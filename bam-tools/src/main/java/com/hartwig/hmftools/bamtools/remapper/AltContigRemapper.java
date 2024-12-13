@@ -10,7 +10,11 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
@@ -32,11 +36,39 @@ public class AltContigRemapper
 
     public void run()
     {
+        final AtomicInteger numberCompared = new AtomicInteger();
+        final AtomicInteger numberMatching = new AtomicInteger();
+        final AtomicInteger nonHLA = new AtomicInteger();
         BT_LOGGER.info("starting alt contig remapper");
         long startTimeMs = System.currentTimeMillis();
 
+        Map<String, SAMRecord> noAltsNegativeReads = new HashMap<>();
+        Map<String, SAMRecord> noAltsPositiveReads = new HashMap<>();
+
+        try(SamReader samReader = SamReaderFactory.makeDefault().open(new File("/Users/timlavers/work/scratch/comparison/no_alts.final.bam")))
+        {
+            samReader.forEach(record -> {
+                if (record.getReadNegativeStrandFlag()) {
+                    if (!record.isSecondaryOrSupplementary())
+                    {
+                        noAltsNegativeReads.put(record.getReadName(), record);
+                    }
+                } else {
+                    if(!record.isSecondaryOrSupplementary())
+                    {
+                        noAltsPositiveReads.put(record.getReadName(), record);
+                    }
+                }
+            });
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
+
         try(SamReader samReader = SamReaderFactory.makeDefault().open(new File(mConfig.OrigBamFile)))
         {
+
             // The header in the rewritten file needs to be the same
             // as the header in the original file but with the hla dictionary items removed.
             SAMFileHeader fileHeader = samReader.getFileHeader();
@@ -57,8 +89,56 @@ public class AltContigRemapper
             final BwaHlaRecordAligner aligner = new BwaHlaRecordAligner(mConfig.aligner(), newHeader);
             HlaTransformer transformer = new HlaTransformer(aligner);
             samReader.forEach(record ->
-                    transformer.process(record).forEach(bamWriter::addAlignment));
+            {
+                boolean isHla = HlaTransformer.hasSomeHlaReference(record);
+                transformer.process(record).forEach(alignment ->
+                {
+                    bamWriter.addAlignment(alignment);
+                    if (isHla)
+                    {
+                        if(alignment.getReadNegativeStrandFlag())
+                        {
+                            if(!record.isSecondaryOrSupplementary() && !alignment.isSecondaryOrSupplementary())
+                            {
+                                SAMRecord noAltsRecord = noAltsNegativeReads.get(record.getReadName());
+                                if(noAltsRecord !=null)
+                                {
+                                    numberCompared.getAndIncrement();
+                                    if(
+                                            alignment.getAlignmentStart() != noAltsRecord.getAlignmentStart() ||
+//                                                    alignment.getFlags() != noAltsRecord.getFlags() ||
+                                                    !Objects.equals(alignment.getCigarString(), noAltsRecord.getCigarString()) ||
+                                                    !Objects.equals(alignment.getReferenceIndex(), noAltsRecord.getReferenceIndex())
+//                                                    !Objects.equals(alignment.getMappingQuality(), noAltsRecord.getMappingQuality())
+//                                                    !Objects.equals(alignment.getSAMString(), noAltsRecord.getSAMString())
+                                    )
+                                    {
+                                        System.out.println("WHOA: " + record.getReadName());
+                                        System.out.println(summary(noAltsRecord));
+                                        System.out.println(summary(alignment));
+                                    }
+                                    else
+                                    {
+                                        numberMatching.getAndIncrement();
+                                    }
+                                }
+                                else
+                                {
+                                    System.out.println("Not found or bad: " + record.getReadName());
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        nonHLA.getAndIncrement();
+                    }
+                });
+            });
 
+            System.out.println("number non HLA: " + nonHLA.get());
+            System.out.println("number compared: " + numberCompared.get());
+            System.out.println("number matching: " + numberMatching.get());
             // Deal with any unmatched reads.
             // Don't map these - log an error and write them out as they are
             List<SAMRecord> unmatched = transformer.unmatchedRecords();
@@ -93,6 +173,13 @@ public class AltContigRemapper
         BT_LOGGER.info("Remapping complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
+    private static String summary(SAMRecord record)
+    {
+        return record.getReferenceIndex() + "\t"
+                + record.getAlignmentStart() + "\t"
+                + record.getFlags() + "\t"
+                + record.getCigarString() + "\t";
+    }
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
@@ -101,7 +188,6 @@ public class AltContigRemapper
         configBuilder.checkAndParseCommandLine(args);
 
         AltContigRemapperConfig config = new AltContigRemapperConfig(configBuilder);
-        AltContigRemapper regionSlicer = new AltContigRemapper(config);
-        regionSlicer.run();
+        new AltContigRemapper(config).run();
     }
 }

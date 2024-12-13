@@ -21,6 +21,30 @@ import htsjdk.samtools.SamReaderFactory;
 public class RemapperTestBase
 {
 
+    static BwaMemAlignment bwa(String data, String xa, String remainingData)
+    {
+        String[] parts1 = data.split(",");
+        String[] parts2 = remainingData.split(",");
+        return new BwaMemAlignment(
+                parseInt(parts1[0]),
+                parseInt(parts1[1]),
+                parseInt(parts1[2]),
+                parseInt(parts1[3]),
+                parseInt(parts1[4]),
+                parseInt(parts1[5]),
+                parseInt(parts1[6]),
+                parseInt(parts1[7]),
+                parseInt(parts1[8]),
+                parseInt(parts1[9]),
+                parts1[10],
+                parts1[11],
+                xa,
+                parseInt(parts2[0]),
+                parseInt(parts2[1]),
+                parseInt(parts2[2])
+        );
+    }
+
     static BwaMemAlignment bwa(String data)
     {
         String[] parts = data.split(",");

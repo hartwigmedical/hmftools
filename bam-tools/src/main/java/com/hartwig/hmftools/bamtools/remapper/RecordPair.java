@@ -16,35 +16,54 @@ public class RecordPair
 
     public RecordPair(@NotNull final SAMRecord aRecord, @NotNull final SAMRecord anotherRecord)
     {
-        if (!aRecord.getReadName().equals(anotherRecord.getReadName())) {
+        if(!aRecord.getReadName().equals(anotherRecord.getReadName()))
+        {
             throw new IllegalArgumentException("Left read name does not match right read name.");
         }
-        if (!SamRecordUtils.firstInPair(aRecord)) {
+        if(!SamRecordUtils.firstInPair(aRecord))
+        {
             throw new IllegalArgumentException("Left read is not first in pair.");
         }
-        if (!SamRecordUtils.secondInPair(anotherRecord)) {
+        if(!SamRecordUtils.secondInPair(anotherRecord))
+        {
             throw new IllegalArgumentException("Right read is not second in pair.");
         }
-        if (aRecord.getProperPairFlag() != anotherRecord.getProperPairFlag()) {
+        if(aRecord.getProperPairFlag() != anotherRecord.getProperPairFlag())
+        {
             throw new IllegalArgumentException("Proper pair values not equal.");
         }
-        if (aRecord.getFirstOfPairFlag()) {
-            if (!anotherRecord.getSecondOfPairFlag()) {
+        if(aRecord.getFirstOfPairFlag())
+        {
+            if(!anotherRecord.getSecondOfPairFlag())
+            {
                 throw new IllegalArgumentException("Records do not form a proper pair.");
             }
             this.first = aRecord;
             this.second = anotherRecord;
-        } else if (aRecord.getSecondOfPairFlag()) {
-            if (!anotherRecord.getFirstOfPairFlag()) {
+        }
+        else if(aRecord.getSecondOfPairFlag())
+        {
+            if(!anotherRecord.getFirstOfPairFlag())
+            {
                 throw new IllegalArgumentException("Records do not form a proper pair.");
             }
             this.second = aRecord;
             this.first = anotherRecord;
         }
-
-        else {
+        else
+        {
             throw new IllegalArgumentException("Records do not form a proper pair as neither is first.");
         }
+    }
+
+    public RawFastaData leftData()
+    {
+        return RawFastaData.fromRecord(first);
+    }
+
+    public RawFastaData rightData()
+    {
+        return RawFastaData.fromRecord(second);
     }
 
     public boolean isProperPair()
@@ -72,15 +91,19 @@ public class RecordPair
         return basesString(second);
     }
 
-    private static byte[] bases(SAMRecord record) {
-        if (record.getReadNegativeStrandFlag() ) {
+    private static byte[] bases(SAMRecord record)
+    {
+        if(record.getReadNegativeStrandFlag())
+        {
             return Nucleotides.reverseComplementBases(record.getReadBases());
         }
         return record.getReadBases();
     }
 
-    private static String basesString(SAMRecord record) {
-        if (record.getReadNegativeStrandFlag() ) {
+    private static String basesString(SAMRecord record)
+    {
+        if(record.getReadNegativeStrandFlag())
+        {
             return Nucleotides.reverseComplementBases(record.getReadString());
         }
         return record.getReadString();

@@ -1,15 +1,13 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
@@ -25,9 +23,12 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
 
     private @NotNull
     final Aligner aligner;
-    private final SAMFileHeader header;
+    private @NotNull
+    final SAMFileHeader header;
+    private @NotNull
+    final RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38; // TODO make parameter
 
-    public BwaHlaRecordAligner(@NotNull final Aligner aligner, final SAMFileHeader newHeader)
+    public BwaHlaRecordAligner(@NotNull final Aligner aligner, @NotNull final SAMFileHeader newHeader)
     {
         this.aligner = aligner;
         header = newHeader;
@@ -39,28 +40,20 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
     {
         ImmutablePair<List<BwaMemAlignment>, List<BwaMemAlignment>> alignments =
                 aligner.alignSequences(pair.leftBasesForRealignment(), pair.rightBasesForRealignment());
+        AlignmentsList leftAlignments = new AlignmentsList(alignments.getLeft());
+        AlignmentsList rightAlignments = new AlignmentsList(alignments.getRight());
+        AlignmentsSelector alignmentsSelector = new AlignmentsSelector(leftAlignments, rightAlignments);
 
-        List<SAMRecord> result = new ArrayList<>();
-        final List<SAMRecord> realignedRecordsLeft = produceRealignments(pair.first, alignments.getLeft());
-        final List<SAMRecord> realignedRecordsRight = produceRealignments(pair.second, alignments.getRight());
+        final List<SAMRecord> realignedRecordsLeft = createNewRecords(alignmentsSelector.preferredLeftAlignments(), pair.leftData());
+        final List<SAMRecord> realignedRecordsRight = createNewRecords(alignmentsSelector.preferredRightAlignments(), pair.rightData());
         // The realigned records may still have mate references that point to hla contigs.
         // These need to be adjusted using the alignment info from the first record in the
         // realigned records for the complementary record.
-        // TODO what if either of the returned sequences is empty?
         SAMRecord firstRealignedLeftRecord = realignedRecordsLeft.stream().filter(sr -> !sr.isSecondaryOrSupplementary()).findFirst().get();
         SAMRecord firstRealignedRightRecord =
                 realignedRecordsRight.stream().filter(sr -> !sr.isSecondaryOrSupplementary()).findFirst().get();
-        if(pair.first.getReadName().equals("A00624:8:HHKYHDSXX:1:1664:13205:2472"))
-        {
-            System.out.println(pair);
-        }
-        if(pair.first.getReadName().equals("A00624:8:HHKYHDSXX:3:1536:28971:18630"))
-        {
-            System.out.println(pair);
-        }
-        fixProperPairFlag(firstRealignedLeftRecord, pair);
-        fixProperPairFlag(firstRealignedRightRecord, pair);
 
+        List<SAMRecord> result = new ArrayList<>();
         realignedRecordsLeft.forEach(record ->
         {
             setMateProperties(record, firstRealignedRightRecord);
@@ -71,12 +64,29 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
             setMateProperties(record, firstRealignedLeftRecord);
             result.add(record);
         });
+        fixProperPairFlag(firstRealignedLeftRecord, pair);
+        fixProperPairFlag(firstRealignedRightRecord, pair);
         return result;
+    }
+
+    private List<SAMRecord> createNewRecords(List<PreferredAlignment> alignments, RawFastaData data)
+    {
+        return alignments.stream().map(preferredAlignment -> remappedRecord(data, preferredAlignment))
+                .collect(Collectors.toList());
     }
 
     private static void fixProperPairFlag(SAMRecord record, RecordPair pair)
     {
-        record.setProperPairFlag(pair.isProperPair());
+        int insertLength = Math.abs(record.getInferredInsertSize());
+        if(insertLength < 1200 && insertLength > 50)
+        {
+            record.setProperPairFlag(pair.isProperPair());
+            //        if(pair.isProperPair())
+            //        {
+            int newQuality = Math.min(60, record.getMappingQuality() + 20);
+            record.setMappingQuality(newQuality);
+            //        }
+        }
     }
 
     private static void setMateProperties(SAMRecord record, SAMRecord mate)
@@ -99,7 +109,7 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
             return 0;
         }
 
-        if (record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
+        if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
         {
             return 0;
         }
@@ -107,28 +117,31 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
         {
             return -1 * (record.getAlignmentEnd() - record.getMateAlignmentStart() + 1);
         }
-//        int cigarLength = CigarUtils.cigarBaseLength(CigarUtils.cigarFromStr(record.getCigarString()));
+        //        int cigarLength = CigarUtils.cigarBaseLength(CigarUtils.cigarFromStr(record.getCigarString()));
         return mate.getAlignmentEnd() - record.getAlignmentStart() + 1;
     }
 
     @NotNull
-    private List<SAMRecord> produceRealignments(@NotNull final SAMRecord record, @NotNull final List<BwaMemAlignment> alignments)
+    private List<SAMRecord> produceRealignments(
+            @NotNull final RawFastaData raw,
+            @NotNull final List<BwaMemAlignment> alignments,
+            @NotNull final BwaMemAlignment mate)
     {
         return alignments
                 .stream()
-                .map(a -> remappedRecord(record, a))
+                .map(a -> new PreferredAlignment(a, mate, refGenomeVersion))
+                .map(a -> remappedRecord(raw, a))
                 .collect(Collectors.toList());
     }
 
-    private SAMRecord remappedRecord(@NotNull final SAMRecord original, @NotNull final BwaMemAlignment alignment)
+    private SAMRecord remappedRecord(@NotNull final RawFastaData raw, @NotNull final PreferredAlignment alignment)
     {
-        RawFastaData raw = RawFastaData.fromRecord(original);
         SAMRecord remappedRecord = new SAMRecord(header);
-        remappedRecord.setReadName(original.getReadName());
+        remappedRecord.setReadName(raw.readName);
         remappedRecord.setHeader(this.header);
         remappedRecord.setFlags(alignment.getSamFlag());
         remappedRecord.setReferenceIndex(alignment.getRefId());
-        remappedRecord.setAlignmentStart(alignment.getRefStart() + 1); // BwaMemAlignment is 0-based
+        remappedRecord.setAlignmentStart(alignment.getRefStart());
         remappedRecord.setMappingQuality(alignment.getMapQual());
         remappedRecord.setCigarString(alignment.getCigar());
         if(remappedRecord.getReadNegativeStrandFlag())
