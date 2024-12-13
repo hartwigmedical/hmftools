@@ -133,7 +133,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
                 readContextCounter.setMaxCandidateDeleteLength(maxCloseDel);
         }
 
-        final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, sliceRegions, false);
+        SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, sliceRegions, false);
         samSlicer.slice(this::processReadRecord);
 
         mFragmentSync.emptyCachedReads();
