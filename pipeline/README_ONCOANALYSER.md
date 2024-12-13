@@ -15,24 +15,25 @@ Oncoanalyser (links: [GitHub](https://github.com/nf-core/oncoanalyser), [nf-core
 
 **Pipeline overview**
 
-Except for read alignment, the pipeline uses tools from [hmftools](https://github.com/hartwigmedical/hmftools/tree/master/).
+The pipeline uses tools from [hmftools](https://github.com/hartwigmedical/hmftools/tree/master/) (except for
+[bwa-mem2](https://github.com/bwa-mem2/bwa-mem2), [STAR](https://github.com/alexdobin/STAR) and
+[Picard MarkDuplicates](https://gatk.broadinstitute.org/hc/en-us/articles/360037052812-MarkDuplicates-Picard)):
 
-| Task                                         | Tool                                                                                                                                                                                                                                                                                                                    |
-|:---------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Read alignment <a name="read-alignment"></a> | [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) - DNA<br/>[STAR](https://github.com/alexdobin/STAR) - RNA                                                                                                                                                                                                              |
-| Read deduplication and unmapping             | [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux)                                                                                                                                                                                                                                                   |
-| SNV, MNV, INDEL calling                      | [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) - Variant calling<br/>[PAVE](https://github.com/hartwigmedical/hmftools/tree/master/pave) - Transcript/coding effect annotation                                                                                                                     |
-| SV calling                                   | [ESVEE](https://github.com/hartwigmedical/hmftools/tree/master/esvee)<br/>                                                                                                                                                                                                                                              |
-| CNV calling                                  | [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) - B-allele frequencies<br/>[COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt) - Read depth ratios<br/>[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) - Purity/ploidy estimation, variant annotation |
-| SV and driver event interpretation           | [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx)                                                                                                                                                                                                                                                     |
-| Oncoviral detection                          | [VIRUSbreakend](https://github.com/PapenfussLab/gridss) - Viral content and integration calling<br/>[VirusInterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter) - Post-processing                                                                                                      |
-| HLA typing                                   | [LILAC](https://github.com/hartwigmedical/hmftools/tree/master/lilac)                                                                                                                                                                                                                                                   |
-| HRD prediction                               | [CHORD](https://github.com/hartwigmedical/hmftools/tree/master/chord)                                                                                                                                                                                                                                                   |
-| Tissue of origin prediction                  | [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa)                                                                                                                                                                                                                                                   |
-| Mutational signature fitting                 | [Sigs](https://github.com/hartwigmedical/hmftools/tree/master/sigs)                                                                                                                                                                                                                                                     |
-| Neo-epitope prediction                       | [NEO](https://github.com/hartwigmedical/hmftools/tree/master/neo)                                                                                                                                                                                                                                                       |
-| RNA transcript quantification                | [ISOFOX](https://github.com/hartwigmedical/hmftools/tree/master/isofox)                                                                                                                                                                                                                                                 |
-| Report generation                            | [ORANGE](https://github.com/hartwigmedical/hmftools/tree/master/orange)                                                                                                                                                                                                                                                 |
+| Task                                                                      | Tool                                                                                                                                                                                                                                                                                                                    |
+|:--------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [Read alignment](#read-alignment)                                         | [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) - DNA<br/>[STAR](https://github.com/alexdobin/STAR) - RNA                                                                                                                                                                                                              |
+| [Read post-processing](#read-post-processing)                             | [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux) - DNA, duplicate marking and unmapping<br/>[Picard MarkDuplicates](https://gatk.broadinstitute.org/hc/en-us/articles/360037052812-MarkDuplicates-Picard) - RNA, duplicate marking                                                                 |
+| [SNV, MNV, INDEL calling](#snv-mnv-indel-calling)                         | [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) - Variant calling<br/>[PAVE](https://github.com/hartwigmedical/hmftools/tree/master/pave) - Transcript/coding effect annotation                                                                                                                     |
+| [SV calling](#sv-calling)                                                 | [ESVEE](https://github.com/hartwigmedical/hmftools/tree/master/esvee)<br/>                                                                                                                                                                                                                                              |
+| [CNV calling](#cnv-calling)                                               | [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) - B-allele frequencies<br/>[COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt) - Read depth ratios<br/>[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) - Purity/ploidy estimation, variant annotation |
+| [SV and driver event interpretation](#sv-and-driver-event-interpretation) | [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx)                                                                                                                                                                                                                                                     |
+| [RNA transcript analysis](#rna-transcript-analysis)                       | [ISOFOX](https://github.com/hartwigmedical/hmftools/tree/master/isofox)                                                                                                                                                                                                                                                 |
+| [Oncoviral detection](#oncoviral-detection)                               | [VIRUSbreakend](https://github.com/PapenfussLab/gridss) - Viral content and integration calling<br/>[VirusInterpreter](https://github.com/hartwigmedical/hmftools/tree/master/virus-interpreter) - Post-processing                                                                                                      |
+| [Immune analysis](#immune-analysis)                                       | [LILAC](https://github.com/hartwigmedical/hmftools/tree/master/lilac) - HLA typing<br/>[NEO](https://github.com/hartwigmedical/hmftools/tree/master/neo) - Neo-epitope prediction                                                                                                                                       |
+| [Mutational signature fitting](#mutational-signature-fitting)             | [SIGS](https://github.com/hartwigmedical/hmftools/tree/master/sigs)                                                                                                                                                                                                                                                     |
+| [HRD prediction](#hrd-prediction)                                         | [CHORD](https://github.com/hartwigmedical/hmftools/tree/master/chord)                                                                                                                                                                                                                                                   |
+| [Tissue of origin prediction](#tissue-of-origin-prediction)               | [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa)                                                                                                                                                                                                                                                   |
+| [Summary report](#summary-report)                                         | [ORANGE](https://github.com/hartwigmedical/hmftools/tree/master/orange)                                                                                                                                                                                                                                                 |
 
 ## Getting started
 
@@ -137,12 +138,20 @@ nextflow run nf-core/oncoanalyser \
     * [Caching Singularity images](#caching-singularity-images)
     * [Configuring container images](#configuring-container-images)
   * [Outputs](#outputs)
-    * [Pipeline information: `pipeline_info/`](#pipeline-information--pipelineinfo)
-    * [Alignments](#alignments)
-    * [AMBER](#amber)
-    * [CHORD](#chord)
-    * [COBALT](#cobalt)
-    * [CUPPA](#cuppa)
+    * [Pipeline information](#pipeline-information)
+    * [Read alignment](#read-alignment)
+    * [Read post-processing](#read-post-processing)
+    * [SNV, MNV, INDEL calling](#snv-mnv-indel-calling)
+    * [SV calling](#sv-calling)
+    * [CNV calling](#cnv-calling)
+    * [SV and driver event interpretation](#sv-and-driver-event-interpretation)
+    * [RNA transcript analysis](#rna-transcript-analysis)
+    * [Oncoviral detection](#oncoviral-detection)
+    * [Immune analysis](#immune-analysis)
+    * [Mutational signature fitting](#mutational-signature-fitting)
+    * [HRD prediction](#hrd-prediction)
+    * [Tissue of origin prediction](#tissue-of-origin-prediction)
+    * [Summary report](#summary-report)
   * [Acknowledgements](#acknowledgements)
 <!-- TOC -->
 
@@ -815,7 +824,7 @@ In general, the process names for all hmftools are `{TOOL}` or `{TOOL}_{SUBPROCE
 Oncoanalyser writes output files to the below directory tree structure. Files are grouped by the `group_id` provided in the 
 [sample sheet](#sample-sheet), then by tool:
 
-```tree
+```shell
 output/
 ├── pipeline_info/
 ├── group_id_1/
@@ -848,20 +857,32 @@ has completed this directory can be removed.
 
 ### Pipeline information
 
+Created by Nextflow:
+
 ```shell
 pipeline_info/
 ├── execution_report_<date_time>.html   # HTML report of execution metrics and details
 ├── execution_timeline_<date_time>.html # Timeline diagram showing process start/duration/finish
 ├── execution_trace_<date_time>.txt     # Resource usage
-├── params_<date_time>.json             # Parameters used by the pipeline run
 ├── pipeline_dag_<date_time>.html       # Pipeline diagram showing how each process is connected
+```
+
+Created by Oncoanalyser:
+```shell
+├── params_<date_time>.json             # Parameters used by the pipeline run
 └── software_versions.yml               # Tool versions
 ```
 
-### Alignments
+### Read alignment
+
+No outputs from **bwa-mem2** and **STAR** are published.
+
+### Read post-processing
+
+**REDUX**
 
 ```shell
-alignments/
+<group_id>/alignments/
 ├── dna
 │   ├── <tumor_dna_id>.jitter_params.tsv         # Microsatellite jitter model parameters
 │   ├── <tumor_dna_id>.ms_table.tsv.gz           # Aggregated repeat units and repeat counts
@@ -875,16 +896,95 @@ alignments/
 │   ├── <normal_dna_id>.redux.bam.bai            # See above
 │   ├── <normal_dna_id>.redux.duplicate_freq.tsv # See above
 │   └── <normal_dna_id>.repeat.tsv.gz            # See above
+```
+
+**Picard MarkDuplicates**
+
+```shell
 └── rna
     ├── `<tumor_rna_id>.md.bam`     # Read alignments               
     ├── `<tumor_rna_id>.md.bam.bai` # Read alignments index         
     └── `<tumor_rna_id>.md.metrics` # Duplicate read marking metrics
 ```
 
-### AMBER
+### SNV, MNV, INDEL calling
+
+**SAGE**
 
 ```shell
-amber/
+<group_id>/sage
+├── somatic
+│   ├── <normal_dna_id>.sage.bqr.png            # Normal DNA sample base quality recalibration metrics plot
+│   ├── <normal_dna_id>.sage.bqr.tsv            # Normal DNA sample base quality recalibration metrics
+│   ├── <tumor_dna_id>.sage.bqr.png             # Tumor DNA sample base quality recalibration metrics plot
+│   ├── <tumor_dna_id>.sage.bqr.tsv             # Tumor DNA sample base quality recalibration metrics
+│   ├── <tumor_dna_id>.sage.exon.medians.tsv    # Tumor DNA sample exon median depths
+│   ├── <tumor_dna_id>.sage.gene.coverage.tsv   # Tumor DNA sample gene coverages
+│   ├── <tumor_dna_id>.sage.somatic.vcf.gz      # Tumor DNA sample small variant calls
+│   └── <tumor_dna_id>.sage.somatic.vcf.gz.tbi  # Tumor DNA sample small variant calls index
+├── germline
+│   ├── <normal_dna_id>.sage.bqr.png            # Tumor DNA sample base quality recalibration metrics plot             
+│   ├── <normal_dna_id>.sage.bqr.tsv            # Tumor DNA sample base quality recalibration metrics
+│   ├── <normal_dna_id>.sage.exon.medians.tsv   # Normal DNA sample exon median depths
+│   ├── <normal_dna_id>.sage.gene.coverage.tsv  # Normal DNA sample gene coverages
+│   ├── <tumor_dna_id>.sage.bqr.png             # Normal DNA sample base quality recalibration metrics plot
+│   ├── <tumor_dna_id>.sage.bqr.tsv             # Normal DNA sample base quality recalibration metrics
+│   ├── <tumor_dna_id>.sage.germline.vcf.gz     # Normal DNA sample filtered small variant calls
+│   └── <tumor_dna_id>.sage.germline.vcf.gz.tbi # Normal DNA sample filtered small variant calls index
+└── append
+    ├── <normal_dna_id>.sage.append.vcf.gz      # Normal VCF with SMNVs and RNA data appended
+    └── <tumor_dna_id>.sage.append.vcf.gz       # Tumor VCF with SMNVs and RNA data appended
+```
+
+**PAVE**
+
+```shell
+<group_id>/pave/
+├── <tumor_dna_id>.sage.germline.pave.vcf.gz     # VCF with annotated germline SAGE SMNVs
+├── <tumor_dna_id>.sage.germline.pave.vcf.gz.tbi # VCF index
+├── <tumor_dna_id>.sage.somatic.pave.vcf.gz      # VCF with annotated somatic SAGE SMNVs
+└── <tumor_dna_id>.sage.somatic.pave.vcf.gz.tbi  # VCF index
+```
+
+### SV calling
+
+**ESVEE**
+
+```shell
+<group_id>/esvee/
+├── prep
+│   ├── <tumor_dna_id>.esvee.prep.bam                 # BAM with candidate SV reads 
+│   ├── <tumor_dna_id>.esvee.prep.bam.bai             # BAM index
+│   ├── <tumor_dna_id>.esvee.prep.disc_stats.tsv      # Discordant reads stats
+│   ├── <tumor_dna_id>.esvee.prep.fragment_length.tsv # Fragment length stats
+│   ├── <tumor_dna_id>.esvee.prep.junction.tsv        # Candidate junctions
+│   ├── <normal_dna_id>.esvee.prep.bam                # BAM with candidate SV reads
+│   └── <normal_dna_id>.esvee.prep.bam.bai            # BAM index
+├── assemble
+│   ├── <tumor_dna_id>.esvee.assembly.tsv             # Breakend assemblies
+│   ├── <tumor_dna_id>.esvee.alignment.tsv            # Assemblies realigned to the ref genome
+│   ├── <tumor_dna_id>.esvee.breakend.tsv             #
+│   ├── <tumor_dna_id>.esvee.phased_assembly.tsv      #
+│   ├── <tumor_dna_id>.esvee.raw.vcf.gz               # VCF with candidate breakends
+│   └── <tumor_dna_id>.esvee.raw.vcf.gz.tbi           # VCF with candidate breakends
+├── depth_annotation
+│   ├── <tumor_dna_id>.esvee.ref_depth.vcf.gz         # VCF annotated with normal sample read depths
+│   └── <tumor_dna_id>.esvee.ref_depth.vcf.gz.tbi     # VCF index
+└── caller
+    ├── <tumor_dna_id>.esvee.germline.vcf.gz          # VCF with germline breakends
+    ├── <tumor_dna_id>.esvee.germline.vcf.gz.tbi      # VCF index
+    ├── <tumor_dna_id>.esvee.somatic.vcf.gz           # VCF with somatic breakends
+    ├── <tumor_dna_id>.esvee.somatic.vcf.gz.tbi       # VCF index
+    ├── <tumor_dna_id>.esvee.unfiltered.vcf.gz        # VCF with unfiltered breakends
+    └── <tumor_dna_id>.esvee.unfiltered.vcf.gz.tbi    # VCF index
+```
+
+### CNV calling
+
+**AMBER**
+
+```shell
+<group_id>/amber/
 ├── <tumor_dna_id>.amber.baf.pcf                  # Piecewise constant fit on B-allele frequencies
 ├── <tumor_dna_id>.amber.baf.tsv.gz               # B-allele frequencies
 ├── <tumor_dna_id>.amber.contamination.tsv        # Contamination TSV
@@ -892,23 +992,15 @@ amber/
 ├── <tumor_dna_id>.amber.contamination.vcf.gz.tbi # Sample contamination sites index
 ├── <tumor_dna_id>.amber.qc                       # QC file
 ├── <normal_dna_id>.amber.homozygousregion.tsv    # Regions of homozygosity
-├── <normal_dna_id>.amber.snp.vcf.gz              #
-├── <normal_dna_id>.amber.snp.vcf.gz.tbi          #
+├── <normal_dna_id>.amber.snp.vcf.gz              # SNP sites VCF
+├── <normal_dna_id>.amber.snp.vcf.gz.tbi          # VCF index
 └── amber.version                                 # Tool version
 ```
 
-### CHORD
+**COBALT**
 
 ```shell
-chord/
-├── <tumor_dna_id>.chord.mutation_contexts.tsv # Counts of mutation types
-└── <tumor_dna_id>.chord.prediction.tsv        # HRD predictions
-```
-
-### COBALT
-
-```shell
-cobalt/
+<group_id>/cobalt/
 ├── <tumor_dna_id>.cobalt.gc.median.tsv     # GC median read depths
 ├── <tumor_dna_id>.cobalt.ratio.pcf         # Piecewise constant fit
 ├── <tumor_dna_id>.cobalt.ratio.tsv.gz      # Read counts and ratios (with reference or supposed diploid)
@@ -918,14 +1010,165 @@ cobalt/
 └── cobalt.version                          # Tool version
 ```
 
-### CUPPA
+**PURPLE**
 
 ```shell
-cuppa/
-├── `<tumor_dna_id>.cuppa.pred_summ.tsv` # Prediction summary               
-├── `<tumor_dna_id>.cuppa.vis.png`       # Prediction visualisation         
-├── `<tumor_dna_id>.cuppa.vis_data.tsv`  # Prediction visualisation raw data
-└── `<tumor_dna_id>.cuppa_data.tsv.gz`   # Input features                   
+<group_id>/purple/
+├── <tumor_dna_id>.purple.cnv.gene.tsv                # Somatic gene copy number
+├── <tumor_dna_id>.purple.cnv.somatic.tsv             # Copy number variant segments
+├── <tumor_dna_id>.purple.driver.catalog.germline.tsv # Germline DNA sample driver events
+├── <tumor_dna_id>.purple.driver.catalog.somatic.tsv  # Somatic DNA sample driver events
+├── <tumor_dna_id>.purple.germline.deletion.tsv       # Germline DNA deletions
+├── <tumor_dna_id>.purple.germline.vcf.gz             # Germline SAGE SMNVs with PURPLE annotations
+├── <tumor_dna_id>.purple.germline.vcf.gz.tbi         # VCF index
+├── <tumor_dna_id>.purple.purity.range.tsv            # Purity/ploidy model fit scores across a range of purity values
+├── <tumor_dna_id>.purple.purity.tsv                  # Purity/ploidy summary
+├── <tumor_dna_id>.purple.qc                          # QC file
+├── <tumor_dna_id>.purple.segment.tsv                 # Genomic copy number segments
+├── <tumor_dna_id>.purple.somatic.clonality.tsv       # Clonality peak model data
+├── <tumor_dna_id>.purple.somatic.hist.tsv            # Somatic variants histogram data
+├── <tumor_dna_id>.purple.somatic.vcf.gz              # Tumor SAGE SMNVs with PURPLE annotations
+├── <tumor_dna_id>.purple.somatic.vcf.gz.tbi          # VCF index
+├── <tumor_dna_id>.purple.sv.germline.vcf.gz          # Germline ESVEE SVs with PURPLE annotations
+├── <tumor_dna_id>.purple.sv.germline.vcf.gz.tbi      # VCF index
+├── <tumor_dna_id>.purple.sv.vcf.gz                   # Somatic ESVEE SVs with PURPLE annotations
+├── <tumor_dna_id>.purple.sv.vcf.gz.tbi               # VCF index
+├── circos/         # Circos plot data
+├── plot/           # PURPLE plots
+└── purple.version  # Tool version
+```
+
+### SV and driver event interpretation
+
+**LINX**
+
+```shell
+<group_id>/linx/
+├── germline_annotations
+│   ├── <tumor_dna_id>.linx.germline.breakend.tsv       # Normal sample breakend data
+│   ├── <tumor_dna_id>.linx.germline.clusters.tsv       # Normal sample clustered events
+│   ├── <tumor_dna_id>.linx.germline.disruption.tsv     # 
+│   ├── <tumor_dna_id>.linx.germline.driver.catalog.tsv # Normal sample driver events
+│   ├── <tumor_dna_id>.linx.germline.links.tsv          # 
+│   ├── <tumor_dna_id>.linx.germline.svs.tsv            #
+│   └── linx.version                                    # Tool version
+├── somatic_annotations
+│   ├── <tumor_dna_id>.linx.breakend.tsv                # Tumor sample breakend data
+│   ├── <tumor_dna_id>.linx.clusters.tsv                # Tumor sample clustered events
+│   ├── <tumor_dna_id>.linx.driver.catalog.tsv          # Tumor sample driver events
+│   ├── <tumor_dna_id>.linx.drivers.tsv                 #
+│   ├── <tumor_dna_id>.linx.fusion.tsv                  # Tumor sample fusions
+│   ├── <tumor_dna_id>.linx.links.tsv                   #
+│   ├── <tumor_dna_id>.linx.neoepitope.tsv              #
+│   ├── <tumor_dna_id>.linx.svs.tsv                     #
+│   ├── <tumor_dna_id>.linx.vis_copy_number.tsv         #
+│   ├── <tumor_dna_id>.linx.vis_fusion.tsv              #
+│   ├── <tumor_dna_id>.linx.vis_gene_exon.tsv           #
+│   ├── <tumor_dna_id>.linx.vis_protein_domain.tsv      #
+│   ├── <tumor_dna_id>.linx.vis_segments.tsv            #
+│   ├── <tumor_dna_id>.linx.vis_sv_data.tsv             #
+│   └── linx.version
+└── somatic_plots
+    ├── all
+    │   └── <tumor_dna_id>.*.png # All cluster plots
+    └── reportable
+        └── <tumor_dna_id>.*.png # Driver cluster plots
+```
+
+### RNA transcript analysis
+
+**ISOFOX**
+
+```shell
+<group_id>/isofox/
+├── <tumor_rna_id>.isf.alt_splice_junc.csv # Alternative splice junctions
+├── <tumor_rna_id>.isf.fusions.csv         # Fusions, unfiltered
+├── <tumor_rna_id>.isf.gene_collection.csv # Gene-collection fragment counts
+├── <tumor_rna_id>.isf.gene_data.csv       # Gene fragment counts
+├── <tumor_rna_id>.isf.pass_fusions.csv    # Fusions, filtered
+├── <tumor_rna_id>.isf.retained_intron.csv # Retained introns
+├── <tumor_rna_id>.isf.summary.csv         # Analysis summary
+└── <tumor_rna_id>.isf.transcript_data.csv # Transcript fragment counts
+```
+
+
+### Oncoviral detection
+
+**VIRUSBreakend**
+
+```shell
+<group_id>/virusbreakend/
+├── <tumor_dna_id>.virusbreakend.vcf             # VCF with viral integration sites
+└── <tumor_dna_id>.virusbreakend.vcf.summary.tsv # Analysis summary
+```
+
+**VirusInterpreter**
+
+```shell
+<group_id>/virusinterpreter/
+└── <tumor_dna_id>.virus.annotated.tsv # Processed oncoviral call/annotation data
+```
+
+### Immune analysis
+
+**LILAC**
+
+```shell
+<group_id>/lilac/
+├── <tumor_dna_id>.lilac.candidates.coverage.tsv # Coverage of high scoring candidates
+├── <tumor_dna_id>.lilac.qc.tsv                  # QC file
+└── <tumor_dna_id>.lilac.tsv                     # Analysis summary
+```
+
+**NEO**
+
+```shell
+<group_id>/neo/
+├── <tumor_dna_id>.lilac.candidates.coverage.tsv # Coverage of high scoring candidates
+├── <tumor_dna_id>.lilac.qc.tsv                  # QC file
+└── <tumor_dna_id>.lilac.tsv                     # Analysis summary
+```
+
+### Mutational signature fitting
+
+**SIGS**
+
+```shell
+sigs/
+├── <tumor_dna_id>.sig.allocation.tsv
+└── <tumor_dna_id>.sig.snv_counts.csv
+```
+
+### HRD prediction
+
+**CHORD**
+
+```shell
+<group_id>/chord/
+├── <tumor_dna_id>.chord.mutation_contexts.tsv # Counts of mutation types
+└── <tumor_dna_id>.chord.prediction.tsv        # HRD predictions
+```
+
+### Tissue of origin prediction
+
+**CUPPA**
+
+```shell
+<group_id>/cuppa/
+├── <tumor_dna_id>.cuppa.pred_summ.tsv # Prediction summary               
+├── <tumor_dna_id>.cuppa.vis.png       # Prediction visualisation         
+├── <tumor_dna_id>.cuppa.vis_data.tsv  # Prediction visualisation raw data
+└── <tumor_dna_id>.cuppa_data.tsv.gz   # Input features                   
+```
+
+### Summary report
+
+**ORANGE**
+
+```shell
+<group_id>/orange/
+├── <tumor_dna_id>.orange.pdf # Results of all tools as a PDF
+└── <tumor_dna_id>.orange.json # Result raw data
 ```
 
 ## Acknowledgements
