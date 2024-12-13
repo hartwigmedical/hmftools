@@ -205,7 +205,7 @@ public class DiscordantStats
         }
         catch(Exception e)
         {
-            SV_LOGGER.warn("failed to read discordant read statsitics file: {}", e.toString());
+            SV_LOGGER.warn("failed to read discordant read statistics file: {}", e.toString());
             return new DiscordantStats();
         }
     }

@@ -4,7 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -253,15 +256,31 @@ public class FragmentSizeDistribution
 
         private boolean isCandidateRecord(final SAMRecord record)
         {
-            boolean isPaired = record.getReadPairedFlag();
+            if(record.getDuplicateReadFlag())
+                return false;
 
-            if(isPaired)
+            int fragmentLength = abs(record.getInferredInsertSize());
+            if(fragmentLength > FRAG_LENGTH_DIST_MAX_LENGTH)
+                return false;
+
+            int readLength = record.getReadBases().length;
+            if(fragmentLength < readLength)
+                return false;
+
+            String alignedCigar = format("%dM", readLength);
+
+            // only fully aligned reads
+            if(!record.getCigarString().equals(alignedCigar))
+                return false;
+
+            // without too many mismatches
+            Integer nmCount = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+            if(nmCount != null && nmCount.intValue() > 2)
+                return false;
+
+            if(record.getReadPairedFlag())
             {
                 if(record.getSecondOfPairFlag())
-                    return false;
-
-                int fragmentLength = abs(record.getInferredInsertSize());
-                if(fragmentLength > FRAG_LENGTH_DIST_MAX_LENGTH)
                     return false;
 
                 // ignore translocations and inversions
@@ -273,11 +292,12 @@ public class FragmentSizeDistribution
 
                 if(record.isSecondaryOrSupplementary())
                     return false;
-            }
 
-            // only fully aligned reads
-            if(record.getCigar().getCigarElements().size() != 1 || record.getCigar().getCigarElements().get(0).getOperator() != M)
-                return false;
+                String mateCigar = record.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+
+                if(mateCigar != null && !mateCigar.equals(alignedCigar))
+                    return false;
+            }
 
             return true;
         }
@@ -343,7 +363,7 @@ public class FragmentSizeDistribution
 
             for(LengthFrequency lengthFrequency : mLengthFrequencies)
             {
-                writer.write(String.format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
+                writer.write(format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
                 writer.newLine();
             }
 
