@@ -37,10 +37,17 @@ The pipeline uses tools from [hmftools](https://github.com/hartwigmedical/hmftoo
 
 ## Getting started
 
-This section will assume that the analysis: 
-- Starts from tumor/normal BAMs
-- Reads are aligned to the GRCh37 ref genome
+This section will assume that: 
+- The analysis starts from paired tumor/normal BAMs
+- Reads are aligned to the GRCh37 reference genome
+- BAMs contain whole genome sequencing data
 - Docker images are used to run each tool
+
+> The user has other options including:
+> - Starting from FASTQ or other pipeline steps (see: **[Sample sheet](#sample-sheet)**)
+> - Using reference genome GRCh38 (see: **[Configuring general resource files](#configuring-general-resource-files)**)
+> - Analysing panel sequencing data (see: **[Configuring panel resource files](#configuring-panel-resource-files)**)
+> - Using Singularity images (see: **[Container images](#container-images)**)
 
 **1. Install Nextflow**
 
@@ -706,7 +713,7 @@ process {
 Oncoanalyser by default uses **[Docker](https://www.docker.com/)** and [**Singularity**](https://docs.sylabs.io/guides/3.0/user-guide/quick_start.html#) 
 images built by the **[bioconda-recipes](https://github.com/bioconda/bioconda-recipes/tree/master/recipes)** Azure CI/CD infrastructure.
 
-The `-profile` argument is used to tell Oncoanalyser whether to run with Docker or Singularity:
+Use `-profile docker` or `-profile singularity` to tell Oncoanalyser whether to run with Docker or Singularity respectively. For example:
 ```shell
 nextflow run nf-core/oncoanalyser 
 -profile docker \
