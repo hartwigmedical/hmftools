@@ -54,7 +54,7 @@ See: **https://docs.docker.com/engine/install/**
 
 Download and extract the reference genome and hmftools resources using these **[links](#links)**.
 
-Create a file called `oncoanalyser.config` which points to the resource file paths:
+Create a file called `resources.config` which points to the resource file paths:
 
 ```
 params {
@@ -74,7 +74,7 @@ params {
 ```
 
 > [!TIP]
-> Jump to section: **[Resource files](#resource-files)**
+> Jump to: **[Resource files](#resource-files)**, **[Configuration files](#configuration-files)**
 
 **4. Set up sample sheet**
 
@@ -89,7 +89,7 @@ COLO829,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
 BAM and BAI files for the above COLO829 test sample can be downloaded from [here](test_data/).
 
 > [!TIP]
-> Jump to section: **[Sample sheet](#sample-sheet)**
+> Jump to: **[Sample sheet](#sample-sheet)**
 
 **5. Run Oncoanalyser with Nextflow**
 
@@ -97,15 +97,16 @@ BAM and BAI files for the above COLO829 test sample can be downloaded from [here
 nextflow run nf-core/oncoanalyser \
 -profile docker \
 -revision pipeline_v6.0 \
--config oncoanalyser.config \
+-config resources.config \
 --mode wgts \
 --genome GRCh37_hmf \
 --input sample_sheet.csv \
---outdir output/
+--outdir output/ \
+-work-dir output/work
 ```
 
 > [!TIP]
-> Jump to section: **[Command line interface](#command-line-interface)**
+> Jump to: **[Command line interface](#command-line-interface)**, **[Outputs](#outputs)**, **[Work directory](#work-directory)**
 
 ## Table of contents
 <!-- TOC -->
@@ -152,6 +153,7 @@ nextflow run nf-core/oncoanalyser \
     * [HRD prediction](#hrd-prediction)
     * [Tissue of origin prediction](#tissue-of-origin-prediction)
     * [Summary report](#summary-report)
+  * [Work directory](#work-directory)
   * [Acknowledgements](#acknowledgements)
 <!-- TOC -->
 
@@ -182,6 +184,8 @@ nextflow run /path/to/oncoanalyser_repo \
 # other arguments
 ```
 
+Please section [Outputs](#outputs) and [Work directory](#work-directory) for details on the outputs of Oncoanalyser.
+
 > [!NOTE]
 > [Nextflow-specific arguments](https://www.nextflow.io/docs/latest/reference/cli.html) start with a single hyphen (`-`). 
 > Oncoanalyser-specific arugments start with two hyphens (`--`).
@@ -189,10 +193,7 @@ nextflow run /path/to/oncoanalyser_repo \
 ### Nextflow arguments
 
 All arguments for `nextflow run` are documented in the [CLI reference](https://www.nextflow.io/docs/latest/reference/cli.html#run). The
-below table lists some relevant ones.
-
-<details>
-<summary><b>Show content</b></summary>
+below table lists some relevant ones:
 
 | Argument&emsp;&emsp; | Description                                                                                                                                                                                                                            |
 |:---------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -205,14 +206,9 @@ below table lists some relevant ones.
 | `-work-dir`          | Path to a directory where Nextflow will put temporary files for each step in the pipeline. If this is not specified, Nextflow will create the `work/` directory in the current directory                                               |
 | `-help`              | Show all Nextflow command line arguments and their descriptions                                                                                                                                                                        |
 
-</details>
-
 ### Oncoanalyser arguments
 
-The below table list all arguments that can be passed to Oncoanalyser.
-
-<details>
-<summary><b>Show content</b></summary>
+The below table lists all arguments that can be passed to Oncoanalyser:
 
 | Argument&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; | Description                                                                                                                                                                                                                                                                     |
 |:---------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -253,8 +249,6 @@ Notes:
 1. **WARNING**: Cannot be provided to a [config file](#configuration-files)
 2. Valid process names are: `alignment`, `amber`, `bamtools`, `chord`, `cobalt`, `cuppa`, `esvee`, `isofox`, `lilac`, `linx`, `neo`,
    `orange`, `pave`, `purple`, `redux`, `sage`, `sigs`, `virusinterpreter`
-
-</details>
 
 ## Sample sheet
 
@@ -355,15 +349,16 @@ PATIENT2,PATIENT2-YEAR1,PATIENT2-YEAR1-R,normal,dna,bam,/path/to/PATIENT2-YEAR1-
 ```
 
 ### Running from REDUX BAM
-Read mapping with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) followed by read pre-processing with [REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux) 
-are the pipeline steps that take the most time and compute resources. Thus, we can re-run Oncoanalyser from a REDUX BAM if it is already 
-exists, e.g. due to updates to downstream tools from [hmftools](https://github.com/hartwigmedical/hmftools/tree/master/).
+For DNA sequencing analyses, read alignment with [bwa-mem2](https://github.com/bwa-mem2/bwa-mem2) and read pre-processing with 
+[REDUX](https://github.com/hartwigmedical/hmftools/tree/master/redux) are the pipeline steps that take the most time and compute resources. 
+Thus, we can re-run Oncoanalyser from a REDUX BAM if it is already exists, e.g. due to updates to downstream tools from 
+[hmftools](https://github.com/hartwigmedical/hmftools/tree/master/).
 
 Simply provide the REDUX BAM path, specifying `bam_redux` under `filetype`:
 
 ```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,bam_redux,/path/to/COLO829T.dna.redux.bam
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bam_redux,/path/to/PATIENT1-T.dna.redux.bam
 ```
 
 The `*.jitter_params.tsv` and `*.ms_table.tsv.gz` REDUX output files are expected to be in the same directory as the REDUX BAM. If these 
@@ -371,9 +366,9 @@ files are located elsewhere, their paths can also be explicitly provided by spec
 
 ```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,bam_redux,/path/to/COLO829T.dna.redux.bam
-COLO829,COLO829,COLO829T,tumor,dna,redux_jitter_tsv,/path/to/COLO829T.dna.jitter_params.tsv
-COLO829,COLO829,COLO829T,tumor,dna,redux_ms_tsv,/path/to/COLO829T.dna.ms_table.tsv.gz
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bam_redux,/path/to/PATIENT1-T.dna.redux.bam
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,redux_jitter_tsv,/path/to/PATIENT1-T.dna.jitter_params.tsv
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,redux_ms_tsv,/path/to/PATIENT1-T.dna.ms_table.tsv.gz
 ```
 
 ### Running specific tools
@@ -387,9 +382,9 @@ outputs from those tools to the sample sheet, specifying entries where `filetype
 
 ```csv
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829,COLO829,COLO829T,tumor,dna,purple_dir,/path/to/purple/dir/
-COLO829,COLO829,COLO829T,tumor,dna,linx_anno_dir,/path/to/linx/dir/
-COLO829,COLO829,COLO829T,tumor,dna,virusinterpreter_dir,/path/to/virus/dir/
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,purple_dir,/path/to/purple/dir/
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,linx_anno_dir,/path/to/linx/dir/
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,virusinterpreter_dir,/path/to/virus/dir/
 ```
 
 Please see the respective tool [READMEs](https://github.com/hartwigmedical/hmftools/tree/master/) for details on which input data is required. 
@@ -821,8 +816,8 @@ In general, the process names for all hmftools are `{TOOL}` or `{TOOL}_{SUBPROCE
 
 ## Outputs
 
-Oncoanalyser writes output files to the below directory tree structure. Files are grouped by the `group_id` provided in the 
-[sample sheet](#sample-sheet), then by tool:
+Oncoanalyser writes output files to the below directory tree structure at the path provided by the `--outdir` 
+[argument](#oncoanalyser-arguments). Files are grouped by the `group_id` provided in the [sample sheet](#sample-sheet), then by tool:
 
 ```shell
 output/
@@ -852,8 +847,8 @@ output/
 ...
 ```
 
-All intermediate files used by each process are kept in the Nextflow work directory (default: `work/`). Once an analysis
-has completed this directory can be removed.
+All intermediate files used by each process are kept in the Nextflow [work directory](#work-directory). Once an analysis has completed this 
+directory can be removed.
 
 ### Pipeline information
 
@@ -879,7 +874,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 
 ### Read post-processing
 
-**REDUX**
+**REDUX**: Duplicate marking and unmapping
 
 ```shell
 <group_id>/alignments/
@@ -898,7 +893,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 │   └── <normal_dna_id>.repeat.tsv.gz            # See above
 ```
 
-**Picard MarkDuplicates**
+**Picard MarkDuplicates**: Duplicate marking
 
 ```shell
 └── rna
@@ -909,7 +904,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 
 ### SNV, MNV, INDEL calling
 
-**SAGE**
+**SAGE**: Variant calling
 
 ```shell
 <group_id>/sage
@@ -936,7 +931,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
     └── <tumor_dna_id>.sage.append.vcf.gz       # Tumor VCF with SMNVs and RNA data appended
 ```
 
-**PAVE**
+**PAVE**: Transcript/coding effect annotation
 
 ```shell
 <group_id>/pave/
@@ -948,7 +943,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 
 ### SV calling
 
-**ESVEE**
+**ESVEE**: Variant calling
 
 ```shell
 <group_id>/esvee/
@@ -981,7 +976,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 
 ### CNV calling
 
-**AMBER**
+**AMBER**: B-allele frequencies
 
 ```shell
 <group_id>/amber/
@@ -997,7 +992,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 └── amber.version                                 # Tool version
 ```
 
-**COBALT**
+**COBALT**: Read depth ratios
 
 ```shell
 <group_id>/cobalt/
@@ -1010,7 +1005,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 └── cobalt.version                          # Tool version
 ```
 
-**PURPLE**
+**PURPLE**: Purity/ploidy estimation, variant annotation
 
 ```shell
 <group_id>/purple/
@@ -1040,7 +1035,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 
 ### SV and driver event interpretation
 
-**LINX**
+**LINX**: SV and driver event interpretation
 
 ```shell
 <group_id>/linx/
@@ -1094,7 +1089,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 
 ### Oncoviral detection
 
-**VIRUSBreakend**
+**VIRUSBreakend**: Viral content and integration calling
 
 ```shell
 <group_id>/virusbreakend/
@@ -1102,7 +1097,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 └── <tumor_dna_id>.virusbreakend.vcf.summary.tsv # Analysis summary
 ```
 
-**VirusInterpreter**
+**VirusInterpreter**: Post-processing
 
 ```shell
 <group_id>/virusinterpreter/
@@ -1111,7 +1106,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 
 ### Immune analysis
 
-**LILAC**
+**LILAC**: HLA typing
 
 ```shell
 <group_id>/lilac/
@@ -1120,7 +1115,7 @@ No outputs from **bwa-mem2** and **STAR** are published.
 └── <tumor_dna_id>.lilac.tsv                     # Analysis summary
 ```
 
-**NEO**
+**NEO**: Neo-epitope prediction
 
 ```shell
 <group_id>/neo/
@@ -1170,6 +1165,106 @@ sigs/
 ├── <tumor_dna_id>.orange.pdf # Results of all tools as a PDF
 └── <tumor_dna_id>.orange.json # Result raw data
 ```
+
+## Work directory
+
+When running Oncoanalyser, a work directory (default: `<current_directory>/work/`) is created that contains the input files, output 
+files, and run logs for a particular tool. Once the tool is done running, the output files are 'published' (copied) to the final output 
+directory. 
+
+The work directory has the below structure:
+
+```shell
+work/
+├── 06
+│   └── e6f7613f50bdca27662f3d256c09e1
+├── 0a
+│   └── 9acb05051afef00264593f36058180
+├── 1a
+│   └── 9997df2e2e9978ec24b5f8e8a7bb3c
+...
+```
+
+The subdirectory names are hashes and correspond to those shown in the console when running Oncoanalyser. For example, `0a/9acb05` as shown 
+below is shorthand for `work/06/e6f7613f50bdca27662f3d256c09e1` as shown above, and corresponds to the `COBALT_PROFILING:COBALT` process.
+
+> [!TIP]
+> Use Tab to auto-complete directory names when navigating the work directory
+
+```shell
+...
+executor >  local (28)
+[-        ] process > NFCORE_ONCOANALYSER:WGTS:READ_ALIGNMENT_DNA:FASTP                            -
+[-        ] process > NFCORE_ONCOANALYSER:WGTS:READ_ALIGNMENT_DNA:BWAMEM2_ALIGN                    -
+[-        ] process > NFCORE_ONCOANALYSER:WGTS:READ_ALIGNMENT_RNA:STAR_ALIGN                       -
+[-        ] process > NFCORE_ONCOANALYSER:WGTS:READ_ALIGNMENT_RNA:SAMTOOLS_SORT                    -
+[-        ] process > NFCORE_ONCOANALYSER:WGTS:READ_ALIGNMENT_RNA:SAMBAMBA_MERGE                   -
+[-        ] process > NFCORE_ONCOANALYSER:WGTS:READ_ALIGNMENT_RNA:GATK4_MARKDUPLICATES             -
+[48/aa4d5c] process > NFCORE_ONCOANALYSER:WGTS:REDUX_PROCESSING:REDUX (<group_id>_<sample_id>)     [100%] 2 of 2 ✔
+[2c/2acf23] process > NFCORE_ONCOANALYSER:WGTS:ISOFOX_QUANTIFICATION:ISOFOX (<group_id>)           [100%] 1 of 1 ✔
+[0a/9acb05] process > NFCORE_ONCOANALYSER:WGTS:AMBER_PROFILING:AMBER (<group_id>)                  [100%] 1 of 1 ✔
+[06/e6f761] process > NFCORE_ONCOANALYSER:WGTS:COBALT_PROFILING:COBALT (<group_id>)                [100%] 1 of 1 ✔
+[7c/828af1] process > NFCORE_ONCOANALYSER:WGTS:ESVEE_CALLING:ESVEE_PREP (<group_id>)               [100%] 1 of 1 ✔
+[e1/182433] process > NFCORE_ONCOANALYSER:WGTS:ESVEE_CALLING:ESVEE_ASSEMBLE (<group_id>)           [100%] 1 of 1 ✔
+[76/0da3ee] process > NFCORE_ONCOANALYSER:WGTS:ESVEE_CALLING:ESVEE_DEPTH_ANNOTATOR (<group_id>)    [100%] 1 of 1 ✔
+[41/49f1f8] process > NFCORE_ONCOANALYSER:WGTS:ESVEE_CALLING:ESVEE_CALL (<group_id>)               [100%] 1 of 1 ✔
+[ce/0f6b20] process > NFCORE_ONCOANALYSER:WGTS:SAGE_CALLING:GERMLINE (<group_id>)                  [100%] 1 of 1 ✔
+[5e/be6aab] process > NFCORE_ONCOANALYSER:WGTS:SAGE_CALLING:SOMATIC (<group_id>)                   [100%] 1 of 1 ✔
+[45/88540d] process > NFCORE_ONCOANALYSER:WGTS:PAVE_ANNOTATION:GERMLINE (<group_id>)               [100%] 1 of 1 ✔
+[e2/279465] process > NFCORE_ONCOANALYSER:WGTS:PAVE_ANNOTATION:SOMATIC (<group_id>)                [100%] 1 of 1 ✔
+[ff/37883b] process > NFCORE_ONCOANALYSER:WGTS:PURPLE_CALLING:PURPLE (<group_id>)                  [100%] 1 of 1 ✔
+[d0/7ebc71] process > NFCORE_ONCOANALYSER:WGTS:SAGE_APPEND:GERMLINE (<group_id>)                   [100%] 1 of 1 ✔
+[1c/0b3f55] process > NFCORE_ONCOANALYSER:WGTS:SAGE_APPEND:SOMATIC (<group_id>)                    [100%] 1 of 1 ✔
+[87/0118e3] process > NFCORE_ONCOANALYSER:WGTS:LINX_ANNOTATION:GERMLINE (<group_id>)               [100%] 1 of 1 ✔
+[1a/9997df] process > NFCORE_ONCOANALYSER:WGTS:LINX_ANNOTATION:SOMATIC (<group_id>)                [100%] 1 of 1 ✔
+[a8/22db2b] process > NFCORE_ONCOANALYSER:WGTS:LINX_PLOTTING:VISUALISER (<group_id>)               [100%] 1 of 1 ✔
+[dc/da6010] process > NFCORE_ONCOANALYSER:WGTS:BAMTOOLS_METRICS:BAMTOOLS (<group_id>_<sample_id>)  [100%] 2 of 2 ✔
+[b5/5c54f6] process > NFCORE_ONCOANALYSER:WGTS:SIGS_FITTING:SIGS (<group_id>)                      [100%] 1 of 1 ✔
+[71/701751] process > NFCORE_ONCOANALYSER:WGTS:CHORD_PREDICTION:CHORD (<group_id>)                 [100%] 1 of 1 ✔
+[bc/6191b2] process > NFCORE_ONCOANALYSER:WGTS:LILAC_CALLING:LILAC (<group_id>)                    [100%] 1 of 1 ✔
+[51/153ee1] process > NFCORE_ONCOANALYSER:WGTS:VIRUSBREAKEND_CALLING:VIRUSBREAKEND (<group_id>)    [100%] 1 of 1 ✔
+[88/fee470] process > NFCORE_ONCOANALYSER:WGTS:VIRUSBREAKEND_CALLING:VIRUSINTERPRETER (<group_id>) [100%] 1 of 1 ✔
+[28/6e9733] process > NFCORE_ONCOANALYSER:WGTS:CUPPA_PREDICTION:CUPPA (<group_id>)                 [100%] 1 of 1 ✔
+[e0/2e5797] process > NFCORE_ONCOANALYSER:WGTS:ORANGE_REPORTING:ORANGE (<group_id>)                [100%] 1 of 1 ✔
+...
+```
+
+Below is an example of the contents of the `COBALT_PROFILING:COBALT` process work directory. 
+
+```shell
+work/06/
+└── e6f7613f50bdca27662f3d256c09e1
+    ├── .command.begin
+    ├── .command.err
+    ├── .command.log
+    ├── .command.out
+    ├── .command.run
+    ├── .command.sh
+    ├── .command.trace
+    ├── .exitcode
+    ├── <normal_dna_id>.redux.bam ->  /path/to/work/32/6d0191b876479d1a0c3c4a4c39733d/<normal_dna_id>.redux.bam
+    ├── <normal_dna_id>.redux.bam.bai ->  /path/to/work/32/6d0191b876479d1a0c3c4a4c39733d/<normal_dna_id>.redux.bam.bai
+    ├── <tumor_dna_id>.redux.bam ->  /path/to/work/48/aa4d5cecc431bfe3fef5e85d922272/<tumor_dna_id>.redux.bam
+    ├── <tumor_dna_id>.redux.bam.bai ->  /path/to/work/48/aa4d5cecc431bfe3fef5e85d922272/<tumor_dna_id>.redux.bam.bai
+    ├── GC_profile.1000bp.37.cnp -> /path/to/hmftools/dna/copy_number/GC_profile.1000bp.37.cnp
+    ├── cobalt
+    │   ├── <normal_dna_id>.cobalt.gc.median.tsv
+    │   ├── <normal_dna_id>.cobalt.ratio.median.tsv
+    │   ├── <normal_dna_id>.cobalt.ratio.pcf
+    │   ├── <tumor_dna_id>.cobalt.gc.median.tsv
+    │   ├── <tumor_dna_id>.cobalt.ratio.pcf
+    │   ├── <tumor_dna_id>.cobalt.ratio.tsv.gz
+    │   └── cobalt.version
+    └── versions.yml
+```
+
+Tool work directories have a consistent structure:
+- `.command.sh`: Bash command used to run the tool <ins>within the Docker/Singularity container<ins>
+- `.command.log`,  `.command.err`, `.command.out`: Run logs
+- `versions.yml`: Tool version
+- Tool outputs generally are written to a directory of the same name (e.g. `cobalt/`)
+- Input files are symlinked into the tool work directory (e.g. `<tumor_dna_id>.redux.bam ->  ...`). This is done so that under the hood the 
+tool work directory can simply be [mounted](https://docs.docker.com/engine/storage/bind-mounts/) within the container.
 
 ## Acknowledgements
 
