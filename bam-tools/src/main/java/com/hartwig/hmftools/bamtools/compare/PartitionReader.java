@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
@@ -259,11 +261,12 @@ public class PartitionReader implements Runnable
         }
     }
 
-    private List<String> compareReads(final SAMRecord origRead, final SAMRecord newRead, final CompareConfig config)
+    @VisibleForTesting
+    public static List<String> compareReads(final SAMRecord origRead, final SAMRecord newRead, final CompareConfig config)
     {
         List<String> diffs = new ArrayList<>();
 
-        boolean skipUnmappingMateDifference = mConfig.IgnoreReduxUnmapped && origRead.getMateUnmappedFlag() != newRead.getMateUnmappedFlag();
+        boolean skipUnmappingMateDifference = config.IgnoreReduxUnmapped && origRead.getMateUnmappedFlag() != newRead.getMateUnmappedFlag();
 
         if(!skipUnmappingMateDifference)
         {
