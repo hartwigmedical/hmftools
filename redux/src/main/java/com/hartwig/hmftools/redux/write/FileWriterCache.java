@@ -150,6 +150,16 @@ public class FileWriterCache
         return mBamWriters.stream().mapToLong(x -> x.nonConsensusWriteCount()).sum();
     }
 
+    public long sortedWrittenReads()
+    {
+        return mBamWriters.stream().filter(x -> x.isSorted()).mapToLong(x -> x.nonConsensusWriteCount()).sum();
+    }
+
+    public long fullyUnmappedWrittenReads()
+    {
+        return mFullUnmappedWriter != null ? mFullUnmappedWriter.unsortedWriteCount() : 0;
+    }
+
     public long sortedBamUnsortedWriteCount()
     {
         return mBamWriters.stream().filter(x -> x.isSorted()).mapToLong(x -> x.unsortedWriteCount()).sum();
@@ -178,15 +188,22 @@ public class FileWriterCache
     {
         mReadDataWriter.close();
 
+        if(mFullUnmappedWriter != null)
+            mFullUnmappedWriter.close();
+
         // last thing to do is write fully unmapped read to the final BAM
 
-        if(mConfig.BamToolPath != null)
+        if(mConfig.WriteBam && mConfig.BamToolPath != null)
         {
             if(!mConfig.ParallelConcatenation)
                 concatenateBams();
 
+            RD_LOGGER.debug("indexing BAM: {}", mFinalBamFilename);
+
             if(!BamOperations.indexBam(bamToolName(), mConfig.BamToolPath, mFinalBamFilename, mConfig.Threads))
                 return false;
+
+            RD_LOGGER.debug("final BAM complete: {}", mFinalBamFilename);
         }
 
         deleteInterimBams();
@@ -201,17 +218,12 @@ public class FileWriterCache
 
         orderPartitionBams.add(mFullUnmappedWriter.filename());
 
-        String finalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
-
         RD_LOGGER.debug("concatenating {} BAMs", orderPartitionBams.size());
 
-        if(!BamOperations.concatenateBams(bamToolName(), mConfig.BamToolPath, finalBamFilename, orderPartitionBams, 1))
+        if(!BamOperations.concatenateBams(bamToolName(), mConfig.BamToolPath, mFinalBamFilename, orderPartitionBams, 1))
             return false;
 
-        if(!BamOperations.indexBam(bamToolName(), mConfig.BamToolPath, finalBamFilename, mConfig.Threads))
-            return false;
-
-        RD_LOGGER.debug("final BAM complete: {}", mFinalBamFilename);
+        RD_LOGGER.debug("final concatenate complete: {}", mFinalBamFilename);
 
         return true;
     }

@@ -12,7 +12,7 @@ public class UnmapStats
     public AtomicInteger SuppAlignmentCount; // supplementary alignment (ie attribute) is unmapped
     public AtomicInteger SupplementaryCount; // supplementary read is unmapped
     public AtomicInteger SecondaryCount; // secondary read is unmapped
-    public AtomicInteger UnmappedCount; // ie both read and mate
+    public AtomicInteger FullyUnmappedCount; // ie both read and mate
     public AtomicInteger ExistingUnmapped; // read and mate were already unmapped in the BAM
 
     // reasons for unmapping a read
@@ -27,7 +27,7 @@ public class UnmapStats
         SuppAlignmentCount = new AtomicInteger();
         SupplementaryCount = new AtomicInteger();
         SecondaryCount = new AtomicInteger();
-        UnmappedCount = new AtomicInteger();
+        FullyUnmappedCount = new AtomicInteger();
         HighDepthCount = new AtomicInteger();
         LongSoftClipCount = new AtomicInteger();
         ChimericCount = new AtomicInteger();
@@ -41,7 +41,7 @@ public class UnmapStats
         SuppAlignmentCount.set(0);
         SupplementaryCount.set(0);
         SecondaryCount.set(0);
-        UnmappedCount.set(0);
+        FullyUnmappedCount.set(0);
         HighDepthCount.set(0);
         LongSoftClipCount.set(0);
         ChimericCount.set(0);
@@ -51,7 +51,7 @@ public class UnmapStats
     public String toString()
     {
         return format("reads(%d) mates(%d) both(%d existing=%d) supps(read=%d align=%d) seconds(%d) reasons(depth=%d softClip=%d chimeric=%d)",
-            ReadCount.get(), MateCount.get(), UnmappedCount.get(), ExistingUnmapped.get(), SupplementaryCount.get(), SuppAlignmentCount.get(),
+            ReadCount.get(), MateCount.get(), FullyUnmappedCount.get(), ExistingUnmapped.get(), SupplementaryCount.get(), SuppAlignmentCount.get(),
                 SecondaryCount.get(), HighDepthCount.get(), LongSoftClipCount.get(), ChimericCount.get());
     }
 }

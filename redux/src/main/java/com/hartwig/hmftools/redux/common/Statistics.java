@@ -20,13 +20,10 @@ import com.hartwig.hmftools.redux.umi.UmiStatistics;
 
 public class Statistics
 {
+    // recorded by partition readers
     public long TotalReads;
     public long DuplicateReads;
     public long DuplicateGroups;
-
-    // technical metrics
-    public long Unmapped; // fully, ie primary and mate
-    public long UnmappedDropped; // secondaries and supplementaries dropped after unmapped
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
@@ -39,7 +36,6 @@ public class Statistics
         TotalReads = 0;
         DuplicateReads = 0;
         DuplicateGroups = 0;
-        Unmapped = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
         ConsensusStats = new ConsensusStatistics();
@@ -50,7 +46,6 @@ public class Statistics
         TotalReads += other.TotalReads;
         DuplicateReads += other.DuplicateReads;
         DuplicateGroups += other.DuplicateGroups;
-        Unmapped += other.Unmapped;
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
@@ -103,8 +98,8 @@ public class Statistics
 
     public void logStats()
     {
-        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({}) unmapped({} supp2ndDropped={})",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, Unmapped, UnmappedDropped);
+        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({})",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups);
 
         if(RD_LOGGER.isDebugEnabled())
         {

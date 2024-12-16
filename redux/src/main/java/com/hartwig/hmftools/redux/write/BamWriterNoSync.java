@@ -76,8 +76,6 @@ public class BamWriterNoSync extends BamWriter
         }
     }
 
-    public void writeReadUnchecked(final SAMRecord read) { mSortedBamWriter.writeReadUnchecked(read); }
-
     @Override
     public void close()
     {

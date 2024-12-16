@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V37;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V38;
@@ -43,7 +44,7 @@ public class ReadUnmapper
 {
     private final Map<String,List<UnmappingRegion>> mChrLocationsMap; // keyed by chromosome start
     private boolean mEnabled;
-    private final UnmapStats mStats;
+    private UnmapStats mStats;
 
     public ReadUnmapper(final String filename)
     {
@@ -71,6 +72,7 @@ public class ReadUnmapper
 
     public boolean enabled() { return mEnabled; }
 
+    public void setStats(final UnmapStats stats) { mStats = stats; }
     public UnmapStats stats() { return mStats; }
 
     public boolean checkTransformRead(final SAMRecord read, final UnmapRegionState regionState)
@@ -190,7 +192,7 @@ public class ReadUnmapper
         }
 
         if((readUnmapped || unmapRead) && (mateUnmapped || unmapMate))
-            mStats.UnmappedCount.incrementAndGet();
+            mStats.FullyUnmappedCount.incrementAndGet();
         else if(unmapRead)
             mStats.ReadCount.incrementAndGet();
         else if(unmapMate)
@@ -259,7 +261,7 @@ public class ReadUnmapper
         if(unmapRead)
         {
             unmapReadAlignment(read, false, true);
-            mStats.UnmappedCount.incrementAndGet();
+            mStats.FullyUnmappedCount.incrementAndGet();
         }
 
         // nothing more to do for a supplementary whose primary has been unmapped, or if it was unmapped
@@ -673,11 +675,11 @@ public class ReadUnmapper
     private static void setUnmappedAttributes(final SAMRecord read)
     {
         read.setReadUnmappedFlag(true);
-        read.setSecondaryAlignment(false);
         read.setMappingQuality(0);
 
-        // store the original mapping
-        setUnmapCoordsAttribute(read, read.getReferenceName(), read.getAlignmentStart());
+        // store the original mapping if a primary read now taking mate coords
+        if(!read.isSecondaryOrSupplementary())
+            setUnmapCoordsAttribute(read, read.getReferenceName(), read.getAlignmentStart());
     }
 
     public static void unmapReadAlignment(final SAMRecord read, final boolean mateUnmapped, final boolean unmapMate)
@@ -719,8 +721,6 @@ public class ReadUnmapper
         // clear the supplementary data too
         clearSupplementaryAlignment(read);
     }
-
-    private static final String UNMAPP_COORDS_DELIM = ":";
 
     private static void setUnmapCoordsAttribute(final SAMRecord read, final String chromosome, final int position)
     {
@@ -871,60 +871,5 @@ public class ReadUnmapper
         regions.add(region);
 
         mEnabled = true;
-    }
-
-    // state for checking that unmapped reads are then processed correctly
-    private final Map<String,Map<String,String>> mChrUnmappedReadMap = Maps.newHashMap();
-
-    public synchronized void addUnmappedRead(final SAMRecord read, final String chromosome, final int readStart, final int readFlags)
-    {
-        String readInfo = format("%s:%d mate(%s:%d) %s",
-                chromosome, readStart,
-                read.getReadPairedFlag() ? read.getMateReferenceName() : NO_CHROMOSOME_NAME,
-                read.getReadPairedFlag() ? read.getMateAlignmentStart() : NO_POSITION, read.getCigarString());
-
-        Map<String,String> chrEntries = mChrUnmappedReadMap.get(chromosome);
-
-        if(chrEntries == null)
-        {
-            chrEntries = Maps.newHashMap();
-            mChrUnmappedReadMap.put(chromosome, chrEntries);
-        }
-
-        String readId = formReadId(read.getReadName(), readFlags);
-
-        chrEntries.put(readId, readInfo);
-    }
-
-    private static String formReadId(final String readId, final int readFlags) { return format("%s:%d", readId, readFlags); }
-
-    public synchronized void checkUnmappedRead(final SAMRecord read, final String chromosome, final int readFlags)
-    {
-        Map<String,String> chrEntries = mChrUnmappedReadMap.get(chromosome);
-
-        if(chrEntries == null)
-            return;
-
-        String readId = formReadId(read.getReadName(), readFlags);
-
-        String readInfo = chrEntries.remove(readId);
-
-        if(readInfo == null)
-        {
-            RD_LOGGER.warn("read chr({}) flags({}) {} was unmapped but not cached", chromosome, readFlags, readToString(read));
-        }
-    }
-
-    public void logUnmatchedUnmappedReads()
-    {
-        for(Map<String,String> chrMap : mChrUnmappedReadMap.values())
-        {
-            for(Map.Entry<String,String> entry : chrMap.entrySet())
-            {
-                RD_LOGGER.warn("read({}) details({}) remains cached", entry.getKey(), entry.getValue());
-            }
-        }
-
-        mChrUnmappedReadMap.clear();
     }
 }

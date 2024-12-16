@@ -39,6 +39,7 @@ public final class SamRecordUtils
     public static final String CONSENSUS_INFO_DELIM = ";";
 
     public static final String UNMAP_ATTRIBUTE = "UM"; // the read was unmapped
+    public static final String UNMAPP_COORDS_DELIM = ":";
 
     public static final String NO_CHROMOSOME_NAME = "*";
     public static final String NO_CIGAR = "*";

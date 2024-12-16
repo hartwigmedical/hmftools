@@ -220,7 +220,6 @@ public class RegionUnmapper extends Thread
         read.setDuplicateReadFlag(false);
 
         boolean alreadyUnmapped = read.getReadUnmappedFlag();
-        int readFlags = read.getFlags();
         mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
 
         boolean internallyUnmapped = !alreadyUnmapped && read.getReadUnmappedFlag();
@@ -233,7 +232,7 @@ public class RegionUnmapper extends Thread
                 return;
 
             if(mConfig.RunChecks)
-                mReadUnmapper.addUnmappedRead(read, mCurrentRegion.Chromosome, readStart, readFlags);
+                mConfig.readChecker().addUnmappedRead(read, mCurrentRegion.Chromosome, readStart);
 
             if(fullyUnmapped)
                 mFullyUnmappedBamWriter.writeRecordSync(read);

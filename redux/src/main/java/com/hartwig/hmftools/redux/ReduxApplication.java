@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
 import com.hartwig.hmftools.redux.unmap.TaskQueue;
+import com.hartwig.hmftools.redux.unmap.UnmapStats;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.FinalBamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
@@ -65,6 +66,7 @@ public class ReduxApplication
         }
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
+        UnmapStats unmapStats = mConfig.UnmapRegions.stats();
 
         if(mConfig.UnmapRegions.enabled())
         {
@@ -77,12 +79,13 @@ public class ReduxApplication
             RD_LOGGER.debug("initial unmapping complete");
 
             long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
-            RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats().toString());
+            RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
+
+            // reset unmapped stats for a final comparison
+            mConfig.UnmapRegions.setStats(new UnmapStats());
 
             if(!fileWriterCache.prepareSortedUnmappingBam())
                 System.exit(1);
-
-            mConfig.UnmapRegions.stats().clearAll();
         }
 
         // partition the genome into sequential regions to be processed by each thread
@@ -101,11 +104,6 @@ public class ReduxApplication
             System.exit(1);
 
         RD_LOGGER.info("all partition tasks complete");
-
-        if(mConfig.RunChecks && mConfig.UnmapRegions.enabled())
-        {
-            mConfig.UnmapRegions.logUnmatchedUnmappedReads();
-        }
 
         if(jitterAnalyser != null)
         {
@@ -150,29 +148,23 @@ public class ReduxApplication
             RD_LOGGER.warn("unsorted BAM write count({}) via sorted BAM writers", sortedBamUnsortedWriteCount);
         }
 
-        long mappedReadsProcessed = combinedStats.TotalReads;
-        long unmappedDropped = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
-        long unmappedPlusAltContig = 0;
-
         combinedStats.logStats();
 
         if(mConfig.UnmapRegions.enabled())
         {
-            RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
-        }
+            if(mConfig.RunChecks)
+                mConfig.readChecker().logUnmatchedUnmappedReads();
 
-        // check total reads read, processed, dropped and written
-        long expectedWritten = mappedReadsProcessed + unmappedPlusAltContig - unmappedDropped;
+            // check that the unmapping counts match the re-tested unmapped reads from the the partition readers
+            UnmapStats reunmapStats = mConfig.UnmapRegions.stats();
 
-        long mappedWritten = fileWriterCache.totalWrittenReads();
-        long totalWritten = mappedWritten + unmappedPlusAltContig;
+            RD_LOGGER.debug("re-unmapped stats: {}", reunmapStats.toString());
 
-        if(expectedWritten != totalWritten)
-        {
-            long difference = expectedWritten - totalWritten;
-
-            RD_LOGGER.warn("reads processed(standard={} unmappedAlts={} dropped={}) vs written(mapped={} unmappedAlts={}) mismatch({})",
-                    mappedReadsProcessed, unmappedPlusAltContig, unmappedDropped, mappedWritten, unmappedPlusAltContig, difference);
+            if(reunmapStats.ReadCount.get() != unmapStats.ReadCount.get()
+            || reunmapStats.FullyUnmappedCount.get() != unmapStats.FullyUnmappedCount.get())
+            {
+                RD_LOGGER.warn("re-unmapped stats differ: {}", reunmapStats.toString());
+            }
         }
 
         if(mConfig.WriteStats)

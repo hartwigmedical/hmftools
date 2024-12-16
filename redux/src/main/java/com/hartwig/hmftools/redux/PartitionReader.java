@@ -235,6 +235,8 @@ public class PartitionReader
         if(shouldFilterRead(read))
             return;
 
+        ++mStats.TotalReads;
+
         read.setDuplicateReadFlag(false);
 
         if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
@@ -263,24 +265,18 @@ public class PartitionReader
 
             if(!internallyUnmapped)
             {
-                int readFlags = read.getFlags();
                 mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
 
-                if(mConfig.RunChecks && !read.isSecondaryOrSupplementary())
+                boolean fullyUnmapped = fullyUnmapped(read);
+                boolean unmapped = !isUnmapped && read.getReadUnmappedFlag();
+
+                if(unmapped || fullyUnmapped)
                 {
-                    if((!isUnmapped && read.getReadUnmappedFlag()) || fullyUnmapped(read))
-                        mReadUnmapper.checkUnmappedRead(read, mCurrentRegion.Chromosome, readFlags);
+                    mConfig.readChecker().checkRead(read, mCurrentRegion.Chromosome, readStart, fullyUnmapped);
+                    return;
                 }
-
-                if(!isUnmapped && read.getReadUnmappedFlag()) // scenario 2 as described above
-                    return;
-
-                if(fullyUnmapped(read)) // scenario 3 as described above
-                    return;
             }
         }
-
-        ++mStats.TotalReads;
 
         checkRefBases(readStart);
 

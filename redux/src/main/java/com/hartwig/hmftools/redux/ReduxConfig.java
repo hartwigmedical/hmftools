@@ -59,6 +59,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
+import com.hartwig.hmftools.redux.unmap.ReadChecker;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.write.ReadOutput;
@@ -115,6 +116,7 @@ public class ReduxConfig
 
     private boolean mIsValid;
     private int mReadLength;
+    private final ReadChecker mReadChecker;
 
     public static final Logger RD_LOGGER = LogManager.getLogger(ReduxConfig.class);
     public static final String APP_NAME = "Redux";
@@ -259,6 +261,8 @@ public class ReduxConfig
         {
             RD_LOGGER.info("running debug options: read-checks({})", RunChecks);
         }
+
+        mReadChecker = new ReadChecker(RunChecks);
     }
 
     public boolean isValid() { return mIsValid; }
@@ -270,6 +274,7 @@ public class ReduxConfig
     }
 
     public boolean perfDebug() { return PerfDebugTime > 0; }
+    public ReadChecker readChecker() { return mReadChecker; }
 
     public String formFilename(final String fileType)
     {
@@ -380,5 +385,7 @@ public class ReduxConfig
         WriteStats = false;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
+
+        mReadChecker = new ReadChecker(false);
     }
 }
