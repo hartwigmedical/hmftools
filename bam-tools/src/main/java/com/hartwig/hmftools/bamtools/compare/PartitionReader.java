@@ -133,7 +133,7 @@ public class PartitionReader implements Runnable
 
         if(mStats.OrigReadCount > 0 || mStats.NewReadCount > 0)
         {
-            BT_LOGGER.debug("{} complete: origReads({}) newReads({}) diff({})",
+            BT_LOGGER.trace("{} complete: origReads({}) newReads({}) diff({})",
                     mName, mStats.OrigReadCount, mStats.NewReadCount, mStats.DiffCount);
         }
     }
@@ -259,12 +259,17 @@ public class PartitionReader implements Runnable
         }
     }
 
-    static List<String> compareReads(final SAMRecord origRead, final SAMRecord newRead, final CompareConfig config)
+    private List<String> compareReads(final SAMRecord origRead, final SAMRecord newRead, final CompareConfig config)
     {
         List<String> diffs = new ArrayList<>();
 
-        if(origRead.getInferredInsertSize() != newRead.getInferredInsertSize())
-            diffs.add(format("insertSize(%d/%d)", origRead.getInferredInsertSize(), newRead.getInferredInsertSize()));
+        boolean skipUnmappingMateDifference = mConfig.IgnoreReduxUnmapped && origRead.getMateUnmappedFlag() != newRead.getMateUnmappedFlag();
+
+        if(!skipUnmappingMateDifference)
+        {
+            if(origRead.getInferredInsertSize() != newRead.getInferredInsertSize())
+                diffs.add(format("insertSize(%d/%d)", origRead.getInferredInsertSize(), newRead.getInferredInsertSize()));
+        }
 
         if(origRead.getMappingQuality() != newRead.getMappingQuality())
             diffs.add(format("mapQuality(%d/%d)", origRead.getMappingQuality(), newRead.getMappingQuality()));
@@ -292,6 +297,9 @@ public class PartitionReader implements Runnable
                 if(origRead.hasAttribute(UNMAP_ATTRIBUTE) || newRead.hasAttribute(UNMAP_ATTRIBUTE))
                     continue;
             }
+
+            if(skipUnmappingMateDifference && attribute.equals(MATE_CIGAR_ATTRIBUTE))
+                continue;
 
             String readAttr1 = origRead.getStringAttribute(attribute);
             String readAttr2 = newRead.getStringAttribute(attribute);
