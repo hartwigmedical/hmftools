@@ -652,6 +652,14 @@ options. The following links is the documentation for the ones used above:
 We can also use a regular expression to select multiple processes. SAGE for example has the processes `SAGE_SOMATIC`, `SAGE_GERMLINE` and
 `SAGE_APPEND`. We can select all 3 like so:
 
+```
+process {
+   withName: 'SAGE.*' {
+      cpus = 32
+   }
+}
+```
+
 Processes are also grouped by compute resource **labels**, with the main ones being (in order of increasing compute load) `process_single`,
 `process_low`, `process_medium` and `process_high`. The labels `process_medium_memory` and `process_high_memory` are only used for creating
 genome indexes. We can use `withLabel` to set options for all tools with an associated label:
