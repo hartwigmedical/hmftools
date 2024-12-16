@@ -47,8 +47,9 @@ public class CobaltConfig
     private static final String TARGET_REGION_NORM_FILE = "target_region";
     private static final String INCLUDE_DUPLICATES = "include_duplicates";
 
-    private static final String GC_RATIO_MIN = "gc_ratio_min";
-    private static final String GC_RATIO_MAX = "gc_ratio_max";
+    public static final String GC_RATIO_MIN = "gc_ratio_min";
+    public static final String GC_RATIO_MAX = "gc_ratio_max";
+
     private static final String SKIP_PCF_CALC = "skip_pcf_calc";
 
     public final String ReferenceId;
@@ -115,8 +116,7 @@ public class CobaltConfig
         configBuilder.addPath(GC_PROFILE, true, GC_PROFILE_DESC);
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
 
-        configBuilder.addDecimal(GC_RATIO_MIN, "Restrict GC ratios to above minimum", DEFAULT_GC_RATIO_MIN);
-        configBuilder.addDecimal(GC_RATIO_MAX, "Restrict GC ratios to below maximum", DEFAULT_GC_RATIO_MAX);
+        registerCommonConfig(configBuilder);
 
         configBuilder.addPath(TUMOR_ONLY_DIPLOID_BED, false, "Diploid regions for tumor-only mode");
         configBuilder.addPath(TARGET_REGION_NORM_FILE, false, "Targeted regions normalisation file");
@@ -130,6 +130,12 @@ public class CobaltConfig
         addThreadOptions(configBuilder);
         addValidationStringencyOption(configBuilder);
         addLoggingOptions(configBuilder);
+    }
+
+    public static void registerCommonConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addDecimal(GC_RATIO_MIN, "Restrict GC ratios to above minimum", DEFAULT_GC_RATIO_MIN);
+        configBuilder.addDecimal(GC_RATIO_MAX, "Restrict GC ratios to below maximum", DEFAULT_GC_RATIO_MAX);
     }
 
     public void validate() throws Exception
