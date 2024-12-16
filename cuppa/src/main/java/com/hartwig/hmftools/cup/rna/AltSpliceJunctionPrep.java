@@ -14,12 +14,12 @@ import static com.hartwig.hmftools.cup.prep.PrepConfig.REF_ALT_SJ_SITES;
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.cup.prep.CategoryType;
@@ -52,15 +52,15 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         if(mRefAsjIndexMap.isEmpty())
             return null;
 
-        List<DataItem> dataItems = Lists.newArrayList();
-
         final String filename = mConfig.altSpliceJunctionFile(sampleId);
 
         if(!Files.exists(Paths.get(filename)))
-            return dataItems;
+            return null;
 
         try
         {
+            List<DataItem> dataItems = new ArrayList<>();
+
             final List<String> lines = Files.readAllLines(Paths.get(filename));
             String fileDelim = inferFileDelimiter(filename);
 
@@ -103,15 +103,16 @@ public class AltSpliceJunctionPrep implements CategoryPrep
             {
                 CUP_LOGGER.warn("sample({}) had no matching alt-SJs of the {} provided in configItem(-{})", sampleId, mRefAsjIndexMap.size(), REF_ALT_SJ_SITES);
             }
+
+            return dataItems;
         }
         catch(Exception e)
         {
             CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
             e.printStackTrace();
             System.exit(1);
+            return null;
         }
-
-        return dataItems;
     }
 
     public static final String FLD_POS_START = "PosStart";
