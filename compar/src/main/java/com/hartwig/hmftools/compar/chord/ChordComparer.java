@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.chord;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.common.Category.CHORD;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA1;
@@ -7,6 +8,7 @@ import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA2;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_SCORE;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_STATUS;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_TYPE;
+import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,6 +28,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class ChordComparer implements ItemComparer
 {
+    private static final String OLD_CHORD_FILE_EXTENSION = "_chord_prediction.txt";
+
     private final ComparConfig mConfig;
 
     public ChordComparer(final ComparConfig config)
@@ -72,7 +76,7 @@ public class ChordComparer implements ItemComparer
 
         try
         {
-            ChordData chordData = ChordDataFile.read(ChordDataFile.generateFilename(fileSources.Chord, sampleId));
+            ChordData chordData = ChordDataFile.read(determineChordFilePath(sampleId, fileSources));
             comparableItems.add(new ChordComparData(chordData));
         }
         catch(IOException e)
@@ -82,5 +86,20 @@ public class ChordComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    private static String determineChordFilePath(final String sampleId, final FileSources fileSources)
+    {
+        final String currentFilePath = ChordDataFile.generateFilename(fileSources.Chord, sampleId);
+        final String oldFilePath = checkAddDirSeparator(fileSources.Chord) + sampleId + OLD_CHORD_FILE_EXTENSION;
+
+        if(!fileExists(currentFilePath) && fileExists(oldFilePath))
+        {
+            return oldFilePath;
+        }
+        else
+        {
+            return currentFilePath;
+        }
     }
 }
