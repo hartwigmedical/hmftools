@@ -9,7 +9,6 @@ import pandas as pd
 from sklearn.compose import make_column_selector
 
 from cuppa.components.passthrough import PassthroughTransformer
-from cuppa.components.preprocessing import NaRowFilter
 from cuppa.constants import SUB_CLF_NAMES, SIG_QUANTILE_TRANSFORMER_NAME, PREDICT_NA_FILL_VALUE
 from cuppa.logger import LoggerMixin
 
@@ -110,13 +109,13 @@ class MissingFeaturesHandler(LoggerMixin):
             n_missing,
             self._get_feat_type_counts_string(missing)
         ))
-        self.logger.error("Please use " + self.__class__.__name__ + ".fill_missing_cols() to ensure `X` has the required columns")
+        self.logger.error(f"Please use {self.__class__.__name__}.{self.fill_missing.__name__}() to ensure `X` has the required columns")
         raise LookupError
 
     def fill_missing(self) -> pd.DataFrame:
 
         ## DNA --------------------------------
-        X_dna = self.X.reindex(columns=self.required_dna_features, fill_value=self.fill_value)
+        X_dna = self.X.reindex(columns=self.required_dna_features).fillna(self.fill_value)
 
         ## RNA --------------------------------
         pattern_rna_features = f"^{SUB_CLF_NAMES.GENE_EXP}|{SUB_CLF_NAMES.ALT_SJ}"
@@ -130,12 +129,15 @@ class MissingFeaturesHandler(LoggerMixin):
                 columns=self.required_rna_features
             )
         else:
-            ## Samples without RNA data either have no RNA columns
-            ## We don't want to fill these rows with 0 because this would produce an unwanted probability
-            is_missing_rna_data = NaRowFilter.detect_na_rows(X_rna, use_first_col=True)
+            ## Samples with no RNA data -> Rows with all NA. We don't want to fill these rows with e.g. 0 because this
+            ## would produce an unwanted probability. We therefore first remove these samples/rows altogether.
+            has_rna_data = ~np.isnan(X_rna).all(axis=1)
+            X_rna = X_rna.loc[has_rna_data]
+
+            ## ... then we can fill NAs only for the samples that have RNA data
             X_rna = X_rna \
-                .loc[~is_missing_rna_data] \
-                .reindex(columns=self.required_rna_features, fill_value=self.fill_value)
+                .reindex(columns=self.required_rna_features) \
+                .fillna(self.fill_value)
 
         X_new = pd.concat([X_dna, X_rna], axis=1)
         del X_dna, X_rna
