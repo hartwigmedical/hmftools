@@ -19,7 +19,6 @@ public class SamplePrepTask implements Callable
     @Nullable private List<DataItem> mDataItems;
     @Nullable private ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
 
-    private static final int FEW_SAMPLES_THRESHOLD = 10;
     private static final int PROGRESS_INTERVAL = 100;
 
     public SamplePrepTask(
@@ -61,7 +60,7 @@ public class SamplePrepTask implements Callable
 
     public void run()
     {
-        if(mConfig.isMultiSample() & (mSampleIndex < FEW_SAMPLES_THRESHOLD || mSampleIndex % PROGRESS_INTERVAL == 0))
+        if(mConfig.isMultiSample() & (mSampleIndex < PROGRESS_INTERVAL || mSampleIndex % PROGRESS_INTERVAL == 0))
         {
             int sampleNum = mSampleIndex + 1;
             int totalSamples = mConfig.SampleIds.size();
