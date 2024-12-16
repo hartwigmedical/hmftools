@@ -184,7 +184,7 @@ public class AssemblyApplication
             return true;
         }
 
-        String discStatsFilename = formDiscordantStatsFilename(mConfig.OutputDir, mConfig.sampleId());
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId());
         DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
 
         int minJunctionFrags = MIN_JUNCTION_SUPPORT;

@@ -363,6 +363,10 @@ public class FragmentSizeDistribution
 
             for(LengthFrequency lengthFrequency : mLengthFrequencies)
             {
+                // cap any fragmemt distribution entry at the observed read length to avoid the use of trimmed fragments impacting it
+                if(mMaxReadLength > 0 && lengthFrequency.Length < mMaxReadLength)
+                    continue;
+
                 writer.write(format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
                 writer.newLine();
             }
