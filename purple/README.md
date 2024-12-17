@@ -932,7 +932,7 @@ This HRD classifier is still in experimental stage due to the small number of tr
 Purity & Ploidy fitting:
 - **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
 - **Fit resolution** - currently set to 1%. Setting to 0.5% or lower may allow better fitting at lower purities including potentially <0.08
-- **TUMOR ONLY fitting for Hgh Purity samples** - High / low BAF points currently get ignored (as they may be homozygous in germline), but long regions of homozygous or near homozygous points are very convincing evidence of high purity and should be captured.
+- **TUMOR ONLY fitting for High Purity samples** - High / low BAF points currently get ignored (as they may be homozygous in germline), but long regions of homozygous or near homozygous points are very convincing evidence of high purity and should be captured.
 - **Imputation** - Used population phased BAF points in segmentation would allow better subclonal calling and calling at TF < 0.08
 
 Other functionality:
