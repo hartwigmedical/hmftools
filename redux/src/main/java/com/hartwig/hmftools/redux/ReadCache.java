@@ -46,7 +46,7 @@ public class ReadCache
     private static final int POP_DISTANCE_CHECK = 100;
 
     private static final int CHECK_CACHE_READ_COUNT = 1000;
-    private static final int LOG_READ_COUNT_THRESHOLD = 10000;
+    private static final int LOG_READ_COUNT_THRESHOLD = 100000;
     private static final int LOG_READ_COUNT_DIFF = LOG_READ_COUNT_THRESHOLD / 10;
 
     public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final SequencingType sequencingType)
@@ -341,49 +341,4 @@ public class ReadCache
         mLastCacheReadCount = 0;
         mCheckSizeReadCount = 0;
     }
-
-    /*
-    private int mLastPopReadMinPosition = 0;
-
-    public void updateLastPopMinReadPosition() { mLastPopReadMinPosition = mCurrentReadMinPosition; }
-
-    public void logNonPoppedReads(final FragmentCoordReads fragmentCoordReads, final int lastReadMinPosition)
-    {
-        int lastPopFragCoordLowerPosition = mLastPopReadMinPosition - mMaxSoftClipLength;
-        int lastPopFragCoordUpperPosition = mLastPopReadMinPosition - 1;
-
-        if(fragmentCoordReads.DuplicateGroups != null)
-        {
-            for(DuplicateGroup duplicateGroup : fragmentCoordReads.DuplicateGroups)
-            {
-                for(SAMRecord read : duplicateGroup.reads())
-                {
-                    checkReadVsPoppingConditions(
-                            read, duplicateGroup.fragmentCoordinates(),
-                            lastReadMinPosition, lastPopFragCoordLowerPosition, lastPopFragCoordUpperPosition);
-                }
-            }
-        }
-
-        for(ReadInfo readInfo : fragmentCoordReads.SingleReads)
-        {
-            checkReadVsPoppingConditions(
-                    readInfo.read(), readInfo.coordinates(),
-                    lastReadMinPosition, lastPopFragCoordLowerPosition, lastPopFragCoordUpperPosition);
-        }
-    }
-
-    private void checkReadVsPoppingConditions(
-            final SAMRecord read, final FragmentCoords fragCoords, int lastReadMinPosition,
-            int lastPopFragCoordLowerPosition, int lastPopFragCoordUpperPosition)
-    {
-        if(read.getAlignmentStart() >= lastReadMinPosition)
-            return;
-
-        RD_LOGGER.warn("read({} {}:{}) before lastReadMinPosition({}) fragCoords({}) vs lastPop(lower={} upper={}) fragRead({} {}:{})",
-                read.getReadName(), read.getReferenceName(), read.getAlignmentStart(),
-                lastReadMinPosition, fragCoords, lastPopFragCoordLowerPosition, lastPopFragCoordUpperPosition,
-                fragCoords.ReadIsLower ? "lower" : "upper", fragCoords.readPosition(), fragCoords.readOrientation().asByte());
-    }
-    */
 }
