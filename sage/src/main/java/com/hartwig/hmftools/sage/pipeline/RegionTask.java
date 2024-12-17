@@ -223,9 +223,6 @@ public class RegionTask
                 {
                     SageVariant otherVar = sageVariants.get(otherIndex);
 
-                    if(otherVar.nearIndel())
-                        continue;
-
                     if(positionWithin(otherVar.position(), variant.readContext().AlignmentStart, variant.readContext().AlignmentEnd))
                     {
                         otherVar.setNearIndel();
