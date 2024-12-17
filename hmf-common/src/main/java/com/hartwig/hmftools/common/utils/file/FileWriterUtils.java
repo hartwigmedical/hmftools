@@ -60,7 +60,7 @@ FileWriterUtils
 
     public static boolean checkCreateOutputDir(final String outputDirPath)
     {
-        if (Files.exists(Paths.get(outputDirPath)))
+        if(Files.exists(Paths.get(outputDirPath)))
             return true;
 
         final File outputDir = new File(outputDirPath);

@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
@@ -267,6 +269,26 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasInfoLine(MAX_READ_EDGE_DISTANCE))
         {
             header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
+        }
+
+        if(!header.hasInfoLine(AVG_MODIFIED_BASE_QUAL))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
+        }
+
+        if(!header.hasInfoLine(AVG_MODIFIED_ALT_MAP_QUAL))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
+        }
+
+        if(!header.hasInfoLine(SIMPLE_ALT_COUNT))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
+        }
+
+        if(!header.hasFormatLine(LPS_APPEND_INFO))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(LPS_APPEND_INFO, 1, VCFHeaderLineType.String, LPS_APPEND_INFO_DESC));
         }
     }
 
