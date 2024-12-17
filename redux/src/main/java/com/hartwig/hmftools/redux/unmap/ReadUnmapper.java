@@ -5,9 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V37;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V38;
 import static com.hartwig.hmftools.common.region.BaseRegion.binarySearch;
@@ -32,7 +30,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
@@ -519,33 +516,33 @@ public class ReadUnmapper
 
     private int checkRegionStateMatch(final int readStart, final int readEnd, final UnmapRegionState regionState)
     {
-        if(regionState == null || regionState.LastMatchedRegionIndex == null || regionState.Regions.isEmpty())
+        if(regionState == null || regionState.LastMatchedIndex == null || regionState.Regions.isEmpty())
             return NO_INDEX_MATCH;
 
         if(!positionsWithin(readStart, readEnd, regionState.SliceRegion.start(), regionState.SliceRegion.end()))
             return NO_INDEX_MATCH;
 
-        UnmappingRegion region = regionState.Regions.get(regionState.LastMatchedRegionIndex);
+        UnmappingRegion region = regionState.Regions.get(regionState.LastMatchedIndex);
 
         if(readStart < region.start())
         {
-            if(regionState.LastMatchedRegionIndex == 0)
-                return regionState.LastMatchedRegionIndex; // returning the first region is still valid since the read is within the partition
+            if(regionState.LastMatchedIndex == 0)
+                return regionState.LastMatchedIndex; // returning the first region is still valid since the read is within the partition
 
-            UnmappingRegion prevRegion = regionState.Regions.get(regionState.LastMatchedRegionIndex - 1);
+            UnmappingRegion prevRegion = regionState.Regions.get(regionState.LastMatchedIndex - 1);
 
-            return readStart >= prevRegion.start() ? regionState.LastMatchedRegionIndex - 1 : NO_INDEX_MATCH;
+            return readStart >= prevRegion.start() ? regionState.LastMatchedIndex - 1 : NO_INDEX_MATCH;
         }
 
         if(region.containsPosition(readStart))
-            return regionState.LastMatchedRegionIndex;
+            return regionState.LastMatchedIndex;
 
-        if(regionState.LastMatchedRegionIndex >= regionState.Regions.size() - 1)
+        if(regionState.LastMatchedIndex >= regionState.Regions.size() - 1)
             return NO_INDEX_MATCH;
 
-        UnmappingRegion nextRegion = regionState.Regions.get(regionState.LastMatchedRegionIndex + 1);
+        UnmappingRegion nextRegion = regionState.Regions.get(regionState.LastMatchedIndex + 1);
 
-        return readStart < nextRegion.start() ? regionState.LastMatchedRegionIndex : NO_INDEX_MATCH;
+        return readStart < nextRegion.start() ? regionState.LastMatchedIndex : NO_INDEX_MATCH;
     }
 
     private RegionMatchType findMaxDepthRegionOverlap(
@@ -564,7 +561,7 @@ public class ReadUnmapper
             startIndex = binarySearch(readStart, regions);
 
             if(updateRegionState)
-                regionState.LastMatchedRegionIndex = startIndex;
+                regionState.LastMatchedIndex = startIndex;
         }
 
         // in effect the binary search finds a current overlap or the previous region, so at most 2 regions will be tested

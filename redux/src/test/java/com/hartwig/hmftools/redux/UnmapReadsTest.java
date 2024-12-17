@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -14,28 +13,21 @@ import static com.hartwig.hmftools.redux.TestUtils.CHR_4;
 import static com.hartwig.hmftools.redux.TestUtils.CHR_5;
 import static com.hartwig.hmftools.redux.TestUtils.CHR_LOCATION_MAP;
 import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER;
-import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
-import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
-import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
-import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
 import org.junit.Test;
 
@@ -411,28 +403,28 @@ public class UnmapReadsTest
                 false, null, true, TEST_READ_CIGAR);
 
         assertTrue(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertTrue(regionState.LastMatchedRegionIndex != null);
-        assertEquals(0, regionState.LastMatchedRegionIndex.intValue());
+        assertTrue(regionState.LastMatchedIndex != null);
+        assertEquals(0, regionState.LastMatchedIndex.intValue());
 
         read = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_4, 2100, READ_BASES, TEST_READ_CIGAR, CHR_5, 100, false,
                 false, null, true, TEST_READ_CIGAR);
 
         assertFalse(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertEquals(0, regionState.LastMatchedRegionIndex.intValue());
+        assertEquals(0, regionState.LastMatchedIndex.intValue());
 
         read = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_4, 5100, READ_BASES, TEST_READ_CIGAR, CHR_5, 100, false,
                 false, null, true, TEST_READ_CIGAR);
 
         assertTrue(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertEquals(2, regionState.LastMatchedRegionIndex.intValue());
+        assertEquals(2, regionState.LastMatchedIndex.intValue());
 
         read = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_4, 10000, READ_BASES, TEST_READ_CIGAR, CHR_5, 100, false,
                 false, null, true, TEST_READ_CIGAR);
 
         assertFalse(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertEquals(3, regionState.LastMatchedRegionIndex.intValue());
+        assertEquals(3, regionState.LastMatchedIndex.intValue());
     }
 }

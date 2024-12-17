@@ -24,6 +24,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -84,7 +85,7 @@ public class ConsensusReads
         }
         else
         {
-            readsView = reads.subList(0, CONSENSUS_MAX_DEPTH);
+            readsView = Lists.newArrayList(reads.subList(0, CONSENSUS_MAX_DEPTH));
 
             if(readsView.stream().noneMatch(x -> x == templateRead)) // ensure it is included since it drives cigar selection
                 readsView.add(templateRead);

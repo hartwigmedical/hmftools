@@ -177,7 +177,7 @@ public class RegionUnmapper extends Thread
         mCurrentRegion = region;
 
         mUnmapRegionState = new UnmapRegionState(mCurrentRegion, mCurrentRegion.Regions);
-        mUnmapRegionState.LastMatchedRegionIndex = 0;
+        mUnmapRegionState.LastMatchedIndex = 0;
 
         if(mBamReader != null)
         {

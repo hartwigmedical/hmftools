@@ -11,15 +11,15 @@ public class UnmapRegionState
 {
     public final ChrBaseRegion SliceRegion;
     public final List<UnmappingRegion> Regions;
-    public Integer LastMatchedRegionIndex;
+    public Integer LastMatchedIndex;
 
     public UnmapRegionState(final ChrBaseRegion sliceRegion, final List<UnmappingRegion> regions)
     {
         SliceRegion = sliceRegion;
         Regions = regions;
-        LastMatchedRegionIndex = null;
+        LastMatchedIndex = null;
     }
 
     public String toString() { return format("partition(%s) regions(%d) index(%d)",
-            SliceRegion, Regions.size(), LastMatchedRegionIndex != null ? LastMatchedRegionIndex : -1); }
+            SliceRegion, Regions.size(), LastMatchedIndex != null ? LastMatchedIndex : -1); }
 }
