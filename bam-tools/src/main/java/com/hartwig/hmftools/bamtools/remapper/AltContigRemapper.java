@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.immune.ImmuneRegions;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.common.FileCommon;
 
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
@@ -39,6 +43,7 @@ public class AltContigRemapper
         final AtomicInteger numberCompared = new AtomicInteger();
         final AtomicInteger numberMatching = new AtomicInteger();
         final AtomicInteger nonHLA = new AtomicInteger();
+        final AtomicInteger hlaRegionRemapping = new AtomicInteger();
         BT_LOGGER.info("starting alt contig remapper");
         long startTimeMs = System.currentTimeMillis();
 
@@ -96,26 +101,36 @@ public class AltContigRemapper
                     bamWriter.addAlignment(alignment);
                     if (isHla)
                     {
-                        if(alignment.getReadNegativeStrandFlag())
-                        {
+//                        if(alignment.getReadNegativeStrandFlag())
+//                        {
                             if(!record.isSecondaryOrSupplementary() && !alignment.isSecondaryOrSupplementary())
                             {
-                                SAMRecord noAltsRecord = noAltsNegativeReads.get(record.getReadName());
+                                SAMRecord noAltsRecord = alignment.getReadNegativeStrandFlag() ? noAltsNegativeReads.get(record.getReadName()) : noAltsPositiveReads.get(record.getReadName());
                                 if(noAltsRecord !=null)
                                 {
+                                    int qualDiff = Math.abs(alignment.getFlags() - noAltsRecord.getFlags());
                                     numberCompared.getAndIncrement();
                                     if(
                                             alignment.getAlignmentStart() != noAltsRecord.getAlignmentStart() ||
 //                                                    alignment.getFlags() != noAltsRecord.getFlags() ||
+                                                    qualDiff > 2 ||
                                                     !Objects.equals(alignment.getCigarString(), noAltsRecord.getCigarString()) ||
                                                     !Objects.equals(alignment.getReferenceIndex(), noAltsRecord.getReferenceIndex())
 //                                                    !Objects.equals(alignment.getMappingQuality(), noAltsRecord.getMappingQuality())
 //                                                    !Objects.equals(alignment.getSAMString(), noAltsRecord.getSAMString())
                                     )
                                     {
-                                        System.out.println("WHOA: " + record.getReadName());
-                                        System.out.println(summary(noAltsRecord));
-                                        System.out.println(summary(alignment));
+                                        String hlaOriginal = hlaRegion(noAltsRecord.getAlignmentStart());
+                                        String hlaNew = hlaRegion(alignment.getAlignmentStart());
+                                        if (hlaOriginal != null && hlaNew != null && !hlaOriginal.equals(hlaNew)) {
+                                            hlaRegionRemapping.incrementAndGet();
+//                                        } else {
+                                        }
+                                            System.out.println(record.getReadName());
+                                            System.out.println(summary(noAltsRecord));
+                                            System.out.println(summary(alignment));
+                                            System.out.println();
+//                                        }
                                     }
                                     else
                                     {
@@ -126,7 +141,7 @@ public class AltContigRemapper
                                 {
                                     System.out.println("Not found or bad: " + record.getReadName());
                                 }
-                            }
+//                            }
                         }
                     }
                     else
@@ -139,6 +154,7 @@ public class AltContigRemapper
             System.out.println("number non HLA: " + nonHLA.get());
             System.out.println("number compared: " + numberCompared.get());
             System.out.println("number matching: " + numberMatching.get());
+            System.out.println("number of differences due to HLA region change: " + hlaRegionRemapping.get());
             // Deal with any unmatched reads.
             // Don't map these - log an error and write them out as they are
             List<SAMRecord> unmatched = transformer.unmatchedRecords();
@@ -173,10 +189,22 @@ public class AltContigRemapper
         BT_LOGGER.info("Remapping complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
+    private static String hlaRegion(int position)
+    {
+        final AtomicReference<ChrBaseRegion> result = new AtomicReference<>();
+        List<ChrBaseRegion> regions = ImmuneRegions.getHlaRegions(RefGenomeVersion.V38);
+        if (regions.get(0).containsPosition(position)) return "HLA-A";
+        if (regions.get(1).containsPosition(position)) return "HLA-B";
+        if (regions.get(2).containsPosition(position)) return "HLA-C";
+
+        return null;
+    }
+
     private static String summary(SAMRecord record)
     {
         return record.getReferenceIndex() + "\t"
                 + record.getAlignmentStart() + "\t"
+                + hlaRegion(record.getAlignmentStart()) + "\t"
                 + record.getFlags() + "\t"
                 + record.getCigarString() + "\t";
     }

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +38,16 @@ public class AlignmentsList
     private static boolean isNotSupplementary(final BwaMemAlignment alignment)
     {
         return !isSupplementary(alignment);
+    }
+
+    public BwaMemAlignment principalAlignment()
+    {
+        return alignments.get(0);
+    }
+
+    public Stream<HlaAlignment> supplementaryAlignments()
+    {
+        return alignments.subList(1, alignments.size()).stream().map(HlaAlignment::new);
     }
 
     public boolean hasMultipleAlignments()

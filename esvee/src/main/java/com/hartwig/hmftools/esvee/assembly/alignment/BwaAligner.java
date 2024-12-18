@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.bamtools.remapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
@@ -42,37 +41,50 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
                 aligner.alignSequences(pair.leftBasesForRealignment(), pair.rightBasesForRealignment());
         AlignmentsList leftAlignments = new AlignmentsList(alignments.getLeft());
         AlignmentsList rightAlignments = new AlignmentsList(alignments.getRight());
+
+        if (pair.first.getReadName().equals("A00624:8:HHKYHDSXX:2:2365:30129:36354"))
+        {
+            System.out.println(pair);
+        }
+
+        // Get an alignments pair that minimises the distance between the read
+        // and its mate.
         AlignmentsSelector alignmentsSelector = new AlignmentsSelector(leftAlignments, rightAlignments);
+        HlaAlignmentPair bestAlignedPair = alignmentsSelector.closestAlignmentPair(refGenomeVersion);
+        // Each element of the pair needs the other for its mate properties.
+        SAMRecord principalLeftRemapped = remappedRecord(pair.leftData(), bestAlignedPair.left);
+        SAMRecord principalRightRemapped = remappedRecord(pair.rightData(), bestAlignedPair.right);
+        setMateProperties(principalLeftRemapped, principalRightRemapped);
+        setMateProperties(principalRightRemapped, principalLeftRemapped);
+        // Because our alignments have been calculated by BWA one pair at a time,
+        // they are missing the "proper pair" flag, which is set based on statistical
+        // properties of large batches. Put this back if the pair are close together.
+        fixProperPairFlag(principalLeftRemapped, pair);
+        fixProperPairFlag(principalRightRemapped, pair);
 
-        final List<SAMRecord> realignedRecordsLeft = createNewRecords(alignmentsSelector.preferredLeftAlignments(), pair.leftData());
-        final List<SAMRecord> realignedRecordsRight = createNewRecords(alignmentsSelector.preferredRightAlignments(), pair.rightData());
-        // The realigned records may still have mate references that point to hla contigs.
-        // These need to be adjusted using the alignment info from the first record in the
-        // realigned records for the complementary record.
-        SAMRecord firstRealignedLeftRecord = realignedRecordsLeft.stream().filter(sr -> !sr.isSecondaryOrSupplementary()).findFirst().get();
-        SAMRecord firstRealignedRightRecord =
-                realignedRecordsRight.stream().filter(sr -> !sr.isSecondaryOrSupplementary()).findFirst().get();
-
+        // Create a result list and add the pair.
         List<SAMRecord> result = new ArrayList<>();
-        realignedRecordsLeft.forEach(record ->
-        {
-            setMateProperties(record, firstRealignedRightRecord);
-            result.add(record);
-        });
-        realignedRecordsRight.forEach(record ->
-        {
-            setMateProperties(record, firstRealignedLeftRecord);
-            result.add(record);
-        });
-        fixProperPairFlag(firstRealignedLeftRecord, pair);
-        fixProperPairFlag(firstRealignedRightRecord, pair);
-        return result;
-    }
+        result.add(principalLeftRemapped);
+        result.add(principalRightRemapped);
 
-    private List<SAMRecord> createNewRecords(List<PreferredAlignment> alignments, RawFastaData data)
-    {
-        return alignments.stream().map(preferredAlignment -> remappedRecord(data, preferredAlignment))
-                .collect(Collectors.toList());
+        // Calculate and add any supplementary alignments. These have their mate
+        // properties set from the principal pair of the mate read.
+        leftAlignments.supplementaryAlignments()
+                .map(hla -> remappedRecord(pair.leftData(), hla))
+                .forEach(samRecord ->
+                {
+                    setMateProperties(samRecord, principalRightRemapped);
+                    result.add(samRecord);
+                });
+        rightAlignments.supplementaryAlignments()
+                .map(hla -> remappedRecord(pair.rightData(), hla))
+                .forEach(samRecord ->
+                {
+                    setMateProperties(samRecord, principalLeftRemapped);
+                    result.add(samRecord);
+                });
+
+        return result;
     }
 
     private static void fixProperPairFlag(SAMRecord record, RecordPair pair)
@@ -81,11 +93,8 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
         if(insertLength < 1200 && insertLength > 50)
         {
             record.setProperPairFlag(pair.isProperPair());
-            //        if(pair.isProperPair())
-            //        {
             int newQuality = Math.min(60, record.getMappingQuality() + 20);
             record.setMappingQuality(newQuality);
-            //        }
         }
     }
 
@@ -117,24 +126,10 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
         {
             return -1 * (record.getAlignmentEnd() - record.getMateAlignmentStart() + 1);
         }
-        //        int cigarLength = CigarUtils.cigarBaseLength(CigarUtils.cigarFromStr(record.getCigarString()));
         return mate.getAlignmentEnd() - record.getAlignmentStart() + 1;
     }
 
-    @NotNull
-    private List<SAMRecord> produceRealignments(
-            @NotNull final RawFastaData raw,
-            @NotNull final List<BwaMemAlignment> alignments,
-            @NotNull final BwaMemAlignment mate)
-    {
-        return alignments
-                .stream()
-                .map(a -> new PreferredAlignment(a, mate, refGenomeVersion))
-                .map(a -> remappedRecord(raw, a))
-                .collect(Collectors.toList());
-    }
-
-    private SAMRecord remappedRecord(@NotNull final RawFastaData raw, @NotNull final PreferredAlignment alignment)
+    private SAMRecord remappedRecord(@NotNull final RawFastaData raw, @NotNull final HlaAlignment alignment)
     {
         SAMRecord remappedRecord = new SAMRecord(header);
         remappedRecord.setReadName(raw.readName);
