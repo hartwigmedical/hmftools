@@ -69,7 +69,7 @@ public class AlleleTolerance
 
     private static double tolerance(double minTolerance, double additional, int samples)
     {
-        return minTolerance + additional / Math.sqrt(samples);
+        return minTolerance + additional / Math.sqrt(samples + 2);
     }
 
     private static boolean inAbsoluteTolerance(double tolerance, double firstCopyNumber, double secondCopyNumber)
