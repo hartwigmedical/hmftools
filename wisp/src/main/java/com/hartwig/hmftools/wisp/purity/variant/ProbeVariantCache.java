@@ -25,7 +25,7 @@ import com.hartwig.hmftools.wisp.probe.CategoryType;
 
 public class ProbeVariantCache
 {
-    private final Map<String,List<ProbeVariant>> mTumorVariants; // map of tumor ID to probe variants in the panel
+    private final Map<String,List<SimpleVariant>> mTumorVariants; // map of tumor ID to probe variants in the panel
 
     public ProbeVariantCache(final String filename)
     {
@@ -35,7 +35,7 @@ public class ProbeVariantCache
             loadVariants(filename);
     }
 
-    public List<ProbeVariant> getSampleVariants(final String tumorId) { return mTumorVariants.get(tumorId); }
+    public List<SimpleVariant> getSampleVariants(final String tumorId) { return mTumorVariants.get(tumorId); }
 
     private void loadVariants(final String filename)
     {
@@ -52,7 +52,7 @@ public class ProbeVariantCache
 
             lines.remove(0);
 
-            List<ProbeVariant> sampleVariants = null;
+            List<SimpleVariant> sampleVariants = null;
             String currentTumorId = "";
 
             for(String line : lines)
@@ -82,7 +82,7 @@ public class ProbeVariantCache
                     String[] mutation = parts[1].split(">", 2);
                     VariantType type = VariantType.valueOf(parts[2]);
 
-                    sampleVariants.add(new ProbeVariant(
+                    sampleVariants.add(new SimpleVariant(
                             coords[0], Integer.parseInt(coords[1]), mutation[0], mutation[1], type));
                 }
             }

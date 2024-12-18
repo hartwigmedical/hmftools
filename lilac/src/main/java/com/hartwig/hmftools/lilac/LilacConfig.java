@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MAX_REF_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FACTOR;
@@ -76,6 +77,7 @@ public class LilacConfig
 
     public final int MinFragmentsPerAllele;
     public final int MinFragmentsToRemoveSingle;
+    public final int MaxRefFragments;
     public final int Threads;
     public final double TopScoreThreshold;
     public final ValidationStringency BamStringency;
@@ -105,6 +107,7 @@ public class LilacConfig
     // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MIN_EVIDENCE = "min_evidence";
+    private static final String MAX_REF_FRAGMENTS = "max_ref_fragments";
     private static final String MIN_EVIDENCE_FACTOR = "min_evidence_factor";
     private static final String MIN_HIGH_QUAL_EVIDENCE_FACTOR = "min_high_qual_evidence_factor";
     private static final String MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele";
@@ -182,6 +185,7 @@ public class LilacConfig
 
         MinBaseQual = configBuilder.getInteger(MIN_BASE_QUAL);
         MinEvidence = configBuilder.getInteger(MIN_EVIDENCE);
+        MaxRefFragments = configBuilder.getInteger(MAX_REF_FRAGMENTS);
         MinEvidenceFactor = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         MinHighQualEvidenceFactor = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
         HlaYPercentThreshold = configBuilder.getDecimal(HLA_Y_THRESHOLD);
@@ -264,6 +268,7 @@ public class LilacConfig
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
         MinEvidenceFactor = DEFAULT_MIN_EVIDENCE_FACTOR;
+        MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
         MinHighQualEvidenceFactor = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
@@ -299,6 +304,7 @@ public class LilacConfig
 
         configBuilder.addInteger(MIN_BASE_QUAL,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
         configBuilder.addInteger(MIN_EVIDENCE, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
+        configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
         configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
         configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence factor", DEFAULT_MIN_EVIDENCE_FACTOR);
         configBuilder.addInteger(MIN_FRAGMENTS_PER_ALLELE,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);

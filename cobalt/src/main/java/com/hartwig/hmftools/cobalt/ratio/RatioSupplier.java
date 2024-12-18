@@ -98,7 +98,7 @@ public class RatioSupplier
             if(targetRegionEnrichment != null)
             {
                 CB_LOGGER.info("using targeted ratio");
-                readRatios = new TargetedRatioMapper(targetRegionEnrichment, chromosomePosCodec).mapRatios(readRatios);
+                readRatios = new TargetedRatioMapper(targetRegionEnrichment).mapRatios(readRatios);
             }
 
             gcNormalizedRatioMapper = new GcNormalizedRatioMapper();
@@ -161,7 +161,7 @@ public class RatioSupplier
             final String ratioMedianFilename = MedianRatioFile.generateFilename(outputDir, referenceId);
             MedianRatioFile.write(ratioMedianFilename, medianRatios);
 
-            CB_LOGGER.info("applying ratio diploid normalization");
+            CB_LOGGER.info("applying ratio diploid normalisation");
             gcDiploidRatios = calcDiploidRatioResults(getRatios(), medianRatios);
         }
     }
@@ -182,7 +182,7 @@ public class RatioSupplier
         mChromosomePosCodec = chromosomePosCodec;
     }
     
-    public void setTargetRegionEnrichment(Table targetRegionEnrichment)
+    public void setTargetRegionEnrichment(final Table targetRegionEnrichment)
     {
         mTargetRegionEnrichment = targetRegionEnrichment;
     }
@@ -195,8 +195,12 @@ public class RatioSupplier
             CB_LOGGER.error("tumor count should not be null");
             throw new RuntimeException("tumor count is null");
         }
-        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
-        Table tumorRatios = new SampleRatios(mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy,
+
+        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ?
+                SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+
+        Table tumorRatios = new SampleRatios(
+                mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy,
                 null, mOutputDir, mChromosomePosCodec).getRatios();
 
         // filter tumor ratios by the diploid regions
@@ -217,9 +221,14 @@ public class RatioSupplier
             CB_LOGGER.fatal("Reference count should not be null");
             throw new RuntimeException("reference count is null");
         }
-        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceDepths, mGcProfiles, mTargetRegionEnrichment,
+
+        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ?
+                SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+
+        GermlineRatios germlineRatios = new GermlineRatios(
+                mReferenceId, mReferenceDepths, mGcProfiles, mTargetRegionEnrichment,
                 sparseBucketPolicy, null, mOutputDir, mChromosomePosCodec);
+
         return mergeRatios(
                 mReferenceDepths, null,
                 germlineRatios.getRatios(), null, germlineRatios.gcDiploidRatios);
@@ -241,13 +250,13 @@ public class RatioSupplier
         SparseBucketPolicy tumorSparseBucketPolicy = mTargetRegionEnrichment == null ?
                 SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
 
-        var tumorRatios = new SampleRatios(mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment,
+        SampleRatios tumorRatios = new SampleRatios(mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment,
                 tumorSparseBucketPolicy, null, mOutputDir, mChromosomePosCodec);
 
         SparseBucketPolicy germlineSparseBucketPolicy = tumorRatios.consolidatedBuckets == null ?
                 SparseBucketPolicy.DO_NOT_CONSOLIDATE : SparseBucketPolicy.USE_PROVIDED_BUCKETS;
 
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceDepths, mGcProfiles, mTargetRegionEnrichment,
+        GermlineRatios germlineRatios = new GermlineRatios(mReferenceId, mReferenceDepths, mGcProfiles, mTargetRegionEnrichment,
                 germlineSparseBucketPolicy, tumorRatios.consolidatedBuckets, mOutputDir, mChromosomePosCodec);
 
         return mergeRatios(

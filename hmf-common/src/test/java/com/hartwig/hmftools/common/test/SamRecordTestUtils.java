@@ -41,32 +41,6 @@ public final class SamRecordTestUtils
         SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(MitochondrialChromosome.MT.toString(), MT_LENGTH));
     }
 
-    public static SAMRecord createSamRecord(
-            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
-            int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment,
-            boolean mateReversed, final String mateCigar)
-    {
-        SAMRecord record = createSamRecord(readId, chrStr, readStart, readBases, cigar, mateChr, mateStart, isReversed, isSupplementary, suppAlignment);
-
-        if(mateReversed)
-            record.setMateNegativeStrandFlag(true);
-
-        if(mateCigar != null)
-            record.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
-
-        return record;
-    }
-
-    public static SAMRecord createSamRecordUnpaired(
-            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, boolean isReversed,
-            boolean isSupplementary, final SupplementaryReadData suppAlignment)
-    {
-        SAMRecord record = createSamRecord(
-                readId, chrStr, readStart, readBases, cigar, NO_CHROMOSOME_NAME, NO_POSITION, isReversed, isSupplementary, suppAlignment);
-        record.setReadPairedFlag(false);
-        return record;
-    }
-
     public static SAMRecord cloneSamRecord(final SAMRecord record, final String newReadId)
     {
         try
@@ -142,6 +116,50 @@ public final class SamRecordTestUtils
             record.setInferredInsertSize(0);
 
         return record;
+    }
+
+    public static SAMRecord createSamRecord(
+            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
+            int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment,
+            boolean mateReversed, final String mateCigar)
+    {
+        SAMRecord record = createSamRecord(
+                readId, chrStr, readStart, readBases, cigar, mateChr, mateStart, isReversed, isSupplementary, suppAlignment);
+
+        if(mateReversed)
+            record.setMateNegativeStrandFlag(true);
+
+        if(mateCigar != null)
+            record.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
+
+        return record;
+    }
+
+    public static SAMRecord createSamRecordUnpaired(
+            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, boolean isReversed,
+            boolean isSupplementary, final SupplementaryReadData suppAlignment)
+    {
+        SAMRecord record = createSamRecord(
+                readId, chrStr, readStart, readBases, cigar, NO_CHROMOSOME_NAME, NO_POSITION, isReversed, isSupplementary, suppAlignment);
+        record.setReadPairedFlag(false);
+        return record;
+    }
+
+    public static void flipFirstInPair(final SAMRecord record)
+    {
+        if(record.getReadPairedFlag())
+        {
+            if(record.getFirstOfPairFlag())
+            {
+                record.setFirstOfPairFlag(false);
+                record.setSecondOfPairFlag(true);
+            }
+            else
+            {
+                record.setFirstOfPairFlag(true);
+                record.setSecondOfPairFlag(false);
+            }
+        }
     }
 
     public static int chromosomeOrdinal(final String chromosome)

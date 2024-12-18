@@ -169,11 +169,11 @@ public class ResultsWriter
             return format("%4.3e", probability);
     }
 
-    public static String formatDetectionResult(double estimatedPurity, double limitOfDetection)
+    public static DetectionResult formatDetectionResult(double estimatedPurity, double limitOfDetection)
     {
         if(limitOfDetection >= 1 || limitOfDetection == CALC_NO_SET)
-            return "NA";
+            return DetectionResult.NA;
 
-        return estimatedPurity > limitOfDetection ? "TRUE" : "FALSE";
+        return estimatedPurity > limitOfDetection ? DetectionResult.TRUE : DetectionResult.FALSE;
     }
 }

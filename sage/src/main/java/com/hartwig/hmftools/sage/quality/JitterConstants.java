@@ -1,0 +1,105 @@
+package com.hartwig.hmftools.sage.quality;
+
+import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
+
+import java.util.List;
+
+import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
+import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+
+public final class JitterConstants
+{
+    public static double DEFAULT_JITTER_SCALE_GRADIENT = 0.04;
+    public static double DEFAULT_JITTER_SCALE_4_HP = 0.05;
+    public static double DEFAULT_JITTER_SCALE_5_HP = 0.09;
+    public static double DEFAULT_JITTER_SCALE_6_HP = 0.13;
+    public static double DEFAULT_JITTER_SCALE_INTERCEPT_HP = DEFAULT_JITTER_SCALE_6_HP - 6 * DEFAULT_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_JITTER_SCALE_4_DN = 0.11;
+    public static double DEFAULT_JITTER_SCALE_5_DN = 0.15;
+    public static double DEFAULT_JITTER_SCALE_6_DN = 0.19;
+    public static double DEFAULT_JITTER_SCALE_INTERCEPT_DN = DEFAULT_JITTER_SCALE_6_DN - 6 * DEFAULT_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_JITTER_SCALE_4_3P = 0.15;
+    public static double DEFAULT_JITTER_SCALE_5_3P = 0.19;
+    public static double DEFAULT_JITTER_SCALE_6_3P = 0.23;
+    public static double DEFAULT_JITTER_SCALE_INTERCEPT_3P = DEFAULT_JITTER_SCALE_6_3P - 6 * DEFAULT_JITTER_SCALE_GRADIENT;
+
+    // high depth equivalents
+    public static double DEFAULT_HD_JITTER_SCALE_GRADIENT = 0.06;
+    public static double DEFAULT_HD_JITTER_SCALE_4_HP = 0.1;
+    public static double DEFAULT_HD_JITTER_SCALE_5_HP = 0.15;
+    public static double DEFAULT_HD_JITTER_SCALE_6_HP = 0.2;
+    public static double DEFAULT_HD_JITTER_SCALE_INTERCEPT_HP = DEFAULT_HD_JITTER_SCALE_6_HP - 6 * DEFAULT_HD_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_HD_JITTER_SCALE_4_DN = 0.15;
+    public static double DEFAULT_HD_JITTER_SCALE_5_DN = 0.2;
+    public static double DEFAULT_HD_JITTER_SCALE_6_DN = 0.25;
+    public static double DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN = DEFAULT_HD_JITTER_SCALE_6_DN - 6 * DEFAULT_HD_JITTER_SCALE_GRADIENT;
+    public static double DEFAULT_HD_JITTER_SCALE_4_3P = 0.2;
+    public static double DEFAULT_HD_JITTER_SCALE_5_3P = 0.25;
+    public static double DEFAULT_HD_JITTER_SCALE_6_3P = 0.3;
+    public static double DEFAULT_HD_JITTER_SCALE_INTERCEPT_3P = DEFAULT_HD_JITTER_SCALE_6_3P - 6 * DEFAULT_HD_JITTER_SCALE_GRADIENT;
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP_1 = new JitterModelParams(
+            "A/T", ConsensusType.IGNORE, DEFAULT_JITTER_SCALE_4_HP, DEFAULT_JITTER_SCALE_5_HP, DEFAULT_JITTER_SCALE_6_HP, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_HP_2 = new JitterModelParams(
+            "C/G", ConsensusType.IGNORE, DEFAULT_JITTER_SCALE_4_HP, DEFAULT_JITTER_SCALE_5_HP, DEFAULT_JITTER_SCALE_6_HP, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_1 = new JitterModelParams(
+            "AT/TA", ConsensusType.IGNORE, DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_2 = new JitterModelParams(
+            "AC/CA/GT/TG", ConsensusType.IGNORE, DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_3 = new JitterModelParams(
+            "AG/GA/CT/TC", ConsensusType.IGNORE, DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_DN_4 = new JitterModelParams(
+            "CG/GC", ConsensusType.IGNORE, DEFAULT_JITTER_SCALE_4_DN, DEFAULT_JITTER_SCALE_5_DN, DEFAULT_JITTER_SCALE_6_DN, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_JITTER_PARAMS_3P = new JitterModelParams(
+            REPEAT_UNIT_3_PLUS_LABEL, ConsensusType.IGNORE, DEFAULT_JITTER_SCALE_4_3P, DEFAULT_JITTER_SCALE_5_3P, DEFAULT_JITTER_SCALE_6_3P, DEFAULT_JITTER_SCALE_GRADIENT,
+            DEFAULT_JITTER_SCALE_INTERCEPT_3P, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_HP_1 = new JitterModelParams(
+            "A/T", ConsensusType.IGNORE, DEFAULT_HD_JITTER_SCALE_4_HP, DEFAULT_HD_JITTER_SCALE_5_HP, DEFAULT_HD_JITTER_SCALE_6_HP, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_HP_2 = new JitterModelParams(
+            "C/G", ConsensusType.IGNORE, DEFAULT_HD_JITTER_SCALE_4_HP, DEFAULT_HD_JITTER_SCALE_5_HP, DEFAULT_HD_JITTER_SCALE_6_HP, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_HP, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_1 = new JitterModelParams(
+            "AT/TA", ConsensusType.IGNORE, DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_2 = new JitterModelParams(
+            "AC/CA/GT/TG", ConsensusType.IGNORE, DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_3 = new JitterModelParams(
+            "AG/GA/CT/TC", ConsensusType.IGNORE, DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_DN_4 = new JitterModelParams(
+            "CG/GC", ConsensusType.IGNORE, DEFAULT_HD_JITTER_SCALE_4_DN, DEFAULT_HD_JITTER_SCALE_5_DN, DEFAULT_HD_JITTER_SCALE_6_DN, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_DN, 1);
+
+    public static final JitterModelParams DEFAULT_HD_JITTER_PARAMS_3P = new JitterModelParams(
+            REPEAT_UNIT_3_PLUS_LABEL, ConsensusType.IGNORE, DEFAULT_HD_JITTER_SCALE_4_3P, DEFAULT_HD_JITTER_SCALE_5_3P, DEFAULT_HD_JITTER_SCALE_6_3P, DEFAULT_HD_JITTER_SCALE_GRADIENT,
+            DEFAULT_HD_JITTER_SCALE_INTERCEPT_3P, 1);
+
+    public static final List<JitterModelParams> DEFAULT_JITTER_PARAMS = List.of(
+            DEFAULT_JITTER_PARAMS_HP_1, DEFAULT_JITTER_PARAMS_HP_2, DEFAULT_JITTER_PARAMS_DN_1,
+            DEFAULT_JITTER_PARAMS_DN_2, DEFAULT_JITTER_PARAMS_DN_3, DEFAULT_JITTER_PARAMS_DN_4, DEFAULT_JITTER_PARAMS_3P);
+
+    public static final List<JitterModelParams> DEFAULT_HD_JITTER_PARAMS = List.of(
+            DEFAULT_HD_JITTER_PARAMS_HP_1, DEFAULT_HD_JITTER_PARAMS_HP_2, DEFAULT_HD_JITTER_PARAMS_DN_1,
+            DEFAULT_HD_JITTER_PARAMS_DN_2, DEFAULT_HD_JITTER_PARAMS_DN_3, DEFAULT_HD_JITTER_PARAMS_DN_4, DEFAULT_HD_JITTER_PARAMS_3P);
+
+}

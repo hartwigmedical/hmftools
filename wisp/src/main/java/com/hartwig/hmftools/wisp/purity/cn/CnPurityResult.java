@@ -73,7 +73,7 @@ public class CnPurityResult
     {
         double lod = calcLod();
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(formatDetectionResult(EstimatedPurity, lod));
+        sj.add(formatDetectionResult(EstimatedPurity, lod).toString());
         sj.add(formatPurityValue(EstimatedPurity));
         sj.add(formatPurityValue(lod));
         sj.add(formatPurityValue(EstimatedPurityLow));

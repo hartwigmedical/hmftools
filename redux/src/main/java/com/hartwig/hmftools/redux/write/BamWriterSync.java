@@ -13,13 +13,14 @@ import htsjdk.samtools.SAMRecord;
 
 public class BamWriterSync extends BamWriter
 {
+    // a simple unsorted BAM writer, expected to be shared across threads so uses a synchronised write call
     private long mWriteCount;
 
     public BamWriterSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, @Nullable final SuppBamWriter suppBamReadWriter)
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
-        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser, suppBamReadWriter);
+        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
         mWriteCount = 0;
     }
 
@@ -32,9 +33,14 @@ public class BamWriterSync extends BamWriter
     @Override
     protected void writeRecord(final SAMRecord read) { writeRecordSync(read); }
 
+    @Override
+    public long unsortedWriteCount() { return mWriteCount; }
+
     public synchronized void writeRecordSync(final SAMRecord read)
     {
-        mSamFileWriter.addAlignment(read);
+        if(mSamFileWriter != null)
+            mSamFileWriter.addAlignment(read);
+
         ++mWriteCount;
     }
 

@@ -106,7 +106,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mVariantPhaser = variantPhaser;
 
         if(mVariantPhaser != null)
-            mVariantPhaser.initialise(regionBounds, mConfig.LogLpsData);
+            mVariantPhaser.initialise(regionBounds, sample);
 
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 

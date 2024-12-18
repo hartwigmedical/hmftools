@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.List;
 import java.util.Map;
 
+import com.google.errorprone.annotations.Var;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
@@ -29,30 +30,31 @@ public class EvidenceStage
 
     public EvidenceStage(
             final SageConfig config, final RefGenomeInterface refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap,
-            final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory)
+            final MsiJitterCalcs msiJitterCalcs, final VariantPhaser variantPhaser, final SamSlicerFactory samSlicerFactory)
     {
         mConfig = config;
         mSamSlicerFactory = samSlicerFactory;
 
         mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap, msiJitterCalcs);
-        mVariantPhaser = new VariantPhaser(phaseSetCounter);
+        mVariantPhaser = variantPhaser;
     }
 
     public ReadContextCounters findEvidence(
-            final ChrBaseRegion region, final String sampleType, final List<String> samples, final List<Candidate> candidates, boolean checkPhasing)
+            final ChrBaseRegion region, final String sampleType, final List<String> samples, final List<Candidate> candidates,
+            final List<String> phasingSamples)
     {
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())
             return new ReadContextCounters(mConfig, candidates);
 
         int sampleCount = samples.size();
-        final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig, candidates);
+        ReadContextCounters readContextCounters = new ReadContextCounters(mConfig, candidates);
 
         for(int i = 0; i < samples.size(); i++)
         {
             final String sample = samples.get(i);
 
-            boolean collectPhasingGroups = checkPhasing && (i == 0);
+            boolean collectPhasingGroups = phasingSamples.contains(sample);
 
             List<ReadContextCounter> readCounters = mReadContextEvidence.collectEvidence(
                     candidates, sample, mSamSlicerFactory, collectPhasingGroups ? mVariantPhaser : null);

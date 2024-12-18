@@ -1,25 +1,20 @@
 package com.hartwig.hmftools.redux;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.redux.PartitionThread.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
-import static com.hartwig.hmftools.redux.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapMateAlignment;
-import static com.hartwig.hmftools.redux.common.ReadUnmapper.unmapReadAlignment;
+import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -27,19 +22,16 @@ import com.hartwig.hmftools.common.bamops.BamSampler;
 import com.hartwig.hmftools.common.basequal.jitter.ConsensusMarker;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.redux.common.FragmentStatus;
-import com.hartwig.hmftools.redux.common.PartitionData;
 import com.hartwig.hmftools.redux.common.Statistics;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
-import com.hartwig.hmftools.redux.write.BamWriter;
+import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
+import com.hartwig.hmftools.redux.unmap.TaskQueue;
+import com.hartwig.hmftools.redux.unmap.UnmapStats;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
-import com.hartwig.hmftools.redux.write.SuppBamReprocessor;
-
-import htsjdk.samtools.SAMRecord;
+import com.hartwig.hmftools.redux.write.FinalBamWriter;
+import com.hartwig.hmftools.redux.write.PartitionInfo;
 
 public class ReduxApplication
 {
@@ -74,98 +66,44 @@ public class ReduxApplication
         }
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
+        UnmapStats unmapStats = mConfig.UnmapRegions.stats();
 
-        PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
-
-        // partition all chromosomes
-        Queue<ChrBaseRegion> partitions = new ConcurrentLinkedQueue<>();
-
-        for(HumanChromosome chromosome : HumanChromosome.values())
+        if(mConfig.UnmapRegions.enabled())
         {
-            String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+            List<Thread> unmappingThreadTasks = Lists.newArrayList();
+            List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
 
-            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
-                continue;
+            if(!runThreadTasks(unmappingThreadTasks))
+                System.exit(1);
 
-            List<ChrBaseRegion> chrPartitions = partitionChromosome(
-                    chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize);
+            RD_LOGGER.debug("initial unmapping complete");
 
-            partitions.addAll(chrPartitions);
+            long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
+            RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
+
+            // reset unmapped stats for a final comparison
+            mConfig.UnmapRegions.setStats(new UnmapStats());
+
+            if(!fileWriterCache.prepareSortedUnmappingBam())
+                System.exit(1);
         }
 
-        if(partitions.isEmpty())
+        // partition the genome into sequential regions to be processed by each thread
+        List<PartitionThread> partitionThreads = createPartitionThreads(fileWriterCache);
+        List<Thread> allThreads = Lists.newArrayList(partitionThreads);
+
+        FinalBamWriter finalBamWriter = null;
+
+        if(mConfig.WriteBam && mConfig.ParallelConcatenation)
         {
-            RD_LOGGER.error("invalid partitions");
-            System.exit(1);
+            finalBamWriter = new FinalBamWriter(mConfig, fileWriterCache);
+            allThreads.add(finalBamWriter);
         }
 
-        List<PartitionThread> partitionTasks = Lists.newArrayList();
-        List<Thread> workers = new ArrayList<>();
-
-        int partitionCount = partitions.size();
-
-        for(int i = 0; i < min(partitionCount, mConfig.Threads); ++i)
-        {
-            PartitionThread partitionThread = new PartitionThread(i, mConfig, partitions, fileWriterCache, partitionDataStore);
-            partitionTasks.add(partitionThread);
-            workers.add(partitionThread);
-        }
-
-        RD_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, partitionTasks.size());
-
-        if(!runThreadTasks(workers))
+        if(!runThreadTasks(allThreads))
             System.exit(1);
 
         RD_LOGGER.info("all partition tasks complete");
-
-        if(mConfig.PerfDebug)
-            partitionDataStore.logTotalCacheSize();
-
-        // write any orphaned or remaining fragments (can be supplementaries)
-        BamWriter recordWriter = fileWriterCache.getUnsortedBamWriter();
-
-        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
-        consensusReads.setDebugOptions(mConfig.RunChecks);
-
-        if(mConfig.UseSupplementaryBam)
-        {
-            SuppBamReprocessor.reprocessSupplementaries(
-                    mConfig, recordWriter, partitionDataStore, fileWriterCache.getSupplementaryBamReadWriters(), consensusReads);
-        }
-
-        if(mConfig.PerfDebug)
-            partitionDataStore.logTotalCacheSize();
-
-        long unmappedReads = writeUnmappedReads(fileWriterCache);
-
-        List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
-
-        int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 1000 : 0;
-        int totalUnwrittenFragments = 0;
-
-        for(PartitionData partitionData : partitionDataStore.partitions())
-        {
-            int cachedReadCount = partitionData.writeRemainingReads(recordWriter, consensusReads, maxLogFragments > 0);
-            totalUnwrittenFragments += cachedReadCount;
-            maxLogFragments = max(0, maxLogFragments - cachedReadCount);
-        }
-
-        if(totalUnwrittenFragments > 0)
-        {
-            RD_LOGGER.info("wrote {} remaining cached fragments", totalUnwrittenFragments);
-        }
-
-        List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
-
-        Statistics combinedStats = new Statistics();
-        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
-        partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
-        combinedStats.ConsensusStats.merge(consensusReads.consensusStats());
-
-        // free up any processing state
-        partitionReaders.clear();
-
-        fileWriterCache.close();
 
         if(jitterAnalyser != null)
         {
@@ -181,118 +119,122 @@ public class ReduxApplication
             }
         }
 
-        if(fileWriterCache.runSortMergeIndex())
+        if(mConfig.JitterMsiOnly)
         {
-            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
-            // the core routines are complete, it is helpful to do so now
-            System.gc();
+            RD_LOGGER.info("Redux jitter complete, mins({})", runTimeMinsStr(startTimeMs));
+            return;
+        }
 
-            // log interim time
-            RD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
+        List<PartitionReader> partitionReaders = partitionThreads.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
-            if(!fileWriterCache.sortAndIndexBams())
+        Statistics combinedStats = new Statistics();
+        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
+
+        List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
+
+        // free up any processing state
+        partitionReaders.clear();
+
+        // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
+        // the core routines are complete, it is helpful to do so now
+        System.gc();
+
+        fileWriterCache.finaliseBams();
+
+        long sortedBamUnsortedWriteCount = fileWriterCache.sortedBamUnsortedWriteCount();
+
+        if(sortedBamUnsortedWriteCount > 0)
+        {
+            RD_LOGGER.warn("unsorted BAM write count({}) via sorted BAM writers", sortedBamUnsortedWriteCount);
+        }
+
+        combinedStats.logStats();
+
+        if(mConfig.UnmapRegions.enabled())
+        {
+            if(mConfig.RunChecks)
+                mConfig.readChecker().logUnmatchedUnmappedReads();
+
+            // check that the unmapping counts match the re-tested unmapped reads from the the partition readers
+            UnmapStats reunmapStats = mConfig.UnmapRegions.stats();
+
+            RD_LOGGER.debug("re-unmapped stats: {}", reunmapStats.toString());
+
+            if(reunmapStats.ReadCount.get() != unmapStats.ReadCount.get()
+            || reunmapStats.FullyUnmappedCount.get() != unmapStats.FullyUnmappedCount.get())
             {
-                RD_LOGGER.error("sort-merge-index failed");
-                System.exit(1);
+                RD_LOGGER.warn("re-unmapped stats differ: {}", reunmapStats.toString());
             }
         }
 
-        if(!mConfig.JitterMsiOnly)
+        if(mConfig.WriteStats)
         {
-            combinedStats.logStats();
+            combinedStats.writeDuplicateStats(mConfig);
 
-            long totalWrittenReads = fileWriterCache.totalWrittenReads();
-            long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get() + mConfig.UnmapRegions.stats().SecondaryCount.get();
-
-            if(mConfig.UnmapRegions.enabled())
+            if(mConfig.UMIs.Enabled)
             {
-                RD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
-            }
+                combinedStats.UmiStats.writePositionFragmentsData(mConfig);
 
-            if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
-            {
-                long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
-
-                RD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
-                        combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
-            }
-
-            if(mConfig.WriteStats)
-            {
-                combinedStats.writeDuplicateStats(mConfig);
-
-                if(mConfig.UMIs.Enabled)
+                if(mConfig.UMIs.BaseStats)
                 {
-                    combinedStats.UmiStats.writePositionFragmentsData(mConfig);
-
-                    if(mConfig.UMIs.BaseStats)
-                    {
-                        combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
-                        combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
-                    }
+                    combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
+                    combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
                 }
             }
         }
 
-        logPerformanceStats(combinedPerfCounters, partitionDataStore);
+        if(finalBamWriter != null)
+            finalBamWriter.logTimes();
+
+        logPerformanceStats(combinedPerfCounters);
 
         RD_LOGGER.info("Redux complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private long writeUnmappedReads(final FileWriterCache fileWriterCache)
+    private List<PartitionThread> createPartitionThreads(final FileWriterCache fileWriterCache)
     {
-        if(mConfig.SpecificChrRegions.hasFilters() || !mConfig.WriteBam)
-            return 0;
+        int partitionThreadCount = mConfig.WriteBam & mConfig.ParallelConcatenation ? max(mConfig.Threads - 1, 1) : mConfig.Threads;
+        int partitionCount = mConfig.PartitionThreadRatio * partitionThreadCount;
 
-        BamWriter bamWriter = fileWriterCache.getUnsortedBamWriter();
+        RD_LOGGER.debug("splitting {} partition regions across {} threads", partitionCount, partitionThreadCount);
 
-        BamReader bamReader = new BamReader(mConfig);
+        List<PartitionThread> partitionThreads = Lists.newArrayListWithCapacity(partitionThreadCount);
 
-        AtomicLong unmappedCount = new AtomicLong();
-        AtomicLong nonHumanContigCount = new AtomicLong();
+        List<List<ChrBaseRegion>> partitionRegions = splitRegionsIntoPartitions(
+                mConfig.SpecificChrRegions, partitionCount, mConfig.RefGenVersion, mConfig.RefGenome);
 
-        bamReader.queryUnmappedReads((final SAMRecord record) ->
+        if(partitionRegions.isEmpty())
+            return Collections.emptyList();
+
+        for(List<ChrBaseRegion> regions : partitionRegions)
         {
-            bamWriter.writeRead(record, FragmentStatus.UNSET);
-            unmappedCount.incrementAndGet();
-        });
+            if(regions.isEmpty())
+                break;
 
-        // do the same for non-human contigs
-        bamReader.queryNonHumanContigs((final SAMRecord record) ->
-        {
-            processNonHumanContigReads(record, bamWriter);
-            nonHumanContigCount.incrementAndGet();
-        });
+            long regionsLength = regions.stream().mapToLong(x -> x.baseLength()).sum();
+            String regionsStr = regions.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+            RD_LOGGER.debug("adding partition regions({}) totalLength({}): {}}", regions.size(), regionsLength, regionsStr);
 
-        if(unmappedCount.get() > 0 || nonHumanContigCount.get() > 0)
-        {
-            RD_LOGGER.debug("wrote unmapped({}) otherContig({}) reads", unmappedCount, nonHumanContigCount);
+            fileWriterCache.addPartition(regions);
         }
 
-        return unmappedCount.get() + nonHumanContigCount.get();
-    }
+        Queue<PartitionInfo> partitionQueue = new ConcurrentLinkedQueue<>();
+        partitionQueue.addAll(fileWriterCache.partitions());
 
-    private void processNonHumanContigReads(final SAMRecord record, final BamWriter bamWriter)
-    {
-        // if these have a mate in a human chromosome, then they have been unmapped in that read, so do so here as well
-        if(record.getReadPairedFlag() && !record.getMateUnmappedFlag() && HumanChromosome.contains(record.getMateReferenceName()))
+        TaskQueue taskQueue = new TaskQueue(partitionQueue, "partitions", 0); // log on completed partitions
+
+        List<String> inputBamFiles = Lists.newArrayList(mConfig.BamFiles);
+
+        if(mConfig.UnmapRegions.enabled() && mConfig.WriteBam)
+            inputBamFiles.add(fileWriterCache.unmappedSortedBamFilename());
+
+        for(int i = 0; i < partitionThreadCount; ++i)
         {
-            if(record.getSupplementaryAlignmentFlag())
-                return; // drop as per standard logic
-
-            boolean mateUnmapped = mConfig.UnmapRegions.mateInUnmapRegion(record);
-
-            // if the human-chromosome mate was unmapped (ie in an unmap region), then this read should also now be unmapped
-            // otherwise it should be unmapped but leave its mate attributes as-is
-            unmapReadAlignment(record, mateUnmapped, mateUnmapped);
-
-            if(mateUnmapped)
-            {
-                unmapMateAlignment(record, false, true);
-            }
+            PartitionThread partitionThread = new PartitionThread(mConfig, inputBamFiles, taskQueue, fileWriterCache);
+            partitionThreads.add(partitionThread);
         }
 
-        bamWriter.writeRead(record, FragmentStatus.UNSET);
+        return partitionThreads;
     }
 
     private void setReadLength()
@@ -338,9 +280,9 @@ public class ReduxApplication
         return combinedPerfCounters;
     }
 
-    private void logPerformanceStats(final List<PerformanceCounter> combinedPerfCounters, final PartitionDataStore partitionDataStore)
+    private void logPerformanceStats(final List<PerformanceCounter> combinedPerfCounters)
     {
-        if(mConfig.PerfDebug)
+        if(mConfig.perfDebug())
         {
             for(int j = 0; j < combinedPerfCounters.size(); ++j)
             {
@@ -351,34 +293,11 @@ public class ReduxApplication
                 else
                     perfCounter.logStats();
             }
-
-            // check partition store locking times
-            double totalLockTimeMs = 0;
-
-            for(PartitionData partitionData : partitionDataStore.partitions())
-            {
-                double lockTime = partitionData.totalLockTimeMs();
-
-                totalLockTimeMs += lockTime;
-
-                if(lockTime > LOCK_ACQUIRE_LONG_TIME_MS)
-                {
-                    RD_LOGGER.debug("partition({}) lock-acquisition time({}ms)",
-                            partitionData.partitionStr(), format("%.1f", lockTime));
-                }
-            }
-
-            if(totalLockTimeMs > LOCK_ACQUIRE_LONG_TIME_MS)
-            {
-                RD_LOGGER.debug("partition cache total lock-acquisition time({}s)",
-                        format("%.3f", totalLockTimeMs / 1000));
-            }
         }
         else
         {
             combinedPerfCounters.forEach(x -> x.logStats());
         }
-
     }
 
     public static void main(final String[] args)

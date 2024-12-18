@@ -3,11 +3,17 @@ package com.hartwig.hmftools.wisp.purity.loh;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatDetectionResult;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.FALSE;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.NA;
+import static com.hartwig.hmftools.wisp.purity.DetectionResult.TRUE;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
+
+import com.hartwig.hmftools.wisp.purity.DetectionResult;
+import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 
 public class AmberLohResult
 {
@@ -19,7 +25,7 @@ public class AmberLohResult
     public final double AvgAF;
     public final double RawEstimatedPurity;
     public final double EstimatedPurity;
-    public final double PValue;
+    public final double Probability;
     public final int TotalFragments;
     public final double LOD;
 
@@ -40,8 +46,19 @@ public class AmberLohResult
         AvgCopyNumber = avgCopyNumber;
         MedianAF = medianAF;
         AvgAF = avgAF;
-        PValue = pValue;
+        Probability = pValue;
         TotalFragments = totalFragments;
+    }
+
+    private DetectionResult formatDetectionResult()
+    {
+        if(ResultsWriter.formatDetectionResult(EstimatedPurity, LOD) == NA)
+            return NA;
+
+        if(EstimatedPurity > RawEstimatedPurity || Probability < LOW_PROBABILITY)
+            return TRUE;
+        else
+            return FALSE;
     }
 
     public static String header()
@@ -65,7 +82,7 @@ public class AmberLohResult
     public String toTsv()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(formatDetectionResult(EstimatedPurity, LOD));
+        sj.add(formatDetectionResult().toString());
         sj.add(formatPurityValue(EstimatedPurity));
         sj.add(formatPurityValue(RawEstimatedPurity));
         sj.add(String.valueOf(RegionCount));
@@ -75,7 +92,7 @@ public class AmberLohResult
         sj.add(format("%.2f", AvgCopyNumber));
         sj.add(format("%.6f", MedianAF));
         sj.add(format("%.6f", AvgAF));
-        sj.add(formatProbabilityValue(PValue));
+        sj.add(formatProbabilityValue(Probability));
         sj.add(String.valueOf(TotalFragments));
 
         return sj.toString();

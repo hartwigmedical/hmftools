@@ -13,8 +13,7 @@ public class FragmentAlleles
     private final List<HlaAllele> mFull;
     private final List<HlaAllele> mWild;
 
-    public FragmentAlleles(
-            final Fragment fragment, final List<HlaAllele> full, final List<HlaAllele> wild)
+    public FragmentAlleles(final Fragment fragment, final List<HlaAllele> full, final List<HlaAllele> wild)
     {
         mFragment = fragment;
         mFull = full;

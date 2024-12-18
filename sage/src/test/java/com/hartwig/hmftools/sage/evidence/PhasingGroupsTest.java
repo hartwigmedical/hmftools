@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeByExtension;
-import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeMatching;
-import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeUninformative;
-import static com.hartwig.hmftools.sage.phase.VariantPhaser.removeUninformativeLps;
+import static com.hartwig.hmftools.sage.phase.PhasingUtils.mergeByExtension;
+import static com.hartwig.hmftools.sage.phase.PhasingUtils.mergeMatching;
+import static com.hartwig.hmftools.sage.phase.PhasingUtils.mergeUninformative;
+import static com.hartwig.hmftools.sage.phase.PhasingUtils.removeUninformativeLps;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -24,22 +25,21 @@ import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantUtils;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.phase.CandidateVariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.PhasedVariantGroup;
-import com.hartwig.hmftools.sage.phase.VariantPhaser;
 
 import org.junit.Test;
 
 public class PhasingGroupsTest
 {
-    private VariantPhaser mPhaser;
+    private CandidateVariantPhaser mPhaser;
     private int mNextReadCounterId;
 
     public PhasingGroupsTest()
     {
-        mPhaser = new VariantPhaser(new PhaseSetCounter());
-        mPhaser.initialise(new ChrBaseRegion("1", 0, 200), false);
+        mPhaser = new CandidateVariantPhaser(new PhaseSetCounter(), false);
+        mPhaser.initialise(new ChrBaseRegion("1", 0, 200), TEST_SAMPLE);
 
         mNextReadCounterId = 0;
     }
@@ -250,7 +250,7 @@ public class PhasingGroupsTest
 
         // test again but with multiple options up and down preventing a merge
         groups.clear();
-        mPhaser.initialise(mPhaser.region(), false);
+        mPhaser.initialise(mPhaser.region(), TEST_SAMPLE);
 
         // a sub-group
         posCounters = Lists.newArrayList(rc2, rc3, rc4);

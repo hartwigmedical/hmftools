@@ -21,6 +21,7 @@ public class SageVariant
     private final List<ReadContextCounter> mTumorReadCounters;
 
     private int mMixedImpact;
+    private boolean mNearIndel;
 
     public SageVariant(
             final Candidate candidate,  final List<ReadContextCounter> referenceCounters, final List<ReadContextCounter> tumorReadCounters)
@@ -29,6 +30,7 @@ public class SageVariant
         mReferenceReadCounters = referenceCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
+        mNearIndel = false;
     }
 
     public Candidate candidate()
@@ -151,6 +153,9 @@ public class SageVariant
 
     public boolean hasTumorSamples() { return !mTumorReadCounters.isEmpty(); }
     public boolean hasReferenceSamples() { return !mReferenceReadCounters.isEmpty(); }
+
+    public void setNearIndel() { mNearIndel = true; }
+    public boolean nearIndel() { return mNearIndel; }
 
     public SimpleVariant variant() { return mCandidate.variant(); }
 

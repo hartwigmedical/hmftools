@@ -20,9 +20,6 @@ CREATE TABLE `peachGenotype`
     PRIMARY KEY (`id`)
 );
 
-
-
 # Linx
-
-ALTER TABLE somaticVariant
+ALTER TABLE svFusion
     ADD COLUMN reportedReason varchar(255) NULL after reportedType;

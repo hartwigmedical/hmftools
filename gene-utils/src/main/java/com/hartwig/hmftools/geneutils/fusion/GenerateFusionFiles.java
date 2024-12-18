@@ -2,6 +2,8 @@ package com.hartwig.hmftools.geneutils.fusion;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_DOWN_DISTANCE;
@@ -18,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.DRIVER_GENE_PANEL_TSV;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
@@ -34,6 +37,9 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -44,6 +50,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public class GenerateFusionFiles
 {
     private final String mKnownFusionDbFile;
+    private final String mDriverGenePanelFile;
     private final String mResourceRepoDir;
     private final String mOutputDir;
 
@@ -55,6 +62,7 @@ public class GenerateFusionFiles
         GU_LOGGER.info("starting known fusion file generation");
 
         mKnownFusionDbFile = configBuilder.getValue(KNOWN_FUSION_DB_FILE);
+        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_TSV);
         mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(configBuilder);
     }
@@ -84,14 +92,29 @@ public class GenerateFusionFiles
             }
         }
 
+        List<DriverGene> driverGenes = Lists.newArrayList();
+
+        if(mDriverGenePanelFile != null)
+        {
+            try
+            {
+                driverGenes.addAll(DriverGeneFile.read(mDriverGenePanelFile));
+            }
+            catch(IOException e)
+            {
+                GU_LOGGER.error("failed to read driver gene panel file: {}", e.toString());
+            }
+        }
+
         createOutputDir(mOutputDir);
-        createFusionFiles(RefGenomeVersion.V37, fusionRefData);
-        createFusionFiles(RefGenomeVersion.V38, fusionRefData);
+        createFusionFiles(RefGenomeVersion.V37, fusionRefData, driverGenes);
+        createFusionFiles(RefGenomeVersion.V38, fusionRefData, driverGenes);
 
         GU_LOGGER.info("fusion reference file generation complete");
     }
 
-    private void createFusionFiles(final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData)
+    private void createFusionFiles(
+            final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData, final List<DriverGene> driverGenes)
     {
         // step 3: load Ensembl data cache files
         String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
@@ -127,8 +150,8 @@ public class GenerateFusionFiles
         // step 5: write known_fusion_data for each version
         writeKnownFusionFiles(refGenomeVersion, fusionRefData);
 
-        // step 6: write known fusion BED files (eg for Gripss and SvPrep)
-        writeFusionBedFiles(refGenomeVersion, fusionRefData, ensemblDataCache);
+        // step 6: write known fusion BED files for Esvee
+        writeFusionBedFiles(refGenomeVersion, fusionRefData, driverGenes, ensemblDataCache);
     }
 
     private void writeKnownFusionFiles(final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData)
@@ -280,13 +303,23 @@ public class GenerateFusionFiles
     }
 
     private void writeFusionBedFiles(
-            final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData, final EnsemblDataCache ensemblDataCache)
+            final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData, final List<DriverGene> driverGenes,
+            final EnsemblDataCache ensemblDataCache)
     {
         List<FusionBedData> fusionBedDataList = Lists.newArrayList();
 
         for(FusionRefData fusion : fusionRefData)
         {
             addBedEntries(refGenomeVersion, ensemblDataCache, fusion, fusionBedDataList);
+        }
+
+        for(DriverGene driverGene : driverGenes)
+        {
+            if(driverGene.reportGermlineDeletion() != DriverGeneGermlineReporting.NONE
+            || driverGene.reportGermlineDisruption() != DriverGeneGermlineReporting.NONE)
+            {
+                addGermlineDelDupBedEntries(ensemblDataCache, driverGene, fusionBedDataList);
+            }
         }
 
         // sort and then write
@@ -406,6 +439,27 @@ public class GenerateFusionFiles
         }
     }
 
+    private void addGermlineDelDupBedEntries(
+            final EnsemblDataCache ensemblDataCache, final DriverGene driverGene, final List<FusionBedData> bedEntries)
+    {
+        String name = format("%s", driverGene.gene());
+
+        GeneData geneData = ensemblDataCache.getGeneDataByName(driverGene.gene());
+
+        String chrUp = geneData.Chromosome;
+        String chrDown = geneData.Chromosome;
+        int posUpStart = geneData.GeneStart;
+        int posUpEnd = geneData.GeneEnd;
+        int posDownStart = geneData.GeneStart;
+        int posDownEnd = geneData.GeneEnd;
+
+        byte strandUp = POS_STRAND;
+        byte strandDown = NEG_STRAND;
+
+        bedEntries.add(new FusionBedData(
+                name, chrUp, chrDown, strandUp, strandDown, posUpStart, posUpEnd, posDownStart, posDownEnd));
+    }
+
     private List<FusionRefData> loadFusionRefData()
     {
         try
@@ -522,6 +576,7 @@ public class GenerateFusionFiles
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
+        addGenePanelOption(configBuilder, false);
         configBuilder.addPath(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
         configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         addOutputDir(configBuilder);

@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.redux.TestUtils.CHR_4;
 import static com.hartwig.hmftools.redux.TestUtils.CHR_5;
 import static com.hartwig.hmftools.redux.TestUtils.CHR_LOCATION_MAP;
 import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER;
-import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
@@ -22,17 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.common.ReadUnmapper;
-import com.hartwig.hmftools.redux.common.UnmapRegionState;
-import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
+import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 
 import org.junit.Test;
 
@@ -408,61 +403,28 @@ public class UnmapReadsTest
                 false, null, true, TEST_READ_CIGAR);
 
         assertTrue(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertTrue(regionState.LastMatchedRegionIndex != null);
-        assertEquals(0, regionState.LastMatchedRegionIndex.intValue());
+        assertTrue(regionState.LastMatchedIndex != null);
+        assertEquals(0, regionState.LastMatchedIndex.intValue());
 
         read = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_4, 2100, READ_BASES, TEST_READ_CIGAR, CHR_5, 100, false,
                 false, null, true, TEST_READ_CIGAR);
 
         assertFalse(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertEquals(0, regionState.LastMatchedRegionIndex.intValue());
+        assertEquals(0, regionState.LastMatchedIndex.intValue());
 
         read = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_4, 5100, READ_BASES, TEST_READ_CIGAR, CHR_5, 100, false,
                 false, null, true, TEST_READ_CIGAR);
 
         assertTrue(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertEquals(2, regionState.LastMatchedRegionIndex.intValue());
+        assertEquals(2, regionState.LastMatchedIndex.intValue());
 
         read = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_4, 10000, READ_BASES, TEST_READ_CIGAR, CHR_5, 100, false,
                 false, null, true, TEST_READ_CIGAR);
 
         assertFalse(READ_UNMAPPER.checkTransformRead(read, regionState));
-        assertEquals(3, regionState.LastMatchedRegionIndex.intValue());
-    }
-
-    @Test
-    public void testUnmapReadsWithNonHumanContigMates()
-    {
-        String mtChr = "MT";
-
-        UnmapRegionState regionState = new UnmapRegionState(new ChrBaseRegion(
-                CHR_1, 1, 1000000), CHR_LOCATION_MAP.get(CHR_1));
-
-        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
-                "READ_01", CHR_1, 1, READ_BASES, TEST_READ_CIGAR,
-                mtChr, 200, false, false, null);
-
-        READ_UNMAPPER.checkTransformRead(read1, regionState);
-        assertTrue(read1.getMateUnmappedFlag());
-
-        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
-                "READ_02", CHR_1, 1, READ_BASES, TEST_READ_CIGAR,
-                mtChr, 200, false, false, null);
-
-        READ_UNMAPPER.checkTransformRead(read2, regionState);
-        assertTrue(read2.getMateUnmappedFlag());
-
-        MockRefGenome refGenome = new MockRefGenome();
-        refGenome.RefGenomeMap.put(CHR_1, REF_BASES);
-        ConsensusReads consensusReads = new ConsensusReads(refGenome);
-
-        ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(
-                List.of(read1, read2), null, null, null);
-
-        assertFalse(consensusReadInfo.ConsensusRead.getProperPairFlag());
-        assertTrue(consensusReadInfo.ConsensusRead.getMateUnmappedFlag());
+        assertEquals(3, regionState.LastMatchedIndex.intValue());
     }
 }

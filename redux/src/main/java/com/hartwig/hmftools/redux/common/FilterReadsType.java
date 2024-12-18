@@ -33,7 +33,7 @@ public enum FilterReadsType
             //    return true;
 
             // any mates or supplementaries must also be within the regions specified
-            if(filterType.filterMates() && chromosomes.stream().noneMatch(x -> x.equals(read.getMateReferenceName())))
+            if(filterType.filterMates() && read.getReadPairedFlag() && chromosomes.stream().noneMatch(x -> x.equals(read.getMateReferenceName())))
                 return true;
         }
 
@@ -43,7 +43,7 @@ public enum FilterReadsType
                 return true;
 
             // any mates or supplementaries must also be within the regions specified
-            if(filterType.filterMates() && regions.stream().noneMatch(x -> x.containsPosition(read.getMateReferenceName(), read.getMateAlignmentStart())))
+            if(filterType.filterMates() && read.getReadPairedFlag() && regions.stream().noneMatch(x -> x.containsPosition(read.getMateReferenceName(), read.getMateAlignmentStart())))
                 return true;
         }
 

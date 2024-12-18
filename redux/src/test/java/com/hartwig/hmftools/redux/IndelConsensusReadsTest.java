@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux;
 
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.redux.ConsensusReadsTest.UMI_ID_1;
 import static com.hartwig.hmftools.redux.ConsensusReadsTest.nextUmiReadId;
@@ -34,7 +35,7 @@ public class IndelConsensusReadsTest
     {
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
-        mConsensusReads = new ConsensusReads(mRefGenome);
+        mConsensusReads = new ConsensusReads(mRefGenome, ILLUMINA);
         mReadIdGen = new ReadIdGenerator();
     }
 
@@ -43,19 +44,19 @@ public class IndelConsensusReadsTest
     {
         // first 2 reads without an insert vs 1 with one ignored
         boolean readsReversed = false;
-        SAMRecord read1 = createSamRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", readsReversed);
+        SAMRecord read1 = createRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", readsReversed);
 
         // matching but without the soft-clip
-        SAMRecord read2 = createSamRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", readsReversed);
+        SAMRecord read2 = createRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", readsReversed);
 
         String indelBases = REF_BASES_A.substring(0, 5) + "C" + REF_BASES_A.substring(5, 10);
-        SAMRecord read3 = createSamRecord(nextReadId(), 12, indelBases, "1S4M1I4M1S", readsReversed);
+        SAMRecord read3 = createRecord(nextReadId(), 12, indelBases, "1S4M1I4M1S", readsReversed);
 
         indelBases = REF_BASES_A.substring(0, 3) + "GG" + REF_BASES_A.substring(3, 10);
-        SAMRecord read4 = createSamRecord(nextReadId(), 11, indelBases, "3M2I7M", readsReversed);
+        SAMRecord read4 = createRecord(nextReadId(), 11, indelBases, "3M2I7M", readsReversed);
 
         indelBases = REF_BASES_A.substring(0, 4) + "TTT" + REF_BASES_A.substring(4, 7) + "TTTT" + REF_BASES_A.substring(7, 10);
-        SAMRecord read5 = createSamRecord(nextReadId(), 12, indelBases, "1S3M3I3M4I2M1S", readsReversed);
+        SAMRecord read5 = createRecord(nextReadId(), 12, indelBases, "1S3M3I3M4I2M1S", readsReversed);
 
         String consensusBases = REF_BASES_A.substring(0, 10);
 
@@ -69,16 +70,16 @@ public class IndelConsensusReadsTest
         consensusBases = REF_BASES_A.substring(0, 3) + "TT" + REF_BASES_A.substring(3, 6) + "GGG" + REF_BASES_A.substring(6, 10);
         String consensusCigar = "1S2M2I3M3I3M1S";
         readsReversed = true;
-        read1 = createSamRecord(nextReadId(), 12, consensusBases, consensusCigar, readsReversed);
+        read1 = createRecord(nextReadId(), 12, consensusBases, consensusCigar, readsReversed);
 
         // matching but without the soft-clip
-        read2 = createSamRecord(nextReadId(), 12, consensusBases, consensusCigar, readsReversed);
+        read2 = createRecord(nextReadId(), 12, consensusBases, consensusCigar, readsReversed);
 
-        read3 = createSamRecord(nextReadId(), 12, REF_BASES_A.substring(0, 10), "2S6M2S", readsReversed);
+        read3 = createRecord(nextReadId(), 12, REF_BASES_A.substring(0, 10), "2S6M2S", readsReversed);
 
         // has the same indels but shorter
         indelBases = REF_BASES_A.substring(0, 3) + "TTT" + REF_BASES_A.substring(3, 6) + "GG" + REF_BASES_A.substring(6, 10);
-        read4 = createSamRecord(nextReadId(), 12, indelBases, "1S2M3I3M2I3M1S", readsReversed);
+        read4 = createRecord(nextReadId(), 12, indelBases, "1S2M3I3M2I3M1S", readsReversed);
 
         readInfo = createConsensusRead(mConsensusReads, Lists.newArrayList(read1, read2, read3, read4), UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
@@ -91,17 +92,17 @@ public class IndelConsensusReadsTest
     public void testDeleteMismatches()
     {
         // first 2 reads without a delete vs 1 with one ignored
-        SAMRecord read1 = createSamRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", false);
-        SAMRecord read2 = createSamRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", false);
+        SAMRecord read1 = createRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", false);
+        SAMRecord read2 = createRecord(nextReadId(), 11, REF_BASES_A.substring(0, 10), "10M", false);
 
         String indelBases = REF_BASES_A.substring(0, 5) + REF_BASES_A.substring(6, 10);
-        SAMRecord read3 = createSamRecord(nextReadId(), 12, indelBases, "1S4M1D3M1S", false);
+        SAMRecord read3 = createRecord(nextReadId(), 12, indelBases, "1S4M1D3M1S", false);
 
         indelBases = REF_BASES_A.substring(0, 3) + REF_BASES_A.substring(7, 10);
-        SAMRecord read4 = createSamRecord(nextReadId(), 11, indelBases, "3M4D3M", false);
+        SAMRecord read4 = createRecord(nextReadId(), 11, indelBases, "3M4D3M", false);
 
         indelBases = REF_BASES_A.substring(0, 3) + REF_BASES_A.substring(4, 6) + REF_BASES_A.substring(7, 10);
-        SAMRecord read5 = createSamRecord(nextReadId(), 11, indelBases, "3M1D2M1D3M", false);
+        SAMRecord read5 = createRecord(nextReadId(), 11, indelBases, "3M1D2M1D3M", false);
 
         String consensusBases = REF_BASES_A.substring(0, 10);
 
@@ -114,14 +115,14 @@ public class IndelConsensusReadsTest
         // now test a delete in the consensus read
         String consensusCigar = "4M3D3M";
         String delBases = REF_BASES_A.substring(0, 4) + REF_BASES_A.substring(7, 10);
-        read1 = createSamRecord(nextReadId(), 11, delBases, consensusCigar, false);
+        read1 = createRecord(nextReadId(), 11, delBases, consensusCigar, false);
         setBaseQualities(read1, 11);
 
-        read2 = createSamRecord(nextReadId(), 11, delBases, consensusCigar, false);
+        read2 = createRecord(nextReadId(), 11, delBases, consensusCigar, false);
         setBaseQualities(read2, 11);
 
         indelBases = REF_BASES_A.substring(0, 7) + "CCC"; // no delete and differing aligned bases after the delete
-        read3 = createSamRecord(nextReadId(), 11, indelBases, "10M", false);
+        read3 = createRecord(nextReadId(), 11, indelBases, "10M", false);
         setBaseQualities(read3, 35);
 
         consensusBases = REF_BASES_A.substring(0, 4) + "CCC";
@@ -139,8 +140,8 @@ public class IndelConsensusReadsTest
         String readBases = "CTTCGATAATGGCCGGGCCG";
         String shortedReadBases = readBases.substring(0, readBases.length() - 2);
         String shorterClipped = "3S7M10D5M3S";
-        read1 = createSamRecord(nextReadId(), 10, shortedReadBases, shorterClipped, false);
-        read2 = createSamRecord(nextReadId(), 10, readBases, "5S5M10D5M5S", false);
+        read1 = createRecord(nextReadId(), 10, shortedReadBases, shorterClipped, false);
+        read2 = createRecord(nextReadId(), 10, readBases, "5S5M10D5M5S", false);
 
         readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2), UMI_ID_1);
 
@@ -153,8 +154,8 @@ public class IndelConsensusReadsTest
     public void testMismatchedReads2()
     {
         // favour the read with the least number of soft-clip bases
-        SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAT", "7M1D3M", true);
-        SAMRecord read2 = createSamRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
+        SAMRecord read1 = createRecord(nextReadId(), 10, "CTTCGATAAT", "7M1D3M", true);
+        SAMRecord read2 = createRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
 
         // they are marked as same read cause read is reversed and the end are the same
         assertEquals(read1.getAlignmentEnd(), read2.getAlignmentEnd());
@@ -166,7 +167,7 @@ public class IndelConsensusReadsTest
         assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
 
         // a second supporting read results in the extra base being dropped
-        SAMRecord read3 = createSamRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
+        SAMRecord read3 = createRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
         readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
 
         assertEquals("2S8M", readInfo.ConsensusRead.getCigarString());
@@ -178,9 +179,9 @@ public class IndelConsensusReadsTest
     public void testHardClippedReads()
     {
         String readBases = "CTTCGATAATGGCCG";
-        SAMRecord read1 = createSamRecord(nextReadId(), 13, readBases, "3H8M7S", false);
-        SAMRecord read2 = createSamRecord(nextReadId(), 15, readBases, "5S10M5H", false);
-        SAMRecord read3 = createSamRecord(nextReadId(), 12, readBases, "2H13M2S", false);
+        SAMRecord read1 = createRecord(nextReadId(), 13, readBases, "3H8M7S", false);
+        SAMRecord read2 = createRecord(nextReadId(), 15, readBases, "5S10M5H", false);
+        SAMRecord read3 = createRecord(nextReadId(), 12, readBases, "2H13M2S", false);
 
         ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
 
@@ -189,9 +190,9 @@ public class IndelConsensusReadsTest
         assertEquals(12, readInfo.ConsensusRead.getAlignmentStart());
 
         readBases = "CTTCGATAATGGCCGGGCCG";
-        read1 = createSamRecord(nextReadId(), 10, readBases, "5H10M10D10M10H", false);
-        read2 = createSamRecord(nextReadId(), 10, readBases, "5H10M10D10M10H", false);
-        read3 = createSamRecord(nextReadId(), 15, readBases, "10H5M10D10M10H", false);
+        read1 = createRecord(nextReadId(), 10, readBases, "5H10M10D10M10H", false);
+        read2 = createRecord(nextReadId(), 10, readBases, "5H10M10D10M10H", false);
+        read3 = createRecord(nextReadId(), 15, readBases, "10H5M10D10M10H", false);
 
         readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
 
@@ -203,8 +204,8 @@ public class IndelConsensusReadsTest
     @Test
     public void testMismatchedReadsInsert()
     {
-        SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAAAT", "7M1I4M", true);
-        SAMRecord read2 = createSamRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
+        SAMRecord read1 = createRecord(nextReadId(), 10, "CTTCGATAAAAT", "7M1I4M", true);
+        SAMRecord read2 = createRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
 
         // they are marked as same read cause read is reversed and the end are the same
         assertEquals(read1.getAlignmentEnd(), read2.getAlignmentEnd());
@@ -216,7 +217,7 @@ public class IndelConsensusReadsTest
         assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
 
         // add one more read so the first C will get chopped
-        SAMRecord read3 = createSamRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
+        SAMRecord read3 = createRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
 
         readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
 
@@ -229,14 +230,14 @@ public class IndelConsensusReadsTest
     public void testSoftClipDeletes()
     {
         // one of the As at the end got deleted
-        SAMRecord read1 = createSamRecord(nextReadId(), 40, REF_BASES.substring(40, 100), "30S30M", true);
+        SAMRecord read1 = createRecord(nextReadId(), 40, REF_BASES.substring(40, 100), "30S30M", true);
 
-        SAMRecord read2 = createSamRecord(
+        SAMRecord read2 = createRecord(
                 nextReadId(), 7,
                 REF_BASES.substring(37, 67) + REF_BASES.substring(70, 100), "30M3D30M", true);
 
-        SAMRecord read3 = createSamRecord(nextReadId(), 40, REF_BASES.substring(40, 100), "30S30M", true);
-        SAMRecord read4 = createSamRecord(nextReadId(), 39, REF_BASES.substring(40, 100), "29S31M", true);
+        SAMRecord read3 = createRecord(nextReadId(), 40, REF_BASES.substring(40, 100), "30S30M", true);
+        SAMRecord read4 = createRecord(nextReadId(), 39, REF_BASES.substring(40, 100), "29S31M", true);
 
         ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3, read4), UMI_ID_1);
 
@@ -249,11 +250,12 @@ public class IndelConsensusReadsTest
 
     private String nextReadId() { return nextUmiReadId(UMI_ID_1, mReadIdGen); }
 
-    private static SAMRecord createSamRecord(
+    private static SAMRecord createRecord(
             final String readId, int readStart, final String readBases, final String cigar, boolean isReversed)
     {
         return SamRecordTestUtils.createSamRecord(
-                readId, CHR_1, readStart, readBases, cigar, CHR_1, 5000, isReversed, false, null);
+                readId, CHR_1, readStart, readBases, cigar, CHR_1, 5000, isReversed, false, null,
+                !isReversed, cigar);
     }
 
 }

@@ -55,7 +55,6 @@
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
-        <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
@@ -75,7 +74,7 @@
         <health-checker.version>3.6</health-checker.version>
         <hmf-id-generator.version>3.1</hmf-id-generator.version>
         <isofox.version>1.7.1</isofox.version>
-        <lilac.version>1.8</lilac.version>
+        <lilac.version>1.7</lilac.version>
         <linx.version>2.1</linx.version>
         <neo.version>1.2</neo.version>
         <orange.version>3.7.1</orange.version>
@@ -135,14 +134,19 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>${maven.exec.plugin.version}</version>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <!-- this is required for java 23 to work, not sure why -->
+                        <annotationProcessorPaths combine.children="append">
+                            <path>
+                                <groupId>org.immutables</groupId>
+                                <artifactId>value</artifactId>
+                                <version>${immutables.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

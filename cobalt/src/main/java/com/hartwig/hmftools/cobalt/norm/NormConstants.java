@@ -8,8 +8,9 @@ public class NormConstants
     public static final int REGION_SIZE = WINDOW_SIZE;
 
     public static final double MAPPABILITY_THRESHOLD = MIN_MAPPABLE_PERCENTAGE;
-    public static final int GC_BUCKET_MIN = 20;
-    public static final int GC_BUCKET_MAX = 60;
+
+    public static int GC_BUCKET_MIN = 20;
+    public static int GC_BUCKET_MAX = 60;
 
     public static final double MIN_ENRICHMENT_RATIO = 0.1;
 }

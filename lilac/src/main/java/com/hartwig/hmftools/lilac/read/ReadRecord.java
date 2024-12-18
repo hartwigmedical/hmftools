@@ -186,8 +186,20 @@ public class ReadRecord
         positionStart = record.getReferencePositionAtReadPosition(readIndexStart + 1);
         positionEnd = record.getReferencePositionAtReadPosition(readIndexEnd + 1);
 
+        // ignore soft-clip positions on the 3' end which run past the mate's 5' end for overlapping fragments
+        boolean restrictSoftclipStart = false;
+        boolean restrictSoftclipEnd = false;
+
+        if(abs(record.getInferredInsertSize()) <= record.getReadBases().length)
+        {
+            if(record.getReadNegativeStrandFlag())
+                restrictSoftclipStart = true;
+            else
+                restrictSoftclipEnd = true;
+        }
+
         // Add soft clip start
-        if(positionStart == alignmentStart && softClipStart > 0 && includeSoftClips)
+        if(positionStart == alignmentStart && softClipStart > 0 && includeSoftClips && !restrictSoftclipStart)
         {
             int earliestStart = max(codingRegion.start(), recordStart);
             readIndexStart = readIndexStart - positionStart + earliestStart;
@@ -195,7 +207,7 @@ public class ReadRecord
         }
 
         // Add soft clip end
-        if(positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips)
+        if(positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips && !restrictSoftclipEnd)
         {
             int latestEnd = min(codingRegion.end(), recordEnd);
             readIndexEnd = readIndexEnd + latestEnd - positionEnd;

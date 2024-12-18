@@ -56,6 +56,8 @@ public final class PurpleConversion
                 .gene(geneCopyNumber.geneName())
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .transcript(geneCopyNumber.transName())
+                .isCanonical(geneCopyNumber.isCanonical())
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber.maxCopyNumber())
                 .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())

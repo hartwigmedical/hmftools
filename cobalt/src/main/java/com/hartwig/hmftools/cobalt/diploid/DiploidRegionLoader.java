@@ -26,38 +26,37 @@ import tech.tablesaw.api.*;
 
 public class DiploidRegionLoader implements Consumer<Locatable>
 {
-    private final Table mResult = Table.create(
-            StringColumn.create(CobaltColumns.CHROMOSOME), IntColumn.create(CobaltColumns.POSITION));
-    private final Table mContigResult = mResult.emptyCopy();
+    private final Table mResult;
+    private final Table mContigResult;
 
     private final ChromosomePositionCodec mChromosomePosCodec;
 
     private String mChromosome = null;
     private int mStart = 0;
 
-    public DiploidRegionLoader(ChromosomePositionCodec chromosomePosCodec)
+    public DiploidRegionLoader(final ChromosomePositionCodec chromosomePosCodec, final String diploidBedPath) throws IOException
     {
         mChromosomePosCodec = chromosomePosCodec;
-    }
+        mResult = Table.create(StringColumn.create(CobaltColumns.CHROMOSOME), IntColumn.create(CobaltColumns.POSITION));
+        mContigResult = mResult.emptyCopy();
 
-    public DiploidRegionLoader(final String diploidBedPath,
-            ChromosomePositionCodec chromosomePosCodec) throws IOException
-    {
-        this(chromosomePosCodec);
-        List<BEDFeature> bedFeatures = new ArrayList<>();
-
-        CB_LOGGER.info("Reading diploid regions from {}", diploidBedPath);
-        try(final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(diploidBedPath,
-                new BEDCodec(),
-                false))
+        if(diploidBedPath != null)
         {
-            for(BEDFeature bedFeature : reader.iterator())
-            {
-                bedFeatures.add(bedFeature);
-            }
-        }
+            List<BEDFeature> bedFeatures = new ArrayList<>();
 
-        bedFeatures.forEach(this);
+            CB_LOGGER.info("Reading diploid regions from {}", diploidBedPath);
+            try(final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(diploidBedPath,
+                    new BEDCodec(),
+                    false))
+            {
+                for(BEDFeature bedFeature : reader.iterator())
+                {
+                    bedFeatures.add(bedFeature);
+                }
+            }
+
+            bedFeatures.forEach(this);
+        }
     }
 
     @Override

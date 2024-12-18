@@ -44,6 +44,9 @@ public enum HumanChromosome implements Chromosome
     public static final String CHR_PREFIX = "chr";
     public static final String ENUM_PREFIX = "_";
 
+    public static final String MT_CHR_V37 = "MT";
+    public static final String MT_CHR_V38 = "chrM";
+
     @Override
     public boolean isAutosome()
     {
