@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux;
 
 import static java.lang.Math.ceil;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
@@ -85,6 +86,19 @@ public class PartitionThread extends Thread
                 for(int i = 0 ; i < threadCount; ++i)
                 {
                     partitionRegions.add(List.of(specificRegions.Regions.get(i)));
+                }
+            }
+            else if(specificRegions.Regions.size() == 1 && threadCount > 0)
+            {
+                ChrBaseRegion specificRegion = specificRegions.Regions.get(0);
+                int intervalLength = (int)ceil(specificRegion.baseLength() / (double)threadCount);
+                int regionStart = 1;
+
+                for(int i = 0 ; i < threadCount; ++i)
+                {
+                    int regionEnd = min(regionStart + intervalLength - 1, specificRegion.end());
+                    partitionRegions.add(List.of(new ChrBaseRegion(specificRegion.Chromosome, regionStart, regionEnd)));
+                    regionStart = regionEnd + 1;
                 }
             }
             else

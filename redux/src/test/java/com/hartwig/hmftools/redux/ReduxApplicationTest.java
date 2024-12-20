@@ -241,11 +241,37 @@ public class ReduxApplicationTest
         partitionRegions = splitRegionsIntoPartitions(specificRegions, 1, V37, null);
         assertEquals(1, partitionRegions.size());
 
-        region = partitionRegions.get(0).get(0);
         assertEquals(specificRegions.Regions.get(0), partitionRegions.get(0).get(0));
         assertEquals(specificRegions.Regions.get(1), partitionRegions.get(0).get(1));
         assertEquals(specificRegions.Regions.get(2), partitionRegions.get(0).get(2));
 
-        // TODO: test splits across chromosome and region boundaries, and that lengths are roughly equal
+        // test with human genome
+        specificRegions.Regions.clear();
+        specificRegions.Chromosomes.clear();
+        specificRegions.Chromosomes.add(CHR_1);
+        specificRegions.Chromosomes.add(CHR_2);
+
+        partitionRegions = splitRegionsIntoPartitions(specificRegions, 3, V37, null);
+        assertEquals(3, partitionRegions.size());
+
+        region = partitionRegions.get(0).get(0);
+        assertEquals(CHR_1, region.Chromosome);
+        assertEquals(1, region.start());
+        assertEquals(164149998, region.end());
+
+        region = partitionRegions.get(1).get(0);
+        assertEquals(CHR_1, region.Chromosome);
+        assertEquals(164149999, region.start());
+        assertEquals(249250621, region.end());
+
+        region = partitionRegions.get(1).get(1);
+        assertEquals(CHR_2, region.Chromosome);
+        assertEquals(1, region.start());
+        assertEquals(79049375, region.end());
+
+        region = partitionRegions.get(2).get(0);
+        assertEquals(CHR_2, region.Chromosome);
+        assertEquals(79049376, region.start());
+        assertEquals(243199373, region.end());
     }
 }
