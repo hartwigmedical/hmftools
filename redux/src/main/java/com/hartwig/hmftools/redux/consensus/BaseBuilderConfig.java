@@ -21,10 +21,12 @@ public abstract class BaseBuilderConfig
         mConsensusStats = consensusStats;
     }
 
-    public abstract byte[] determineBaseAndQual(boolean isDualStrand, final boolean[] isFirstInPair, final byte[] locationBases,
+    public abstract byte[] determineBaseAndQual(
+            boolean isDualStrand, final boolean[] isFirstInPair, final byte[] locationBases,
             final byte[] locationQuals, final String chromosome, int position);
 
-    public static BaseBuilderConfig fromSequencingType(final SequencingType sequencingType, final RefGenome refGenome,
+    public static BaseBuilderConfig fromSequencingType(
+            final SequencingType sequencingType, final RefGenome refGenome,
             final ConsensusStatistics consensusStats)
     {
         if(sequencingType == SBX)

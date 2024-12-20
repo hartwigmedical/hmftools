@@ -73,16 +73,19 @@ public class ReduxApplication
             List<Thread> unmappingThreadTasks = Lists.newArrayList();
             List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
 
-            if(!runThreadTasks(unmappingThreadTasks))
-                System.exit(1);
+            if(!readUnmappers.isEmpty())
+            {
+                if(!runThreadTasks(unmappingThreadTasks))
+                    System.exit(1);
 
-            RD_LOGGER.debug("initial unmapping complete");
+                RD_LOGGER.debug("initial unmapping complete");
 
-            long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
-            RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
+                long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
+                RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
 
-            // reset unmapped stats for a final comparison
-            mConfig.UnmapRegions.setStats(new UnmapStats());
+                // reset unmapped stats for a final comparison
+                mConfig.UnmapRegions.setStats(new UnmapStats());
+            }
 
             if(!fileWriterCache.prepareSortedUnmappingBam())
                 System.exit(1);
