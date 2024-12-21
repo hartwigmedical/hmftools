@@ -62,12 +62,18 @@ public class ConsensusReads
         mValidateConsensusReads = validateConsensusReads;
     }
 
-    public ConsensusReadInfo createConsensusRead(
-            final List<SAMRecord> reads, final FragmentCoords fragmentCoords, @Nullable final String umiId)
+    @VisibleForTesting
+    public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final FragmentCoords fragmentCoords,
+            @Nullable final String umiId)
+    {
+        return createConsensusRead(reads, fragmentCoords.ReadIsLower, umiId);
+    }
+
+    public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, boolean isLowerRead, @Nullable final String umiId)
     {
         String consensusReadId  = "";
 
-        SAMRecord templateRead = TemplateReads.selectTemplateRead(reads, fragmentCoords);
+        SAMRecord templateRead = TemplateReads.selectTemplateRead(reads, isLowerRead);
         consensusReadId = formConsensusReadId(templateRead, umiId);
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())

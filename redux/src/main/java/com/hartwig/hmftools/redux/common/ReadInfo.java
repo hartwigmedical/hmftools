@@ -26,6 +26,11 @@ public class ReadInfo
         mUmi = null;
     }
 
+    public ReadInfo(final ReadWithFragCoords readWithFragCoords)
+    {
+        this(readWithFragCoords.Read, readWithFragCoords.FragCoords);
+    }
+
     public String id() { return mRead.getReadName(); }
     public SAMRecord read() { return mRead; }
 

@@ -16,10 +16,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.common.SingleCoordDuplicateGroup;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -28,6 +31,7 @@ public class ReadCache
     private final int mGroupSize;
     private final int mMaxSoftClipLength;
     private final boolean mUseFragmentOrientation;
+    private final DuplicateGroupCollapser mDuplicateGroupCollapser;
 
     private int mCurrentReadMinPosition;
     private String mCurrentChromosome;
@@ -47,11 +51,12 @@ public class ReadCache
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
     private static final int LOG_READ_COUNT_DIFF = LOG_READ_COUNT_THRESHOLD / 10;
 
-    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation)
+    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final SequencingType sequencingType)
     {
         mGroupSize = groupSize;
         mMaxSoftClipLength = maxSoftClipLength;
         mUseFragmentOrientation = useFragmentOrientation;
+        mDuplicateGroupCollapser = DuplicateGroupCollapser.fromSequencingType(sequencingType);
         mPositionGroups = Lists.newArrayList();
         mCurrentReadMinPosition = 0;
         mCurrentChromosome = "";
@@ -165,7 +170,7 @@ public class ReadCache
                     if(duplicateGroups == null)
                         duplicateGroups = Lists.newArrayList();
 
-                    duplicateGroups.add(new DuplicateGroup(reads, fragCoords));
+                    duplicateGroups.add(new SingleCoordDuplicateGroup(reads, fragCoords));
                 }
                 else
                 {
@@ -193,7 +198,10 @@ public class ReadCache
         if(duplicateGroups == null && singleReads == null)
             return null;
 
-        return new FragmentCoordReads(duplicateGroups, singleReads);
+        if(mDuplicateGroupCollapser == null)
+            return new FragmentCoordReads(duplicateGroups, singleReads);
+
+        return mDuplicateGroupCollapser.collapse(duplicateGroups, singleReads);
     }
 
     public int minCachedReadStart()

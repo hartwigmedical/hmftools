@@ -86,7 +86,7 @@ public final class TestUtils
             final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
     {
         FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false);
-        return consensusReads.createConsensusRead(reads, fragmentCoords, umiId);
+        return consensusReads.createConsensusRead(reads, fragmentCoords.ReadIsLower, umiId);
     }
 
     // unmapping test state

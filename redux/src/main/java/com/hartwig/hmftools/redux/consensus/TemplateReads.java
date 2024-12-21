@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
@@ -16,7 +17,13 @@ import htsjdk.samtools.SAMRecord;
 
 public final class TemplateReads
 {
+    @VisibleForTesting
     public static SAMRecord selectTemplateRead(final List<SAMRecord> reads, final FragmentCoords fragmentCoords)
+    {
+        return selectTemplateRead(reads, fragmentCoords.ReadIsLower);
+    }
+
+    public static SAMRecord selectTemplateRead(final List<SAMRecord> reads, boolean isLowerRead)
     {
         // establish if the read, its mate or the supplementary data should be used to establish the template data
         int primaryCount = reads.stream().mapToInt(x -> x.getSupplementaryAlignmentFlag() ? 0 : 1).sum();
@@ -32,8 +39,6 @@ public final class TemplateReads
         {
             arePrimaries = primaryCount > reads.size() / 2;
         }
-
-        boolean isLowerRead = fragmentCoords.ReadIsLower;
 
         List<ReadCigarInfo> readCigarInfos = reads.stream()
                 .map(x -> new ReadCigarInfo(x, isLowerRead, arePrimaries)).collect(Collectors.toList());

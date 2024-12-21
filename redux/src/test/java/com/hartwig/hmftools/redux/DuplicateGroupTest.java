@@ -15,10 +15,10 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.common.SingleCoordDuplicateGroup;
 
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class DuplicateGroupTest
 
         setBaseQualities(read3, 11);
 
-        DuplicateGroup duplicateGroup = new DuplicateGroup(List.of(read1, read2, read3), fragmentCoords);
+        DuplicateGroup duplicateGroup = new SingleCoordDuplicateGroup(List.of(read1, read2, read3), fragmentCoords);
         duplicateGroups.add(duplicateGroup);
 
         duplicateGroupBuilder.processDuplicateGroups(duplicateGroups, Collections.emptyList(), true);

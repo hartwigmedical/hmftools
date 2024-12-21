@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.redux.common.UltimaDuplicateGroupCollapser.MAX_THREE_PRIME_COLLAPSE_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -24,7 +28,7 @@ public class ReadCacheTest
     @Test
     public void testBasics()
     {
-        ReadCache readCache = new ReadCache(100, 100, false);
+        ReadCache readCache = new ReadCache(100, 100, false, ILLUMINA);
 
         SAMRecord read1 = createRecord(CHR_1, 50, false);
 
@@ -118,7 +122,7 @@ public class ReadCacheTest
     @Test
     public void testMixedPrimarySupplementaries()
     {
-        ReadCache readCache = new ReadCache(100, 100, false);
+        ReadCache readCache = new ReadCache(100, 100, false, ILLUMINA);
 
         SupplementaryReadData suppData1 = new SupplementaryReadData(CHR_2, 100, SUPP_POS_STRAND, TEST_READ_CIGAR, 60);
 
@@ -140,10 +144,96 @@ public class ReadCacheTest
         assertEquals(2, readCache.cachedFragCoordGroups());
     }
 
+    @Test
+    public void testUltimaDuplicateGroupCollapsing()
+    {
+        ReadCache readCache = new ReadCache(100, 100, false, ULTIMA);
+
+        // no collapsing
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + MAX_THREE_PRIME_COLLAPSE_DISTANCE + 1, false));
+
+        FragmentCoordReads fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(0, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(2, fragmentCoordsReads.SingleReads.size());
+        assertEquals(2, fragmentCoordsReads.totalReadCount());
+
+        // no collapsing of forward and reverse reads
+        readCache.clear();
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
+
+        fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(0, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(2, fragmentCoordsReads.SingleReads.size());
+        assertEquals(2, fragmentCoordsReads.totalReadCount());
+
+        // simple collapsing
+        readCache.clear();
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(0, fragmentCoordsReads.SingleReads.size());
+        assertEquals(2, fragmentCoordsReads.totalReadCount());
+
+        // chain collapsing collapsing
+        readCache.clear();
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(0, fragmentCoordsReads.SingleReads.size());
+        assertEquals(3, fragmentCoordsReads.totalReadCount());
+
+        // a more complex scenario
+        readCache.clear();
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 175 + 4*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 5*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6*MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(2, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(13, fragmentCoordsReads.totalReadCount());
+    }
+
     private static SAMRecord createRecord(final String chromosome, final int readStart, boolean isReversed)
     {
         return createSamRecord(
                 READ_ID_GEN.nextId(), chromosome, readStart, TEST_READ_BASES, TEST_READ_CIGAR,
                 CHR_1, 200, isReversed, false, null, true, TEST_READ_CIGAR);
+    }
+
+    private static SAMRecord createUnpairedRecord(final String chromosome, final int readStart, int readEnd, boolean isReversed)
+    {
+        int readLength = readEnd - readStart + 1;
+        String readBases = "A".repeat(readLength);
+        String cigar = readLength + "M";
+        return createSamRecordUnpaired(READ_ID_GEN.nextId(), chromosome, readStart, readBases, cigar, isReversed, false, null);
     }
 }
