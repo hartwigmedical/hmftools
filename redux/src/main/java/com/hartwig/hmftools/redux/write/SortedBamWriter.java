@@ -170,8 +170,6 @@ public class SortedBamWriter
         mMinCachedPosition = mRecords.isEmpty() ? mUpperWritablePosition + 1 : mRecords.first().Read.getAlignmentStart();
     }
 
-    public void writeReadUnchecked(final SAMRecord read) { mWriter.addAlignment(read); }
-
     private void writeRecords(final SortedSet<ReadOrAlignmentStart> records)
     {
         if(records.isEmpty())

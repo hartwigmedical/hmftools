@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMFileWriterImpl;
 
 public class FileWriterCache
 {
@@ -43,9 +44,10 @@ public class FileWriterCache
     private final BamWriterSync mUnmappingWriter;
     private String mUnmappingSortedBamFilename;
 
-    private String mFinalBamFilename;
-
     private final BamWriterSync mFullUnmappedWriter;
+
+    private boolean mHasWrittenFirstSorted;
+    private String mFinalBamFilename;
 
     private final JitterAnalyser mJitterAnalyser;
 
@@ -65,6 +67,7 @@ public class FileWriterCache
 
         mPartitions = Lists.newArrayList();
         mBamWriters = Lists.newArrayList();
+        mHasWrittenFirstSorted = false;
 
         mCompletedPartitionsQueue = new LinkedBlockingQueue<>();
         mCompletedPartitionCount = 0;
@@ -147,7 +150,6 @@ public class FileWriterCache
         {
             RD_LOGGER.trace("writing temp BAM file: {}", filenamePart(filename));
 
-            // no option to use library-based sorting
             samFileWriter = initialiseSamFileWriter(filename, !synchronousUnsorted);
         }
 
@@ -192,17 +194,26 @@ public class FileWriterCache
     {
         SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
 
-        // sorted BAMs set the sort order to coordinate while the header is written but then revert to unsorted for actual writing
-        // of BAM records to avoid any internal caching, sorting or record checking (ie current vs previous position)
+        // the sorted BAM writers make use of the pre-sorted mode, which still checks that each read is after the previous
+        // however since this check is redundant given that Redux sorts records itself, this presort checking is disabled after
+        // the first sorted BAM has been written. The first BAM needs to retain this presorted setting so the header is 'coordinate' sorted
+
+        if(isSorted)
+        {
+            if(!mHasWrittenFirstSorted)
+                mHasWrittenFirstSorted = true;
+            else
+                isSorted = false;
+        }
+
         if(isSorted)
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         else
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-        SAMFileWriter samFileWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
+        boolean presorted = isSorted;
 
-        // revert now that the header has been written to avoid checks on each record vs previous alignment's coordinates
-        samFileWriter.getFileHeader().setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        SAMFileWriter samFileWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
 
         return samFileWriter;
     }
