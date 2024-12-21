@@ -33,6 +33,8 @@ import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.FinalBamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 public class ReduxApplication
 {
     private final ReduxConfig mConfig;
@@ -173,13 +175,16 @@ public class ReduxApplication
 
             if(mConfig.UMIs.Enabled)
             {
-                combinedStats.UmiStats.writePositionFragmentsData(mConfig);
+                // TODO:
+                throw new NotImplementedException("TODO");
 
-                if(mConfig.UMIs.BaseStats)
-                {
-                    combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
-                    combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
-                }
+                //                combinedStats.UmiStats.writePositionFragmentsData(mConfig);
+                //
+                //                if(mConfig.UMIs.BaseStats)
+                //                {
+                //                    combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
+                //                    combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
+                //                }
             }
         }
 

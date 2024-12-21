@@ -37,7 +37,9 @@ public class Statistics
         DuplicateReads = 0;
         DuplicateGroups = 0;
         DuplicateFrequencies = Maps.newHashMap();
-        UmiStats = new UmiStatistics();
+        // TODO:
+        UmiStats = null;
+        //        UmiStats = new UmiStatistics();
         ConsensusStats = new ConsensusStatistics();
     }
 
@@ -52,7 +54,8 @@ public class Statistics
             addFrequency(dupFreq.DuplicateCount, dupFreq.Frequency, dupFreq.DualStrandFrequency);
         }
 
-        UmiStats.merge(other.UmiStats);
+        // TODO:
+        //        UmiStats.merge(other.UmiStats);
         ConsensusStats.merge(other.ConsensusStats);
     }
 
@@ -98,8 +101,12 @@ public class Statistics
 
     public void logStats()
     {
+        // TODO:
+        //        RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({})",
+        //                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups);
+
         RD_LOGGER.info("stats: totalReads({}) duplicates({}) dupGroups({}) umiGroups({})",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups);
+                TotalReads, DuplicateReads, DuplicateGroups, "");
 
         if(RD_LOGGER.isDebugEnabled())
         {

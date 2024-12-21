@@ -6,6 +6,8 @@ import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroupBuilder
@@ -20,7 +22,10 @@ public class DuplicateGroupBuilder
         mFormConsensus = config.FormConsensus;
         mUmiConfig = config.UMIs;
         mStats = new Statistics();
-        mUmiGroupBuilder = new UmiGroupBuilder(config.UMIs, mStats.UmiStats);
+
+        // TODO:
+        mUmiGroupBuilder = null;
+        //        mUmiGroupBuilder = new UmiGroupBuilder(config.UMIs, mStats.UmiStats);
     }
 
     public Statistics statistics() { return mStats; }
@@ -30,17 +35,20 @@ public class DuplicateGroupBuilder
     {
         if(mUmiConfig.Enabled)
         {
-            List<DuplicateGroup> umiGroups = mUmiGroupBuilder.processUmiGroups(rawDuplicateGroups, singleFragments, captureStats);
+            // TODO:
+            throw new NotImplementedException("TODO");
 
-            if(captureStats)
-            {
-                for(DuplicateGroup umiGroup: umiGroups)
-                {
-                    mStats.addUmiGroup(umiGroup.readCount(), umiGroup.hasDualStrand());
-                }
-            }
-
-            return umiGroups;
+            //            List<DuplicateGroup> umiGroups = mUmiGroupBuilder.processUmiGroups(rawDuplicateGroups, singleFragments, captureStats);
+            //
+            //            if(captureStats)
+            //            {
+            //                for(DuplicateGroup umiGroup: umiGroups)
+            //                {
+            //                    mStats.addUmiGroup(umiGroup.readCount(), umiGroup.hasDualStrand());
+            //                }
+            //            }
+            //
+            //            return umiGroups;
         }
 
         if(captureStats)
