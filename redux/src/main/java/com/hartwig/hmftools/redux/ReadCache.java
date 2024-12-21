@@ -16,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -29,7 +28,6 @@ public class ReadCache
     private final int mGroupSize;
     private final int mMaxSoftClipLength;
     private final boolean mUseFragmentOrientation;
-    private final SequencingType mSequencingType;
 
     private int mCurrentReadMinPosition;
     private String mCurrentChromosome;
@@ -48,12 +46,11 @@ public class ReadCache
     private static final int CHECK_CACHE_READ_COUNT = 10000;
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
 
-    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final SequencingType sequencingType)
+    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation)
     {
         mGroupSize = groupSize;
         mMaxSoftClipLength = maxSoftClipLength;
         mUseFragmentOrientation = useFragmentOrientation;
-        mSequencingType = sequencingType;
         mPositionGroups = Lists.newArrayList();
         mCurrentReadMinPosition = 0;
         mCurrentChromosome = "";
@@ -64,7 +61,7 @@ public class ReadCache
 
     public void processRead(final SAMRecord read)
     {
-        FragmentCoords fragmentCoords = FragmentCoords.fromRead(read, mUseFragmentOrientation, mSequencingType);
+        FragmentCoords fragmentCoords = FragmentCoords.fromRead(read, mUseFragmentOrientation);
 
         String chromosome = read.getReferenceName();
         ReadPositionGroup group = getOrCreateGroup(chromosome, fragmentCoords);
