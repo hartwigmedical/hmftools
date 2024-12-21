@@ -14,15 +14,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
-import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
-import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
+import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
@@ -80,13 +79,13 @@ public final class TestUtils
 
     public static FragmentCoords createFragmentCoords(final SAMRecord read)
     {
-        return FragmentCoords.fromRead(read, false, SequencingType.ILLUMINA);
+        return FragmentCoords.fromRead(read, false);
     }
 
     public static ConsensusReadInfo createConsensusRead(
             final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
     {
-        FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false, SequencingType.ILLUMINA);
+        FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false);
         return consensusReads.createConsensusRead(reads, fragmentCoords, umiId);
     }
 
