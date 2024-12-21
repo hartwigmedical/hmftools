@@ -13,7 +13,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 
 import org.junit.Test;
@@ -25,7 +24,7 @@ public class ReadCacheTest
     @Test
     public void testBasics()
     {
-        ReadCache readCache = new ReadCache(100, 100,false, SequencingType.ILLUMINA);
+        ReadCache readCache = new ReadCache(100, 100, false);
 
         SAMRecord read1 = createRecord(CHR_1, 50, false);
 
@@ -119,7 +118,7 @@ public class ReadCacheTest
     @Test
     public void testMixedPrimarySupplementaries()
     {
-        ReadCache readCache = new ReadCache(100, 100,false, SequencingType.ILLUMINA);
+        ReadCache readCache = new ReadCache(100, 100, false);
 
         SupplementaryReadData suppData1 = new SupplementaryReadData(CHR_2, 100, SUPP_POS_STRAND, TEST_READ_CIGAR, 60);
 
