@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
+import java.util.Set;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -30,5 +32,15 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
     {
         SingleAminoAcidVariant v1 = this.variant("BRAF:p.1E");
         Assert.assertEquals("E", v1.variantAminoAcid());
+    }
+
+    @Test
+    public void possibleVariantCodonsTest()
+    {
+        SingleAminoAcidVariant v1 = this.variant("BRAF:p.1F");
+        Assert.assertEquals(Set.of("TTC", "TTT"), v1.possibleVariantCodons());
+
+        SingleAminoAcidVariant v7 = this.variant("BRAF:p.7G");
+        Assert.assertEquals(Set.of("GGA", "GGC", "GGG", "GGT"), v7.possibleVariantCodons());
     }
 }

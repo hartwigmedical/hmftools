@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.pave.transval;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -53,5 +56,15 @@ public class SingleAminoAcidVariant
     public String variantAminoAcid()
     {
         return variant;
+    }
+
+    public Set<String> possibleVariantCodons()
+    {
+        return new HashSet<>(AminoAcids.AMINO_ACID_TO_CODON_MAP.get(variant));
+    }
+
+    public String referenceCodon(RefGenomeSource refGenomeSource)
+    {
+        return "";
     }
 }
