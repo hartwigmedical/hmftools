@@ -34,8 +34,6 @@ public class FastBamWriter implements SAMFileWriter
     // taken from HTS JDK
     private static final int HTSJDK_COMPRESSION_LEVEL = 5;
     private static final byte[] HTSJDK_BAM_MAGIC = "BAM\u0001".getBytes();
-
-    // unused:
     private static final int BUFFER_SIZE = 131072;
 
     public FastBamWriter(final SAMFileHeader header, final String filename)

@@ -195,29 +195,11 @@ public class FileWriterCache
     {
         SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
 
-        /*
-        if(isSorted)
-        {
-            // the sorted BAM writers make use of the pre-sorted mode, which still checks that each read is after the previous
-            // however since this check is redundant given that Redux sorts records itself, this presort checking is disabled after
-            // the first sorted BAM has been written. The first BAM needs to retain this presorted setting so the header is 'coordinate' sorted
-
-            if(!mHasWrittenFirstSorted)
-                mHasWrittenFirstSorted = true;
-            else
-                isSorted = false;
-        }
-        */
-
+        // since the internal fast BAM writer is used, sort order and the presorted flag has no bearing on how reads are checked and written
         if(isSorted)
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         else
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-
-        /*
-        boolean presorted = isSorted;
-        SAMFileWriter samFileWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
-        */
 
         SAMFileWriter samFileWriter = new FastBamWriter(fileHeader, filename);
 
