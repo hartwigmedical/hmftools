@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.phase;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -13,10 +14,10 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.errorprone.annotations.Var;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -27,9 +28,9 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class AppendVariantPhaser implements VariantPhaser
 {
-    private final Map<Integer, LocalPhaseSet> mLocalPhaseSets;
-    private final Map<SimpleVariant, List<Integer>> mVariantLpsIds;
-    private final Map<String, Map<Integer, LpsReadCounts>> mSampleLpsReadCounts;
+    private final Map<Integer,LocalPhaseSet> mLocalPhaseSets;
+    private final Map<SimpleVariant,List<Integer>> mVariantLpsIds;
+    private final Map<String,Map<Integer,LpsReadCounts>> mSampleLpsReadCounts;
 
     private Map<Integer, LpsReadCounts> mCurrentSampleLpsCounts;
 
@@ -96,8 +97,13 @@ public class AppendVariantPhaser implements VariantPhaser
 
                 List<SimpleVariant> lpsVariants = variants;
 
+                // skip if the variants from the read aren't an exact match for this LPS and are for another
+                if(!localPhaseSet.variantsMatch(variants) && variantsMatchLps(variants))
+                    continue;
+
                 if(variants.stream().anyMatch(x -> !localPhaseSet.Variants.contains(x)))
                 {
+                    // remove any variants not in the LPS
                     lpsVariants = variants.stream().filter(x -> localPhaseSet.Variants.contains(x)).collect(Collectors.toList());
 
                     if(lpsVariants.size() < 2)
@@ -112,10 +118,25 @@ public class AppendVariantPhaser implements VariantPhaser
                     mCurrentSampleLpsCounts.put(lpsId, readCounts);
                 }
 
-                // restrict to variants covered by the read
+
+                // only look for subsets if this variant set doesn't match any others precisely
+                if(lpsVariants.size() < readCounts.Variants.size() && variantsMatchLps(lpsVariants))
+                    continue;
+
                 readCounts.registerCount(lpsVariants, hasAltSupport);
             }
         }
+    }
+
+    private boolean variantsMatchLps(final List<SimpleVariant> variants)
+    {
+        for(LocalPhaseSet localPhaseSet : mLocalPhaseSets.values())
+        {
+            if(localPhaseSet.variantsMatch(variants))
+                return true;
+        }
+
+        return false;
     }
 
     private class LocalPhaseSet
@@ -129,53 +150,7 @@ public class AppendVariantPhaser implements VariantPhaser
             Variants = variants;
         }
 
-        public String toString()
-        {
-            return format("%d: variants(%d)", Id, Variants.size());
-        }
-    }
-
-    private class LpsReadCounts
-    {
-        public final int Id;
-        public final List<SimpleVariant> Variants;
-        public List<LpsReadCounts> SubsetVariantCounts;
-
-        public int Depth;
-        public int AltSupport;
-
-        public LpsReadCounts(final int id, final List<SimpleVariant> variants)
-        {
-            Id = id;
-            Variants = variants;
-            Depth = 0;
-            AltSupport = 0;
-            SubsetVariantCounts = null;
-        }
-
-        public void registerCount(final List<SimpleVariant> variants, boolean hasAltSupport)
-        {
-            LpsReadCounts counts = this;
-
-            if(variants.size() < Variants.size())
-            {
-                if(SubsetVariantCounts == null)
-                    SubsetVariantCounts = Lists.newArrayList();
-
-                counts = SubsetVariantCounts.stream().filter(x -> x.variantsMatch(variants)).findFirst().orElse(null);
-
-                if(counts == null)
-                {
-                    counts = new LpsReadCounts(SubsetVariantCounts.size(), variants);
-                    SubsetVariantCounts.add(counts);
-                }
-            }
-
-            ++counts.Depth;
-
-            if(hasAltSupport)
-                ++counts.AltSupport;
-        }
+        public int variantCount() { return Variants.size(); }
 
         public boolean variantsMatch(final List<SimpleVariant> variants)
         {
@@ -187,8 +162,7 @@ public class AppendVariantPhaser implements VariantPhaser
 
         public String toString()
         {
-            return format("%d: variants(%d) depth(%d) alt(%d) subGroups(%d)",
-                    Id, Variants.size(), Depth, AltSupport, SubsetVariantCounts != null ? SubsetVariantCounts.size() : 0);
+            return format("%d: variants(%d)", Id, Variants.size());
         }
     }
 
@@ -197,6 +171,9 @@ public class AppendVariantPhaser implements VariantPhaser
         for(int i = 0; i < candidates.size(); ++i)
         {
             VariantContext variantContext = variantContexts.get(i);
+
+            if(variantContext.isFiltered() && !variantContext.getFilters().contains(PASS))
+                continue;
 
             if(!variantContext.hasAttribute(LOCAL_PHASE_SET))
                 continue;
@@ -223,7 +200,7 @@ public class AppendVariantPhaser implements VariantPhaser
 
         // purge any single-variant groups
         Set<Integer> singleVariantIds = mLocalPhaseSets.entrySet().stream()
-                .filter(x -> x.getValue().Variants.size() == 1).map(x -> x.getKey()).collect(Collectors.toSet());
+                .filter(x -> x.getValue().variantCount() == 1).map(x -> x.getKey()).collect(Collectors.toSet());
 
         singleVariantIds.forEach(x -> mLocalPhaseSets.remove(x));
 
@@ -247,6 +224,8 @@ public class AppendVariantPhaser implements VariantPhaser
 
     public void populateLocalPhaseSetInfo(final List<Candidate> candidates, final List<VariantContext> variantContexts)
     {
+        boolean logAltOnly = false;
+
         for(int i = 0; i < candidates.size(); ++i)
         {
             Candidate candidate = candidates.get(i);
@@ -260,7 +239,7 @@ public class AppendVariantPhaser implements VariantPhaser
 
             for(Genotype genotype : variantContext.getGenotypes())
             {
-                Map<Integer, LpsReadCounts> sampleReadCounts = mSampleLpsReadCounts.get(genotype.getSampleName());
+                Map<Integer,LpsReadCounts> sampleReadCounts = mSampleLpsReadCounts.get(genotype.getSampleName());
 
                 if(sampleReadCounts == null)
                     continue;
@@ -274,7 +253,7 @@ public class AppendVariantPhaser implements VariantPhaser
                     if(readCounts == null)
                         continue;
 
-                    if(readCounts.Depth > 0)
+                    if(!logAltOnly || readCounts.AltSupport > 0) // during testing only log if has alt support
                     {
                         lpsInfo.add(format("%d=%d/%d", readCounts.Id, readCounts.AltSupport, readCounts.Depth));
                     }
@@ -283,7 +262,8 @@ public class AppendVariantPhaser implements VariantPhaser
                     {
                         for(LpsReadCounts subsetReadCounts : readCounts.SubsetVariantCounts)
                         {
-                            if(subsetReadCounts.Variants.contains(candidate.variant()))
+                            if(subsetReadCounts.Variants.contains(candidate.variant())
+                            && (!logAltOnly || subsetReadCounts.AltSupport > 0))
                             {
                                 lpsInfo.add(format("%d_%d=%d/%d",
                                         readCounts.Id, subsetReadCounts.Id, subsetReadCounts.AltSupport, subsetReadCounts.Depth));
@@ -296,4 +276,7 @@ public class AppendVariantPhaser implements VariantPhaser
             }
         }
     }
+
+    @VisibleForTesting
+    public Map<String,Map<Integer,LpsReadCounts>> sampleLpsReadCounts() { return mSampleLpsReadCounts; }
 }
