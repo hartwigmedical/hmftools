@@ -29,19 +29,12 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class CandidateSerialisationTest
 {
-    private static MockRefGenome REF_GENOME = new MockRefGenome();
-
     private static final String REF_BASES =
         //             10        20        30        40        50
         //   0123456789012345678901234567890123456789012345678901
             "CGCAATATTCGGGTGGGAGTGACCCGATTTACCCGGTGCGTTCGTCACCGCTGTCT";
 
     private static RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES.getBytes());
-
-    static
-    {
-        REF_GENOME.RefGenomeMap.put(CHR_1, REF_BASES);
-    }
 
     @Test
     public void testCandidateCreation()
