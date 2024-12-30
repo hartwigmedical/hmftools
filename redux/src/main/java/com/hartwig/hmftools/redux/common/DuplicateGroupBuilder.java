@@ -50,19 +50,52 @@ public class DuplicateGroupBuilder
                 mStats.addDuplicateGroup(duplicateGroup.readCount());
 
                 if(!mFormConsensus)
-                    setPrimaryRead(duplicateGroup);
+                {
+                    SAMRecord primaryRead = getPrimaryRead(duplicateGroup.reads());
+                    duplicateGroup.setPrimaryRead(primaryRead);
+                }
             }
         }
 
         return rawDuplicateGroups;
     }
 
-    private static void setPrimaryRead(final DuplicateGroup duplicateGroup)
+    public void processAllDuplicateGroups(
+            final List<DuplicateGroup> duplicateGroups, final List<MultiCoordsDuplicateGroup> multiCoordsDuplicateGroups,
+            boolean captureStats)
+    {
+        if(captureStats)
+        {
+            for(DuplicateGroup duplicateGroup : duplicateGroups)
+            {
+                mStats.addDuplicateGroup(duplicateGroup.readCount());
+
+                if(!mFormConsensus)
+                {
+                    SAMRecord primaryRead = getPrimaryRead(duplicateGroup.reads());
+                    duplicateGroup.setPrimaryRead(primaryRead);
+                }
+            }
+
+            for(MultiCoordsDuplicateGroup multiCoordsDuplicateGroup : multiCoordsDuplicateGroups)
+            {
+                mStats.addDuplicateGroup(multiCoordsDuplicateGroup.readCount());
+
+                if(!mFormConsensus)
+                {
+                    SAMRecord primaryRead = getPrimaryRead(multiCoordsDuplicateGroup.reads());
+                    multiCoordsDuplicateGroup.setPrimaryRead(primaryRead);
+                }
+            }
+        }
+    }
+
+    private static SAMRecord getPrimaryRead(final List<SAMRecord> reads)
     {
         SAMRecord maxRead = null;
         double maxBaseQual = 0;
 
-        for(SAMRecord read : duplicateGroup.reads())
+        for(SAMRecord read : reads)
         {
             double avgBaseQual = calcBaseQualAverage(read);
 
@@ -73,7 +106,7 @@ public class DuplicateGroupBuilder
             }
         }
 
-        duplicateGroup.setPrimaryRead(maxRead);
+        return maxRead;
     }
 
     public static double calcBaseQualAverage(final SAMRecord read)

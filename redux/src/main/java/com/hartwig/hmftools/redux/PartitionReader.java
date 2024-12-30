@@ -28,12 +28,16 @@ import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.common.MultiCoordsDuplicateGroup;
+import com.hartwig.hmftools.redux.common.MultiCoordsFragmentCoordReads;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
+
+import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -74,7 +78,7 @@ public class PartitionReader
         mBamReader = bamReader;
         mReadUnmapper = mConfig.UnmapRegions;
 
-        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled);
+        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.Sequencing);
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
@@ -343,8 +347,24 @@ public class PartitionReader
         boolean logDetails = mConfig.perfDebug() && readCount > LOG_PERF_FRAG_COUNT;
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
-        List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                fragmentCoordReads.DuplicateGroups, fragmentCoordReads.SingleReads, true);
+        MultiCoordsFragmentCoordReads multiCoordFragmentCoordReads =
+                (fragmentCoordReads instanceof MultiCoordsFragmentCoordReads) ? (MultiCoordsFragmentCoordReads) fragmentCoordReads : null;
+
+        List<DuplicateGroup> duplicateGroups;
+        List<MultiCoordsDuplicateGroup> multiCoordsDuplicateGroups;
+        if(multiCoordFragmentCoordReads == null)
+        {
+            duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
+                    fragmentCoordReads.DuplicateGroups, fragmentCoordReads.SingleReads, true);
+
+            multiCoordsDuplicateGroups = Lists.newArrayList();
+        }
+        else
+        {
+            mDuplicateGroupBuilder.processAllDuplicateGroups(multiCoordFragmentCoordReads.DuplicateGroups, multiCoordFragmentCoordReads.MultiCoordDuplicateGroups, true);
+            duplicateGroups = multiCoordFragmentCoordReads.DuplicateGroups;
+            multiCoordsDuplicateGroups = multiCoordFragmentCoordReads.MultiCoordDuplicateGroups;
+        }
 
         if(logDetails)
         {
@@ -352,10 +372,22 @@ public class PartitionReader
 
             if(timeTakenSec > mConfig.PerfDebugTime)
             {
-                RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) processing time({})",
-                        mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
-                        fragmentCoordReads.DuplicateGroups.size(), fragmentCoordReads.duplicateGroupReadCount(),
-                        format("%.1fs", timeTakenSec));
+                if(multiCoordFragmentCoordReads == null)
+                {
+                    RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) processing time({})",
+                            mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
+                            fragmentCoordReads.DuplicateGroups.size(), fragmentCoordReads.duplicateGroupReadCount(),
+                            format("%.1fs", timeTakenSec));
+                }
+                else
+                {
+                    RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) multiCoordGroups({} reads={}) processing time({})",
+                            mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, multiCoordFragmentCoordReads.SingleReads.size(),
+                            multiCoordFragmentCoordReads.DuplicateGroups.size(), multiCoordFragmentCoordReads.duplicateGroupReadCount(),
+                            multiCoordFragmentCoordReads.MultiCoordDuplicateGroups.size(), multiCoordFragmentCoordReads.multiCoordDuplicateGroupReadCount(),
+                            format("%.1fs", timeTakenSec));
+                }
+
             }
         }
 
@@ -366,6 +398,14 @@ public class PartitionReader
                 duplicateGroup.formConsensusRead(mConsensusReads);
 
             mBamWriter.writeDuplicateGroup(duplicateGroup);
+        }
+
+        for(MultiCoordsDuplicateGroup multiCoordsDuplicateGroup : multiCoordsDuplicateGroups)
+        {
+            if(mConfig.FormConsensus)
+                multiCoordsDuplicateGroup.formConsensusRead(mConsensusReads);
+
+            mBamWriter.writeMultiCoordsDuplicateGroup(multiCoordsDuplicateGroup);
         }
 
         mBamWriter.writeReads(fragmentCoordReads.SingleReads, true);

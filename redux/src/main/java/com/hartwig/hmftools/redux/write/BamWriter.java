@@ -2,21 +2,23 @@ package com.hartwig.hmftools.redux.write;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.common.MultiCoordsDuplicateGroup;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -94,6 +96,32 @@ public abstract class BamWriter
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
             writeRead(read, fragmentStatus, group.coordinatesKey(), group.umiId());
+        }
+    }
+
+    public void writeMultiCoordsDuplicateGroup(final MultiCoordsDuplicateGroup group)
+    {
+        if(group.consensusRead() != null)
+        {
+            SAMRecord read = group.consensusRead();
+            processRecord(read);
+            mConsensusReadCount.incrementAndGet();
+
+            if(mReadDataWriter != null && mReadDataWriter.enabled())
+            {
+                mReadDataWriter.writeReadData(read, PRIMARY, group.consensusCoordinatesKey(), null);
+            }
+        }
+
+        for(Map.Entry<FragmentCoords, List<SAMRecord>> coordsAndReads : group.readsByCoords().entrySet())
+        {
+            FragmentCoords coords = coordsAndReads.getKey();
+            List<SAMRecord> reads = coordsAndReads.getValue();
+            for(SAMRecord read : reads)
+            {
+                FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+                writeRead(read, fragmentStatus, coords.Key, null);
+            }
         }
     }
 
