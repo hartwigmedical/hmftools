@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.common;
 
 import static java.lang.String.format;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -51,7 +52,7 @@ public class MultiCoordsFragmentCoordReads extends FragmentCoordReads
         return minPositionStart;
     }
 
-    public static FragmentCoordReads fromCollapsedGroups(final List<MultiCoordsDuplicateGroup> collapsedGroups)
+    public static FragmentCoordReads fromCollapsedGroups(final Collection<MultiCoordsDuplicateGroup> collapsedGroups)
     {
         List<ReadInfo> singleReads = Lists.newArrayList();
         List<DuplicateGroup> duplicateGroups = Lists.newArrayList();

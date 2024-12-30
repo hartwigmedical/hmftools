@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.common;
 
+import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 
 import java.util.List;
@@ -11,6 +12,8 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.SAMRecord;
+
 @FunctionalInterface
 public interface DuplicateGroupCollapser
 {
@@ -20,6 +23,9 @@ public interface DuplicateGroupCollapser
     {
         if(sequencingType == ULTIMA)
             return DuplicateGroupCollapser::ultimaCollapse;
+
+        if(sequencingType == BIOMODAL)
+            return DuplicateGroupCollapser::biomodalCollapse;
 
         return null;
     }
@@ -116,5 +122,52 @@ public interface DuplicateGroupCollapser
             duplicateGroups.forEach(collapser::addDuplicateGroup);
 
         return collapser.getCollapsedGroups();
+    }
+
+    static FragmentCoordReads biomodalCollapse(
+            @Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads)
+    {
+        Map<String, MultiCoordsDuplicateGroup> fivePrimeGroups = Maps.newHashMap();
+
+        if(singleReads != null)
+        {
+            for(ReadInfo readInfo : singleReads)
+            {
+                SAMRecord read = readInfo.read();
+                FragmentCoords coords = readInfo.coordinates();
+                String fivePrimeKey = collapseToFivePrimeKey(coords);
+                MultiCoordsDuplicateGroup fivePrimeGroup = fivePrimeGroups.get(fivePrimeKey);
+                if(fivePrimeGroup == null)
+                {
+                    fivePrimeGroup = new MultiCoordsDuplicateGroup(read, coords);
+                    fivePrimeGroups.put(fivePrimeKey, fivePrimeGroup);
+                    continue;
+                }
+
+                fivePrimeGroup.addRead(read, coords);
+            }
+        }
+
+        if(duplicateGroups != null)
+        {
+            for(DuplicateGroup duplicateGroup : duplicateGroups)
+            {
+                String fivePrimeKey = collapseToFivePrimeKey(duplicateGroup.fragmentCoordinates());
+                MultiCoordsDuplicateGroup fivePrimeGroup = fivePrimeGroups.get(fivePrimeKey);
+                if(fivePrimeGroup == null)
+                {
+                    fivePrimeGroup = new MultiCoordsDuplicateGroup(duplicateGroup);
+                    fivePrimeGroups.put(fivePrimeKey, fivePrimeGroup);
+                    continue;
+                }
+
+                fivePrimeGroup.merge(duplicateGroup);
+            }
+        }
+
+        if(fivePrimeGroups.isEmpty())
+            return null;
+
+        return MultiCoordsFragmentCoordReads.fromCollapsedGroups(fivePrimeGroups.values());
     }
 }

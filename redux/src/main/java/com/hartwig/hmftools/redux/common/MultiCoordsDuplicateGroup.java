@@ -42,6 +42,11 @@ public class MultiCoordsDuplicateGroup
         mReadsByCoords.put(fragCoords, Lists.newArrayList(reads));
     }
 
+    public MultiCoordsDuplicateGroup(final SAMRecord read, final FragmentCoords coords)
+    {
+        this(Lists.newArrayList(read), coords);
+    }
+
     public MultiCoordsDuplicateGroup(final DuplicateGroup duplicateGroup)
     {
         this(duplicateGroup.reads(), duplicateGroup.fragmentCoordinates());
@@ -80,6 +85,12 @@ public class MultiCoordsDuplicateGroup
             addReads(reads, fragCoords);
         }
 
+        return this;
+    }
+
+    public MultiCoordsDuplicateGroup merge(final DuplicateGroup group)
+    {
+        addReads(group.reads(), group.fragmentCoordinates());
         return this;
     }
 
