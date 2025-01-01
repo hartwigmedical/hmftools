@@ -14,6 +14,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantImplied;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
@@ -91,16 +92,13 @@ public class StructuralVariantImpliedTest
         final StructuralVariantLegPloidy left = create(1, Optional.of(4d), Optional.empty());
         final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(5d));
 
-        final double bothKnown =
-                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.of(right));
+        double bothKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.of(right));
         assertEquals(3.5, bothKnown, EPSILON);
 
-        final double leftKnown =
-                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.empty());
+        double leftKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.empty());
         assertEquals(3, leftKnown, EPSILON);
 
-        final double rightKnown =
-                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.empty(), Optional.of(right));
+        double rightKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.empty(), Optional.of(right));
         assertEquals(4, rightKnown, EPSILON);
     }
 
@@ -110,16 +108,13 @@ public class StructuralVariantImpliedTest
         final StructuralVariantLegPloidy left = create(1, Optional.of(0.5d), Optional.empty());
         final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(0.9d));
 
-        final double bothKnown =
-                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.of(right));
+        double bothKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.of(right));
         assertEquals(0, bothKnown, EPSILON);
 
-        final double leftKnown =
-                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.empty());
+        double leftKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.empty());
         assertEquals(0, leftKnown, EPSILON);
 
-        final double rightKnown =
-                StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.empty(), Optional.of(right));
+        double rightKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.empty(), Optional.of(right));
         assertEquals(0, rightKnown, EPSILON);
     }
 

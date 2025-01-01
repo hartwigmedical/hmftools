@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
-import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegs;
 import com.hartwig.hmftools.purple.copynumber.sv.ModifiableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
@@ -79,7 +78,7 @@ public class StructuralVariantPloidyFactoryTest
         final PurpleCopyNumber middle = copyNumber(1001, 2000, 3);
         final PurpleCopyNumber right = copyNumber(2001, 3000, 4);
 
-        final StructuralVariantLegs legs = ImmutableStructuralVariantLegs.builder().start(start).end(Optional.empty()).build();
+        StructuralVariantLegs legs = new StructuralVariantLegs(start, null);
         final ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
         final List<StructuralVariantLegPloidy> ploidies = PURE_PLOIDY_FACTORY.create(legs, copyNumbers);
         assertEquals(1, ploidies.size());
@@ -100,7 +99,7 @@ public class StructuralVariantPloidyFactoryTest
         final PurpleCopyNumber middle = copyNumber(1001, 2000, 3);
         final PurpleCopyNumber right = copyNumber(2001, 3000, 4);
 
-        final StructuralVariantLegs legs = ImmutableStructuralVariantLegs.builder().start(start).end(end).build();
+        final StructuralVariantLegs legs = new StructuralVariantLegs(start, end);
         final ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
         final List<StructuralVariantLegPloidy> ploidies = PURE_PLOIDY_FACTORY.create(legs, copyNumbers);
         assertEquals(2, ploidies.size());

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.copynumber;
+package com.hartwig.hmftools.purple.copynumber.sv;
 
 import java.util.List;
 import java.util.Map;
@@ -13,6 +13,8 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.purple.copynumber.CombinedRegion;
+import com.hartwig.hmftools.purple.copynumber.ExtendStructuralVariant;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
@@ -48,22 +50,25 @@ public class StructuralVariantImplied
                         .forEach(x -> processedCopyNumbers.put(chromosome, x));
             }
 
-            final List<StructuralVariantLegPloidy> ploidyList = mSvPloidyFactory.create(structuralVariants, processedCopyNumbers);
-            final Map<GenomePosition, StructuralVariantLegPloidy> ploidyMap =
-                    ploidyList.stream().collect(Collectors.toMap(x -> GenomePositions.create(x.chromosome(), x.cnaPosition()), x -> x));
+            List<StructuralVariantLegPloidy> ploidyList = mSvPloidyFactory.create(structuralVariants, processedCopyNumbers);
+
+            Map<GenomePosition, StructuralVariantLegPloidy> ploidyMap = ploidyList.stream()
+                    .collect(Collectors.toMap(x -> GenomePositions.create(x.chromosome(), x.cnaPosition()), x -> x));
 
             for(Chromosome chromosome : HumanChromosome.values())
             {
-                final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosome);
+                List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosome);
+
                 boolean svInferred = false;
                 for(final CombinedRegion copyNumber : chromosomeCopyNumbers)
                 {
                     if(implyCopyNumberFromSV(copyNumber))
                     {
-                        final Optional<StructuralVariantLegPloidy> optionalStart =
+                        Optional<StructuralVariantLegPloidy> optionalStart =
                                 Optional.ofNullable(ploidyMap.get(GenomePositions.create(copyNumber.chromosome(), copyNumber.start())))
                                         .filter(x -> x.impliedRightCopyNumberWeight() > 0);
-                        final Optional<StructuralVariantLegPloidy> optionalEnd =
+
+                        Optional<StructuralVariantLegPloidy> optionalEnd =
                                 Optional.ofNullable(ploidyMap.get(GenomePositions.create(copyNumber.chromosome(), copyNumber.end() + 1)))
                                         .filter(x -> x.impliedLeftCopyNumberWeight() > 0);
                         if(optionalStart.isPresent() || optionalEnd.isPresent())
@@ -96,7 +101,7 @@ public class StructuralVariantImplied
     }
 
     @VisibleForTesting
-    static double inferCopyNumberFromStructuralVariants(
+    public static double inferCopyNumberFromStructuralVariants(
             final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end)
     {
         final double startWeight = start.map(StructuralVariantLegPloidy::impliedRightCopyNumberWeight).orElse(0d);

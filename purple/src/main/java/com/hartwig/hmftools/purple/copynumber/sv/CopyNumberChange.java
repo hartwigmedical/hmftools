@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.jetbrains.annotations.NotNull;
-
 public class CopyNumberChange
 {
     private final double mDownScale;
@@ -75,12 +73,12 @@ public class CopyNumberChange
         return isPositive(leg) ? mDownOffset + mDownScale * ploidy(leg) : mUpOffset + mUpScale * ploidy(leg);
     }
 
-    private static boolean isPositive(StructuralVariantLegPloidy ploidy)
+    private static boolean isPositive(final StructuralVariantLegPloidy ploidy)
     {
         return ploidy.orientation() == 1;
     }
 
-    private static double ploidy(StructuralVariantLegPloidy ploidy)
+    private static double ploidy(final StructuralVariantLegPloidy ploidy)
     {
         return Math.max(0, ploidy.averageImpliedPloidy());
     }

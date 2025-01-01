@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegsFac
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -60,8 +62,8 @@ public class StructuralVariantLegsFactoryTest
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
         assertEquals(1, legs.size());
-        assertTrue(legs.get(0).start().isPresent());
-        assertFalse(legs.get(0).end().isPresent());
+        assertNotNull(legs.get(0).start());
+        assertNull(legs.get(0).end());
     }
 
     @Test
@@ -74,14 +76,14 @@ public class StructuralVariantLegsFactoryTest
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
         assertEquals(2, legs.size());
 
-        assertTrue(legs.get(0).start().isPresent());
-        assertTrue(legs.get(0).end().isPresent());
-        assertFalse(legs.get(1).start().isPresent());
-        assertTrue(legs.get(1).end().isPresent());
+        assertNotNull(legs.get(0).start());
+        assertNotNull(legs.get(0).end());
+        assertNull(legs.get(1).start());
+        assertNotNull(legs.get(1).end());
 
-        assertLeg(1, 0.25, legs.get(0).start().get());
-        assertLeg(1, 0.25, legs.get(0).end().get());
-        assertLeg(1, 0.25, legs.get(1).end().get());
+        assertLeg(1, 0.25, legs.get(0).start());
+        assertLeg(1, 0.25, legs.get(0).end());
+        assertLeg(1, 0.25, legs.get(1).end());
     }
 
     @Test
@@ -93,13 +95,13 @@ public class StructuralVariantLegsFactoryTest
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
         assertEquals(2, legs.size());
-        assertTrue(legs.get(0).start().isPresent());
-        assertLeg(1, 0.25, legs.get(0).start().get());
-        assertFalse(legs.get(0).end().isPresent());
-        assertTrue(legs.get(1).start().isPresent());
-        assertLeg(1, 0.4, legs.get(1).start().get());
-        assertTrue(legs.get(1).end().isPresent());
-        assertLeg(1, 0.25, legs.get(1).end().get());
+        assertNotNull(legs.get(0).start());
+        assertLeg(1, 0.25, legs.get(0).start());
+        assertNull(legs.get(0).end());
+        assertNotNull(legs.get(1).start());
+        assertLeg(1, 0.4, legs.get(1).start());
+        assertNotNull(legs.get(1).end());
+        assertLeg(1, 0.25, legs.get(1).end());
     }
 
     @Test
@@ -111,15 +113,15 @@ public class StructuralVariantLegsFactoryTest
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
         assertEquals(3, legs.size());
-        assertTrue(legs.get(0).start().isPresent());
-        assertLeg(1, 0.25, legs.get(0).start().get());
-        assertFalse(legs.get(0).end().isPresent());
-        assertFalse(legs.get(1).start().isPresent());
-        assertTrue(legs.get(1).end().isPresent());
-        assertLeg(1, 0.25, legs.get(1).end().get());
-        assertTrue(legs.get(2).start().isPresent());
-        assertLeg(-1, 0.15, legs.get(2).start().get());
-        assertFalse(legs.get(2).end().isPresent());
+        assertNotNull(legs.get(0).start());
+        assertLeg(1, 0.25, legs.get(0).start());
+        assertNull(legs.get(0).end());
+        assertNull(legs.get(1).start());
+        assertNotNull(legs.get(1).end());
+        assertLeg(1, 0.25, legs.get(1).end());
+        assertNotNull(legs.get(2).start());
+        assertLeg(-1, 0.15, legs.get(2).start());
+        assertNull(legs.get(2).end());
     }
 
     @Test
@@ -129,8 +131,8 @@ public class StructuralVariantLegsFactoryTest
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
         assertEquals(1, legs.size());
-        assertTrue(legs.get(0).start().isPresent());
-        assertFalse(legs.get(0).end().isPresent());
+        assertNotNull(legs.get(0).start());
+        assertNull(legs.get(0).end());
     }
 
     private void assertLeg(int orientation, double vaf, @NotNull final StructuralVariantLeg victim)
