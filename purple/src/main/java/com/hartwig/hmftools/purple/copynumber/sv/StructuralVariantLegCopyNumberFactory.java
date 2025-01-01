@@ -20,22 +20,23 @@ public class StructuralVariantLegCopyNumberFactory<T extends GenomeRegion>
 
     public StructuralVariantLegCopyNumberFactory(final Function<T, Double> copyNumberExtractor)
     {
-        this.mCopyNumberExtractor = copyNumberExtractor;
+        mCopyNumberExtractor = copyNumberExtractor;
     }
 
     public StructuralVariantLegCopyNumber create(final StructuralVariantLeg leg, final Multimap<Chromosome, T> copyNumbers)
     {
         return create(leg, GenomeRegionSelectorFactory.createImproved(copyNumbers));
-
     }
 
     public StructuralVariantLegCopyNumber create(final StructuralVariantLeg leg, final GenomeRegionSelector<T> selector)
     {
-        final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.cnaPosition() - 1);
-        final GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
-        final Optional<Double> left =
+        GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.cnaPosition() - 1);
+        GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
+
+        Optional<Double> left =
                 selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(mCopyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
-        final Optional<Double> right =
+
+        Optional<Double> right =
                 selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(mCopyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
 
         return ImmutableStructuralVariantLegCopyNumberImpl.builder()

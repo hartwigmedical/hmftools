@@ -72,11 +72,11 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion>
 
     public List<StructuralVariantLegPloidy> create(final StructuralVariantLegs legs, final Multimap<Chromosome, T> copyNumbers)
     {
-        final Optional<ModifiableStructuralVariantLegPloidy> start =
-                legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
+        Optional<ModifiableStructuralVariantLegPloidy> start = legs.start() != null ?
+                create(legs.start(), GenomeRegionSelectorFactory.createImproved(copyNumbers)) : Optional.empty();
 
-        final Optional<ModifiableStructuralVariantLegPloidy> end =
-                legs.end().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
+        Optional<ModifiableStructuralVariantLegPloidy> end = legs.end() != null ?
+                create(legs.end(), GenomeRegionSelectorFactory.createImproved(copyNumbers)) : Optional.empty();
 
         if(!start.isPresent() && !end.isPresent())
         {
