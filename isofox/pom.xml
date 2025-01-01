@@ -18,7 +18,10 @@
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.hartwig.cloud-sdk</groupId>
+            <artifactId>compute-engine</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>patient-db</artifactId>

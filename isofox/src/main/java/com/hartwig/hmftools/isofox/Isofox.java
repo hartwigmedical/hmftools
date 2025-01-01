@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTp
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,8 @@ import com.hartwig.hmftools.isofox.common.BamReadCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
+import com.hartwig.hmftools.isofox.cram.CramAndValidateCommands;
+import com.hartwig.hmftools.isofox.cram.StageRunner;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.expression.PanelTpmNormaliser;
@@ -123,6 +126,16 @@ public class Isofox
             boolean status = countBamReads(chrGeneMap);
             mResultsWriter.close();
             return status;
+        }
+
+        // create CRAM file
+        try {
+            ISF_LOGGER.info("Cram export");
+            ISF_LOGGER.info("BAM file:{}", mConfig.BamFile);
+            ISF_LOGGER.info("Output dir for CRAM:{}", mConfig.OutputDir);
+            new StageRunner().run(mConfig.BamFile, mConfig.OutputDir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         // BAM processing for the key routines - novel junctions, fusions and gene expression

@@ -204,6 +204,11 @@
                 <version>${hmf-common.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.hartwig.cloud-sdk</groupId>
+                <artifactId>compute-engine</artifactId>
+                <version>3.0.8</version>
+            </dependency>
+            <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
