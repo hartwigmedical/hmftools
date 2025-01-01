@@ -398,4 +398,11 @@
             <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
         </repository>
     </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
+        </repository>
+    </repositories>
 </project>
