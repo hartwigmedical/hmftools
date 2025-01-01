@@ -128,6 +128,7 @@ public class MultiCoordsDuplicateGroup
     {
         return mConsensusRead;
     }
+    public SAMRecord primaryRead() { return mPrimaryRead; }
 
     public void setPrimaryRead(final SAMRecord read)
     {

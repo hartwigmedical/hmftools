@@ -134,6 +134,24 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>LATEST</version>
+                    <configuration>
+                        <targetClasses>
+                            <param>com.hartwig.hmftools.common.sequencing.SBXBamUtils_Mutate*</param>
+                        </targetClasses>
+                        <targetTests>
+                            <param>com.hartwig.hmftools.common.sequencing.SBXBamUtilsTest</param>
+                        </targetTests>
+                        <outputFormats>
+                            <outputFormat>HTML</outputFormat>
+                        </outputFormats>
+                        <failWhenNoMutations>false</failWhenNoMutations>
+                    </configuration>
+                </plugin>
+
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven.compiler.plugin.version}</version>
