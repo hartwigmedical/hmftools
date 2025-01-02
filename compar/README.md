@@ -23,7 +23,7 @@ The key configuration values to set are:
  
 ### Required configuration
 
-| Filter                            | Description                                                                                                                                |
+| Argument                          | Description                                                                                                                                |
 |-----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
 | sample                            | Tumor sample ID, OR                                                                                                                        |
 | sample_id_file                    | File with column header SampleId and then list of sample IDs, optional Ref and New sample mappings and germline sample IDs (see examples)  |
@@ -45,7 +45,7 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 
 ### Optional configuration
 
-| Filter                                                  | Description                                                                                                   |
+| Argument                                                | Description                                                                                                   |
 |---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
 | germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                          |
 | output_id                                               | Outfile file suffix                                                                                           |
