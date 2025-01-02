@@ -12,13 +12,11 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
-import org.jetbrains.annotations.NotNull;
-
-public class StructuralVariantLegCopyNumberFactory<T extends GenomeRegion>
+public class SvLegCopyNumberFactory<T extends GenomeRegion>
 {
     private final Function<T, Double> mCopyNumberExtractor;
 
-    public StructuralVariantLegCopyNumberFactory(final Function<T, Double> copyNumberExtractor)
+    public SvLegCopyNumberFactory(final Function<T, Double> copyNumberExtractor)
     {
         mCopyNumberExtractor = copyNumberExtractor;
     }
@@ -39,10 +37,9 @@ public class StructuralVariantLegCopyNumberFactory<T extends GenomeRegion>
         Optional<Double> right =
                 selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(mCopyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
 
-        return ImmutableStructuralVariantLegCopyNumberImpl.builder()
-                .from(leg)
-                .leftCopyNumber(left)
-                .rightCopyNumber(right)
-                .build();
+        StructuralVariantLegCopyNumber legCopyNumber = new StructuralVariantLegCopyNumber(
+                leg, left.isPresent() ? left.get() : null, right.isPresent() ? right.get() : null);
+
+        return legCopyNumber;
     }
 }

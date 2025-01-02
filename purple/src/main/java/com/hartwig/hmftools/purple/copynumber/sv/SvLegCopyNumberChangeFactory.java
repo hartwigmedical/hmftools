@@ -20,11 +20,11 @@ import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
 import org.jetbrains.annotations.Nullable;
 
-public class StructuralVariantLegCopyNumberChangeFactory
+public class SvLegCopyNumberChangeFactory
 {
-    private final Map<GenomePosition, CopyNumberChange> mCopyNumberChangeMap;
+    private final Map<GenomePosition, SvCopyNumberChange> mCopyNumberChangeMap;
 
-    public StructuralVariantLegCopyNumberChangeFactory(
+    public SvLegCopyNumberChangeFactory(
             final PurityAdjuster purityAdjuster,
             final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, final Collection<StructuralVariant> variants)
     {
@@ -37,7 +37,7 @@ public class StructuralVariantLegCopyNumberChangeFactory
 
         if(!mCopyNumberChangeMap.containsKey(cnaPosition))
         {
-            return CopyNumberChange.copyNumberChangeSimple(leg);
+            return SvCopyNumberChange.copyNumberChangeSimple(leg);
         }
 
         return mCopyNumberChangeMap.get(cnaPosition).copyNumberChange(leg);
@@ -48,17 +48,17 @@ public class StructuralVariantLegCopyNumberChangeFactory
     {
         if(!mCopyNumberChangeMap.containsKey(GenomePositions.create(copyNumber.chromosome(), copyNumber.cnaPosition())))
         {
-            return CopyNumberChange.copyNumberChangeSimple(copyNumber);
+            return SvCopyNumberChange.copyNumberChangeSimple(copyNumber);
         }
 
         return null;
     }
 
-    private static Map<GenomePosition, CopyNumberChange> copyNumberChangeMap(
+    private static Map<GenomePosition, SvCopyNumberChange> copyNumberChangeMap(
             final PurityAdjuster purityAdjuster, final Multimap<Chromosome, PurpleCopyNumber> copyNumbers,
             final Collection<StructuralVariant> variants)
     {
-        StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory = new StructuralVariantLegPloidyFactory<>(
+        SvLegPloidyFactory<PurpleCopyNumber> ploidyFactory = new SvLegPloidyFactory<>(
                 purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
         ListMultimap<GenomePosition, StructuralVariantLegPloidy> ploidyMap = ArrayListMultimap.create();
@@ -72,14 +72,14 @@ public class StructuralVariantLegCopyNumberChangeFactory
             }
         }
 
-        Map<GenomePosition, CopyNumberChange> copyNumberChangeMap = Maps.newHashMap();
+        Map<GenomePosition, SvCopyNumberChange> copyNumberChangeMap = Maps.newHashMap();
         for(GenomePosition genomePosition : ploidyMap.keySet())
         {
             List<StructuralVariantLegPloidy> legs = ploidyMap.get(genomePosition);
 
             if(legs.size() > 1)
             {
-                copyNumberChangeMap.put(genomePosition, new CopyNumberChange(legs));
+                copyNumberChangeMap.put(genomePosition, new SvCopyNumberChange(legs));
             }
         }
 

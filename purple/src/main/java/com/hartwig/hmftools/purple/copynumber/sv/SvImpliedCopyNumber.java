@@ -17,17 +17,15 @@ import com.hartwig.hmftools.purple.copynumber.CombinedRegion;
 import com.hartwig.hmftools.purple.copynumber.ExtendStructuralVariant;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
-import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 
-public class StructuralVariantImplied
+public class SvImpliedCopyNumber
 {
-    private final StructuralVariantLegPloidyFactory<CombinedRegion> mSvPloidyFactory;
+    private final SvLegPloidyFactory<CombinedRegion> mSvPloidyFactory;
 
-    public StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster)
+    public SvImpliedCopyNumber(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster)
     {
-        mSvPloidyFactory = new StructuralVariantLegPloidyFactory<>(averageReadDepth,
+        mSvPloidyFactory = new SvLegPloidyFactory<>(averageReadDepth,
                 averageCopyNumber,
                 purityAdjuster,
                 x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
@@ -104,11 +102,11 @@ public class StructuralVariantImplied
     public static double inferCopyNumberFromStructuralVariants(
             final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end)
     {
-        final double startWeight = start.map(StructuralVariantLegPloidy::impliedRightCopyNumberWeight).orElse(0d);
-        final double startCopyNumber = start.map(StructuralVariantLegPloidy::impliedRightCopyNumber).orElse(0d);
+        double startWeight = start.map(StructuralVariantLegPloidy::impliedRightCopyNumberWeight).orElse(0d);
+        double startCopyNumber = start.map(StructuralVariantLegPloidy::impliedRightCopyNumber).orElse(0d);
 
-        final double endWeight = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumberWeight).orElse(0d);
-        final double endCopyNumber = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumber).orElse(0d);
+        double endWeight = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumberWeight).orElse(0d);
+        double endCopyNumber = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumber).orElse(0d);
 
         double unconstrainedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
         return Math.max(0, unconstrainedResult);
