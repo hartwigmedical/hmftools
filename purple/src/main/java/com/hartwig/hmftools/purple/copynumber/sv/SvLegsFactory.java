@@ -3,7 +3,6 @@ package com.hartwig.hmftools.purple.copynumber.sv;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,7 +17,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
-public final class StructuralVariantLegsFactory
+public final class SvLegsFactory
 {
     public static List<StructuralVariantLegs> create(final StructuralVariant variants)
     {
@@ -166,7 +165,7 @@ public final class StructuralVariantLegsFactory
 
         byte orientation = (byte) (Doubles.greaterThan(maxPositive, maxNegative) ? 1 : -1);
         double vaf = Math.abs(maxPositive - maxNegative);
-        
+
         return ImmutableStructuralVariantLegImpl.builder()
                 .chromosome(cnaPosition.chromosome())
                 .position(orientation == -1 ? cnaPosition.position() : cnaPosition.position() - 1)

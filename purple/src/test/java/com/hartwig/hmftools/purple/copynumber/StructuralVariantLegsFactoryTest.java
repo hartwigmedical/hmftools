@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.copynumber;
 
 import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createStartLeg;
 import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.CHROMOSOME;
-import static com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegsFactory.reduce;
+import static com.hartwig.hmftools.purple.copynumber.sv.SvLegsFactory.reduce;
 
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegs;
-import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegsFactory;
+import com.hartwig.hmftools.purple.copynumber.sv.SvLegsFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class StructuralVariantLegsFactoryTest
         final StructuralVariant second = sv(300, 400, StructuralVariantType.INS, 0.25, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
 
-        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
+        final List<StructuralVariantLegs> legs = SvLegsFactory.create(variants);
         assertEquals(0, legs.size());
     }
 
@@ -60,7 +60,7 @@ public class StructuralVariantLegsFactoryTest
     {
         final StructuralVariant first = sv(100, 100, StructuralVariantType.INV, 0.25, 0.25);
 
-        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
+        final List<StructuralVariantLegs> legs = SvLegsFactory.create(Lists.newArrayList(first));
         assertEquals(1, legs.size());
         assertNotNull(legs.get(0).start());
         assertNull(legs.get(0).end());
@@ -73,7 +73,7 @@ public class StructuralVariantLegsFactoryTest
         final StructuralVariant second = sv(200, 300, StructuralVariantType.BND, 0.25, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
 
-        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
+        final List<StructuralVariantLegs> legs = SvLegsFactory.create(variants);
         assertEquals(2, legs.size());
 
         assertNotNull(legs.get(0).start());
@@ -93,7 +93,7 @@ public class StructuralVariantLegsFactoryTest
         final StructuralVariant second = sv(200, 300, StructuralVariantType.BND, 0.4, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
 
-        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
+        final List<StructuralVariantLegs> legs = SvLegsFactory.create(variants);
         assertEquals(2, legs.size());
         assertNotNull(legs.get(0).start());
         assertLeg(1, 0.25, legs.get(0).start());
@@ -111,7 +111,7 @@ public class StructuralVariantLegsFactoryTest
         final StructuralVariant second = sv(199, 300, StructuralVariantType.BND, 0.25, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
 
-        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
+        final List<StructuralVariantLegs> legs = SvLegsFactory.create(variants);
         assertEquals(3, legs.size());
         assertNotNull(legs.get(0).start());
         assertLeg(1, 0.25, legs.get(0).start());
@@ -129,7 +129,7 @@ public class StructuralVariantLegsFactoryTest
     {
         final StructuralVariant first = breakend(100, 0.25);
 
-        final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
+        final List<StructuralVariantLegs> legs = SvLegsFactory.create(Lists.newArrayList(first));
         assertEquals(1, legs.size());
         assertNotNull(legs.get(0).start());
         assertNull(legs.get(0).end());

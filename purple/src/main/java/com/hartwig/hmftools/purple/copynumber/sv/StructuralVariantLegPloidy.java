@@ -1,28 +1,38 @@
 package com.hartwig.hmftools.purple.copynumber.sv;
 
-import java.util.Optional;
-
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Modifiable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg, StructuralVariantLegCopyNumber
+public class StructuralVariantLegPloidy extends StructuralVariantLegCopyNumber
 {
-    public abstract double observedVaf();
+    private final double mObservedVaf;
+    private final double mAdjustedVaf;
+    private final double mUnweightedImpliedPloidy;
 
-    public abstract double adjustedVaf();
+    private double mAverageImpliedPloidy;
+    private double mWeight;
 
-    public abstract double weight();
+    public StructuralVariantLegPloidy(
+            final StructuralVariantLegCopyNumber leg, final double observedVaf, final double adjustedVaf,
+            final double averageImpliedPloidy, final double unweightedImpliedPloidy, final double weight)
+    {
+        super(leg, leg.leftCopyNumber(), leg.rightCopyNumber());
+        mObservedVaf = observedVaf;
+        mAdjustedVaf = adjustedVaf;
+        mAverageImpliedPloidy = averageImpliedPloidy;
+        mUnweightedImpliedPloidy = unweightedImpliedPloidy;
+        mWeight = weight;
+    }
 
-    public abstract double averageImpliedPloidy();
+    public double observedVaf() { return mObservedVaf; }
+    public double adjustedVaf() { return mAdjustedVaf; }
+    public double unweightedImpliedPloidy() { return mUnweightedImpliedPloidy; }
 
-    public abstract double unweightedImpliedPloidy();
+    public double averageImpliedPloidy() { return mAverageImpliedPloidy; }
+    public void setAverageImpliedPloidy(double ploidy) { mAverageImpliedPloidy = ploidy; }
+
+    public double weight() { return mWeight; }
+    public void setWeight(double weight) { mWeight = weight; }
 
     public double impliedRightCopyNumberWeight()
     {
@@ -34,7 +44,7 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         if(isDecreasingFromZero(1, leftCopyNumber()))
             return 0;
 
-        return leftCopyNumber().map(x -> x - orientation() * averageImpliedPloidy()).orElse(0D);
+        return leftCopyNumber() != null ? leftCopyNumber() - orientation() * averageImpliedPloidy() : 0;
     }
 
     public double impliedLeftCopyNumber()
@@ -42,7 +52,7 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
         if(isDecreasingFromZero(-1, rightCopyNumber()))
             return 0;
 
-        return rightCopyNumber().map(x -> x + orientation() * averageImpliedPloidy()).orElse(0D);
+        return rightCopyNumber() != null ? rightCopyNumber() + orientation() * averageImpliedPloidy() : 0;
     }
 
     public double impliedLeftCopyNumberWeight()
@@ -52,16 +62,16 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
 
     private boolean canInferRight()
     {
-        return isDecreasingFromZero(1, leftCopyNumber()) || leftCopyNumber().isPresent();
+        return isDecreasingFromZero(1, leftCopyNumber()) || leftCopyNumber() != null;
     }
 
     private boolean canInferLeft()
     {
-        return isDecreasingFromZero(-1, rightCopyNumber()) || rightCopyNumber().isPresent();
+        return isDecreasingFromZero(-1, rightCopyNumber()) || rightCopyNumber() != null;
     }
 
-    private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber)
+    private boolean isDecreasingFromZero(int orientation, final Double copyNumber)
     {
-        return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
+        return orientation() == orientation && copyNumber != null && Doubles.isZero(copyNumber);
     }
 }

@@ -11,6 +11,7 @@ import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -22,16 +23,16 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumber;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
-import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
-import com.hartwig.hmftools.purple.copynumber.sv.ModifiableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
+import com.hartwig.hmftools.purple.copynumber.sv.SvLegPloidyFactory;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegs;
 
 import org.jetbrains.annotations.NotNull;
@@ -44,26 +45,26 @@ public class StructuralVariantPloidyFactoryTest
     private static final double AVERAGE_COPY_NUMBER = 2;
 
     @NotNull
-    public static ImmutableStructuralVariantLegPloidy.Builder svLegPloidy(int orientation, @NotNull final Optional<Double> leftCopyNumber,
-            @NotNull final Optional<Double> rightCopyNumber, double ploidy)
+    public static StructuralVariantLegPloidy svLegPloidy(
+            final String chromosome, int orientation, final Optional<Double> leftCopyNumber, final Optional<Double> rightCopyNumber, double ploidy)
     {
-        return ImmutableStructuralVariantLegPloidy.builder()
-                .chromosome(CHROMOSOME)
+        StructuralVariantLeg leg = ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(chromosome)
                 .position(1)
                 .orientation((byte) orientation)
-                .observedVaf(0.5)
-                .adjustedVaf(0.5)
                 .alleleFrequency(0.5)
                 .homology("")
-                .anchoringSupportDistance(0)
-                .weight(1)
-                .averageImpliedPloidy(ploidy)
-                .unweightedImpliedPloidy(ploidy)
-                .leftCopyNumber(leftCopyNumber)
-                .rightCopyNumber(rightCopyNumber);
+                .anchoringSupportDistance(0).build();
+
+        StructuralVariantLegCopyNumber legCopyNumber = new StructuralVariantLegCopyNumber(
+                leg,
+                leftCopyNumber.isPresent() ? leftCopyNumber.get() : null,
+                rightCopyNumber.isPresent() ? rightCopyNumber.get() : null);
+
+        return new StructuralVariantLegPloidy(legCopyNumber, 0.5, 0.5, ploidy, ploidy, 1);
     }
 
-    private static final StructuralVariantLegPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY = new StructuralVariantLegPloidyFactory<>(
+    private static final SvLegPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY = new SvLegPloidyFactory<>(
             AVERAGE_READ_DEPTH,
             AVERAGE_COPY_NUMBER,
             PURE,
@@ -118,16 +119,15 @@ public class StructuralVariantPloidyFactoryTest
         final PurpleCopyNumber left = copyNumber(1001, 2000, -0.03);
         final PurpleCopyNumber right = copyNumber(2001, 3000, 0);
 
-        ModifiableStructuralVariantLegPloidy leftLegPloidy =
-                PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).get();
-        ModifiableStructuralVariantLegPloidy rightLegPloidy =
-                PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).get();
+        StructuralVariantLegPloidy leftLegPloidy = PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).get();
 
-        assertFalse(leftLegPloidy.leftCopyNumber().isPresent());
-        assertTrue(leftLegPloidy.rightCopyNumber().filter(Doubles::isZero).isPresent());
+        StructuralVariantLegPloidy rightLegPloidy = PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).get();
 
-        assertFalse(rightLegPloidy.leftCopyNumber().isPresent());
-        assertTrue(leftLegPloidy.rightCopyNumber().filter(Doubles::isZero).isPresent());
+        assertNull(leftLegPloidy.leftCopyNumber());
+        assertTrue(Doubles.isZero(leftLegPloidy.rightCopyNumberOrZero()));
+
+        assertNull(rightLegPloidy.leftCopyNumber());
+        assertTrue(Doubles.isZero(leftLegPloidy.rightCopyNumberOrZero()));
     }
 
     @Test
@@ -146,7 +146,7 @@ public class StructuralVariantPloidyFactoryTest
 
         final StructuralVariantLeg leg = createLeg(1001, -1, 3.5 / 4, AVERAGE_READ_DEPTH * multiplier);
         final PurpleCopyNumber left = copyNumber(1, 1000, 3);
-        Optional<ModifiableStructuralVariantLegPloidy> result =
+        Optional<StructuralVariantLegPloidy> result =
                 PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(singleton(left)));
         assertEquals(AVERAGE_COPY_NUMBER * multiplier, result.get().unweightedImpliedPloidy(), EPSILON);
     }
@@ -173,41 +173,41 @@ public class StructuralVariantPloidyFactoryTest
         final StructuralVariantLeg leg = createLeg(1000, 1, 0.5);
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList(copyNumber(1, 1000, 2), copyNumber(1001, 200, 1));
 
-        Optional<ModifiableStructuralVariantLegPloidy> purePloidy =
+        Optional<StructuralVariantLegPloidy> purePloidy =
                 PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1d, purePloidy);
 
         final PurityAdjuster diluted = buildPurityAdjuster(Gender.FEMALE, 0.8, 1);
-        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> dilutedFactory =
-                new StructuralVariantLegPloidyFactory<>(diluted, PurpleCopyNumber::averageTumorCopyNumber);
-        Optional<ModifiableStructuralVariantLegPloidy> dilutedPloidy =
+        final SvLegPloidyFactory<PurpleCopyNumber> dilutedFactory =
+                new SvLegPloidyFactory<>(diluted, PurpleCopyNumber::averageTumorCopyNumber);
+        Optional<StructuralVariantLegPloidy> dilutedPloidy =
                 dilutedFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.25d, dilutedPloidy);
 
         final PurityAdjuster male = buildPurityAdjuster(Gender.MALE, 0.8, 1);
-        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> maleFactory =
-                new StructuralVariantLegPloidyFactory<>(male, PurpleCopyNumber::averageTumorCopyNumber);
-        Optional<ModifiableStructuralVariantLegPloidy> malePloidy =
+        final SvLegPloidyFactory<PurpleCopyNumber> maleFactory =
+                new SvLegPloidyFactory<>(male, PurpleCopyNumber::averageTumorCopyNumber);
+        Optional<StructuralVariantLegPloidy> malePloidy =
                 maleFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.125d, malePloidy);
     }
 
-    private void assertPloidy(double expected, @NotNull final Optional<ModifiableStructuralVariantLegPloidy> ploidy)
+    private void assertPloidy(double expected, @NotNull final Optional<StructuralVariantLegPloidy> ploidy)
     {
-        assertEquals(expected, ploidy.map(ModifiableStructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D), EPSILON);
+        assertEquals(expected, ploidy.map(StructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D), EPSILON);
     }
 
     private void assertPloidy(double expectedPloidy, boolean alternate,
-            @NotNull final Optional<ModifiableStructuralVariantLegPloidy> ploidy)
+            @NotNull final Optional<StructuralVariantLegPloidy> ploidy)
     {
-        assertEquals(expectedPloidy, ploidy.map(ModifiableStructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D), EPSILON);
+        assertEquals(expectedPloidy, ploidy.map(StructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D), EPSILON);
         if(alternate)
         {
-            assertNotEquals(1d, ploidy.map(ModifiableStructuralVariantLegPloidy::weight).orElse(0D), EPSILON);
+            assertNotEquals(1d, ploidy.map(StructuralVariantLegPloidy::weight).orElse(0D), EPSILON);
         }
         else
         {
-            assertEquals(1d, ploidy.map(ModifiableStructuralVariantLegPloidy::weight).orElse(0D), EPSILON);
+            assertEquals(1d, ploidy.map(StructuralVariantLegPloidy::weight).orElse(0D), EPSILON);
         }
     }
 

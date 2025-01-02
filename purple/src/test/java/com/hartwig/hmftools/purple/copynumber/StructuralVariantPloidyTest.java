@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 
 import org.jetbrains.annotations.NotNull;
@@ -71,24 +70,9 @@ public class StructuralVariantPloidyTest
         assertEquals(expectedWeight, ploidy.impliedRightCopyNumberWeight(), EPSILON);
     }
 
-    @NotNull
-    private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
-            @NotNull final Optional<Double> rightCopyNumber)
+    private static StructuralVariantLegPloidy create(
+            int orientation, final Optional<Double> leftCopyNumber, final Optional<Double> rightCopyNumber)
     {
-        return ImmutableStructuralVariantLegPloidy.builder()
-                .chromosome(CHROMOSOME)
-                .position(1)
-                .orientation((byte) orientation)
-                .observedVaf(0.5)
-                .adjustedVaf(0.5)
-                .alleleFrequency(0.5)
-                .homology("")
-                .anchoringSupportDistance(0)
-                .weight(1)
-                .averageImpliedPloidy(PLOIDY)
-                .unweightedImpliedPloidy(PLOIDY)
-                .leftCopyNumber(leftCopyNumber)
-                .rightCopyNumber(rightCopyNumber)
-                .build();
+        return StructuralVariantPloidyFactoryTest.svLegPloidy(CHROMOSOME, orientation, leftCopyNumber, rightCopyNumber, PLOIDY);
     }
 }
