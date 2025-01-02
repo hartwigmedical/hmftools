@@ -135,7 +135,9 @@ public class Isofox
             ISF_LOGGER.info("Output dir for CRAM:{}", mConfig.OutputDir);
             new StageRunner().run(mConfig.BamFile, mConfig.OutputDir);
         } catch (IOException e) {
+            System.exit(1);
             throw new RuntimeException(e);
+
         }
 
         // BAM processing for the key routines - novel junctions, fusions and gene expression
@@ -143,6 +145,7 @@ public class Isofox
             return false;
 
         ISF_LOGGER.info("Isofox complete, mins({})", runTimeMinsStr(startTimeMs));
+        System.exit(1);
         return true;
     }
 
