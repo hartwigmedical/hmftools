@@ -1,19 +1,26 @@
-package com.hartwig.hmftools.geneutils.targetregion;
+package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_ID;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.paneldesign.BlastnMapper.isPrimaryBlastnMatch;
+import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.CANDIDATE_FILE_EXTENSION;
+import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.GENE_REGION_FILE_EXTENSION;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_CANDIDATE_REGION_SIZE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_FLANKING_DISTANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_LONG_INTRON_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX_CANDIDATE_PROBES;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MIN_INTRON_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MAX_PROBE_SUM_BLASTN_BITSCORE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MIN_BLAST_ALIGNMENT_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeCandidate.createProbeCandidate;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -23,115 +30,71 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.blastn.BlastnMatch;
-import com.hartwig.hmftools.common.blastn.BlastnRunner;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
-
-import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class GeneProbesGenerator
 {
     private static class GeneNameTranscriptId
     {
         public final String GeneName;
-        public final String EnsemblTranscriptId;
+        public final String TranscriptName;
 
-        public GeneNameTranscriptId(final String geneName, final String ensemblTranscriptId)
+        public GeneNameTranscriptId(final String geneName, final String transcriptName)
         {
             GeneName = geneName;
-            EnsemblTranscriptId = ensemblTranscriptId;
+            TranscriptName = transcriptName;
         }
+
+        public boolean useCanonical() { return TranscriptName.isEmpty(); }
+        public String toString() { return format("%s:%s", GeneName, useCanonical() ? "canonical" : TranscriptName); }
     }
 
-    private static final double PROBE_GC_MIN = 0.35;
-    private static final double PROBE_GC_MAX = 0.55;
-    private static final double MAX_PROBE_SUM_BLASTN_BITSCORE = 2500;
-
-    private static final int PROBE_LENGTH = 120;
-
-    private static final int MAX_CANDIDATE_PROBES = 8;
-    private static final int MIN_INTRON_LENGTH = 3000;
-    private static final int LONG_INTRON_LENGTH = 5000;
-
-    private static final int MAX_EXONS_TO_ADD_INTRON = 19;
-
-    private static final int FLANKING_DISTANCE = 1000;
-    private static final int CANDIDATE_REGION_SIZE = PROBE_LENGTH * MAX_CANDIDATE_PROBES;
-
-    private static final int BLASTN_WORD_SIZE = 15;
-
-    private static final int MIN_BLAST_ALIGNMENT_LENGTH = 30;
-
-    private static final String GENE_TRANSCRIPT_FILE = "gene_transcript_file";
-    private static final String OUTPUT_PREFIX = "output_prefix";
-
-    private static final String BLAST = "blast";
-
-    private static final String BLAST_DB = "blast_db";
-
-    private final String mOutputPrefix;
-
-    private final String mOutputDir;
-
-    private final int mThreads;
-
-    private final String mBlast;
-
-    private final String mBlastDb;
-
-    private final RefGenomeInterface mRefGenome;
+    private final PanelConfig mConfig;
+    private final PanelCache mPanelCache;
+    private final BlastnMapper mBlastnMapper;
 
     private final EnsemblDataCache mEnsemblDataCache;
 
-    private final List<GeneNameTranscriptId> mGeneNameTranscriptIds = new ArrayList<>();
+    private final List<GeneNameTranscriptId> mGeneNameTranscriptIds;
 
-    public GeneProbesGenerator(final ConfigBuilder configBuilder) throws FileNotFoundException
+    public GeneProbesGenerator(final PanelConfig config, final PanelCache panelCache, final BlastnMapper blastnMapper)
     {
-        ConfigUtils.setLogLevel(configBuilder);
-        mOutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
-        mOutputDir = parseOutputDir(configBuilder);
-        mThreads = parseThreads(configBuilder);
-        mBlast = configBuilder.getValue(BLAST);
-        mBlastDb = configBuilder.getValue(BLAST_DB);
+        mConfig = config;
+        mPanelCache = panelCache;
+        mBlastnMapper = blastnMapper;
 
-        final String refGenomeFile = configBuilder.getValue(REF_GENOME);
-        mRefGenome = new RefGenomeSource(new IndexedFastaSequenceFile(new File(refGenomeFile)));
+        mGeneNameTranscriptIds = new ArrayList<>();
 
-        mEnsemblDataCache = new EnsemblDataCache(configBuilder);
+        mEnsemblDataCache = new EnsemblDataCache(mConfig.EnsemblDir, mConfig.RefGenVersion);
         mEnsemblDataCache.setRequiredData(true, false, false, false);
         mEnsemblDataCache.load(false);
 
-        try (DelimFileReader reader = new DelimFileReader(configBuilder.getValue(GENE_TRANSCRIPT_FILE)))
+        try(DelimFileReader reader = new DelimFileReader(mConfig.GeneTranscriptFile))
         {
             reader.stream().forEach(row -> mGeneNameTranscriptIds.add(
-                    new GeneNameTranscriptId(row.get(FLD_GENE_NAME), row.get(FLD_TRANS_ID))));
+                    new GeneNameTranscriptId(row.get(FLD_GENE_NAME), row.getOrNull(FLD_TRANS_NAME))));
         }
     }
 
-    public int run()
+    public void run()
     {
         List<TargetedGene> targetedGenes = new ArrayList<>();
 
         // from the gene, find all the gene regions
-        for(GeneNameTranscriptId geneNameTranscriptId : mGeneNameTranscriptIds)
+        for(GeneNameTranscriptId geneTranscript : mGeneNameTranscriptIds)
         {
-            String geneName = geneNameTranscriptId.GeneName;
-            String transcriptId = geneNameTranscriptId.EnsemblTranscriptId;
+            String geneName = geneTranscript.GeneName;
 
-            GU_LOGGER.info("processing gene: {}, ensembl transcript id: {}", geneName, transcriptId);
+            GU_LOGGER.debug("processing gene-transcript({})", geneTranscript);
 
             // get all the gene regions from the ensembl
             GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
@@ -139,15 +102,24 @@ public class GeneProbesGenerator
             if(geneData == null)
             {
                 GU_LOGGER.error("transcript data for gene: {} not found", geneName);
-                throw new RuntimeException(String.format("transcript data for gene: %s not found", geneName));
+                throw new RuntimeException(format("transcript data for gene: %s not found", geneName));
             }
 
-            TranscriptData transcriptData = mEnsemblDataCache.getTranscriptData(geneData.GeneId, transcriptId);
+            // skip if the gene is already covered by a custom region
+            if(mPanelCache.overlapsExisting(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd))
+            {
+                GU_LOGGER.warn("gene({}) skipped since overlaps with existing panel region", geneName);
+                continue;
+            }
+
+            TranscriptData transcriptData = geneTranscript.useCanonical() ?
+                    mEnsemblDataCache.getCanonicalTranscriptData(geneData.GeneId) :
+                    mEnsemblDataCache.getTranscriptData(geneData.GeneId, geneTranscript.TranscriptName);
 
             if(transcriptData == null)
             {
-                GU_LOGGER.error("transcript id({}) for gene({}) not found", transcriptId, geneName);
-                throw new RuntimeException(String.format("transcript id(%s) for gene(%s) not found", transcriptId, geneName));
+                GU_LOGGER.error("gene({}) transcript({}) not found", geneName, geneTranscript.TranscriptName);
+                System.exit(1);
             }
 
             TargetedGene targetedGene = new TargetedGene(geneData, transcriptData);
@@ -165,12 +137,44 @@ public class GeneProbesGenerator
         // now choose probes for each region
         selectProbeCandidates(targetedGenes);
 
-        // write the outputs
-        List<TargetedGeneRegion> regions = targetedGenes.stream().flatMap(o -> o.getRegions().stream()).collect(Collectors.toList());
-        GeneProbeCandidateFileWriter.write(mOutputDir, mOutputPrefix, regions);
-        GeneProbeRegionFileWriter.write(mOutputDir, mOutputPrefix, regions);
+        // add regions & probes to the cache
+        List<TargetedGeneRegion> targetedGeneRegions = Lists.newArrayList();
 
-        return 0;
+        for(TargetedGene targetedGene : targetedGenes)
+        {
+            for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
+            {
+                ChrBaseRegion region = new ChrBaseRegion(
+                        targetedGene.getGeneData().Chromosome, targetedGeneRegion.getStart(), targetedGeneRegion.getEnd());
+
+                PanelRegion panelRegion;
+                if(targetedGeneRegion.useWholeRegion())
+                {
+                    panelRegion = new PanelRegion(region, RegionType.GENE, targetedGeneRegion.getType().toString());
+                }
+                else
+                {
+                    ProbeCandidate probeCandidate = targetedGeneRegion.getSelectedProbe();
+
+                    if(probeCandidate == null)
+                        continue;
+
+                    String sourceInfo = format("%s:%s", targetedGene.getGeneData().GeneName, targetedGeneRegion.getType().toString());
+
+                    panelRegion = new PanelRegion(
+                            region, RegionType.GENE, sourceInfo,
+                            probeCandidate.getSequence(), probeCandidate.getGcContent(), probeCandidate.getSumBlastnBitScore());
+                }
+
+                mPanelCache.addRegion(panelRegion);
+
+                targetedGeneRegions.add(targetedGeneRegion);
+            }
+        }
+
+        // write the outputs
+        DataWriter.writeCandidates(mConfig.formOutputFilename(CANDIDATE_FILE_EXTENSION), targetedGeneRegions);
+        DataWriter.writeTargertedGeneRegions(mConfig.formOutputFilename(GENE_REGION_FILE_EXTENSION), targetedGeneRegions);
     }
 
     /*
@@ -190,44 +194,43 @@ public class GeneProbesGenerator
     |             |                       | - Choose 1 probe  per region with lowest SUM_BLASTN score.                                     |
     |-------------|-----------------------|------------------------------------------------------------------------------------------------|
     */
-    static void populateTargetedGeneRegions(TargetedGene targetedGene)
+    static void populateTargetedGeneRegions(final TargetedGene targetedGene)
     {
         // first we create a region 1-2kb upstream of the gene
-        // TODO: should this be before first exon or before the gene start?
+        TranscriptData transcript = targetedGene.getTranscriptData();
+
         targetedGene.addRegion(targetedGene.getGeneData().forwardStrand() ? TargetedGeneRegion.Type.UP_STREAM : TargetedGeneRegion.Type.DOWN_STREAM,
-                targetedGene.getGeneData().GeneStart - FLANKING_DISTANCE - CANDIDATE_REGION_SIZE,
-                targetedGene.getGeneData().GeneStart - FLANKING_DISTANCE - 1);
+                transcript.TransStart - GENE_FLANKING_DISTANCE - GENE_CANDIDATE_REGION_SIZE,
+                transcript.TransStart - GENE_FLANKING_DISTANCE - 1);
 
         int lastExonEnd = -1;
 
-        TranscriptData transcript = targetedGene.getTranscriptData();
-
         for(ExonData exonData : transcript.exons())
         {
-            if(lastExonEnd != -1 && targetedGene.getTranscriptData().exons().size() <= MAX_EXONS_TO_ADD_INTRON)
+            if(lastExonEnd != -1 && targetedGene.getTranscriptData().exons().size() <= GENE_MAX_EXONS_TO_ADD_INTRON)
             {
                 int intronLength = exonData.Start - lastExonEnd;
 
-                if(intronLength > MIN_INTRON_LENGTH)
+                if(intronLength > GENE_MIN_INTRON_LENGTH)
                 {
-                    if(intronLength > LONG_INTRON_LENGTH)
+                    if(intronLength > GENE_LONG_INTRON_LENGTH)
                     {
                         // for long intron, we want to split into two 1k regions each flank the exons
                         targetedGene.addRegion(TargetedGeneRegion.Type.INTRONIC_LONG,
-                                lastExonEnd + 1 + FLANKING_DISTANCE,
-                                lastExonEnd + FLANKING_DISTANCE + CANDIDATE_REGION_SIZE);
+                                lastExonEnd + 1 + GENE_FLANKING_DISTANCE,
+                                lastExonEnd + GENE_FLANKING_DISTANCE + GENE_CANDIDATE_REGION_SIZE);
 
                         targetedGene.addRegion(TargetedGeneRegion.Type.INTRONIC_LONG,
-                                exonData.Start - FLANKING_DISTANCE - CANDIDATE_REGION_SIZE,
-                                exonData.Start - FLANKING_DISTANCE - 1);
+                                exonData.Start - GENE_FLANKING_DISTANCE - GENE_CANDIDATE_REGION_SIZE,
+                                exonData.Start - GENE_FLANKING_DISTANCE - 1);
                     }
                     else
                     {
                         // for smaller intron we add a region in the middle 1k
                         int intronMid = (lastExonEnd + 1 + exonData.Start) / 2;
                         targetedGene.addRegion(TargetedGeneRegion.Type.INTRONIC_SHORT,
-                                intronMid - CANDIDATE_REGION_SIZE / 2,
-                                intronMid + CANDIDATE_REGION_SIZE / 2 - 1);
+                                intronMid - GENE_CANDIDATE_REGION_SIZE / 2,
+                                intronMid + GENE_CANDIDATE_REGION_SIZE / 2 - 1);
                     }
                 }
             }
@@ -257,8 +260,8 @@ public class GeneProbesGenerator
         }
 
         targetedGene.addRegion(targetedGene.getGeneData().forwardStrand() ? TargetedGeneRegion.Type.DOWN_STREAM : TargetedGeneRegion.Type.UP_STREAM,
-                targetedGene.getGeneData().GeneEnd + 1 + FLANKING_DISTANCE,
-                targetedGene.getGeneData().GeneEnd + FLANKING_DISTANCE + CANDIDATE_REGION_SIZE);
+                transcript.TransEnd + 1 + GENE_FLANKING_DISTANCE,
+                transcript.TransEnd + GENE_FLANKING_DISTANCE + GENE_CANDIDATE_REGION_SIZE);
     }
 
     // from the targeted gene regions, we find the probes
@@ -266,11 +269,11 @@ public class GeneProbesGenerator
     {
         for(TargetedGeneRegion region : targetedGene.getRegions())
         {
-            populateCandidateProbes(region, mRefGenome);
+            populateCandidateProbes(region, mConfig.RefGenome);
         }
     }
 
-    static void populateCandidateProbes(TargetedGeneRegion region, RefGenomeInterface refGenomeInterface)
+    static void populateCandidateProbes(final TargetedGeneRegion region, final RefGenomeInterface refGenomeInterface)
     {
         switch(region.getType())
         {
@@ -282,29 +285,62 @@ public class GeneProbesGenerator
             case DOWN_STREAM:
             case INTRONIC_LONG:
             case INTRONIC_SHORT:
-                // create 8 candidate probes
-                for(int i = 0; i < MAX_CANDIDATE_PROBES; ++i)
+
+                // create set of candidate probes within the region
+                for(int i = 0; i < GENE_MAX_CANDIDATE_PROBES; ++i)
                 {
                     int start = region.getStart() + i * PROBE_LENGTH;
                     int end = start + PROBE_LENGTH - 1; // end is inclusive
-                    ProbeCandidate probe = createProbeCandidate(new ChrBaseRegion(region.getGene().getGeneData().Chromosome, start, end),
-                            refGenomeInterface);
+
+                    ProbeCandidate probe = createProbeCandidate(
+                            new ChrBaseRegion(region.getGene().getGeneData().Chromosome, start, end), refGenomeInterface);
+
                     region.getProbeCandidates().add(probe);
                 }
                 break;
         }
     }
 
-    static ProbeCandidate createProbeCandidate(ChrBaseRegion chrBaseRegion, RefGenomeInterface refGenomeInterface)
+    public void runBlastnOnProbeCandidates(final List<TargetedGene> targetedGeneList)
     {
-        // get the sequence from the ref genome
-        String sequence = refGenomeInterface.getBaseString(chrBaseRegion.chromosome(), chrBaseRegion.start(), chrBaseRegion.end());
-        double gcContent = GcCalcs.calcGcPercent(sequence);
+        List<ProbeCandidate> probeCandidates = Lists.newArrayList();
 
-        return new ProbeCandidate(chrBaseRegion, sequence, gcContent);
+        for(TargetedGene targetedGene : targetedGeneList)
+        {
+            for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
+            {
+                for(ProbeCandidate probeCandidate : targetedGeneRegion.getProbeCandidates())
+                {
+                    if(checkGcContent(probeCandidate))
+                    {
+                        probeCandidates.add(probeCandidate);
+                    }
+                }
+            }
+        }
+
+        if(probeCandidates.isEmpty())
+            return;
+
+        List<String> sequences = probeCandidates.stream().map(x -> x.getSequence()).collect(Collectors.toList());
+
+        GU_LOGGER.info("calling Blastn on {} gene probes", sequences.size());
+
+        List<BlastnResult> results = mBlastnMapper.mapSequences(sequences);
+
+        GU_LOGGER.info("finished Blastn on {} gene probes", sequences.size());
+
+        for(int i = 0; i < probeCandidates.size(); ++i)
+        {
+            ProbeCandidate probeCandidate = probeCandidates.get(i);
+            BlastnResult blastnResult = results.get(i);
+
+            if(blastnResult.isValid())
+                probeCandidate.setSumBlastnBitScore(blastnResult.SumBitScore);
+        }
     }
 
-    public void runBlastnOnProbeCandidates(Collection<TargetedGene> targetedGeneList)
+    public void runBlastnOnProbeCandidatesOld(Collection<TargetedGene> targetedGeneList)
     {
         int nextProbeKey = 0;
 
@@ -329,19 +365,10 @@ public class GeneProbesGenerator
         GU_LOGGER.info("running blastn on {} probe candidates", probeCandidateMap.size());
 
         // run blastn on those
-        Multimap<Integer, BlastnMatch> result = new BlastnRunner.Builder()
-                .withTask("megablast")
-                .withPrefix(mOutputPrefix)
-                .withBlastDir(mBlast)
-                .withBlastDb(mBlastDb)
-                .withOutputDir(mOutputDir)
-                .withKeepOutput(true)
-                .withWordSize(BLASTN_WORD_SIZE)
-                .withSubjectBestHit(true)
-                .withNumThreads(mThreads)
-                .build()
-                .run(probeCandidateMap.entrySet().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSequence())));
+        Map<Integer,String> querySequences = probeCandidateMap.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSequence()));
+
+        Multimap<Integer, BlastnMatch> result = mBlastnMapper.mapSequences(querySequences);
 
         // now go back to process the results
         for(int k : probeCandidateMap.keySet())
@@ -361,7 +388,7 @@ public class GeneProbesGenerator
 
             // now process all the matches and sum up the bit score, but remove the one with best match
             Optional<BlastnMatch> bestMatch = matches.stream()
-                    .filter(GeneProbesGenerator::isPrimaryBlastnMatch)
+                    .filter(x -> isPrimaryBlastnMatch(x))
                     .max(Comparator.comparing(BlastnMatch::getBitScore));
 
             if(bestMatch.isPresent())
@@ -383,20 +410,13 @@ public class GeneProbesGenerator
         GU_LOGGER.info("finished blastn on {} probes", probeCandidateMap.size());
     }
 
-    // write out the candidate probe for each region we are interested
     public void selectProbeCandidates(Collection<TargetedGene> targetedGeneList)
     {
+        // select top-scoring, valid probe from the set of candidates
         for(TargetedGene targetedGene : targetedGeneList)
         {
-            GU_LOGGER.debug("gene: {}", targetedGene.getGeneData().GeneName);
-
             for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
             {
-                // select the best probe
-                GU_LOGGER.debug("gene: {}, region: type({}) {}:{}-{}",
-                        targetedGene.getGeneData().GeneName, targetedGeneRegion.getType(),
-                        targetedGeneRegion.getChromosome(), targetedGeneRegion.getStart(), targetedGeneRegion.getEnd());
-
                 ProbeCandidate selectedProbe = null;
 
                 for(ProbeCandidate probeCandidate : targetedGeneRegion.getProbeCandidates())
@@ -419,8 +439,7 @@ public class GeneProbesGenerator
                 {
                     targetedGeneRegion.setSelectedProbe(selectedProbe);
 
-                    // now log the selected probe
-                    GU_LOGGER.debug("region: type({}) {}:{}-{} selected probe: {}-{}", targetedGeneRegion.getType(),
+                    GU_LOGGER.trace("region: type({}) {}:{}-{} selected probe: {}-{}", targetedGeneRegion.getType(),
                             targetedGeneRegion.getChromosome(), targetedGeneRegion.getStart(), targetedGeneRegion.getEnd(),
                             selectedProbe.getStart(), selectedProbe.getEnd());
                 }
@@ -437,43 +456,15 @@ public class GeneProbesGenerator
     {
         if(probeCandidate.getGcContent() <= PROBE_GC_MIN)
         {
-            probeCandidate.setFilterReason(String.format("gc <= %.2f", PROBE_GC_MIN));
+            probeCandidate.setFilterReason(format("gc <= %.2f", PROBE_GC_MIN));
         }
         else if(probeCandidate.getGcContent() >= PROBE_GC_MAX)
         {
-            probeCandidate.setFilterReason(String.format("gc >= %.2f", PROBE_GC_MAX));
+            probeCandidate.setFilterReason(format("gc >= %.2f", PROBE_GC_MAX));
         }
         else if(probeCandidate.getSumBlastnBitScore() >= MAX_PROBE_SUM_BLASTN_BITSCORE)
         {
-            probeCandidate.setFilterReason(String.format("sum(bitscore) >= %g", MAX_PROBE_SUM_BLASTN_BITSCORE));
+            probeCandidate.setFilterReason(format("sum(bitscore) >= %g", MAX_PROBE_SUM_BLASTN_BITSCORE));
         }
-    }
-
-    public static boolean isPrimaryBlastnMatch(BlastnMatch match)
-    {
-        return match.getSubjectTitle().contains("Primary Assembly") ||
-                match.getSubjectTitle().contains("unlocalized genomic scaffold") ||
-                match.getSubjectTitle().contains("unplaced genomic scaffold");
-    }
-
-    public static void main(@NotNull final String[] args) throws FileNotFoundException
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-
-        configBuilder.addPath(GENE_TRANSCRIPT_FILE, true, "Gene name file");
-        addRefGenomeVersion(configBuilder);
-        configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        configBuilder.addConfigItem(OUTPUT_PREFIX, true, "prefix of output BED filename");
-        addOutputDir(configBuilder);
-        EnsemblDataCache.addEnsemblDir(configBuilder, true);
-        configBuilder.addPath(BLAST, true, "Location of blast installation");
-        configBuilder.addPath(BLAST_DB, true, "Location of blast database");
-        addThreadOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
-
-        configBuilder.checkAndParseCommandLine(args);
-
-        GeneProbesGenerator geneProbesGenerator = new GeneProbesGenerator(configBuilder);
-        System.exit(geneProbesGenerator.run());
     }
 }

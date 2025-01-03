@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.targetregion;
+package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
@@ -21,36 +21,20 @@ import org.junit.Test;
 
 public class GeneProbesGeneratorTest
 {
-    /*
-    | Region Type | Gene                  | Design                                                                                         |
-    |-------------|-----------------------|------------------------------------------------------------------------------------------------|
-    | Coding      | All                   | - Cover the full coding region of each exon                                                    |
-    |-------------|-----------------------|------------------------------------------------------------------------------------------------|
-    | UTR         | All                   | - Add a 120nt probe centred on each non-coding exon                                            |
-    |-------------|-----------------------|------------------------------------------------------------------------------------------------|
-    | Upstream/   | All                   | - Create 8 candidate 120nt probes from 1kb to 2kb bases upstream of gene.                      |
-    | Downstream  |                       | - Filter for  0.35<GC<0.55 AND SUM_BLASTN<1000                                                 |
-    |             |                       | - Choose 1 probe per region with lowest SUM_BLASTN score.                                      |
-    |-------------|-----------------------|------------------------------------------------------------------------------------------------|
-    | Intronic    | Genes with < 20 exons | - For each intron of >5kb, create 8 candidate120nt probes from 1kb-2kb from EACH flanking exon |
-    |             |                       | - For each intron of 3kb-5kb, create 8 candidate 120nt probes centred on intron                |
-    |             |                       | - Filter for 0.35<GC<0.55 AND SUM_BLASTN<1000                                                  |
-    |             |                       | - Choose 1 probe  per region with lowest SUM_BLASTN score.                                     |
-    |-------------|-----------------------|------------------------------------------------------------------------------------------------|
-    */
     @Test
     public void testPopulateTargetGeneRegionsSimple()
     {
         // create gene and transcript data
         String geneId = "GENE01";
 
-        GeneData geneData = new GeneData(geneId, geneId, "1", Strand.POS_STRAND, 10000, 20000 - 1, "");
+        GeneData geneData = new GeneData(geneId, geneId, CHR_1, Strand.POS_STRAND, 11000, 19000 - 1, "");
 
         int transId = 1;
         String transName = "TRANS01";
 
-        TranscriptData transData =
-                new TranscriptData(transId, transName, geneId, true, Strand.POS_STRAND, 11000, 19000 - 1, 13500, 18000 - 1, "");
+        TranscriptData transData = new TranscriptData(
+                transId, transName, geneId, true, Strand.POS_STRAND,
+                11000, 19000 - 1, 13500, 18000 - 1, "");
 
         // first exon is not coding
         transData.exons().add(new ExonData(transId, 11000, 12000 - 1, 1, -1, -1));
@@ -74,8 +58,8 @@ public class GeneProbesGeneratorTest
         // first we should have an upstream region
         TargetedGeneRegion region = itr.next();
         assertEquals(TargetedGeneRegion.Type.UP_STREAM, region.getType());
-        assertEquals(8040, region.getStart());
-        assertEquals(8999, region.getEnd());
+        assertEquals(9040, region.getStart());
+        assertEquals(9999, region.getEnd());
 
         // 1st exon is non coding, add a probe in the centre
         region = itr.next();
@@ -98,8 +82,8 @@ public class GeneProbesGeneratorTest
         // downstream region
         region = itr.next();
         assertEquals(TargetedGeneRegion.Type.DOWN_STREAM, region.getType());
-        assertEquals(21000, region.getStart());
-        assertEquals(21960 - 1, region.getEnd());
+        assertEquals(20000, region.getStart());
+        assertEquals(20960 - 1, region.getEnd());
     }
 
     @Test
@@ -108,13 +92,15 @@ public class GeneProbesGeneratorTest
         // create gene and transcript data
         String geneId = "GENE01";
 
-        GeneData geneData = new GeneData(geneId, geneId, "1", Strand.POS_STRAND, 10000, 30000 - 1, "");
+        GeneData geneData = new GeneData(
+                geneId, geneId, CHR_1, Strand.POS_STRAND, 11000, 25000 - 1, "");
 
         int transId = 1;
         String transName = "TRANS01";
 
-        TranscriptData transData =
-                new TranscriptData(transId, transName, geneId, true, Strand.POS_STRAND, 11000, 25000 - 1, 13500, 24000 - 1, "");
+        TranscriptData transData = new TranscriptData(
+                transId, transName, geneId, true, Strand.POS_STRAND,
+                11000, 25000 - 1, 13500, 24000 - 1, "");
 
         // first exon is not coding
         transData.exons().add(new ExonData(transId, 11000, 12000 - 1, 1, -1, -1));
@@ -141,8 +127,8 @@ public class GeneProbesGeneratorTest
         // first we should have an upstream region
         TargetedGeneRegion region = itr.next();
         assertEquals(TargetedGeneRegion.Type.UP_STREAM, region.getType());
-        assertEquals(8040, region.getStart());
-        assertEquals(8999, region.getEnd());
+        assertEquals(9040, region.getStart());
+        assertEquals(9999, region.getEnd());
 
         // 1st exon is non coding, add a probe in the centre
         region = itr.next();
@@ -182,8 +168,8 @@ public class GeneProbesGeneratorTest
         // downstream region
         region = itr.next();
         assertEquals(TargetedGeneRegion.Type.DOWN_STREAM, region.getType());
-        assertEquals(31000, region.getStart());
-        assertEquals(31960 - 1, region.getEnd());
+        assertEquals(26000, region.getStart());
+        assertEquals(26960 - 1, region.getEnd());
     }
 
     @Test
@@ -202,8 +188,8 @@ public class GeneProbesGeneratorTest
         int transId = 1;
         String transName = "TRANS01";
 
-        TranscriptData transData =
-                new TranscriptData(transId, transName, geneId, true, Strand.POS_STRAND, 1, 1000, 1, 1000, "");
+        TranscriptData transData = new TranscriptData(
+                transId, transName, geneId, true, Strand.POS_STRAND, 1, 1000, 1, 1000, "");
 
         // create a targeted gene
         TargetedGene targetedGene = new TargetedGene(geneData, transData);

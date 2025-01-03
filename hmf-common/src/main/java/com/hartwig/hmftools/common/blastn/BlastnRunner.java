@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.blastn;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -98,7 +100,7 @@ public class BlastnRunner
             return ArrayListMultimap.create();
         }
 
-        Instant start = Instant.now();
+        long startTimeMs = System.currentTimeMillis();
 
         String fastaFile = outputDir + "/" + prefix + ".blastn.fa";
         writeBlastFasta(querySequences, fastaFile);
@@ -142,7 +144,7 @@ public class BlastnRunner
 
         File outputFileCsv = new File(outputDir + "/" + prefix + ".blastn.csv.gz");
 
-        sLogger.info("Running blastn on sample {}, {} sequences, output: {}", prefix, querySequences.size(), outputFileCsv);
+        sLogger.info("running blastn on sample {}, {} sequences, output: {}", prefix, querySequences.size(), outputFileCsv);
 
         command.add("-outfmt");
         command.add("6 " + Arrays.stream(BlastColumns.values()).map(BlastColumns::name).collect(Collectors.joining(" ")));
@@ -151,7 +153,7 @@ public class BlastnRunner
         Map<String, String> environment = processBuilder.environment();
         environment.put("BLASTDB", blastDb);
 
-        sLogger.info("{}", String.join(" ", processBuilder.command()));
+        sLogger.debug("{}", String.join(" ", processBuilder.command()));
 
         try
         {
@@ -177,7 +179,7 @@ public class BlastnRunner
             if(result != 0)
             {
                 sLogger.fatal("Error executing blastn");
-                throw new RuntimeException("BLASTN execution failed");
+                throw new RuntimeException("blastn execution failed");
             }
         }
         catch(IOException | InterruptedException e)
@@ -186,9 +188,7 @@ public class BlastnRunner
             throw new RuntimeException(e);
         }
 
-        Instant finish = Instant.now();
-        long seconds = Duration.between(start, finish).getSeconds();
-        sLogger.info("blastn run complete. Time taken: {}m {}s", seconds / 60, seconds % 60);
+        sLogger.info("blastn run complete, mins({})", runTimeMinsStr(startTimeMs));
 
         Multimap<Integer, BlastnMatch> blastnMatches = processBlast(outputFileCsv.getAbsolutePath());
 
