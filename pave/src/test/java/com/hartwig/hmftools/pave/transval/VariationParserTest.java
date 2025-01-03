@@ -38,7 +38,7 @@ public class VariationParserTest extends TransvalTestBase
     public void canReferToGeneByName()
     {
         SingleAminoAcidVariant variant = variationParser.parse("ZYX:p.Pro46Ala");
-        Assert.assertEquals(46, variant.position);
+        Assert.assertEquals(46, variant.Position);
         Assert.assertEquals("ENSG00000159840", variant.Gene.GeneId);
     }
 
@@ -46,7 +46,7 @@ public class VariationParserTest extends TransvalTestBase
     public void canReferToGeneByEnsemblId()
     {
         SingleAminoAcidVariant variant = variationParser.parse("ENSG00000159840:p.Pro46Ala");
-        Assert.assertEquals(46, variant.position);
+        Assert.assertEquals(46, variant.Position);
         Assert.assertEquals("ZYX", variant.Gene.GeneName);
     }
 
@@ -54,7 +54,7 @@ public class VariationParserTest extends TransvalTestBase
     public void referenceAminoAcidIsNotRequired()
     {
         SingleAminoAcidVariant variant = variationParser.parse("BRAF:p.600E");
-        Assert.assertEquals(600, variant.position);
+        Assert.assertEquals(600, variant.Position);
         Assert.assertEquals("E", variant.Variant);
     }
 

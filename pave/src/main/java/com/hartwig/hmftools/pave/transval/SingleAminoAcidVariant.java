@@ -26,7 +26,7 @@ public class SingleAminoAcidVariant
     final TranscriptData Transcript;
     @NotNull
     final TranscriptAminoAcids AminoAcidSequence;
-    int position;
+    int Position;
     @NotNull
     final String Variant;
     @NotNull
@@ -52,7 +52,7 @@ public class SingleAminoAcidVariant
         this.Gene = gene;
         this.Transcript = transcript;
         this.AminoAcidSequence = aminoAcidSequence;
-        this.position = position;
+        this.Position = position;
         this.Variant = variant;
         List<ChrBaseRegion> codingRegions = transcript.exons().stream()
                 .filter(exonData -> exonData.End >= transcript.CodingStart && exonData.Start <= transcript.CodingEnd)
@@ -72,7 +72,7 @@ public class SingleAminoAcidVariant
 
     public String referenceAminoAcid()
     {
-        return AminoAcidSequence.AminoAcids.substring(position - 1, position);
+        return AminoAcidSequence.AminoAcids.substring(Position - 1, Position);
     }
 
     public String variantAminoAcid()
@@ -87,25 +87,25 @@ public class SingleAminoAcidVariant
 
     public String referenceCodon(RefGenomeInterface refGenomeSource)
     {
-        int codonPosition = 3 * (position - 1);
+        int codonPosition = 3 * (Position - 1);
         CodonRegions exonData = exonsForCodonPosition(codonPosition);
         return exonData.retrieveCodon(refGenomeSource);
     }
 
-    List<Integer> exonCodingLengths()
+    List<Integer> codingRegionLengths()
     {
         return CodingRegions.stream().map(ChrBaseRegion::baseLength).collect(Collectors.toList());
     }
 
     private CodonRegions exonsForCodonPosition(int codonPosition)
     {
-        List<Integer> exonLengths = exonCodingLengths();
+        List<Integer> regionLengths = codingRegionLengths();
         int lengthIncludingCurrent = 0;
-        for(int i = 0; i < exonLengths.size(); i++)
+        for(int i = 0; i < regionLengths.size(); i++)
         {
             int lengthUpToCurrent = lengthIncludingCurrent;
             ChrBaseRegion exon = CodingRegions.get(i);
-            lengthIncludingCurrent += exonLengths.get(i);
+            lengthIncludingCurrent += regionLengths.get(i);
             if(lengthIncludingCurrent > codonPosition)
             {
                 ChrBaseRegion nextExon = (i < CodingRegions.size() - 1) ? CodingRegions.get(i + 1) : null;

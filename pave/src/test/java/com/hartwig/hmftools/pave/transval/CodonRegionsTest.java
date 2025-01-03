@@ -9,12 +9,11 @@ import org.junit.Test;
 public class CodonRegionsTest
 {
     private final RefGenomeInterface genome1 = new FixedStringGenome("AAAACCCGGTGGGGGGGGGGATGGGGGGGGGGGGG");
-    private final String chr1 = "chr1";
 
     @Test
-    public void retrieveCodonExonsTest()
+    public void retrieveCodonsPositiveStrandTest()
     {
-        CodonRegions cd1 = new CodonRegions(5, ed(5, 10), ed(20, 28, 2));
+        CodonRegions cd1 = new CodonRegions(5, ed(5, 10), ed(20, 28));
         Assert.assertEquals("CCG", cd1.retrieveCodon(genome1));
 
         cd1 = new CodonRegions(5, ed(5, 10), null);
@@ -26,20 +25,15 @@ public class CodonRegionsTest
         CodonRegions cd3 = new CodonRegions(8, ed(5, 10), null);
         Assert.assertEquals("GTG", cd3.retrieveCodon(genome1));
 
-        CodonRegions cd4 = new CodonRegions(9, ed(5, 10), ed(20, 28, 2));
+        CodonRegions cd4 = new CodonRegions(9, ed(5, 10), ed(20, 28));
         Assert.assertEquals("TGA", cd4.retrieveCodon(genome1));
 
-        CodonRegions cd5 = new CodonRegions(10, ed(5, 10), ed(20, 28, 2));
+        CodonRegions cd5 = new CodonRegions(10, ed(5, 10), ed(20, 28));
         Assert.assertEquals("GAT", cd5.retrieveCodon(genome1));
-    }
-
-    private ChrBaseRegion ed(int start, int end, int rank)
-    {
-        return new ChrBaseRegion(chr1, start, end);
     }
 
     private ChrBaseRegion ed(int start, int end)
     {
-        return ed(start, end, 1);
+        return new ChrBaseRegion("chr1", start, end);
     }
 }
