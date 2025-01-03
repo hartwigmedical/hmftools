@@ -2,6 +2,8 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
@@ -112,6 +114,13 @@ public class GeneProbesGenerator
             {
                 GU_LOGGER.error("gene({}) transcript({}) not found", geneName, geneTranscript.TranscriptName);
                 System.exit(1);
+            }
+
+            if(transcriptData.nonCoding())
+            {
+                // should add as a custom region instead
+                GU_LOGGER.warn("gene({}) transcript({}) non-coding skipped", geneName, geneTranscript.TranscriptName);
+                continue;
             }
 
             TargetedGene targetedGene = new TargetedGene(geneData, transcriptData);
@@ -228,16 +237,11 @@ public class GeneProbesGenerator
                 }
             }
 
-            // not all exons are coding, but I am not sure how to get non coding ones
-
-            // from Junran's script, an exon is coding of it overlaps with coding start / coding end
-            boolean isCoding = transcript.CodingStart != null &&
-                               transcript.CodingEnd != null &&
-                               (exonData.Start < transcript.CodingEnd && exonData.End > transcript.CodingStart);
+            boolean isCoding = positionsOverlap(exonData.Start, exonData.End, transcript.CodingStart, transcript.CodingEnd);
 
             if(isCoding)
             {
-                // we take the coding part
+                // limit the region's bases to coding
                 targetedGene.addRegion(TargetedGeneRegion.Type.CODING,
                         Math.max(exonData.Start, transcript.CodingStart),
                         Math.min(exonData.End, transcript.CodingEnd));
