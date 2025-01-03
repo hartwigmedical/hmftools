@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.paneldesign.BlastnMapper.isPrimaryBlastnMatch;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.CANDIDATE_FILE_EXTENSION;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.GENE_REGION_FILE_EXTENSION;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_CANDIDATE_REGION_SIZE;
@@ -15,7 +14,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MIN_INTRON_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MAX_PROBE_SUM_BLASTN_BITSCORE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MIN_BLAST_ALIGNMENT_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_LENGTH;
@@ -23,16 +21,10 @@ import static com.hartwig.hmftools.geneutils.paneldesign.ProbeCandidate.createPr
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.blastn.BlastnMatch;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -148,9 +140,12 @@ public class GeneProbesGenerator
                         targetedGene.getGeneData().Chromosome, targetedGeneRegion.getStart(), targetedGeneRegion.getEnd());
 
                 PanelRegion panelRegion;
+
+                String sourceInfo = format("%s:%s", targetedGene.getGeneData().GeneName, targetedGeneRegion.getType().toString());
+
                 if(targetedGeneRegion.useWholeRegion())
                 {
-                    panelRegion = new PanelRegion(region, RegionType.GENE, targetedGeneRegion.getType().toString());
+                    panelRegion = new PanelRegion(region, RegionType.GENE, sourceInfo);
                 }
                 else
                 {
@@ -158,8 +153,6 @@ public class GeneProbesGenerator
 
                     if(probeCandidate == null)
                         continue;
-
-                    String sourceInfo = format("%s:%s", targetedGene.getGeneData().GeneName, targetedGeneRegion.getType().toString());
 
                     panelRegion = new PanelRegion(
                             region, RegionType.GENE, sourceInfo,
@@ -338,76 +331,6 @@ public class GeneProbesGenerator
             if(blastnResult.isValid())
                 probeCandidate.setSumBlastnBitScore(blastnResult.SumBitScore);
         }
-    }
-
-    public void runBlastnOnProbeCandidatesOld(Collection<TargetedGene> targetedGeneList)
-    {
-        int nextProbeKey = 0;
-
-        Map<Integer, ProbeCandidate> probeCandidateMap = new HashMap<>();
-
-        // get all the probes into a map with a keyed sequence
-        for(TargetedGene targetedGene : targetedGeneList)
-        {
-            for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
-            {
-                for(ProbeCandidate probeCandidate : targetedGeneRegion.getProbeCandidates())
-                {
-                    if(checkGcContent(probeCandidate))
-                    {
-                        int probeKey = nextProbeKey++;
-                        probeCandidateMap.put(probeKey, probeCandidate);
-                    }
-                }
-            }
-        }
-
-        GU_LOGGER.info("running blastn on {} probe candidates", probeCandidateMap.size());
-
-        // run blastn on those
-        Map<Integer,String> querySequences = probeCandidateMap.entrySet().stream().collect(
-                Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSequence()));
-
-        Multimap<Integer, BlastnMatch> result = mBlastnMapper.mapSequences(querySequences);
-
-        // now go back to process the results
-        for(int k : probeCandidateMap.keySet())
-        {
-            // get the probe
-            ProbeCandidate probeCandidate = probeCandidateMap.get(k);
-            Collection<BlastnMatch> matches = result.get(k);
-
-            if(matches.isEmpty())
-            {
-                // this probe is not good
-                GU_LOGGER.info("probe({}) no blastn match found, probably low complexity sequence", probeCandidate.toString());
-                continue;
-            }
-
-            double sumBitScore = 0;
-
-            // now process all the matches and sum up the bit score, but remove the one with best match
-            Optional<BlastnMatch> bestMatch = matches.stream()
-                    .filter(x -> isPrimaryBlastnMatch(x))
-                    .max(Comparator.comparing(BlastnMatch::getBitScore));
-
-            if(bestMatch.isPresent())
-            {
-                sumBitScore -= bestMatch.get().getBitScore();
-            }
-
-            for(BlastnMatch m : matches)
-            {
-                if(m.getAlignmentLength() >= MIN_BLAST_ALIGNMENT_LENGTH && isPrimaryBlastnMatch(m))
-                {
-                    sumBitScore += m.getBitScore();
-                }
-            }
-
-            probeCandidate.setSumBlastnBitScore(sumBitScore);
-        }
-
-        GU_LOGGER.info("finished blastn on {} probes", probeCandidateMap.size());
     }
 
     public void selectProbeCandidates(Collection<TargetedGene> targetedGeneList)
