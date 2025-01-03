@@ -39,7 +39,7 @@ public class VariationParserTest extends TransvalTestBase
     {
         SingleAminoAcidVariant variant = variationParser.parse("ZYX:p.Pro46Ala");
         Assert.assertEquals(46, variant.position);
-        Assert.assertEquals("ENSG00000159840", variant.gene.GeneId);
+        Assert.assertEquals("ENSG00000159840", variant.Gene.GeneId);
     }
 
     @Test
@@ -47,7 +47,7 @@ public class VariationParserTest extends TransvalTestBase
     {
         SingleAminoAcidVariant variant = variationParser.parse("ENSG00000159840:p.Pro46Ala");
         Assert.assertEquals(46, variant.position);
-        Assert.assertEquals("ZYX", variant.gene.GeneName);
+        Assert.assertEquals("ZYX", variant.Gene.GeneName);
     }
 
     @Test
@@ -55,14 +55,14 @@ public class VariationParserTest extends TransvalTestBase
     {
         SingleAminoAcidVariant variant = variationParser.parse("BRAF:p.600E");
         Assert.assertEquals(600, variant.position);
-        Assert.assertEquals("E", variant.variant);
+        Assert.assertEquals("E", variant.Variant);
     }
 
     @Test
     public void aminoAcidNameIsConvertedToSingleLetter()
     {
         SingleAminoAcidVariant variant = variationParser.parse("BRAF:p.Val600Glu");
-        Assert.assertEquals("E", variant.variant);
+        Assert.assertEquals("E", variant.Variant);
     }
 
     private void checkInputResultsInErrorWithMessage(String input, String expectedMessage)
