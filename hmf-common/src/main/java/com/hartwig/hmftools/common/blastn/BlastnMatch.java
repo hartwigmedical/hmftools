@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.blastn;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Optional;
+
 import com.hartwig.hmftools.common.genome.region.Strand;
 
 // Represents a BLASTn match with various alignment details.
@@ -129,5 +133,40 @@ public class BlastnMatch
     public String getAlignedPartOfSubjectSeq()
     {
         return AlignedPartOfSubjectSeq;
+    }
+
+    public static boolean isPrimaryBlastnMatch(final BlastnMatch match)
+    {
+        return match.getSubjectTitle().contains("Primary Assembly") ||
+                match.getSubjectTitle().contains("unlocalized genomic scaffold") ||
+                match.getSubjectTitle().contains("unplaced genomic scaffold");
+    }
+
+    public static double calcSumBitScore(final Collection<BlastnMatch> matches, final int minAlignmentLength)
+    {
+        if(matches.isEmpty())
+            return 0;
+
+        double sumBitScore = 0;
+
+        // process all the matches and sum up the bit score, but remove the one with best match
+        Optional<BlastnMatch> bestMatch = matches.stream()
+                .filter(x -> isPrimaryBlastnMatch(x))
+                .max(Comparator.comparing(BlastnMatch::getBitScore));
+
+        if(bestMatch.isPresent())
+        {
+            sumBitScore -= bestMatch.get().getBitScore();
+        }
+
+        for(BlastnMatch m : matches)
+        {
+            if(m.getAlignmentLength() >= minAlignmentLength && isPrimaryBlastnMatch(m))
+            {
+                sumBitScore += m.getBitScore();
+            }
+        }
+
+        return sumBitScore;
     }
 }

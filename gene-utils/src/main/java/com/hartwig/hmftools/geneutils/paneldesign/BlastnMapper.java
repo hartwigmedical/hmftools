@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static com.hartwig.hmftools.common.blastn.BlastnMatch.calcSumBitScore;
+import static com.hartwig.hmftools.common.blastn.BlastnMatch.isPrimaryBlastnMatch;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.paneldesign.BlastnResult.INVALID_RESULT;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.BLASTN_WORD_SIZE;
@@ -130,25 +132,7 @@ public class BlastnMapper
                 continue;
             }
 
-            double sumBitScore = 0;
-
-            // process all the matches and sum up the bit score, but remove the one with best match
-            Optional<BlastnMatch> bestMatch = matches.stream()
-                    .filter(x -> isPrimaryBlastnMatch(x))
-                    .max(Comparator.comparing(BlastnMatch::getBitScore));
-
-            if(bestMatch.isPresent())
-            {
-                sumBitScore -= bestMatch.get().getBitScore();
-            }
-
-            for(BlastnMatch m : matches)
-            {
-                if(m.getAlignmentLength() >= MIN_BLAST_ALIGNMENT_LENGTH && isPrimaryBlastnMatch(m))
-                {
-                    sumBitScore += m.getBitScore();
-                }
-            }
+            double sumBitScore = calcSumBitScore(matches, MIN_BLAST_ALIGNMENT_LENGTH);
 
             BlastnResult result = new BlastnResult(sequence, sumBitScore, matches.size());
             results.set(i, result);
@@ -171,12 +155,5 @@ public class BlastnMapper
     public void onComplete()
     {
         mResultsCache.writeCache();
-    }
-
-    public static boolean isPrimaryBlastnMatch(BlastnMatch match)
-    {
-        return match.getSubjectTitle().contains("Primary Assembly") ||
-                match.getSubjectTitle().contains("unlocalized genomic scaffold") ||
-                match.getSubjectTitle().contains("unplaced genomic scaffold");
     }
 }

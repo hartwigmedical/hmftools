@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static com.hartwig.hmftools.common.blastn.BlastnRunner.registerBlastn;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
@@ -81,8 +82,7 @@ public class PanelConfig
         configBuilder.addPath(CUSTOM_REGION_FILE, false, "Custom region file");
 
         configBuilder.addConfigItem(BLAST_CACHE_FILE, false, "Cache of BlastN results");
-        configBuilder.addPath(BLAST, false, "Location of Blastn installation");
-        configBuilder.addPath(BLAST_DB, false, "Location of Blastn database");
+        registerBlastn(configBuilder, false);
         configBuilder.addFlag(SKIP_BLAST, "Skip calling Blastn, accept probe without scoring");
 
         EnsemblDataCache.addEnsemblDir(configBuilder, true);
