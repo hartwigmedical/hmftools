@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.targetregion;
+package com.hartwig.hmftools.geneutils.paneldesign;
 
 import java.util.ArrayList;
 import java.util.List;

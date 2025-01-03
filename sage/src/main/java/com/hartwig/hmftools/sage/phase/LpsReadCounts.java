@@ -56,9 +56,7 @@ public class LpsReadCounts
     public boolean variantsMatch(final List<SimpleVariant> variants)
     {
         if(Variants.size() != variants.size())
-        {
             return false;
-        }
 
         return Variants.stream().allMatch(x -> variants.contains(x));
     }
