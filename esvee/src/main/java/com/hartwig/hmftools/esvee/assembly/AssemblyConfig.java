@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
+import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -116,7 +118,6 @@ public class AssemblyConfig
 
     private static final String REF_GENOME_IMAGE = "ref_genome_image";
     private static final String DECOY_GENOME = "decoy_genome";
-    public static final String BWA_LIB_PATH = "bwa_lib";
     public static final String JUNCTION_FILE = "junction_file";
 
     @Deprecated
@@ -313,7 +314,7 @@ public class AssemblyConfig
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
-        configBuilder.addPath(BWA_LIB_PATH, false, "Path to BWA library");
+        configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);

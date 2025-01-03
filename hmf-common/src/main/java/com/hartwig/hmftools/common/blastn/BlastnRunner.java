@@ -22,6 +22,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.region.Strand;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
@@ -32,6 +33,19 @@ import org.apache.logging.log4j.Logger;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class BlastnRunner
 {
+    // common config
+    public static final String BLAST_TOOL = "blast";
+    public static final String BLAST_TOOL_DESC = "Path to BlastN";
+
+    public static final String BLAST_DB = "blast_db";
+    public static final String BLAST_DB_DESC = "blast_db";
+
+    public static void registerBlastn(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addPath(BLAST_TOOL, required, BLAST_TOOL_DESC);
+        configBuilder.addPath(BLAST_DB, required, BLAST_DB_DESC);
+    }
+
     private static final Logger sLogger = LogManager.getLogger(BlastnRunner.class);
     private static final String DEFAULT_TASK = "blastn";
     private static final int OUTPUT_STREAM_BUFFER_SIZE = 65536;
