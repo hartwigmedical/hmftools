@@ -158,7 +158,7 @@ public class BlastnRunner
 
         File outputFileCsv = new File(outputDir + "/" + prefix + ".blastn.csv.gz");
 
-        sLogger.info("running blastn on sample {}, {} sequences, output: {}", prefix, querySequences.size(), outputFileCsv);
+        sLogger.debug("running blastn on sample {}, {} sequences, output: {}", prefix, querySequences.size(), outputFileCsv);
 
         command.add("-outfmt");
         command.add("6 " + Arrays.stream(BlastColumns.values()).map(BlastColumns::name).collect(Collectors.joining(" ")));
@@ -202,7 +202,7 @@ public class BlastnRunner
             throw new RuntimeException(e);
         }
 
-        sLogger.info("blastn run complete, mins({})", runTimeMinsStr(startTimeMs));
+        sLogger.trace("blastn run complete, mins({})", runTimeMinsStr(startTimeMs));
 
         Multimap<Integer, BlastnMatch> blastnMatches = processBlast(outputFileCsv.getAbsolutePath());
 
