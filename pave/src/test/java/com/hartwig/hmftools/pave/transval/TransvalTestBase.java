@@ -9,7 +9,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 public class TransvalTestBase
 {
     public final File ensemblDataDir;
-    public final RefGenomeInterface genome = new Chr7Genome();
+    public final Transval transval;
+    public final RefGenomeInterface genome = new TinyGenome();
 
     public TransvalTestBase()
     {
@@ -23,10 +24,11 @@ public class TransvalTestBase
         {
             throw new RuntimeException(e);
         }
+        transval = new Transval(ensemblDataDir, genome);
     }
 
     public SingleAminoAcidVariant variant(String definition)
     {
-        return new VariationParser(ensemblDataDir).parse(definition);
+        return transval.variationParser().parse(definition);
     }
 }

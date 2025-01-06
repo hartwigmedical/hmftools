@@ -153,12 +153,28 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
 
         Assert.assertEquals("TGG", variant("BRAF:p.476E").referenceCodon(genome));
         Assert.assertEquals("CAT", variant("BRAF:p.477E").referenceCodon(genome));
-        Assert.assertEquals("GGT", variant("BRAF:p.478E").referenceCodon(genome)); // 1 nukes in an exon, 2 in the next
+        Assert.assertEquals("GGT", variant("BRAF:p.478E").referenceCodon(genome)); // 1 nuke in an exon, 2 in the next
         Assert.assertEquals("GAT", variant("BRAF:p.479E").referenceCodon(genome));
 
         Assert.assertEquals("GTG", variant("BRAF:p.600E").referenceCodon(genome));
         Assert.assertEquals("AAA", variant("BRAF:p.601E").referenceCodon(genome));
         Assert.assertEquals("TCT", variant("BRAF:p.602E").referenceCodon(genome));
         Assert.assertEquals("GGA", variant("BRAF:p.670E").referenceCodon(genome));
+    }
+
+    @Test
+    public void mtorTest()
+    {
+        // See TransvarConverterTest in the serve codebase
+        Assert.assertEquals("TTA", variant("MTOR:p.L2230V").referenceCodon(genome));
+    }
+
+    @Test
+    public void codonIsInSingleExon()
+    {
+        Assert.assertTrue(variant("ADCK2:p.1E").codonIsInSingleExon());
+        Assert.assertTrue(variant("BRAF:p.46E").codonIsInSingleExon());
+        Assert.assertFalse(variant("BRAF:p.327E").codonIsInSingleExon());
+        Assert.assertFalse(variant("BRAF:p.478E").codonIsInSingleExon());
     }
 }

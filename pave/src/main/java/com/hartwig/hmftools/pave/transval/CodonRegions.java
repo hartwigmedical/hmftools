@@ -21,6 +21,7 @@ public class CodonRegions
     @Nullable
     final public ChrBaseRegion SecondExon;
     final boolean IsPositiveReadStrand;
+    final int numberOfBaseInSecondExon;
 
     public CodonRegions(final int codonStart, @NotNull final ChrBaseRegion firstExon, @Nullable final ChrBaseRegion secondExon)
     {
@@ -32,13 +33,18 @@ public class CodonRegions
     {
         Preconditions.checkArgument(position >= firstExon.start());
         Preconditions.checkArgument(position <= firstExon.end());
-        //        Preconditions.checkArgument(secondExon == null || secondExon.Rank == firstExon.Rank + 1);
-        //        Preconditions.checkArgument(secondExon != null || position + 2 <= firstExon.end());
 
         this.CodonStart = position;
         this.FirstExon = firstExon;
         this.SecondExon = secondExon;
         this.IsPositiveReadStrand = isPositiveReadStrand;
+
+        numberOfBaseInSecondExon = IsPositiveReadStrand ? CodonStart + 2 - FirstExon.end() : FirstExon.start() + 2 - CodonStart;
+    }
+
+    public boolean codonIsInSingleExon()
+    {
+        return numberOfBaseInSecondExon  < 1;
     }
 
     @NotNull public String retrieveCodon(final RefGenomeInterface refGenome)
@@ -48,29 +54,24 @@ public class CodonRegions
 
     @NotNull private String codonForPositiveRead(final RefGenomeInterface refGenome)
     {
-        String chromosome = FirstExon.Chromosome;
-        int numberOfBasesInSecondCodon = CodonStart + 2 - FirstExon.end();
-        if (numberOfBasesInSecondCodon < 1)
+        if (numberOfBaseInSecondExon < 1)
         {
-            return refGenome.getBaseString(chromosome, CodonStart, CodonStart + 2);
+            return refGenome.getBaseString(FirstExon.Chromosome, CodonStart, CodonStart + 2);
         }
-        String part1 = refGenome.getBaseString(chromosome, CodonStart, FirstExon.end());
-        String part2 = refGenome.getBaseString(chromosome, SecondExon.start(), SecondExon.start() + numberOfBasesInSecondCodon - 1);
+        String part1 = refGenome.getBaseString(FirstExon.Chromosome, CodonStart, FirstExon.end());
+        String part2 = refGenome.getBaseString(FirstExon.Chromosome, SecondExon.start(), SecondExon.start() + numberOfBaseInSecondExon - 1);
         return part1 + part2;
     }
 
     @NotNull private String codonForNegativeRead(final RefGenomeInterface refGenome)
     {
-        String chromosome = FirstExon.Chromosome;
-        int basesInFirstRegion = CodonStart - FirstExon.start() + 1;
-        if (basesInFirstRegion > 2)
+        if (numberOfBaseInSecondExon < 1)
         {
-            String positiveStrandBases = refGenome.getBaseString(chromosome, CodonStart - 2, CodonStart);
+            String positiveStrandBases = refGenome.getBaseString(FirstExon.Chromosome, CodonStart - 2, CodonStart);
             return Nucleotides.reverseComplementBases(positiveStrandBases);
         }
-        String part1 = Nucleotides.reverseComplementBases(refGenome.getBaseString(chromosome, FirstExon.start(), FirstExon.start() + basesInFirstRegion - 1));
-        final int basesInSecondRegion = 3 - basesInFirstRegion;
-        String part2 = Nucleotides.reverseComplementBases(refGenome.getBaseString(chromosome, SecondExon.end() - basesInSecondRegion + 1, SecondExon.end()));
+        String part1 = Nucleotides.reverseComplementBases(refGenome.getBaseString(FirstExon.Chromosome, FirstExon.start(), CodonStart));
+        String part2 = Nucleotides.reverseComplementBases(refGenome.getBaseString(FirstExon.Chromosome, SecondExon.end() - numberOfBaseInSecondExon + 1, SecondExon.end()));
         return part1 + part2;
     }
 }

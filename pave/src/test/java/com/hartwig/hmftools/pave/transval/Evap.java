@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.transval;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,21 +9,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.pave.transval.Chr7Genome;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -40,20 +34,24 @@ public class Evap
         File outputDir = new File("/Users/timlavers/work/junk/ensemblmini");
 
         final Set<String> geneNames = Set.of(
-                "BRAF",
-                "ADCK2",
-                "RNU1-82P",
-                "ZYX"
+                "MTOR,",
+                "TET2,",
+                "BRAF,",
+                "ADCK2,",
+                "RNU1-82P,",
+                "ZYX,"
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneNames);
-//        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
         Set<String> geneIds = Set.of(
+                "ENSG00000198793", // MTOR
+                "ENSG00000168769", // TET2
                 "ENSG00000133597", // ADCK2
                 "ENSG00000157764", // BRAF
                 "ENSG00000212153", // RNU-82P
                 "ENSG00000159840" // ZYX
         );
-//        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
 
         Set<String> transcriptIds = Set.of(
                 "ENST00000072869",
@@ -79,7 +77,7 @@ public class Evap
                 "ENST00000436448",
                 "ENST00000446634"
         );
-//        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_exon_data.csv"), outputDir, geneIds);
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_exon_data.csv"), outputDir, geneIds);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_splice_data.csv"), outputDir, geneIds);
 
     }
@@ -124,7 +122,25 @@ public class Evap
         return false;
     }
 
-    @Test
+//    @Test
+    public void produceReducedChrFile() throws IOException
+    {
+        File outputDir = new File("/Users/timlavers/work/junk");
+
+        RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna")));
+        var chromosomeLengths = refGenomeSource.chromosomeLengths();
+        System.out.println(chromosomeLengths.size());
+        int chrLength = chromosomeLengths.get("chr1");
+        System.out.println(chrLength);
+        int start = 10_000_000;
+        int end = start + 3_000_000;
+        var chr = refGenomeSource.getBaseString("chr1", start, end);
+        System.out.println(chr.substring(10000, 10100));
+        File chrFile = new File(outputDir, "chr1_part.txt");
+        Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
+    }
+
+//    @Test
     public void braf() throws IOException
     {
         File ensemblDataDir = new File("/Users/timlavers/work/data/v6_0/ref/38/common/ensembl_data");
@@ -170,8 +186,8 @@ public class Evap
         String bases3FromCCDS = "ATATATTTCTTCATGAAGACCTCACAGTAAAAATAGGTGATTTTGGTCTAGCTACAGTGAAATCTCGATGGAGTGGGTCCCATCAGTTTGAACAGTTGTCTGGATCCATTTTGTGGATG";
         Assert.assertEquals(bases3FromCCDS, Nucleotides.reverseComplementBases(bases3));
 
-        Chr7Genome chr7Genome = new Chr7Genome();
-        String bases3FromChr7Genome = chr7Genome.getBaseString(brafData.Chromosome, exon3.Start, exon3.End);
+        TinyGenome tinyGenome = new TinyGenome();
+        String bases3FromChr7Genome = tinyGenome.getBaseString(brafData.Chromosome, exon3.Start, exon3.End);
         Assert.assertEquals(bases3, bases3FromChr7Genome);
 
         // Codon for V at 600 is GTG

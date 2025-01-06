@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -31,6 +32,8 @@ public class SingleAminoAcidVariant
     final String Variant;
     @NotNull
     final List<ChrBaseRegion> CodingRegions;
+    @NotNull
+    private final CodonRegions RegionsDefiningCodon;
 
     private static boolean isValidAminoAcidName(String s)
     {
@@ -68,6 +71,8 @@ public class SingleAminoAcidVariant
         {
             CodingRegions = codingRegions;
         }
+        int codonPosition = 3 * (Position - 1);
+        RegionsDefiningCodon = exonsForCodonPosition(codonPosition);
     }
 
     public String referenceAminoAcid()
@@ -87,11 +92,15 @@ public class SingleAminoAcidVariant
 
     public String referenceCodon(RefGenomeInterface refGenomeSource)
     {
-        int codonPosition = 3 * (Position - 1);
-        CodonRegions exonData = exonsForCodonPosition(codonPosition);
-        return exonData.retrieveCodon(refGenomeSource);
+        return RegionsDefiningCodon.retrieveCodon(refGenomeSource);
     }
 
+    public boolean codonIsInSingleExon()
+    {
+        return RegionsDefiningCodon.codonIsInSingleExon();
+    }
+
+    @VisibleForTesting
     List<Integer> codingRegionLengths()
     {
         return CodingRegions.stream().map(ChrBaseRegion::baseLength).collect(Collectors.toList());

@@ -14,7 +14,7 @@ public class VariationParserTest extends TransvalTestBase
     @Before
     public void setUp()
     {
-        variationParser = new VariationParser(ensemblDataDir);
+        variationParser = transval.variationParser();
     }
 
     @Test

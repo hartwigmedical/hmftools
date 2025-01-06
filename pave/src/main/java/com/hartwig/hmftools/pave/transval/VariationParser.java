@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave.transval;
 
-import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -9,25 +7,20 @@ import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class VariationParser
 {
     static final String HGVS_FORMAT_REQUIRED = "Required format is GENE:p.XnY where X and Y are amino acids and n is an integer.";
-    private final EnsemblDataCache ensemblCache;
-    private final Map<String, TranscriptAminoAcids> transcriptAminoAcidsMap = new HashMap<>();
+    private final EnsemblDataCache mEnsemblCache;
+    private final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap;
 
-    public VariationParser(final File ensemblDataDir)
+    public VariationParser(final EnsemblDataCache ensemblDataCache, final Map<String, TranscriptAminoAcids> transcriptAminoAcidsMap)
     {
-        this.ensemblCache = new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), RefGenomeVersion.V38);
-        ensemblCache.setRequiredData(true, true, true, true);
-        ensemblCache.load(false);
-        ensemblCache.createTranscriptIdMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, transcriptAminoAcidsMap, List.of(), false);
+        mEnsemblCache = ensemblDataCache;
+        mTranscriptAminoAcidsMap = transcriptAminoAcidsMap;
     }
 
     public SingleAminoAcidVariant parse(String input)
@@ -57,10 +50,10 @@ public class VariationParser
         }
 
         String reference = geneVar[0];
-        GeneData geneData = ensemblCache.getGeneDataByName(reference);
+        GeneData geneData = mEnsemblCache.getGeneDataByName(reference);
         if (geneData == null)
         {
-            geneData = ensemblCache.getGeneDataById(reference);
+            geneData = mEnsemblCache.getGeneDataById(reference);
             if (geneData == null)
             {
                 throw new IllegalArgumentException(reference + " is not a known gene");
@@ -79,13 +72,13 @@ public class VariationParser
         }
         String singleLetterName = AminoAcids.forceSingleLetterProteinAnnotation(variantAminoAcid);
 
-        List<TranscriptData> transcripts = ensemblCache.getTranscripts(geneData.GeneId);
+        List<TranscriptData> transcripts = mEnsemblCache.getTranscripts(geneData.GeneId);
         TranscriptData canonicalTranscript = transcripts.stream()
                 .filter(transcriptData -> transcriptData.IsCanonical)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No canonical transcript found for " + reference));
 
-        TranscriptAminoAcids aminoAcidsSequence = transcriptAminoAcidsMap.get(canonicalTranscript.TransName);
+        TranscriptAminoAcids aminoAcidsSequence = mTranscriptAminoAcidsMap.get(canonicalTranscript.TransName);
         if (aminoAcidsSequence == null)
         {
             throw new IllegalStateException("No amino acid sequence found for " + canonicalTranscript.TransName);
