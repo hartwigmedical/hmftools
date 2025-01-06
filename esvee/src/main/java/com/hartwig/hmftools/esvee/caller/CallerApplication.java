@@ -234,7 +234,7 @@ public class CallerApplication
         {
             double af = breakend.calcAllelicFrequency(genotype);
 
-            if(mConfig.hasReference() && mConfig.ReferenceId.contains(genotype.getSampleName()))
+            if(mConfig.hasReference() && mConfig.ReferenceId.equals(genotype.getSampleName()))
                 maxGermlineAf = max(maxGermlineAf, af);
             else
                 maxTumorAf = max(maxTumorAf, af);
