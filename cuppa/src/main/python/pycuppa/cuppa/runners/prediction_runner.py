@@ -9,6 +9,7 @@ import pandas as pd
 
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
+from cuppa.constants import PREDICT_NA_FILL_VALUE
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.logger import LoggerMixin, initialize_logging
 from cuppa.sample_data.cuppa_features import CuppaFeaturesLoader
@@ -72,7 +73,7 @@ class PredictionRunner(LoggerMixin):
         loader = CuppaFeaturesLoader(self.features_path, sample_id=self.sample_id)
         X = loader.load()
 
-        X = self.cuppa_classifier.fill_missing_cols(X)
+        X = self.cuppa_classifier.fill_missing_cols(X, PREDICT_NA_FILL_VALUE)
 
         self.X = X
 
