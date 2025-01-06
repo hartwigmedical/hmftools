@@ -46,7 +46,7 @@ public class PurpleConstants
 
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 1;
-    public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 3;
+    public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 1;
 
     public static final double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
 
