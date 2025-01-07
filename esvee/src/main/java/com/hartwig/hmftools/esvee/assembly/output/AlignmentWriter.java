@@ -115,7 +115,7 @@ public class AlignmentWriter
     public static final String FLD_SCORE = "Score";
     public static final String FLD_FLAGS = "Flags";
     public static final String FLD_NMATCHES = "NMatches";
-    public static final String FLD_XA_TAG = "LocTag";
+    public static final String FLD_XA_TAG = "XaTag";
     public static final String FLD_MD_TAG = "MdTag";
 
     private BufferedWriter initialiseAlignmentDataWriter(final AssemblyConfig config)

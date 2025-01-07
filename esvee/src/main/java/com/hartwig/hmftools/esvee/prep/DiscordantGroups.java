@@ -259,10 +259,7 @@ public class DiscordantGroups
 
             int remoteJunctionPosition = remoteRegion.Orient.isForward() ? remoteRegion.end() : remoteRegion.start();
 
-            // ignore remote regions which will be assessed earlier or later in this same partition
-            if(mRegion.containsPosition(remoteRegion.Chromosome, remoteJunctionPosition))
-                continue;
-
+            // add remote regions as junctions even if they will be assessed earlier or later in this same partition
             JunctionData remoteJunctionData = new JunctionData(
                     remoteJunctionPosition, remoteRegion.Orient, remoteRegion.ReadGroups.get(0).reads().get(0));
 

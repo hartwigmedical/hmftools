@@ -54,6 +54,7 @@ public final class AssemblyConstants
     // assembly extension
     public static final int ASSEMBLY_READ_OVERLAP_BASES = 20;
     public static final int ASSEMBLY_LINK_OVERLAP_BASES = 50;
+    public static final int ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES = ASSEMBLY_READ_OVERLAP_BASES;
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int ASSEMBLY_REF_BASE_MAX_GAP = 200;
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;

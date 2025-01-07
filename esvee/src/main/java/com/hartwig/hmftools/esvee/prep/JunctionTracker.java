@@ -627,7 +627,19 @@ public class JunctionTracker
             if(junctionData.Position == newJunction.Position)
             {
                 if(junctionData.Orient == newJunction.Orient)
+                {
+                    // favour discordant-only groups if the split-read junction has minimum support, to ensure if will be processed
+                    // as a valid junction assembly by the assembler
+                    if(!junctionData.discordantGroup() && newJunction.discordantGroup())
+                    {
+                        if(junctionData.JunctionGroups.size() < mFilterConfig.MinJunctionSupport && !junctionData.hotspot())
+                        {
+                            mJunctions.set(index, newJunction);
+                        }
+                    }
+
                     return;
+                }
             }
             else if(junctionData.Position > newJunction.Position)
             {
