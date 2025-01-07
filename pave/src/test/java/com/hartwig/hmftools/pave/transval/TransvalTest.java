@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pave.transval;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -53,5 +54,30 @@ public class TransvalTest extends TransvalTestBase
         assertEquals("GAG", record.AlternateCodons.get(0));
         assertEquals("GAA", record.AlternateCodons.get(1));
         assertEquals(2, record.AlternateCodons.size());
+    }
+
+    @Test
+    public void vhl()
+    {
+        // Another example based on a test in serve's TransvarConverterTest.
+        TransvalSNV record = transval.calculateSNV("VHL:p.G114R");
+                assertEquals("ENST00000256474", record.TranscriptId);
+        assertEquals("3", record.Chromosome);
+//        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
+        assertTrue(record.SpansMultipleExons);
+        assertEquals("G", record.ReferenceNucleotide);
+        assertEquals("C", record.AlternateNucleotide);
+        assertEquals("GGT", record.ReferenceCodon);
+        // The serve test has the alternate codons in the order defined by Transvar,
+        // which is simply the order in which they appear in its reverse codon table:
+        // 'R': ['AGG', 'AGA', 'CGA', 'CGC', 'CGG', 'CGT'],
+        // However, we order them by edit distance and then alphabetically.
+        assertEquals("CGT", record.AlternateCodons.get(0));
+        assertEquals("AGA", record.AlternateCodons.get(1));
+        assertEquals("AGG", record.AlternateCodons.get(2));
+        assertEquals("CGA", record.AlternateCodons.get(3));
+        assertEquals("CGC", record.AlternateCodons.get(4));
+        assertEquals("CGG", record.AlternateCodons.get(5));
+        assertEquals(6, record.AlternateCodons.size());
     }
 }
