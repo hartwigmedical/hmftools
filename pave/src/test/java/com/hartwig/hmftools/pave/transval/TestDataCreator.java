@@ -20,11 +20,10 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.junit.Assert;
-import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class Evap
+public class TestDataCreator
 {
 
 //    @Test
@@ -55,33 +54,8 @@ public class Evap
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
 
-        Set<String> transcriptIds = Set.of(
-                "ENST00000072869",
-                "ENST00000476491",
-                "ENST00000483369",
-                "ENST00000473512",
-                "ENST00000496384",
-                "ENST00000644969",
-                "ENST00000646891",
-                "ENST00000642228",
-                "ENST00000288602",
-                "ENST00000646730",
-                "ENST00000479537",
-                "ENST00000647434",
-                "ENST00000644650",
-                "ENST00000497784",
-                "ENST00000469930",
-                "ENST00000449630",
-                "ENST00000322764",
-                "ENST00000457235",
-                "ENST00000354434",
-                "ENST00000392910",
-                "ENST00000436448",
-                "ENST00000446634"
-        );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_exon_data.csv"), outputDir, geneIds);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_splice_data.csv"), outputDir, geneIds);
-
     }
 
     private static void copyLinesMatching(File input, File outputDir, Set<String> toFind) throws IOException
@@ -124,7 +98,7 @@ public class Evap
         return false;
     }
 
-    @Test
+//    @Test
     public void produceReducedChrFile() throws IOException
     {
         File outputDir = new File("/Users/timlavers/work/junk");
