@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.pave.transval;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -35,16 +38,37 @@ public class Transval
     public TransvalSNV calculateSNV(String proteinVariant)
     {
         SingleAminoAcidVariant variant = variationParser().parse(proteinVariant);
-
+        String referenceCodon = variant.referenceCodon(mRefGenomeVersion);
+        CodonVariantsCalculator change = new CodonVariantsCalculator(variant.referenceAminoAcid(), variant.variantAminoAcid());
+        SortedSet<CodonVariant> codonChanges = change.possibleCodonsForVariant(referenceCodon);
+        if(codonChanges.isEmpty())
+        {
+            return null;
+        }
+        CodonVariant codonVariant = codonChanges.first();
+        if(codonVariant.editDistance() != 1)
+        {
+            return null; // todo deal with this later
+        }
+        int positionInCodonOfChange = codonVariant.positionOfFirstDifference();
+        int positionInChromosomeOfChange = variant.regionsDefiningCodon().translateCodonPosition(positionInCodonOfChange);
+        String variantNucleotide = codonVariant.alternateCodon.charAt(positionInCodonOfChange) + "";
+        if(!variant.Gene.forwardStrand())
+        {
+            variantNucleotide = Nucleotides.reverseComplementBases(variantNucleotide);
+        }
+        String referenceNucleotide = mRefGenomeVersion.getBaseString(variant.Gene.Chromosome, positionInChromosomeOfChange, positionInChromosomeOfChange);
+        List<String> alternateNucleotides = new ArrayList<>();
+        codonChanges.forEach(cv -> alternateNucleotides.add(cv.alternateCodon));
         return new TransvalSNV(
                 variant.Transcript.TransName,
                 variant.Gene.Chromosome,
-                variant.Position,
+                positionInChromosomeOfChange,
                 !variant.codonIsInSingleExon(),
-                variant.referenceAminoAcid(), // todo fix
-                variant.variantAminoAcid(), // fix
-                variant.referenceCodon(mRefGenomeVersion),
-                List.of()
+                referenceNucleotide,
+                variantNucleotide,
+                referenceCodon,
+                alternateNucleotides
         );
     }
 }

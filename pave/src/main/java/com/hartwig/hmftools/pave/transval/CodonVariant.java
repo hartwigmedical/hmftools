@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
@@ -61,6 +62,18 @@ public class CodonVariant implements Comparable<CodonVariant>
             }
         }
         return result;
+    }
+
+    public int positionOfFirstDifference()
+    {
+        for(int i = 0; i < 3; ++i)
+        {
+            if(referenceCodon.charAt(i) != alternateCodon.charAt(i))
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override

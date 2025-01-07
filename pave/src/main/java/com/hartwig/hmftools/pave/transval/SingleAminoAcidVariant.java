@@ -2,10 +2,8 @@ package com.hartwig.hmftools.pave.transval;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -85,11 +83,6 @@ public class SingleAminoAcidVariant
         return Variant;
     }
 
-    public Set<String> possibleVariantCodons()
-    {
-        return new HashSet<>(AminoAcids.AMINO_ACID_TO_CODON_MAP.get(Variant));
-    }
-
     public String referenceCodon(RefGenomeInterface refGenomeSource)
     {
         return RegionsDefiningCodon.retrieveCodon(refGenomeSource);
@@ -98,6 +91,11 @@ public class SingleAminoAcidVariant
     public boolean codonIsInSingleExon()
     {
         return RegionsDefiningCodon.codonIsInSingleExon();
+    }
+
+    public CodonRegions regionsDefiningCodon()
+    {
+        return RegionsDefiningCodon;
     }
 
     @VisibleForTesting

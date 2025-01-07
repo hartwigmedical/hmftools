@@ -77,13 +77,6 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
     }
 
     @Test
-    public void possibleVariantCodonsTest()
-    {
-        Assert.assertEquals(Set.of("TTC", "TTT"), this.variant("BRAF:p.1F").possibleVariantCodons());
-        Assert.assertEquals(Set.of("GGA", "GGC", "GGG", "GGT"), this.variant("BRAF:p.7G").possibleVariantCodons());
-    }
-
-    @Test
     public void referenceCodonTest()
     {
         Assert.assertEquals("ATG", variant("ADCK2:p.1E").referenceCodon(genome));
