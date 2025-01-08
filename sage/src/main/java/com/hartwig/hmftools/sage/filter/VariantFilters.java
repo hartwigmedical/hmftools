@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPP
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_REL_RAW_QUAL_RATIO;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
@@ -581,6 +582,7 @@ public class VariantFilters
         }
 
         double adjustedRefVaf = adjustedRefAltCount / (double)refCounter.readCounts().Total;
+        primaryTumor.setAdjustedRefVaf(adjustedRefVaf);
         return Doubles.greaterThan(adjustedRefVaf, config.MaxGermlineVaf);
     }
 
@@ -594,7 +596,10 @@ public class VariantFilters
             return false; // will be handled in tumor filters
 
         double refTumorQualRatio = refQual / tumorQual;
-        return Doubles.greaterThan(refTumorQualRatio, config.MaxGermlineRelativeQual);
+        double threshold = config.BaseMaxGermlineRelativeQual;
+        if(!primaryTumor.isIndel() && primaryTumor.adjustedRefVaf() > 0)
+            threshold = min(config.BaseMaxGermlineRelativeQual * config.MaxGermlineVaf / primaryTumor.adjustedRefVaf(), MAX_GERMLINE_REL_RAW_QUAL_RATIO);
+        return Doubles.greaterThan(refTumorQualRatio, threshold);
     }
 
     private static boolean aboveMaxMnvIndelGermlineAltSupport(final VariantTier tier, final ReadContextCounter refCounter)

@@ -18,7 +18,7 @@ public class SoftFilterConfig
     public final int MinGermlineCoverage;
     public final int MinGermlineCoverageAllosome;
     public final double MaxGermlineVaf;
-    public final double MaxGermlineRelativeQual;
+    public final double BaseMaxGermlineRelativeQual;
 
 
     private static final String MAP_QUAL_FACTOR = "map_qual_factor";
@@ -32,7 +32,7 @@ public class SoftFilterConfig
         MinGermlineCoverage = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
         MinGermlineCoverageAllosome = defaultValue.MinGermlineCoverageAllosome;
         MaxGermlineVaf = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_VAF.configName());
-        MaxGermlineRelativeQual = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_RELATIVE_QUAL.configName());
+        BaseMaxGermlineRelativeQual = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_RELATIVE_QUAL.configName());
     }
 
     public SoftFilterConfig(
@@ -46,7 +46,7 @@ public class SoftFilterConfig
         MinGermlineCoverage = minGermlineCoverage;
         MinGermlineCoverageAllosome = minGermlineCoverageAllosome;
         MaxGermlineVaf = maxGermlineVaf;
-        MaxGermlineRelativeQual = maxGermlineRelativeQual;
+        BaseMaxGermlineRelativeQual = maxGermlineRelativeQual;
     }
 
     public static SoftFilterConfig getTieredSoftFilterConfig(final VariantTier tier, final FilterConfig filterConfig)
@@ -86,6 +86,6 @@ public class SoftFilterConfig
                 prefix + "_" + MAX_GERMLINE_VAF.configName(), "Maximum " + prefix + " germline VAF", defaultConfig.MaxGermlineVaf);
 
         configBuilder.addDecimal(
-                prefix + "_" + MAX_GERMLINE_RELATIVE_QUAL.configName(), "Maximum " + prefix + " relative germline qual", defaultConfig.MaxGermlineRelativeQual);
+                prefix + "_" + MAX_GERMLINE_RELATIVE_QUAL.configName(), "Base maximum " + prefix + " relative germline qual", defaultConfig.BaseMaxGermlineRelativeQual);
     }
 }

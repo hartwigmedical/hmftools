@@ -125,6 +125,7 @@ public class ReadContextCounter
     // info only for VCF
     private double mTumorQualProbability;
     private double mMapQualFactor;
+    private double mAdjustedRefVaf;
 
     public ReadContextCounter(
             final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
@@ -182,6 +183,7 @@ public class ReadContextCounter
 
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
+        mAdjustedRefVaf = 0;
     }
 
     public int id() { return mId; }
@@ -658,6 +660,9 @@ public class ReadContextCounter
 
     public double mapQualFactor() { return mMapQualFactor; }
     public void setMapQualFactor(double factor) { mMapQualFactor = factor; }
+
+    public double adjustedRefVaf() { return mAdjustedRefVaf; }
+    public void setAdjustedRefVaf(double vaf) { mAdjustedRefVaf = vaf; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
