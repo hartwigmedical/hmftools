@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.io.File;
@@ -37,6 +38,7 @@ public class BwaAligner implements Aligner
             {
                 mAligner = new BwaMemAligner(index);
                 mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
+                // mAligner.setMismatchPenaltyOption(BWA_MISMATCH_PENALTY);
             }
             else
             {

@@ -114,7 +114,11 @@ public class TestUtils
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, mateStart,
                 false, false, null);
 
-        record.setMateNegativeStrandFlag(true);
+        if(readStart > mateStart)
+            record.setReadNegativeStrandFlag(true);
+        else
+            record.setMateNegativeStrandFlag(true);
+
         record.setAttribute(MATE_CIGAR_ATTRIBUTE, cigar); // assume the same
 
         return new Read(record);

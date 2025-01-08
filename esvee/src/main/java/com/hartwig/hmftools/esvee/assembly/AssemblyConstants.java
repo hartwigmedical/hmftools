@@ -77,6 +77,7 @@ public final class AssemblyConstants
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
 
     // alignment
+    public static final int BWA_MISMATCH_PENALTY = 6;
     public static final int ALIGNMENT_MIN_SOFT_CLIP = MIN_VARIANT_LENGTH;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 10;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA = 5;
