@@ -155,7 +155,7 @@ public class UmiStatistics
 
     public void recordUmiBaseStats(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
-        umiGroups.forEach(x -> recordUmiBaseFrequencies(x));
+        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umiId()));
 
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
@@ -168,16 +168,14 @@ public class UmiStatistics
         }
     }
 
-    private void recordUmiBaseFrequencies(final DuplicateGroup umiGroup)
+    private void recordUmiBaseFrequencies(final String umiId)
     {
-        String umiId = umiGroup.umiId();
-
         if(UmiPositionBaseFrequencies == null)
             UmiPositionBaseFrequencies = new int[umiId.length()][UMI_BASE_COUNT];
 
         for(int p = 0; p < min(umiId.length(), UmiPositionBaseFrequencies.length); ++p)
         {
-            int baseIndex = getBaseIndex(umiGroup.umiId().charAt(p));
+            int baseIndex = getBaseIndex(umiId.charAt(p));
 
             if(baseIndex >= 0)
                 ++UmiPositionBaseFrequencies[p][baseIndex];

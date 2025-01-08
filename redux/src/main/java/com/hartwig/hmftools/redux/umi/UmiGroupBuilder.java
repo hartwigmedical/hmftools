@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
-import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 
 import java.util.Collections;
@@ -94,7 +93,6 @@ public class UmiGroupBuilder
 
         for(DuplicateGroup umiGroup : allUmiGroups)
         {
-            // TODO: how to handle single read which were in groups?
             if(umiGroup.readCount() == 1)
             {
                 // drop any single fragments
@@ -150,7 +148,7 @@ public class UmiGroupBuilder
             else
             {
                 // should be 1 distinct coordinate
-                int ungroupedFragmentCount = (int)singleFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+                int ungroupedFragmentCount = singleFragments.size();
                 uniqueFragmentCount = ungroupedFragmentCount + finalUmiGroups.size();
                 uniqueCoordCount = duplicateGroups.size() + ungroupedFragmentCount;
             }
@@ -534,8 +532,6 @@ public class UmiGroupBuilder
             else
             {
                 SAMRecord read = (SAMRecord)fragGroup;
-
-                // TODO: use ReadInfo?? to get frag coordinates
                 groups.add(new DuplicateGroup(mUmiConfig.extractUmiId(read.getReadName()), read, null));
             }
         }

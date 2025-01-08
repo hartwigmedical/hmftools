@@ -88,11 +88,11 @@ public class PartitionThread extends Thread
                     partitionRegions.add(List.of(specificRegions.Regions.get(i)));
                 }
             }
-            else if(specificRegions.Regions.size() == 1 && threadCount > 0)
+            else if(specificRegions.Regions.size() == 1 && threadCount > 1)
             {
                 ChrBaseRegion specificRegion = specificRegions.Regions.get(0);
                 int intervalLength = (int)ceil(specificRegion.baseLength() / (double)threadCount);
-                int regionStart = 1;
+                int regionStart = specificRegion.start();
 
                 for(int i = 0 ; i < threadCount; ++i)
                 {

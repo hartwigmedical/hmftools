@@ -285,7 +285,7 @@ public class PartitionReader
         if(read.isSecondaryAlignment())
         {
             mBamWriter.setBoundaryPosition(readStart, false);
-            mBamWriter.writeRead(read, FragmentStatus.UNSET);
+            mBamWriter.writeSecondaryRead(read);
             return;
         }
 
@@ -334,12 +334,6 @@ public class PartitionReader
 
         mLastWriteLowerPosition = readFlushPosition;
 
-        if(readCount > LOG_PERF_FRAG_COUNT)
-        {
-            RD_LOGGER.debug("position({}:{}) processing {} frag-coord read groups with {} reads",
-                    mCurrentRegion.Chromosome, currentPosition, fragmentCoordReads.coordinateCount(), readCount);
-        }
-
         boolean logDetails = mConfig.perfDebug() && readCount > LOG_PERF_FRAG_COUNT;
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
@@ -368,7 +362,7 @@ public class PartitionReader
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 
-        mBamWriter.writeReads(fragmentCoordReads.SingleReads, true);
+        mBamWriter.writeNonDuplicateReads(fragmentCoordReads.SingleReads);
 
         mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
 

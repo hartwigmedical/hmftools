@@ -45,7 +45,7 @@ public class ReadCache
 
     private static final int POP_DISTANCE_CHECK = 100;
 
-    private static final int CHECK_CACHE_READ_COUNT = 1000;
+    private static final int CHECK_CACHE_READ_COUNT = 10000;
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
     private static final int LOG_READ_COUNT_DIFF = LOG_READ_COUNT_THRESHOLD / 10;
 
@@ -308,12 +308,13 @@ public class ReadCache
 
     private void checkCacheSize()
     {
+        // only check and log cache size every X reads
         ++mCheckSizeReadCount;
 
-        if(mCheckSizeReadCount >= CHECK_CACHE_READ_COUNT)
-        {
-            mCheckSizeReadCount = 0;
-        }
+        if(mCheckSizeReadCount < CHECK_CACHE_READ_COUNT)
+            return;
+
+        mCheckSizeReadCount = 0;
 
         int newReadCount = cachedReadCount();
 
