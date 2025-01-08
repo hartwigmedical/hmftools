@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.purple.copynumber;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.purple.PurpleConstants.SV_MAX_INFERRED_COPY_NUMBER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,8 +110,8 @@ public class StructuralVariantImplied
         final double endWeight = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumberWeight).orElse(0d);
         final double endCopyNumber = end.map(StructuralVariantLegPloidy::impliedLeftCopyNumber).orElse(0d);
 
-        double unconstrainedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
-        return Math.max(0, unconstrainedResult);
+        double weightedResult = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
+        return min(max(0, weightedResult), SV_MAX_INFERRED_COPY_NUMBER);
     }
 
     private long missingCopyNumberCount(Multimap<?, CombinedRegion> copyNumbers)
