@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSE
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.tryLineSequenceLink;
+import static com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
@@ -274,14 +275,14 @@ public final class AssemblyLinker
             if(secondSubSeqIndex < 0)
                 continue;
 
-            // check if the first match sequence (ie including all extension bases) to fits/matches within the second
-            // and if not if there is sufficient overlap
-            int impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
-            int impliedSequenceMatchSeqEnd = impliedSequenceMatchSeqStart + firstMatchSeqLength - 1;
+            // check if the first match sequence (ie including all extension bases) fits/matches within the second
+            // and if not whether there is sufficient overlap
+            int impliedSecondSeqMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+            int impliedSecondSeqMatchSeqEnd = impliedSecondSeqMatchSeqStart + firstMatchSeqLength - 1;
 
-            if(impliedSequenceMatchSeqEnd >= secondSeq.BaseLength)
+            if(impliedSecondSeqMatchSeqEnd >= secondSeq.BaseLength)
             {
-                int secondMatchLength = secondSeq.BaseLength - impliedSequenceMatchSeqStart - 1;
+                int secondMatchLength = secondSeq.BaseLength - impliedSecondSeqMatchSeqStart - 1;
 
                 if(secondMatchLength < ASSEMBLY_LINK_OVERLAP_BASES)
                     continue; // still possible that a later subsequence will match earlier
@@ -293,8 +294,8 @@ public final class AssemblyLinker
 
             while(secondSubSeqIndex >= 0)
             {
-                impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
-                if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
+                impliedSecondSeqMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+                if(impliedSecondSeqMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
                     break;
 
                 alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
@@ -311,7 +312,10 @@ public final class AssemblyLinker
         if(first.discordantOnly() && second.discordantOnly())
             minOverlapLength = min(minOverlapLength, ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES);
 
-        int[] topMatchIndices = findBestSequenceMatch(firstSeq, secondSeq, minOverlapLength, alternativeIndexStarts);
+        boolean requireRefBaseOverlap = isLocalAssemblyCandidate(assembly1, assembly2);
+
+        int[] topMatchIndices = findBestSequenceMatch(
+                firstSeq, secondSeq, minOverlapLength, requireRefBaseOverlap, alternativeIndexStarts);
 
         if(topMatchIndices != null)
         {
@@ -326,7 +330,8 @@ public final class AssemblyLinker
     }
 
     public static int[] findBestSequenceMatch(
-            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, final List<int[]> alternativeIndexStarts)
+            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, boolean requireRefBaseOverlap,
+            final List<int[]> alternativeIndexStarts)
     {
         if(alternativeIndexStarts.isEmpty())
             return null;
@@ -384,6 +389,16 @@ public final class AssemblyLinker
 
             if(overlapLength < minOverlapLength)
                 continue;
+
+            // require the overlapping sections to cover min overlap of ref bases if a local DEL or DUP
+            if(requireRefBaseOverlap)
+            {
+                int restrictedSecondSeqEnd = secondIndexStart + overlapLength - 1;
+                int refBaseOverlap = restrictedSecondSeqEnd - secondSeq.junctionIndex() + 1;
+
+                if(refBaseOverlap < minOverlapLength)
+                    continue;
+            }
 
             int mismatchCount = SequenceCompare.compareSequences(
                     firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),

@@ -630,9 +630,9 @@ public class JunctionTracker
                 {
                     // favour discordant-only groups if the split-read junction has minimum support, to ensure if will be processed
                     // as a valid junction assembly by the assembler
-                    if(!junctionData.discordantGroup() && newJunction.discordantGroup())
+                    if(!junctionData.discordantGroup() && newJunction.discordantGroup() && !junctionData.hotspot())
                     {
-                        if(junctionData.JunctionGroups.size() < mFilterConfig.MinJunctionSupport && !junctionData.hotspot())
+                        if(junctionData.JunctionGroups.size() < mFilterConfig.MinJunctionSupport)
                         {
                             mJunctions.set(index, newJunction);
                         }
