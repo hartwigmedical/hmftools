@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TransvalSNV
+public class TransvalSnvMnv
 {
     @NotNull
     public final String TranscriptId;
@@ -15,21 +15,21 @@ public class TransvalSNV
     public final int Position;
     public final boolean SpansMultipleExons;
     @NotNull
-    public final String ReferenceNucleotide;
+    public final String ReferenceNucleotides;
     @NotNull
-    public final String AlternateNucleotide;
+    public final String AlternateNucleotides;
     @NotNull
     public final String ReferenceCodon;
     @NotNull
     public final List<String> AlternateCodons;
 
-    public TransvalSNV(
+    public TransvalSnvMnv(
             @NotNull final String transcriptId,
             @NotNull final String chromosome,
             final int position,
             final boolean spansMultipleExons,
-            @NotNull final String referenceNucleotide,
-            @NotNull final String alternateNucleotide,
+            @NotNull final String referenceNucleotides,
+            @NotNull final String alternateNucleotides,
             @NotNull final String referenceCodon,
             @NotNull final List<String> alternateCodons)
     {
@@ -37,8 +37,8 @@ public class TransvalSNV
         Chromosome = RefGenomeFunctions.stripChrPrefix(chromosome);
         Position = position;
         SpansMultipleExons = spansMultipleExons;
-        ReferenceNucleotide = referenceNucleotide;
-        AlternateNucleotide = alternateNucleotide;
+        ReferenceNucleotides = referenceNucleotides;
+        AlternateNucleotides = alternateNucleotides;
         ReferenceCodon = referenceCodon;
         AlternateCodons = alternateCodons;
     }

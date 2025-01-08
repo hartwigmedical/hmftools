@@ -17,6 +17,7 @@ public class TinyGenome extends SimpleTestGenome
         super();
         data.put("chr1", new ChromosomeSnippet(10_000_000, 3_000_000, "chr1_part.txt"));
         data.put("chr3", new ChromosomeSnippet(10_000_000, 3_000_000, "chr3_part.txt"));
+        data.put("chr4", new ChromosomeSnippet(105_000_000, 3_000_000, "chr4_part.txt"));
         data.put("chr7", new ChromosomeSnippet(140_000_000, 10_000_000, "chr7_part.txt"));
     }
 

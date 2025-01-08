@@ -14,14 +14,14 @@ public class TransvalTest extends TransvalTestBase
         // This example is based on TransvarConverterTest in the serve codebase.
         // The idea is to check that the current code agrees with Transval on
         // the key fields used by serve.
-        TransvalSNV record = transval.calculateSNV("MTOR:p.L2230V");
+        TransvalSnvMnv record = transval.calculateSNV("MTOR:p.L2230V");
 
         assertEquals("ENST00000361445", record.TranscriptId);
         assertEquals("1", record.Chromosome);
         assertEquals(11_122_101, record.Position); // serve example has 11_182_158, which is from v37, I think
         assertFalse(record.SpansMultipleExons);
-        assertEquals("A", record.ReferenceNucleotide);
-        assertEquals("C", record.AlternateNucleotide);
+        assertEquals("A", record.ReferenceNucleotides);
+        assertEquals("C", record.AlternateNucleotides);
         assertEquals("TTA", record.ReferenceCodon);
         assertEquals("GTA", record.AlternateCodons.get(0));
         assertEquals("GTC", record.AlternateCodons.get(1));
@@ -43,13 +43,13 @@ public class TransvalTest extends TransvalTestBase
 21:35:20 - [INFO ] -  Hotspot{ref=A, alt=T, chromosome=chr7, position=140753336}
 21:35:20 - [INFO ] -  Hotspot{ref=CA, alt=TT, chromosome=chr7, position=140753335}
 */
-        TransvalSNV record = transval.calculateSNV("BRAF:p.V600E");
+        TransvalSnvMnv record = transval.calculateSNV("BRAF:p.V600E");
 //        assertEquals("ENST00000288602", record.TranscriptId); // Our ensembl data has ENST00000646891 as the canonical transcript
         assertEquals("7", record.Chromosome);
         assertEquals(140_753_336, record.Position); // serve example has 11_182_158, which is from v37, I think
         assertFalse(record.SpansMultipleExons);
-        assertEquals("A", record.ReferenceNucleotide);
-        assertEquals("T", record.AlternateNucleotide);
+        assertEquals("A", record.ReferenceNucleotides);
+        assertEquals("T", record.AlternateNucleotides);
         assertEquals("GTG", record.ReferenceCodon);
         assertEquals("GAG", record.AlternateCodons.get(0));
         assertEquals("GAA", record.AlternateCodons.get(1));
@@ -57,16 +57,16 @@ public class TransvalTest extends TransvalTestBase
     }
 
     @Test
-    public void vhl()
+    public void vhlMultipleExons()
     {
         // Another example based on a test in serve's TransvarConverterTest.
-        TransvalSNV record = transval.calculateSNV("VHL:p.G114R");
-                assertEquals("ENST00000256474", record.TranscriptId);
+        TransvalSnvMnv record = transval.calculateSNV("VHL:p.G114R");
+        assertEquals("ENST00000256474", record.TranscriptId);
         assertEquals("3", record.Chromosome);
 //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
         assertTrue(record.SpansMultipleExons);
-        assertEquals("G", record.ReferenceNucleotide);
-        assertEquals("C", record.AlternateNucleotide);
+        assertEquals("G", record.ReferenceNucleotides);
+        assertEquals("C", record.AlternateNucleotides);
         assertEquals("GGT", record.ReferenceCodon);
         // The serve test has the alternate codons in the order defined by Transvar,
         // which is simply the order in which they appear in its reverse codon table:
@@ -79,5 +79,25 @@ public class TransvalTest extends TransvalTestBase
         assertEquals("CGC", record.AlternateCodons.get(4));
         assertEquals("CGG", record.AlternateCodons.get(5));
         assertEquals(6, record.AlternateCodons.size());
+    }
+
+    @Test
+    public void tet2MNV()
+    {
+        // Another example based on a test in serve's TransvarConverterTest.
+        TransvalSnvMnv record = transval.calculateSNV("TET2:p.Y1294A");
+        assertEquals("ENST00000380013", record.TranscriptId); // TransvarConvertTest has ENST00000540549
+        assertEquals("4", record.Chromosome);
+        //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
+        assertFalse(record.SpansMultipleExons);
+        assertEquals("TA", record.ReferenceNucleotides);
+        assertEquals("GC", record.AlternateNucleotides);
+        assertEquals("TAC", record.ReferenceCodon);
+
+        assertEquals("GCC", record.AlternateCodons.get(0)); // Edit distance 2, the other options have edit distance 3
+        assertEquals("GCA", record.AlternateCodons.get(1));
+        assertEquals("GCG", record.AlternateCodons.get(2));
+        assertEquals("GCT", record.AlternateCodons.get(3));
+        assertEquals(4, record.AlternateCodons.size());
     }
 }

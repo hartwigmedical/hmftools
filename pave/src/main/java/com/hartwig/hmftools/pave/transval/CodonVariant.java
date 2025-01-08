@@ -1,18 +1,19 @@
 package com.hartwig.hmftools.pave.transval;
 
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class CodonVariant implements Comparable<CodonVariant>
 {
     @NotNull
-    public final String referenceCodon;
+    public final String ReferenceCodon;
     @NotNull
-    public final String alternateCodon;
+    public final String AlternateCodon;
+    private final int EditDistance;
 
     private static boolean isCodon(@NotNull String s)
     {
@@ -32,48 +33,76 @@ public class CodonVariant implements Comparable<CodonVariant>
     {
         Preconditions.checkArgument(isCodon(referenceCodon));
         Preconditions.checkArgument(isCodon(alternateCodon));
-        this.referenceCodon = referenceCodon;
-        this.alternateCodon = alternateCodon;
+        this.ReferenceCodon = referenceCodon;
+        this.AlternateCodon = alternateCodon;
+        int distance = 0;
+        for(int i = 0; i < 3; ++i)
+        {
+            if(referenceCodon.charAt(i) != alternateCodon.charAt(i))
+            {
+                distance += 1;
+            }
+        }
+        EditDistance = distance;
     }
 
     @Override
     public int compareTo(@NotNull final CodonVariant o)
     {
-        if(!referenceCodon.equals(o.referenceCodon))
+        if(!ReferenceCodon.equals(o.ReferenceCodon))
         {
-            throw new IllegalArgumentException(String.format("%s != %s", referenceCodon, o.referenceCodon));
+            throw new IllegalArgumentException(String.format("%s != %s", ReferenceCodon, o.ReferenceCodon));
         }
         int byDistance = editDistance() - o.editDistance();
         if(byDistance != 0)
         {
             return byDistance;
         }
-        return alternateCodon.compareTo(o.alternateCodon);
+        return AlternateCodon.compareTo(o.AlternateCodon);
     }
 
     public int editDistance()
     {
-        int result = 0;
-        for(int i = 0; i < 3; ++i)
-        {
-            if(referenceCodon.charAt(i) != alternateCodon.charAt(i))
-            {
-                result += 1;
-            }
-        }
-        return result;
+        return EditDistance;
     }
 
     public int positionOfFirstDifference()
     {
         for(int i = 0; i < 3; ++i)
         {
-            if(referenceCodon.charAt(i) != alternateCodon.charAt(i))
+            if(ReferenceCodon.charAt(i) != AlternateCodon.charAt(i))
             {
                 return i;
             }
         }
         return -1;
+    }
+
+    public Pair<String,String> differenceStrings()
+    {
+        StringBuilder refBuilder = new StringBuilder();
+        StringBuilder altBuilder = new StringBuilder();
+        int differencesAnnotated = 0;
+        for(int i = 0; i < 3; ++i)
+        {
+            if (differencesAnnotated == EditDistance)
+            {
+                break;
+            }
+            final char refChar = ReferenceCodon.charAt(i);
+            final char altChar = AlternateCodon.charAt(i);
+            boolean differentHere = refChar != altChar;
+            if (differentHere || differencesAnnotated > 0)
+            {
+                refBuilder.append(refChar);
+                altBuilder.append(altChar);
+            }
+            if (differentHere)
+            {
+                differencesAnnotated++;
+            }
+        }
+        return Pair.of(refBuilder.toString(), altBuilder.toString());
     }
 
     @Override
@@ -84,21 +113,21 @@ public class CodonVariant implements Comparable<CodonVariant>
             return false;
         }
         final CodonVariant that = (CodonVariant) o;
-        return Objects.equals(referenceCodon, that.referenceCodon) && Objects.equals(alternateCodon, that.alternateCodon);
+        return Objects.equals(ReferenceCodon, that.ReferenceCodon) && Objects.equals(AlternateCodon, that.AlternateCodon);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(referenceCodon, alternateCodon);
+        return Objects.hash(ReferenceCodon, AlternateCodon);
     }
 
     @Override
     public String toString()
     {
         return "CodonVariant{" +
-                "referenceCodon='" + referenceCodon + '\'' +
-                ", alternateCodon='" + alternateCodon + '\'' +
+                "referenceCodon='" + ReferenceCodon + '\'' +
+                ", alternateCodon='" + AlternateCodon + '\'' +
                 '}';
     }
 }

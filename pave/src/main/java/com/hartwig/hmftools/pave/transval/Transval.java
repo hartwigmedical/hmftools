@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,12 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class Transval
 {
@@ -35,7 +38,7 @@ public class Transval
         return new VariationParser(mEnsemblCache, transcriptAminoAcidsMap);
     }
 
-    public TransvalSNV calculateSNV(String proteinVariant)
+    public TransvalSnvMnv calculateSNV(String proteinVariant)
     {
         SingleAminoAcidVariant variant = variationParser().parse(proteinVariant);
         String referenceCodon = variant.referenceCodon(mRefGenomeVersion);
@@ -46,27 +49,22 @@ public class Transval
             return null;
         }
         CodonVariant codonVariant = codonChanges.first();
-        if(codonVariant.editDistance() != 1)
-        {
-            return null; // todo deal with this later
-        }
         int positionInCodonOfChange = codonVariant.positionOfFirstDifference();
         int positionInChromosomeOfChange = variant.regionsDefiningCodon().translateCodonPosition(positionInCodonOfChange);
-        String variantNucleotide = codonVariant.alternateCodon.charAt(positionInCodonOfChange) + "";
+        Pair<String,String> nucleotideDifferences = codonVariant.differenceStrings();
         if(!variant.Gene.forwardStrand())
         {
-            variantNucleotide = Nucleotides.reverseComplementBases(variantNucleotide);
+            nucleotideDifferences = Pair.of(reverseComplementBases(nucleotideDifferences.getLeft()), reverseComplementBases(nucleotideDifferences.getRight()));
         }
-        String referenceNucleotide = mRefGenomeVersion.getBaseString(variant.Gene.Chromosome, positionInChromosomeOfChange, positionInChromosomeOfChange);
         List<String> alternateNucleotides = new ArrayList<>();
-        codonChanges.forEach(cv -> alternateNucleotides.add(cv.alternateCodon));
-        return new TransvalSNV(
+        codonChanges.forEach(cv -> alternateNucleotides.add(cv.AlternateCodon));
+        return new TransvalSnvMnv(
                 variant.Transcript.TransName,
                 variant.Gene.Chromosome,
                 positionInChromosomeOfChange,
                 !variant.codonIsInSingleExon(),
-                referenceNucleotide,
-                variantNucleotide,
+                nucleotideDifferences.getLeft(),
+                nucleotideDifferences.getRight(),
                 referenceCodon,
                 alternateNucleotides
         );

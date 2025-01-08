@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 public class CodonVariantTest
@@ -44,6 +45,22 @@ public class CodonVariantTest
     }
 
     @Test
+    public void differenceStringsTest()
+    {
+        assertEquals(p("", ""), cv("AAA", "AAA").differenceStrings());
+
+        assertEquals(p("A", "T"), cv("AAA", "AAT").differenceStrings());
+        assertEquals(p("A", "T"), cv("AAA", "ATA").differenceStrings());
+        assertEquals(p("A", "T"), cv("AAA", "TAA").differenceStrings());
+
+        assertEquals(p("GC", "TT"), cv("AGC", "ATT").differenceStrings());
+        assertEquals(p("GC", "TT"), cv("GCA", "TTA").differenceStrings());
+        assertEquals(p("GAC", "TAT"), cv("GAC", "TAT").differenceStrings());
+
+        assertEquals(p("GCC", "TTA"), cv("GCC", "TTA").differenceStrings());
+    }
+
+    @Test
     public void testEquals()
     {
         assertEquals(cv("AAA", "AAG"), cv("AAA", "AAG"));
@@ -60,5 +77,10 @@ public class CodonVariantTest
     private CodonVariant cv(String s, String t)
     {
         return new CodonVariant(s, t);
+    }
+
+    private Pair<String,String> p(String s, String t)
+    {
+        return Pair.of(s, t);
     }
 }
