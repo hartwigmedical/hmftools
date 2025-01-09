@@ -109,6 +109,8 @@ class MicrosatelliteRead
         return readRepeatLength() / refGenomeMicrosatellite.unit.length;
     }
 
+    public int jitter() { return numRepeatUnits() - refGenomeMicrosatellite.numRepeat; }
+
     @Nullable
     public static MicrosatelliteRead from(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record,
             @Nullable final ConsensusMarker consensusMarker)
@@ -266,7 +268,7 @@ class MicrosatelliteRead
                     refBase += e.getLength();
                     break;
                 default:
-                    throw new IllegalStateException("Case statement didn't deal with op: " + e.getOperator() + "in CIGAR: " + cigar);
+                    throw new IllegalStateException("Case statement didn't deal with op: " + e.getOperator() + " in CIGAR: " + cigar);
             }
         }
     }

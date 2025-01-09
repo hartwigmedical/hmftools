@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // store the data for each MS table for a repeat unit such as (A/T)
@@ -113,11 +112,11 @@ public class JitterCountsTable
                 // get all the read counts into a row object
                 Row row = newTable.new Row(microsatelliteSiteAnalyser.refGenomeMicrosatellite().numRepeat);
 
-                for(MicrosatelliteRead microsatelliteRead : microsatelliteSiteAnalyser.getPassingReadRepeatMatches(consensusType))
+                for(Map.Entry<Integer, Integer> entry : microsatelliteSiteAnalyser.passingJitterCounts(consensusType).entrySet())
                 {
-                    int numRepeatUnits = microsatelliteRead.numRepeatUnits();
-                    int jitter = numRepeatUnits - row.refNumUnits;
-                    row.addRead(jitter);
+                    int jitter = entry.getKey();
+                    int numReads = entry.getValue();
+                    row.addReads(jitter, numReads);
                 }
 
                 newTable.mergeCounts(row);

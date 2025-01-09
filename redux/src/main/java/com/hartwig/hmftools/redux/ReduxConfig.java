@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.redux;
 
-import static java.lang.Math.round;
 import static java.lang.String.format;
-import static java.nio.file.Files.createDirectory;
 
-import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_WRITE_SITE_FILE;
+import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_WRITE_SITE_FILE_DESC;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -40,7 +40,6 @@ import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.redux.write.ReadOutput.NONE;
 
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -49,22 +48,22 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
+import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.unmap.ReadChecker;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
-import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.write.ReadOutput;
 
 import org.apache.logging.log4j.LogManager;
@@ -116,6 +115,7 @@ public class ReduxConfig
 
     public final String JitterMsiFile;
     public final double JitterMsiMaxSitePercContribution;
+    public final boolean JitterMsiWriteSiteFile;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -248,6 +248,7 @@ public class ReduxConfig
 
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
         JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
+        JitterMsiWriteSiteFile = configBuilder.hasFlag(JITTER_WRITE_SITE_FILE);
         JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
@@ -323,6 +324,7 @@ public class ReduxConfig
         UmiConfig.addConfig(configBuilder);
 
         configBuilder.addPath(JITTER_MSI_SITES_FILE, false, JITTER_MSI_SITES_FILE_DESC);
+        configBuilder.addFlag(JITTER_WRITE_SITE_FILE, JITTER_WRITE_SITE_FILE_DESC);
 
         configBuilder.addDecimal(
                 JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Jitter MIS max single alt site perc contribute",
@@ -374,6 +376,7 @@ public class ReduxConfig
         UnmapRegions = readUnmapper;
 
         JitterMsiFile = null;
+        JitterMsiWriteSiteFile = false;
         JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
         JitterMsiOnly = false;
 
