@@ -154,11 +154,16 @@ class TelomereLengthCalc(
     // this is the number of reads that have telomeric content - number of interstitial reads
     fun calcTotalTelomericReads() : Int
     {
-        return 2 * getFragmentTypeCount(FragmentType.F1) + getFragmentTypeCount(FragmentType.F2) - getFragmentTypeCount(FragmentType.F4)
+        return (2 * getFragmentTypeCount(FragmentType.F1) + getFragmentTypeCount(FragmentType.F2) - getFragmentTypeCount(FragmentType.F4))
+            .coerceAtLeast(0)
     }
 
     fun calcTelomereLength() : Double
     {
+        // protect against division by 0
+        if (numReads == 0L)
+            return 0.0
+
         val meanReadLength = readLengthSum / numReads.toDouble()
         val totalTelomericReads = calcTotalTelomericReads()
         val meanTelomereLength = totalTelomericReads * (1 - duplicateProportion) * meanReadLength / meanReadDepth / calcGcBiasAdj() / 46
