@@ -50,20 +50,28 @@ public class BwaSeqTester
             BwaMemIndex index = new BwaMemIndex(refGenomeImageFile);
             BwaMemAligner aligner = new BwaMemAligner(index);
 
-            // log default optiona()
+            // log default values()
 
             GU_LOGGER.debug("BWA align options: ");
             GU_LOGGER.debug("  BWA Bandwidth: {}", aligner.getBandwidthOption());
             GU_LOGGER.debug("  BWA MatchScore: {}", aligner.getMatchScoreOption());
             GU_LOGGER.debug("  BWA OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
-            GU_LOGGER.debug("  BWA ZDrop: {}", aligner.getZDropOption());
             GU_LOGGER.debug("  BWA SplitFactor: {}", aligner.getSplitFactorOption());
+            GU_LOGGER.debug("  BWA Mismatch: {}", aligner.getXADropRatio());
+            GU_LOGGER.debug("  BWA IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
+            GU_LOGGER.debug("  BWA IGapOpenExtend: {}", aligner.getIGapExtendPenaltyOption());
+            GU_LOGGER.debug("  BWA DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
+            GU_LOGGER.debug("  BWA DGapOpenExtend: {}", aligner.getDGapExtendPenaltyOption());
             GU_LOGGER.debug("  BWA DropRatio: {}", aligner.getDropRatioOption());
+            GU_LOGGER.debug("  BWA ZDrop: {}", aligner.getZDropOption());
             GU_LOGGER.debug("  BWA XADropRatio: {}", aligner.getXADropRatio());
             GU_LOGGER.debug("  BWA MaxXAHits: {}", aligner.getMaxXAHitsOption());
             GU_LOGGER.debug("  BWA MaxXAHitsAlt: {}", aligner.getMaxXAHitsAltOption());
 
             aligner.setBandwidthOption(31); // matches Esvee / Sage indel calling
+            // aligner.setMismatchPenaltyOption(5);
+
+            /*
             aligner.setOutputScoreThresholdOption(0);
             aligner.setZDropOption(1);
             aligner.setXADropRatio((float)0.1);
@@ -71,6 +79,7 @@ public class BwaSeqTester
             aligner.setMaxXAHitsOption(100); // default 5
             aligner.setMaxXAHitsAltOption(200); // default 200
             aligner.setSplitFactorOption((float)0.1); // default 1.5
+            */
 
             return aligner;
         }

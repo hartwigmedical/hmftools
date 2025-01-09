@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
@@ -9,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -60,22 +65,26 @@ public class SequenceTester
         try
         {
             List<String> lines = Files.readAllLines(Paths.get(mConfig.InputFile));
-            lines.remove(0); // Skip header
 
-            int chrIndex = 0;
-            int posStartIndex = 1;
-            int posEndIndex = 2;
-            int sequenceIndex = 3;
+            String header = lines.get(0);
+            lines.remove(0);
+
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+
+            Integer chrIndex = fieldsIndexMap.getOrDefault(FLD_CHROMOSOME, null);
+            Integer posStartIndex = fieldsIndexMap.getOrDefault(FLD_POSITION_START, null);
+            Integer posEndIndex = fieldsIndexMap.getOrDefault(FLD_POSITION_END, null);
+            Integer seqIndex = fieldsIndexMap.getOrDefault(FLD_SEQUENCE, null);
 
             int seqId = 0;
             for(String line : lines)
             {
                 String[] values = line.split(TSV_DELIM);
 
-                String chromosome = values[chrIndex];
-                String startString = values[posStartIndex];
-                String endString = values[posEndIndex];
-                String sequence = values.length > sequenceIndex ? values[sequenceIndex] : null;
+                String chromosome = chrIndex != null ? values[chrIndex] : "";
+                String startString = posStartIndex != null ? values[posStartIndex] : "";
+                String endString = posEndIndex != null ? values[posEndIndex] : "";
+                String sequence = seqIndex != null ? values[seqIndex] : "";
 
                 ChrBaseRegion region = null;
                 if(chromosome.length() > 0 && startString.length() > 0 && endString.length() > 0)
@@ -83,7 +92,6 @@ public class SequenceTester
                     region = new ChrBaseRegion(chromosome, Integer.parseInt(startString), Integer.parseInt(endString));
                 }
 
-                // Get sequence from region if sequence is empty
                 if(sequence == null || sequence.length() == 0)
                 {
                     sequence = mConfig.RefGenome.getBaseString(chromosome, region.start(), region.end());
