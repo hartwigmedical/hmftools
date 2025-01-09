@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class PhasedVariantGroup
 {

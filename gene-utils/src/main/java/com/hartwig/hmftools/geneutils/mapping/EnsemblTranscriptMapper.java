@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class EnsemblTranscriptMapper
 {

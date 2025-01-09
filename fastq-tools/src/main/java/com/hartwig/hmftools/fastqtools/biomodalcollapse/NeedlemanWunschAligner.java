@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.ToIntBiFunction;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 

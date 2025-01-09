@@ -15,7 +15,7 @@ import static htsjdk.samtools.SAMUtils.phredToFastq;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;

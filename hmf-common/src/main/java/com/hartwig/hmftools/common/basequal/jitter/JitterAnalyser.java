@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 

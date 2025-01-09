@@ -19,7 +19,7 @@ import java.util.List;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class NeoFragmentMatcher
 {

@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

@@ -9,7 +9,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 

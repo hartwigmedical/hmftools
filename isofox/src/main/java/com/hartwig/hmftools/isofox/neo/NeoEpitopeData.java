@@ -18,7 +18,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 import htsjdk.samtools.Cigar;
 

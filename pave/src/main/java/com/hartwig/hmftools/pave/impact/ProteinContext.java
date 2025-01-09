@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.util.List;
 import java.util.StringJoiner;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class ProteinContext
 {
