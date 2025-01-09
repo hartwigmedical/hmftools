@@ -41,7 +41,7 @@ public class JitterAnalyser
         mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
 
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = loadRefGenomeMicrosatellites();
-        mSampleReadProcessor = new SampleReadProcessor(refGenomeMicrosatellites, consensusMarker);
+        mSampleReadProcessor = new SampleReadProcessor(config, refGenomeMicrosatellites, consensusMarker);
 
         mConsensusTypes = null;
     }
@@ -82,7 +82,8 @@ public class JitterAnalyser
         Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers = mSampleReadProcessor.getMicrosatelliteSiteAnalysers();
 
         // now write out all the repeat stats
-        MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
+        if(mConfig.WriteSiteFile)
+            MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
 
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
         writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile, mConfig);
