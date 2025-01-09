@@ -67,7 +67,6 @@ public class DuplicateGroup
 
     public void registerDualStrand() { mDualStrand = true; }
     public boolean hasDualStrand() { return mDualStrand; }
-    public String coordinatesKey() { return mFragmentCoords.Key; }
 
     public void formConsensusRead(final ConsensusReads consensusReads)
     {

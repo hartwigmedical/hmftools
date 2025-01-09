@@ -130,7 +130,9 @@ public class UmiStatistics
         if(duplicateGroup != null && duplicateGroup.readCount() > posFragData.MaxUmiReadsCount)
         {
             posFragData.MaxUmiReadsCount = duplicateGroup.readCount();
-            posFragData.UmiGroupDetails = format("%s %s", duplicateGroup.coordinatesKey(), duplicateGroup.reads().get(0).getReadName());
+
+            posFragData.UmiGroupDetails = format("%s %s",
+                    duplicateGroup.fragmentCoordinates().keyNonOriented(), duplicateGroup.reads().get(0).getReadName());
         }
     }
 
