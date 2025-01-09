@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 

@@ -26,7 +26,7 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class ChimericReadCache
 {

@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;

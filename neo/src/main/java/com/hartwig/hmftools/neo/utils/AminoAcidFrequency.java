@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.neo.bind.BindConstants;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class AminoAcidFrequency
 {
