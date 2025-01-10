@@ -226,14 +226,14 @@ public class SBXBamUtilsTest
     {
         int alignmentStart = 25;
 
-        String readStr = "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
-        String cigar = "5M2I7M";  // inserts are left aligned.
+        String readStr = "A".repeat(5) + "CT".repeat(3) + "A".repeat(5);
+        String cigar = "5M4I7M";  // inserts are left aligned.
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
-        String qualStr = NON_ZERO_QUAL.repeat(7) + ZERO_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(5);
+        String qualStr = NON_ZERO_QUAL.repeat(9) + ZERO_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(5);
         read.setBaseQualityString(qualStr);
 
-        List<Boolean> duplexIndels = getDuplexIndels("0-7ZZ5-0");
+        List<Boolean> duplexIndels = getDuplexIndels("0-9ZZ5-0");
 
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
 
@@ -260,14 +260,14 @@ public class SBXBamUtilsTest
     {
         int alignmentStart = 25;
 
-        String readStr = "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
-        String cigar = "5M2I7M";  // inserts are left aligned.
+        String readStr = "A".repeat(5) + "CT".repeat(3) + "A".repeat(5);
+        String cigar = "5M4I7M";  // inserts are left aligned.
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, true, false, null);
 
-        String qualStr = NON_ZERO_QUAL.repeat(5) + ZERO_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(7);
+        String qualStr = NON_ZERO_QUAL.repeat(5) + ZERO_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(9);
         read.setBaseQualityString(qualStr);
 
-        List<Boolean> duplexIndels = getDuplexIndels("0-7ZZ5-0");
+        List<Boolean> duplexIndels = getDuplexIndels("0-9ZZ5-0");
         Collections.reverse(duplexIndels);
 
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
@@ -277,14 +277,14 @@ public class SBXBamUtilsTest
 
         List<AnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
 
-        expectedBases.get(7).setQual((byte) 0);
-        expectedBases.get(8).setQual((byte) 0);
+        expectedBases.get(9).setQual((byte) 0);
+        expectedBases.get(10).setQual((byte) 0);
 
         expectedBases.get(5).deleteBase();
         expectedBases.get(6).deleteBase();
 
-        expectedBases.get(5).setQual((byte) 0);
-        expectedBases.get(6).setQual((byte) 0);
+        expectedBases.get(7).setQual((byte) 0);
+        expectedBases.get(8).setQual((byte) 0);
 
         assertTrue(readModified);
         assertEquals(expectedBases, annotedBases);

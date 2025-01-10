@@ -544,17 +544,22 @@ public class SBXBamUtils
 
             // trim bases
             int trimLength = min(readRepeatLength - refRepeatLength, duplexIndelBases.length());
-            int lastInsertIndex = INVALID_POSITION;
-            for(int j = readRepeatStart; j <= duplexIndelEnd; j++)
+            int insertTrimStart = INVALID_POSITION;
+            final int jStart = isForward ? readRepeatStart : duplexIndelEnd;
+            final int jInc = isForward ? 1 : -1;
+            for(int j = jStart; j >= readRepeatStart && j <= duplexIndelEnd; j += jInc)
             {
                 if(annotatedBases.get(j).Op == I)
-                    lastInsertIndex = j;
+                {
+                    insertTrimStart = j;
+                    break;
+                }
             }
 
             int trimCount = 0;
-            if(lastInsertIndex != INVALID_POSITION)
+            if(insertTrimStart != INVALID_POSITION)
             {
-                for(int j = lastInsertIndex; j >= readRepeatStart && trimCount < trimLength; j--)
+                for(int j = insertTrimStart; j >= readRepeatStart && j <= duplexIndelEnd && trimCount < trimLength; j += jInc)
                 {
                     if(!annotatedBases.get(j).isReadBase())
                         continue;
@@ -568,9 +573,9 @@ public class SBXBamUtils
                 }
             }
 
-            // ensure last duplexIndelBases.length() untrimmed bases have qual 0
+            // ensure first duplexIndelBases.length() left-aligned untrimmed bases have qual 0
             basesSeen = 0;
-            for(int j = duplexIndelEnd; j >= readRepeatStart && basesSeen < duplexIndelBases.length(); j--)
+            for(int j = jStart; j >= readRepeatStart && j <= duplexIndelEnd && basesSeen < duplexIndelBases.length(); j += jInc)
             {
                 if(!annotatedBases.get(j).deleted() && annotatedBases.get(j).isReadBase())
                 {
