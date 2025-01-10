@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux.common;
 
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 
 import java.util.Collection;
@@ -10,7 +11,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.collect.OneDGridMap;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.common.collect.TwoDGridMap;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -21,23 +22,29 @@ public interface DuplicateGroupCollapser
 {
     FragmentCoordReads collapse(@Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads);
 
-    static DuplicateGroupCollapser fromSequencingType(final SequencingType sequencingType)
+    static DuplicateGroupCollapser from(final DuplicateGroupCollapseConfig config)
     {
-        if(sequencingType == ULTIMA)
+        if(config.Sequencing == ULTIMA)
             return DuplicateGroupCollapser::ultimaCollapse;
 
-        if(sequencingType == BIOMODAL)
+        if(config.Sequencing == BIOMODAL)
             return DuplicateGroupCollapser::biomodalCollapse;
+
+        if(config.Sequencing == SBX && config.SbxMaxDuplicateDistance > 0)
+            return sbxCollapserFactory(config.SbxMaxDuplicateDistance);
 
         return null;
     }
 
-    static boolean isEnabled(final SequencingType sequencingType)
+    static boolean isEnabled(final DuplicateGroupCollapseConfig config)
     {
-        if(sequencingType == ULTIMA)
+        if(config.Sequencing == ULTIMA)
             return true;
 
-        if(sequencingType == BIOMODAL)
+        if(config.Sequencing == BIOMODAL)
+            return true;
+
+        if(config.Sequencing == SBX && config.SbxMaxDuplicateDistance > 0)
             return true;
 
         return false;
@@ -183,5 +190,81 @@ public interface DuplicateGroupCollapser
             return null;
 
         return getFragmentCoordReads(fivePrimeGroups.values());
+    }
+
+    class SbxCollapser
+    {
+        private final int mMaxDuplicateDistance;
+        private final Map<String, TwoDGridMap<DuplicateGroup>> mKeyGroups;
+
+        public SbxCollapser(int maxDuplicateDistance)
+        {
+            mMaxDuplicateDistance = maxDuplicateDistance;
+            mKeyGroups = Maps.newHashMap();
+        }
+
+        public void addSingleRead(final ReadInfo readInfo)
+        {
+            DuplicateGroup duplicateGroup = new DuplicateGroup(null, readInfo.read(), readInfo.coordinates());
+            addDuplicateGroup(duplicateGroup);
+        }
+
+        public void addDuplicateGroup(final DuplicateGroup duplicateGroup)
+        {
+            FragmentCoords coords = duplicateGroup.fragmentCoordinates();
+            String collapsedKey = collapseKey(coords);
+            int fragStartPos = coords.ReadIsLower ? coords.PositionLower : coords.PositionUpper;
+            int fragEndPos = coords.ReadIsLower ? coords.PositionUpper : coords.PositionLower;
+            mKeyGroups.computeIfAbsent(collapsedKey, key -> new TwoDGridMap<>());
+            mKeyGroups.get(collapsedKey).merge(fragStartPos, fragEndPos, duplicateGroup,
+                    (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+        }
+
+        public FragmentCoordReads getCollapsedGroups()
+        {
+            if(mKeyGroups.isEmpty())
+                return null;
+
+            List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
+            for(TwoDGridMap<DuplicateGroup> keyGroup : mKeyGroups.values())
+            {
+                List<DuplicateGroup> keyGroupCollapsed = keyGroup.mergeValuesByDistance(
+                        mMaxDuplicateDistance, (acc, x) -> { acc.addReads(x.reads()); return acc; });
+
+                collapsedGroups.addAll(keyGroupCollapsed);
+            }
+
+            return getFragmentCoordReads(collapsedGroups);
+        }
+
+        private static String collapseKey(final FragmentCoords fragmentCoords)
+        {
+            String key = fragmentCoords.ReadIsLower ? "" : "R";
+            if(fragmentCoords.SuppReadInfo != null)
+                return key + "S";
+
+            return key;
+        }
+    }
+
+    static DuplicateGroupCollapser sbxCollapserFactory(final int maxDuplicateDistance)
+    {
+        return new DuplicateGroupCollapser()
+        {
+            @Override
+            public FragmentCoordReads collapse(
+                    @Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads)
+            {
+                SbxCollapser collapser = new SbxCollapser(maxDuplicateDistance);
+
+                if(singleReads != null)
+                    singleReads.forEach(collapser::addSingleRead);
+
+                if(duplicateGroups != null)
+                    duplicateGroups.forEach(collapser::addDuplicateGroup);
+
+                return collapser.getCollapsedGroups();
+            }
+        };
     }
 }

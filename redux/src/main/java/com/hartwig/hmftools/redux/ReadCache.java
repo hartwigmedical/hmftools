@@ -18,6 +18,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -50,18 +51,25 @@ public class ReadCache
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
     private static final int LOG_READ_COUNT_DIFF = LOG_READ_COUNT_THRESHOLD / 10;
 
-    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final SequencingType sequencingType)
+    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation,
+            final DuplicateGroupCollapseConfig groupCollapseConfig)
     {
         mGroupSize = groupSize;
         mMaxSoftClipLength = maxSoftClipLength;
         mUseFragmentOrientation = useFragmentOrientation;
-        mDuplicateGroupCollapser = DuplicateGroupCollapser.fromSequencingType(sequencingType);
+        mDuplicateGroupCollapser = DuplicateGroupCollapser.from(groupCollapseConfig);
         mPositionGroups = Lists.newArrayList();
         mCurrentReadMinPosition = 0;
         mCurrentChromosome = "";
         mLastPopPositionCheck = 0;
         mLastCacheReadCount = 0;
         mCheckSizeReadCount = 0;
+    }
+
+    @VisibleForTesting
+    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final SequencingType sequencingType)
+    {
+        this(groupSize, maxSoftClipLength, useFragmentOrientation, new DuplicateGroupCollapseConfig(sequencingType));
     }
 
     public void processRead(final SAMRecord read)

@@ -78,7 +78,7 @@ public abstract class BamWriter
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
-        boolean recomputeFragCoords = DuplicateGroupCollapser.isEnabled(mConfig.Sequencing);
+        boolean recomputeFragCoords = DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse);
         if(group.consensusRead() != null)
         {
             SAMRecord read = group.consensusRead();
