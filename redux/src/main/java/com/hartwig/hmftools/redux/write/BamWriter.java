@@ -2,7 +2,6 @@ package com.hartwig.hmftools.redux.write;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
@@ -15,8 +14,10 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -77,14 +78,16 @@ public abstract class BamWriter
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
+        boolean recomputeFragCoords = DuplicateGroupCollapser.isEnabled(mConfig.Sequencing);
         if(group.consensusRead() != null)
         {
             SAMRecord read = group.consensusRead();
             processRecord(read);
             mConsensusReadCount.incrementAndGet();
 
+            String coordinatesKey = recomputeFragCoords ? FragmentCoords.fromRead(read, false).Key : group.coordinatesKey();
             if(mReadDataWriter != null && mReadDataWriter.enabled())
-                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
+                mReadDataWriter.writeReadData(read, PRIMARY, coordinatesKey, group.umiId());
         }
 
         for(SAMRecord read : group.reads())
@@ -93,7 +96,8 @@ public abstract class BamWriter
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
-            writeRead(read, fragmentStatus, group.coordinatesKey(), group.umiId());
+            String coordinatesKey = recomputeFragCoords ? FragmentCoords.fromRead(read, false).Key : group.coordinatesKey();
+            writeRead(read, fragmentStatus, coordinatesKey, group.umiId());
         }
     }
 
