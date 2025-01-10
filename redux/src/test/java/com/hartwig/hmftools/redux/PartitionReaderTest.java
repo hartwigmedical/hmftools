@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.alignmentsToSamTag;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -396,5 +396,44 @@ public class PartitionReaderTest
 
         // confirm was unmapped again but not written to BAM
         assertEquals(0, mWriter.nonConsensusWriteCount());
+    }
+
+    @Test
+    public void testUltima()
+    {
+        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()), ULTIMA);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
+
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 175 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 5 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+
+        partitionReader.postProcessRegion();
+
+        assertEquals(15, writer.nonConsensusWriteCount());
+        assertEquals(3, writer.consensusWriteCount());
+    }
+
+    private static SAMRecord createUnpairedRecord(final String chromosome, final int readStart, int readEnd, boolean isReversed)
+    {
+        return TestUtils.createUnpairedRecord(READ_ID_GEN.nextId(), chromosome, readStart, readEnd, isReversed);
     }
 }

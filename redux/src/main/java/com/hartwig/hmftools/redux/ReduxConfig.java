@@ -342,8 +342,8 @@ public class ReduxConfig
     }
 
     @VisibleForTesting
-    public ReduxConfig(
-            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus, final ReadUnmapper readUnmapper)
+    public ReduxConfig(final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
+            final ReadUnmapper readUnmapper, final SequencingType sequencingType)
     {
         mIsValid = true;
         SampleId = "";
@@ -354,7 +354,7 @@ public class ReduxConfig
         OutputId = "";
         RefGenVersion = V37;
         RefGenome = refGenome;
-        Sequencing = ILLUMINA;
+        Sequencing = sequencingType;
 
         BamStringency = ValidationStringency.STRICT;
         mReadLength = DEFAULT_READ_LENGTH;
@@ -389,5 +389,12 @@ public class ReduxConfig
         WriteReadBaseLength = 0;
 
         mReadChecker = new ReadChecker(false);
+    }
+
+    @VisibleForTesting
+    public ReduxConfig(
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus, final ReadUnmapper readUnmapper)
+    {
+        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, ILLUMINA);
     }
 }

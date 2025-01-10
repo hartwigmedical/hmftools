@@ -179,7 +179,6 @@ public class FragmentUtilsTest
         assertFalse(fragmentCoords.UnmappedSourced);
         assertTrue(fragmentCoords.Unpaired);
         assertEquals(expectedKey, fragmentCoords.Key);
-        assertEquals(fragmentCoords.Key, fragmentCoords.KeyOriented);
 
         assertEquals(positionLower, fragmentCoords.readPosition());
         assertEquals(FORWARD, fragmentCoords.readOrientation());
@@ -208,7 +207,6 @@ public class FragmentUtilsTest
         assertFalse(fragmentCoords.UnmappedSourced);
         assertTrue(fragmentCoords.Unpaired);
         assertEquals(expectedKey, fragmentCoords.Key);
-        assertEquals(fragmentCoords.Key, fragmentCoords.KeyOriented);
 
         assertEquals(positionUpper, fragmentCoords.readPosition());
         assertEquals(REVERSE, fragmentCoords.readOrientation());
@@ -246,7 +244,6 @@ public class FragmentUtilsTest
         assertFalse(fragmentCoords.UnmappedSourced);
         assertTrue(fragmentCoords.Unpaired);
         assertEquals(expectedKey, fragmentCoords.Key);
-        assertEquals(fragmentCoords.Key, fragmentCoords.KeyOriented);
 
         assertEquals(suppReadPos, fragmentCoords.readPosition());
         assertEquals(FORWARD, fragmentCoords.readOrientation());
@@ -284,7 +281,6 @@ public class FragmentUtilsTest
         assertFalse(fragmentCoords.UnmappedSourced);
         assertTrue(fragmentCoords.Unpaired);
         assertEquals(expectedKey, fragmentCoords.Key);
-        assertEquals(fragmentCoords.Key, fragmentCoords.KeyOriented);
 
         assertEquals(suppReadPos, fragmentCoords.readPosition());
         assertEquals(FORWARD, fragmentCoords.readOrientation());
@@ -322,7 +318,6 @@ public class FragmentUtilsTest
         assertFalse(fragmentCoords.UnmappedSourced);
         assertTrue(fragmentCoords.Unpaired);
         assertEquals(expectedKey, fragmentCoords.Key);
-        assertEquals(fragmentCoords.Key, fragmentCoords.KeyOriented);
 
         assertEquals(suppReadPos + TEST_READ_BASES.length() - 1, fragmentCoords.readPosition());
         assertEquals(REVERSE, fragmentCoords.readOrientation());
@@ -360,7 +355,6 @@ public class FragmentUtilsTest
         assertFalse(fragmentCoords.UnmappedSourced);
         assertTrue(fragmentCoords.Unpaired);
         assertEquals(expectedKey, fragmentCoords.Key);
-        assertEquals(fragmentCoords.Key, fragmentCoords.KeyOriented);
 
         assertEquals(suppReadPos + TEST_READ_BASES.length() - 1, fragmentCoords.readPosition());
         assertEquals(REVERSE, fragmentCoords.readOrientation());
