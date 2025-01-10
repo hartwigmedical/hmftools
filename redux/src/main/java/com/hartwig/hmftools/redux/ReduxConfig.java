@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOp
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_WRITE_SITE_FILE;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_WRITE_SITE_FILE_DESC;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -115,7 +113,6 @@ public class ReduxConfig
 
     public final String JitterMsiFile;
     public final double JitterMsiMaxSitePercContribution;
-    public final boolean JitterMsiWriteSiteFile;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -248,7 +245,6 @@ public class ReduxConfig
 
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
         JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
-        JitterMsiWriteSiteFile = configBuilder.hasFlag(JITTER_WRITE_SITE_FILE);
         JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
@@ -324,7 +320,6 @@ public class ReduxConfig
         UmiConfig.addConfig(configBuilder);
 
         configBuilder.addPath(JITTER_MSI_SITES_FILE, false, JITTER_MSI_SITES_FILE_DESC);
-        configBuilder.addFlag(JITTER_WRITE_SITE_FILE, JITTER_WRITE_SITE_FILE_DESC);
 
         configBuilder.addDecimal(
                 JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Jitter MIS max single alt site perc contribute",
@@ -376,7 +371,6 @@ public class ReduxConfig
         UnmapRegions = readUnmapper;
 
         JitterMsiFile = null;
-        JitterMsiWriteSiteFile = false;
         JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
         JitterMsiOnly = false;
 
