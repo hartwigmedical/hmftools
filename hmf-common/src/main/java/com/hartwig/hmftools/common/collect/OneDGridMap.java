@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.collect;
 
+import static com.hartwig.hmftools.common.collect.PartitionUtils.mergePartitions;
+
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -43,38 +46,48 @@ public class OneDGridMap<T>
         mContainer.put(x, newValue);
     }
 
-    public List<T> mergeValuesByDistance(int maxDistance, final BinaryOperator<T> accumulator)
+    public List<List<T>> partitionValuesByDistance(int maxDistance)
     {
-        List<T> mergedValues = Lists.newArrayList();
-        T currentMergedValue = null;
+        List<List<T>> partitions = Lists.newArrayList();
+        List<T> currentPartition = null;
         int lastX = 0;
         for(Map.Entry<Integer, T> xAndValue : mContainer.entrySet())
         {
             int x = xAndValue.getKey();
             T value = xAndValue.getValue();
 
-            if(currentMergedValue == null)
+            if(currentPartition == null)
             {
-                currentMergedValue = value;
+                currentPartition = Lists.newArrayList(value);
                 lastX = x;
                 continue;
             }
 
             if(x - lastX <= maxDistance)
             {
-                currentMergedValue = accumulator.apply(currentMergedValue, value);
+                currentPartition.add(value);
                 lastX = x;
                 continue;
             }
 
-            mergedValues.add(currentMergedValue);
-            currentMergedValue = value;
+            partitions.add(currentPartition);
+            currentPartition = Lists.newArrayList(value);
             lastX = x;
         }
 
-        if(currentMergedValue != null)
-            mergedValues.add(currentMergedValue);
+        if(currentPartition != null)
+            partitions.add(currentPartition);
 
-        return mergedValues;
+        return partitions;
+    }
+
+    public List<T> mergeValuesByDistance(int maxDistance, final BinaryOperator<T> accumulator)
+    {
+        return mergeValuesByDistance(maxDistance, accumulator, null);
+    }
+
+    public List<T> mergeValuesByDistance(int maxDistance, final BinaryOperator<T> accumulator, @Nullable final Supplier<T> identity)
+    {
+        return mergePartitions(partitionValuesByDistance(maxDistance), accumulator, identity);
     }
 }

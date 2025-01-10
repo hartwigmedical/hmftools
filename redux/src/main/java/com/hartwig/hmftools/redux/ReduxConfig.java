@@ -58,6 +58,7 @@ import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.unmap.ReadChecker;
@@ -79,6 +80,8 @@ public class ReduxConfig
     public final SequencingType Sequencing;
 
     public final ValidationStringency BamStringency;
+
+    public final DuplicateGroupCollapseConfig DuplicateGroupCollapse;
 
     // UMI group config
     public final UmiConfig UMIs;
@@ -207,6 +210,8 @@ public class ReduxConfig
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
 
+        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
+
         UMIs = UmiConfig.from(configBuilder);
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
@@ -325,6 +330,8 @@ public class ReduxConfig
                 JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Jitter MIS max single alt site perc contribute",
                 DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
+        DuplicateGroupCollapseConfig.addConfig(configBuilder);
+
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
@@ -343,7 +350,7 @@ public class ReduxConfig
 
     @VisibleForTesting
     public ReduxConfig(final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
-            final ReadUnmapper readUnmapper, final SequencingType sequencingType)
+            final ReadUnmapper readUnmapper, final SequencingType sequencingType, int sbxMaxDuplicateDistance)
     {
         mIsValid = true;
         SampleId = "";
@@ -374,6 +381,8 @@ public class ReduxConfig
         JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
         JitterMsiOnly = false;
 
+        DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, sbxMaxDuplicateDistance);
+
         WriteBam = false;
         MultiBam = false;
         KeepInterimBams = false;
@@ -389,6 +398,13 @@ public class ReduxConfig
         WriteReadBaseLength = 0;
 
         mReadChecker = new ReadChecker(false);
+    }
+
+    @VisibleForTesting
+    public ReduxConfig(final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
+            final ReadUnmapper readUnmapper, final SequencingType sequencingType)
+    {
+        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, sequencingType, 0);
     }
 
     @VisibleForTesting

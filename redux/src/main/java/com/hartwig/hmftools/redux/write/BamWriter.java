@@ -81,7 +81,7 @@ public abstract class BamWriter
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
-        boolean recomputeFragCoords = DuplicateGroupCollapser.isEnabled(mConfig.Sequencing);
+        boolean recomputeFragCoords = DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse);
         String fragCoords = group.fragmentCoordinates().Key;
         if(group.consensusRead() != null)
         {
