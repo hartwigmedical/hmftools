@@ -390,4 +390,35 @@ public final class CigarUtils
 
         record.setCigar(new Cigar(newCigarElements));
     }
+
+    public static List<CigarElement> collapseCigarOps(final List<CigarOperator> ops)
+    {
+        List<CigarElement> elems = Lists.newArrayList();
+        CigarOperator currentOp = null;
+        int currentLength = 0;
+        for(CigarOperator op : ops)
+        {
+            if(currentOp == null)
+            {
+                currentOp = op;
+                currentLength = 1;
+                continue;
+            }
+
+            if(currentOp == op)
+            {
+                currentLength++;
+                continue;
+            }
+
+            elems.add(new CigarElement(currentLength, currentOp));
+            currentOp = op;
+            currentLength = 1;
+        }
+
+        if(currentLength > 0)
+            elems.add(new CigarElement(currentLength, currentOp));
+
+        return elems;
+    }
 }

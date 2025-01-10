@@ -6,8 +6,10 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.UNSET;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -17,6 +19,7 @@ public class ConsensusState
 {
     public final boolean IsForward;
     public final String Chromosome;
+    public final Map<String, Object> Attributes;
     private final RefGenome mRefGenome;
     public byte[] Bases;
     public byte[] BaseQualities;
@@ -35,6 +38,7 @@ public class ConsensusState
     {
         IsForward = isForward;
         Chromosome = chromosome;
+        Attributes = Maps.newHashMap();
         mRefGenome = refGenome;
         Bases = null;
         BaseQualities = null;
@@ -80,6 +84,14 @@ public class ConsensusState
             MinAlignedPosStart = min(readStart, MinAlignedPosStart);
             MaxAlignedPosEnd = max(readEnd, MaxAlignedPosEnd);
         }
+    }
+
+    public void setBoundaries(int unclippedStart, int unclippedEnd, int readStart, int readEnd)
+    {
+        MinUnclippedPosStart = unclippedStart;
+        MaxUnclippedPosEnd = unclippedEnd;
+        MinAlignedPosStart = readStart;
+        MaxAlignedPosEnd = readEnd;
     }
 
     public void addCigarElement(int length, final CigarOperator operator)
