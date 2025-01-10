@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
 import java.util.Collections;
@@ -87,6 +88,15 @@ public final class TestUtils
     {
         FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false);
         return consensusReads.createConsensusRead(reads, fragmentCoords, umiId);
+    }
+
+    public static SAMRecord createUnpairedRecord(final String readName, final String chromosome, final int readStart, int readEnd,
+            boolean isReversed)
+    {
+        int readLength = readEnd - readStart + 1;
+        String readBases = "A".repeat(readLength);
+        String cigar = readLength + "M";
+        return createSamRecordUnpaired(readName, chromosome, readStart, readBases, cigar, isReversed, false, null);
     }
 
     // unmapping test state

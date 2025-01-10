@@ -13,8 +13,10 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -79,13 +81,16 @@ public abstract class BamWriter
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
+        boolean recomputeFragCoords = DuplicateGroupCollapser.isEnabled(mConfig.Sequencing);
         String fragCoords = group.fragmentCoordinates().Key;
-
         if(group.consensusRead() != null)
         {
             SAMRecord read = group.consensusRead();
             processRecord(read);
             mConsensusReadCount.incrementAndGet();
+
+            if(recomputeFragCoords)
+                fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             if(mReadDataWriter != null && mReadDataWriter.enabled())
                 mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId());
@@ -97,6 +102,9 @@ public abstract class BamWriter
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+            if(recomputeFragCoords)
+                fragCoords = FragmentCoords.fromRead(read, false).Key;
+
             writeRead(read, fragmentStatus, fragCoords, group.umiId());
         }
     }
