@@ -213,11 +213,16 @@
                 <artifactId>orange-datamodel</artifactId>
                 <version>${orange-datamodel.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.github.samtools</groupId>
                 <artifactId>htsjdk</artifactId>
                 <version>${htsjdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-compress</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.intellij</groupId>
