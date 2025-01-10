@@ -28,6 +28,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -126,7 +127,8 @@ public class SomaticStream
         return mEnabled ? TumorMutationalStatus.fromLoad(mTml) : TumorMutationalStatus.UNKNOWN;
     }
 
-    public List<DriverCatalog> buildDrivers(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
+    public List<DriverCatalog> buildDrivers(
+            final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
     {
         if(mReferenceData.TargetRegions.hasTargetRegions())
         {
@@ -148,7 +150,7 @@ public class SomaticStream
             mDrivers.overrideVariantCounts(variantTypeCounts, variantTypeCountsbiallelic);
         }
 
-        return mDrivers.buildCatalog(geneCopyNumberMap);
+        return mDrivers.buildCatalog(geneCopyNumberMap, driverSourceData);
     }
 
     public Set<String> reportedGenes() { return mReportedGenes; }
@@ -294,19 +296,6 @@ public class SomaticStream
 
             // check alt transcript status vs canonical
             addReportableTranscriptList(variant.type(), variant.context(), variant.variantImpact());
-        }
-    }
-
-    public void registerReportedVariants()
-    {
-        for(SomaticVariant variant : mSomaticVariants.variants())
-        {
-            boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
-
-            if(isValidChromosome && variant.isPass())
-            {
-                checkDrivers(variant, false);
-            }
         }
     }
 
