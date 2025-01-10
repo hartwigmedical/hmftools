@@ -16,7 +16,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 
 final class CopyNumberSelector

@@ -24,7 +24,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class FusionCohortData
 {

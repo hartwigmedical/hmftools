@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;

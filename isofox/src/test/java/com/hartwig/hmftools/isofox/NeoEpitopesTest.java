@@ -33,7 +33,7 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeData;
 import com.hartwig.hmftools.isofox.neo.NeoFragmentSupport;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;

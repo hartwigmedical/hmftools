@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.pave.VariantData;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public final class SpliceClassifier
 {

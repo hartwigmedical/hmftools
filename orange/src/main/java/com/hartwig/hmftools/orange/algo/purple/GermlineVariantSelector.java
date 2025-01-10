@@ -5,7 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.jetbrains.annotations.Nullable;
 
 final class GermlineVariantSelector
