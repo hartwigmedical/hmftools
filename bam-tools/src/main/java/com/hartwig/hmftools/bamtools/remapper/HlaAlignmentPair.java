@@ -3,25 +3,45 @@ package com.hartwig.hmftools.bamtools.remapper;
 import java.util.Objects;
 import java.util.Set;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.SAMFlag;
 
 public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
 {
     @NotNull
-    public final HlaAlignment left;
+    public final HlaAlignment Left;
     @NotNull
-    public final HlaAlignment right;
+    public final HlaAlignment Right;
+    private final int InterPairDistance;
 
     public HlaAlignmentPair(@NotNull final HlaAlignment left, @NotNull final HlaAlignment right)
     {
-        this.left = left;
-        this.right = right;
+        this.Left = left;
+        this.Right = right;
+        InterPairDistance = Math.abs(Math.abs(left.getRefStart()) - Math.abs(right.Position));
+    }
+
+    public boolean isConcordantPair()
+    {
+        final Set<SAMFlag> leftFlags = SAMFlag.getFlags(Left.getSamFlag());
+        final Set<SAMFlag> rightFlags = SAMFlag.getFlags(Right.getSamFlag());
+        boolean orientationOk = leftFlags.contains(SAMFlag.READ_REVERSE_STRAND) != rightFlags.contains(SAMFlag.READ_REVERSE_STRAND);
+        if (!orientationOk)
+        {
+            return false;
+        }
+        boolean sameStrand = Left.getRefId() == Right.getRefId();
+        if(!sameStrand)
+        {
+            return false;
+        }
+        return InterPairDistance > 50 && InterPairDistance < 1000;
     }
 
     public int interPairDistance()
     {
-        return Math.abs(Math.abs(left.getRefStart()) - Math.abs(right.Position));
+        return InterPairDistance;
     }
 
     @Override
@@ -38,21 +58,21 @@ public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
             return false;
         }
         final HlaAlignmentPair that = (HlaAlignmentPair) o;
-        return Objects.equals(left, that.left) && Objects.equals(right, that.right);
+        return Objects.equals(Left, that.Left) && Objects.equals(Right, that.Right);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(left, right);
+        return Objects.hash(Left, Right);
     }
 
     @Override
     public String toString()
     {
         return "HlaAlignmentPair{" +
-                "left=" + left +
-                ", right=" + right +
+                "left=" + Left +
+                ", right=" + Right +
                 ", distance=" + interPairDistance() +
                 '}';
     }

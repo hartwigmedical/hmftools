@@ -9,15 +9,20 @@ import htsjdk.samtools.SAMRecord;
 
 public class RawFastaData
 {
-    @NotNull public final String readName;
-    @NotNull public final byte[] bases;
-    @NotNull public final byte[]  qualities;
+    @NotNull
+    public final String ReadName;
+    @NotNull
+    public final byte[] Bases;
+    @NotNull
+    public final byte[] Qualities;
 
     public static RawFastaData fromRecord(SAMRecord read)
     {
-        if (read.getReadNegativeStrandFlag()) {
+        if(read.getReadNegativeStrandFlag())
+        {
             return new RawFastaData(read.getReadName(), Nucleotides.reverseComplementBases(read.getReadBases()), Arrays.reverseArray(read.getBaseQualities()));
-        } else
+        }
+        else
         {
             return new RawFastaData(read.getReadName(), read.getReadBases(), read.getBaseQualities());
         }
@@ -25,19 +30,18 @@ public class RawFastaData
 
     public RawFastaData(@NotNull final String readName, @NotNull final byte[] bases, @NotNull final byte[] qualities)
     {
-        this.readName = readName;
-        this.bases = bases;
-        this.qualities = qualities;
+        this.ReadName = readName;
+        this.Bases = bases;
+        this.Qualities = qualities;
     }
-
 
     @Override
     public String toString()
     {
         return "RawFastaData{" +
-                "readName='" + readName + '\'' +
-                ", bases=" + java.util.Arrays.toString(bases) +
-                ", qualities=" + java.util.Arrays.toString(qualities) +
+                "readName='" + ReadName + '\'' +
+                ", bases=" + java.util.Arrays.toString(Bases) +
+                ", qualities=" + java.util.Arrays.toString(Qualities) +
                 '}';
     }
 }

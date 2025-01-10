@@ -11,8 +11,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class RecordPair
 {
-    public final @NotNull SAMRecord first;
-    public final @NotNull SAMRecord second;
+    public final @NotNull SAMRecord First;
+    public final @NotNull SAMRecord Second;
 
     public RecordPair(@NotNull final SAMRecord aRecord, @NotNull final SAMRecord anotherRecord)
     {
@@ -38,8 +38,8 @@ public class RecordPair
             {
                 throw new IllegalArgumentException("Records do not form a proper pair.");
             }
-            this.first = aRecord;
-            this.second = anotherRecord;
+            this.First = aRecord;
+            this.Second = anotherRecord;
         }
         else if(aRecord.getSecondOfPairFlag())
         {
@@ -47,8 +47,8 @@ public class RecordPair
             {
                 throw new IllegalArgumentException("Records do not form a proper pair.");
             }
-            this.second = aRecord;
-            this.first = anotherRecord;
+            this.Second = aRecord;
+            this.First = anotherRecord;
         }
         else
         {
@@ -58,37 +58,22 @@ public class RecordPair
 
     public RawFastaData leftData()
     {
-        return RawFastaData.fromRecord(first);
+        return RawFastaData.fromRecord(First);
     }
 
     public RawFastaData rightData()
     {
-        return RawFastaData.fromRecord(second);
-    }
-
-    public boolean isProperPair()
-    {
-        return first.getProperPairFlag();
+        return RawFastaData.fromRecord(Second);
     }
 
     public byte[] leftBasesForRealignment()
     {
-        return bases(first);
+        return bases(First);
     }
 
     public byte[] rightBasesForRealignment()
     {
-        return bases(second);
-    }
-
-    public String leftBases()
-    {
-        return basesString(first);
-    }
-
-    public String rightBases()
-    {
-        return basesString(second);
+        return bases(Second);
     }
 
     private static byte[] bases(SAMRecord record)
@@ -100,15 +85,6 @@ public class RecordPair
         return record.getReadBases();
     }
 
-    private static String basesString(SAMRecord record)
-    {
-        if(record.getReadNegativeStrandFlag())
-        {
-            return Nucleotides.reverseComplementBases(record.getReadString());
-        }
-        return record.getReadString();
-    }
-
     @Override
     public boolean equals(final Object o)
     {
@@ -117,12 +93,12 @@ public class RecordPair
             return false;
         }
         final RecordPair that = (RecordPair) o;
-        return Objects.equals(first, that.first) && Objects.equals(second, that.second);
+        return Objects.equals(First, that.First) && Objects.equals(Second, that.Second);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(first, second);
+        return Objects.hash(First, Second);
     }
 }

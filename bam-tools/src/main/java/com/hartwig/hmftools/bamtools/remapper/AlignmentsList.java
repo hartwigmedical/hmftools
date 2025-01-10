@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -11,7 +10,7 @@ import htsjdk.samtools.SAMFlag;
 
 public class AlignmentsList
 {
-    @NotNull public final List<BwaMemAlignment> alignments;
+    @NotNull private final List<BwaMemAlignment> Alignments;
 
     public AlignmentsList(@NotNull final List<BwaMemAlignment> alignments)
     {
@@ -27,7 +26,7 @@ public class AlignmentsList
         {
             throw new IllegalArgumentException("only one non-supplementary alignment is allowed");
         }
-        this.alignments = alignments;
+        this.Alignments = alignments;
     }
 
     private static boolean isSupplementary(final BwaMemAlignment alignment)
@@ -42,16 +41,11 @@ public class AlignmentsList
 
     public BwaMemAlignment principalAlignment()
     {
-        return alignments.get(0);
+        return Alignments.get(0);
     }
 
     public Stream<HlaAlignment> supplementaryAlignments()
     {
-        return alignments.subList(1, alignments.size()).stream().map(HlaAlignment::new);
-    }
-
-    public boolean hasMultipleAlignments()
-    {
-        return alignments.size() > 1;
+        return Alignments.subList(1, Alignments.size()).stream().map(HlaAlignment::new);
     }
 }

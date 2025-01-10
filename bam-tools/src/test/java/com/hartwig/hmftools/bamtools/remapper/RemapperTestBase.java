@@ -7,11 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
-
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Assert;
-import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
