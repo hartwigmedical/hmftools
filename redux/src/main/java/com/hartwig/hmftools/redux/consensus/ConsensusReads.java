@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
@@ -20,12 +21,14 @@ import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
@@ -37,23 +40,40 @@ public class ConsensusReads
     private final RefGenome mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
+    private final NonStandardBaseBuilder mNonStandardBaseBuilder;
 
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
 
-    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
+    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats, final SequencingType sequencingType)
     {
         mRefGenome = new RefGenome(refGenome);
-        mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
+        mNonStandardBaseBuilder = NonStandardBaseBuilder.fromSequencingType(sequencingType, mRefGenome);
+        if(mNonStandardBaseBuilder == null)
+        {
+            mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
+            mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
+        }
+        else
+        {
+            mBaseBuilder = null;
+            mIndelConsensusReads = null;
+        }
+
         mConsensusStats = consensusStats;
-        mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mValidateConsensusReads = false;
+    }
+
+    @VisibleForTesting
+    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType)
+    {
+        this(refGenome, new ConsensusStatistics(), sequencingType);
     }
 
     @VisibleForTesting
     public ConsensusReads(final RefGenomeInterface refGenome)
     {
-        this(refGenome, new ConsensusStatistics());
+        this(refGenome, new ConsensusStatistics(), ILLUMINA);
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
@@ -102,7 +122,11 @@ public class ConsensusReads
             consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
         }
 
-        if(hasIndels)
+        if(mNonStandardBaseBuilder != null)
+        {
+            mNonStandardBaseBuilder.buildConsensusRead(readsView, consensusState, hasIndels);
+        }
+        else if(hasIndels)
         {
             mIndelConsensusReads.buildIndelComponents(readsView, consensusState, templateRead);
 
@@ -148,7 +172,11 @@ public class ConsensusReads
 
     public void setChromosomeLength(int chromosomeLength)
     {
-        mBaseBuilder.setChromosomLength(chromosomeLength);
+        if(mBaseBuilder != null)
+            mBaseBuilder.setChromosomLength(chromosomeLength);
+
+        if(mNonStandardBaseBuilder != null)
+            mNonStandardBaseBuilder.setChromosomeLength(chromosomeLength);
     }
 
     private static SAMRecord createConsensusRead(final ConsensusState state, final SAMRecord templateRead, final String groupReadId)
@@ -172,6 +200,13 @@ public class ConsensusReads
         record.setFlags(templateRead.getFlags());
         record.setDuplicateReadFlag(false); // being the new primary
         record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);
+
+        for(Map.Entry<String, Object> tagAndValue : state.Attributes.entrySet())
+        {
+            String tag = tagAndValue.getKey();
+            Object value = tagAndValue.getValue();
+            record.setAttribute(tag, value);
+        }
 
         if(!record.getReadPairedFlag())
             return record;

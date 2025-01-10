@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.replaceXwithM;
@@ -193,41 +194,12 @@ public class SBXBamUtils
 
         List<CigarElement> newCigarElements = Lists.newArrayList();
         if(readLeftHardClipLength > 0)
-        {
             newCigarElements.add(new CigarElement(readLeftHardClipLength, H));
-        }
 
-        CigarOperator currentOp = null;
-        int currentLength = 0;
-        for(CigarOperator op : newOps)
-        {
-            if(currentOp == null)
-            {
-                currentOp = op;
-                currentLength = 1;
-                continue;
-            }
-
-            if(currentOp == op)
-            {
-                currentLength++;
-                continue;
-            }
-
-            newCigarElements.add(new CigarElement(currentLength, currentOp));
-            currentOp = op;
-            currentLength = 1;
-        }
-
-        if(currentLength > 0)
-        {
-            newCigarElements.add(new CigarElement(currentLength, currentOp));
-        }
+        newCigarElements.addAll(collapseCigarOps(newOps));
 
         if(readRightHardClipLength > 0)
-        {
             newCigarElements.add(new CigarElement(readRightHardClipLength, H));
-        }
 
         int oldInsertGaps = 0;
         int oldTotalInsertLength = 0;
