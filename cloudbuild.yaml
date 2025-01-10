@@ -17,5 +17,3 @@ steps:
     args: ['/workspace/docker.sh']
 logsBucket: 'gs://hmf-build-logs'
 timeout: 1800s
-images:
-  - 'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/jdk-mvn-python'
