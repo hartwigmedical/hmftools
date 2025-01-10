@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.redux.common;
 
+import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +13,8 @@ import com.hartwig.hmftools.common.collect.OneDGridMap;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.SAMRecord;
 
 @FunctionalInterface
 public interface DuplicateGroupCollapser
@@ -22,6 +26,9 @@ public interface DuplicateGroupCollapser
         if(sequencingType == ULTIMA)
             return DuplicateGroupCollapser::ultimaCollapse;
 
+        if(sequencingType == BIOMODAL)
+            return DuplicateGroupCollapser::biomodalCollapse;
+
         return null;
     }
 
@@ -30,10 +37,13 @@ public interface DuplicateGroupCollapser
         if(sequencingType == ULTIMA)
             return true;
 
+        if(sequencingType == BIOMODAL)
+            return true;
+
         return false;
     }
 
-    private static FragmentCoordReads getFragmentCoordReads(final List<DuplicateGroup> collapsedGroups)
+    private static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
     {
         List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
         List<ReadInfo> singleReads = Lists.newArrayList();
@@ -139,5 +149,39 @@ public interface DuplicateGroupCollapser
             duplicateGroups.forEach(collapser::addDuplicateGroup);
 
         return collapser.getCollapsedGroups();
+    }
+
+    static FragmentCoordReads biomodalCollapse(
+            @Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads)
+    {
+        Map<String, DuplicateGroup> fivePrimeGroups = Maps.newHashMap();
+
+        if(singleReads != null)
+        {
+            for(ReadInfo readInfo : singleReads)
+            {
+                SAMRecord read = readInfo.read();
+                FragmentCoords coords = readInfo.coordinates();
+                String fivePrimeKey = collapseToFivePrimeKey(coords);
+                DuplicateGroup duplicateGroup = new DuplicateGroup(null, read, coords);
+                fivePrimeGroups.merge(
+                        fivePrimeKey, duplicateGroup, (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+            }
+        }
+
+        if(duplicateGroups != null)
+        {
+            for(DuplicateGroup duplicateGroup : duplicateGroups)
+            {
+                String fivePrimeKey = collapseToFivePrimeKey(duplicateGroup.fragmentCoordinates());
+                fivePrimeGroups.merge(
+                        fivePrimeKey, duplicateGroup, (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+            }
+        }
+
+        if(fivePrimeGroups.isEmpty())
+            return null;
+
+        return getFragmentCoordReads(fivePrimeGroups.values());
     }
 }

@@ -9,7 +9,8 @@ public enum SequencingType
 {
     ILLUMINA,
     ULTIMA,
-    SBX;
+    SBX,
+    BIOMODAL;
 
     public static final String SEQUENCING_TYPE_CFG = "sequencing_type";
 
