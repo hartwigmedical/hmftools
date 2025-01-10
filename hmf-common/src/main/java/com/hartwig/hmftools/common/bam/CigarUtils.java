@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
+import static htsjdk.samtools.CigarOperator.X;
 
 import java.util.Collections;
 import java.util.List;
@@ -335,5 +337,57 @@ public final class CigarUtils
         }
 
         return NO_POSITION_INFO;
+    }
+
+    @Nullable
+    public static List<CigarElement> replaceXwithM(final List<CigarElement> cigarElements)
+    {
+        boolean includesMismatchCigarOp = cigarElements.stream().anyMatch(el -> el.getOperator() == X);
+        if(!includesMismatchCigarOp)
+        {
+            return null;
+        }
+
+        List<CigarElement> newCigarElements = Lists.newArrayList();
+        CigarElement lastEl = null;
+        for(CigarElement el : cigarElements)
+        {
+            if(el.getOperator() == M && lastEl != null && lastEl.getOperator() == M)
+            {
+                lastEl = new CigarElement(lastEl.getLength() + el.getLength(), M);
+                newCigarElements.set(newCigarElements.size() - 1, lastEl);
+                continue;
+            }
+
+            if(el.getOperator() != X)
+            {
+                lastEl = el;
+                newCigarElements.add(el);
+                continue;
+            }
+
+            if(lastEl == null || lastEl.getOperator() != M)
+            {
+                lastEl = new CigarElement(el.getLength(), M);
+                newCigarElements.add(lastEl);
+                continue;
+            }
+
+            lastEl = new CigarElement(lastEl.getLength() + el.getLength(), M);
+            newCigarElements.set(newCigarElements.size() - 1, lastEl);
+        }
+
+        return newCigarElements;
+    }
+
+    public static void replaceXwithM(final SAMRecord record)
+    {
+        List<CigarElement> newCigarElements = replaceXwithM(record.getCigar().getCigarElements());
+        if(newCigarElements == null)
+        {
+            return;
+        }
+
+        record.setCigar(new Cigar(newCigarElements));
     }
 }
