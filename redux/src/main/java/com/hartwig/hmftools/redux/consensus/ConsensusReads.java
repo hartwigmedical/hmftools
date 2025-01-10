@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
@@ -42,19 +41,19 @@ public class ConsensusReads
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
 
-    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType, final ConsensusStatistics consensusStats)
+    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
         mRefGenome = new RefGenome(refGenome);
-        mBaseBuilder = new BaseBuilder(mRefGenome, sequencingType, consensusStats);
+        mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
         mConsensusStats = consensusStats;
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mValidateConsensusReads = false;
     }
 
     @VisibleForTesting
-    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType)
+    public ConsensusReads(final RefGenomeInterface refGenome)
     {
-        this(refGenome, sequencingType, new ConsensusStatistics());
+        this(refGenome, new ConsensusStatistics());
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
