@@ -118,8 +118,7 @@
         <junit.version>4.13.1</junit.version>
         <mockito.version>5.12.0</mockito.version>
 
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     </properties>
 
