@@ -8,11 +8,11 @@ steps:
     entrypoint: 'bash'
     args: [ '-c', "gcloud secrets versions access latest --secret=hmftools-dockerhub-password --format='get(payload.data)' | tr '_-' '/+' | base64 -d > /workspace/dockerhub.password" ]
   - id: 'Tag, release, build'
-    name: 'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/jdk-mvn-python'
+    name: 'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/jdk-mvn-python:1.7.8-beta.1'
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME', '/workspace/github.key', '${_GITHUB_CLIENT_ID}', '${_GITHUB_INSTALLATION_ID}']
   - id: 'Publish Docker image'
-    name: 'europe-west4-docker.pkg.dev/hmf-build/docker-tag'
+    name: 'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/docker-tag'
     entrypoint: sh
     args: ['/workspace/docker.sh']
 logsBucket: 'gs://hmf-build-logs'
