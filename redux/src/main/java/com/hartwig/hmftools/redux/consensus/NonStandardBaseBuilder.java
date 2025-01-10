@@ -4,13 +4,20 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.BASE_MODIFICATIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MODC_ANNOTATION;
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMValueFromModCReadIndices;
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getModCReadIndices;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_ERROR_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.SIMPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
+import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -29,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,6 +44,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import org.jetbrains.annotations.Nullable;
@@ -65,6 +74,9 @@ public abstract class NonStandardBaseBuilder
     {
         if(sequencingType == SBX)
             return new SbxBuilder(refGenome);
+
+        if(sequencingType == BIOMODAL)
+            return new BiomodalBuilder(refGenome);
 
         return null;
     }
@@ -187,13 +199,17 @@ public abstract class NonStandardBaseBuilder
         return annotatedBases;
     }
 
-    private static Collection<List<AnnotatedBase>> annotatedAndAlignReads(final List<SAMRecord> reads)
+    private static List<List<AnnotatedBase>> annotateReads(final List<SAMRecord> reads)
+    {
+        return reads.stream().map(NonStandardBaseBuilder::getAnnotatedBases).collect(Collectors.toList());
+    }
+
+    private static Collection<List<AnnotatedBase>> alignAnnotatedReads(final List<List<AnnotatedBase>> annotateReads)
     {
         SortedMap<ExtendedRefPos, List<AnnotatedBase>> alignment = Maps.newTreeMap();
-        for(SAMRecord read : reads)
+        for(List<AnnotatedBase> annotatedRead : annotateReads)
         {
-            List<AnnotatedBase> annotatedBases = getAnnotatedBases(read);
-            for(AnnotatedBase annotatedBase : annotatedBases)
+            for(AnnotatedBase annotatedBase : annotatedRead)
             {
                 alignment.computeIfAbsent(annotatedBase.Pos, key -> Lists.newArrayList());
                 alignment.get(annotatedBase.Pos).add(annotatedBase);
@@ -322,7 +338,8 @@ public abstract class NonStandardBaseBuilder
             String chromosome = reads.get(0).getReferenceName();
             mChromosomeLength = mRefGenome.getChromosomeLength(chromosome);
 
-            Collection<List<AnnotatedBase>> alignment = annotatedAndAlignReads(reads);
+            List<List<AnnotatedBase>> annotatedReads = annotateReads(reads);
+            Collection<List<AnnotatedBase>> alignment = alignAnnotatedReads(annotatedReads);
             List<AnnotatedBase> consensusBases = getConsensusBases(alignment, records -> determineConsensus(chromosome, records));
             updateConsensusState(reads, consensusState, hasIndels, consensusBases);
         }
@@ -469,6 +486,99 @@ public abstract class NonStandardBaseBuilder
             byte base = DNA_BASE_BYTES[maxIdx];
             byte qual = (byte) SIMPLEX_QUAL;
             return new AnnotatedBase(pos, base, qual, consensusOp);
+        }
+    }
+
+    public static class BiomodalBuilder extends NonStandardBaseBuilder
+    {
+        private final BaseBuilder mBaseBuilder;
+
+        public BiomodalBuilder(final RefGenome refGenome)
+        {
+            super(refGenome);
+
+            mBaseBuilder = new BaseBuilder(refGenome, null);
+        }
+
+        @Override
+        public void buildConsensusRead(final List<SAMRecord> reads, final ConsensusState consensusState, final boolean hasIndels)
+        {
+            String chromosome = reads.get(0).getReferenceName();
+            mChromosomeLength = mRefGenome.getChromosomeLength(chromosome);
+
+            List<List<AnnotatedBase>> annotatedReads = annotateReads(reads);
+            for(int i = 0; i < reads.size(); i++)
+                addModCAnnotation(reads.get(i), annotatedReads.get(i));
+
+            Collection<List<AnnotatedBase>> alignment = alignAnnotatedReads(annotatedReads);
+            List<AnnotatedBase> consensusBases = getConsensusBases(alignment, records -> determineConsensus(chromosome, consensusState.IsForward, records));
+            updateConsensusState(reads, consensusState, hasIndels, consensusBases);
+
+            SortedSet<Integer> modCReadIndices = Sets.newTreeSet();
+            for(int i = 0; i < consensusBases.size(); i++)
+            {
+                if(consensusBases.get(i).Annotations.contains(MODC_ANNOTATION))
+                    modCReadIndices.add(i);
+            }
+
+            String mmValue = getMMValueFromModCReadIndices(consensusState.Bases, modCReadIndices, consensusState.IsForward);
+            consensusState.Attributes.put(BASE_MODIFICATIONS_ATTRIBUTE, mmValue);
+        }
+
+        private AnnotatedBase determineConsensus(final String chromosome, boolean isForward, final List<AnnotatedBase> bases)
+        {
+            ExtendedRefPos pos = bases.get(0).Pos;
+            byte[] locationBases = new byte[bases.size()];
+            byte[] locationQuals = new byte[bases.size()];
+            for(int i = 0; i < bases.size(); i++)
+            {
+                locationBases[i] = bases.get(i).Base;
+                locationQuals[i] = bases.get(i).Qual;
+            }
+
+            int basePosition = pos.RefPos;
+            if(pos.InsertIndex > 0 || basePosition < 1 || basePosition > mChromosomeLength)
+                basePosition = INVALID_POSITION;
+
+            byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(locationBases, locationQuals, chromosome, basePosition);
+            byte consensusBase = consensusBaseAndQual[0] == NO_BASE ? ANY_BASE : consensusBaseAndQual[0];
+            byte consensusQual = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
+
+            CigarOperator consensusOp = getConsensusCigarOp(bases);
+            AnnotatedBase consensus = new AnnotatedBase(pos, consensusBase, consensusQual, consensusOp);
+
+            byte targetBase = isForward ? (byte) 'C' : (byte) swapDnaBase('C');
+            if(consensusBase != targetBase)
+                return consensus;
+
+            int nonModCQualTotal = 0;
+            int modCQualTotal = 0;
+            for(AnnotatedBase annotatedBase : bases)
+            {
+                if(annotatedBase.Base != targetBase)
+                    continue;
+
+                if(annotatedBase.Annotations.contains(MODC_ANNOTATION))
+                {
+                    modCQualTotal += annotatedBase.Qual;
+                    continue;
+                }
+
+                nonModCQualTotal += annotatedBase.Qual;
+            }
+
+            if(modCQualTotal <= nonModCQualTotal)
+                return consensus;
+
+            consensus.Annotations.add(MODC_ANNOTATION);
+            return consensus;
+        }
+
+        private static void addModCAnnotation(final SAMRecord read, List<AnnotatedBase> annotatedRead)
+        {
+            SortedSet<Integer> modCReadIndices = getModCReadIndices(read);
+            for(int readIndex : modCReadIndices)
+                annotatedRead.get(readIndex).Annotations.add(MODC_ANNOTATION);
         }
     }
 }
