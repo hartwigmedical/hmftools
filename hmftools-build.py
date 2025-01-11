@@ -16,8 +16,9 @@ Example:
 """
 import re
 import subprocess
+from typing import BinaryIO
+
 import requests
-import os.path
 import sys
 import time
 import jwt
@@ -25,9 +26,16 @@ import jwt
 from xml.etree import ElementTree
 from argparse import ArgumentParser
 
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stdout,
+                    format='%(asctime)s [%(levelname)5s] - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.INFO)
+logger.setLevel(logging.INFO)
+
 SEMVER_REGEX = re.compile(
     r'^([a-z-]+)-v([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-(?:alpha|beta|rc)\.[0-9]+)?(?:_(?:[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?)$')
-
 
 class Maven:
     def __init__(self, pom_path, name=''):
@@ -44,6 +52,7 @@ class Maven:
 
     @staticmethod
     def deploy_all(*modules):
+        logger.info('Starting Maven deploy_all')
         module_str = ','.join([m.name for m in modules])
         subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
 
@@ -57,6 +66,7 @@ class Docker:
         self.external_image = f'hartwigmedicalfoundation/{self.module}:{self.version}'
 
     def build(self):
+        logger.info('Starting Docker build')
         with open("/workspace/entrypoint_template.sh", "r") as template, \
            open(f"/workspace/{self.module}/target/entrypoint.sh", "w") as output:
                for line in template:
@@ -76,7 +86,7 @@ class Docker:
 
 
 class GithubRelease:
-    def __init__(self, tag_name: str, module: str, version: str, artifact_file: str, private_key: str, github_client_id: str,
+    def __init__(self, tag_name: str, module: str, version: str, artifact_file: BinaryIO, private_key: str, github_client_id: str,
             github_installation_id: str):
         self.tag_name = tag_name
         self.module = module
@@ -90,13 +100,13 @@ class GithubRelease:
     def create(self):
         jwt = self._construct_jwt()
         token = self._refresh_token(jwt)
-        print("Successfully refreshed token")
+        logger.info("Successfully refreshed token")
         id = self._create_release(token)
-        print(f"Created release with id {id}")
+        logger.info(f"Created release with id {id}")
         self._upload_artifacts(id, token)
 
     def _create_release(self, token: str):
-        print(f"Creating release [{self.release_name}]")
+        logger.info(f"Creating release [{self.release_name}]")
         request = {"tag_name": self.tag_name,
                 "target_commitish": "master",
                 "name": self.release_name,
@@ -108,12 +118,12 @@ class GithubRelease:
         response = requests.post(self._construct_url("api"),
                 json = request,
                 headers = self._headers(token))
-        print(f"Response: {response.text}")
+        logger.info(f"Response: {response.text}")
         response.raise_for_status()
         return response.json()["id"]
 
     def _upload_artifacts(self, id: str, token: str):
-        print(f"Uploading artifact to release {id}")
+        logger.info(f"Uploading artifact to release {id}")
         headers = self._headers(token)
         headers["Content-Type"] = "application/octet-stream"
         base_url="{}/{}/assets?name".format(self._construct_url("uploads"), id)
@@ -121,7 +131,7 @@ class GithubRelease:
                 headers = headers, 
                 data = self.artifact_file.read())
         response.raise_for_status()
-        print(f"Uploaded {self.artifact_file.name}")
+        logger.info(f"Uploaded {self.artifact_file.name}")
 
     def _construct_url(self, prefix):
         return f"https://{prefix}.github.com/repos/hartwigmedical/hmftools/releases"
@@ -180,9 +190,10 @@ def main():
 
 
 def build_and_release(raw_tag: str, github_key: str, github_client_id: str, github_installation_id: str):
+    logger.info('Starting build and release')
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
-        print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
+        logger.info(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
         exit(1)
     module = match.group(1)
     version = match.group(2)
@@ -215,8 +226,9 @@ def build_and_release(raw_tag: str, github_key: str, github_client_id: str, gith
         GithubRelease(raw_tag, module, version, open(f'/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar', 'rb'), 
             open(github_key, "r").read(), github_client_id, github_installation_id).create()
     else:
-        print(f'Skipping Github release creation as {version} is an internal-only version')
+        logger.info(f'Skipping Github release creation as {version} is an internal-only version')
 
+    logger.info('Complete build and release')
 
 if __name__ == '__main__':
     main()
