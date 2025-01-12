@@ -113,7 +113,7 @@ public class RegionThread extends Thread
             }
         }
 
-        mSamSlicerFactory.close();
+        mSamSlicerFactory.closeSamReaders();
     }
 
     private RegionTask createRegionTask(final PartitionTask partitionTask)

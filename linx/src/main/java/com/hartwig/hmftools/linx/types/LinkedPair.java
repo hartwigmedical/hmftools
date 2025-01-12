@@ -9,7 +9,6 @@ import java.util.List;
 
 public class LinkedPair
 {
-
     private SvBreakend mFirstBreakend;
     private SvBreakend mSecondBreakend;
     private int mLinkLength;

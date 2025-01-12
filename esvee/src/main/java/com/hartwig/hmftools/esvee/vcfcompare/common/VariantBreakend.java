@@ -38,7 +38,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantBreakend
 {
-    public final SvCaller mSvCaller;
+    public final SvCallerType mSvCallerType;
 
     public final VariantContext Context;
     private final VariantAltInsertCoords AltCoords;
@@ -66,9 +66,9 @@ public class VariantBreakend
     public LineLink LinkedLineBreakends;
     public LineLink InferredLinkedLineBreakends;
 
-    public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
+    public VariantBreakend(final VariantContext context, SvCallerType svCallerType, VcfType sourceVcfType)
     {
-        mSvCaller = svCaller;
+        mSvCallerType = svCallerType;
 
         Context = context;
 
@@ -90,7 +90,7 @@ public class VariantBreakend
         Homseq = context.getAttributeAsString(HOMSEQ, "");
         InsertSequence = AltCoords.InsertSequence;
 
-        SvType = mSvCaller == SvCaller.GRIDSS ?
+        SvType = mSvCallerType == SvCallerType.GRIDSS ?
                 context.getAttributeAsString(EVENT_TYPE, "") :
                 context.getAttributeAsString(SV_TYPE, "");
 
@@ -258,7 +258,7 @@ public class VariantBreakend
     {
         String fragsInfoTag;
 
-        if(mSvCaller == SvCaller.GRIDSS)
+        if(mSvCallerType == SvCallerType.GRIDSS)
         {
             fragsInfoTag = isSingle() ? SGL_FRAG_COUNT : TOTAL_FRAGS;
         }
@@ -292,7 +292,7 @@ public class VariantBreakend
 
     public String mateId()
     {
-        return mSvCaller == SvCaller.GRIDSS ?
+        return mSvCallerType == SvCallerType.GRIDSS ?
                 Context.getAttributeAsString(PAR_ID, "") :
                 Context.getAttributeAsString(MATE_ID, "");
     }
@@ -301,15 +301,15 @@ public class VariantBreakend
     {
         // This id links 2 breakends together into 1 structural event
 
-        if(mSvCaller == SvCaller.GRIDSS)
+        if(mSvCallerType == SvCallerType.GRIDSS)
         {
             return Context.getAttributeAsString(EVENT, "");
         }
 
-        if(mSvCaller == SvCaller.TRUTH)
+        if(mSvCallerType == SvCallerType.TRUTH)
             return Context.getAttributeAsString("SVID", "");
 
-        if(mSvCaller == SvCaller.ESVEE)
+        if(mSvCallerType == SvCallerType.ESVEE)
         {
             if(isSingle())
                 return Id;
@@ -318,7 +318,7 @@ public class VariantBreakend
             return String.join(",",mateIds);
         }
 
-        throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCaller);
+        throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCallerType);
     }
 
     public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
@@ -332,7 +332,7 @@ public class VariantBreakend
         String currentChr = "";
         List<VariantBreakend> breakends = null;
 
-        SvCaller svCaller = SvCaller.fromVcfPath(vcfFile);
+        SvCallerType svCallerType = SvCallerType.fromVcfPath(vcfFile);
         VcfType sourceVcfType = VcfType.fromVcfPath(vcfFile);
 
         for(VariantContext variantContext : reader.iterator())
@@ -346,7 +346,7 @@ public class VariantBreakend
                 chrBreakendMap.put(chromosome, breakends);
             }
 
-            breakends.add(new VariantBreakend(variantContext, svCaller, sourceVcfType));
+            breakends.add(new VariantBreakend(variantContext, svCallerType, sourceVcfType));
         }
 
         SV_LOGGER.debug("Loaded {} structural variants", chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum());

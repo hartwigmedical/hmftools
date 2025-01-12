@@ -2,8 +2,12 @@ package com.hartwig.hmftools.common.circos;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -44,9 +48,21 @@ public class CircosExecution
 
         LOGGER.info(String.format("generating " + outputFile + " via command: %s", String.join(" ", command)));
 
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        Map<String, String> environment = processBuilder.environment();
+
+        // Circos writes the temporary file circos.colorlist. However, this file would be overwritten multiple times when invoking circos
+        // from multiple threads which results in a race condition. We make sure that circos writes to different temporary directories to
+        // avoid this race condition
+        Path tempDir = Files.createTempDirectory("circos");
+        environment.put("TMPDIR", tempDir.toString());
+
         // must redirect error stream to stdout, as circos print some errors to stdout
-        Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        Process process = processBuilder.redirectErrorStream(true).start();
+
         int result = process.waitFor();
+
+        FileUtils.deleteDirectory(tempDir.toFile());
 
         if(result != 0)
         {

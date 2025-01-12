@@ -33,7 +33,8 @@ clonality_plot <- function(somaticBuckets, clonalityModel) {
     summarise(
       isSubclonal = T,
       bucketWeight = sum(bucketWeight), 
-      subclonalLikelihood = ifelse(bucketWeight == 0, 0, bucketWeight / max(totalWeight)))
+      subclonalLikelihood = as.numeric(ifelse(bucketWeight == 0, 0, bucketWeight / max(totalWeight)))
+   )
 
   nonResidualModel = clonalityModel %>% filter(peak != 0)
 
@@ -44,7 +45,7 @@ clonality_plot <- function(somaticBuckets, clonalityModel) {
     summarise(
     isSubclonal = T,
     bucketWeight = sum(bucketWeight),
-    subclonalLikelihood = ifelse(bucketWeight == 0, 0, bucketWeight / max(totalWeight)))
+    subclonalLikelihood = as.numeric(ifelse(bucketWeight == 0, 0, bucketWeight / max(totalWeight))))
 
   combinedModel = nonResidualModel %>%
     group_by(bucket) %>% 

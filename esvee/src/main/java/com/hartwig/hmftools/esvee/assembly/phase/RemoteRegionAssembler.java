@@ -57,6 +57,9 @@ public class RemoteRegionAssembler
 
     private int mTotalRemoteReadsSearch;
     private int mTotalRemoteReadsMatched;
+    private int mTotalRemoteReadSlices;
+
+    private int mRemoteReadsMatched;
     private int mRemoteReadSlices;
 
     public RemoteRegionAssembler(final RefGenomeInterface refGenome, final BamReader bamReader)
@@ -70,10 +73,13 @@ public class RemoteRegionAssembler
 
         mTotalRemoteReadsSearch = 0;
         mTotalRemoteReadsMatched = 0;
+        mTotalRemoteReadSlices = 0;
+
+        mRemoteReadsMatched = 0;
         mRemoteReadSlices = 0;
     }
 
-    public int remoteReadSlices() { return mRemoteReadSlices; }
+    public int remoteReadSlices() { return mTotalRemoteReadSlices; }
     public int remoteReadsSearch() { return mTotalRemoteReadsSearch; }
     public int remoteReadsMatched() { return mTotalRemoteReadsMatched; }
 
@@ -169,6 +175,10 @@ public class RemoteRegionAssembler
         int minRemoteRegionReadCount = 1;
         int maxRemoteRegionReadCount = 0;
 
+        // reset for this phase group
+        mRemoteReadsMatched = 0;
+        mRemoteReadSlices = 0;
+
         int totalRemoteReads = remoteRegions.stream().mapToInt(x -> x.readCount()).sum();
 
         // impose restrictions on which remote regions are used - excluding those with 1 or very few reads relatively, eg for 1000 then
@@ -206,7 +216,7 @@ public class RemoteRegionAssembler
         }
     }
 
-    public List<Read> extractRemoteReads(final int phaseGroupId, final RemoteRegion remoteRegion)
+    private List<Read> extractRemoteReads(final int phaseGroupId, final RemoteRegion remoteRegion)
     {
         mRemoteRegion = remoteRegion;
 
@@ -227,14 +237,16 @@ public class RemoteRegionAssembler
             //        mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
 
             mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
+            mRemoteReadsMatched += mMatchedRemoteReads.size();
         }
 
+        ++mTotalRemoteReadSlices;
         ++mRemoteReadSlices;
 
-        if((mRemoteReadSlices % 10000) == 0 && mTotalRemoteReadsMatched > 100000)
+        if((mRemoteReadSlices % 100) == 0 && mRemoteReadsMatched > 10000)
         {
             SV_LOGGER.debug("pgId({}) remote region read extraction: slices({}) matched({}) last region({}:{}-{})",
-                    phaseGroupId, mRemoteReadSlices, mTotalRemoteReadsMatched,
+                    phaseGroupId, mRemoteReadSlices, mRemoteReadsMatched,
                     mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end());
         }
 

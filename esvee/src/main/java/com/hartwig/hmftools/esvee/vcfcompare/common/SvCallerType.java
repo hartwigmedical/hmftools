@@ -2,18 +2,18 @@ package com.hartwig.hmftools.esvee.vcfcompare.common;
 
 import java.io.File;
 
-enum SvCaller
+public enum SvCallerType
 {
     ESVEE,
     GRIDSS,
     TRUTH,
     OTHER;
 
-    public static SvCaller fromVcfPath(String path)
+    public static SvCallerType fromVcfPath(String path)
     {
         String basename = new File(path).getName();
 
-        if(basename.contains("esvee"))
+        if(basename.contains("esvee") || basename.contains("purple"))
             return ESVEE;
 
         if(basename.contains("gridss") || basename.contains("gripss"))

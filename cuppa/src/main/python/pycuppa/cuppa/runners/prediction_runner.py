@@ -9,6 +9,7 @@ import pandas as pd
 
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
+from cuppa.constants import PREDICT_NA_FILL_VALUE
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.logger import LoggerMixin, initialize_logging
 from cuppa.sample_data.cuppa_features import CuppaFeaturesLoader
@@ -23,6 +24,7 @@ class PredictionRunner(LoggerMixin):
         output_dir: str,
         sample_id: str | None = None,
         compress_tsv_files: bool = False,
+        force_plot: bool = False,
         cv_predictions_path: str = None,
         cv_predictions: CuppaPrediction | None = None,
         clf_group: str = DEFAULT_RUNNER_ARGS.clf_group,
@@ -35,6 +37,7 @@ class PredictionRunner(LoggerMixin):
         self.output_dir = output_dir
         self.sample_id = sample_id
         self.compress_tsv_files = compress_tsv_files
+        self.force_plot = force_plot
         self.classifier_path = classifier_path
 
         self.cv_predictions_path = cv_predictions_path
@@ -70,7 +73,7 @@ class PredictionRunner(LoggerMixin):
         loader = CuppaFeaturesLoader(self.features_path, sample_id=self.sample_id)
         X = loader.load()
 
-        X = self.cuppa_classifier.fill_missing_cols(X)
+        X = self.cuppa_classifier.fill_missing_cols(X, PREDICT_NA_FILL_VALUE)
 
         self.X = X
 
@@ -180,4 +183,10 @@ class PredictionRunner(LoggerMixin):
         self.pred_summ.to_tsv(self.pred_summ_path, verbose=True)
         self.vis_data.to_tsv(self.vis_data_path, verbose=True)
 
-        CuppaVisPlotter.from_tsv(path=self.vis_data_path, plot_path=self.plot_path, verbose=True).plot()
+        plotter = CuppaVisPlotter.from_tsv(
+            path=self.vis_data_path,
+            plot_path=self.plot_path,
+            force_plot=self.force_plot,
+            verbose=True
+        )
+        plotter.plot()

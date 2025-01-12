@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isDuplicationFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
@@ -183,10 +184,21 @@ public class RefBaseExtender
 
     private static boolean isConcordantRead(final Read read)
     {
-        return read.isPairedRead() && read.isMateMapped() && read.isMateMapped()
-                && read.chromosome().equals(read.mateChromosome())
-                && read.orientation() != read.mateOrientation()
-                && abs(read.bamRecord().getInferredInsertSize()) <= DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
+        if(!read.isPairedRead() || !read.isMateMapped() || !read.isMateMapped())
+            return false;
+
+        if(!read.chromosome().equals(read.mateChromosome()) || read.orientation() == read.mateOrientation())
+            return false;
+
+        int fragmentSize = abs(read.bamRecord().getInferredInsertSize());
+
+        if(fragmentSize > DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
+            return false;
+
+        if(isDuplicationFragment(read.bamRecord(), fragmentSize))
+            return false;
+
+        return true;
     }
 
     private static boolean isDiscordantCandidate(

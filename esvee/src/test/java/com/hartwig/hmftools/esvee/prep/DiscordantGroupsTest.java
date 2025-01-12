@@ -130,7 +130,13 @@ public class DiscordantGroupsTest
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
         addDiscordantCandidate(discordantCandidates, READ_ID_GENERATOR.nextId(), CHR_1, 401, CHR_1, 1200);
         junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
-        assertEquals(1, junctions.size());
+
+        assertEquals(2, junctions.size());
+        assertEquals(500, junctions.get(0).Position);
+        assertEquals(FORWARD, junctions.get(0).Orient);
+        assertEquals(1200, junctions.get(1).Position);
+        assertEquals(REVERSE, junctions.get(1).Orient);
+
     }
 
     @Test

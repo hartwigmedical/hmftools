@@ -21,7 +21,6 @@ import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscorda
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -65,12 +64,10 @@ public class CallerApplication
         mPonCache = new PonCache(configBuilder);
         mHotspotCache = new HotspotCache(configBuilder);
 
-        String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
-        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.fileSampleId());
-
+        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId());
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
-        String discStatsFilename = formDiscordantStatsFilename(inputDir, mConfig.fileSampleId());
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId());
         DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -237,7 +234,7 @@ public class CallerApplication
         {
             double af = breakend.calcAllelicFrequency(genotype);
 
-            if(mConfig.hasReference() && mConfig.ReferenceId.contains(genotype.getSampleName()))
+            if(mConfig.hasReference() && mConfig.ReferenceId.equals(genotype.getSampleName()))
                 maxGermlineAf = max(maxGermlineAf, af);
             else
                 maxTumorAf = max(maxTumorAf, af);

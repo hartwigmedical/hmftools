@@ -51,10 +51,37 @@ public final class CommonUtils
         if(read.getReadNegativeStrandFlag() == read.getMateNegativeStrandFlag())
             return true;
 
-        // otherwise rely on its fragment length vs the observed max concordant length
+        // check fragment length vs the observed max concordant length
         int fragmentSize = abs(read.getInferredInsertSize());
 
-        return fragmentSize == 0 || (maxConcordantFragmentLength > 0 && fragmentSize >= maxConcordantFragmentLength);
+        if(fragmentSize == 0 || (maxConcordantFragmentLength > 0 && fragmentSize >= maxConcordantFragmentLength))
+            return true;
+
+        // lastly look for duplication orientation fragments which aren't overlapping fragments
+        if(isDuplicationFragment(read, fragmentSize))
+            return true;
+
+        return false;
+    }
+
+    public static boolean isDuplicationFragment(final SAMRecord read, int fragmentSize)
+    {
+        if(fragmentSize > 2 * read.getReadBases().length)
+        {
+            if(!read.getReadNegativeStrandFlag())
+            {
+                // expect the +ve orientation read to have a lower position
+                if(read.getMateAlignmentStart() < read.getAlignmentStart())
+                    return true;
+            }
+            else
+            {
+                if(read.getAlignmentStart() < read.getMateAlignmentStart())
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     public static boolean isLineInsertPair(final JunctionAssembly assembly1, final JunctionAssembly assembly2)

@@ -107,6 +107,8 @@ public class PurpleConstants
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
     public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 1000;
 
+    public static final int SV_MAX_INFERRED_COPY_NUMBER = 1000;
+
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
     public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;

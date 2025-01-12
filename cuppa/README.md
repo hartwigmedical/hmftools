@@ -153,7 +153,6 @@ Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbe
 | `-ref_genome_version` | V37                                   | Valid values: V37 (default), V38                                                                                                              |
 | `-threads`            | 8                                     | Number of threads to use. Each thread processes one sample at a time                                                                          |
 | `-write_by_category`  |                                       | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                     |
-| `-progress_interval`  | 100                                   | Print progress per this number of samples in multi-sample mode                                                                                |
 | `-log_level`          | DEBUG                                 | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                                                    |
 | `-log_debug`          |                                       | Flag. Set log level to DEBUG                                                                                                                  |
 
@@ -267,6 +266,7 @@ The below table lists all possible arguments for training and/or predicting.
 | `--metadata_path`         | Train   | [Required] Path to the metadata file with cancer type labels per sample                                                                                                                       |
 | `--cv_predictions_path`   | Predict | Path to a CuppaPrediction tsv file containing the cross-validation predictions. Samples found in <br/>this file will have their predictions returned from this file instead of being computed |
 | `--compress_tsv_files`    | Predict | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                            |
+| `--force_plot`            | Predict | Force plotting when there are >10 samples in multi-sample mode                                                                                                                                |
 | `--excl_classes`          | Train   | Comma separated list of cancer subtypes to exclude from training. E.g. 'Breast' or 'Breast,Lung'. Default: '_Other,_Unknown'                                                                  |
 | `--min_samples_with_rna`  | Train   | Minimum number of samples with RNA in each cancer subtype. If the cancer subtype has fewer samples with RNA than this value, the cancer subtype will be excluded from training. Default: 5    |
 | `--fusion_overrides_path` | Train   | Path to the fusion overrides tsv file. See section [FusionProbOverrider](#fusionproboverrider) for how this file should be formatted                                                          |
