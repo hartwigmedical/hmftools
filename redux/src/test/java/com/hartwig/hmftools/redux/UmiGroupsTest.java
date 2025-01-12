@@ -1,7 +1,13 @@
 package com.hartwig.hmftools.redux;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
+import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.extractUmiIdFromReadId;
+import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.buildUmiGroups;
 import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.hasDuplexUmiMatch;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 
@@ -9,9 +15,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.redux.common.DuplicateGroup;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 
 import org.junit.Test;
+
+import htsjdk.samtools.SAMRecord;
 
 public class UmiGroupsTest
 {
@@ -62,36 +76,42 @@ public class UmiGroupsTest
         assertFalse(hasDuplexUmiMatch(umiId1, umiId2, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));
     }
 
-    /*
+    private static SAMRecord createSimpleRead(final String readId)
+    {
+        return createSamRecord(readId, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200,
+                false, false, null, true, TEST_READ_CIGAR);
+    }
+
     @Test
     public void testUmiGroupAssignment()
     {
-        FragmentOld frag1 = createFragment(FIXED_READ_ID + "TATCGC", CHR_1, 100);
-        FragmentOld frag2 = createFragment(FIXED_READ_ID + "TATCGC", CHR_1, 100);
-        FragmentOld frag3 = createFragment(FIXED_READ_ID + "TATCCC", CHR_1, 100);
-        FragmentOld frag4 = createFragment(FIXED_READ_ID + "AATGGG", CHR_1, 100);
-        FragmentOld frag5 = createFragment(FIXED_READ_ID + "TATCGC", CHR_1, 100);
-        FragmentOld frag6 = createFragment(FIXED_READ_ID + "AATGGG", CHR_1, 100);
+        SAMRecord frag1 = createSimpleRead(FIXED_READ_ID + "TATCGC");
+        SAMRecord frag2 = createSimpleRead(FIXED_READ_ID + "TATCGC");
+        SAMRecord frag3 = createSimpleRead(FIXED_READ_ID + "TATCCC");
+        SAMRecord frag4 = createSimpleRead(FIXED_READ_ID + "AATGGG");
+        SAMRecord frag5 = createSimpleRead(FIXED_READ_ID + "TATCGC");
+        SAMRecord frag6 = createSimpleRead(FIXED_READ_ID + "AATGGG");
 
-        List<FragmentOld> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
-        List<DuplicateGroupOld> groups = buildUmiGroups(fragments, UMI_CONFIG);
+        List<SAMRecord> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
+        FragmentCoords fragmentCoords = createFragmentCoords(frag1);
+        List<DuplicateGroup> groups = buildUmiGroups(fragmentCoords, fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
 
-        DuplicateGroupOld group = groups.stream().filter(x -> x.fragments().contains(frag1)).findFirst().orElse(null);
-        assertTrue(group.fragments().contains(frag2));
-        assertTrue(group.fragments().contains(frag3));
-        assertTrue(group.fragments().contains(frag5));
+        DuplicateGroup group = groups.stream().filter(x -> x.reads().contains(frag1)).findFirst().orElse(null);
+        assertTrue(group.reads().contains(frag2));
+        assertTrue(group.reads().contains(frag3));
+        assertTrue(group.reads().contains(frag5));
 
-        group = groups.stream().filter(x -> x.fragments().contains(frag4)).findFirst().orElse(null);
-        assertTrue(group.fragments().contains(frag6));
+        group = groups.stream().filter(x -> x.reads().contains(frag4)).findFirst().orElse(null);
+        assertTrue(group.reads().contains(frag6));
 
         // check that larger groups aren't merged
-        FragmentOld frag11 = createFragment(FIXED_READ_ID + "TTTCGT", CHR_1, 100);
-        FragmentOld frag12 = createFragment(FIXED_READ_ID + "TTCCGT", CHR_1, 100);
-        FragmentOld frag13 = createFragment(FIXED_READ_ID + "TTACGT", CHR_1, 100);
-        FragmentOld frag14 = createFragment(FIXED_READ_ID + "TTACAT", CHR_1, 100);
-        FragmentOld frag15 = createFragment(FIXED_READ_ID + "TAAAAT", CHR_1, 100);
-        FragmentOld frag16 = createFragment(FIXED_READ_ID + "TTACAG", CHR_1, 100);
+        SAMRecord frag11 = createSimpleRead(FIXED_READ_ID + "TTTCGT");
+        SAMRecord frag12 = createSimpleRead(FIXED_READ_ID + "TTCCGT");
+        SAMRecord frag13 = createSimpleRead(FIXED_READ_ID + "TTACGT");
+        SAMRecord frag14 = createSimpleRead(FIXED_READ_ID + "TTACAT");
+        SAMRecord frag15 = createSimpleRead(FIXED_READ_ID + "TAAAAT");
+        SAMRecord frag16 = createSimpleRead(FIXED_READ_ID + "TTACAG");
 
         // duplicate some to build bigger UMI groups
         fragments = Lists.newArrayList(
@@ -102,34 +122,35 @@ public class UmiGroupsTest
                 frag15, frag15, frag15, frag15, frag15,
                 frag16);
 
-        groups = buildUmiGroups(fragments, UMI_CONFIG);
+        groups = buildUmiGroups(fragmentCoords, fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
-        assertEquals(fragments.size(), groups.stream().mapToInt(x -> x.fragmentCount()).sum());
+        assertEquals(fragments.size(), groups.stream().mapToInt(x -> x.readCount()).sum());
 
-        group = groups.stream().filter(x -> x.fragments().contains(frag11)).findFirst().orElse(null);
-        assertEquals(18, group.fragmentCount());
-        assertTrue(group.fragments().contains(frag12));
-        assertTrue(group.fragments().contains(frag13));
-        assertTrue(group.fragments().contains(frag14));
-        assertTrue(group.fragments().contains(frag16));
+        group = groups.stream().filter(x -> x.reads().contains(frag11)).findFirst().orElse(null);
+        assertEquals(18, group.readCount());
+        assertTrue(group.reads().contains(frag12));
+        assertTrue(group.reads().contains(frag13));
+        assertTrue(group.reads().contains(frag14));
+        assertTrue(group.reads().contains(frag16));
 
-        group = groups.stream().filter(x -> x.fragments().contains(frag15)).findFirst().orElse(null);
-        assertEquals(5, group.fragmentCount());
+        group = groups.stream().filter(x -> x.reads().contains(frag15)).findFirst().orElse(null);
+        assertEquals(5, group.readCount());
     }
 
     @Test
     public void testUmiGroupAssignment2()
     {
         // test a final merge of groups with 2 bases difference
-        FragmentOld frag1 = createFragment(FIXED_READ_ID + "TTAAGG", CHR_1, 100);
-        FragmentOld frag2 = createFragment(FIXED_READ_ID + "TTAAGC", CHR_1, 100);
-        FragmentOld frag3 = createFragment(FIXED_READ_ID + "TTAATT", CHR_1, 100);
-        FragmentOld frag4 = createFragment(FIXED_READ_ID + "GGGATT", CHR_1, 100);
-        FragmentOld frag5 = createFragment(FIXED_READ_ID + "GGGAGG", CHR_1, 100);
-        FragmentOld frag6 = createFragment(FIXED_READ_ID + "CCGAGC", CHR_1, 100);
+        SAMRecord frag1 = createSimpleRead(FIXED_READ_ID + "TTAAGG");
+        SAMRecord frag2 = createSimpleRead(FIXED_READ_ID + "TTAAGC");
+        SAMRecord frag3 = createSimpleRead(FIXED_READ_ID + "TTAATT");
+        SAMRecord frag4 = createSimpleRead(FIXED_READ_ID + "GGGATT");
+        SAMRecord frag5 = createSimpleRead(FIXED_READ_ID + "GGGAGG");
+        SAMRecord frag6 = createSimpleRead(FIXED_READ_ID + "CCGAGC");
 
-        List<FragmentOld> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
-        List<DuplicateGroupOld> groups = buildUmiGroups(fragments, UMI_CONFIG);
+        List<SAMRecord> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
+        FragmentCoords fragmentCoords = createFragmentCoords(frag1);
+        List<DuplicateGroup> groups = buildUmiGroups(fragmentCoords, fragments, UMI_CONFIG);
         assertEquals(3, groups.size());
     }
 
@@ -142,18 +163,19 @@ public class UmiGroupsTest
         String umi3 = "CCGGTT"; // unrelated
         String umi4 = "TTCCCC"; // 4-base diff from #1 and #2
 
-        List<FragmentOld> fragments = Lists.newArrayList();
+        List<SAMRecord> fragments = Lists.newArrayList();
 
-        fragments.add(createFragment(FIXED_READ_ID + umi1, CHR_1, 100));
-        fragments.add(createFragment(FIXED_READ_ID + umi2, CHR_1, 100));
-        fragments.add(createFragment(FIXED_READ_ID + umi3, CHR_1, 100));
+        fragments.add(createSimpleRead(FIXED_READ_ID + umi1));
+        fragments.add(createSimpleRead(FIXED_READ_ID + umi2));
+        fragments.add(createSimpleRead(FIXED_READ_ID + umi3));
 
         for(int i = 0; i < 51; ++i)
         {
-            fragments.add(createFragment(FIXED_READ_ID + umi4, CHR_1, 100));
+            fragments.add(createSimpleRead(FIXED_READ_ID + umi4));
         }
 
-        List<DuplicateGroupOld> groups = buildUmiGroups(fragments, UMI_CONFIG);
+        FragmentCoords fragmentCoords = createFragmentCoords(fragments.get(0));
+        List<DuplicateGroup> groups = buildUmiGroups(fragmentCoords, fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
     }
 
@@ -166,19 +188,18 @@ public class UmiGroupsTest
         String definedUmi3 = "CCCAAA";
         umiConfig.addDefinedUmis(Sets.newHashSet(definedUmi1, definedUmi2, definedUmi3));
 
-        FragmentOld frag1 = createFragment(FIXED_READ_ID + definedUmi1, CHR_1, 100);
-        FragmentOld frag2 = createFragment(FIXED_READ_ID + "AAAGGC", CHR_1, 100);
-        FragmentOld frag3 = createFragment(FIXED_READ_ID + definedUmi1, CHR_1, 100);
-        FragmentOld frag4 = createFragment(FIXED_READ_ID + definedUmi2, CHR_1, 100);
-        FragmentOld frag5 = createFragment(FIXED_READ_ID + "TTTAAC", CHR_1, 100);
-        FragmentOld frag6 = createFragment(FIXED_READ_ID + definedUmi3, CHR_1, 100);
+        SAMRecord frag1 = createSimpleRead(FIXED_READ_ID + definedUmi1);
+        SAMRecord frag2 = createSimpleRead(FIXED_READ_ID + "AAAGGC");
+        SAMRecord frag3 = createSimpleRead(FIXED_READ_ID + definedUmi1);
+        SAMRecord frag4 = createSimpleRead(FIXED_READ_ID + definedUmi2);
+        SAMRecord frag5 = createSimpleRead(FIXED_READ_ID + "TTTAAC");
+        SAMRecord frag6 = createSimpleRead(FIXED_READ_ID + definedUmi3);
 
-        List<FragmentOld> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
-        List<DuplicateGroupOld> groups = buildUmiGroups(fragments, umiConfig);
+        List<SAMRecord> fragments = Lists.newArrayList(frag1, frag2, frag3, frag4, frag5, frag6);
+        FragmentCoords fragmentCoords = createFragmentCoords(fragments.get(0));
+        List<DuplicateGroup> groups = buildUmiGroups(fragmentCoords, fragments, umiConfig);
         assertEquals(3, groups.size());
     }
-
-     */
 
     /*
     @Test

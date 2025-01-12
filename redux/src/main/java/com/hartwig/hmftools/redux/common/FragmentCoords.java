@@ -42,8 +42,9 @@ public class FragmentCoords implements Comparable<FragmentCoords>
     public final boolean UnmappedSourced;
     public final boolean Unpaired;
 
-    public final String Key;
-    public final String KeyOriented; // includes fragment orientation
+    public final String Key; // includes fragment orientation if applicable
+
+    private final String mKeyNonOriented; // only used for UMI collapsing, and set as required
 
     public FragmentCoords(
             final String chromsomeLower, final String chromsomeUpper, final int positionLower, final int positionUpper,
@@ -71,7 +72,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
                 coordinate = format("%s_R", coordinate);
 
             Key = suppReadInfo != null ? format("%s_S", coordinate) : coordinate;
-            KeyOriented = Key;
+            mKeyNonOriented = null;
             return;
         }
 
@@ -86,7 +87,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             else
                 Key = coordinateLower;
 
-            KeyOriented = Key;
+            mKeyNonOriented = null;
         }
         else
         {
@@ -96,12 +97,20 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             if(SuppReadInfo != null)
                 readInfo += "_S";
 
-            Key = format("%s_%s_%s", coordinateLower, coordinateUpper, readInfo);
-            KeyOriented = (keyByFragmentOrientation && FragmentOrient.isReverse()) ? format("%s_N", Key) : Key;
+            String keyNonOriented = format("%s_%s_%s", coordinateLower, coordinateUpper, readInfo);
+            if(keyByFragmentOrientation && FragmentOrient.isReverse())
+            {
+                Key = format("%s_N", keyNonOriented);
+                mKeyNonOriented = keyNonOriented;
+            }
+            else
+            {
+                Key = keyNonOriented;
+                mKeyNonOriented = null;
+            }
         }
     }
 
-    public boolean isSingleRead() { return PositionUpper == NO_POSITION; }
     public boolean forwardFragment() { return FragmentOrient.isForward(); }
 
     public int readPosition()
@@ -119,6 +128,8 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         else
             return ReadIsLower || UnmappedSourced ? OrientLower : OrientUpper;
     }
+
+    public String keyNonOriented() { return mKeyNonOriented != null ? mKeyNonOriented : Key; }
 
     private static String formCoordinate(final String chromosome, final int position, final boolean isForward)
     {
@@ -233,7 +244,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
     @Override
     public int compareTo(final FragmentCoords other)
     {
-        return KeyOriented.compareTo(other.KeyOriented);
+        return Key.compareTo(other.Key);
     }
 
     @Override
@@ -246,11 +257,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             return false;
 
         FragmentCoords fragCoords = (FragmentCoords)other;
-        return KeyOriented.compareTo(fragCoords.KeyOriented) == 0;
+        return Key.compareTo(fragCoords.Key) == 0;
     }
 
     @Override
-    public int hashCode() { return KeyOriented.hashCode(); }
+    public int hashCode() { return Key.hashCode(); }
 
-    public String toString() { return KeyOriented; }
+    public String toString() { return Key; }
 }

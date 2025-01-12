@@ -2,9 +2,7 @@ package com.hartwig.hmftools.common.basequal.jitter;
 
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -36,6 +34,7 @@ public class JitterAnalyserConfig
     public final double MaxSingleSiteAltContribution;
 
     public final boolean WritePlots;
+    public final boolean WriteSiteFile;
 
     public final List<ChrBaseRegion> SpecificRegions;
 
@@ -47,6 +46,9 @@ public class JitterAnalyserConfig
 
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String MAX_SINGLE_SITE_ALT_CONTRIBUTION = "max_site_alt_contribution";
+
+    public static final String JITTER_WRITE_SITE_FILE = "write_msi_site_file";
+    public static final String JITTER_WRITE_SITE_FILE_DESC = "Write MSI site file (useful for debugging)";
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
@@ -62,12 +64,13 @@ public class JitterAnalyserConfig
         MaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
         MaxSingleSiteAltContribution = configBuilder.getDecimal(MAX_SINGLE_SITE_ALT_CONTRIBUTION);
         WritePlots = true;
+        WriteSiteFile = configBuilder.hasFlag(JITTER_WRITE_SITE_FILE);
         SpecificRegions = loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS));
     }
 
     public JitterAnalyserConfig(
             final String sampleId, final RefGenomeVersion refGenVersion, final String refGenomeFile,
-            final String refGenomeMsiFile, final String outputDir, double maxSingleSiteAltContribution)
+            final String refGenomeMsiFile, final String outputDir, double maxSingleSiteAltContribution, boolean writeSiteFile)
     {
         SampleId = sampleId;
         RefGenVersion = refGenVersion;
@@ -78,6 +81,7 @@ public class JitterAnalyserConfig
         MaxSitesPerType = DEFAULT_NUM_SITES_PER_TYPE;
         MaxSingleSiteAltContribution = maxSingleSiteAltContribution;
         WritePlots = false;
+        WriteSiteFile = writeSiteFile;
         SpecificRegions = null;
     }
 
@@ -99,6 +103,8 @@ public class JitterAnalyserConfig
         configBuilder.addDecimal(
                 MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Max percentage a single alt site can contribute",
                 DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
+
+        configBuilder.addFlag(JITTER_WRITE_SITE_FILE, JITTER_WRITE_SITE_FILE_DESC);
     }
 
     public boolean isValid()
