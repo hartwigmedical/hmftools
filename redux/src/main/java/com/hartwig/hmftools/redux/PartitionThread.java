@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.write.PartitionInfo.isAltRegionContig;
 
 import java.util.Collections;
 import java.util.List;
@@ -111,7 +112,8 @@ public class PartitionThread extends Thread
 
         List<ChrBaseRegion> genomeRegions = getRefGenomeRegions(specificRegions, refGenomeVersion, refGenome);
 
-        long totalLength = genomeRegions.stream().mapToLong(x -> x.baseLength()).sum();
+        // ignore lengths for alt-contigs so they don't impact the partitioning of actual chromosomes and reads
+        long totalLength = genomeRegions.stream().mapToLong(x -> regionIntervalLength(x)).sum();
         long intervalLength = (int)ceil(totalLength / (double)threadCount);
 
         int chrEndBuffer = (int)round(intervalLength * 0.05);
@@ -123,17 +125,17 @@ public class PartitionThread extends Thread
         for(ChrBaseRegion genomeRegion : genomeRegions)
         {
             nextRegionStart = 1;
-            int chromosomeLength = genomeRegion.baseLength();
-            int remainingChromosomeLength = chromosomeLength;
+            int regionLength = regionIntervalLength(genomeRegion);
+            int remainingChromosomeLength = regionLength;
 
             while(currentLength + remainingChromosomeLength >= intervalLength)
             {
                 int remainingIntervalLength = (int)(intervalLength - currentLength);
                 int regionEnd = nextRegionStart + remainingIntervalLength - 1;
 
-                if(chromosomeLength - regionEnd < chrEndBuffer)
+                if(regionLength - regionEnd < chrEndBuffer)
                 {
-                    regionEnd = chromosomeLength;
+                    regionEnd = regionLength;
                     remainingChromosomeLength = 0;
                 }
 
@@ -147,7 +149,7 @@ public class PartitionThread extends Thread
                     break;
 
                 nextRegionStart = regionEnd + 1;
-                remainingChromosomeLength = chromosomeLength - nextRegionStart + 1;
+                remainingChromosomeLength = regionLength - nextRegionStart + 1;
             }
 
             if(remainingChromosomeLength <= 0)
@@ -155,10 +157,15 @@ public class PartitionThread extends Thread
 
             currentLength += remainingChromosomeLength;
 
-            currentRegions.add(new ChrBaseRegion(genomeRegion.Chromosome, nextRegionStart, chromosomeLength));
+            currentRegions.add(new ChrBaseRegion(genomeRegion.Chromosome, nextRegionStart, regionLength));
         }
 
         return partitionRegions.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
+    }
+
+    private static int regionIntervalLength(final ChrBaseRegion region)
+    {
+        return isAltRegionContig(region.Chromosome) ? 1 : region.baseLength();
     }
 
     private static List<ChrBaseRegion> getRefGenomeRegions(
@@ -204,5 +211,4 @@ public class PartitionThread extends Thread
 
         return inputRegions;
     }
-
 }
