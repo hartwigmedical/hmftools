@@ -18,6 +18,8 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 
+import htsjdk.samtools.SAMRecord;
+
 public class UmiStatistics
 {
     public long UmiGroups;
@@ -125,10 +127,12 @@ public class UmiStatistics
         ++posFragData.Frequency;
         posFragData.MaxCoordUmiCount = max(posFragData.MaxCoordUmiCount, maxCoordUmiCount);
 
-        if(duplicateGroup != null && duplicateGroup.fragmentCount() > posFragData.MaxUmiReadsCount)
+        if(duplicateGroup != null && duplicateGroup.readCount() > posFragData.MaxUmiReadsCount)
         {
-            posFragData.MaxUmiReadsCount = duplicateGroup.fragmentCount();
-            posFragData.UmiGroupDetails = format("%s %s", duplicateGroup.coordinatesKey(), duplicateGroup.getReadIds().get(0));
+            posFragData.MaxUmiReadsCount = duplicateGroup.readCount();
+
+            posFragData.UmiGroupDetails = format("%s %s",
+                    duplicateGroup.fragmentCoordinates().keyNonOriented(), duplicateGroup.reads().get(0).getReadName());
         }
     }
 
@@ -153,7 +157,7 @@ public class UmiStatistics
 
     public void recordUmiBaseStats(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
-        umiGroups.forEach(x -> recordUmiBaseFrequencies(x));
+        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umiId()));
 
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
@@ -166,16 +170,14 @@ public class UmiStatistics
         }
     }
 
-    private void recordUmiBaseFrequencies(final DuplicateGroup umiGroup)
+    private void recordUmiBaseFrequencies(final String umiId)
     {
-        String umiId = umiGroup.umiId();
-
         if(UmiPositionBaseFrequencies == null)
             UmiPositionBaseFrequencies = new int[umiId.length()][UMI_BASE_COUNT];
 
         for(int p = 0; p < min(umiId.length(), UmiPositionBaseFrequencies.length); ++p)
         {
-            int baseIndex = getBaseIndex(umiGroup.umiId().charAt(p));
+            int baseIndex = getBaseIndex(umiId.charAt(p));
 
             if(baseIndex >= 0)
                 ++UmiPositionBaseFrequencies[p][baseIndex];
@@ -198,12 +200,12 @@ public class UmiStatistics
 
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup umiGroup)
     {
-        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.fragmentCount());
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.readCount());
         ++umiGroupStats.GroupCount;
 
-        for(String readId : umiGroup.getReadIds())
+        for(SAMRecord read : umiGroup.reads())
         {
-            int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), umiGroup.umiId());
+            int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId());
 
             if(diff <= MAX_EDIT_DISTANCE)
                 ++umiGroupStats.EditDistanceFrequency[diff];
@@ -212,7 +214,7 @@ public class UmiStatistics
 
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup group1, final DuplicateGroup group2)
     {
-        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.fragmentCount() + group2.fragmentCount());
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.readCount() + group2.readCount());
         ++umiGroupStats.GroupCount;
 
         for(int groupIndex = 0; groupIndex <= 1; ++groupIndex)
@@ -220,9 +222,9 @@ public class UmiStatistics
             DuplicateGroup testGroup = groupIndex == 0 ? group1 : group2;
             DuplicateGroup readsGroup = groupIndex == 0 ? group2 : group1;
 
-            for(String readId : readsGroup.getReadIds())
+            for(SAMRecord read : readsGroup.reads())
             {
-                int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), testGroup.umiId());
+                int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umiId());
 
                 if(diff <= MAX_EDIT_DISTANCE)
                     ++umiGroupStats.EditDistanceFrequency[diff];

@@ -6,21 +6,30 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildSamRecord;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
+import static com.hartwig.hmftools.lilac.read.ReadRecord.create;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.lilac.read.ReadRecord;
 
 import org.junit.Test;
 
+import htsjdk.samtools.SAMRecord;
+
 public class FragmentsTest
 {
+    private static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(100);
+
     @Test
     public void testIndices()
     {
@@ -37,6 +46,43 @@ public class FragmentsTest
         assertRange(1, 2, calcAminoAcidIndices(3, 9));
         assertRange(1, 2, calcAminoAcidIndices(3, 10));
     }
+
+    @Test
+    public void testAdapterSoftClippedFragments()
+    {
+        BaseRegion codingRegion = new BaseRegion(100, 1000);
+
+        // firstly a record with soft-clips at both ends which will be used
+        SAMRecord record = buildSamRecord(200, "10S60M10S", TEST_READ_BASES.substring(0, 80), "");
+        record.setInferredInsertSize(200);
+
+        ReadRecord readRecord = create(codingRegion, record, true, true);
+        assertNotNull(readRecord);
+
+        assertEquals(190, readRecord.PositionStart);
+        assertEquals(269, readRecord.PositionEnd);
+        assertEquals(10, readRecord.SoftClippedStart);
+        assertEquals(10, readRecord.SoftClippedEnd);
+
+        // now restricted at the lower 3' end
+        record.setInferredInsertSize(70);
+        record.setReadNegativeStrandFlag(true);
+
+        readRecord = create(codingRegion, record, true, true);
+        assertEquals(200, readRecord.PositionStart);
+        assertEquals(269, readRecord.PositionEnd);
+        assertEquals(0, readRecord.SoftClippedStart);
+        assertEquals(10, readRecord.SoftClippedEnd);
+
+        record.setReadNegativeStrandFlag(false);
+
+        readRecord = create(codingRegion, record, true, true);
+        assertEquals(190, readRecord.PositionStart);
+        assertEquals(259, readRecord.PositionEnd);
+        assertEquals(10, readRecord.SoftClippedStart);
+        assertEquals(0, readRecord.SoftClippedEnd);
+    }
+
 
     @Test
     public void testFragmentMerge()
@@ -97,5 +143,4 @@ public class FragmentsTest
         assertEquals(expectedStart, victim.get(0).intValue());
         assertEquals(expectedEnd, victim.get(victim.size() - 1).intValue());
     }
-
 }

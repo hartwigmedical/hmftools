@@ -772,7 +772,7 @@ public class PhaseSetBuilder
         }
     }
 
-    private static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
+    protected static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
     {
         // just checks orientation, no read concordance
         return AssemblyUtils.isLocalAssemblyCandidate(first, second, false, false);

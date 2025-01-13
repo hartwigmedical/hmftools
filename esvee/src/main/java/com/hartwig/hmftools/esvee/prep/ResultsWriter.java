@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXTRA_INFO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
@@ -74,6 +75,8 @@ public class ResultsWriter
         mBamWriter.close();
     }
 
+    public long writtenCount() { return mBamWriter != null ? mBamWriter.writtenCount() : 0; }
+
     public synchronized void writeReadGroup(final List<ReadGroup> readGroups)
     {
         for(ReadGroup readGroup : readGroups)
@@ -120,7 +123,7 @@ public class ResultsWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
             sj.add(FLD_JUNCTION_FRAGS).add(FLD_EXACT_SUPPORT_FRAGS).add(FLD_OTHER_SUPPORT_FRAGS).add("LowMapQualFrags");
-            sj.add("MaxQual").add("MaxSoftClip");
+            sj.add("MaxQual").add(FLD_EXTRA_INFO);
             sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("InitialReadId");
 
             if(mConfig.TrackRemotes)
@@ -150,7 +153,7 @@ public class ResultsWriter
             {
                 int maxMapQual = 0;
                 int lowMapQualFrags = 0;
-                int maxSoftClip = 0;
+                int extraInfoValues = 0;
 
                 int junctionFrags = junctionData.junctionFragmentCount();
                 int exactSupportFrags = junctionData.ExactSupportGroups.size();
@@ -179,9 +182,9 @@ public class ResultsWriter
                         {
                             int scLength = expectLeftClipped ? read.leftClipLength() : read.rightClipLength();
 
-                            if(scLength > maxSoftClip)
+                            if(scLength > extraInfoValues)
                             {
-                                maxSoftClip = scLength;
+                                extraInfoValues = scLength;
                             }
                         }
                     }
@@ -196,7 +199,10 @@ public class ResultsWriter
                 }
                 else
                 {
-                    // replace soft-clip length with region range
+                    // replace soft-clip length with max remote location reads
+                    extraInfoValues = !junctionData.RemoteJunctions.isEmpty() ? junctionData.RemoteJunctions.get(0).Fragments : 0;
+
+                    /* was read span distance before
                     int minReadPosition = -1;
                     int maxReadPosition = 0;
 
@@ -210,7 +216,8 @@ public class ResultsWriter
                         maxReadPosition = max(read.end(), maxReadPosition);
                     }
 
-                    maxSoftClip = maxReadPosition - minReadPosition + 1;
+                    extraInfoValues = maxReadPosition - minReadPosition + 1;
+                    */
                 }
 
                 mJunctionWriter.write(String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
@@ -218,7 +225,7 @@ public class ResultsWriter
                         exactSupportFrags, otherSupportFrags, lowMapQualFrags, maxMapQual));
 
                 mJunctionWriter.write(String.format("\t%d\t%s\t%s\t%s",
-                        maxSoftClip, junctionData.internalIndel(), junctionData.hotspot(),
+                        extraInfoValues, junctionData.internalIndel(), junctionData.hotspot(),
                         junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING"));
 
                 if(mConfig.TrackRemotes)

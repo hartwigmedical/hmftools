@@ -1,8 +1,8 @@
+import numpy as np
 import pandas as pd
 import pytest
 
 from tests.mock_data import MockTrainingData, MockCuppaClassifier
-from cuppa.constants import PREDICT_NA_FILL_VALUE
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler, BypassedClassifierBuilder
 from cuppa.components.calibration import RollingAvgCalibration
@@ -41,16 +41,20 @@ class TestMissingFeaturesHandler:
 
         required_features = present_features + missing_features
 
-        handler = MissingFeaturesHandler(X, required_features=required_features)
+        fill_value = -1e-8
+        handler = MissingFeaturesHandler(X, required_features=required_features, fill_value=fill_value)
         X_filled = handler.fill_missing()
 
-        assert all(X_filled[missing_features].iloc[0] == PREDICT_NA_FILL_VALUE)
+        assert all(X_filled[missing_features].iloc[0] == -1e-8)
 
-    def test_missing_rna_features_are_filled_with_na(self):
+    def test_missing_rna_features_are_filled_but_only_for_samples_with_rna(self):
         X = pd.DataFrame(
-            [[1, 1, 1, 1]],
-            columns=["gen_pos.feat_1", "snv96.feat_1", "event.feat_1", "sig.feat_1"],
-            index=["sample_1"]
+            [
+                [1, 1, 1, 1, 1],
+                [1, 1, 1, 1, np.nan],
+            ],
+            columns=["gen_pos.feat_1", "snv96.feat_1", "event.feat_1", "sig.feat_1", "gene_exp.feat_1",],
+            index=["sample_with_rna_data", "sample_without_rna_data"]
         )
 
         required_dna_features = [
@@ -67,9 +71,12 @@ class TestMissingFeaturesHandler:
 
         required_features = required_dna_features + required_rna_features
 
-        handler = MissingFeaturesHandler(X, required_features=required_features)
+        fill_value = -1e-8
+        handler = MissingFeaturesHandler(X, required_features=required_features, fill_value=fill_value)
         X_filled = handler.fill_missing()
-        assert X_filled[required_rna_features].isna().iloc[0].all()
+
+        assert X_filled.loc["sample_with_rna_data"].isna().all().__invert__()
+        assert X_filled.loc["sample_without_rna_data", required_rna_features].isna().all()
 
     def test_can_fill_missing_cols_from_classifier(self):
         X = MockTrainingData.X

@@ -20,7 +20,7 @@ import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 /* Rank candidates by:
     - first calculating bonuses and penalties for being homozygous and common in the provided cohort
@@ -49,10 +49,7 @@ public class ComplexCoverageRanking
 
         for(ComplexCoverage complexCoverage : complexes)
         {
-            calcCohortFrequency(complexCoverage);
-            calcRecoveryPenalty(complexCoverage, recoveredAlleles);
-            calcWildcardPenalty(complexCoverage, sequences);
-            calcComplexScore(complexCoverage);
+            calcScore(complexCoverage, recoveredAlleles, sequences);
         }
 
         if(mMaxScoreDifference == 0)
@@ -85,6 +82,14 @@ public class ComplexCoverageRanking
         }
 
         return results;
+    }
+
+    private void calcScore(final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles, final List<HlaSequenceLoci> sequences)
+    {
+        calcCohortFrequency(complexCoverage);
+        calcRecoveryPenalty(complexCoverage, recoveredAlleles);
+        calcWildcardPenalty(complexCoverage, sequences);
+        calcComplexScore(complexCoverage);
     }
 
     private void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles)

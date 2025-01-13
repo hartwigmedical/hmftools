@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
 import static com.hartwig.hmftools.purple.fittingsnv.SomaticReadjustmentFit.calcReadjustmentPurity;
+import static com.hartwig.hmftools.purple.region.ObservedRegionFactory.EXCLUDED_IMMUNE_REGIONS;
 
 import java.util.Collections;
 import java.util.List;
@@ -109,13 +110,6 @@ public class SomaticPurityFitter
 
         for(SomaticVariant variant : variants)
         {
-//            if(variant.gene().equals("JAK2"))
-//            {
-//                System.out.print(variant.gene());
-//                System.out.print(":  ");
-//                System.out.println(variant.alleleFrequency());
-//            }
-            
             if(variant.type() != VariantType.SNP)
             {
                 ++filterCounts[FilterReason.NON_SNV.ordinal()];
@@ -160,6 +154,9 @@ public class SomaticPurityFitter
 
     private static boolean isFittingCandidate(final SomaticVariant variant, final int[] filterCounts)
     {
+        if(EXCLUDED_IMMUNE_REGIONS.stream().anyMatch(x -> x.containsPosition(variant.chromosome(), variant.position())))
+            return false;
+        
         if(!variant.hasTumorAlleleDepth() || variant.tumorAlleleDepth().TotalReadCount == 0)
             return false;
 
@@ -168,9 +165,7 @@ public class SomaticPurityFitter
         double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
 
         if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && variant.isHotspot())
-        {
             return true;
-        }
 
         if(variantTier != VariantTier.HOTSPOT)
         {

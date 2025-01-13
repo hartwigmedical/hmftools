@@ -8,6 +8,9 @@ public final class SageVcfTags
     public static final String LOCAL_PHASE_SET = "LPS";
     public static final String LOCAL_PHASE_SET_DESC = "Local Phase Set";
 
+    public static final String LPS_APPEND_INFO = "LPSA";
+    public static final String LPS_APPEND_INFO_DESC = "Local Phase Set Append Info";
+
     // NOTE: most downstream applications use reference and read-context repeat and homology information
     public static final String REPEAT_COUNT = "REP_C";
     public static final String REPEAT_COUNT_DESC = "Repeat sequence count";

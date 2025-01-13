@@ -32,7 +32,7 @@ public enum SoftFilter
     DEDUP_INDEL("dedupIndel", "", true, false, "Variant duplicate SNV/MNV vs INDEL"),
     DEDUP_MATCH("dedupMatch", "", true, false, "Variant duplicate with different read contexts");
 
-    private static final Set<SoftFilter> TUMOR_FILTERS = Sets.newHashSet();
+    public static final Set<SoftFilter> TUMOR_FILTERS = Sets.newHashSet();
     public static final Set<SoftFilter> GERMLINE_FILTERS = Sets.newHashSet();
 
     static

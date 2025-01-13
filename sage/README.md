@@ -325,11 +325,12 @@ There are 9 key steps in the SAGE algorithm described in detail below:
   1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
   2. [Candidate Variants](#2-candidate-variants)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
-  4. [Normal Counts and Quality](#4-normal-counts-and-quality)
-  5. [Soft Filter](#5-soft-filters)
-  6. [Phasing](#6-phasing)
-  7. [De-duplication](#7-de-duplication)
-  8. [Gene Panel Coverage](#8-gene-panel-coverage)
+  4. [Jitter Determinations](#4-jitter-determinations)
+  5. [Normal Counts and Quality](#5-normal-counts-and-quality)
+  6. [Soft Filter](#6-soft-filters)
+  7. [Phasing](#7-phasing)
+  8. [De-duplication](#8-de-duplication)
+  9. [Gene Panel Coverage](#9-gene-panel-coverage)
 
 ## 1. Alt Specific Base Quality Recalibration
 
@@ -462,7 +463,7 @@ hard_min_tumor_qual | 50            | `totalQuality`
 hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `AD[1]`
 jitter p-score | 0.05 | see description of jitter p-score below
-filtered_max_normal_alt_support | 3             | Normal `AD[1]`
+filtered_max_germline_alt_support | 3             | Normal `AD[1]`
 
 Note that hotspots are never hard-filtered.
 

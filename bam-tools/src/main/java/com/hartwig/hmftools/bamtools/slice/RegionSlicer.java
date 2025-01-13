@@ -5,15 +5,18 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.slice.SliceConfig.UNMAPPED_READS_DISABLED;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -22,6 +25,11 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class RegionSlicer
 {
@@ -90,9 +98,37 @@ public class RegionSlicer
             BT_LOGGER.info("secondary slice complete");
         }
 
+        if(mConfig.MaxUnmappedReads != UNMAPPED_READS_DISABLED)
+        {
+            BT_LOGGER.info("slicing unmapped reads");
+
+            sliceUnmappedReads(sliceWriter);
+
+            BT_LOGGER.info("unmapped read slice complete");
+        }
+
         sliceWriter.close();
 
         BT_LOGGER.info("Regions slice complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private void sliceUnmappedReads(final SliceWriter sliceWriter)
+    {
+        SamReader samReader = !mConfig.RefGenomeFile.isEmpty() ?
+                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+
+        long unmappedCount = 0;
+
+        SAMRecordIterator iterator = samReader.queryUnmapped();
+
+        while(iterator.hasNext())
+        {
+            sliceWriter.writeRead(iterator.next());
+            ++unmappedCount;
+
+            if(mConfig.MaxUnmappedReads > 0 && unmappedCount >= mConfig.MaxUnmappedReads)
+                break;
+        }
     }
 
     private class RemotePositions implements Comparable<RemotePositions>

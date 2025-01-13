@@ -18,13 +18,14 @@ public final class BamOperations
     private static final String MERGE_COMMAND = "merge";
     private static final String CONCATENATE_COMMAND = "cat";
     private static final String SORT_COMMAND = "sort";
+    private static final String REHEADER_COMMAND = "reheader";
 
     protected static final Logger BOP_LOGGER = LogManager.getLogger(BamOperations.class);
 
     public static boolean mergeBams(
             final BamToolName toolName, final String toolPath, final String outputBam, final List<String> inputBams, final int threads)
     {
-        BOP_LOGGER.debug("merging {} bams", inputBams.size());
+        BOP_LOGGER.trace("merging {} bams", inputBams.size());
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -42,7 +43,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        BOP_LOGGER.debug("merge complete");
+        BOP_LOGGER.trace("merge complete");
         return true;
     }
 
@@ -55,7 +56,7 @@ public final class BamOperations
             return false;
         }
 
-        BOP_LOGGER.debug("concatenating {} bams", inputBams.size());
+        BOP_LOGGER.trace("concatenating {} bams", inputBams.size());
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -77,13 +78,12 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        BOP_LOGGER.debug("merge complete");
         return true;
     }
 
     public static boolean indexBam(final BamToolName toolName, final String toolPath, final String bamFilename, final int threads)
     {
-        BOP_LOGGER.debug("indexing bam({})", bamFilename);
+        BOP_LOGGER.trace("indexing bam({})", bamFilename);
 
         List<String> commandArgs = Lists.newArrayList();
 
@@ -95,7 +95,7 @@ public final class BamOperations
         if(!executeCommand(commandArgs, bamFilename))
             return false;
 
-        BOP_LOGGER.debug("index complete");
+        BOP_LOGGER.trace("index complete");
         return true;
     }
 
@@ -129,10 +129,35 @@ public final class BamOperations
         if(!executeCommand(commandArgs, outputBam))
             return false;
 
-        BOP_LOGGER.debug("sort complete");
+        BOP_LOGGER.trace("sort complete");
         return true;
     }
 
+    public static boolean reheaderBam(
+            final BamToolName toolName, final String toolPath, final String inputBam, final String outputBam, final String headerBam)
+    {
+        if(toolName != BamToolName.SAMTOOLS)
+            return false;
+
+        List<String> commandArgs = Lists.newArrayList();
+
+        commandArgs.add(toolPath);
+        commandArgs.add(REHEADER_COMMAND);
+
+        commandArgs.add("--no-PG");
+        commandArgs.add(headerBam);
+
+        commandArgs.add(inputBam);
+
+        commandArgs.add(">");
+        commandArgs.add(outputBam);
+
+        if(!executeCommand(commandArgs, outputBam))
+            return false;
+
+        BOP_LOGGER.trace("reheader complete");
+        return true;
+    }
 
     private static void addThreadsArg(final BamToolName toolName, final List<String> commandArgs, final int threads)
     {

@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
-import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
+import com.hartwig.hmftools.sage.phase.AppendVariantPhaser;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
@@ -44,14 +44,16 @@ public class RegionAppendTask implements Callable
     private final IndexedFastaSequenceFile mRefGenomeFile;
     private final RefGenomeSource mRefGenome;
     private final FragmentLengthWriter mFragmentLengths;
+    private final AppendVariantPhaser mVariantPhaser;
+    private final SamSlicerFactory mSamSlicerFactory;
 
     private final List<VariantContext> mOriginalVariants;
     private final List<VariantContext> mFinalVariants;
 
     public RegionAppendTask(
             final int taskId, final ChrBaseRegion region, final List<VariantContext> variants,
-            final SageAppendConfig config, final IndexedFastaSequenceFile refGenome,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final FragmentLengthWriter fragmentLengths)
+            final SageAppendConfig config, final IndexedFastaSequenceFile refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap,
+            final FragmentLengthWriter fragmentLengths, final MsiJitterCalcs msiJitterCalcs)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -64,15 +66,13 @@ public class RegionAppendTask implements Callable
         mRefGenomeFile = refGenome;
         mRefGenome = new RefGenomeSource(mRefGenomeFile);
 
-        SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
-        samSlicerFactory.buildBamReaders(Collections.emptyList(), Collections.emptyList(), mConfig.Common, mRefGenomeFile);
+        mSamSlicerFactory = new SamSlicerFactory();
+        mSamSlicerFactory.buildBamReaders(Collections.emptyList(), Collections.emptyList(), mConfig.Common, mRefGenomeFile);
 
-        MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
-                config.Common.ReferenceIds, !config.Common.SkipMsiJitter ? config.Common.JitterParamsDir : null,
-                mConfig.Common.Quality.HighDepthMode);
+        mVariantPhaser = new AppendVariantPhaser();
 
         mEvidenceStage = new EvidenceStage(
-                config.Common, mRefGenome, qualityRecalibrationMap, msiJitterCalcs, new PhaseSetCounter(), samSlicerFactory);
+                config.Common, mRefGenome, qualityRecalibrationMap, msiJitterCalcs, mVariantPhaser, mSamSlicerFactory);
     }
 
     public List<VariantContext> finalVariants() { return mFinalVariants; }
@@ -101,10 +101,14 @@ public class RegionAppendTask implements Callable
             System.exit(1);
         }
 
+        mVariantPhaser.registerLocalPhaseSets(candidates, mOriginalVariants);
+
         ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
-                (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, false);
+                (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, mConfig.Common.ReferenceIds);
 
         createFinalVariants(readContextCounters, mConfig.Common.ReferenceIds);
+
+        mVariantPhaser.populateLocalPhaseSetInfo(candidates, mFinalVariants);
 
         if(mConfig.Common.WriteFragmentLengths)
         {
@@ -127,6 +131,8 @@ public class RegionAppendTask implements Callable
         }
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
+
+        mSamSlicerFactory.closeSamReaders();
 
         return (long)0;
     }

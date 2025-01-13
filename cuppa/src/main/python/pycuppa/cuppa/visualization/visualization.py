@@ -270,16 +270,15 @@ class CuppaVisPlotter(LoggerMixin):
         self,
         vis_data: CuppaVisData,
         plot_path: str,
+        force_plot: bool = False,
         verbose: bool = True
     ):
         self.vis_data = vis_data
         self.plot_path = os.path.expanduser(plot_path)
+        self.force_plot = force_plot
         self.verbose = verbose
 
         self.vis_data_path: str | None = None
-
-        self._check_number_of_samples()
-        self._check_plot_path_extension()
 
     @classmethod
     def from_tsv(cls, path: str, **kwargs) -> CuppaVisPlotter:
@@ -289,18 +288,36 @@ class CuppaVisPlotter(LoggerMixin):
         plotter.vis_data_path = path
         return plotter
 
-    def _check_number_of_samples(self):
-        sample_ids = self.vis_data["sample_id"].dropna().unique()
+    @property
+    def sample_ids(self):
+        return self.vis_data["sample_id"].dropna().unique()
 
-        max_samples = 25
-        if len(sample_ids) > max_samples:
-            self.logger.error("Plotting predictions for >", max_samples, " is not supported")
-            raise RuntimeError
+    PLOT_MAX_SAMPLES = 10
+
+
+    def _check_should_plot(self) -> bool:
+
+        n_samples = len(self.sample_ids)
+
+        if n_samples <= self.PLOT_MAX_SAMPLES:
+            return True
+
+        elif self.force_plot:
+            self.logger.info(f"Forcing plotting predictions for {n_samples} (>{self.PLOT_MAX_SAMPLES}) samples")
+            return True
+
+        else:
+            self.logger.warning(f"Skipping plotting predictions for {n_samples} (>{self.PLOT_MAX_SAMPLES}) samples. Please use arg --force_plot to plot anyway")
+            return False
 
     def _check_plot_path_extension(self):
         if not self.plot_path.endswith((".pdf", ".png")):
             self.logger.error("`plot_path` must end with .pdf or .png")
-            raise ValueError
+            raise Exception
+
+        if len(self.sample_ids) > 1 and not self.plot_path.endswith(".pdf"):
+            self.logger.error("`plot_path` must end with .pdf for multi-sample plotting")
+            raise Exception
 
     @property
     def _tmp_vis_data_path(self) -> str:
@@ -321,6 +338,11 @@ class CuppaVisPlotter(LoggerMixin):
     def plot(self) -> None:
 
         try:
+            self._check_plot_path_extension()
+
+            if not self._check_should_plot():
+                return
+
             if self.vis_data_path is None or not os.path.exists(self.vis_data_path):
                 self._write_tmp_vis_data()
                 self.vis_data_path = self._tmp_vis_data_path

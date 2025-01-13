@@ -5,6 +5,9 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadInde
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 
 import static org.junit.Assert.assertEquals;
 
@@ -177,5 +180,31 @@ public class CigarUtilsTest
 
         readIndex = getPositionFromReadIndex(100, cigarElements, 35, false, true)[0];
         assertEquals(125, readIndex);
+    }
+    
+    @Test
+    public void testClippedPositions()
+    {
+        String readId = "READ_01";
+        String readBases = "";
+
+        SAMRecord read = createSamRecord(readId, CHR_1, 100, readBases, "100M", CHR_1, 200,
+                false, false, null);
+
+        int ucPos = getFivePrimeUnclippedPosition(read);
+        assertEquals(100, ucPos);
+
+        read = createSamRecord(readId, CHR_1, 100, readBases, "5S95M", CHR_1, 200,
+                false, false, null);
+
+        ucPos = getFivePrimeUnclippedPosition(read);
+        assertEquals(95, ucPos);
+
+        read = createSamRecord(readId, CHR_1, 100, readBases, "5S80M15S", CHR_1, 200,
+                true, false, null);
+
+        ucPos = getFivePrimeUnclippedPosition(read);
+        assertEquals(194, ucPos);
+
     }
 }

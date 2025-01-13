@@ -56,18 +56,6 @@ public class CobaltApplication
         }
     }
 
-    public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-
-        registerConfig(configBuilder);
-
-        configBuilder.checkAndParseCommandLine(args);
-
-        CobaltApplication application = new CobaltApplication(configBuilder);
-        application.run();
-    }
-
     private void run()
     {
         long startTimeMs = System.currentTimeMillis();
@@ -90,17 +78,19 @@ public class CobaltApplication
             Table referenceReadDepths = bamReadCounter.getReferenceDepths();
             Table tumorReadDepths = bamReadCounter.getTumorDepths();
 
-            final Table gcProfiles = loadGCContent(chromosomePosCodec);
+            Table gcProfiles = loadGCContent(chromosomePosCodec);
 
-            final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                    gcProfiles, referenceReadDepths, tumorReadDepths,
+            RatioSupplier ratioSupplier = new RatioSupplier(
+                    mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir, gcProfiles, referenceReadDepths, tumorReadDepths,
                     chromosomePosCodec);
 
             if(mConfig.TargetRegionPath != null)
             {
-                CsvReadOptions options = CsvReadOptions.builder(mConfig.TargetRegionPath)
+                CsvReadOptions options = CsvReadOptions.builder(
+                        mConfig.TargetRegionPath)
                         .separator(TSV_DELIM.charAt(0))
                         .columnTypesPartial(Map.of("chromosome", ColumnType.STRING)).build();
+
                 Table targetRegionEnrichment = Table.read().usingOptions(options);
                 chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);
                 ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
@@ -111,12 +101,14 @@ public class CobaltApplication
             switch(mConfig.mode())
             {
                 case TUMOR_ONLY:
-                    final Table diploidRegions = new DiploidRegionLoader(mConfig.TumorOnlyDiploidBed, chromosomePosCodec).build();
+                    Table diploidRegions = new DiploidRegionLoader(chromosomePosCodec, mConfig.TumorOnlyDiploidBed).build();
                     ratios = ratioSupplier.tumorOnly(diploidRegions);
                     break;
+
                 case GERMLIHE_ONLY:
                     ratios = ratioSupplier.germlineOnly();
                     break;
+
                 default:
                     ratios = ratioSupplier.tumorNormalPair();
             }
@@ -126,10 +118,10 @@ public class CobaltApplication
 
             CB_LOGGER.info("persisting cobalt ratios to {}", outputFilename);
 
-
             CobaltRatioFile.write(outputFilename, ratios.stream().map(r -> rowToCobaltRatio(r, chromosomePosCodec)).collect(Collectors.toList()));
 
-            applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
+            if(!mConfig.SkipPcfCalc)
+                applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
 
             final VersionInfo version = fromAppName(APP_NAME);
             version.write(mConfig.OutputDir);
@@ -173,8 +165,10 @@ public class CobaltApplication
         for(GCProfile gcProfile : gcProfileList)
         {
             Row row = gcProfileTable.appendRow();
+
             long chrPosIndex = chromosomePosCodec.encodeChromosomePosition(gcProfile.chromosome(), gcProfile.start());
-            if (chrPosIndex > 0)
+
+            if(chrPosIndex > 0)
             {
                 row.setLong(CobaltColumns.ENCODED_CHROMOSOME_POS, chrPosIndex);
             }
@@ -182,11 +176,24 @@ public class CobaltApplication
             {
                 throw new RuntimeException("Unknown chromosome: " + gcProfile.chromosome());
             }
+
             row.setDouble(CobaltColumns.GC_CONTENT, gcProfile.gcContent());
             row.setBoolean(CobaltColumns.IS_MAPPABLE, gcProfile.isMappable());
             row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
         }
 
         return gcProfileTable;
+    }
+
+    public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+
+        registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        CobaltApplication application = new CobaltApplication(configBuilder);
+        application.run();
     }
 }

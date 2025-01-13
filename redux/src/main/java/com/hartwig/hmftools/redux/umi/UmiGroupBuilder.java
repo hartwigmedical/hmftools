@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.redux.umi;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
-import static com.hartwig.hmftools.redux.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +17,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.Fragment;
-import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.common.ReadInfo;
+
+import htsjdk.samtools.SAMRecord;
 
 public class UmiGroupBuilder
 {
@@ -30,15 +33,101 @@ public class UmiGroupBuilder
         mStats = stats;
     }
 
-    public static List<DuplicateGroup> buildUmiGroups(final List<Fragment> fragments, final UmiConfig config)
+    public List<DuplicateGroup> processUmiGroups(
+            final List<DuplicateGroup> duplicateGroups, final List<ReadInfo> singleFragments, boolean captureStats)
     {
-        Map<String, DuplicateGroup> groups = Maps.newHashMap();
+        // the list of input duplicate group and single reads will typically contain unrelated fragments, but any which are related - ie
+        // same coordinates but with different orientations need to be handled together
+
+        // IDEA: if R1 and R2 are present in the same collection of fragments, ideally only establish UMI status once and propagate this
+        // to the other set of reads
+
+        // organise groups by their UMIs, applying base-difference collapsing rules
+        // UMI stats require evaluation of uncollapsed UMI groups with the same coordinates
+        // at the same time organise UMI groups by the coordinates
+
+        boolean formCoordGroups = mUmiConfig.BaseStats || (duplicateGroups.size() + singleFragments.size() > 1);
+
+        Map<String,CoordinateGroup> coordinateGroupMap = formCoordGroups ? Maps.newHashMap() : null;
+
+        List<DuplicateGroup> allUmiGroups = Lists.newArrayList();
+
+        for(DuplicateGroup duplicateGroup : duplicateGroups)
+        {
+            List<DuplicateGroup> umiGroups = buildUmiGroups(duplicateGroup.fragmentCoordinates(), duplicateGroup.reads(), mUmiConfig);
+
+            if(formCoordGroups)
+            {
+                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, duplicateGroup.fragmentCoordinates().keyNonOriented());
+
+                // add in order of descending by fragment count for non-duplex collapsing
+                Collections.sort(umiGroups, new UmiUtils.SizeComparator());
+                umiGroups.forEach(x -> coordGroup.addGroup(x));
+            }
+            else
+            {
+                allUmiGroups.addAll(umiGroups);
+            }
+        }
+
+        if(formCoordGroups)
+        {
+            // add in single fragments
+            for(ReadInfo readInfo : singleFragments)
+            {
+                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, readInfo.coordinates().keyNonOriented());
+                coordGroup.addSingleRead(readInfo);
+            }
+
+            if(mUmiConfig.BaseStats)
+            {
+                // test UMI similarity for all fragments and groups with the same coordinates
+                for(CoordinateGroup coordGroup : coordinateGroupMap.values())
+                {
+                    captureUmiGroupStats(coordGroup.ForwardGroups);
+                    captureUmiGroupStats(coordGroup.ReverseGroups);
+                }
+            }
+
+            // collapse duplex and single UMIs with opposite orientations
+            for(CoordinateGroup coordGroup : coordinateGroupMap.values())
+            {
+                collapseCoordinateGroup(coordGroup, allUmiGroups, singleFragments);
+            }
+        }
+
+        List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
+
+        for(DuplicateGroup umiGroup : allUmiGroups)
+        {
+            if(umiGroup.readCount() == 1)
+            {
+                // drop any single fragments
+                singleFragments.add(new ReadInfo(umiGroup.reads().get(0), umiGroup.fragmentCoordinates()));
+                continue;
+            }
+
+            finalUmiGroups.add(umiGroup);
+        }
+
+        if(captureStats)
+        {
+            Collection<CoordinateGroup> coordinateGroups = coordinateGroupMap != null ? coordinateGroupMap.values() : Collections.emptyList();
+            captureStats(duplicateGroups, singleFragments, finalUmiGroups, formCoordGroups, coordinateGroups);
+        }
+
+        return finalUmiGroups;
+    }
+
+    public static List<DuplicateGroup> buildUmiGroups(final FragmentCoords fragCoords, final List<SAMRecord> reads, final UmiConfig config)
+    {
+        Map<String,DuplicateGroup> groups = Maps.newHashMap();
         boolean checkDefinedUmis = config.hasDefinedUmis();
         boolean useDefinedUmis = checkDefinedUmis;
 
-        for(Fragment fragment : fragments)
+        for(SAMRecord read : reads)
         {
-            String umiId = config.extractUmiId(fragment.id());
+            String umiId = config.extractUmiId(read.getReadName());
 
             if(checkDefinedUmis)
             {
@@ -58,11 +147,11 @@ public class UmiGroupBuilder
 
             if(group == null)
             {
-                groups.put(umiId, new DuplicateGroup(umiId, fragment));
+                groups.put(umiId, new DuplicateGroup(umiId, read, fragCoords));
             }
             else
             {
-                group.fragments().add(fragment);
+                group.addRead(read);
             }
         }
 
@@ -91,7 +180,7 @@ public class UmiGroupBuilder
 
                 for(DuplicateGroup existing : cluster)
                 {
-                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
+                    if(existing.readCount() >= second.readCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
                     {
                         merged = true;
                         break;
@@ -114,7 +203,7 @@ public class UmiGroupBuilder
 
             for(j = 1; j < cluster.size(); ++j)
             {
-                first.fragments().addAll(cluster.get(j).fragments());
+                first.addReads(cluster.get(j).reads());
             }
 
             ++i;
@@ -135,7 +224,7 @@ public class UmiGroupBuilder
 
                     if(!exceedsUmiIdDiff(first.umiId(), second.umiId(), config.PermittedBaseDiff + 1))
                     {
-                        first.fragments().addAll(second.fragments());
+                        first.addReads(second.reads());
                         orderedGroups.remove(j);
                     }
                     else
@@ -149,7 +238,7 @@ public class UmiGroupBuilder
         }
 
         // run a check allowing collapsing of UMIs with 4-base differences where significant imbalance exists
-        boolean hasLargeGroups = orderedGroups.stream().anyMatch(x -> x.fragmentCount() >= MAX_IMBALANCED_UMI_COUNT);
+        boolean hasLargeGroups = orderedGroups.stream().anyMatch(x -> x.readCount() >= MAX_IMBALANCED_UMI_COUNT);
 
         if(orderedGroups.size() > 1 && hasLargeGroups)
         {
@@ -163,12 +252,12 @@ public class UmiGroupBuilder
                 {
                     DuplicateGroup second = orderedGroups.get(j);
 
-                    double maxCountRatio = first.fragmentCount() >= second.fragmentCount() ?
-                            first.fragmentCount() / (double)second.fragmentCount() : second.fragmentCount() / (double)first.fragmentCount();
+                    double maxCountRatio = first.readCount() >= second.readCount() ?
+                            first.readCount() / (double)second.readCount() : second.readCount() / (double)first.readCount();
 
                     if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umiId(), second.umiId(), MAX_IMBALANCED_UMI_BASE_DIFF))
                     {
-                        first.fragments().addAll(second.fragments());
+                        first.addReads(second.reads());
                         orderedGroups.remove(j);
                     }
                     else
@@ -224,158 +313,30 @@ public class UmiGroupBuilder
 
         public void addGroup(final DuplicateGroup group)
         {
-            addFragmentGroup(group, group.fragmentCoordinates().IsForward);
+            addFragmentGroup(group, group.fragmentCoordinates().forwardFragment());
         }
 
-        public void addFragment(final Fragment fragment)
+        public void addSingleRead(final ReadInfo readInfo)
         {
-            addFragmentGroup(fragment, fragment.coordinates().IsForward);
+            addFragmentGroup(readInfo, readInfo.coordinates().forwardFragment());
+        }
+
+        public String toString()
+        {
+            return format("%s fwd(%d) rev(%d)",
+                CoordKey, ForwardGroups != null ? ForwardGroups.size() : 0, ReverseGroups != null ? ReverseGroups.size() : 0);
         }
     }
 
-    public List<DuplicateGroup> processUmiGroups(
-            final List<List<Fragment>> duplicateGroups, final List<Fragment> singleFragments, boolean captureStats)
+    private CoordinateGroup getOrCreateCoordGroup(final Map<String,CoordinateGroup> coordinateGroups, final String coordKey)
     {
-        // organise groups by their UMIs, applying base-difference collapsing rules
-        // UMI stats require evaluation of uncollapsed UMI groups with the same coordinates
-        // at the same time organise UMI groups by the coordinates
+        CoordinateGroup coordinateGroup = coordinateGroups.get(coordKey);
 
-        boolean formCoordGroups = mUmiConfig.BaseStats || (duplicateGroups.size() + singleFragments.size() > 1);
-
-        List<CoordinateGroup> coordinateGroups = formCoordGroups ? Lists.newArrayList() : null;
-
-        List<DuplicateGroup> allUmiGroups = Lists.newArrayList();
-
-        for(List<Fragment> fragments : duplicateGroups)
-        {
-            List<DuplicateGroup> umiGroups = buildUmiGroups(fragments, mUmiConfig);
-
-            if(formCoordGroups)
-            {
-                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroups, fragments.get(0).coordinates().Key);
-
-                // add in order of descending by fragment count for non-duplex collapsing
-                Collections.sort(umiGroups, new UmiUtils.SizeComparator());
-                umiGroups.forEach(x -> coordGroup.addGroup(x));
-            }
-            else
-            {
-                allUmiGroups.addAll(umiGroups);
-            }
-        }
-
-        if(formCoordGroups)
-        {
-            // add in single fragments
-            for(Fragment fragment : singleFragments)
-            {
-                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroups, fragment.coordinates().Key);
-                coordGroup.addFragment(fragment);
-            }
-
-            if(mUmiConfig.BaseStats)
-            {
-                // test UMI similarity for all fragments and groups with the same coordinates
-                for(CoordinateGroup coordGroup : coordinateGroups)
-                {
-                    captureUmiGroupStats(coordGroup.ForwardGroups);
-                    captureUmiGroupStats(coordGroup.ReverseGroups);
-                }
-            }
-
-            // collapse duplex and single UMIs with opposite orientations
-            for(CoordinateGroup coordGroup : coordinateGroups)
-            {
-                collapseCoordinateGroup(allUmiGroups, coordGroup);
-            }
-        }
-
-        List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
-
-        for(DuplicateGroup umiGroup : allUmiGroups)
-        {
-            if(umiGroup.fragmentCount() == 1)
-            {
-                // drop any single fragments
-                Fragment fragment = umiGroup.fragments().get(0);
-                fragment.setStatus(NONE);
-                fragment.setUmi(null);
-                continue;
-            }
-
-            umiGroup.categoriseReads();
-            finalUmiGroups.add(umiGroup);
-        }
-
-        if(captureStats)
-        {
-            int uniqueCoordCount = 0; // count of distinct coordinates after collapsing
-
-            // count of final primary fragments (UMIs and singles)
-            int uniqueFragmentCount = 0;
-            int maxCoordUmiCount = 0;
-
-            if(formCoordGroups)
-            {
-                for(CoordinateGroup coordGroup : coordinateGroups)
-                {
-                    if(coordGroup.ForwardGroups != null)
-                    {
-                        uniqueFragmentCount += coordGroup.ForwardGroups.size();
-                        ++uniqueCoordCount;
-                        maxCoordUmiCount = max(maxCoordUmiCount, coordGroup.ForwardGroups.size());
-                    }
-
-                    if(coordGroup.ReverseGroups != null)
-                    {
-                        uniqueFragmentCount += coordGroup.ReverseGroups.size();
-
-                        if(!coordGroup.ReverseGroups.isEmpty())
-                            ++uniqueCoordCount;
-
-                        maxCoordUmiCount = max(maxCoordUmiCount, coordGroup.ReverseGroups.size());
-                    }
-                }
-            }
-            else
-            {
-                // should be 1 distinct coordinate
-                int ungroupedFragmentCount = (int)singleFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
-                uniqueFragmentCount = ungroupedFragmentCount + finalUmiGroups.size();
-                uniqueCoordCount = duplicateGroups.size() + ungroupedFragmentCount;
-            }
-
-            int maxUmiFragmentCount = 0;
-            DuplicateGroup maxUmiGroup = null;
-
-            for(DuplicateGroup umiGroup : finalUmiGroups)
-            {
-                ++mStats.UmiGroups;
-
-                if(umiGroup.fragmentCount() > maxUmiFragmentCount)
-                {
-                    maxUmiGroup = umiGroup;
-                    maxUmiFragmentCount = umiGroup.fragmentCount();
-                }
-            }
-
-            if(uniqueCoordCount > 0 && uniqueFragmentCount > 0)
-                mStats.recordFragmentPositions(uniqueCoordCount, uniqueFragmentCount, maxCoordUmiCount, maxUmiGroup);
-        }
-
-        return finalUmiGroups;
-    }
-
-    private CoordinateGroup getOrCreateCoordGroup(final List<CoordinateGroup> coordinateGroups, final String coordKey)
-    {
-        for(CoordinateGroup coordinateGroup : coordinateGroups)
-        {
-            if(coordinateGroup.CoordKey.equals(coordKey))
-                return coordinateGroup;
-        }
+        if(coordinateGroup != null)
+            return coordinateGroup;
 
         CoordinateGroup newGroup = new CoordinateGroup(coordKey);
-        coordinateGroups.add(newGroup);
+        coordinateGroups.put(coordKey, newGroup);
         return newGroup;
     }
 
@@ -393,11 +354,12 @@ public class UmiGroupBuilder
         }
     }
 
-    private void collapseCoordinateGroup(final List<DuplicateGroup> allUmiGroups, final CoordinateGroup coordGroup)
+    private void collapseCoordinateGroup(
+            final CoordinateGroup coordGroup, final List<DuplicateGroup> allUmiGroups, final List<ReadInfo> singleFragments)
     {
-        // up until now fragments with the same coordinates but different ordering (ie F1R2 vs F2R1) have been kept separate.
+        // up until now fragments with the same coordinates but different orientation (ie F1R2 vs F2R1) have been kept separate,
         // but now merge these if they either don't use UMIs or have complementary duplex UMIs
-        if(!coordGroup.hasOpposites())
+        if(!coordGroup.hasOpposites() || !mUmiConfig.Duplex)
         {
             addUmiGroup(allUmiGroups, coordGroup.ForwardGroups);
             addUmiGroup(allUmiGroups, coordGroup.ReverseGroups);
@@ -407,18 +369,21 @@ public class UmiGroupBuilder
         for(Object first : coordGroup.ForwardGroups)
         {
             DuplicateGroup firstGroup = null;
-            Fragment firstFragment = null;
+            ReadInfo firstSingleRead = null;
             String firstUmi;
+            FragmentCoords firstFragCoords;
 
             if(first instanceof DuplicateGroup)
             {
                 firstGroup = (DuplicateGroup) first;
                 firstUmi = firstGroup.umiId();
+                firstFragCoords = firstGroup.fragmentCoordinates();
             }
             else
             {
-                firstFragment = (Fragment) first;
-                firstUmi = mUmiConfig.extractUmiId(firstFragment.id());
+                firstSingleRead = (ReadInfo) first;
+                firstUmi = mUmiConfig.extractUmiId(firstSingleRead.id());
+                firstFragCoords = firstSingleRead.coordinates();
             }
 
             int secondIndex = 0;
@@ -426,7 +391,7 @@ public class UmiGroupBuilder
             {
                 Object second = coordGroup.ReverseGroups.get(secondIndex);
                 DuplicateGroup secondGroup = null;
-                Fragment secondFragment = null;
+                ReadInfo secondSingleRead = null;
                 String secondUmi;
 
                 if(second instanceof DuplicateGroup)
@@ -436,8 +401,8 @@ public class UmiGroupBuilder
                 }
                 else
                 {
-                    secondFragment = (Fragment) second;
-                    secondUmi = mUmiConfig.extractUmiId(secondFragment.id());
+                    secondSingleRead = (ReadInfo) second;
+                    secondUmi = mUmiConfig.extractUmiId(secondSingleRead.read().getReadName());
                 }
 
                 boolean canCollapse = mUmiConfig.Duplex ?
@@ -448,21 +413,24 @@ public class UmiGroupBuilder
                     // merge the two opposing fragments / groups
                     coordGroup.ReverseGroups.remove(secondIndex);
 
-                    if(firstGroup == null) // turn fragment into group
+                    if(firstGroup == null)
                     {
-                        firstGroup = new DuplicateGroup(firstUmi, firstFragment);
+                        // turn fragment into group
+                        firstGroup = new DuplicateGroup(firstUmi, firstSingleRead.read(), firstFragCoords);
+
+                        // and remove single fragment from the full set of these
+                        singleFragments.remove(firstSingleRead);
                     }
 
                     if(secondGroup != null)
                     {
-                        for(Fragment fragment : secondGroup.fragments())
-                        {
-                            firstGroup.addFragment(fragment);
-                        }
+                        firstGroup.addReads(secondGroup.reads());
                     }
                     else
                     {
-                        firstGroup.addFragment(secondFragment);
+                        firstGroup.addRead(secondSingleRead.read());
+
+                        singleFragments.remove(secondSingleRead);
                     }
 
                     firstGroup.registerDualStrand();
@@ -505,6 +473,64 @@ public class UmiGroupBuilder
         return new String[] { duplexUmi.substring(0, delimIndex), duplexUmi.substring(delimIndex + 1) };
     }
 
+    private void captureStats(
+            final List<DuplicateGroup> duplicateGroups, final List<ReadInfo> singleFragments, final List<DuplicateGroup> finalUmiGroups,
+            boolean formCoordGroups, final Collection<CoordinateGroup> coordinateGroups)
+    {
+        int uniqueCoordCount = 0; // count of distinct coordinates after collapsing
+
+        // count of final primary fragments (UMIs and singles)
+        int uniqueFragmentCount = 0;
+        int maxCoordUmiCount = 0;
+
+        if(formCoordGroups)
+        {
+            for(CoordinateGroup coordGroup : coordinateGroups)
+            {
+                if(coordGroup.ForwardGroups != null)
+                {
+                    uniqueFragmentCount += coordGroup.ForwardGroups.size();
+                    ++uniqueCoordCount;
+                    maxCoordUmiCount = max(maxCoordUmiCount, coordGroup.ForwardGroups.size());
+                }
+
+                if(coordGroup.ReverseGroups != null)
+                {
+                    uniqueFragmentCount += coordGroup.ReverseGroups.size();
+
+                    if(!coordGroup.ReverseGroups.isEmpty())
+                        ++uniqueCoordCount;
+
+                    maxCoordUmiCount = max(maxCoordUmiCount, coordGroup.ReverseGroups.size());
+                }
+            }
+        }
+        else
+        {
+            // should be 1 distinct coordinate
+            int ungroupedFragmentCount = singleFragments.size();
+            uniqueFragmentCount = ungroupedFragmentCount + finalUmiGroups.size();
+            uniqueCoordCount = duplicateGroups.size() + ungroupedFragmentCount;
+        }
+
+        int maxUmiFragmentCount = 0;
+        DuplicateGroup maxUmiGroup = null;
+
+        for(DuplicateGroup umiGroup : finalUmiGroups)
+        {
+            ++mStats.UmiGroups;
+
+            if(umiGroup.readCount() > maxUmiFragmentCount)
+            {
+                maxUmiGroup = umiGroup;
+                maxUmiFragmentCount = umiGroup.readCount();
+            }
+        }
+
+        if(uniqueCoordCount > 0 && uniqueFragmentCount > 0)
+            mStats.recordFragmentPositions(uniqueCoordCount, uniqueFragmentCount, maxCoordUmiCount, maxUmiGroup);
+    }
+
     private void captureUmiGroupStats(final List<Object> fragGroups)
     {
         if(fragGroups == null)
@@ -520,8 +546,8 @@ public class UmiGroupBuilder
             }
             else
             {
-                Fragment fragment = (Fragment)fragGroup;
-                groups.add(new DuplicateGroup(mUmiConfig.extractUmiId(fragment.id()), fragment));
+                SAMRecord read = (SAMRecord)fragGroup;
+                groups.add(new DuplicateGroup(mUmiConfig.extractUmiId(read.getReadName()), read, null));
             }
         }
 

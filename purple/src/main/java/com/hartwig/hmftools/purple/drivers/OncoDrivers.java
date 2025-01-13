@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class OncoDrivers extends SomaticVariantDriverFinder
@@ -34,9 +35,9 @@ public class OncoDrivers extends SomaticVariantDriverFinder
     
     public List<DriverCatalog> findDrivers(
             final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final Map<VariantType,Integer> variantTypeCounts,
-            final Map<VariantType,Integer> variantTypeCountsBiallelic)
+            final Map<VariantType,Integer> variantTypeCountsBiallelic, final List<DriverSourceData> driverSourceData)
     {
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         int sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
         int sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
@@ -46,10 +47,10 @@ public class OncoDrivers extends SomaticVariantDriverFinder
 
         for(String gene : codingVariants.keySet())
         {
-            final DndsDriverGeneLikelihood dndsLikelihood = mLikelihoodsByGene.containsKey(gene) ?
+            DndsDriverGeneLikelihood dndsLikelihood = mLikelihoodsByGene.containsKey(gene) ?
                     mLikelihoodsByGene.get(gene) : NO_GENE_DNDS_LIKELIHOOD;
 
-            final List<SomaticVariant> geneVariants = codingVariants.get(gene);
+            List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
             List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
@@ -58,17 +59,15 @@ public class OncoDrivers extends SomaticVariantDriverFinder
 
             for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
             {
-                if(geneCopyNumbers.size() == 1)
+                if(geneCopyNumbers.size() == 1
+                || geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
                 {
-                    driverCatalog.add(createOncoDriver(sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber));
-                }
-                else
-                {
-                    // confirm this variant has a reportable effect against the specific transcript
-                    if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
-                    {
-                        driverCatalog.add(createOncoDriver(sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber));
-                    }
+                    // confirm this variant has a reportable effect against the specific transcript or the gene itself
+                    DriverCatalog driverRecord = createOncoDriver(
+                            sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber);
+                    driverCatalog.add(driverRecord);
+
+                    driverSourceData.add(new DriverSourceData(driverRecord, geneVariants.get(0)));
                 }
             }
         }

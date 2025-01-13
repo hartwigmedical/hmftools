@@ -369,13 +369,13 @@ minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50
 shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 3<=IHOMLEN<6:  min(0.1,200 * shortINVRate); IHOMLEN>=6 min(0.2,400 * shortINVRate) <sup>5</sup> | NA | NA  | NA 
 sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
 
-<sup>1. The inserted sequence length must also meet these requirements </sup>
+<sup>1. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
 
 <sup>2. Same chromosome junctions only. </sup>
 
 <sup>3. implies the sampled average fragment length should be within 3 standard deviations of the sample median length (note the cutoff is also capped at 0.6*SD below median length).  Standard deviation is estimated as Lengthmedian-length16th percentile </sup>
 
-<sup>4. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
+<sup>4. The inserted sequence length must also meet these requirements </sup>
 
 <sup>5. Only applied to variants with type=INV and LEN<3kb. ShortINVRate = proportion of fragments genome wide that support a short INV </sup>
 
@@ -389,7 +389,7 @@ In targeted mode, SGL breakends are only retained if in a targeted region.
 If the same precise breakend is found to PASS multiple times in the VCF then retain the variant with the highest QUAL only 
 
 #### Germline or Somatic determination 
-A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
+A consolidated VCF is produced showing all soft filters. If a germline sample is present and BOTH max(germline AF/TumorAF) > 0.1 AND germlineAD / tumorAD > 0.01 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf based on both a SGL BE PON (for SGL breakends) and a paired BE PON (for junctions). SGL breakends with candidate alignments that fall in the SSX2, SSX2B or DUX4 regions are never PON filtered. For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
 ## Summary of LINE insertion site behaviour
 
@@ -453,9 +453,9 @@ VF	|	Total variant fragments supporting the breakend
 
 ## Known issues and future improvements
 Know sources of errors
-- Poor extension from a single mispleaced read => can lead to either a FP or prevent further assembly extension
-- Assembly merging requirements are quite strict.  Someimtes we can miss read support.  If we miss in the germline this may cause germline leakage
-- Mis-intepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
+- Poor extension from a single mispleced read => can lead to either a FP or prevent further assembly extension
+- Assembly merging requirements are quite strict and sometimes we can miss read support.  If missed in the germline, this may cause germline leakage
+- Misintepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
 - MSI Jitter of germline INDELS just under 32 bases in length may be intepreted as a somatic SV of 32+ bases
 - Long dinucleotide MS expansions can fail minAnchorfilter
 - SGL AF will be systematically underestimated if we cannot extend the assembly.
@@ -465,8 +465,8 @@ Alignment
 - We should analyse additional supplemementary alignments arising from re-query of initial supplementary alignments (currently dropping)
 - We should requery long softclips to see if additional alignments can be found.
 
-ESVEE has some implicit assumptions on reads, qualities and alignments:
-- **AS field** - is currently required
+ESVEE has some implicit and explicit assumptions on reads, qualities and alignments:
+- **AS field** - AS is currently required
 - **Low qual masking** -  assumes a high proportion of bases have qual > 30 
 - **Read lengths** - Soft clip & alignment score assumptions require read lengths > 80 bases
 - **Fragment lengts** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
@@ -480,6 +480,9 @@ Other planned improvements
 - Develop an ESVEE specific PON (currently using GRIDSS)
 - Investigate region specific filtering for IG,TCR & HLA regions
 - Switch minSupport from MAX to SUM of samples & lower minSupport to 3.  Depends on duplicate collapsing improvements in REDUX to allow supplementary and primary read are reverse
+
+### GRIDSS and GRIPSS SV filtering
+- [Old Gripss information](./README_GRIPSS.md)
 
 ### Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/esvee-v1.0)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 
+import cuppa.visualization.visualization
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
 
 
@@ -20,6 +21,7 @@ class DEFAULT_RUNNER_ARGS:
     cv_folds: int = 10
     cache_training: bool = True
     n_jobs: int = 1
+    force_plot: bool = False
 
     log_to_file: bool = False
     log_path: str | None = None
@@ -94,6 +96,11 @@ class RunnerArgs:
         help="Path to the fusion overrides tsv file"
     )
 
+    force_plot = dict(
+        action="store_true",
+        help="Force plotting when number of samples is >%s" % cuppa.visualization.visualization.CuppaVisPlotter.PLOT_MAX_SAMPLES
+    )
+
     ## Cross-validation / training ================================
     cv_predictions_path = dict(
         help="Path to a CuppaPrediction tsv file containing the cross-validation predictions."
@@ -166,6 +173,7 @@ class RunnerArgParser:
             "clf_group",
             "cv_predictions_path",
             "compress_tsv_files",
+            "force_plot",
             "log_to_file",
             "log_path",
             "log_format"

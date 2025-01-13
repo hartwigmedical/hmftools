@@ -31,7 +31,7 @@ public class UnmappedRegions
 
     private static final Logger LOGGER = LogManager.getLogger(UnmappedRegions.class);
 
-    public static Map<String,List<HighDepthRegion>> loadUnmapRegions(final String filename)
+    public static Map<String,List<UnmappingRegion>> loadUnmapRegions(final String filename)
     {
         try
         {
@@ -47,7 +47,7 @@ public class UnmappedRegions
             int posEndIndex = getPositionEndFieldIndex(fieldIndexMap);
             int depthIndex = fieldIndexMap.get("MaxDepth");
 
-            Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
+            Map<String, List<UnmappingRegion>> chrLocationsMap = Maps.newHashMap();
 
             for(String line : lines)
             {
@@ -55,20 +55,20 @@ public class UnmappedRegions
 
                 String chromosome = values[chrIndex];
 
-                List<HighDepthRegion> regions = chrLocationsMap.get(chromosome);
+                List<UnmappingRegion> regions = chrLocationsMap.get(chromosome);
                 if(regions == null)
                 {
                     regions = Lists.newArrayList();
                     chrLocationsMap.put(chromosome, regions);
                 }
 
-                HighDepthRegion lastRegion = (regions.isEmpty()) ? null : regions.get(regions.size() - 1);
+                UnmappingRegion lastRegion = (regions.isEmpty()) ? null : regions.get(regions.size() - 1);
 
                 int posStart = Integer.parseInt(values[posStartIndex]);
                 int posEnd = Integer.parseInt(values[posEndIndex]);
                 int maxDepth = Integer.parseInt(values[depthIndex]);
 
-                HighDepthRegion region = new HighDepthRegion(posStart, posEnd, maxDepth);
+                UnmappingRegion region = new UnmappingRegion(posStart, posEnd, maxDepth);
 
                 if(lastRegion != null)
                 {

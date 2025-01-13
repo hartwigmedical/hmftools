@@ -107,16 +107,11 @@ public class PurpleConstants
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
     public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 1000;
 
+    public static final int SV_MAX_INFERRED_COPY_NUMBER = 1000;
+
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
     public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;
-    public static final double RECOVERY_MIN_LENGTH = 1000;
-    public static final double RECOVERY_MIN_PLOIDY = 0.5;
-    public static final double RECOVERY_MIN_PLOIDY_PERC = 0.5;
-    public static final int RECOVERY_MIN_MATE_UNCERTAINTY = 150;
-    public static final int RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
-    public static final double RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE = 0.6;
-    public static final double RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC = 0.2;
 
     // germline deletions
     public static final int GERMLINE_DEL_GENE_BUFFER = 500;

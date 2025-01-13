@@ -33,14 +33,14 @@ public final class Candidates
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
-        LL_LOGGER.info("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
+        LL_LOGGER.debug("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
 
         SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, fragments);
 
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.Gene.equals(context.Gene)).collect(Collectors.toList());
 
-        LL_LOGGER.debug("  {} candidates before filtering", geneCandidates.size());
+        LL_LOGGER.debug("gene({}) {} candidates before filtering", context.geneName(), geneCandidates.size());
 
         // Amino acid filtering
         List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
@@ -52,11 +52,13 @@ public final class Candidates
 
         if(aminoAcidSpecificAllelesCandidates.isEmpty())
         {
-            LL_LOGGER.warn("  no candidates after amino acid filtering - reverting to common allele gene candidates");
+            LL_LOGGER.warn("gene({}) no candidates after amino acid filtering - reverting to common allele gene candidates",
+                    context.geneName());
+
             return commonAllles.stream().filter(x -> x.Gene.equals(context.Gene)).collect(Collectors.toList());
         }
 
-        LL_LOGGER.info("  {} candidates after amino acid filtering", aminoAcidCandidates.size());
+        LL_LOGGER.info("gene({}) {} candidates after amino acid filtering", context.geneName(), aminoAcidCandidates.size());
 
         // Nucleotide filtering
         NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mMinEvidence, aminoAcidBoundary);
@@ -73,11 +75,13 @@ public final class Candidates
 
         if(nucleotideSpecificAllelesCandidates.isEmpty())
         {
-            LL_LOGGER.warn("  0 candidates after exon boundary filtering - reverting to amino acid candidates");
+            LL_LOGGER.warn("gene({}) 0 candidates after exon boundary filtering - reverting to amino acid candidates", context.geneName());
             return aminoAcidCandidateAlleles;
         }
 
-        LL_LOGGER.info("  {} candidates after exon boundary filtering", nucleotideSpecificAllelesCandidates.size());
+        LL_LOGGER.info("gene({}) {} candidates after exon boundary filtering",
+                context.geneName(), nucleotideSpecificAllelesCandidates.size());
+
         return nucleotideSpecificAllelesCandidates;
     }
 
@@ -134,7 +138,7 @@ public final class Candidates
     public List<HlaAllele> phasedCandidates(
             final HlaContext context, final List<HlaAllele> unphasedCandidateAlleles, final List<PhasedEvidence> phasedEvidence)
     {
-        LL_LOGGER.debug("determining phased candidate set for gene {}", context.geneName());
+        LL_LOGGER.debug("gene({}) determining phased candidate set", context.geneName());
 
         List<HlaSequenceLoci> unphasedCandidates = mAminoAcidSequences.stream()
                 .filter(x -> unphasedCandidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
@@ -165,23 +169,4 @@ public final class Candidates
 
         return candidates;
     }
-
-    public static void addPhasedCandidates(
-            final List<HlaAllele> allAlleles, List<HlaAllele> geneCandidates, final LilacConfig config, final ReferenceData refData)
-    {
-        if(geneCandidates.isEmpty())
-            return;
-
-        if(config.MaxEliminationCandidates == 0 || geneCandidates.size() <= config.MaxEliminationCandidates)
-        {
-            allAlleles.addAll(geneCandidates);
-            return;
-        }
-
-        final String gene = geneCandidates.get(0).Gene;
-
-        refData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
-                .filter(x -> x.Gene.equals(gene)).forEach(x -> allAlleles.add(x));
-    }
-
 }

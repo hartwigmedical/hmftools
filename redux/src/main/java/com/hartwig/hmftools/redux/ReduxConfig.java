@@ -2,8 +2,8 @@ package com.hartwig.hmftools.redux;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
@@ -29,11 +29,10 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_PARTITION_SIZE;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
@@ -44,23 +43,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
-import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
-import com.hartwig.hmftools.redux.common.ReadUnmapper;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
+import com.hartwig.hmftools.redux.unmap.ReadChecker;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.write.ReadOutput;
 
 import org.apache.logging.log4j.LogManager;
@@ -77,8 +78,6 @@ public class ReduxConfig
     public final RefGenomeInterface RefGenome;
     public final SequencingType Sequencing;
 
-    public final int PartitionSize;
-    public final int BufferSize;
     public final ValidationStringency BamStringency;
 
     // UMI group config
@@ -95,11 +94,11 @@ public class ReduxConfig
     public final boolean MultiBam;
     public final boolean WriteStats;
 
-    public final boolean NoMateCigar;
     public final int Threads;
-    public final boolean UseSupplementaryBam;
+    public final int PartitionThreadRatio;
 
     public final String BamToolPath;
+    public final boolean ParallelConcatenation;
 
     // debug
     public final boolean KeepInterimBams;
@@ -107,10 +106,9 @@ public class ReduxConfig
     public final List<String> LogReadIds;
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
-    public final boolean PerfDebug;
+    public final double PerfDebugTime;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
-    public final boolean LogFinalCache;
     public final int WriteReadBaseLength;
 
     public final String JitterMsiFile;
@@ -118,6 +116,7 @@ public class ReduxConfig
 
     private boolean mIsValid;
     private int mReadLength;
+    private final ReadChecker mReadChecker;
 
     public static final Logger RD_LOGGER = LogManager.getLogger(ReduxConfig.class);
     public static final String APP_NAME = "Redux";
@@ -126,25 +125,22 @@ public class ReduxConfig
     private static final String INPUT_BAM = "input_bam";
     private static final String BAM_FILE = "bam_file";
     private static final String OUTPUT_BAM = "output_bam";
-    public static final String PARTITION_SIZE = "partition_size";
-    private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
-    private static final String NO_MATE_CIGAR = "no_mate_cigar";
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
+    private static final String PARTIION_THREAD_RATIO = "partition_ratio";
+    private static final String PARALLEL_CONCATENATION = "parallel_concat";
 
     private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
 
     // dev and options
-    private static final String NO_SUPP_BAM = "no_supp_bam";
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
     private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String RUN_CHECKS = "run_checks";
-    private static final String LOG_FINAL_CACHE = "log_final_cache";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
     private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
 
@@ -178,6 +174,8 @@ public class ReduxConfig
         if(configBuilder.hasValue(OUTPUT_DIR))
         {
             OutputDir = parseOutputDir(configBuilder);
+            checkCreateOutputDir(OutputDir);
+
         }
         else if(OutputBam != null)
         {
@@ -202,29 +200,28 @@ public class ReduxConfig
         // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         RD_LOGGER.info("output({})", OutputDir);
 
-        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
-        BufferSize = configBuilder.getInteger(BUFFER_SIZE);
         BamStringency = BamUtils.validationStringency(configBuilder);
 
         mReadLength = configBuilder.getInteger(READ_LENGTH);
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+        ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
 
-        NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(configBuilder);
 
-        FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
+        FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
             UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS_FILE));
+            UnmapRegions.addMitochondrialRegion(RefGenVersion);
         }
         else
         {
-            Map<String, List<HighDepthRegion>> unmappedMap = Maps.newHashMap();
+            Map<String, List<UnmappingRegion>> unmappedMap = Maps.newHashMap();
 
             ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
-            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(HighDepthRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
+            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
 
             UnmapRegions = new ReadUnmapper(unmappedMap);
         }
@@ -242,6 +239,7 @@ public class ReduxConfig
                 FilterReadsType.NONE;
 
         Threads = parseThreads(configBuilder);
+        PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 
@@ -252,14 +250,12 @@ public class ReduxConfig
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
-        UseSupplementaryBam = !configBuilder.hasFlag(NO_SUPP_BAM) && MultiBam;
 
         LogReadIds = parseLogReadIds(configBuilder);
 
         WriteStats = configBuilder.hasFlag(WRITE_STATS);
-        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
+        PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
-        LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
 
@@ -267,16 +263,20 @@ public class ReduxConfig
         {
             RD_LOGGER.info("running debug options: read-checks({})", RunChecks);
         }
+
+        mReadChecker = new ReadChecker(RunChecks);
     }
 
     public boolean isValid() { return mIsValid; }
 
     public int readLength() { return mReadLength; }
-
     public void setReadLength(int readLength)
     {
         mReadLength = readLength;
     }
+
+    public boolean perfDebug() { return PerfDebugTime > 0; }
+    public ReadChecker readChecker() { return mReadChecker; }
 
     public String formFilename(final String fileType)
     {
@@ -300,8 +300,6 @@ public class ReduxConfig
         configBuilder.addConfigItem(OUTPUT_BAM, false, "Output BAM filename");
         addRefGenomeConfig(configBuilder, true);
         SequencingType.registerConfig(configBuilder);
-        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
-        configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
 
         configBuilder.addConfigItem(
@@ -315,8 +313,6 @@ public class ReduxConfig
         BamToolName.addConfig(configBuilder);
 
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
-        configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
-        configBuilder.addFlag(NO_SUPP_BAM, "Skip use of supplementary reads temporary BAMs");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
         configBuilder.addFlag(JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");
@@ -330,22 +326,24 @@ public class ReduxConfig
                 DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         addThreadOptions(configBuilder);
+        configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
+        configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
+
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
-        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
-        configBuilder.addFlag(LOG_FINAL_CACHE, "Log cached fragments on completion");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
     }
 
+    @VisibleForTesting
     public ReduxConfig(
-            int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi,
-            boolean formConsensus)
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus, final ReadUnmapper readUnmapper)
     {
         mIsValid = true;
         SampleId = "";
@@ -358,22 +356,19 @@ public class ReduxConfig
         RefGenome = refGenome;
         Sequencing = ILLUMINA;
 
-        PartitionSize = partitionSize;
-        BufferSize = bufferSize;
         BamStringency = ValidationStringency.STRICT;
         mReadLength = DEFAULT_READ_LENGTH;
 
         UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
-        FormConsensus = formConsensus;
-        NoMateCigar = false;
-        UseSupplementaryBam = false;
+        FormConsensus = umiEnabled || formConsensus;
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
         BamToolPath = null;
+        ParallelConcatenation = false;
 
-        UnmapRegions = new ReadUnmapper(Maps.newHashMap());
+        UnmapRegions = readUnmapper;
 
         JitterMsiFile = null;
         JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
@@ -386,11 +381,13 @@ public class ReduxConfig
 
         LogReadIds = Lists.newArrayList();
         Threads = 0;
-        PerfDebug = false;
+        PartitionThreadRatio = 1;
+        PerfDebugTime = 0;
         RunChecks = true;
         WriteStats = false;
-        LogFinalCache = true;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
+
+        mReadChecker = new ReadChecker(false);
     }
 }

@@ -1,20 +1,24 @@
 package com.hartwig.hmftools.purple.copynumber.sv;
 
-import java.util.Optional;
-
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class StructuralVariantLegs
+{
+    private StructuralVariantLeg mStart;
+    private StructuralVariantLeg mEnd;
 
-@Value.Immutable
-@Value.Modifiable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class StructuralVariantLegs {
+    public StructuralVariantLegs(final StructuralVariantLeg start, final StructuralVariantLeg end)
+    {
+        mStart = start;
+        mEnd = end;
+    }
 
-    public abstract Optional<StructuralVariantLeg> start();
+    public boolean hasEither() { return mStart != null || mEnd != null; }
+    public boolean hasBoth() { return mStart != null && mEnd != null; }
 
-    public abstract Optional<StructuralVariantLeg> end();
+    public StructuralVariantLeg start() { return mStart; }
+    public void setStart(final StructuralVariantLeg leg) { mStart = leg; }
 
+    public StructuralVariantLeg end() { return mEnd; }
+    public void setEnd(final StructuralVariantLeg leg) { mEnd = leg; }
 }

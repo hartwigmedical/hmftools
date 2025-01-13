@@ -7,21 +7,21 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.redux.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_C;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_BASES;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
+import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
-import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM_STR;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,13 +37,13 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.ReadParseState;
-import com.hartwig.hmftools.redux.consensus.TemplateReadData;
 
 import org.junit.Test;
 
@@ -64,7 +64,7 @@ public class ConsensusReadsTest
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES.length());
-        mConsensusReads = new ConsensusReads(mRefGenome);
+        mConsensusReads = new ConsensusReads(mRefGenome, ILLUMINA);
 
         mRefGenomeOneBased = new MockRefGenome(true);
         mRefGenomeOneBased.RefGenomeMap.put(CHR_1, REF_BASES);
@@ -77,29 +77,6 @@ public class ConsensusReadsTest
         mNextBaseMap.put('C', 'A');
         mNextBaseMap.put('A', 'T');
         mNextBaseMap.put('T', 'G');
-    }
-
-    @Test
-    public void testConsensusReadId()
-    {
-        String readIdFixed = "ABAB:8:SAMPLE:2:222:12345";
-
-        SAMRecord read1 = createSamRecord(
-                readIdFixed + READ_ID_DELIM_STR + "READ_01", 100, TEST_READ_BASES, TEST_READ_CIGAR, false);
-
-        String consensusReadId = ConsensusReads.formConsensusReadId(read1, null);
-
-        assertEquals("ABAB:8:SAMPLE:2:222:12345:CNS_READ_01", consensusReadId);
-
-        String unmiId = "ACGTG_ATTGC";
-
-        read1 = createSamRecord(
-                readIdFixed + READ_ID_DELIM_STR + "READ_01" + READ_ID_DELIM_STR + unmiId,
-                100, TEST_READ_BASES, TEST_READ_CIGAR, false);
-
-        consensusReadId = ConsensusReads.formConsensusReadId(read1, unmiId);
-
-        assertEquals("ABAB:8:SAMPLE:2:222:12345:READ_01:CNS_" + unmiId, consensusReadId);
     }
 
     @Test
@@ -334,109 +311,6 @@ public class ConsensusReadsTest
     }
 
     @Test
-    public void testReadParseState()
-    {
-        String bases = "AGGCGGA";
-        String indelCigar = "1S2M1I2M1S";
-
-        SAMRecord read1 = createSamRecord(nextReadId(), 100, bases, indelCigar, false);
-
-        ReadParseState readState = new ReadParseState(read1, true);
-        assertEquals((byte)'A', readState.currentBase());
-        assertEquals(DEFAULT_QUAL, readState.currentBaseQual());
-        assertEquals(S, readState.elementType());
-        assertEquals(1, readState.elementLength());
-
-        readState.moveNextBase();
-        assertEquals((byte)'G', readState.currentBase());
-        assertEquals(M, readState.elementType());
-        assertEquals(2, readState.elementLength());
-
-        readState.moveNextBase();
-        readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
-        assertEquals(I, readState.elementType());
-        assertEquals(1, readState.elementLength());
-
-        readState.moveNextBase();
-        readState.moveNextBase();
-        assertFalse(readState.exhausted());
-        assertEquals((byte)'G', readState.currentBase());
-        assertEquals(M, readState.elementType());
-
-        readState.moveNextBase();
-        assertFalse(readState.exhausted());
-        assertEquals((byte)'A', readState.currentBase());
-        assertEquals(S, readState.elementType());
-
-        readState.moveNextBase();
-        assertTrue(readState.exhausted());
-
-        // and in reverse
-        readState = new ReadParseState(read1, false);
-        assertEquals((byte)'A', readState.currentBase());
-        assertEquals(DEFAULT_QUAL, readState.currentBaseQual());
-        assertEquals(S, readState.elementType());
-        assertEquals(1, readState.elementLength());
-
-        readState.moveNextBase();
-        readState.moveNextBase();
-        readState.moveNextBase();
-
-        assertEquals((byte)'C', readState.currentBase());
-        assertEquals(I, readState.elementType());
-        assertEquals(1, readState.elementLength());
-
-        readState.moveNextBase();
-        readState.moveNextBase();
-        readState.moveNextBase();
-        assertFalse(readState.exhausted());
-        assertEquals((byte)'A', readState.currentBase());
-        assertEquals(S, readState.elementType());
-
-        readState.moveNextBase();
-        assertTrue(readState.exhausted());
-
-        // with a delete
-        bases = "ACGT";
-        indelCigar = "2M3D2M";
-
-        read1 = createSamRecord(nextReadId(), 100, bases, indelCigar, false);
-
-        readState = new ReadParseState(read1, true);
-
-        assertEquals((byte)'A', readState.currentBase());
-        assertEquals(M, readState.elementType());
-
-        readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
-        assertEquals(M, readState.elementType());
-
-        readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
-        assertEquals(D, readState.elementType());
-
-        readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
-        assertEquals(D, readState.elementType());
-
-        readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
-        assertEquals(D, readState.elementType());
-
-        readState.moveNextBase();
-        assertEquals((byte)'G', readState.currentBase());
-        assertEquals(M, readState.elementType());
-
-        readState.moveNextBase();
-        assertEquals((byte)'T', readState.currentBase());
-        assertEquals(M, readState.elementType());
-
-        readState.moveNextBase();
-        assertTrue(readState.exhausted());
-    }
-
-    @Test
     public void testSoftClippedOverChromosomeEnd()
     {
         List<SAMRecord> reads = Lists.newArrayList();
@@ -448,11 +322,11 @@ public class ConsensusReadsTest
         String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
         reads.add(createSamRecord(nextReadId(), posStart, readBases2, "5M5S", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
 
-        consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
         consensusReads.setChromosomeLength(mRefGenomeOneBased.getChromosomeLength(CHR_1));
         readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
@@ -470,11 +344,11 @@ public class ConsensusReadsTest
         String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
         reads.add(createSamRecord(nextReadId(), posStart, readBases2, "1M1D3M5S", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
 
-        consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
         consensusReads.setChromosomeLength(mRefGenomeOneBased.getChromosomeLength(CHR_1));
         readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
@@ -491,7 +365,7 @@ public class ConsensusReadsTest
         String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
         reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S5M", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
     }
@@ -507,7 +381,7 @@ public class ConsensusReadsTest
         String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
         reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S1M1D3M", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
     }
@@ -729,41 +603,47 @@ public class ConsensusReadsTest
     }
 
     @Test
-    public void testPrimaryTemplateUseOnIncompletes()
+    public void testUnmappedMates()
     {
         String consensusBases = REF_BASES.substring(0, 50);
 
+        String readCigar1 = "50M";
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
-                nextReadId(), CHR_1, 1, consensusBases, "50M",
-                NO_CHROMOSOME_NAME, 1, false, false, null);
+                nextReadId(), CHR_1, 1, consensusBases, readCigar1,
+                NO_CHROMOSOME_NAME, 1, false, false, null, false, NO_CIGAR);
         read1.setMateUnmappedFlag(true);
         read1.setMateAlignmentStart(1);
 
+        String readCigar2 = "1S49M";
         SAMRecord read2 = SamRecordTestUtils.createSamRecord(
-                nextReadId(), CHR_1, 2, consensusBases, "1S49M",
-                NO_CHROMOSOME_NAME, 1, false, false, null);
+                nextReadId(), CHR_1, 2, consensusBases, readCigar2,
+                NO_CHROMOSOME_NAME, 2, false, false, null, false, NO_CIGAR);
         read2.setMateUnmappedFlag(true);
         read2.setMateAlignmentStart(2);
 
-        SAMRecord mate2 = SamRecordTestUtils.createSamRecord(
-                read2.getReadName(), NO_CHROMOSOME_NAME, 2, consensusBases, "1S49M",
-                CHR_1, 2, false, false, null);
-        mate2.setReadUnmappedFlag(true);
-        // read1.setMateAlignmentStart(2);
-
         ConsensusReadInfo readConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(read1, read2), null, null, "");
+                List.of(read1, read2), createFragmentCoords(read1), "");
 
         assertEquals(readConsensusInfo.TemplateRead, read1);
-        assertEquals("50M", readConsensusInfo.ConsensusRead.getCigarString());
+        assertEquals(readCigar1, readConsensusInfo.ConsensusRead.getCigarString());
         assertEquals(1, readConsensusInfo.ConsensusRead.getAlignmentStart());
         assertEquals(1, readConsensusInfo.ConsensusRead.getMateAlignmentStart());
         assertTrue(readConsensusInfo.ConsensusRead.getMateUnmappedFlag());
 
-        // now send through only the non template read, for the scenario where the primary's mate is unmapped
+        SAMRecord mate1 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), NO_CHROMOSOME_NAME, 1, consensusBases, NO_CIGAR,
+                CHR_1, 1, false, false, null, false, readCigar1);
+        mate1.setReadUnmappedFlag(true);
+        mate1.setAlignmentStart(1);
+
+        SAMRecord mate2 = SamRecordTestUtils.createSamRecord(
+                read2.getReadName(), NO_CHROMOSOME_NAME, 2, consensusBases, NO_CIGAR,
+                CHR_1, 2, false, false, null, false, readCigar2);
+        mate2.setReadUnmappedFlag(true);
+        mate2.setAlignmentStart(2);
+
         ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(mate2), TemplateReadData.fromRead(readConsensusInfo.TemplateRead),
-                readConsensusInfo.ConsensusRead.getReadName(), "");
+                List.of(mate1, mate2), createFragmentCoords(mate1), "");
 
         assertEquals(NO_CIGAR, mateConsensusInfo.ConsensusRead.getCigarString());
         assertEquals(1, mateConsensusInfo.ConsensusRead.getAlignmentStart());
@@ -776,7 +656,8 @@ public class ConsensusReadsTest
             final String readId, int readStart, final String readBases, final String cigar, boolean isReversed)
     {
         return SamRecordTestUtils.createSamRecord(
-                readId, CHR_1, readStart, readBases, cigar, CHR_1, 5000, isReversed, false, null);
+                readId, CHR_1, readStart, readBases, cigar, CHR_1, 5000, isReversed, false, null,
+                true, TEST_READ_CIGAR);
     }
 
     private String nextReadId() { return nextUmiReadId(UMI_ID_1, mReadIdGen); }

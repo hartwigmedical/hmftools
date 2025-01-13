@@ -69,17 +69,8 @@ public class SampleDataFiles
         else
             CobaltDirectory = null;
 
-        if(Files.exists(Paths.get(ESVEE_DIR)))
-        {
-            SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, ESVEE_DIR, sampleId, ".esvee.somatic.vcf.gz");;
-            GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, ESVEE_DIR, sampleId, ".esvee.germline.vcf.gz");;
-        }
-        else
-        {
-            SomaticSvVcfFile = "";
-            GermlineSvVcfFile = "";
-        }
-
+        SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, ESVEE_DIR, sampleId, ".esvee.somatic.vcf.gz");;
+        GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, ESVEE_DIR, sampleId, ".esvee.germline.vcf.gz");;
         SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.somatic.vcf.gz");
         GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.germline.vcf.gz");
     }

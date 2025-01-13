@@ -15,6 +15,9 @@ public final class BwaUtils
     public static final String MAC_ARCH = "aarch64";
     public static final String MAC_BWA_LIB = "libbwwwa.Darwin.dylib";
 
+    public static final String BWA_LIB_PATH = "bwa_lib";
+    public static final String BWA_LIB_PATH_DESC = "Path to BWA library";
+
     public static void loadAlignerLibrary(@Nullable final String bwaLibraryPath)
     {
         if(System.getProperty(LIBBWA_PATH) != null)

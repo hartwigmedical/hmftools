@@ -63,6 +63,10 @@ public class BamSampler
                 .referenceSource(new ReferenceSource(mRefGenome.refGenomeFile()))
                 .open(new File(bamFile));
 
+        // reset
+        mReadCount = 0;
+        mMaxReadLength = 0;
+
         mSlicer.slice(samReader, sampleRegion, this::processRecord);
 
         return mReadCount > 0 && mMaxReadCount > 0;

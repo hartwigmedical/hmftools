@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.DRIVER_GENE_PANEL_TSV;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
@@ -64,8 +65,6 @@ public class GenerateDriverGeneFiles
     private static final String SAGE_RESOURCE_DIR = "sage";
 
     // config
-    private static final String DRIVER_GENE_PANEL_TSV = "driver_gene_panel";
-
     private static final String PANEL_GENE_OVERRIDES = "panel_gene_overrides";
 
     public GenerateDriverGeneFiles(final ConfigBuilder configBuilder)

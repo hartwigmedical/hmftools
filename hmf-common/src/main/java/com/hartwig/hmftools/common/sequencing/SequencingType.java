@@ -7,9 +7,9 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public enum SequencingType
 {
-    ILLUMINA,
-    ULTIMA,
-    SBX;
+    ILLUMINA(true),
+    ULTIMA(false),
+    SBX(false);
 
     public static final String SEQUENCING_TYPE_CFG = "sequencing_type";
 
@@ -21,4 +21,10 @@ public enum SequencingType
         configBuilder.addConfigItem(SEQUENCING_TYPE_CFG, false, SEQUENCING_TYPE_DESC_CFG, ILLUMINA.toString());
     }
 
+    public final boolean PairedReads;
+
+    SequencingType(boolean pairedReads)
+    {
+        PairedReads = pairedReads;
+    }
 }

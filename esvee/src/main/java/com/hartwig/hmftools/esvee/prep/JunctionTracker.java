@@ -43,7 +43,6 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
-import com.hartwig.hmftools.esvee.prep.types.JunctionsConfig;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
@@ -59,7 +58,7 @@ import htsjdk.samtools.CigarElement;
 public class JunctionTracker
 {
     private final ChrBaseRegion mRegion;
-    private final JunctionsConfig mConfig;
+    private final PrepConfig mConfig;
     private final ReadFilterConfig mFilterConfig;
     private final List<BaseRegion> mBlacklistRegions;
     private final List<KnownHotspot> mKnownHotspots;
@@ -94,13 +93,7 @@ public class JunctionTracker
     };
 
     public JunctionTracker(
-            final ChrBaseRegion region, final PrepConfig svConfig, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
-    {
-        this(region, JunctionsConfig.from(svConfig), hotspotCache, blacklist);
-    }
-
-    public JunctionTracker(
-            final ChrBaseRegion region, final JunctionsConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
+            final ChrBaseRegion region, final PrepConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
     {
         mRegion = region;
         mConfig = config;
@@ -634,7 +627,19 @@ public class JunctionTracker
             if(junctionData.Position == newJunction.Position)
             {
                 if(junctionData.Orient == newJunction.Orient)
+                {
+                    // favour discordant-only groups if the split-read junction has minimum support, to ensure if will be processed
+                    // as a valid junction assembly by the assembler
+                    if(!junctionData.discordantGroup() && newJunction.discordantGroup() && !junctionData.hotspot())
+                    {
+                        if(junctionData.JunctionGroups.size() < mFilterConfig.MinJunctionSupport)
+                        {
+                            mJunctions.set(index, newJunction);
+                        }
+                    }
+
                     return;
+                }
             }
             else if(junctionData.Position > newJunction.Position)
             {

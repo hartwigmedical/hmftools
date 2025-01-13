@@ -26,15 +26,15 @@ This is the default and recommended mode.
 
 ### Mandatory Arguments
 
-| Argument      | Description                                                                                |
-|---------------|--------------------------------------------------------------------------------------------|
-| reference     | Name of the reference sample   (if left null run in tumor_only mode)                       |
-| reference_bam | Path to indexed reference BAM file                                                         |
-| tumor         | Name of the tumor sample (if left null run in germline_only mode)                          |
-| tumor_bam     | Path to indexed tumor BAM file                                                             |
-| output_dir    | Path to the output directory. This directory will be created if it does not already exist. |
-| loci          | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
-| ref_genome_version | One of `37` or `38`
+| Argument           | Description                                                                                |
+|--------------------|--------------------------------------------------------------------------------------------|
+| reference          | Name of the reference sample   (if left null run in tumor_only mode)                       |
+| reference_bam      | Path to indexed reference BAM file                                                         |
+| tumor              | Name of the tumor sample (if left null run in germline_only mode)                          |
+| tumor_bam          | Path to indexed tumor BAM file                                                             |
+| output_dir         | Path to the output directory. This directory will be created if it does not already exist. |
+| loci               | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
+| ref_genome_version | One of `37` or `38`                                                                        |
 
 The loci file used by HMF for both 37 and 38 reference genomes is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). These loci are generated using GNOMAD v3 SNP sites (lifted over for GRCH37 version) from chr1-chrX with only a single ALT at that location and with populationAF > 0.05 and < 0.95.  These sites are further filtered to remove loci with frequently unclear zygosity in a set of 60 HMF samples, yielding around 6.3M sites overall.  
 
@@ -60,7 +60,7 @@ AMBER supports both BAM and CRAM file formats.
 ### Example Usage
 
 ```
-java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
+java -Xmx16G -jar amber.jar \
     -reference SAMPLE_ID_R \
     -reference_bam /sample_data/SAMPLE_ID_R.bam \ 
     -tumor SAMPLE_ID \
@@ -89,15 +89,15 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 
 ### Tumor-only specific optional Arguments
 
-| Argument          | Default | Description                                   |
-|-------------------|---------|-----------------------------------------------|
-| tumor_only_min_vaf | 0.05    | Min VAF in ref and alt in tumor-only mode     |
-| tumor_only_min_support | 2 | Min support in ref and alt in tumor-only mode |
+| Argument               | Default | Description                                   |
+|------------------------|---------|-----------------------------------------------|
+| tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor-only mode     |
+| tumor_only_min_support | 2       | Min support in ref and alt in tumor-only mode |
 
 ### Example Usage
 
 ```
-java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
+java -Xmx16G -jar amber.jar \
    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
    -output_dir /run_dir/amber/ \
    -threads 16 \
@@ -157,8 +157,8 @@ If only one chromosome is affected and the regions affected amount to more than 
 The REFERENCE.amber.snp.vcf.gz contains some 1000 SNP points that can be used to identify if a new sample belongs to an existing patient. 
 This is particularly important when doing cohort analysis as multiple samples from the same patient can skew results.
 
-To enable patient matching a database is required with three tables, AmberSample, AmberMapping and AmberPatient. 
-Scripts to generate these tables are available [here](../patient-db/src/main/resources/patches/amber/amber3.4_to_3.5_migration.sql).   
+To enable patient matching a database is required with three tables, amberSample, amberMapping and amberPatient. 
+Scripts to generate these tables are available [here](../patient-db/src/main/resources/generate_database.sql).   
 
 Each sample is loaded into AmberSample with the `LoadAmberData` application which downsamples the REFERENCE.amber.snp.vcf.gz file to 100 loci and describes each locus as:
 - 1: Homozygous ref

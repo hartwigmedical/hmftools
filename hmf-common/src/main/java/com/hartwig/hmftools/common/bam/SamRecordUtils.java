@@ -42,6 +42,7 @@ public final class SamRecordUtils
     public static final String CONSENSUS_INFO_DELIM = ";";
 
     public static final String UNMAP_ATTRIBUTE = "UM"; // the read was unmapped
+    public static final String UNMAPP_COORDS_DELIM = ":";
 
     public static final String NO_CHROMOSOME_NAME = "*";
     public static final String NO_CIGAR = "*";
@@ -123,12 +124,21 @@ public final class SamRecordUtils
         return getReadBoundaryPosition(readStart, cigarStr, forwardStrand, true);
     }
 
-    public static int getFivePrimeUnclippedPosition(final SAMRecord read)
+    public static int getThreePrimeUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
     {
-        // returns the 5' position of the read, factoring in any soft-clipped bases
+        return getReadBoundaryPosition(readStart, cigarStr, !forwardStrand, true);
+    }
+
+    public static int getFivePrimeUnclippedPosition(final SAMRecord read) { return getUnclippedPosition(read, true); }
+
+    public static int getThreePrimeUnclippedPosition(final SAMRecord read) { return getUnclippedPosition(read, false); }
+
+    public static int getUnclippedPosition(final SAMRecord read, boolean fivePrime)
+    {
+        // returns the 5' or 3' position of the read, factoring in any soft-clipped bases
         int position;
 
-        if(orientation(read) == POS_ORIENT)
+        if((orientation(read) == POS_ORIENT) == fivePrime)
         {
             position = read.getAlignmentStart();
             if(read.getCigar().isLeftClipped())

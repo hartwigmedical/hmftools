@@ -106,7 +106,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mVariantPhaser = variantPhaser;
 
         if(mVariantPhaser != null)
-            mVariantPhaser.initialise(regionBounds, mConfig.LogLpsData);
+            mVariantPhaser.initialise(regionBounds, sample);
 
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 
@@ -133,7 +133,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
                 readContextCounter.setMaxCandidateDeleteLength(maxCloseDel);
         }
 
-        final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, sliceRegions, false);
+        SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, sliceRegions, false);
         samSlicer.slice(this::processReadRecord);
 
         mFragmentSync.emptyCachedReads();

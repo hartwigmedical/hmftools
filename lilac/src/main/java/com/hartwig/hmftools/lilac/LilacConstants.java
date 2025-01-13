@@ -18,6 +18,8 @@ public class LilacConstants
     public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.000375;
     public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.00075;
 
+    public static final int DEFAULT_MAX_REF_FRAGMENTS = 10000;
+
     public static final double BASE_QUAL_PERCENTILE = 0.25;
 
     // values applied as percentages

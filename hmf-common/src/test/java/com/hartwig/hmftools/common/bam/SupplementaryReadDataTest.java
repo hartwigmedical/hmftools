@@ -10,19 +10,20 @@ import org.junit.Test;
 
 public class SupplementaryReadDataTest
 {
-    private static final SupplementaryReadData TEST_SUPP_DATA1 =
-            new SupplementaryReadData("chr20", 31055958, SupplementaryReadData.SUPP_POS_STRAND, "20S14M5I81M31S", 1, 8);
-    private static final SupplementaryReadData TEST_SUPP_DATA2 =
-            new SupplementaryReadData("chrUn_GL000216v2", 13986, SupplementaryReadData.SUPP_NEG_STRAND, "116S35M", 0, 0);
+    private static final SupplementaryReadData TEST_SUPP_DATA1 = new SupplementaryReadData(
+            "chr20", 31055958, SupplementaryReadData.SUPP_POS_STRAND, "20S14M5I81M31S", 1, 8);
+
+    private static final SupplementaryReadData TEST_SUPP_DATA2 = new SupplementaryReadData(
+            "chrUn_GL000216v2", 13986, SupplementaryReadData.SUPP_NEG_STRAND, "116S35M", 0, 0);
 
     @Test
-    public void testFromAlignment_EmptyAlignment_ReturnsNull()
+    public void testFromAlignmentEmptyAlignmentReturnsNull()
     {
         assertNull(SupplementaryReadData.fromAlignment(""));
     }
 
     @Test
-    public void testFromAlignment_ActualAlignment()
+    public void testFromAlignmentActualAlignment()
     {
         final SupplementaryReadData actual = SupplementaryReadData.fromAlignment(TEST_SUPP_DATA1.asSamTag());
 
@@ -31,7 +32,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFromAlignment_AlternativeDelimiter()
+    public void testFromAlignmentAlternativeDelimiter()
     {
         final SupplementaryReadData actual = SupplementaryReadData.fromAlignment(TEST_SUPP_DATA1.asDelimStr(), ";");
 
@@ -40,13 +41,13 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFrom_Emtpy_ReturnsNull()
+    public void testFromEmtpyReturnsNull()
     {
         assertNull(SupplementaryReadData.extractAlignments(""));
     }
 
     @Test
-    public void testFrom_SingleAlignment_WithEndingDelim()
+    public void testFromSingleAlignmentWithEndingDelim()
     {
         final List<SupplementaryReadData> actual = SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asSamTag() + ';');
 
@@ -56,7 +57,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFrom_SingleAlignment_WithoutEndingDelim()
+    public void testFromSingleAlignmentWithoutEndingDelim()
     {
         final List<SupplementaryReadData> actual = SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asSamTag());
 
@@ -66,7 +67,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFrom_SingleAlignment_AlternativeDelimiter()
+    public void testFromSingleAlignmentAlternativeDelimiter()
     {
         final List<SupplementaryReadData> actual = SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asDelimStr());
 
@@ -76,7 +77,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFrom_TwoAlignments_WithEndingDelim()
+    public void testFromTwoAlignmentsWithEndingDelim()
     {
         final List<SupplementaryReadData> actual =
                 SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asSamTag() + ';' + TEST_SUPP_DATA2.asSamTag() + ';');
@@ -88,7 +89,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFrom_TwoAlignments_WithoutEndingDelim()
+    public void testFromTwoAlignmentsWithoutEndingDelim()
     {
         final List<SupplementaryReadData> actual =
                 SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asSamTag() + ';' + TEST_SUPP_DATA2.asSamTag());
@@ -100,25 +101,25 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFrom_TwoAlignment_EmptyFirst_ReturnsNull()
+    public void testFromTwoAlignmentEmptyFirstReturnsNull()
     {
         assertNull(SupplementaryReadData.extractAlignments(";" + TEST_SUPP_DATA1.asSamTag()));
     }
 
     @Test
-    public void testFrom_TwoAlignment_EmptyLast_ReturnsNull()
+    public void testFromTwoAlignmentEmptyLastReturnsNull()
     {
         assertNull(SupplementaryReadData.extractAlignments(TEST_SUPP_DATA1.asSamTag() + ";;"));
     }
 
     @Test
-    public void testFirstAlignmentFrom_Emtpy_ReturnsNull()
+    public void testFirstAlignmentFromEmtpyReturnsNull()
     {
         assertNull(SupplementaryReadData.extractAlignment(""));
     }
 
     @Test
-    public void testFirstAlignmentFrom_SingleAlignment_WithEndingDelim()
+    public void testFirstAlignmentFromSingleAlignmentWithEndingDelim()
     {
         final SupplementaryReadData actual = SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asSamTag() + ';');
 
@@ -127,7 +128,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFirstAlignmentFrom_SingleAlignment_WithoutEndingDelim()
+    public void testFirstAlignmentFromSingleAlignmentWithoutEndingDelim()
     {
         final SupplementaryReadData actual = SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asSamTag());
 
@@ -136,7 +137,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFirstAlignmentFrom_SingleAlignment_AlternativeDelimiter()
+    public void testFirstAlignmentFromSingleAlignmentAlternativeDelimiter()
     {
         final SupplementaryReadData actual = SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asDelimStr());
 
@@ -145,7 +146,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFirstAlignmentFrom_TwoAlignments_WithEndingDelim()
+    public void testFirstAlignmentFromTwoAlignmentsWithEndingDelim()
     {
         final SupplementaryReadData actual =
                 SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asSamTag() + ';' + TEST_SUPP_DATA2.asSamTag() + ';');
@@ -155,7 +156,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFirstAlignmentFrom_TwoAlignments_WithoutEndingDelim()
+    public void testFirstAlignmentFromTwoAlignmentsWithoutEndingDelim()
     {
         final SupplementaryReadData actual =
                 SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asSamTag() + ';' + TEST_SUPP_DATA2.asSamTag());
@@ -165,13 +166,13 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testFirstAlignmentFrom_TwoAlignment_EmptyFirst_ReturnsNull()
+    public void testFirstAlignmentFromTwoAlignmentEmptyFirst_ReturnsNull()
     {
         assertNull(SupplementaryReadData.extractAlignment(";" + TEST_SUPP_DATA1.asSamTag()));
     }
 
     @Test
-    public void testFirstAlignmentFrom_TwoAlignment_EmptyLast()
+    public void testFirstAlignmentFromTwoAlignmentEmptyLast()
     {
         final SupplementaryReadData actual = SupplementaryReadData.extractAlignment(TEST_SUPP_DATA1.asSamTag() + ";;");
 
@@ -180,7 +181,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testAlignmentCount_TwoAlignments_EndingWithDelim()
+    public void testAlignmentCountTwoAlignmentsEndingWithDelim()
     {
         final String suppData = TEST_SUPP_DATA1.asSamTag() + ';' + TEST_SUPP_DATA2.asSamTag() + ';';
 
@@ -188,7 +189,7 @@ public class SupplementaryReadDataTest
     }
 
     @Test
-    public void testAlignmentCount_TwoAlignments_EndingWithoutDelim()
+    public void testAlignmentCountTwoAlignmentsEndingWithoutDelim()
     {
         final String suppData = TEST_SUPP_DATA1.asSamTag() + ';' + TEST_SUPP_DATA2.asSamTag();
 

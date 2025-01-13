@@ -140,12 +140,16 @@ public class AminoAcidFragmentPipeline
 
         // cache support at each base and amino acid for later writing and recovery of low-qual support
         SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, enrichedAminoAcidFrags);
-        mRefNucleotideCounts.put(gene, refNucleotideCounts);
-
         SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, enrichedAminoAcidFrags);
-        mRefAminoAcidCounts.put(gene, refAminoAcidCounts);
+        setCounts(gene, refNucleotideCounts, refAminoAcidCounts);
 
         return enrichedAminoAcidFrags;
+    }
+
+    private synchronized void setCounts(final String gene, final SequenceCount refNucleotideCounts, final SequenceCount refAminoAcidCounts)
+    {
+        mRefNucleotideCounts.put(gene, refNucleotideCounts);
+        mRefAminoAcidCounts.put(gene, refAminoAcidCounts);
     }
 
     public List<Fragment> calcComparisonCoverageFragments(final List<Fragment> comparisonFragments)

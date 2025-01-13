@@ -25,7 +25,7 @@ public class TargetedRatioMapperTest
     @Test
     public void testOnTargetRatio()
     {
-        var chromosomePositionCodec = new ChromosomePositionCodec();
+        ChromosomePositionCodec chromosomePositionCodec = new ChromosomePositionCodec();
 
         final Table ratios = Table.create(
                 StringColumn.create(CobaltColumns.CHROMOSOME),
@@ -44,7 +44,7 @@ public class TargetedRatioMapperTest
 
         chromosomePositionCodec.addEncodedChrPosColumn(ratios, false);
 
-        final Table targetEnrichmentRatios = Table.create(
+        Table targetEnrichmentRatios = Table.create(
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
                 DoubleColumn.create(CobaltColumns.RELATIVE_ENRICHMENT),
@@ -64,9 +64,9 @@ public class TargetedRatioMapperTest
 
         chromosomePositionCodec.addEncodedChrPosColumn(targetEnrichmentRatios, true);
 
-        var ratioMapper = new TargetedRatioMapper(targetEnrichmentRatios, chromosomePositionCodec);
+        TargetedRatioMapper ratioMapper = new TargetedRatioMapper(targetEnrichmentRatios);
 
-        Table onTargetRatios = ratioMapper.onTargetRatios(ratios);
+        Table onTargetRatios = ratioMapper.mapRatios(ratios);
 
         assertEquals(2, onTargetRatios.rowCount());
 

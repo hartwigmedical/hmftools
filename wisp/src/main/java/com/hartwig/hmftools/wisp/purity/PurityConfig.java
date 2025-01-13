@@ -28,10 +28,12 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_BQR_MIN_Q
 import static com.hartwig.hmftools.wisp.purity.SampleData.sampleIdsFromStr;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
+import static com.hartwig.hmftools.wisp.purity.variant.SimpleVariant.loadSimpleVariants;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,6 +43,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.wisp.purity.variant.ProbeVariantCache;
+import com.hartwig.hmftools.wisp.purity.variant.SimpleVariant;
 
 public class PurityConfig
 {
@@ -57,6 +60,7 @@ public class PurityConfig
     public final String AmberDir;
     public final String CobaltDir;
     public final String FragmentLengthDir;
+    public final List<SimpleVariant> ExcludedSomatics;
 
     public final ProbeVariantCache ProbeVariants;
 
@@ -101,6 +105,7 @@ public class PurityConfig
     private static final String APPLY_REF_VARIANT_FILTERS = "apply_ref_variant_filters";
     private static final String ALLOW_MISSING_SAMPLES = "allow_missing_samples";
     private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
+    private static final String EXCLUDED_SOMATICS_FILE = "excluded_somatics";
 
     public PurityConfig(final ConfigBuilder configBuilder)
     {
@@ -185,14 +190,22 @@ public class PurityConfig
         }
 
         Threads = parseThreads(configBuilder);
-    }
 
+        if(configBuilder.hasValue(EXCLUDED_SOMATICS_FILE))
+        {
+            ExcludedSomatics = loadSimpleVariants(configBuilder.getValue(EXCLUDED_SOMATICS_FILE));
+            CT_LOGGER.info("excluding {} somatic variants", ExcludedSomatics.size());
+        }
+        else
+        {
+            ExcludedSomatics = Collections.emptyList();
+        }
+    }
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
     public boolean multiplePatients() { return Samples.size() > 1; }
     public boolean multipleSamples() { return multiplePatients() || Samples.stream().mapToInt(x -> x.SampleIds.size()).sum() > 1; }
-    public boolean hasBatchControls() { return Samples.stream().anyMatch(x -> x.isBatchControl()); }
 
     public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
     public String getAmberDir(final String sampleId) { return convertWildcardSamplePath(AmberDir, sampleId); }
@@ -292,6 +305,7 @@ public class PurityConfig
 
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
         configBuilder.addPath(PROBE_VARIANTS_FILE, false, "File defining the probe variants");
+        configBuilder.addPath(EXCLUDED_SOMATICS_FILE, false, "File with somatic variants to ignore");
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", DEFAULT_NOISE_READS_PER_MILLION);
