@@ -20,11 +20,12 @@ public class AlignmentsSelector
         this.Rights = rights;
     }
 
-    public HlaAlignmentPair closestAlignmentPair(RefGenomeVersion refGenomeVersion)
+    public HlaAlignmentPair bestAlignmentPair(RefGenomeVersion refGenomeVersion)
     {
-        final HlaAlignmentPair principalsPair =
-                new HlaAlignmentPair(new HlaAlignment(Lefts.principalAlignment()), new HlaAlignment(Rights.principalAlignment()));
-        if(principalsPair.isConcordantPair())
+        final HlaAlignment principalLeft = new HlaAlignment(Lefts.principalAlignment());
+        final HlaAlignment principalRight = new HlaAlignment(Rights.principalAlignment());
+        final HlaAlignmentPair principalsPair = new HlaAlignmentPair(principalLeft, principalRight);
+        if(principalsPair.isConcordantPair() || principalsPair.oneOfPairIsUnmapped())
         {
             return principalsPair;
         }

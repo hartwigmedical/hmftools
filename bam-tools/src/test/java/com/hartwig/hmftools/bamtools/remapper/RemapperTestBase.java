@@ -10,6 +10,7 @@ import java.util.Objects;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Assert;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
@@ -65,6 +66,11 @@ public class RemapperTestBase
         );
     }
     List<SAMRecord> records = readTestFile();
+
+    SAMFileHeader samFileHeader()
+    {
+        return readTestFile().get(0).getHeader();
+    }
 
     List<SAMRecord> readTestFile()
     {

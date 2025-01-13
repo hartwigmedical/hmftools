@@ -19,7 +19,12 @@ public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
     {
         this.Left = left;
         this.Right = right;
-        InterPairDistance = Math.abs(Math.abs(left.getRefStart()) - Math.abs(right.Position));
+        InterPairDistance = Math.abs(Math.abs(left.Position_1Based) - Math.abs(right.Position_1Based));
+    }
+
+    public boolean oneOfPairIsUnmapped()
+    {
+        return Left.isUnmapped() || Right.isUnmapped();
     }
 
     public boolean isConcordantPair()

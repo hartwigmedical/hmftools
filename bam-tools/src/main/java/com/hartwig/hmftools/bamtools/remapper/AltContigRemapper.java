@@ -100,7 +100,7 @@ public class AltContigRemapper
                         {
                             if(readsWithDifferences.contains(alignment.getReadName()))
                             {
-                                if(differencesAlts2.containsKey(alignment.getReadName()))
+                                if (alignment.getFirstOfPairFlag())
                                 {
                                     differencesAlts1.put(alignment.getReadName(), alignment);
                                 }
@@ -142,8 +142,8 @@ public class AltContigRemapper
         BT_LOGGER.info("starting alt contig remapper");
         long startTimeMs = System.currentTimeMillis();
 
-        Map<String, SAMRecord> noAltsNegativeReads = new HashMap<>();
-        Map<String, SAMRecord> noAltsPositiveReads = new HashMap<>();
+        Map<String, SAMRecord> noAltsFirstReads = new HashMap<>();
+        Map<String, SAMRecord> noAltsSecondReads = new HashMap<>();
         Set<String> namesOfReadsWithDifferences = new HashSet<>();
 
         try(SamReader samReader = SamReaderFactory.makeDefault()
@@ -153,13 +153,13 @@ public class AltContigRemapper
             {
                 if(!record.isSecondaryOrSupplementary())
                 {
-                    if(record.getReadNegativeStrandFlag())
+                    if(record.getFirstOfPairFlag())
                     {
-                        noAltsNegativeReads.put(record.getReadName(), record);
+                        noAltsFirstReads.put(record.getReadName(), record);
                     }
                     else
                     {
-                        noAltsPositiveReads.put(record.getReadName(), record);
+                        noAltsSecondReads.put(record.getReadName(), record);
                     }
                 }
             });
@@ -202,17 +202,22 @@ public class AltContigRemapper
 
                         if(!record.isSecondaryOrSupplementary() && !alignment.isSecondaryOrSupplementary())
                         {
-                            SAMRecord noAltsRecord = alignment.getReadNegativeStrandFlag()
-                                    ? noAltsNegativeReads.get(record.getReadName())
-                                    : noAltsPositiveReads.get(record.getReadName());
+                            SAMRecord noAltsRecord = alignment.getFirstOfPairFlag()
+                                    ? noAltsFirstReads.get(record.getReadName())
+                                    : noAltsSecondReads.get(record.getReadName());
                             if(noAltsRecord != null)
                             {
                                 int qualDiff = Math.abs(alignment.getFlags() - noAltsRecord.getFlags());
                                 numberCompared.getAndIncrement();
+                                if (alignment.getReadName().equals("A00624:8:HHKYHDSXX:4:2543:5737:19288"))
+                                {
+                                    System.out.println("qualDiff: " + qualDiff);
+                                }
                                 if(
                                         alignment.getAlignmentStart() != noAltsRecord.getAlignmentStart() ||
                                                 //                                                    alignment.getFlags() != noAltsRecord.getFlags() ||
                                                 qualDiff > 0 ||
+                                                !Objects.equals(alignment.getInferredInsertSize(), noAltsRecord.getInferredInsertSize()) ||
                                                 !Objects.equals(alignment.getCigarString(), noAltsRecord.getCigarString()) ||
                                                 !Objects.equals(alignment.getReferenceIndex(), noAltsRecord.getReferenceIndex())
                                     //                                                    !Objects.equals(alignment.getMappingQuality(), noAltsRecord.getMappingQuality())

@@ -17,32 +17,37 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
 
 public class HlaAlignment
 {
 
-    private final BwaMemAlignment baseAlignment;
-    public int Position;
+    private final BwaMemAlignment BaseAlignment;
+    public final int Position_1Based;
     private final int MapQuality;
-    @NotNull private final String Cigar;
+    @NotNull
+    private final String Cigar;
+    @NotNull
+    final Set<SAMFlag> Flags;
 
     public static @NotNull Set<HlaAlignment> hlaAlignments(BwaMemAlignment alignment, RefGenomeVersion refGenomeVersion)
     {
         Set<HlaAlignment> result = new HashSet<>();
         result.add(new HlaAlignment(alignment)); // TODO only if hla
-        if (alignment.getMapQual() > 30)
+        if(alignment.getMapQual() > 30)
         {
             return result;
         }
-        if (alignment.getXATag() != null) {
+        if(alignment.getXATag() != null)
+        {
             List<AlternativeAlignment> alternatives = AlternativeAlignment.fromLocationTag(alignment.getXATag());
             alternatives.stream()
-                    .filter(a -> isHla(a,refGenomeVersion ))
+                    .filter(a -> isHla(a, refGenomeVersion))//
                     .forEach(a -> result.add(new HlaAlignment(alignment, a)));
         }
-        if (result.isEmpty())
+        if(result.isEmpty())
         {
             throw new IllegalStateException("No HLA alignments found");
         }
@@ -51,22 +56,24 @@ public class HlaAlignment
 
     public HlaAlignment(final BwaMemAlignment baseAlignment, AlternativeAlignment alignment)
     {
-        this.baseAlignment = baseAlignment;
+        this.BaseAlignment = baseAlignment;
         // TODO check in chr6
-        Position = alignment.Position;
+        Position_1Based = alignment.Position;
         // TODO  check in HLA
         MapQuality = 0; // alignment.MapQual; No. AlternativeAlignment.MapQual seems actually to be the edit distance
         Cigar = alignment.Cigar;
+        Flags = SAMFlag.getFlags(getSamFlag());
     }
 
     public HlaAlignment(final BwaMemAlignment baseAlignment)
     {
-        this.baseAlignment = baseAlignment;
+        this.BaseAlignment = baseAlignment;
         // TODO check in chr6
-        Position = baseAlignment.getRefStart() + 1;
+        Position_1Based = baseAlignment.getRefStart() + 1;
         // TODO  check in HLA
         MapQuality = baseAlignment.getMapQual();
         Cigar = baseAlignment.getCigar();
+        Flags = SAMFlag.getFlags(getSamFlag());
     }
 
     public SAMRecord createSamRecord(SAMFileHeader header, RawFastaData raw, HlaAlignment mate)
@@ -75,10 +82,20 @@ public class HlaAlignment
         remappedRecord.setReadName(raw.ReadName);
         remappedRecord.setHeader(header);
         remappedRecord.setFlags(getSamFlag());
-        remappedRecord.setReferenceIndex(getRefId());
-        remappedRecord.setAlignmentStart(getRefStart());
-        remappedRecord.setMappingQuality(getMapQual());
-        remappedRecord.setCigarString(getCigar());
+        if(isUnmapped())
+        {
+            remappedRecord.setReferenceIndex(mate.getRefId());
+            remappedRecord.setAlignmentStart(mate.Position_1Based);
+            remappedRecord.setCigarString("*");
+            remappedRecord.setMappingQuality(0);
+        }
+        else
+        {
+            remappedRecord.setReferenceIndex(getRefId());
+            remappedRecord.setAlignmentStart(Position_1Based);
+            remappedRecord.setCigarString(Cigar);
+            remappedRecord.setMappingQuality(MapQuality);
+        }
         if(remappedRecord.getReadNegativeStrandFlag())
         {
             remappedRecord.setReadBases(Nucleotides.reverseComplementBases(raw.Bases));
@@ -89,16 +106,26 @@ public class HlaAlignment
             remappedRecord.setReadBases(raw.Bases);
             remappedRecord.setBaseQualities(raw.Qualities);
         }
-        remappedRecord.setAttribute(SamRecordUtils.NUM_MUTATONS_ATTRIBUTE, getNMismatches());
-        remappedRecord.setAttribute(SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE, getMDTag());
-        remappedRecord.setAttribute(SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE, getAlignerScore());
-        remappedRecord.setAttribute(SamRecordUtils.SUBOPTIMAL_SCORE_ATTRIBUTE, getSuboptimalScore());
+        remappedRecord.setAttribute(SamRecordUtils.NUM_MUTATONS_ATTRIBUTE, BaseAlignment.getNMismatches());
+        remappedRecord.setAttribute(SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE, BaseAlignment.getMDTag());
+        remappedRecord.setAttribute(SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE, BaseAlignment.getAlignerScore());
+        remappedRecord.setAttribute(SamRecordUtils.SUBOPTIMAL_SCORE_ATTRIBUTE, BaseAlignment.getSuboptimalScore());
 
-        remappedRecord.setMateReferenceIndex(mate.getRefId());
-        remappedRecord.setMateAlignmentStart(mate.getRefStart());
+        if (mate.isUnmapped())
+        {
+            remappedRecord.setMateAlignmentStart(Position_1Based);
+            remappedRecord.setMateReferenceIndex(getRefId());
+            remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, "*");
+        }
+        else
+        {
+            remappedRecord.setMateAlignmentStart(mate.Position_1Based);
+            remappedRecord.setMateReferenceIndex(mate.getRefId());
+            remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, mate.Cigar);
+        }
         remappedRecord.setInferredInsertSize(calculateInsertSize(remappedRecord, mate));
-        remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, mate.Cigar);
         remappedRecord.setAttribute(SamRecordUtils.MATE_QUALITY_ATTRIBUTE, mate.MapQuality);
+
         return remappedRecord;
     }
 
@@ -126,7 +153,7 @@ public class HlaAlignment
 
     private int getAlignmentEnd()
     {
-        return Position + TextCigarCodec.decode(Cigar).getReferenceLength() - 1;
+        return Position_1Based + TextCigarCodec.decode(Cigar).getReferenceLength() - 1;
     }
 
     @Override
@@ -137,69 +164,43 @@ public class HlaAlignment
             return false;
         }
         final HlaAlignment that = (HlaAlignment) o;
-        return Position == that.Position && Objects.equals(baseAlignment, that.baseAlignment);
+        return Position_1Based == that.Position_1Based && Objects.equals(BaseAlignment, that.BaseAlignment);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(baseAlignment, Position);
+        return Objects.hash(BaseAlignment, Position_1Based);
     }
 
     @Override
     public String toString()
     {
         return "HlaAlignment{" +
-                ", Position=" + Position +
+                ", Position=" + Position_1Based +
                 ", MapQuality=" + MapQuality +
                 ", Cigar='" + Cigar + '\'' +
                 '}';
     }
 
+    public boolean isReadReverseStrand()
+    {
+        return Flags.contains(SAMFlag.READ_REVERSE_STRAND);
+    }
+
+    public boolean isUnmapped()
+    {
+        return Flags.contains(SAMFlag.READ_UNMAPPED);
+    }
+
     public int getSamFlag()
     {
-        return baseAlignment.getSamFlag();
+        return BaseAlignment.getSamFlag();
     }
 
-    public int getRefId()
+    public Integer getRefId()
     {
-        return baseAlignment.getRefId();
-    }
-
-    public int getRefStart()
-    {
-        return Position;
-    }
-
-    public int getMapQual()
-    {
-        return MapQuality;
-    }
-
-    @NotNull
-    public String getCigar()
-    {
-        return Cigar;
-    }
-
-    public Object getNMismatches()
-    {
-        return baseAlignment.getNMismatches();
-    }
-
-    public Object getMDTag()
-    {
-        return baseAlignment.getMDTag();
-    }
-
-    public Object getAlignerScore()
-    {
-        return baseAlignment.getAlignerScore();
-    }
-
-    public Object getSuboptimalScore()
-    {
-        return baseAlignment.getSuboptimalScore();
+        return BaseAlignment.getRefId();
     }
 
     private static boolean isHla(AlternativeAlignment alternativeAlignment, RefGenomeVersion refGenomeVersion)
