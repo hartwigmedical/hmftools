@@ -36,6 +36,7 @@ public class HlaTransformer
     private @NotNull
     final HlaRecordAligner aligner;
     private final Map<String, SAMRecord> recordsByName = new HashMap<>();
+    private int NumberProcessed = 0;
 
     public HlaTransformer(@NotNull final HlaRecordAligner aligner)
     {
@@ -54,7 +55,7 @@ public class HlaTransformer
         {
             return List.of();
         }
-
+        NumberProcessed++;
         if (recordsByName.containsKey(record.getReadName())) {
             SAMRecord match = recordsByName.remove(record.getReadName());
             RecordPair pair = pair(match, record);
@@ -68,6 +69,11 @@ public class HlaTransformer
     public @NotNull List<SAMRecord> unmatchedRecords()
     {
         return new ArrayList<>(recordsByName.values());
+    }
+
+    public int numberOfHlaRecordsProcessed()
+    {
+        return NumberProcessed;
     }
 
     private RecordPair pair(final SAMRecord s, final SAMRecord r)

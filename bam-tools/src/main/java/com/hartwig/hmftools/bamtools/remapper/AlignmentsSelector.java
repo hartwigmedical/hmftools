@@ -29,6 +29,10 @@ public class AlignmentsSelector
         {
             return principalsPair;
         }
+        // If the principal pairis not an obvious choice then we
+        // choose a pair involving one or more supplementary alignments.
+        // To make this deterministic we choose the closest pair,
+        // but there's no reason this is actually best.
         List<HlaAlignmentPair> allPairs = new ArrayList<>();
         HlaAlignment.hlaAlignments(Lefts.principalAlignment(), refGenomeVersion).forEach(left ->
                 HlaAlignment.hlaAlignments(Rights.principalAlignment(), refGenomeVersion)

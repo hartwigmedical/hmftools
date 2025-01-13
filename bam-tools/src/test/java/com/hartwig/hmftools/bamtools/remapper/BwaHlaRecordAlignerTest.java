@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.remapper;
 import java.util.List;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -25,7 +26,7 @@ public class BwaHlaRecordAlignerTest extends RemapperTestBase
     public void before()
     {
         aligner = Mockito.mock(Aligner.class);
-        bwaAligner = new BwaHlaRecordAligner(aligner, samFileHeader());
+        bwaAligner = new BwaHlaRecordAligner(aligner, samFileHeader(), RefGenomeVersion.V38);
     }
 
     @Test

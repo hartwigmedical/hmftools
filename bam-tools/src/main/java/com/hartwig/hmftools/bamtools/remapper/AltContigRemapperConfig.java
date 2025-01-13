@@ -71,6 +71,6 @@ public class AltContigRemapperConfig
         OutputFile = outputFile;
         BamToolPath = bamToolPath;
         RefGenomeFile = null;
-        RefGenVersion = null;
+        RefGenVersion = RefGenomeVersion.V38;
     }
 }

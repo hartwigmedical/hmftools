@@ -36,7 +36,7 @@ public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
         {
             return false;
         }
-        boolean sameStrand = Left.getRefId() == Right.getRefId();
+        boolean sameStrand = Objects.equals(Left.getRefId(), Right.getRefId());
         if(!sameStrand)
         {
             return false;
