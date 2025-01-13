@@ -8,8 +8,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
-import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -93,43 +92,40 @@ public class MicrosatelliteSiteFile
             row.set(END, repeatAnalyser.refGenomeMicrosatellite().referenceEnd());
             row.set(UNIT,  repeatAnalyser.refGenomeMicrosatellite().unitString());
             row.set(CONSENSUS_TYPE, consensusType.name());
-            row.set(NUM_READS, repeatAnalyser.getReadRepeatMatches(consensusType).size());
+            row.set(NUM_READS, repeatAnalyser.readRepeatMatchCount(consensusType));
             row.set(NUM_READS_REJECTED, repeatAnalyser.numReadRejected(consensusType));
             row.set(REAL_VARIANT, repeatAnalyser.isRealVariant(JitterAnalyserConstants.ALT_COUNT_FRACTION_INIT, JitterAnalyserConstants.ALT_COUNT_FRACTION_STEP,
                     JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION, JitterAnalyserConstants.MIN_PASSING_SITE_READS));
-            int refNumRepeat = repeatAnalyser.refGenomeMicrosatellite().numRepeat;
-            row.set(COUNT_p0, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat, consensusType));
 
-            row.set(COUNT_p10, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 10, consensusType));
-            row.set(COUNT_p9, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 9, consensusType));
-            row.set(COUNT_p8, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 8, consensusType));
-            row.set(COUNT_p7, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 7, consensusType));
-            row.set(COUNT_p6, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 6, consensusType));
-            row.set(COUNT_p5, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 5, consensusType));
-            row.set(COUNT_p4, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 4, consensusType));
-            row.set(COUNT_p3, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 3, consensusType));
-            row.set(COUNT_p2, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 2, consensusType));
-            row.set(COUNT_p1, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat + 1, consensusType));
+            row.set(COUNT_p0, repeatAnalyser.passingJitterCount(0, consensusType));
 
-            row.set(COUNT_m10, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 10, consensusType));
-            row.set(COUNT_m9, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 9, consensusType));
-            row.set(COUNT_m8, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 8, consensusType));
-            row.set(COUNT_m7, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 7, consensusType));
-            row.set(COUNT_m6, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 6, consensusType));
-            row.set(COUNT_m5, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 5, consensusType));
-            row.set(COUNT_m4, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 4, consensusType));
-            row.set(COUNT_m3, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 3, consensusType));
-            row.set(COUNT_m2, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 2, consensusType));
-            row.set(COUNT_m1, repeatAnalyser.getCountWithRepeatUnits(refNumRepeat - 1, consensusType));
+            row.set(COUNT_p10, repeatAnalyser.passingJitterCount(10, consensusType));
+            row.set(COUNT_p9, repeatAnalyser.passingJitterCount(9, consensusType));
+            row.set(COUNT_p8, repeatAnalyser.passingJitterCount(8, consensusType));
+            row.set(COUNT_p7, repeatAnalyser.passingJitterCount(7, consensusType));
+            row.set(COUNT_p6, repeatAnalyser.passingJitterCount(6, consensusType));
+            row.set(COUNT_p5, repeatAnalyser.passingJitterCount(5, consensusType));
+            row.set(COUNT_p4, repeatAnalyser.passingJitterCount(4, consensusType));
+            row.set(COUNT_p3, repeatAnalyser.passingJitterCount(3, consensusType));
+            row.set(COUNT_p2, repeatAnalyser.passingJitterCount(2, consensusType));
+            row.set(COUNT_p1, repeatAnalyser.passingJitterCount(1, consensusType));
 
-            row.set(READ_REPEAT_LENGTHS, getRepeatString(repeatAnalyser.getPassingReadRepeatMatches(consensusType)));
+            row.set(COUNT_m10, repeatAnalyser.passingJitterCount(-10, consensusType));
+            row.set(COUNT_m9, repeatAnalyser.passingJitterCount(-9, consensusType));
+            row.set(COUNT_m8, repeatAnalyser.passingJitterCount(-8, consensusType));
+            row.set(COUNT_m7, repeatAnalyser.passingJitterCount(-7, consensusType));
+            row.set(COUNT_m6, repeatAnalyser.passingJitterCount(-6, consensusType));
+            row.set(COUNT_m5, repeatAnalyser.passingJitterCount(-5, consensusType));
+            row.set(COUNT_m4, repeatAnalyser.passingJitterCount(-4, consensusType));
+            row.set(COUNT_m3, repeatAnalyser.passingJitterCount(-3, consensusType));
+            row.set(COUNT_m2, repeatAnalyser.passingJitterCount(-2, consensusType));
+            row.set(COUNT_m1, repeatAnalyser.passingJitterCount(-1, consensusType));
+
+            String repeatString = repeatAnalyser.allPassingRepeats(consensusType).stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(","));
+
+            row.set(READ_REPEAT_LENGTHS, repeatString);
         });
-    }
-
-    public static String getRepeatString(final List<MicrosatelliteRead> microsatelliteReads)
-    {
-        List<Integer> repeatLengths = microsatelliteReads.stream().filter(o -> !o.shouldDropRead).map(MicrosatelliteRead::readRepeatLength).collect(
-                Collectors.toList());
-        return StringUtils.join(repeatLengths, ",");
     }
 }

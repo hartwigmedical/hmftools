@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.targetregion;
+package com.hartwig.hmftools.geneutils.paneldesign;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +13,7 @@ public class TargetedGeneRegion
     }
 
     private final TargetedGene mGene;
-
     private final Type mType;
-
     private final BaseRegion mBaseRegion;
 
     private ProbeCandidate mSelectedProbe = null;
@@ -24,9 +22,9 @@ public class TargetedGeneRegion
 
     public TargetedGeneRegion(final TargetedGene gene, Type type, BaseRegion region)
     {
-        this.mGene = gene;
-        this.mType = type;
-        this.mBaseRegion = region;
+        mGene = gene;
+        mType = type;
+        mBaseRegion = region;
     }
 
     public TargetedGene getGene()
@@ -37,11 +35,6 @@ public class TargetedGeneRegion
     public Type getType()
     {
         return mType;
-    }
-
-    public BaseRegion getBaseRegion()
-    {
-        return mBaseRegion;
     }
 
     public String getChromosome()
@@ -64,7 +57,7 @@ public class TargetedGeneRegion
         return mSelectedProbe;
     }
 
-    public void setSelectedProbe(ProbeCandidate probe)
+    public void setSelectedProbe(final ProbeCandidate probe)
     {
         mSelectedProbe = probe;
     }

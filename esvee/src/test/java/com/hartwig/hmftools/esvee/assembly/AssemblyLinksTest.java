@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -455,11 +456,17 @@ public class AssemblyLinksTest
         String assemblyExtBases2 = REF_BASES_200.substring(30, 130);
         String assemblyBases2 = assemblyExtBases2 + assemblyRefBases2;
 
-        JunctionAssembly assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, assemblyExtBases2.length());
+        JunctionAssembly assembly2 = createAssembly(CHR_2, 300, REVERSE, assemblyBases2, assemblyExtBases2.length());
 
         AssemblyLink link = AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
         assertNotNull(link);
         assertEquals(130, link.insertedBases().length());
         assertEquals(REF_BASES_200.substring(0, 130), link.insertedBases());
+
+        // cannot form a link purely in extension bases if the assemblies form a local DEL or DUP
+        assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, assemblyExtBases2.length());
+
+        link = AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+        assertNull(link);
     }
 }

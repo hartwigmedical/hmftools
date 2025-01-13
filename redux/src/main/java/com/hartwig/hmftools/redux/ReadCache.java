@@ -45,9 +45,8 @@ public class ReadCache
 
     private static final int POP_DISTANCE_CHECK = 100;
 
-    private static final int CHECK_CACHE_READ_COUNT = 1000;
+    private static final int CHECK_CACHE_READ_COUNT = 10000;
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
-    private static final int LOG_READ_COUNT_DIFF = LOG_READ_COUNT_THRESHOLD / 10;
 
     public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final SequencingType sequencingType)
     {
@@ -308,19 +307,20 @@ public class ReadCache
 
     private void checkCacheSize()
     {
+        // only check and log cache size every X reads
         ++mCheckSizeReadCount;
 
-        if(mCheckSizeReadCount >= CHECK_CACHE_READ_COUNT)
-        {
-            mCheckSizeReadCount = 0;
-        }
+        if(mCheckSizeReadCount < CHECK_CACHE_READ_COUNT)
+            return;
+
+        mCheckSizeReadCount = 0;
 
         int newReadCount = cachedReadCount();
 
         if(newReadCount < LOG_READ_COUNT_THRESHOLD)
             return;
 
-        if(abs(newReadCount - mLastCacheReadCount) < LOG_READ_COUNT_DIFF)
+        if(abs(newReadCount - mLastCacheReadCount) < LOG_READ_COUNT_THRESHOLD)
             return;
 
         RD_LOGGER.debug("read cache({}) above threshold", toString());

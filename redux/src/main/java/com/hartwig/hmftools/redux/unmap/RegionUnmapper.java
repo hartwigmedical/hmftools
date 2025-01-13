@@ -112,6 +112,9 @@ public class RegionUnmapper extends Thread
 
         Collections.sort(unmappingRegions);
 
+        if(config.SpecificChrRegions.hasFilters() && unmappingRegions.isEmpty())
+            return Collections.emptyList();
+
         // add in an entry to extract fully unmapped reads
         unmappingRegions.add(UNMAPPED_READS);
 

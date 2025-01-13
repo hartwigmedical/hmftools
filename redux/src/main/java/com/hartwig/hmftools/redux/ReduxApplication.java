@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
+import static com.hartwig.hmftools.redux.write.PartitionInfo.partitionInfoStr;
 
 import java.util.Collections;
 import java.util.List;
@@ -59,7 +60,7 @@ public class ReduxApplication
         {
             JitterAnalyserConfig jitterConfig = new JitterAnalyserConfig(
                     mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile, mConfig.OutputDir,
-                    mConfig.JitterMsiMaxSitePercContribution);
+                    mConfig.JitterMsiMaxSitePercContribution, false);
 
             ConsensusMarker consensusMarker = ConsensusMarker.fromSequencingType(mConfig.Sequencing);
             jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER, consensusMarker);
@@ -73,16 +74,19 @@ public class ReduxApplication
             List<Thread> unmappingThreadTasks = Lists.newArrayList();
             List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
 
-            if(!runThreadTasks(unmappingThreadTasks))
-                System.exit(1);
+            if(!readUnmappers.isEmpty())
+            {
+                if(!runThreadTasks(unmappingThreadTasks))
+                    System.exit(1);
 
-            RD_LOGGER.debug("initial unmapping complete");
+                RD_LOGGER.debug("initial unmapping complete");
 
-            long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
-            RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
+                long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
+                RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
 
-            // reset unmapped stats for a final comparison
-            mConfig.UnmapRegions.setStats(new UnmapStats());
+                // reset unmapped stats for a final comparison
+                mConfig.UnmapRegions.setStats(new UnmapStats());
+            }
 
             if(!fileWriterCache.prepareSortedUnmappingBam())
                 System.exit(1);
@@ -212,8 +216,8 @@ public class ReduxApplication
                 break;
 
             long regionsLength = regions.stream().mapToLong(x -> x.baseLength()).sum();
-            String regionsStr = regions.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
-            RD_LOGGER.debug("adding partition regions({}) totalLength({}): {}}", regions.size(), regionsLength, regionsStr);
+
+            RD_LOGGER.debug("adding partition regions({}) totalLength({}): {}", regions.size(), regionsLength, partitionInfoStr(regions));
 
             fileWriterCache.addPartition(regions);
         }

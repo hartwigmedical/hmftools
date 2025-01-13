@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.hrd;
+package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.hrd.HrdDetection.determineHrdStatus;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -38,7 +37,6 @@ import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordData;
 import com.hartwig.hmftools.common.purple.HrdData;
-import com.hartwig.hmftools.common.purple.HrdStatus;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityContext;

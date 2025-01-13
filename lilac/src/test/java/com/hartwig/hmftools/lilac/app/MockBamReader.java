@@ -9,7 +9,7 @@ import com.hartwig.hmftools.lilac.read.BamReader;
 import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class MockBamReader implements BamReader
 {

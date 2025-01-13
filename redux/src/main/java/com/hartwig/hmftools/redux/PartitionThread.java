@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.redux;
 
 import static java.lang.Math.ceil;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.write.PartitionInfo.isAltRegionContig;
 
 import java.util.Collections;
 import java.util.List;
@@ -77,20 +79,41 @@ public class PartitionThread extends Thread
     {
         List<List<ChrBaseRegion>> partitionRegions = Lists.newArrayList();
 
-        List<ChrBaseRegion> inputRegions = Lists.newArrayList();
-
-        boolean isSpecificRegions = !specificRegions.Regions.isEmpty();
-
-        if(isSpecificRegions)
+        if(!specificRegions.Regions.isEmpty())
         {
-            inputRegions.addAll(specificRegions.Regions);
-        }
-        else
-        {
-            inputRegions.addAll(getRefGenomeRegions(specificRegions, refGenomeVersion, refGenome));
+            // only split by thread count if can be done simply
+            if(threadCount == specificRegions.Regions.size() && specificRegions.Regions.size() > 1)
+            {
+                for(int i = 0 ; i < threadCount; ++i)
+                {
+                    partitionRegions.add(List.of(specificRegions.Regions.get(i)));
+                }
+            }
+            else if(specificRegions.Regions.size() == 1 && threadCount > 1)
+            {
+                ChrBaseRegion specificRegion = specificRegions.Regions.get(0);
+                int intervalLength = (int)ceil(specificRegion.baseLength() / (double)threadCount);
+                int regionStart = specificRegion.start();
+
+                for(int i = 0 ; i < threadCount; ++i)
+                {
+                    int regionEnd = min(regionStart + intervalLength - 1, specificRegion.end());
+                    partitionRegions.add(List.of(new ChrBaseRegion(specificRegion.Chromosome, regionStart, regionEnd)));
+                    regionStart = regionEnd + 1;
+                }
+            }
+            else
+            {
+                partitionRegions.addAll(List.of(specificRegions.Regions));
+            }
+
+            return partitionRegions;
         }
 
-        long totalLength = inputRegions.stream().mapToLong(x -> x.baseLength()).sum();
+        List<ChrBaseRegion> genomeRegions = getRefGenomeRegions(specificRegions, refGenomeVersion, refGenome);
+
+        // ignore lengths for alt-contigs so they don't impact the partitioning of actual chromosomes and reads
+        long totalLength = genomeRegions.stream().mapToLong(x -> regionIntervalLength(x)).sum();
         long intervalLength = (int)ceil(totalLength / (double)threadCount);
 
         int chrEndBuffer = (int)round(intervalLength * 0.05);
@@ -99,24 +122,24 @@ public class PartitionThread extends Thread
         List<ChrBaseRegion> currentRegions = Lists.newArrayList();
         partitionRegions.add(currentRegions);
 
-        for(ChrBaseRegion inputRegion : inputRegions)
+        for(ChrBaseRegion genomeRegion : genomeRegions)
         {
-            nextRegionStart = isSpecificRegions ? inputRegion.start() : 1;
-            int chromosomeLength = inputRegion.baseLength();
-            int remainingChromosomeLength = chromosomeLength;
+            nextRegionStart = 1;
+            int regionLength = regionIntervalLength(genomeRegion);
+            int remainingChromosomeLength = regionLength;
 
             while(currentLength + remainingChromosomeLength >= intervalLength)
             {
                 int remainingIntervalLength = (int)(intervalLength - currentLength);
                 int regionEnd = nextRegionStart + remainingIntervalLength - 1;
 
-                if(!isSpecificRegions && chromosomeLength - regionEnd < chrEndBuffer)
+                if(regionLength - regionEnd < chrEndBuffer)
                 {
-                    regionEnd = chromosomeLength;
+                    regionEnd = regionLength;
                     remainingChromosomeLength = 0;
                 }
 
-                currentRegions.add(new ChrBaseRegion(inputRegion.Chromosome, nextRegionStart, regionEnd));
+                currentRegions.add(new ChrBaseRegion(genomeRegion.Chromosome, nextRegionStart, regionEnd));
 
                 currentRegions = Lists.newArrayList();
                 partitionRegions.add(currentRegions);
@@ -126,7 +149,7 @@ public class PartitionThread extends Thread
                     break;
 
                 nextRegionStart = regionEnd + 1;
-                remainingChromosomeLength = chromosomeLength - nextRegionStart + 1;
+                remainingChromosomeLength = regionLength - nextRegionStart + 1;
             }
 
             if(remainingChromosomeLength <= 0)
@@ -134,10 +157,15 @@ public class PartitionThread extends Thread
 
             currentLength += remainingChromosomeLength;
 
-            currentRegions.add(new ChrBaseRegion(inputRegion.Chromosome, nextRegionStart, chromosomeLength));
+            currentRegions.add(new ChrBaseRegion(genomeRegion.Chromosome, nextRegionStart, regionLength));
         }
 
         return partitionRegions.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
+    }
+
+    private static int regionIntervalLength(final ChrBaseRegion region)
+    {
+        return isAltRegionContig(region.Chromosome) ? 1 : region.baseLength();
     }
 
     private static List<ChrBaseRegion> getRefGenomeRegions(
@@ -183,5 +211,4 @@ public class PartitionThread extends Thread
 
         return inputRegions;
     }
-
 }

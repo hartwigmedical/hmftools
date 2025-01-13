@@ -68,7 +68,7 @@ public class SamSlicerFactory
         }
     }
 
-    public void close()
+    public void closeSamReaders()
     {
         try
         {

@@ -4,9 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.jetbrains.annotations.NotNull;
-
-public class CopyNumberChange
+public class SvCopyNumberChange
 {
     private final double mDownScale;
     private final double mUpScale;
@@ -14,7 +12,7 @@ public class CopyNumberChange
     private final double mDownOffset;
     private final double mUpOffset;
 
-    public CopyNumberChange(final List<StructuralVariantLegPloidy> structuralVariants)
+    public SvCopyNumberChange(final List<StructuralVariantLegPloidy> structuralVariants)
     {
         final StructuralVariantLegPloidy template = structuralVariants.get(0);
         double copyNumberDifference = copyNumberDifference(template);
@@ -54,8 +52,8 @@ public class CopyNumberChange
 
         if(upCount > 0 && downCount > 0 && minPloidyVariant != null)
         {
-            double targetDownPloidy = Math.min(template.leftCopyNumber().orElse(0d), downPloidy);
-            double targetUpPloidy = Math.min(template.rightCopyNumber().orElse(0d), upPloidy);
+            double targetDownPloidy = Math.min(template.leftCopyNumberOrZero(), downPloidy);
+            double targetUpPloidy = Math.min(template.rightCopyNumberOrZero(), upPloidy);
 
             double targetPloidy = targetUpPloidy + targetDownPloidy;
             double explainedPloidy = mDownScale * downPloidy + mUpScale * upPloidy;
@@ -75,26 +73,26 @@ public class CopyNumberChange
         return isPositive(leg) ? mDownOffset + mDownScale * ploidy(leg) : mUpOffset + mUpScale * ploidy(leg);
     }
 
-    private static boolean isPositive(StructuralVariantLegPloidy ploidy)
+    private static boolean isPositive(final StructuralVariantLegPloidy ploidy)
     {
         return ploidy.orientation() == 1;
     }
 
-    private static double ploidy(StructuralVariantLegPloidy ploidy)
+    private static double ploidy(final StructuralVariantLegPloidy ploidy)
     {
         return Math.max(0, ploidy.averageImpliedPloidy());
     }
 
     static double copyNumberChangeSimple(final StructuralVariantLegCopyNumber copyNumber)
     {
-        double leftCopyNumber = copyNumber.leftCopyNumber().orElse(0D);
-        double rightCopyNumber = copyNumber.rightCopyNumber().orElse(0D);
+        double leftCopyNumber = copyNumber.leftCopyNumberOrZero();
+        double rightCopyNumber = copyNumber.rightCopyNumberOrZero();
 
         return copyNumber.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
     private static double copyNumberDifference(final StructuralVariantLegPloidy leg)
     {
-        return leg.rightCopyNumber().orElse(0D) - leg.leftCopyNumber().orElse(0D);
+        return leg.rightCopyNumberOrZero() - leg.leftCopyNumberOrZero();
     }
 }

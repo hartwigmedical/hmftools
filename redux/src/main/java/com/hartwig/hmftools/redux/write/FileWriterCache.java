@@ -17,6 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.FastBamWriter;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMFileWriterImpl;
 
 public class FileWriterCache
 {
@@ -43,9 +45,10 @@ public class FileWriterCache
     private final BamWriterSync mUnmappingWriter;
     private String mUnmappingSortedBamFilename;
 
-    private String mFinalBamFilename;
-
     private final BamWriterSync mFullUnmappedWriter;
+
+    private boolean mHasWrittenFirstSorted;
+    private String mFinalBamFilename;
 
     private final JitterAnalyser mJitterAnalyser;
 
@@ -65,6 +68,7 @@ public class FileWriterCache
 
         mPartitions = Lists.newArrayList();
         mBamWriters = Lists.newArrayList();
+        mHasWrittenFirstSorted = false;
 
         mCompletedPartitionsQueue = new LinkedBlockingQueue<>();
         mCompletedPartitionCount = 0;
@@ -101,6 +105,23 @@ public class FileWriterCache
         }
     }
 
+    public List<PartitionInfo> partitions() { return mPartitions; }
+    public int partitionCount() { return mPartitions.size(); }
+    public Queue<PartitionInfo> completedPartitionsQueue() { return mCompletedPartitionsQueue; }
+
+    public BamWriterSync getUnmappingBamWriter() { return mUnmappingWriter; }
+    public BamWriterSync getFullUnmappedBamWriter() { return mFullUnmappedWriter; }
+
+    public ReadDataWriter readDataWriter() { return mReadDataWriter; }
+    public List<BamWriter> bamWriters() { return mBamWriters; }
+
+    public String unmappedSortedBamFilename() { return mUnmappingSortedBamFilename; }
+
+    public long sortedBamUnsortedWriteCount()
+    {
+        return mBamWriters.stream().filter(x -> x.isSorted()).mapToLong(x -> x.unsortedWriteCount()).sum();
+    }
+
     public void addPartition(final List<ChrBaseRegion> regions)
     {
         int partitionIndex = mPartitions.size();
@@ -122,9 +143,68 @@ public class FileWriterCache
         mPartitions.add(partitionInfo);
     }
 
-    public List<PartitionInfo> partitions() { return mPartitions; }
-    public int partitionCount() { return mPartitions.size(); }
-    public Queue<PartitionInfo> completedPartitionsQueue() { return mCompletedPartitionsQueue; }
+    private BamWriter createBamWriter(final String filename, boolean synchronousUnsorted)
+    {
+        SAMFileWriter samFileWriter = null;
+
+        if(mConfig.WriteBam)
+        {
+            RD_LOGGER.trace("writing temp BAM file: {}", filenamePart(filename));
+
+            samFileWriter = initialiseSamFileWriter(filename, !synchronousUnsorted);
+        }
+
+        // initiate the applicable type of BAM writer - synchronised or not
+        BamWriter bamWriter;
+
+        if(synchronousUnsorted)
+        {
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
+        }
+        else
+        {
+            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
+        }
+
+        mBamWriters.add(bamWriter);
+        return bamWriter;
+    }
+
+    private String formBamFilename(@Nullable final String sorted, @Nullable final String multiId)
+    {
+        if(!mConfig.MultiBam && mConfig.Threads == 1 && mConfig.OutputBam != null && mConfig.BamToolPath == null)
+            return mConfig.OutputBam; // no need to write a temporary BAM
+
+        String filename = mConfig.OutputDir + mConfig.SampleId + "." + FILE_ID;
+
+        if(mConfig.OutputId != null)
+            filename += "." + mConfig.OutputId;
+
+        if(multiId != null)
+            filename += "." + multiId;
+
+        if(sorted != null)
+            filename += "." + sorted;
+
+        filename += BAM_EXTENSION;
+
+        return filename;
+    }
+
+    public SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
+    {
+        SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
+
+        // since the internal fast BAM writer is used, sort order and the presorted flag has no bearing on how reads are checked and written
+        if(isSorted)
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        else
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        SAMFileWriter samFileWriter = new FastBamWriter(fileHeader, filename);
+
+        return samFileWriter;
+    }
 
     public synchronized void addCompletedPartition(final PartitionInfo partition)
     {
@@ -135,34 +215,6 @@ public class FileWriterCache
             mCompletedPartitionsQueue.add(partition);
         else
             partition.bamWriter().close();
-    }
-
-    public BamWriterSync getUnmappingBamWriter() { return mUnmappingWriter; }
-    public BamWriterSync getFullUnmappedBamWriter() { return mFullUnmappedWriter; }
-
-    public ReadDataWriter readDataWriter() { return mReadDataWriter; }
-    public List<BamWriter> bamWriters() { return mBamWriters; }
-
-    public String unmappedSortedBamFilename() { return mUnmappingSortedBamFilename; }
-
-    public long totalWrittenReads()
-    {
-        return mBamWriters.stream().mapToLong(x -> x.nonConsensusWriteCount()).sum();
-    }
-
-    public long sortedWrittenReads()
-    {
-        return mBamWriters.stream().filter(x -> x.isSorted()).mapToLong(x -> x.nonConsensusWriteCount()).sum();
-    }
-
-    public long fullyUnmappedWrittenReads()
-    {
-        return mFullUnmappedWriter != null ? mFullUnmappedWriter.unsortedWriteCount() : 0;
-    }
-
-    public long sortedBamUnsortedWriteCount()
-    {
-        return mBamWriters.stream().filter(x -> x.isSorted()).mapToLong(x -> x.unsortedWriteCount()).sum();
     }
 
     public boolean prepareSortedUnmappingBam()
@@ -250,77 +302,5 @@ public class FileWriterCache
         {
             RD_LOGGER.error("error deleting interim bams: {}", e.toString());
         }
-    }
-
-    private BamWriter createBamWriter(final String filename, boolean synchronousUnsorted)
-    {
-        SAMFileWriter samFileWriter = null;
-
-        if(mConfig.WriteBam)
-        {
-            RD_LOGGER.trace("writing temp BAM file: {}", filenamePart(filename));
-
-            // no option to use library-based sorting
-            samFileWriter = initialiseSamFileWriter(filename, !synchronousUnsorted);
-        }
-
-        // initiate the applicable type of BAM writer - synchronised or not
-        BamWriter bamWriter;
-
-        if(synchronousUnsorted)
-        {
-            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
-        }
-        else
-        {
-            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
-        }
-
-        mBamWriters.add(bamWriter);
-        return bamWriter;
-    }
-
-    private String formBamFilename(@Nullable final String sorted, @Nullable final String multiId)
-    {
-        if(!mConfig.MultiBam && mConfig.Threads == 1 && mConfig.OutputBam != null && mConfig.BamToolPath == null)
-            return mConfig.OutputBam; // no need to write a temporary BAM
-
-        String filename = mConfig.OutputDir + mConfig.SampleId + "." + FILE_ID;
-
-        if(mConfig.OutputId != null)
-            filename += "." + mConfig.OutputId;
-
-        if(multiId != null)
-            filename += "." + multiId;
-
-        if(sorted != null)
-            filename += "." + sorted;
-
-        filename += BAM_EXTENSION;
-
-        return filename;
-    }
-
-    public SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
-    {
-        SAMFileHeader fileHeader = buildCombinedHeader(mConfig.BamFiles, mConfig.RefGenomeFile);
-
-        // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
-        // the BAM will not actually be sorted by the SAMTools library
-
-        // even for the sorted BAM writer, specify unsorted to avoid the presorted last vs next alignment order check in SAMFileWriterImpl
-        fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-
-        /*
-        if(isSorted)
-            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-        else
-            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-        */
-
-        boolean presorted = isSorted;
-
-        // makeSAMWriter
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
     }
 }

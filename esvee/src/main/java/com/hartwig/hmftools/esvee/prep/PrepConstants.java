@@ -17,6 +17,7 @@ public final class PrepConstants
     public static final String FLD_EXACT_SUPPORT_FRAGS = "ExactSupportFrags";
     public static final String FLD_OTHER_SUPPORT_FRAGS = "OtherSupportFrags";
     public static final String FLD_HOTSPOT_JUNCTION = "Hotspot";
+    public static final String FLD_EXTRA_INFO = "ExtraInfo";
 
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;

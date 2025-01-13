@@ -20,7 +20,7 @@ import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 /* Rank candidates by:
     - first calculating bonuses and penalties for being homozygous and common in the provided cohort

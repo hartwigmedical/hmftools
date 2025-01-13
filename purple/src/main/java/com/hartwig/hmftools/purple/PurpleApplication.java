@@ -313,6 +313,13 @@ public class PurpleApplication
             GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions.getDeletions());
         }
 
+        List<DriverSourceData> driverSourceData = Lists.newArrayList();
+
+        if(mConfig.RunDrivers)
+        {
+            findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions, driverSourceData);
+        }
+
         if(!mConfig.germlineMode() && !mConfig.Charting.Disabled)
         {
             PPL_LOGGER.info("generating charts");
@@ -327,7 +334,7 @@ public class PurpleApplication
                 charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.plottingVariants(), sampleData.SvCache.variants(),
-                        regionsForVis, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+                        regionsForVis, Lists.newArrayList(amberData.ChromosomeBafs.values()), driverSourceData);
                 
                 // clean up any temporary files
                 // RChartData.cleanupFiles(mConfig, tumorId);
@@ -339,27 +346,23 @@ public class PurpleApplication
                 System.exit(1);
             }
         }
-
-        if(mConfig.RunDrivers)
-        {
-            findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
-        }
     }
 
     private void findDrivers(
             final String tumorSample, final PurityContext purityContext,  final List<GeneCopyNumber> geneCopyNumbers,
-            @Nullable final SomaticStream somaticStream, @Nullable GermlineDeletions germlineDeletions) throws IOException
+            @Nullable final SomaticStream somaticStream, @Nullable GermlineDeletions germlineDeletions,
+            final List<DriverSourceData> driverSourceData) throws IOException
     {
-        final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
-        final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
+        List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
+        List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
 
         PPL_LOGGER.info("generating drivers");
 
-        final Map<String,List<GeneCopyNumber>> geneCopyNumberMap = listToMap(geneCopyNumbers);
+        Map<String,List<GeneCopyNumber>> geneCopyNumberMap = listToMap(geneCopyNumbers);
 
         if(mConfig.runTumor())
         {
-            List<DriverCatalog> somaticDrivers = somaticStream.buildDrivers(geneCopyNumberMap);
+            List<DriverCatalog> somaticDrivers = somaticStream.buildDrivers(geneCopyNumberMap, driverSourceData);
 
             somaticDriverCatalog.addAll(somaticDrivers);
 
@@ -367,11 +370,17 @@ public class PurpleApplication
                     purityContext.qc().status(), purityContext.qc().amberGender(), mReferenceData.DriverGenes,
                     purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode);
 
+            addGeneDriverSourceData(ampDrivers, geneCopyNumbers, driverSourceData);
+
             somaticDriverCatalog.addAll(ampDrivers);
 
-            final DeletionDrivers delDrivers = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+            DeletionDrivers delDriverFinder = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
-            somaticDriverCatalog.addAll(delDrivers.deletions(geneCopyNumbers, mConfig.TargetRegionsMode));
+            List<DriverCatalog> delDrivers = delDriverFinder.deletions(geneCopyNumbers, mConfig.TargetRegionsMode);
+
+            somaticDriverCatalog.addAll(delDrivers);
+
+            addGeneDriverSourceData(delDrivers, geneCopyNumbers, driverSourceData);
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, true), somaticDriverCatalog);
         }
@@ -385,6 +394,21 @@ public class PurpleApplication
                 germlineDriverCatalog.addAll(germlineDeletions.getDrivers());
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, false), germlineDriverCatalog);
+        }
+    }
+
+    private void addGeneDriverSourceData(
+            final List<DriverCatalog> geneDivers, final List<GeneCopyNumber> geneCopyNumbers, final List<DriverSourceData> driverSourceData)
+    {
+        for(DriverCatalog driverRecord : geneDivers)
+        {
+            GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream()
+                    .filter(x -> x.geneName().equals(driverRecord.gene())).findFirst().orElse(null);
+
+            if(geneCopyNumber != null)
+            {
+                driverSourceData.add(new DriverSourceData(driverRecord, geneCopyNumber));
+            }
         }
     }
 

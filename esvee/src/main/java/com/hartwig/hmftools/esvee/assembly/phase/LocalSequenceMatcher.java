@@ -100,7 +100,8 @@ public class LocalSequenceMatcher
 
         int minOverlapLength = min(assembly.extensionLength(), ASSEMBLY_LINK_OVERLAP_BASES);
 
-        int[] topMatchIndices = findBestSequenceMatch(assemblySeq, localRefSeq, minOverlapLength, alternativeIndexStarts);
+        int[] topMatchIndices = findBestSequenceMatch(
+                assemblySeq, localRefSeq, minOverlapLength, false, alternativeIndexStarts);
 
         if(topMatchIndices != null)
         {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.hrd;
+package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;

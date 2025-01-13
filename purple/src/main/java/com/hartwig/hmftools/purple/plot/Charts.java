@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.ChartConfig;
+import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
@@ -34,7 +35,7 @@ public class Charts
             final String referenceId, final String sampleId, boolean plotSomatics,
             final Gender gender, final List<PurpleCopyNumber> copyNumbers,
             final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
-            final List<ObservedRegion> regions, final List<AmberBAF> bafs) throws Exception
+            final List<ObservedRegion> regions, final List<AmberBAF> bafs, final List<DriverSourceData> driverSourceData) throws Exception
     {
         final ChartConfig chartConfig = mConfig.Charting;
 

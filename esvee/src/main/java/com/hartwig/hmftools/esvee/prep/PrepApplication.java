@@ -68,7 +68,7 @@ public class PrepApplication
             }
         }
 
-        writeDiscordantStats(mConfig, combinedStats.ReadStats.TotalReads, combinedStats.Discordants);
+        writeDiscordantStats(mConfig, combinedStats.ReadStats.TotalReads, mWriter.writtenCount(), combinedStats.Discordants);
 
         if(mConfig.UseCacheBam)
         {

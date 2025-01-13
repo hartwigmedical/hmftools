@@ -18,6 +18,7 @@ public final class BamOperations
     private static final String MERGE_COMMAND = "merge";
     private static final String CONCATENATE_COMMAND = "cat";
     private static final String SORT_COMMAND = "sort";
+    private static final String REHEADER_COMMAND = "reheader";
 
     protected static final Logger BOP_LOGGER = LogManager.getLogger(BamOperations.class);
 
@@ -132,6 +133,31 @@ public final class BamOperations
         return true;
     }
 
+    public static boolean reheaderBam(
+            final BamToolName toolName, final String toolPath, final String inputBam, final String outputBam, final String headerBam)
+    {
+        if(toolName != BamToolName.SAMTOOLS)
+            return false;
+
+        List<String> commandArgs = Lists.newArrayList();
+
+        commandArgs.add(toolPath);
+        commandArgs.add(REHEADER_COMMAND);
+
+        commandArgs.add("--no-PG");
+        commandArgs.add(headerBam);
+
+        commandArgs.add(inputBam);
+
+        commandArgs.add(">");
+        commandArgs.add(outputBam);
+
+        if(!executeCommand(commandArgs, outputBam))
+            return false;
+
+        BOP_LOGGER.trace("reheader complete");
+        return true;
+    }
 
     private static void addThreadsArg(final BamToolName toolName, final List<String> commandArgs, final int threads)
     {

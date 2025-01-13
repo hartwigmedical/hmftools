@@ -16,7 +16,7 @@ public class SvVcfFile
     public final String mPath;
     public final String mLabel;
 
-    private final SvCaller mSvCaller;
+    private final SvCallerType mSvCallerType;
     private final VcfType mSourceVcfType;
 
     private Map<String, List<VariantBreakend>> mChrBreakendMap = null;
@@ -27,7 +27,7 @@ public class SvVcfFile
         mPath = path;
         mLabel = label;
 
-        mSvCaller = SvCaller.fromVcfPath(mPath);
+        mSvCallerType = SvCallerType.fromVcfPath(mPath);
         mSourceVcfType = VcfType.fromVcfPath(mPath);
     }
 
@@ -42,7 +42,7 @@ public class SvVcfFile
 
         for(VariantContext variantContext : reader.iterator())
         {
-            VariantBreakend variantBreakend = new VariantBreakend(variantContext, mSvCaller, mSourceVcfType);
+            VariantBreakend variantBreakend = new VariantBreakend(variantContext, mSvCallerType, mSourceVcfType);
 
             String chromosome = variantContext.getContig();
             if(!chrBreakendMap.containsKey(chromosome))

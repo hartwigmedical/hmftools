@@ -20,11 +20,12 @@ import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
 import org.jetbrains.annotations.Nullable;
 
-public class StructuralVariantLegCopyNumberChangeFactory
+public class SvLegCopyNumberChangeFactory
 {
-    private final Map<GenomePosition, CopyNumberChange> mCopyNumberChangeMap;
+    private final Map<GenomePosition, SvCopyNumberChange> mCopyNumberChangeMap;
 
-    public StructuralVariantLegCopyNumberChangeFactory(final PurityAdjuster purityAdjuster,
+    public SvLegCopyNumberChangeFactory(
+            final PurityAdjuster purityAdjuster,
             final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, final Collection<StructuralVariant> variants)
     {
         mCopyNumberChangeMap = copyNumberChangeMap(purityAdjuster, copyNumbers, variants);
@@ -36,7 +37,7 @@ public class StructuralVariantLegCopyNumberChangeFactory
 
         if(!mCopyNumberChangeMap.containsKey(cnaPosition))
         {
-            return CopyNumberChange.copyNumberChangeSimple(leg);
+            return SvCopyNumberChange.copyNumberChangeSimple(leg);
         }
 
         return mCopyNumberChangeMap.get(cnaPosition).copyNumberChange(leg);
@@ -47,21 +48,21 @@ public class StructuralVariantLegCopyNumberChangeFactory
     {
         if(!mCopyNumberChangeMap.containsKey(GenomePositions.create(copyNumber.chromosome(), copyNumber.cnaPosition())))
         {
-            return CopyNumberChange.copyNumberChangeSimple(copyNumber);
+            return SvCopyNumberChange.copyNumberChangeSimple(copyNumber);
         }
 
         return null;
     }
 
-    private static Map<GenomePosition, CopyNumberChange> copyNumberChangeMap(
+    private static Map<GenomePosition, SvCopyNumberChange> copyNumberChangeMap(
             final PurityAdjuster purityAdjuster, final Multimap<Chromosome, PurpleCopyNumber> copyNumbers,
             final Collection<StructuralVariant> variants)
     {
+        SvLegPloidyFactory<PurpleCopyNumber> ploidyFactory = new SvLegPloidyFactory<>(
+                purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
-        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
-                new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+        ListMultimap<GenomePosition, StructuralVariantLegPloidy> ploidyMap = ArrayListMultimap.create();
 
-        final ListMultimap<GenomePosition, StructuralVariantLegPloidy> ploidyMap = ArrayListMultimap.create();
         for(final StructuralVariant variant : variantsAtDuplicateLocations(variants))
         {
             List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
@@ -71,13 +72,14 @@ public class StructuralVariantLegCopyNumberChangeFactory
             }
         }
 
-        Map<GenomePosition, CopyNumberChange> copyNumberChangeMap = Maps.newHashMap();
+        Map<GenomePosition, SvCopyNumberChange> copyNumberChangeMap = Maps.newHashMap();
         for(GenomePosition genomePosition : ploidyMap.keySet())
         {
-            final List<StructuralVariantLegPloidy> legs = ploidyMap.get(genomePosition);
+            List<StructuralVariantLegPloidy> legs = ploidyMap.get(genomePosition);
+
             if(legs.size() > 1)
             {
-                copyNumberChangeMap.put(genomePosition, new CopyNumberChange(legs));
+                copyNumberChangeMap.put(genomePosition, new SvCopyNumberChange(legs));
             }
         }
 
@@ -90,7 +92,7 @@ public class StructuralVariantLegCopyNumberChangeFactory
         Multimap<GenomePosition, StructuralVariant> cnaMap = cnaMap(variants);
         for(GenomePosition genomePosition : cnaMap.keySet())
         {
-            final Collection<StructuralVariant> variantsAtLocation = cnaMap.get(genomePosition);
+            Collection<StructuralVariant> variantsAtLocation = cnaMap.get(genomePosition);
             if(variantsAtLocation.size() > 1)
             {
                 result.addAll(variantsAtLocation);
@@ -117,6 +119,5 @@ public class StructuralVariantLegCopyNumberChangeFactory
         }
 
         return result;
-
     }
 }

@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
-import com.hartwig.hmftools.purple.hrd.HrdDetection;
+import com.hartwig.hmftools.purple.tools.HrdDetection;
 
 import org.junit.Test;
 

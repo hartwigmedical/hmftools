@@ -22,10 +22,11 @@ public class SampleReadProcessor
     private final List<MicrosatelliteSiteAnalyser> mMicrosatelliteSiteAnalysers;
     private final Map<String, ImmutableIntervalTree<MicrosatelliteSiteAnalyser>> mMicrosatelliteSiteAnalysersByChromosome;
 
-    public SampleReadProcessor(final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites, @Nullable ConsensusMarker consensusMarker)
+    public SampleReadProcessor(final JitterAnalyserConfig config, final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites,
+            @Nullable ConsensusMarker consensusMarker)
     {
         mMicrosatelliteSiteAnalysers = refGenomeMicrosatellites.stream()
-                .map(x -> new MicrosatelliteSiteAnalyser(x, consensusMarker))
+                .map(x -> new MicrosatelliteSiteAnalyser(x, consensusMarker, config.WriteSiteFile))
                 .collect(Collectors.toList());
 
         mMicrosatelliteSiteAnalysersByChromosome = Maps.newHashMap();

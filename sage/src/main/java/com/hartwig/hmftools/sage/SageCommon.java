@@ -1,11 +1,18 @@
 package com.hartwig.hmftools.sage;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_38;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bamops.BamSampler;
@@ -29,37 +36,52 @@ public class SageCommon
 
         BamSampler bamSampler = new BamSampler(config.RefGenomeFile);
 
-        ChrBaseRegion sampleRegion = null;
+        List<ChrBaseRegion> sampleRegions = Lists.newArrayList();
 
         if(!config.SpecificChrRegions.Regions.isEmpty())
         {
-            sampleRegion = config.SpecificChrRegions.Regions.get(0);
+            sampleRegions.addAll(config.SpecificChrRegions.Regions);
         }
         else if(!panelRegions.isEmpty())
         {
+            RefGenomeCoordinates refGenomeCoordinates = config.RefGenVersion.is37() ? COORDS_37 : COORDS_38;
+
             for(Map.Entry<Chromosome, List<BaseRegion>> entry : panelRegions.entrySet())
             {
-                BaseRegion region = entry.getValue().get(0);
+                String chromosome = config.RefGenVersion.versionedChromosome(entry.getKey().toString());
+                int chromosomeLength = refGenomeCoordinates.length(chromosome);
 
-                sampleRegion = new ChrBaseRegion(
-                        config.RefGenVersion.versionedChromosome(entry.getKey().toString()), region.start(), region.end());
+                for(BaseRegion region : entry.getValue())
+                {
+                    // if the region is a single-base hotspot, build some width around it
+                    int regionStart = region.start();
+                    int regionEnd = region.end();
 
-                break;
+                    if(region.length() == 1)
+                    {
+                        regionStart = max(regionStart - 500, 0);
+                        regionEnd = min(regionEnd + 500, chromosomeLength);
+                    }
+
+                    sampleRegions.add(new ChrBaseRegion(chromosome, regionStart, regionEnd));
+                }
             }
         }
         else
         {
-            sampleRegion = bamSampler.defaultRegion();
+            sampleRegions.add(bamSampler.defaultRegion());
         }
 
-        if(bamSampler.calcBamCharacteristics(bamFile, sampleRegion) && bamSampler.maxReadLength() > 0)
+        for(ChrBaseRegion sampleRegion : sampleRegions)
         {
-            config.setReadLength(bamSampler.maxReadLength());
+            if(bamSampler.calcBamCharacteristics(bamFile, sampleRegion) && bamSampler.maxReadLength() > 0)
+            {
+                config.setReadLength(bamSampler.maxReadLength());
+                return;
+            }
         }
-        else
-        {
-            SG_LOGGER.debug("BAM read-length sampling using default read length({})", DEFAULT_READ_LENGTH);
-            config.setReadLength(DEFAULT_READ_LENGTH);
-        }
+
+        SG_LOGGER.debug("BAM read-length sampling using default read length({})", DEFAULT_READ_LENGTH);
+        config.setReadLength(DEFAULT_READ_LENGTH);
     }
 }

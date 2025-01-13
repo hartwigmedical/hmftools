@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
+import static org.apache.logging.log4j.Level.DEBUG;
+import static org.apache.logging.log4j.Level.TRACE;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,13 +30,14 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
-import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
+
+import org.apache.logging.log4j.Level;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -172,7 +176,8 @@ public class PartitionReader
 
         mBamWriter.onRegionComplete();
 
-        RD_LOGGER.debug("region({}) complete, processed {} reads", mCurrentRegion, mProcessedReads);
+        Level logLevel = isAltContigRegion() ? TRACE : DEBUG;
+        RD_LOGGER.log(logLevel, "region({}) complete, processed {} reads", mCurrentRegion, mProcessedReads);
 
         perfCountersStop();
     }
@@ -285,7 +290,7 @@ public class PartitionReader
         if(read.isSecondaryAlignment())
         {
             mBamWriter.setBoundaryPosition(readStart, false);
-            mBamWriter.writeRead(read, FragmentStatus.UNSET);
+            mBamWriter.writeSecondaryRead(read);
             return;
         }
 
@@ -334,12 +339,6 @@ public class PartitionReader
 
         mLastWriteLowerPosition = readFlushPosition;
 
-        if(readCount > LOG_PERF_FRAG_COUNT)
-        {
-            RD_LOGGER.debug("position({}:{}) processing {} frag-coord read groups with {} reads",
-                    mCurrentRegion.Chromosome, currentPosition, fragmentCoordReads.coordinateCount(), readCount);
-        }
-
         boolean logDetails = mConfig.perfDebug() && readCount > LOG_PERF_FRAG_COUNT;
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
@@ -368,7 +367,7 @@ public class PartitionReader
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 
-        mBamWriter.writeReads(fragmentCoordReads.SingleReads, true);
+        mBamWriter.writeNonDuplicateReads(fragmentCoordReads.SingleReads);
 
         mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
 
@@ -397,6 +396,9 @@ public class PartitionReader
 
     private void perfCountersStart()
     {
+        if(isAltContigRegion())
+            return;
+
         if(mConfig.perfDebug())
             mPcTotal.start(format("%s", mCurrentRegion));
         else
@@ -407,9 +409,14 @@ public class PartitionReader
 
     private void perfCountersStop()
     {
+        if(isAltContigRegion())
+            return;
+
         mPcTotal.stop();
         mPcProcessDuplicates.stop();
     }
+
+    private boolean isAltContigRegion() { return PartitionInfo.isAltRegionContig(mCurrentRegion.Chromosome); }
 
     @VisibleForTesting
     public void setBamWriter(final BamWriter writer) { mBamWriter = writer; }
