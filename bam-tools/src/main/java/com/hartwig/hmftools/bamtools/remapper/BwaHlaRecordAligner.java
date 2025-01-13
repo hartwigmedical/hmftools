@@ -34,13 +34,14 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
     @Override
     public List<SAMRecord> alignPair(@NotNull final RecordPair pair)
     {
+        System.out.println(pair.rightData().ReadName);
 
         ImmutablePair<List<BwaMemAlignment>, List<BwaMemAlignment>> alignments =
                 aligner.alignSequences(pair.leftBasesForRealignment(), pair.rightBasesForRealignment());
         AlignmentsList leftAlignments = new AlignmentsList(alignments.getLeft());
         AlignmentsList rightAlignments = new AlignmentsList(alignments.getRight());
 
-        if(pair.First.getReadName().equals("A00624:8:HHKYHDSXX:4:2543:5737:19288"))
+        if(pair.First.getReadName().equals("A00624:8:HHKYHDSXX:1:2559:3224:21292"))
         {
             System.out.println(pair);
         }

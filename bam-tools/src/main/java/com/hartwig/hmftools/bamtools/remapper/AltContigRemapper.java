@@ -209,10 +209,10 @@ public class AltContigRemapper
                             {
                                 int qualDiff = Math.abs(alignment.getFlags() - noAltsRecord.getFlags());
                                 numberCompared.getAndIncrement();
-                                if (alignment.getReadName().equals("A00624:8:HHKYHDSXX:4:2543:5737:19288"))
-                                {
-                                    System.out.println("qualDiff: " + qualDiff);
-                                }
+//                                if (alignment.getReadName().equals("A00624:8:HHKYHDSXX:4:2543:5737:19288"))
+//                                {
+//                                    System.out.println("qualDiff: " + qualDiff);
+//                                }
                                 if(
                                         alignment.getAlignmentStart() != noAltsRecord.getAlignmentStart() ||
                                                 //                                                    alignment.getFlags() != noAltsRecord.getFlags() ||

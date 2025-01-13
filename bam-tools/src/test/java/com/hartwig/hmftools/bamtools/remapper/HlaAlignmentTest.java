@@ -25,6 +25,60 @@ public class HlaAlignmentTest extends RemapperTestBase
     }
 
     @Test
+    public void createSAMRecord()
+    {
+        String readName = "A00624:8:HHKYHDSXX:1:1446:18213:29684";
+        String nukes = "GGCCAGGGTCTCACACCCTCCAGAGCATGTACGGCTGCGACGTGGGGCCGGACGGGCGCCTCCTCCGCGGGCATAACCAGTACGCCTACGACGGCAAGGATTACATCGCCCTGAACGAGGACCTGCGCTCCTGGACCGCCGCGGACACGGC";
+        String qualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        RawFastaData data = new RawFastaData(readName, nukes.getBytes(), qualities.getBytes());
+        BwaMemAlignment bwa = bwa("97,5,31355729,31355880,0,151,60,0,151,19,151M,151,null,5,31356297,719");
+        HlaAlignment alignment = new HlaAlignment(bwa);
+
+        BwaMemAlignment bwa2 = bwa("145,5,31356297,31356448,0,151,60,1,146,108,151M,76C74,null,5,31355729,-719");
+        HlaAlignment mate = new HlaAlignment(bwa2);
+
+        SAMRecord sam = alignment.createSamRecord(samFileHeader(), data, mate);
+        Assert.assertEquals(readName, sam.getReadName());
+        Assert.assertEquals(719, sam.getInferredInsertSize());
+        Assert.assertFalse(sam.getReadNegativeStrandFlag());
+        Assert.assertArrayEquals(nukes.getBytes(), sam.getReadBases());
+        Assert.assertArrayEquals(qualities.getBytes(), sam.getBaseQualities());
+        Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
+        Assert.assertEquals(31355730, sam.getAlignmentStart());
+        Assert.assertEquals(mate.Position_1Based, sam.getMateAlignmentStart());
+        Assert.assertEquals(97, sam.getFlags());
+        Assert.assertEquals(60, sam.getMappingQuality());
+        Assert.assertEquals("151M", sam.getCigarString());
+    }
+
+    @Test
+    public void createSAMRecordReverseStrand()
+    {
+        String readName = "A00624:8:HHKYHDSXX:1:1446:18213:29684";
+        String nukes = "TTGTTCTCTGCCTCACACTCAGTGTGTTTGGGGCTCTGATTCCAGCACTTCTGAGTCACTTTACCTCCACTCAGATCAGGAGCAGAAGTCCCTGTTCCCCGCTCAGAGACTCGAACTTTCCAATGAATAGGAGATTATCCCAGGTGCCTGC";
+        String qualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFF";
+        RawFastaData data = new RawFastaData(readName, nukes.getBytes(), qualities.getBytes());
+        BwaMemAlignment bwa = bwa("145,5,31356297,31356448,0,151,60,1,146,108,151M,76C74,null,5,31355729,-719");
+        HlaAlignment alignment = new HlaAlignment(bwa);
+
+        BwaMemAlignment bwa2 = bwa("97,5,31355729,31355880,0,151,60,0,151,19,151M,151,null,5,31356297,719");
+        HlaAlignment mate = new HlaAlignment(bwa2);
+
+        SAMRecord sam = alignment.createSamRecord(samFileHeader(), data, mate);
+        Assert.assertEquals(readName, sam.getReadName());
+        Assert.assertEquals(-719, sam.getInferredInsertSize());
+        Assert.assertTrue(sam.getReadNegativeStrandFlag());
+        Assert.assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
+        Assert.assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
+        Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
+        Assert.assertEquals(31356298, sam.getAlignmentStart());
+        Assert.assertEquals(mate.Position_1Based, sam.getMateAlignmentStart());
+        Assert.assertEquals(145, sam.getFlags());
+        Assert.assertEquals(60, sam.getMappingQuality());
+        Assert.assertEquals("151M", sam.getCigarString());
+    }
+
+    @Test
     public void createSAMRecordUnmapped()
     {
         String readName = "A00624:8:HHKYHDSXX:4:2543:5737:19288";
