@@ -389,7 +389,7 @@ In targeted mode, SGL breakends are only retained if in a targeted region.
 If the same precise breakend is found to PASS multiple times in the VCF then retain the variant with the highest QUAL only 
 
 #### Germline or Somatic determination 
-A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
+A consolidated VCF is produced showing all soft filters. If a germline sample is present and BOTH max(germline AF/TumorAF) > 0.1 AND germlineAD / tumorAD > 0.01 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf based on both a SGL BE PON (for SGL breakends) and a paired BE PON (for junctions). SGL breakends with candidate alignments that fall in the SSX2, SSX2B or DUX4 regions are never PON filtered. For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
 ## Summary of LINE insertion site behaviour
 
