@@ -127,7 +127,9 @@ java -cp bam-tools.jar com.hartwig.hmftools.bamtools.tofastq.BamToFastq \
 
 ## AltContigRemapper
 
-Remaps HLA alt contig records using a supplied reference genome. 
+Remaps HLA alt contig alignments using a supplied reference genome. 
+
+Supplementary or secondary HLA alignments are skipped. 
 
 ### Usage
 
