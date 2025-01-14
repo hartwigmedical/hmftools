@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -36,14 +37,14 @@ public class PartitionThread extends Thread
     private final PartitionReader mPartitionReader;
 
     public PartitionThread(
-            final ReduxConfig config, final List<String> inputBams, final TaskQueue partitions, final FileWriterCache fileWriterCache)
+            final ReduxConfig config, final List<String> inputBams, final TaskQueue partitions, final FileWriterCache fileWriterCache, final ConcurrentLinkedQueue<PartitionPerfStats> partitionPerfStats)
     {
         mFileWriterCache = fileWriterCache;
         mPartitions = partitions;
 
         mBamReader = new BamReader(inputBams, config.RefGenomeFile);
 
-        mPartitionReader = new PartitionReader(config, mBamReader);
+        mPartitionReader = new PartitionReader(config, mBamReader, partitionPerfStats);
     }
 
     public PartitionReader partitionReader() { return mPartitionReader; }

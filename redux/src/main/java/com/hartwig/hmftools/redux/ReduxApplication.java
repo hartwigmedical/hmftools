@@ -93,7 +93,8 @@ public class ReduxApplication
         }
 
         // partition the genome into sequential regions to be processed by each thread
-        List<PartitionThread> partitionThreads = createPartitionThreads(fileWriterCache);
+        ConcurrentLinkedQueue<PartitionPerfStats> partitionPerfStats = new ConcurrentLinkedQueue<>();
+        List<PartitionThread> partitionThreads = createPartitionThreads(fileWriterCache, partitionPerfStats);
         List<Thread> allThreads = Lists.newArrayList(partitionThreads);
 
         FinalBamWriter finalBamWriter = null;
@@ -192,10 +193,22 @@ public class ReduxApplication
 
         logPerformanceStats(combinedPerfCounters);
 
+        List<PartitionPerfStats> partitionPerfStatsList = Lists.newArrayList(partitionPerfStats);
+        Collections.sort(partitionPerfStatsList);
+        PartitionPerfStats total = new PartitionPerfStats("total");
+        for(PartitionPerfStats partitionPerfStat : partitionPerfStatsList)
+        {
+            RD_LOGGER.info(partitionPerfStat.toString());
+            total.merge(partitionPerfStat);
+        }
+
+        RD_LOGGER.info(total.toString());
+
+
         RD_LOGGER.info("Redux complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private List<PartitionThread> createPartitionThreads(final FileWriterCache fileWriterCache)
+    private List<PartitionThread> createPartitionThreads(final FileWriterCache fileWriterCache, final ConcurrentLinkedQueue<PartitionPerfStats> partitionPerfStats)
     {
         int partitionThreadCount = mConfig.WriteBam & mConfig.ParallelConcatenation ? max(mConfig.Threads - 1, 1) : mConfig.Threads;
         int partitionCount = mConfig.PartitionThreadRatio * partitionThreadCount;
@@ -234,7 +247,7 @@ public class ReduxApplication
 
         for(int i = 0; i < partitionThreadCount; ++i)
         {
-            PartitionThread partitionThread = new PartitionThread(mConfig, inputBamFiles, taskQueue, fileWriterCache);
+            PartitionThread partitionThread = new PartitionThread(mConfig, inputBamFiles, taskQueue, fileWriterCache, partitionPerfStats);
             partitionThreads.add(partitionThread);
         }
 

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -61,7 +62,7 @@ public final class TestUtils
 
     public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)
     {
-        PartitionReader partitionReader = new PartitionReader(config, null);
+        PartitionReader partitionReader = new PartitionReader(config, null, new ConcurrentLinkedQueue<>());
         partitionReader.setBamWriter(writer);
         return partitionReader;
     }

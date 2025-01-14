@@ -22,6 +22,7 @@ import static org.apache.logging.log4j.Level.TRACE;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -75,7 +76,13 @@ public class PartitionReader
     private byte[] mRefBases;
     private int mRefBasesStart;
 
-    public PartitionReader(final ReduxConfig config, final BamReader bamReader)
+    private PerformanceCounter mTotalPc;
+    private PerformanceCounter mConsensusPc;
+    private PerformanceCounter mPrePc;
+    private PerformanceCounter mPostPc;
+    private final ConcurrentLinkedQueue<PartitionPerfStats> mPartitionPerfStats;
+
+    public PartitionReader(final ReduxConfig config, final BamReader bamReader, final ConcurrentLinkedQueue<PartitionPerfStats> partitionPerfStats)
     {
         mConfig = config;
         mBamReader = bamReader;
@@ -101,6 +108,12 @@ public class PartitionReader
 
         mRefBases = null;
         mRefBasesStart = 0;
+
+        mTotalPc = null;
+        mConsensusPc = null;
+        mPrePc = null;
+        mPostPc = null;
+        mPartitionPerfStats = partitionPerfStats;
     }
 
     public List<PerformanceCounter> perfCounters()
@@ -146,6 +159,11 @@ public class PartitionReader
             mRefBases = null;
             checkRefBases(region.start());
         }
+
+        mTotalPc = new PerformanceCounter("total", false);
+        mConsensusPc = new PerformanceCounter("consensus", false);
+        mPrePc = new PerformanceCounter("pre", false);
+        mPostPc = new PerformanceCounter("post", false);
     }
 
     private void checkRefBases(int refPositionStart)
@@ -164,10 +182,12 @@ public class PartitionReader
 
     public void processRegion()
     {
+        mTotalPc.start();
         if(mBamReader != null)
         {
             mBamReader.sliceRegion(mCurrentRegion, this::processSamRecord);
         }
+        mTotalPc.stop();
 
         postProcessRegion();
     }
@@ -182,6 +202,8 @@ public class PartitionReader
 
         Level logLevel = isAltContigRegion() ? TRACE : DEBUG;
         RD_LOGGER.log(logLevel, "region({}) complete, processed {} reads", mCurrentRegion, mProcessedReads);
+
+        mPartitionPerfStats.add(new PartitionPerfStats(mCurrentRegion.toString(), mTotalPc, mPrePc, mPostPc, mConsensusPc));
 
         perfCountersStop();
     }
@@ -307,7 +329,9 @@ public class PartitionReader
 
         checkRefBases(readStart);
 
+        mPrePc.start();
         preprocessSamRecord(read);
+        mPrePc.stop();
 
         if(read.isSecondaryAlignment())
         {
@@ -384,13 +408,21 @@ public class PartitionReader
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
             if(mConfig.FormConsensus)
+            {
+                mConsensusPc.start();
                 duplicateGroup.formConsensusRead(mConsensusReads);
+                mConsensusPc.stop();
+            }
 
+            mPostPc.start();
             postProcessPrimaryRead(duplicateGroup.primaryRead());
+            mPostPc.stop();
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 
+        mPostPc.start();
         postProcessSingleReads(fragmentCoordReads.SingleReads);
+        mPostPc.stop();
         mBamWriter.writeNonDuplicateReads(fragmentCoordReads.SingleReads);
 
         mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
