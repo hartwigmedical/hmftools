@@ -244,7 +244,7 @@ public abstract class NonStandardBaseBuilder
     private static void updateConsensusState(final List<SAMRecord> reads, final ConsensusState consensusState, boolean hasIndels,
             final List<AnnotatedBase> consensusBases)
     {
-        int alignmentStartBoundary = reads.stream().mapToInt(SAMRecord::getAlignmentStart).min().orElse(INVALID_POSITION);
+        final int alignmentStartBoundary = reads.stream().mapToInt(SAMRecord::getAlignmentStart).min().orElse(INVALID_POSITION);
         Validate.isTrue(alignmentStartBoundary >= 1);
 
         int minUnclippedPosStart = INVALID_POSITION;
@@ -294,14 +294,14 @@ public abstract class NonStandardBaseBuilder
             if(minUnclippedPosStart == INVALID_POSITION)
                 minUnclippedPosStart = refPos;
 
-            if(minAlignedPosStart == INVALID_POSITION && !op.isClipping())
+            if(minAlignedPosStart == INVALID_POSITION && !op.isClipping() && op != I)
             {
                 Validate.isTrue(refPos >= alignmentStartBoundary);
                 minAlignedPosStart = refPos;
             }
 
             maxUnclippedPosEnd = max(maxUnclippedPosEnd, refPos);
-            if(!op.isClipping())
+            if(!op.isClipping() && op != I)
                 maxAlignedPosEnd = max(maxAlignedPosEnd, refPos);
 
             lastRefPos = refPos;
