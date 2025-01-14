@@ -167,7 +167,7 @@ public class DepthAnnotator
         // write output VCF
         writeVcf(vcfHeader, depthTasks);
 
-        SV_LOGGER.info("depth annotation complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("Esvee depth annotation complete, mins({})", runTimeMinsStr(startTimeMs));
 
         PerformanceCounter perfCounter = depthTasks.get(0).getPerfCounter();
         for(int i = 1; i < depthTasks.size(); ++i)
