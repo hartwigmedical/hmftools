@@ -3,6 +3,9 @@
 The Redux component performs both UMI aware and UMI agnostic duplicate marking. 
 As the first component to run after alignment it also performs post-alignment improvements to the BAM, specifically by unmapping certain reads and deleting supplementary reads in specific problematic regions of the BAM. It also models sample-specific microsatellite jitter.
 
+Redux requires the mate CIGAR attribute to be set for all paired reads. This will be the case when alignment is performed with BWA or BWA-mem2.
+Alternatively this can be rectified using the Picard FixMateInformation routine.
+
 UMI are used to label each molecule in a sample with a unique sequence prior to PCR amplification.
 
 The usage of UMIs is recommended primarily for three scenarios:  
@@ -20,10 +23,10 @@ java -jar redux.jar
     -input_bam SAMPLE_ID.lane_01.bam,SAMPLE_ID.lane_02.bam,SAMPLE_ID.lane_03.bam  
     -ref_genome /path_to_fasta_files/
     -ref_genome_version V37
-    -unmap_regions /ref_data/unmap_regions.37.tsv 
+    -unmap_regions /ref_data/unmap_regions.37.tsv
+    -ref_genome_msi_file /ref_data/msi_jitter_sites.37.tsv.gz 
     -write_stats 
-    -sambamba /path_to_sambamba/ 
-    -samtools /path_to_samtools/ 
+    -bamtool /path_to_samtools/ 
     -output_dir /path_to_output/
     -log_level DEBUG 
     -threads 24
@@ -40,15 +43,14 @@ ref_genome | Required | Path to reference genome files as used in alignment
 ref_genome_version | Required | V37 or V38
 form_consensus | Optional | Form a consensus read from duplicates
 unmap_regions | Optional | Regions of high depth, repeats or otherwise problematic for mapping
+bamtool | Required | Used for BAM sorting, concatenation and indexing
 threads | Optional | Number of threads, default = 1
-sambamba | Optional | Used to merge BAMs per thread when used with threads > 1
-samtools | Optional | Used to sort and index final output BAM
 output_dir | Optional | If not specified will write output same directory as input BAM
 output_id | Optional | Additonal file suffix
 read_output | Optional, default = NONE | Write detailed read info to CSV, types are: ALL, DUPLICATE, NONE
 write_stats | Optional | Writes a duplicate frequency TSV file
+ref_genome_msi_file | Optional | Path to file of microsatellite sites used for sample-specific jitter, require for Sage
 jitter_msi_only | Optional, default = false | Only runs to model sample-specific microsatellite jitter
-ref_genome_msi_file | Optional | Path to file of microsatellite sites used for sample-specific jitter
 
 ### UMI Command
 
@@ -63,10 +65,8 @@ java -jar redux.jar
     -umi_enabled
     -umi_duplex
     -umi_duplex_delim + 
-    -umi_base_diff_stats 
     -ref_genome_msi_file /path/to/msi_jitter_sites.37.tsv.gz
-    -sambamba /path_to_sambamba/ 
-    -samtools /path_to_samtools/ 
+    -bamtool /path_to_samtools/ 
     -output_dir /path_to_output/
     -log_level DEBUG 
     -threads 24
