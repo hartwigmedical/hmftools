@@ -6,6 +6,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Assert;
@@ -27,7 +28,7 @@ public class AltContigRemapperTest extends RemapperTestBase
 
         // Create a remapper that will remap the tiny bam test data file
         // using the HlaAligner (see below) test aligner (rather than one that uses the entire genome).
-        File tempDir = new File("/Users/timlavers/work/junk"); // TODO is there a preferred way of handling temp files?
+        File tempDir = FileUtils.getTempDirectory();
         File outputFile = new File(tempDir, "test.bam");
         File inputFile = getTestFile("tiny.bam");
         Aligner aligner = new HlaAligner(records);

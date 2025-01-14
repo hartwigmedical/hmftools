@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.nio.file.Files;
@@ -9,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
@@ -36,7 +36,6 @@ public class BwaAligner implements Aligner
             {
                 mAligner = new BwaMemAligner(index);
                 mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
-                // mAligner.setMismatchPenaltyOption(BWA_MISMATCH_PENALTY);
             }
             else
             {
@@ -58,5 +57,14 @@ public class BwaAligner implements Aligner
         List<BwaMemAlignment> alignmentSet = mAligner.alignSeqs(List.of(bases)).get(0);
 
         return alignmentSet;
+    }
+
+    @Override
+    public ImmutablePair<List<BwaMemAlignment>,List<BwaMemAlignment>> alignSequences(final byte[] bases1, final byte[] bases2)
+    {
+        mAligner.alignPairs();
+        mAligner.dontInferPairEndStats();
+        List<List<BwaMemAlignment>> rawResults =  mAligner.alignSeqs(List.of(bases1, bases2));
+        return ImmutablePair.of(rawResults.get(0), rawResults.get(1));
     }
 }
