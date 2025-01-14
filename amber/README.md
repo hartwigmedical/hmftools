@@ -2,7 +2,7 @@
 AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
 When using paired reference/tumor data, AMBER is also able to: 
-  - detect evidence of contamination in the tumor from homozygous sites in the reference; and
+  - detect evidence of contamination in the tumor from homozygous sites in the reference
   - facilitate sample matching / patient deduplication by recording SNPs in the germline
   - identify long regions of homozygosty and consanguinity
 
