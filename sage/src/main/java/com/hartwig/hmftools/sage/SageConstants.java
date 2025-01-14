@@ -96,7 +96,6 @@ public class SageConstants
     public static final double GERMLINE_HET_MIN_EXPECTED_VAF = 0.4;
     public static final double GERMLINE_HET_MIN_SAMPLING_PROB = 1e-3;
 
-
     public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.33;
     public static final double MAX_READ_EDGE_DISTANCE_PERC_PANEL = 0.2;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
@@ -116,6 +115,9 @@ public class SageConstants
     public static final double REALIGNED_MAX_PERC = 0.7;
 
     public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-4;
+
+    public static final double PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT = 0.1;
+    public static final double PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR = 3;
 
     // variant deduplication
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
@@ -150,7 +152,7 @@ public class SageConstants
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
             "panel", 1e-5, -6, 0.02,
-            0, 0, 0.04, 0.04);
+            0, 0, 0.05, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
             "high_confidence", 1e-8, 0, 0.025,
