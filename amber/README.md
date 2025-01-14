@@ -2,7 +2,7 @@
 AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
 When using paired reference/tumor data, AMBER is also able to: 
-  - detect evidence of contamination in the tumor from homozygous sites in the reference; and
+  - detect evidence of contamination in the tumor from homozygous sites in the reference
   - facilitate sample matching / patient deduplication by recording SNPs in the germline
   - identify long regions of homozygosty and consanguinity
 
@@ -124,8 +124,7 @@ No change is made to the SNPCheck or contamination output. These will be run on 
 ## Algorithm 
 
 ### Analysis and filtering of BAF points
-When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
-In tumor only mode, all provided sites are examined in the tumor with additional filtering then applied. 
+When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. Only observations which meet the min map quality, min base quality and min tumor depth and with depth and AF in the specificed range are considered.    In tumor only mode, all provided sites are examined in the tumor with additional filteringon tumor vaf and allelic depth to ensure that the sites are highly unlikely to be homozygous ref or alt in the germline.
  
 ### Segmentation
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
@@ -210,9 +209,6 @@ ORDER BY sampleCount desc;
 
 # Known issues / future improvements
 - **Population based phasing**: Could significantly increase resolution of subclonal/low tumor fraction BAF segmentation.
-- **TINC**: We should estimate tumor in normal contaminations particularly for leukemias
-
-
  
 # Version History and Download Links
 - [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v4.0rc)
