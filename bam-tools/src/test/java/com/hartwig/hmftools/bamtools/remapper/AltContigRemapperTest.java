@@ -24,7 +24,7 @@ public class AltContigRemapperTest extends RemapperTestBase
     @Test
     public void runTest()
     {
-        Assert.assertEquals(16, records.size()); // Sanity check
+        Assert.assertEquals(18, records.size()); // Sanity check
 
         // Create a remapper that will remap the tiny bam test data file
         // using the HlaAligner (see below) test aligner (rather than one that uses the entire genome).
@@ -248,8 +248,6 @@ public class AltContigRemapperTest extends RemapperTestBase
         // 145,5,31271513,31271664,0,151,18,6,121,111,151M,5G8C0T28G42T51C11,"chr6,-31356606,48M3I100M,10;",5,31356204,84542 (reverse)
         // These are not concordant (note the large insertion lengths) so an alt
         // alignment is used for the forward strand.
-        // //5	31356205	HLA-B	99	19	31356606	151M forward
-        //5	31356606	HLA-B	147	0	31356205	48M3I100M. reverse
         SAMRecord expectedFor14 = records.get(14).deepCopy();
         Assert.assertEquals("A00624:8:HHKYHDSXX:2:2276:27299:7623", expectedFor14.getReadName()); // sanity check
         Assert.assertEquals(163, expectedFor14.getFlags()); // sanity check
@@ -276,6 +274,44 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor15.setInferredInsertSize(-549);
         checkOutputContains(expectedFor15, results);
 
+        // input[16]: A00624:8:HHKYHDSXX:4:2543:5737:19288, reverse strand
+        // BWA returns 121,5,29943927,29944078,0,151,60,0,151,73,151M,151,null,-1,-1,0
+        SAMRecord expectedFor16 = records.get(16).deepCopy();
+        Assert.assertEquals("A00624:8:HHKYHDSXX:4:2543:5737:19288", expectedFor16.getReadName()); // sanity check
+        Assert.assertEquals(121, expectedFor16.getFlags()); // sanity check
+        expectedFor16.setFlags(121);
+        expectedFor16.setReferenceIndex(5);
+        expectedFor16.setAlignmentStart(29943927 + 1);
+        expectedFor16.setMappingQuality(60);
+        expectedFor16.setCigarString("151M");
+        expectedFor16.setMateReferenceIndex(5);
+        expectedFor16.setMateAlignmentStart(29943927 + 1);
+        expectedFor16.setInferredInsertSize(0);
+        SAMRecord results16 = results.stream()
+                .filter(samRecord -> samRecord.getReadName().equals(expectedFor16.getReadName()))
+                .filter(samRecord -> samRecord.getFlags() == 121)
+                .findFirst().orElseThrow();
+        check(expectedFor16, results16);
+
+        // input[17]: A00624:8:HHKYHDSXX:4:2543:5737:19288, forward strand
+        // BWA returns 181,-1,-1,-1,-1,-1,0,0,0,0,"",null,null,5,29943927,0 - not mapped
+        SAMRecord expectedFor17 = records.get(17).deepCopy();
+        Assert.assertEquals("A00624:8:HHKYHDSXX:4:2543:5737:19288", expectedFor17.getReadName()); // sanity check
+        Assert.assertEquals(181, expectedFor17.getFlags()); // sanity check
+        expectedFor17.setFlags(181);
+        expectedFor17.setReferenceIndex(5);
+        expectedFor17.setAlignmentStart(29943927 + 1);
+        expectedFor17.setMappingQuality(0);
+        expectedFor17.setCigarString("*");
+        expectedFor17.setMateReferenceIndex(5);
+        expectedFor17.setMateAlignmentStart(29943927 + 1);
+        expectedFor17.setInferredInsertSize(0);
+        // We have to search for this record manually as it has the same start location as that of its mate.
+        SAMRecord results17 = results.stream()
+                .filter(samRecord -> samRecord.getReadName().equals(expectedFor17.getReadName()))
+                .filter(samRecord -> samRecord.getFlags() == 181)
+                .findFirst().orElseThrow();
+        check(expectedFor17, results17);
     }
 
     private void checkOutputContains(SAMRecord expected, List<SAMRecord> output)
@@ -382,14 +418,23 @@ class HlaAligner implements Aligner
 
         Assert.assertEquals("A00624:8:HHKYHDSXX:2:2276:27299:7623", records.get(14).getReadName()); // Sanity check
         recordIndexToAlignments.put(14, List.of(
-                bwa("97,5,31356204,31356355,0,151,19,4,131,121,151M,21T0C19C79G28", "chr6,+31271111,151M,6;","5,31271513,-84542")
+                bwa("97,5,31356204,31356355,0,151,19,4,131,121,151M,21T0C19C79G28", "chr6,+31271111,151M,6;", "5,31271513,-84542")
         ));
 
         Assert.assertEquals("A00624:8:HHKYHDSXX:2:2276:27299:7623", records.get(15).getReadName()); // Sanity check
         recordIndexToAlignments.put(15, List.of(
-                bwa("145,5,31271513,31271664,0,151,18,6,121,111,151M,5G8C0T28G42T51C11","chr6,-31356606,48M3I100M,10;","5,31356204,84542")
+                bwa("145,5,31271513,31271664,0,151,18,6,121,111,151M,5G8C0T28G42T51C11", "chr6,-31356606,48M3I100M,10;", "5,31356204,84542")
         ));
 
+        Assert.assertEquals("A00624:8:HHKYHDSXX:4:2543:5737:19288", records.get(16).getReadName()); // Sanity check
+        recordIndexToAlignments.put(16, List.of(
+                bwa("121,5,29943927,29944078,0,151,60,0,151,73,151M,151,null,-1,-1,0")
+        ));
+
+        Assert.assertEquals("A00624:8:HHKYHDSXX:4:2543:5737:19288", records.get(17).getReadName()); // Sanity check
+        recordIndexToAlignments.put(17, List.of(
+                bwa("181,-1,-1,-1,-1,-1,0,0,0,0,\"\",null,null,5,29943927,0")
+        ));
     }
 
     @Override
