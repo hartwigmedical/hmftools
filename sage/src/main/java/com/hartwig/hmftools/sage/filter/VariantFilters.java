@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PER
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL_MSI_VARIANT;
+import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_BOOST;
 import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
@@ -577,14 +578,19 @@ public class VariantFilters
         {
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
-        else
+
+        if(tier == PANEL && !refCounter.isInLongRepeat())
         {
-            if(adjustedRefAltCount == 1 && tier == PANEL)
+            maxGermlineVaf += PANEL_MAX_GERMLINE_VAF_BOOST;
+            if(adjustedRefAltCount == 1)
             {
                 double baseQualAvg = refCounter.averageAltRecalibratedBaseQuality();
 
                 if(baseQualAvg < DEFAULT_MIN_AVG_BASE_QUALITY)
-                    maxGermlineVaf = min(PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT, tumorVaf / PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR);
+                {
+                    double tumorLimit = tumorVaf / PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR;
+                    maxGermlineVaf = max(maxGermlineVaf, min(PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT, tumorLimit));
+                }
             }
         }
 
