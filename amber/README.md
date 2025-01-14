@@ -124,8 +124,7 @@ No change is made to the SNPCheck or contamination output. These will be run on 
 ## Algorithm 
 
 ### Analysis and filtering of BAF points
-When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
-In tumor only mode, all provided sites are examined in the tumor with additional filtering then applied. 
+When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. Only observations which meet the min map quality, min base quality and min tumor depth and with depth and AF in the specificed range are considered.    In tumor only mode, all provided sites are examined in the tumor with additional filteringon tumor vaf and allelic depth to ensure that the sites are highly unlikely to be homozygous ref or alt in the germline.
  
 ### Segmentation
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
