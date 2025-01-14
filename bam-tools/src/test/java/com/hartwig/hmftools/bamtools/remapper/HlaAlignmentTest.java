@@ -135,5 +135,13 @@ public class HlaAlignmentTest extends RemapperTestBase
         Assert.assertEquals(0, sam.getInferredInsertSize());
     }
 
+    @Test
+    public void isUnmappedTest()
+    {
+        HlaAlignment unmapped = new HlaAlignment(bwa("181,-1,-1,-1,-1,-1,0,0,0,0,\"\",null,null,5,29943927,0"));
+        Assert.assertTrue(unmapped.isUnmapped());
 
+        HlaAlignment mapped = new HlaAlignment(bwa("121,5,29943927,29944078,0,151,60,0,151,73,151M,151,null,-1,-1,0"));
+        Assert.assertFalse(mapped.isUnmapped());
+    }
 }

@@ -35,7 +35,7 @@ public class HlaAlignment
     public static @NotNull Set<HlaAlignment> hlaAlignments(BwaMemAlignment alignment, RefGenomeVersion refGenomeVersion)
     {
         Set<HlaAlignment> result = new HashSet<>();
-        result.add(new HlaAlignment(alignment)); // TODO only if hla
+        result.add(new HlaAlignment(alignment));
         if(alignment.getMapQual() > 30)
         {
             return result;
@@ -57,9 +57,7 @@ public class HlaAlignment
     public HlaAlignment(final BwaMemAlignment baseAlignment, AlternativeAlignment alignment)
     {
         this.BaseAlignment = baseAlignment;
-        // TODO check in chr6
         Position_1Based = alignment.Position;
-        // TODO  check in HLA
         MapQuality = 0; // alignment.MapQual; No. AlternativeAlignment.MapQual seems actually to be the edit distance
         Cigar = alignment.Cigar;
         Flags = SAMFlag.getFlags(getSamFlag());
@@ -68,9 +66,7 @@ public class HlaAlignment
     public HlaAlignment(final BwaMemAlignment baseAlignment)
     {
         this.BaseAlignment = baseAlignment;
-        // TODO check in chr6
         Position_1Based = baseAlignment.getRefStart() + 1;
-        // TODO  check in HLA
         MapQuality = baseAlignment.getMapQual();
         Cigar = baseAlignment.getCigar();
         Flags = SAMFlag.getFlags(getSamFlag());
@@ -181,11 +177,6 @@ public class HlaAlignment
                 ", MapQuality=" + MapQuality +
                 ", Cigar='" + Cigar + '\'' +
                 '}';
-    }
-
-    public boolean isReadReverseStrand()
-    {
-        return Flags.contains(SAMFlag.READ_REVERSE_STRAND);
     }
 
     public boolean isUnmapped()
