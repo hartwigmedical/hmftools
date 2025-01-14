@@ -47,6 +47,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
+import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
@@ -243,6 +244,9 @@ public abstract class NonStandardBaseBuilder
     private static void updateConsensusState(final List<SAMRecord> reads, final ConsensusState consensusState, boolean hasIndels,
             final List<AnnotatedBase> consensusBases)
     {
+        int alignmentStartBoundary = reads.stream().mapToInt(SAMRecord::getAlignmentStart).min().orElse(INVALID_POSITION);
+        Validate.isTrue(alignmentStartBoundary >= 1);
+
         int minUnclippedPosStart = INVALID_POSITION;
         int maxUnclippedPosEnd = 0;
         int minAlignedPosStart = INVALID_POSITION;
@@ -271,24 +275,33 @@ public abstract class NonStandardBaseBuilder
                 }
             }
 
+            CigarOperator op = consensusBase.CigarOp;
+            if(refPos < alignmentStartBoundary && (op == M || op == X || op == EQ))
+            {
+                op = S;
+            }
+
             bases.add(consensusBase.Base);
             quals.add(consensusBase.Qual);
-            cigarOps.add(consensusBase.CigarOp);
+            cigarOps.add(op);
 
-            if(firstNonClippedIndex == INVALID_POSITION && !consensusBase.CigarOp.isClipping())
+            if(firstNonClippedIndex == INVALID_POSITION && !op.isClipping())
                 firstNonClippedIndex = idx;
 
-            if(!consensusBase.CigarOp.isClipping())
+            if(!op.isClipping())
                 lastNonClippedIndex = max(lastNonClippedIndex, idx);
 
             if(minUnclippedPosStart == INVALID_POSITION)
                 minUnclippedPosStart = refPos;
 
-            if(minAlignedPosStart == INVALID_POSITION && !consensusBase.CigarOp.isClipping())
+            if(minAlignedPosStart == INVALID_POSITION && !op.isClipping())
+            {
+                Validate.isTrue(refPos >= alignmentStartBoundary);
                 minAlignedPosStart = refPos;
+            }
 
             maxUnclippedPosEnd = max(maxUnclippedPosEnd, refPos);
-            if(!consensusBase.CigarOp.isClipping())
+            if(!op.isClipping())
                 maxAlignedPosEnd = max(maxAlignedPosEnd, refPos);
 
             lastRefPos = refPos;
