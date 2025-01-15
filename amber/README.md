@@ -130,7 +130,7 @@ When using paired reference/tumor bams, AMBER confirms these sites as heterozygo
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
 ### Contamination
-The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage.  It can only be run in Normal/Tumor mode as it works by analysing evidence in the tumor for heterozygosity at high confidence homozygous reference sites in the normal.  AMBER first detects presence of contamination and then estimates a contamination rate
+The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage.  It can only be run in Normal/Tumor mode as it works by analysing evidence in the tumor for heterozygosity at high confidence homozygous reference sites in the normal.  AMBER first detects presence of contamination and then estimates a contamination rate.
 
 **Detect contamination**
 
@@ -141,16 +141,15 @@ AMBER first gathers high confidence homozygous ref sites from the normal requiri
 The range of the contamination rate is evaluated from 0.001 to 1 in increments of 0.001.
 
 In each candidate site in the Tumor sample with 2 or more ALT support
-•	If it is heterozygous, the expected no. contaminated reads = 0.5 * contamination rate * median read depth
-•	If it is homozygous with ALT, the expected no. contaminated reads = contamination rate * median read depth 
-•	If it is homozygous with REF, the expected no. contaminated reads = 0
+- If it is heterozygous, the expected no. contaminated reads = 0.5 * contamination rate * median read depth
+- If it is homozygous with ALT, the expected no. contaminated reads = contamination rate * median read depth
+- If it is homozygous with REF, the expected no. contaminated reads = 0
 
 Assuming a Poisson distribution, the expected probability of detecting a contaminated read is
 ```
 0.5 * Poisson(observation = ALT support, mean = ALT heterozygous mean) 
 + 0.25 * Poisson(observation = ALT support, mean = homozygous mean)
 ```
-
 AMBER then excludes probabilities associated with ALT support of 0 or 1 and re-normalises the expected probability for all higher ALT support from 3 and more.
 
 AMBER also counts the actual number of positions with ALT support. And similarly calculates the proportion belonging to each ALT support, excluding 0 and 1.
