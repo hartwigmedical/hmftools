@@ -253,7 +253,7 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 ## Known Issues / Future improvements
 
 **Duplicate marking**
-- **Read length for unpaired** - Currently this is not checked, and hence we tend to over collapse duplciates, but in some scenarios it may be valuable
+- **Read length for unpaired** - Currently this is not checked, and hence we tend to over collapse duplicates, but in some scenarios it may be valuable
 - **Reads with unmapped mates** – Currently marked as duplicates based on the coordinates (and UMI) of the aligned read only.  Could lead to over-clustering.
 - **Reads with mates with multiple similar local alignments** – These are currently under-clustered and lead to counting umi groups multiple times 
 - **Distinguish optical vs PCR duplicates** - Duplicates should be marked as ‘optical’ on Illumina if on the same run and lane and the tile difference is in {0,1,999,1000,1001}. For duplicate groups >2, require same tile + distance < 2500.  Investiage rules for other technologies

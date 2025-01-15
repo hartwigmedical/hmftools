@@ -88,7 +88,6 @@ class StructuralVariantDAO
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .type(type)
                     .filter(filterStr)
-                    .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
                     .event(valueNotNull(record.getValue(STRUCTURALVARIANT.EVENT)))
                     .startTumorVariantFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMORVARIANTFRAGMENTCOUNT)))
@@ -107,11 +106,6 @@ class StructuralVariantDAO
                     .inexactHomologyOffsetEnd(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND)))
                     .startLinkedBy(valueNotNull(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY)))
                     .endLinkedBy(valueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
-                    .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
-                    .recoveryMethod(valueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYMETHOD)))
-                    .recoveryFilter(valueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYFILTER)))
-                    .startRefContext(valueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
-                    .endRefContext(valueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
                     .insertSequenceAlignments(valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
                     .insertSequenceRepeatClass(valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS)))
                     .insertSequenceRepeatType(valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE)))
@@ -156,7 +150,6 @@ class StructuralVariantDAO
                     STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGEEND,
                     STRUCTURALVARIANT.JUNCTIONCOPYNUMBER,
                     STRUCTURALVARIANT.FILTER,
-                    STRUCTURALVARIANT.IMPRECISE,
                     STRUCTURALVARIANT.QUALSCORE,
                     STRUCTURALVARIANT.EVENT,
                     STRUCTURALVARIANT.STARTTUMORVARIANTFRAGMENTCOUNT,
@@ -176,11 +169,6 @@ class StructuralVariantDAO
                     STRUCTURALVARIANT.VCFID,
                     STRUCTURALVARIANT.STARTLINKEDBY,
                     STRUCTURALVARIANT.ENDLINKEDBY,
-                    STRUCTURALVARIANT.RECOVERED,
-                    STRUCTURALVARIANT.RECOVERYMETHOD,
-                    STRUCTURALVARIANT.RECOVERYFILTER,
-                    STRUCTURALVARIANT.STARTREFCONTEXT,
-                    STRUCTURALVARIANT.ENDREFCONTEXT,
                     STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS,
                     STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS,
                     STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE,
@@ -221,7 +209,6 @@ class StructuralVariantDAO
                 isSingle ? null : DatabaseUtil.decimal(variant.adjustedEndCopyNumberChange()),
                 variant.junctionCopyNumber(),
                 variant.filter(),
-                variant.imprecise(),
                 DatabaseUtil.decimal(variant.qualityScore()),
                 variant.event(),
                 variant.startTumorVariantFragmentCount(),
@@ -242,11 +229,6 @@ class StructuralVariantDAO
                 "no_vcf_id_known",
                 limitSizeOfCSV(MAX_LINKED_BY, variant.startLinkedBy()),
                 limitSizeOfCSV(MAX_LINKED_BY, variant.endLinkedBy()),
-                variant.recovered(),
-                variant.recoveryMethod(),
-                variant.recoveryFilter(),
-                variant.startRefContext(),
-                isSingle ? null : variant.endRefContext(),
                 DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(), STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS),
                 variant.insertSequenceRepeatClass(),
                 variant.insertSequenceRepeatType(),

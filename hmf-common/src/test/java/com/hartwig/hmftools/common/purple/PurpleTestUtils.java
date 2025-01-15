@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
 import java.util.Collection;
-import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
@@ -63,12 +62,10 @@ public class PurpleTestUtils
                 .insertSequenceAlignments(Strings.EMPTY)
                 .type(type)
                 .hotspot(false)
-                .recovered(false)
                 .qualityScore(0)
                 .start(createStartLeg(startChromosome, startPosition, type).alleleFrequency(startVaf).build())
                 .end(createEndLeg(endChromosome, endPosition, type).alleleFrequency(endVaf).build())
-                .startContext(dummyContext())
-                .imprecise(true);
+                .startContext(dummyContext());
     }
 
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(
@@ -82,11 +79,9 @@ public class PurpleTestUtils
                 .type(type)
                 .qualityScore(0)
                 .hotspot(false)
-                .recovered(false)
                 .start(createStartLeg(startChromosome, startPosition, type).build())
                 .end(createEndLeg(endChromosome, endPosition, type).build())
-                .startContext(dummyContext())
-                .imprecise(true);
+                .startContext(dummyContext());
     }
 
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariantSingleBreakend(
@@ -98,11 +93,9 @@ public class PurpleTestUtils
                 .insertSequenceAlignments(Strings.EMPTY)
                 .qualityScore(0)
                 .hotspot(false)
-                .recovered(false)
                 .type(StructuralVariantType.BND)
                 .start(createStartLeg(startChromosome, startPosition, StructuralVariantType.BND).alleleFrequency(startVaf).build())
-                .startContext(dummyContext())
-                .imprecise(false);
+                .startContext(dummyContext());
     }
 
     @NotNull
