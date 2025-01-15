@@ -155,10 +155,13 @@ public class VariantReadContextBuilder
         if(readFlankStart < 0 || readFlankEnd >= readBases.length)
             return null;
 
-        byte[] coreBaseQuals = Arrays.subsetArray(read.getBaseQualities(), readFlankStart + mFlankSize, readFlankEnd - mFlankSize);
-        for(byte coreBaseQual : coreBaseQuals)
-            if(coreBaseQual == (byte) 0)
-                return null;
+        if(read.getBaseQualities().length > 0) // will not apply to candidates created by append mode
+        {
+            byte[] coreBaseQuals = Arrays.subsetArray(read.getBaseQualities(), readFlankStart + mFlankSize, readFlankEnd - mFlankSize);
+            for (byte coreBaseQual : coreBaseQuals)
+                if (coreBaseQual == (byte) 0)
+                    return null;
+        }
 
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;
