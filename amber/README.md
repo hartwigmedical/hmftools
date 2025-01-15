@@ -130,7 +130,7 @@ When using paired reference/tumor bams, AMBER confirms these sites as heterozygo
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
 ### Contamination
-The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage.  It can only be run in Tumor-Normal mode as it works by analysing evidence in the tumor for heterozygosity at high confidence homozygous reference sites in the normal.  AMBER first detects presence of contamination and then estimates a contamination rate
+The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage.  It can only be run in Normal/Tumor mode as it works by analysing evidence in the tumor for heterozygosity at high confidence homozygous reference sites in the normal.  AMBER first detects presence of contamination and then estimates a contamination rate
 
 **Detect contamination**
 
