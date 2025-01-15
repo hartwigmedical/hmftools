@@ -119,6 +119,11 @@ public class FittingConfig
         GcRatioExponent = getConfigDecimal(configBuilder, GC_RATIO_EXPONENT, targetedMode ? TARGETED_GC_RATIO_EXPONENT_DEFAULT : 0);
     }
 
+    public boolean hasValidValues()
+    {
+        return MinPurity > 0 && MaxPurity >= MinPurity && MaxPurity <= 1.0 && MinPloidy > 0 && MaxPloidy >= MinPloidy && PurityIncrement > 0;
+    }
+
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addDecimal(MIN_PURITY, "Minimum purity", MIN_PURITY_DEFAULT);
