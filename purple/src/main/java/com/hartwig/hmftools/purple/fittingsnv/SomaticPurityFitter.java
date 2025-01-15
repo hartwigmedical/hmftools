@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-import javax.swing.DefaultListSelectionModel;
-
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -67,7 +65,8 @@ public class SomaticPurityFitter
     private final int mKdMinPeak;
     private final int mKdMinSomatics;
 
-    public SomaticPurityFitter(int minPeak, int minSomatics, int minReadCount, int maxReadCount, double minPurity, double maxPurity)
+    public SomaticPurityFitter(
+            int minPeak, int minSomatics, int minReadCount, int maxReadCount, double minPurity, double maxPurity)
     {
         mMinReadCount = minReadCount;
         mMaxReadCount = maxReadCount;
@@ -225,7 +224,7 @@ public class SomaticPurityFitter
 
         if(hotspotPurity > somaticPeakPurity)
         {
-            FittedPurity matchedFittedPurity = findMatchedFittedPurity(hotspotPurity, diploidCandidates, 0.005);
+            FittedPurity matchedFittedPurity = findMatchedFittedPurity(hotspotPurity, diploidCandidates);
 
             if(matchedFittedPurity != null)
                 return matchedFittedPurity;
@@ -237,7 +236,7 @@ public class SomaticPurityFitter
 
             if(reassessmentPurity > somaticPeakPurity)
             {
-                FittedPurity matchedFittedPurity = findMatchedFittedPurity(reassessmentPurity, diploidCandidates, 0.005);
+                FittedPurity matchedFittedPurity = findMatchedFittedPurity(reassessmentPurity, diploidCandidates);
 
                 if(matchedFittedPurity != null)
                     return matchedFittedPurity;
@@ -254,12 +253,27 @@ public class SomaticPurityFitter
             && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
     }
 
-    protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates, final double epsilon)
+    protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates)
     {
-        return allCandidates.stream()
-                .filter(x -> abs(x.purity() - purity) < epsilon)
-                .filter(x -> abs(x.ploidy() - 2.0) < epsilon) // assumes ploidy 2 as well since is looking a highly diploid solutions
-                .findFirst().orElse(null);
+        // find the closest purity with diploid ploidy
+        FittedPurity closestPurity = null;
+        double closestDiff = 0;
+
+        for(FittedPurity fittedPurity : allCandidates)
+        {
+            if(abs(fittedPurity.ploidy() - 2) > 0.005)
+                continue;
+
+            double diff = abs(fittedPurity.purity() - purity);
+
+            if(closestPurity == null || diff < closestDiff)
+            {
+                closestDiff = diff;
+                closestPurity = fittedPurity;
+            }
+        }
+
+        return closestPurity;
     }
 
     @Nullable
@@ -351,7 +365,7 @@ public class SomaticPurityFitter
 
         PPL_LOGGER.info("somatic VAF-based purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
 
-        FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates, 0.005);
+        FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates);
 
         if(matchedFittedPurity != null)
             return matchedFittedPurity;

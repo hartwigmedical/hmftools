@@ -113,6 +113,12 @@ public class PurpleApplication
 
     public void run()
     {
+        if(!mConfig.Fitting.hasValidValues())
+        {
+            PPL_LOGGER.error("invalid configured fitting values");
+            System.exit(1);
+        }
+
         long startTimeMs = System.currentTimeMillis();
 
         try
