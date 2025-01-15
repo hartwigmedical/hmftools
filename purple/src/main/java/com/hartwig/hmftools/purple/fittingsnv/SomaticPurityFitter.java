@@ -247,6 +247,8 @@ public class SomaticPurityFitter
         {
             double reassessmentPurity = calcReadjustmentPurity(filteredSomatics, somaticFitPurity, copyNumbers);
 
+            reassessmentPurity = Math.round(reassessmentPurity * 100.0) / 100.0;
+
             if(reassessmentPurity > somaticPeakPurity)
             {
                 FittedPurity matchedFittedPurity = findMatchedFittedPurity(reassessmentPurity, diploidCandidates, 0.005);
