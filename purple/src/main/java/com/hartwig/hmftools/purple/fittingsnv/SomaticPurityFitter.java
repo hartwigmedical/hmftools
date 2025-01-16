@@ -37,7 +37,9 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
@@ -128,7 +130,7 @@ public class SomaticPurityFitter
 
             GermlineStatus germlineStatus = region.isPresent() ? region.get().germlineStatus() : GermlineStatus.UNKNOWN;
 
-            if(!variant.isHotspot() && germlineStatus != GermlineStatus.DIPLOID)
+            if(!variant.isHotspotType() && germlineStatus != GermlineStatus.DIPLOID)
             {
                 ++filterCounts[FilterReason.GERMLINE_DIPLOID.ordinal()];
                 continue;
@@ -160,13 +162,15 @@ public class SomaticPurityFitter
             return false;
 
         VariantTier variantTier = variant.decorator().tier();
+
+        boolean isHotspotType = variant.isHotspotType();
         
         double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
 
-        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && variant.isHotspot())
+        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && isHotspotType)
             return true;
 
-        if(variantTier != VariantTier.HOTSPOT)
+        if(!isHotspotType)
         {
             if(variant.context().hasAttribute(GNOMAD_FREQ))
             {
@@ -204,10 +208,11 @@ public class SomaticPurityFitter
 
     @Nullable
     public FittedPurity fromSomatics(
-            final List<SomaticVariant> somaticVariants, final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers)
+            final List<SomaticVariant> somaticVariants, final List<FittedPurity> diploidCandidates,
+            final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
         List<SomaticVariant> filteredSomatics = somaticVariants.stream()
-                .filter(x -> x.isHotspot() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
+                .filter(x -> x.isHotspotType() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
                 .collect(toList());
 
         double somaticPeakPurity = 0;
@@ -232,7 +237,7 @@ public class SomaticPurityFitter
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", filteredSomatics.size());
         }
 
-        double hotspotPurity = findHotspotPurity(filteredSomatics, somaticPeakPurity);
+        double hotspotPurity = findHotspotPurity(filteredSomatics, somaticPeakPurity, gender);
 
         if(hotspotPurity > somaticPeakPurity)
         {
@@ -296,7 +301,7 @@ public class SomaticPurityFitter
 
         for(SomaticVariant variant : variants)
         {
-            if(!variant.isHotspot())
+            if(!variant.isHotspotType())
             {
                 if(variant.variantImpact() == null)
                     continue;
@@ -320,7 +325,7 @@ public class SomaticPurityFitter
 
             double vaf = variant.alleleFrequency();
 
-            if(variant.isHotspot())
+            if(variant.isHotspotType())
             {
                 if(vaf > SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
                 {
@@ -392,7 +397,7 @@ public class SomaticPurityFitter
         return null;
     }
 
-    private double findHotspotPurity(final List<SomaticVariant> somaticVariants, final double somaticPeakPurity)
+    private double findHotspotPurity(final List<SomaticVariant> somaticVariants, final double somaticPeakPurity, final Gender gender)
     {
         // check for a hotspot variant with a higher VAF
         if(somaticVariants.size() > SNV_HOTSPOT_MAX_SNV_COUNT)
@@ -402,11 +407,16 @@ public class SomaticPurityFitter
 
         for(SomaticVariant variant : somaticVariants)
         {
-            if(!variant.isHotspot())
+            if(!variant.isHotspotType())
                 continue;
 
-            if(!HumanChromosome.fromString(variant.chromosome()).isAutosome())
-                continue;
+            HumanChromosome chromosome = HumanChromosome.fromString(variant.chromosome());
+
+            if(!chromosome.isAutosome())
+            {
+                if(!(gender == Gender.FEMALE && chromosome == HumanChromosome._X))
+                    continue;
+            }
 
             if(variant.alleleFrequency() * 2 <= somaticPeakPurity || variant.alleleFrequency() > 0.5)
                 continue;
