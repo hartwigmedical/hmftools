@@ -33,6 +33,7 @@ public class VariantPurityFitter
 
     // interim state
     private List<SomaticVariant> mFittingSomatics;
+    private final List<StructuralVariant> mHotspotSVs;
 
     private int mSvHotspotCount;
     private int mSvFragmentReadCount;
@@ -53,6 +54,7 @@ public class VariantPurityFitter
         mHasTumor = false;
 
         mFittingSomatics = Lists.newArrayList();
+        mHotspotSVs = Lists.newArrayList();
 
         mSomaticPurityFitter = new SomaticPurityFitter(
                 config.SomaticFitting.MinPeakVariants, config.SomaticFitting.MinTotalVariants,
@@ -107,9 +109,10 @@ public class VariantPurityFitter
         mHasTumor = false;
     }
 
-    public FittedPurity calcSomaticFit(final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
+    public FittedPurity calcSomaticFit(
+            final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
-        return mSomaticPurityFitter.fromSomatics(mFittingSomatics, diploidCandidates, copyNumbers, gender);
+        return mSomaticPurityFitter.fromSomatics(mFittingSomatics, mHotspotSVs, diploidCandidates, copyNumbers, gender);
     }
 
     public FittedPurity calcSomaticOnlyFit(final List<FittedPurity> allCandidates)
@@ -134,8 +137,11 @@ public class VariantPurityFitter
             if(variant.isFiltered())
                 continue;
 
-            if(variant.hotspot())
+            if(variant.hotspot() && variant.end() != null)
+            {
                 mSvHotspotCount++;
+                mHotspotSVs.add(variant);
+            }
 
             Integer startTumorVariantFragmentCount = variant.start().tumorVariantFragmentCount();
             if(variant.end() != null && startTumorVariantFragmentCount != null)
