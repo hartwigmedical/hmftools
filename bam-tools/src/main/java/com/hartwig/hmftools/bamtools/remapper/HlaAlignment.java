@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.immune.ImmuneRegions;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +41,7 @@ public class HlaAlignment
         }
         if(alignment.getXATag() != null)
         {
-            List<AlternativeAlignment> alternatives = AlternativeAlignment.fromLocationTag(alignment.getXATag());
+            List<AltAlignment> alternatives = AltAlignment.fromLocationTag(alignment.getXATag());
             alternatives.stream()
                     .filter(a -> isHla(a, refGenomeVersion))//
                     .forEach(a -> result.add(new HlaAlignment(alignment, a)));
@@ -54,11 +53,11 @@ public class HlaAlignment
         return result;
     }
 
-    public HlaAlignment(final BwaMemAlignment baseAlignment, AlternativeAlignment alignment)
+    public HlaAlignment(final BwaMemAlignment baseAlignment, AltAlignment alignment)
     {
         this.BaseAlignment = baseAlignment;
         Position_1Based = alignment.Position;
-        MapQuality = 0; // alignment.MapQual; No. AlternativeAlignment.MapQual seems actually to be the edit distance
+        MapQuality = 0; // Only the edit distance is available in the alts in the xa tag.
         Cigar = alignment.Cigar;
         Flags = SAMFlag.getFlags(getSamFlag());
     }
@@ -194,7 +193,7 @@ public class HlaAlignment
         return BaseAlignment.getRefId();
     }
 
-    private static boolean isHla(AlternativeAlignment alternativeAlignment, RefGenomeVersion refGenomeVersion)
+    private static boolean isHla(AltAlignment alternativeAlignment, RefGenomeVersion refGenomeVersion)
     {
         final List<ChrBaseRegion> hlaRegions = ImmuneRegions.getHlaRegions(refGenomeVersion);
         return hlaRegions.stream().anyMatch(chrBaseRegion -> chrBaseRegion.containsPosition(alternativeAlignment.Position));

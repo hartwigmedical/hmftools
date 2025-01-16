@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -31,7 +30,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         File tempDir = FileUtils.getTempDirectory();
         File outputFile = new File(tempDir, "test.bam");
         File inputFile = getTestFile("tiny.bam");
-        Aligner aligner = new HlaAligner(records);
+        PairAligner aligner = new HlaAligner(records);
         AltContigRemapperConfig config = new DummyConfig(aligner, inputFile.getAbsolutePath(), outputFile.getAbsolutePath());
         AltContigRemapper remapper = new AltContigRemapper(config);
 
@@ -335,16 +334,16 @@ public class AltContigRemapperTest extends RemapperTestBase
 
 class DummyConfig extends AltContigRemapperConfig
 {
-    private final Aligner aligner;
+    private final PairAligner aligner;
 
-    DummyConfig(Aligner aligner, String inputBam, String outputBam)
+    DummyConfig(PairAligner aligner, String inputBam, String outputBam)
     {
         super(inputBam, outputBam, null);
         this.aligner = aligner;
     }
 
     @Override
-    public Aligner aligner()
+    public PairAligner aligner()
     {
         return aligner;
     }
@@ -355,7 +354,7 @@ class DummyConfig extends AltContigRemapperConfig
  * in the test data file tiny.sam to the values returned by a BwaAligner instance that uses
  * the hg38_no_alts reference sequence.
  */
-class HlaAligner implements Aligner
+class HlaAligner implements PairAligner
 {
 
     private final List<SAMRecord> records;
@@ -437,7 +436,6 @@ class HlaAligner implements Aligner
         ));
     }
 
-    @Override
     public List<BwaMemAlignment> alignSequence(byte[] bases)
     {
         for(int index = 0; index < records.size(); index++)

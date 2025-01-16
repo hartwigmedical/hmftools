@@ -1,22 +1,21 @@
-package com.hartwig.hmftools.esvee.assembly.alignment;
+package com.hartwig.hmftools.bamtools.remapper;
 
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
-public class BwaAligner implements Aligner
+public class BwaPairAligner implements PairAligner
 {
     private final BwaMemAligner mAligner;
 
-    public BwaAligner(final String refGenomeImageFile)
+    public BwaPairAligner(final String refGenomeImageFile)
     {
         if(!refGenomeImageFile.isEmpty() && Files.exists(Paths.get(refGenomeImageFile)))
         {
@@ -28,13 +27,15 @@ public class BwaAligner implements Aligner
             }
             catch(Exception e)
             {
-                SV_LOGGER.error("failed to initialise BWA aligner: {}", e.toString());
+                BT_LOGGER.error("failed to initialise BWA aligner: {}", e.toString());
             }
 
             if(index != null)
             {
                 mAligner = new BwaMemAligner(index);
-                mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
+                mAligner.alignPairs();
+                mAligner.dontInferPairEndStats();
+                mAligner.setBandwidthOption(31);
             }
             else
             {
@@ -46,13 +47,10 @@ public class BwaAligner implements Aligner
             mAligner = null;
         }
     }
-
     @Override
-    public List<BwaMemAlignment> alignSequence(final byte[] bases)
+    public ImmutablePair<List<BwaMemAlignment>,List<BwaMemAlignment>> alignSequences(final byte[] bases1, final byte[] bases2)
     {
-        if(mAligner == null)
-            return Collections.emptyList();
-
-        return mAligner.alignSeqs(List.of(bases)).get(0);
+        List<List<BwaMemAlignment>> rawResults =  mAligner.alignSeqs(List.of(bases1, bases2));
+        return ImmutablePair.of(rawResults.get(0), rawResults.get(1));
     }
 }

@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -19,13 +18,13 @@ import htsjdk.samtools.SAMRecord;
 public class BwaHlaRecordAlignerTest extends RemapperTestBase
 {
 
-    private Aligner aligner;
+    private PairAligner aligner;
     private BwaHlaRecordAligner bwaAligner;
 
     @Before
     public void before()
     {
-        aligner = Mockito.mock(Aligner.class);
+        aligner = Mockito.mock(PairAligner.class);
         bwaAligner = new BwaHlaRecordAligner(aligner, samFileHeader(), RefGenomeVersion.V38);
     }
 

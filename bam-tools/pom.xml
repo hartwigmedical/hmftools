@@ -35,6 +35,11 @@
             <artifactId>guice</artifactId>
             <version>7.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.broadinstitute</groupId>
+            <artifactId>gatk-bwamem-jni</artifactId>
+            <version>1.0.5</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -53,19 +58,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>esvee</artifactId>
-            <version>1.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>esvee</artifactId>
-            <version>1.1</version>
-            <scope>compile</scope>
-        </dependency>
-
     </dependencies>
 
     <build>

@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
+import com.hartwig.hmftools.common.bamops.BamOperations;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.common.FileCommon;
 
 import htsjdk.samtools.*;
 
@@ -10,10 +11,13 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 public class AltContigRemapper
@@ -34,7 +38,7 @@ public class AltContigRemapper
     {
         long startTimeMs = System.currentTimeMillis();
         BT_LOGGER.info("starting alt contig remapper");
-        try(SamReader samReader = SamReaderFactory.makeDefault().open(new File(mConfig.OrigBamFile)))
+        try(SamReader samReader = SamReaderFactory.makeDefault().open(new File(mConfig.mOrigBamFile)))
         {
 
             // The header in the rewritten file needs to be the same
@@ -50,11 +54,11 @@ public class AltContigRemapper
             newHeader.setSequenceDictionary(dictionaryWithHlaAltsRemoved);
 
             // The initial output is unsorted.
-            String interimOutputFileName = mConfig.OutputFile + ".unsorted";
+            String interimOutputFileName = mConfig.mOutputFile + ".unsorted";
             File interimOutputFile = new File(interimOutputFileName);
             SAMFileWriter bamWriter = new SAMFileWriterFactory().makeBAMWriter(newHeader, false, interimOutputFile);
 
-            final BwaHlaRecordAligner aligner = new BwaHlaRecordAligner(mConfig.aligner(), newHeader, mConfig.RefGenVersion);
+            final BwaHlaRecordAligner aligner = new BwaHlaRecordAligner(mConfig.aligner(), newHeader, mConfig.mRefGenVersion);
             HlaTransformer transformer = new HlaTransformer(aligner);
             samReader.forEach(record ->
                     transformer.process(record).forEach(bamWriter::addAlignment));
@@ -78,15 +82,15 @@ public class AltContigRemapper
             BT_LOGGER.info("BAM Writer closed.");
 
             // If the samtools path has been provided, sort the output. Else simply rename the unsorted file.
-            if(mConfig.BamToolPath != null)
+            if(mConfig.mBamToolPath != null)
             {
                 BT_LOGGER.info("Output file is to be sorted...");
-                FileCommon.writeSortedBam(interimOutputFileName, mConfig.OutputFile, mConfig.BamToolPath, 1);
+                writeSortedBam(interimOutputFileName, mConfig.mOutputFile, mConfig.mBamToolPath, mConfig.mThreads);
                 BT_LOGGER.info("Sorting complete.");
             }
             else
             {
-                File outputFile = new File(mConfig.OutputFile);
+                File outputFile = new File(mConfig.mOutputFile);
                 boolean renamed = interimOutputFile.renameTo(outputFile);
                 if(!renamed)
                 {
@@ -99,6 +103,35 @@ public class AltContigRemapper
             throw new UncheckedIOException(e);
         }
         BT_LOGGER.info("Remapping complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private static void writeSortedBam(final String unsortedBam, final String sortedBam, final String bamToolPath, final int threads)
+    {
+        if(bamToolPath == null)
+            return;
+
+        BT_LOGGER.info("writing sorted BAM: {}", sortedBam);
+
+        BamToolName toolName = fromPath(bamToolPath);
+
+        boolean success = BamOperations.sortBam(toolName, bamToolPath, unsortedBam, sortedBam, threads);
+
+        if(success && toolName == BamToolName.SAMTOOLS)
+        {
+            success = BamOperations.indexBam(toolName, bamToolPath, sortedBam, threads);
+        }
+
+        if(success)
+        {
+                try
+                {
+                    Files.deleteIfExists(Paths.get(unsortedBam));
+                }
+                catch(IOException e)
+                {
+                    BT_LOGGER.error("error deleting interim file: {}", e.toString());
+                }
+        }
     }
 
     public static void main(@NotNull final String[] args)

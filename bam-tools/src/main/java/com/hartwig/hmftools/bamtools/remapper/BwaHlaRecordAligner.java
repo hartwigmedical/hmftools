@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.esvee.assembly.alignment.Aligner;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -18,13 +17,13 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
 {
 
     private @NotNull
-    final Aligner mAligner;
+    final PairAligner mAligner;
     private @NotNull
     final SAMFileHeader mHeader;
     private @NotNull
     final RefGenomeVersion mRefGenomeVersion;
 
-    public BwaHlaRecordAligner(@NotNull final Aligner aligner,
+    public BwaHlaRecordAligner(@NotNull final PairAligner aligner,
             @NotNull final SAMFileHeader newHeader,
             @NotNull final RefGenomeVersion refGenomeVersion)
     {

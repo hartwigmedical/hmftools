@@ -138,7 +138,8 @@ java -cp bam-tools.jar com.hartwig.hmftools.bamtools.remapper.AltContigRemapper 
    -orig_bam_file sample_with_hla_alt_contigs.bam \
    -ref_genome ref_genome.fasta \
    -output_file remapped.bam \
-   -bamtool
+   -bamtool /opt/tools/samtools/1.20/samtools \
+   -threads 6
 ```
 
 ### Configuration
@@ -149,6 +150,7 @@ java -cp bam-tools.jar com.hartwig.hmftools.bamtools.remapper.AltContigRemapper 
 | ref_genome    | Yes       | Reference genome file, used to remap alt contigs.                    |
 | output_file   | Yes       | File into which the records (remapped and unaltered) are written.    |
 | bamtool       | No        | Path to samtools executable. If supplied, the output will be sorted. |
+| threads       | No        | Multi-thread count, default 1                                        |
 
 
 ## Version History and Download Links
