@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BASE_MODIFICATIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
+import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MM_PREFIX;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MM_SUFFIX;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMValueFromModCReadIndices;
@@ -255,6 +256,39 @@ public class BiomodalConsensusTest
         assertEquals(expectedMMValue, consensusRead.getStringAttribute(BASE_MODIFICATIONS_ATTRIBUTE));
     }
 
+    @Test
+    public void testBiomodalConsensusNoReplacementOfSoftClipWithRef()
+    {
+        String refBases = "AA";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr1 = "TA";
+        String readStr2 = "CA";
+
+        String qualStr = QUAL_25.repeat(readStr1.length());
+        String cigar = "1S1M";
+
+        SAMRecord read1 = createBiomodalSamRecord("READ_001", CHR_1, 2, readStr1, qualStr, cigar, true);
+        SAMRecord read2 = createBiomodalSamRecord("READ_002", CHR_1, 2, readStr2, qualStr, cigar, true);
+
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        int expectedAlignmentStart = 2;
+        String expectedCigar = "1S1M";
+        String expectedReadStr = "TA";
+        String expectedQualStr = phredToFastq(BASE_QUAL_MINIMUM) + QUAL_25;
+
+        assertEquals(ALIGNMENT_ONLY, consensusOutcome);
+        assertEquals(expectedAlignmentStart, consensusRead.getAlignmentStart());
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(expectedReadStr, consensusRead.getReadString());
+        assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
+    }
+
     private static SAMRecord createBiomodalSamRecord(final String readName, final String chromosome, int alignmentStart, final String modCReadStr, final String qualStr, final String cigar, boolean isForward)
     {
         char modCBase = isForward ? 'C' : swapDnaBase('C');
@@ -278,5 +312,13 @@ public class BiomodalConsensusTest
         read.setAttribute(BASE_MODIFICATIONS_ATTRIBUTE, mmValue);
 
         return read;
+    }
+
+    private static ConsensusReads getConsensusReads(final String refBases)
+    {
+        MockRefGenome mockRefGenome = new MockRefGenome(true);
+        mockRefGenome.RefGenomeMap.put(CHR_1, refBases);
+        mockRefGenome.ChromosomeLengths.put(CHR_1, refBases.length());
+        return new ConsensusReads(mockRefGenome, BIOMODAL);
     }
 }

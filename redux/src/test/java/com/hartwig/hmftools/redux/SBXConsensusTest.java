@@ -31,6 +31,7 @@ import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.ConsensusOutcome;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.consensus.ConsensusState;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.AnnotatedBase;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.ExtendedRefPos;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.SbxBuilder;
@@ -43,6 +44,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class SBXConsensusTest
 {
+    private static final String ZERO_QUAL_STR = String.valueOf(phredToFastq(0));
     private static final String SIMPLEX_QUAL_STR = String.valueOf(phredToFastq(SIMPLEX_QUAL));
     private static final String DUPLEX_QUAL_STR = String.valueOf(phredToFastq(DUPLEX_QUAL));
 
@@ -273,6 +275,65 @@ public class SBXConsensusTest
         assertEquals(expectedCigar, consensusRead.getCigarString());
         assertEquals(expectedReadStr, consensusRead.getReadString());
         assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
+    }
+
+    @Test
+    public void testSbxConsensusNoReplacementOfSoftClipWithRef()
+    {
+        String refBases = "AA";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr1 = "TA";
+        String readStr2 = "CA";
+
+        String qualStr = SIMPLEX_QUAL_STR.repeat(readStr1.length());
+        String cigar = "1S1M";
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 2, readStr1, qualStr, cigar);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 2, readStr2, qualStr, cigar);
+
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        int expectedAlignmentStart = 2;
+        String expectedCigar = "1S1M";
+        String expectedReadStr = "NA";
+        String expectedQualStr = ZERO_QUAL_STR + SIMPLEX_QUAL_STR;
+
+        assertEquals(ALIGNMENT_ONLY, consensusOutcome);
+        assertEquals(expectedAlignmentStart, consensusRead.getAlignmentStart());
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(expectedReadStr, consensusRead.getReadString());
+        assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
+    }
+
+    @Test
+    public void testSbxConsensusAlignmentBoundariesForInsertBookends()
+    {
+        int alignmentStart = 50;
+        int alignmentLength = 10;
+
+        String readStr = REF_BASES.charAt(alignmentStart - 1) +
+                REF_BASES.substring(alignmentStart - 1, alignmentStart - 1 + alignmentLength) +
+                REF_BASES.charAt(alignmentStart - 1 + alignmentLength);
+        
+        String qualStr = DUPLEX_QUAL_STR.repeat(readStr.length());
+        String cigar = "1I" + alignmentLength + "M1I";
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, alignmentStart, readStr, qualStr, cigar);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, alignmentStart, readStr, qualStr, cigar);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+
+        ConsensusState consensusState = new ConsensusState(true, CHR_1, mRefGenome);
+        mSbxBuilder.buildConsensusRead(reads, consensusState, true);
+
+        assertEquals(alignmentStart, consensusState.MinUnclippedPosStart);
+        assertEquals(alignmentStart + alignmentLength - 1, consensusState.MaxUnclippedPosEnd);
+        assertEquals(alignmentStart, consensusState.MinAlignedPosStart);
+        assertEquals(alignmentStart + alignmentLength - 1, consensusState.MaxAlignedPosEnd);
     }
 
     @Test
