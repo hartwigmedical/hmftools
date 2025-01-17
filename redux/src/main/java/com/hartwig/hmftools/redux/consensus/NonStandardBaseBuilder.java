@@ -256,6 +256,19 @@ public abstract class NonStandardBaseBuilder
             ExtendedRefPos pos = alignedBases.get(0).Pos;
             if(pos.InsertIndex > 0)
             {
+                int noBaseCount = 0;
+                for(AnnotatedBase base : alignedBases)
+                {
+                    if(base.Base == NO_BASE)
+                        noBaseCount++;
+                }
+
+                if(2 * noBaseCount >= alignedBases.size())
+                {
+                    consensus.add(null);
+                    continue;
+                }
+
                 consensus.add(determineConsensus.apply(alignedBases));
                 continue;
             }
@@ -428,9 +441,6 @@ public abstract class NonStandardBaseBuilder
                     noBaseCount++;
             }
 
-            if(consensusOp == I && 2 * noBaseCount >= bases.size())
-                return null;
-
             if(consensusOp != M || refPos < 1 || refPos > mChromosomeLength)
                 refPos = INVALID_POSITION;
 
@@ -602,6 +612,7 @@ public abstract class NonStandardBaseBuilder
 
             Collection<List<AnnotatedBase>> alignment = alignAnnotatedReads(annotatedReads);
             List<AnnotatedBase> consensusBases = getConsensusBases(alignment, records -> determineConsensus(chromosome, consensusState.IsForward, records));
+            consensusBases = consensusBases.stream().filter(x -> x != null).collect(Collectors.toList());
             updateConsensusState(reads, consensusState, hasIndels, consensusBases);
 
             SortedSet<Integer> modCReadIndices = Sets.newTreeSet();
@@ -634,6 +645,9 @@ public abstract class NonStandardBaseBuilder
             byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(locationBases, locationQuals, chromosome, basePosition);
             byte consensusBase = consensusBaseAndQual[0] == NO_BASE ? ANY_BASE : consensusBaseAndQual[0];
             byte consensusQual = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
+
+            if(consensusQual == (byte) 0 && consensusOp == I)
+                return null;
 
             AnnotatedBase consensus = new AnnotatedBase(pos, consensusBase, consensusQual, consensusOp);
 
