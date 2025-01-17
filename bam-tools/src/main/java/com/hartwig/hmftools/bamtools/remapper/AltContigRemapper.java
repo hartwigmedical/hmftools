@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
+import com.hartwig.hmftools.common.bam.FastBamWriter;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -56,35 +57,39 @@ public class AltContigRemapper
             // The initial output is unsorted.
             String interimOutputFileName = mConfig.mOutputFile + ".unsorted";
             File interimOutputFile = new File(interimOutputFileName);
-            SAMFileWriter bamWriter = new SAMFileWriterFactory().makeBAMWriter(newHeader, false, interimOutputFile);
-
-            final BwaHlaRecordAligner aligner = new BwaHlaRecordAligner(mConfig.aligner(), newHeader, mConfig.mRefGenVersion);
-            HlaTransformer transformer = new HlaTransformer(aligner);
-            samReader.forEach(record ->
-                    transformer.process(record).forEach(bamWriter::addAlignment));
-
-            BT_LOGGER.info("Finished processing input file. Number of HLA records processed: " + transformer.numberOfHlaRecordsProcessed());
-            // Deal with any unmatched reads.
-            // Don't map these - log an error and write them out as they are
-            List<SAMRecord> unmatched = transformer.unmatchedRecords();
-            if(!unmatched.isEmpty())
+            try(SAMFileWriter bamWriter = new FastBamWriter(newHeader, interimOutputFileName))
             {
-                BT_LOGGER.warn("Some HLA contig records were unmatched. " + unmatched);
-                unmatched.forEach(bamWriter::addAlignment);
-            }
-            else
-            {
-                BT_LOGGER.info("No HLA contig records were unmatched.");
-            }
+                BT_LOGGER.info("New BAM writer created.");
 
-            // Write the records to file.
-            bamWriter.close();
+                final BwaHlaRecordAligner aligner = new BwaHlaRecordAligner(mConfig.aligner(), newHeader, mConfig.mRefGenVersion);
+                HlaTransformer transformer = new HlaTransformer(aligner);
+                samReader.forEach(record -> transformer.process(record).forEach(bamWriter::addAlignment));
+
+                BT_LOGGER.info("Input file processed. Number of HLA records: " + transformer.numberOfHlaRecordsProcessed());
+                // Deal with any unmatched reads.
+                // Don't map these - log an error and write them out as they are
+                List<SAMRecord> unmatched = transformer.unmatchedRecords();
+                if(!unmatched.isEmpty())
+                {
+                    BT_LOGGER.warn("Some HLA contig records were unmatched. " + unmatched);
+                    unmatched.forEach(bamWriter::addAlignment);
+                }
+                else
+                {
+                    BT_LOGGER.info("No HLA contig records were unmatched.");
+                }
+            }
+            catch(Exception e)
+            {
+                BT_LOGGER.error("Error processing or writing records.", e);
+                throw new RuntimeException(e);
+            }
             BT_LOGGER.info("BAM Writer closed.");
 
             // If the samtools path has been provided, sort the output. Else simply rename the unsorted file.
             if(mConfig.mBamToolPath != null)
             {
-                BT_LOGGER.info("Output file is to be sorted...");
+                BT_LOGGER.info("Sorting output. Threads: " + mConfig.mThreads);
                 writeSortedBam(interimOutputFileName, mConfig.mOutputFile, mConfig.mBamToolPath, mConfig.mThreads);
                 BT_LOGGER.info("Sorting complete.");
             }
@@ -102,13 +107,15 @@ public class AltContigRemapper
         {
             throw new UncheckedIOException(e);
         }
-        BT_LOGGER.info("Remapping complete, mins({})", runTimeMinsStr(startTimeMs));
+        BT_LOGGER.info("Remapping complete in {} minutes.", runTimeMinsStr(startTimeMs));
     }
 
     private static void writeSortedBam(final String unsortedBam, final String sortedBam, final String bamToolPath, final int threads)
     {
         if(bamToolPath == null)
+        {
             return;
+        }
 
         BT_LOGGER.info("writing sorted BAM: {}", sortedBam);
 
@@ -123,14 +130,14 @@ public class AltContigRemapper
 
         if(success)
         {
-                try
-                {
-                    Files.deleteIfExists(Paths.get(unsortedBam));
-                }
-                catch(IOException e)
-                {
-                    BT_LOGGER.error("error deleting interim file: {}", e.toString());
-                }
+            try
+            {
+                Files.deleteIfExists(Paths.get(unsortedBam));
+            }
+            catch(IOException e)
+            {
+                BT_LOGGER.error("error deleting interim file: {}", e.toString());
+            }
         }
     }
 
