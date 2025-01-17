@@ -231,7 +231,10 @@ public abstract class NonStandardBaseBuilder
                 {
                     pos = positions.get(posIdx++);
                     if(pos.InsertIndex == 0)
+                    {
+                        alignment.get(pos).add(new AnnotatedBase(pos, NO_BASE, (byte) 0, D));
                         continue;
+                    }
 
                     alignment.get(pos).add(new AnnotatedBase(pos, NO_BASE, (byte) 0, I));
                 }
@@ -247,7 +250,39 @@ public abstract class NonStandardBaseBuilder
     private static List<AnnotatedBase> getConsensusBases(
             final Collection<List<AnnotatedBase>> alignment, final Function<List<AnnotatedBase>, AnnotatedBase> determineConsensus)
     {
-        return alignment.stream().map(determineConsensus).collect(Collectors.toList());
+        List<AnnotatedBase> consensus = Lists.newArrayList();
+        for(List<AnnotatedBase> alignedBases : alignment)
+        {
+            ExtendedRefPos pos = alignedBases.get(0).Pos;
+            if(pos.InsertIndex > 0)
+            {
+                consensus.add(determineConsensus.apply(alignedBases));
+                continue;
+            }
+
+            List<AnnotatedBase> nonDelBases = Lists.newArrayList();
+            int delCount = 0;
+            for(AnnotatedBase base : alignedBases)
+            {
+                if(base.CigarOp == D)
+                {
+                    delCount++;
+                    continue;
+                }
+
+                nonDelBases.add(base);
+            }
+
+            if(2 * delCount > alignedBases.size())
+            {
+                consensus.add(null);
+                continue;
+            }
+
+            consensus.add(determineConsensus.apply(nonDelBases));
+        }
+
+        return consensus;
     }
 
     private static CigarOperator getConsensusCigarOp(final List<AnnotatedBase> bases)
