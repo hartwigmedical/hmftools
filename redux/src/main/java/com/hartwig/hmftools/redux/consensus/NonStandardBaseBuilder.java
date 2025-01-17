@@ -30,8 +30,10 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.CigarOperator.X;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -160,11 +162,12 @@ public abstract class NonStandardBaseBuilder
 
             if(isReadBase && isRefBase)
             {
+                CigarOperator op = el.getOperator() == S ? S : M;
                 insertIndex = 0;
                 for(int i = 0; i < el.getLength(); i++)
                 {
                     ExtendedRefPos pos = new ExtendedRefPos(refPos, insertIndex);
-                    annotatedBases.add(new AnnotatedBase(pos, bases[readIndex], quals[readIndex], el.getOperator()));
+                    annotatedBases.add(new AnnotatedBase(pos, bases[readIndex], quals[readIndex], op));
 
                     readIndex++;
                     refPos++;
@@ -179,7 +182,7 @@ public abstract class NonStandardBaseBuilder
                 {
                     insertIndex++;
                     ExtendedRefPos pos = new ExtendedRefPos(refPos - 1, insertIndex);
-                    annotatedBases.add(new AnnotatedBase(pos, bases[readIndex], quals[readIndex], el.getOperator()));
+                    annotatedBases.add(new AnnotatedBase(pos, bases[readIndex], quals[readIndex], I));
                     readIndex++;
                 }
 
@@ -204,15 +207,39 @@ public abstract class NonStandardBaseBuilder
         return reads.stream().map(NonStandardBaseBuilder::getAnnotatedBases).collect(Collectors.toList());
     }
 
-    private static Collection<List<AnnotatedBase>> alignAnnotatedReads(final List<List<AnnotatedBase>> annotateReads)
+    @VisibleForTesting
+    public static Collection<List<AnnotatedBase>> alignAnnotatedReads(final List<List<AnnotatedBase>> annotateReads)
     {
         SortedMap<ExtendedRefPos, List<AnnotatedBase>> alignment = Maps.newTreeMap();
-        for(List<AnnotatedBase> annotatedRead : annotateReads)
+        for(List<AnnotatedBase> read : annotateReads)
         {
-            for(AnnotatedBase annotatedBase : annotatedRead)
+            for(AnnotatedBase base : read)
+                alignment.computeIfAbsent(base.Pos, key -> Lists.newArrayList());
+        }
+
+        for(List<AnnotatedBase> read : annotateReads)
+        {
+            ExtendedRefPos readPos = read.get(0).Pos;
+            Deque<ExtendedRefPos> posQueue = new ArrayDeque<>(alignment.keySet());
+            while(!posQueue.peek().equals(readPos))
+                posQueue.pop();
+
+            ExtendedRefPos pos = posQueue.pop();
+            alignment.get(pos).add(read.get(0));
+            for(int readIdx = 1; readIdx < read.size(); readIdx++)
             {
-                alignment.computeIfAbsent(annotatedBase.Pos, key -> Lists.newArrayList());
-                alignment.get(annotatedBase.Pos).add(annotatedBase);
+                readPos = read.get(readIdx).Pos;
+                while(!posQueue.peek().equals(readPos))
+                {
+                    pos = posQueue.pop();
+                    if(pos.InsertIndex == 0)
+                        continue;
+
+                    alignment.get(pos).add(new AnnotatedBase(pos, NO_BASE, (byte) 0, I));
+                }
+
+                pos = posQueue.pop();
+                alignment.get(pos).add(read.get(readIdx));
             }
         }
 
@@ -233,7 +260,7 @@ public abstract class NonStandardBaseBuilder
         for(AnnotatedBase base : bases)
         {
             CigarOperator op = base.CigarOp;
-            if(op == M || op == EQ || op == X)
+            if(op == M)
                 return M;
         }
 
@@ -349,18 +376,33 @@ public abstract class NonStandardBaseBuilder
         public AnnotatedBase determineConsensus(final String chromosome, final List<AnnotatedBase> bases)
         {
             ExtendedRefPos pos = bases.get(0).Pos;
-            int position = pos.RefPos;
+            int refPos = pos.RefPos;
             boolean isInsert = pos.InsertIndex > 0;
-            if(isInsert || position < 1 || position > mChromosomeLength)
-                position = INVALID_POSITION;
+
+            int noBaseCount = 0;
+            for(AnnotatedBase base : bases)
+            {
+                if(base.Base == NO_BASE)
+                    noBaseCount++;
+            }
+
+            if(isInsert && 2 * noBaseCount >= bases.size())
+                return null;
+
+            if(isInsert || refPos < 1 || refPos > mChromosomeLength)
+                refPos = INVALID_POSITION;
 
             if(bases.size() == 1)
             {
-                if(bases.get(0).Qual == (byte) 0 && position != INVALID_POSITION)
+                boolean isQualZero = bases.get(0).Qual == (byte) 0;
+                if(isQualZero && refPos != INVALID_POSITION)
                 {
-                    byte refBase = mRefGenome.getRefBase(chromosome, position);
+                    byte refBase = mRefGenome.getRefBase(chromosome, refPos);
                     return new AnnotatedBase(pos, refBase, (byte) 1, M);
                 }
+
+                if(isQualZero && isInsert)
+                    return null;
 
                 return bases.get(0);
             }
@@ -381,9 +423,9 @@ public abstract class NonStandardBaseBuilder
 
             if(baseCountsByQual.isEmpty())
             {
-                if(position != INVALID_POSITION)
+                if(refPos != INVALID_POSITION)
                 {
-                    byte refBase = mRefGenome.getRefBase(chromosome, position);
+                    byte refBase = mRefGenome.getRefBase(chromosome, refPos);
                     return new AnnotatedBase(pos, refBase, (byte) 1, M);
                 }
 
@@ -395,14 +437,16 @@ public abstract class NonStandardBaseBuilder
 
             if(!baseCountsByQual.containsKey((byte) SIMPLEX_QUAL) && !baseCountsByQual.containsKey((byte) DUPLEX_QUAL))
             {
-                if(position != INVALID_POSITION)
+                if(refPos != INVALID_POSITION)
                 {
-                    byte refBase = mRefGenome.getRefBase(chromosome, position);
+                    byte refBase = mRefGenome.getRefBase(chromosome, refPos);
                     return new AnnotatedBase(pos, refBase, (byte) 1, M);
                 }
 
-                CigarOperator cigarOp = isInsert ? I : S;
-                return new AnnotatedBase(pos, ANY_BASE, (byte) 0, cigarOp);
+                if(isInsert)
+                    return null;
+
+                return new AnnotatedBase(pos, ANY_BASE, (byte) 0, S);
             }
 
             CigarOperator consensusOp = getConsensusCigarOp(bases);
@@ -429,13 +473,16 @@ public abstract class NonStandardBaseBuilder
                     return new AnnotatedBase(pos, base, qual, consensusOp);
                 }
 
-                if(position != INVALID_POSITION)
+                if(refPos != INVALID_POSITION)
                 {
-                    byte refBase = mRefGenome.getRefBase(chromosome, position);
+                    byte refBase = mRefGenome.getRefBase(chromosome, refPos);
                     return new AnnotatedBase(pos, refBase, (byte) 1, M);
                 }
 
-                return new AnnotatedBase(pos, ANY_BASE, (byte) 0, consensusOp);
+                if(isInsert)
+                    return null;
+
+                return new AnnotatedBase(pos, ANY_BASE, (byte) 0, S);
             }
 
             int[] duplexCounts = baseCountsByQual.get((byte) DUPLEX_QUAL);
@@ -453,9 +500,7 @@ public abstract class NonStandardBaseBuilder
                     multipleMax = false;
                 }
                 else if(duplexCounts[i] == maxCount)
-                {
                     multipleMax = true;
-                }
             }
 
             int[] duplexErrorCounts = baseCountsByQual.get((byte) DUPLEX_ERROR_QUAL);
@@ -465,6 +510,7 @@ public abstract class NonStandardBaseBuilder
                     totalCount += duplexErrorCount;
             }
 
+            totalCount += noBaseCount;
             if(2 * maxCount > totalCount)
             {
                 byte base = DNA_BASE_BYTES[maxIdx];
@@ -474,13 +520,16 @@ public abstract class NonStandardBaseBuilder
 
             if(multipleMax)
             {
-                if(position != INVALID_POSITION)
+                if(refPos != INVALID_POSITION)
                 {
-                    byte refBase = mRefGenome.getRefBase(chromosome, position);
+                    byte refBase = mRefGenome.getRefBase(chromosome, refPos);
                     return new AnnotatedBase(pos, refBase, (byte) 1, M);
                 }
 
-                return new AnnotatedBase(pos, ANY_BASE, (byte) 0, consensusOp);
+                if(isInsert)
+                    return null;
+
+                return new AnnotatedBase(pos, ANY_BASE, (byte) 0, S);
             }
 
             byte base = DNA_BASE_BYTES[maxIdx];
