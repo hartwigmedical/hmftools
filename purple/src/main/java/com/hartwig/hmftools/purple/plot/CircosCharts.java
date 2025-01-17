@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.utils.collection.Downsample;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.ChartConfig;
+import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
@@ -67,7 +68,7 @@ public class CircosCharts
             final String referenceId, final String sampleId,
             final Gender gender, final List<PurpleCopyNumber> copyNumber,
             final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
-            final List<ObservedRegion> regions, final List<AmberBAF> bafs) throws IOException
+            final List<ObservedRegion> regions, final List<AmberBAF> bafs, final List<DriverSourceData> driverSourceData) throws IOException
     {
         mCurrentReferenceId = referenceId;
         mCurrentSampleId = sampleId;
@@ -85,6 +86,7 @@ public class CircosCharts
         writeStructuralVariants(structuralVariants);
         writeObservedRegions(Downsample.downsample(MAX_PLOT_POINTS, regions));
         writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
+        writeDrivers(driverSourceData);
     }
 
     public List<Future<Integer>> chartFutures()
@@ -183,6 +185,13 @@ public class CircosCharts
         CircosSNPWriter.writePositions(mBaseCircosTumorSample + ".snp.circos", Downsample.downsample(MAX_PLOT_POINTS, snp(somaticVariants)));
         CircosINDELWriter.writePositions(mBaseCircosTumorSample + ".indel.circos",
                 Downsample.downsample(MAX_PLOT_POINTS, indel(somaticVariants)));
+    }
+
+    private void writeDrivers(final List<DriverSourceData> driverSourceData) throws IOException
+    {
+        CircosDriverWriter.writeDrivers(mBaseCircosTumorSample + ".driver_text.circos",
+                mBaseCircosTumorSample + ".driver_pointer.circos",
+                driverSourceData);
     }
 
     private void writeConfig(final Gender gender) throws IOException
