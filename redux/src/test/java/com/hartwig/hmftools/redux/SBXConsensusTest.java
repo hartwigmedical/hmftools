@@ -319,7 +319,7 @@ public class SBXConsensusTest
         String readStr = REF_BASES.charAt(alignmentStart - 1) +
                 REF_BASES.substring(alignmentStart - 1, alignmentStart - 1 + alignmentLength) +
                 REF_BASES.charAt(alignmentStart - 1 + alignmentLength);
-        
+
         String qualStr = DUPLEX_QUAL_STR.repeat(readStr.length());
         String cigar = "1I" + alignmentLength + "M1I";
 
