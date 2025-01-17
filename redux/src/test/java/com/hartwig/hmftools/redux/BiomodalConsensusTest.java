@@ -257,6 +257,86 @@ public class BiomodalConsensusTest
     }
 
     @Test
+    public void testBiomodalConsensusDropNonStrictMajorityInserts()
+    {
+        String refBases = "AAAAAAAA";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr1 = "AATAATAATAA";
+        String qualStr1 = QUAL_25.repeat(readStr1.length());
+        String cigar1 = "2M1I2M1I2M1I2M";
+
+        String readStr2 = "AAAATAATAA";
+        String qualStr2 = QUAL_25.repeat(readStr2.length());
+        String cigar2 = "4M1I2M1I2M";
+
+        String readStr3 = "AAAAAATAA";
+        String qualStr3 = QUAL_25.repeat(readStr3.length());
+        String cigar3 = "6M1I2M";
+
+        SAMRecord read1 = createBiomodalSamRecord("READ_001", CHR_1, 1, readStr1, qualStr1, cigar1, true);
+        SAMRecord read2 = createBiomodalSamRecord("READ_002", CHR_1, 1, readStr2, qualStr2, cigar2, true);
+        SAMRecord read3 = createBiomodalSamRecord("READ_003", CHR_1, 1, readStr3, qualStr3, cigar3, true);
+
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        int expectedAlignmentStart = 1;
+        String expectedCigar = cigar2;
+        String expectedReadStr = readStr2;
+        String expectedQualStr = qualStr2;
+
+        assertEquals(INDEL_MISMATCH, consensusOutcome);
+        assertEquals(expectedAlignmentStart, consensusRead.getAlignmentStart());
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(expectedReadStr, consensusRead.getReadString());
+        assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
+    }
+
+    @Test
+    public void testBiomodalConsensusKeepStrictMajorityDels()
+    {
+        String refBases = "ATGCATGC";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr1 = "AGCTC";
+        String qualStr1 = QUAL_25.repeat(readStr1.length());
+        String cigar1 = "1M1D2M1D1M1D1M";
+
+        String readStr2 = "ATGCTC";
+        String qualStr2 = QUAL_25.repeat(readStr2.length());
+        String cigar2 = "4M1D1M1D1M";
+
+        String readStr3 = "ATGCATC";
+        String qualStr3 = QUAL_25.repeat(readStr3.length());
+        String cigar3 = "6M1D1M";
+
+        SAMRecord read1 = createBiomodalSamRecord("READ_001", CHR_1, 1, readStr1, qualStr1, cigar1, true);
+        SAMRecord read2 = createBiomodalSamRecord("READ_002", CHR_1, 1, readStr2, qualStr2, cigar2, true);
+        SAMRecord read3 = createBiomodalSamRecord("READ_003", CHR_1, 1, readStr3, qualStr3, cigar3, true);
+
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        int expectedAlignmentStart = 1;
+        String expectedCigar = cigar2;
+        String expectedReadStr = readStr2;
+        String expectedQualStr = qualStr2;
+
+        assertEquals(INDEL_MISMATCH, consensusOutcome);
+        assertEquals(expectedAlignmentStart, consensusRead.getAlignmentStart());
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(expectedReadStr, consensusRead.getReadString());
+        assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
+    }
+
+    @Test
     public void testBiomodalConsensusNoReplacementOfSoftClipWithRef()
     {
         String refBases = "AA";
