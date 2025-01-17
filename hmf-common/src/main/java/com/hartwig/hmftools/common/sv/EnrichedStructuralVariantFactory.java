@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.sv;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_CONTEXT_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
@@ -76,7 +75,6 @@ public final class EnrichedStructuralVariantFactory
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder()
                 .from(leg)
-                .refGenomeContext(context.getAttributeAsString(REF_CONTEXT_FLAG, null))
                 .adjustedAlleleFrequency(!purpleAF.isEmpty() ? purpleAF.get(0) : null)
                 .adjustedCopyNumber(!purpleCN.isEmpty() ? purpleCN.get(0) : null)
                 .adjustedCopyNumberChange(!purpleCNChange.isEmpty() ? purpleCNChange.get(0) : null);

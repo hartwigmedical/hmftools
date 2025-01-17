@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.caller.CallerApplication.isGermline;
+import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_REF_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
@@ -27,6 +29,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class FiltersTest
@@ -180,5 +183,31 @@ public class FiltersTest
         invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.1);
         invFilters.applyFilters(var);
         assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
+    }
+
+    @Test
+    public void testMarkGermline()
+    {
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, 100, 200, POS_ORIENT, POS_ORIENT, "",
+                commonAttributes, null, null);
+
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 50);
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(REF_DEPTH, 50);
+
+        var.contextStart().getGenotype(TEST_REF_ID).getExtendedAttributes().put(TOTAL_FRAGS, 2);
+        var.contextStart().getGenotype(TEST_REF_ID).getExtendedAttributes().put(REF_DEPTH, 7);
+
+        assertTrue(isGermline(var, TEST_REF_ID));
+
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 500);
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(REF_DEPTH, 500);
+
+        var.contextStart().getGenotype(TEST_REF_ID).getExtendedAttributes().put(TOTAL_FRAGS, 2);
+        var.contextStart().getGenotype(TEST_REF_ID).getExtendedAttributes().put(REF_DEPTH, 7);
+
+        assertFalse(isGermline(var, TEST_REF_ID));
     }
 }

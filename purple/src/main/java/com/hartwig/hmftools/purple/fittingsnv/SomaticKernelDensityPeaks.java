@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.fittingsnv;
 
-import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -45,7 +44,7 @@ public final class SomaticKernelDensityPeaks
             {
                 if(peak.Count >= minPeak)
                 {
-                    FittedPurity matchedFittedPurity = findMatchedFittedPurity(impliedPurity, allCandidates, 0.001);
+                    FittedPurity matchedFittedPurity = findMatchedFittedPurity(impliedPurity, allCandidates);
                     if(matchedFittedPurity != null)
                     {
                         PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);
@@ -70,7 +69,7 @@ public final class SomaticKernelDensityPeaks
                 double impliedPurity = peak.AlleleFrequency * 2;
                 if(peak.Count == maxPeak)
                 {
-                    FittedPurity matchedFittedPurity = findMatchedFittedPurity(impliedPurity, allCandidates, 0.001);
+                    FittedPurity matchedFittedPurity = findMatchedFittedPurity(impliedPurity, allCandidates);
                     if(matchedFittedPurity != null)
                     {
                         PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);

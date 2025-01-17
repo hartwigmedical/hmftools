@@ -13,9 +13,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
@@ -282,12 +279,8 @@ public class StructuralVariantFactory implements SvFactoryInterface
         String insSequenceAlignments = trimStringListValue(context.getAttributeAsString(INSALN, ""));
 
         builder.id(context.getID())
-                .recovered(context.getAttributeAsBoolean(RECOVERED, false))
                 .hotspot(context.getAttributeAsBoolean(HOTSPOT, false))
-                .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
-                .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event("")
-                .imprecise(false)
                 .qualityScore(qualityScore)
                 .insertSequenceAlignments(insSequenceAlignments);
 
