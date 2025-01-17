@@ -28,10 +28,8 @@ import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -216,28 +214,29 @@ public abstract class NonStandardBaseBuilder
                 alignment.computeIfAbsent(base.Pos, key -> Lists.newArrayList());
         }
 
+        List<ExtendedRefPos> positions = Lists.newArrayList(alignment.keySet());
         for(List<AnnotatedBase> read : annotateReads)
         {
             ExtendedRefPos readPos = read.get(0).Pos;
-            Deque<ExtendedRefPos> posQueue = new ArrayDeque<>(alignment.keySet());
-            while(!posQueue.peek().equals(readPos))
-                posQueue.pop();
+            int posIdx = 0;
+            while(!positions.get(posIdx).equals(readPos))
+                posIdx++;
 
-            ExtendedRefPos pos = posQueue.pop();
+            ExtendedRefPos pos = positions.get(posIdx++);
             alignment.get(pos).add(read.get(0));
             for(int readIdx = 1; readIdx < read.size(); readIdx++)
             {
                 readPos = read.get(readIdx).Pos;
-                while(!posQueue.peek().equals(readPos))
+                while(!positions.get(posIdx).equals(readPos))
                 {
-                    pos = posQueue.pop();
+                    pos = positions.get(posIdx++);
                     if(pos.InsertIndex == 0)
                         continue;
 
                     alignment.get(pos).add(new AnnotatedBase(pos, NO_BASE, (byte) 0, I));
                 }
 
-                pos = posQueue.pop();
+                pos = positions.get(posIdx++);
                 alignment.get(pos).add(read.get(readIdx));
             }
         }
