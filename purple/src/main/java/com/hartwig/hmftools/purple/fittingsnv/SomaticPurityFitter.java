@@ -32,16 +32,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-import javax.swing.DefaultListSelectionModel;
-
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -71,7 +72,8 @@ public class SomaticPurityFitter
     private final int mKdMinPeak;
     private final int mKdMinSomatics;
 
-    public SomaticPurityFitter(int minPeak, int minSomatics, int minReadCount, int maxReadCount, double minPurity, double maxPurity)
+    public SomaticPurityFitter(
+            int minPeak, int minSomatics, int minReadCount, int maxReadCount, double minPurity, double maxPurity)
     {
         mMinReadCount = minReadCount;
         mMaxReadCount = maxReadCount;
@@ -129,7 +131,7 @@ public class SomaticPurityFitter
 
             GermlineStatus germlineStatus = region.isPresent() ? region.get().germlineStatus() : GermlineStatus.UNKNOWN;
 
-            if(!variant.isHotspot() && germlineStatus != GermlineStatus.DIPLOID)
+            if(!variant.isHotspotType() && germlineStatus != GermlineStatus.DIPLOID)
             {
                 ++filterCounts[FilterReason.GERMLINE_DIPLOID.ordinal()];
                 continue;
@@ -161,13 +163,15 @@ public class SomaticPurityFitter
             return false;
 
         VariantTier variantTier = variant.decorator().tier();
+
+        boolean isHotspotType = variant.isHotspotType();
         
         double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
 
-        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && variant.isHotspot())
+        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && isHotspotType)
             return true;
 
-        if(variantTier != VariantTier.HOTSPOT)
+        if(!isHotspotType)
         {
             if(variant.context().hasAttribute(GNOMAD_FREQ))
             {
@@ -205,10 +209,11 @@ public class SomaticPurityFitter
 
     @Nullable
     public FittedPurity fromSomatics(
-            final List<SomaticVariant> somaticVariants, final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers)
+            final List<SomaticVariant> somaticVariants, final List<StructuralVariant> hotspotSVs,
+            final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
         List<SomaticVariant> filteredSomatics = somaticVariants.stream()
-                .filter(x -> x.isHotspot() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
+                .filter(x -> x.isHotspotType() || (x.totalReadCount() >= mMinReadCount && x.totalReadCount() <= mMaxReadCount))
                 .collect(toList());
 
         double somaticPeakPurity = 0;
@@ -233,11 +238,11 @@ public class SomaticPurityFitter
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", filteredSomatics.size());
         }
 
-        double hotspotPurity = findHotspotPurity(filteredSomatics, somaticPeakPurity);
+        double hotspotPurity = findHotspotPurity(filteredSomatics, hotspotSVs, somaticPeakPurity, gender);
 
         if(hotspotPurity > somaticPeakPurity)
         {
-            FittedPurity matchedFittedPurity = findMatchedFittedPurity(hotspotPurity, diploidCandidates, 0.005);
+            FittedPurity matchedFittedPurity = findMatchedFittedPurity(hotspotPurity, diploidCandidates);
 
             if(matchedFittedPurity != null)
                 return matchedFittedPurity;
@@ -249,7 +254,7 @@ public class SomaticPurityFitter
 
             if(reassessmentPurity > somaticPeakPurity)
             {
-                FittedPurity matchedFittedPurity = findMatchedFittedPurity(reassessmentPurity, diploidCandidates, 0.005);
+                FittedPurity matchedFittedPurity = findMatchedFittedPurity(reassessmentPurity, diploidCandidates);
 
                 if(matchedFittedPurity != null)
                     return matchedFittedPurity;
@@ -266,12 +271,27 @@ public class SomaticPurityFitter
             && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
     }
 
-    protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates, final double epsilon)
+    protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates)
     {
-        return allCandidates.stream()
-                .filter(x -> abs(x.purity() - purity) < epsilon)
-                .filter(x -> abs(x.ploidy() - 2.0) < epsilon) // assumes ploidy 2 as well since is looking a highly diploid solutions
-                .findFirst().orElse(null);
+        // find the closest purity with diploid ploidy
+        FittedPurity closestPurity = null;
+        double closestDiff = 0;
+
+        for(FittedPurity fittedPurity : allCandidates)
+        {
+            if(abs(fittedPurity.ploidy() - 2) > 0.005)
+                continue;
+
+            double diff = abs(fittedPurity.purity() - purity);
+
+            if(closestPurity == null || diff < closestDiff)
+            {
+                closestDiff = diff;
+                closestPurity = fittedPurity;
+            }
+        }
+
+        return closestPurity;
     }
 
     @Nullable
@@ -282,7 +302,7 @@ public class SomaticPurityFitter
 
         for(SomaticVariant variant : variants)
         {
-            if(!variant.isHotspot())
+            if(!variant.isHotspotType())
             {
                 if(variant.variantImpact() == null)
                     continue;
@@ -306,7 +326,7 @@ public class SomaticPurityFitter
 
             double vaf = variant.alleleFrequency();
 
-            if(variant.isHotspot())
+            if(variant.isHotspotType())
             {
                 if(vaf > SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
                 {
@@ -370,7 +390,7 @@ public class SomaticPurityFitter
 
         PPL_LOGGER.info("somatic VAF-based purity({}) from {} variants", formatPurity(somaticPurity), variantVafs.size());
 
-        FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates, 0.005);
+        FittedPurity matchedFittedPurity = findMatchedFittedPurity(somaticPurity, allCandidates);
 
         if(matchedFittedPurity != null)
             return matchedFittedPurity;
@@ -378,7 +398,9 @@ public class SomaticPurityFitter
         return null;
     }
 
-    private double findHotspotPurity(final List<SomaticVariant> somaticVariants, final double somaticPeakPurity)
+    private double findHotspotPurity(
+            final List<SomaticVariant> somaticVariants, final List<StructuralVariant> hotspotSVs,
+            final double somaticPeakPurity, final Gender gender)
     {
         // check for a hotspot variant with a higher VAF
         if(somaticVariants.size() > SNV_HOTSPOT_MAX_SNV_COUNT)
@@ -388,11 +410,16 @@ public class SomaticPurityFitter
 
         for(SomaticVariant variant : somaticVariants)
         {
-            if(!variant.isHotspot())
+            if(!variant.isHotspotType())
                 continue;
 
-            if(!HumanChromosome.fromString(variant.chromosome()).isAutosome())
-                continue;
+            HumanChromosome chromosome = HumanChromosome.fromString(variant.chromosome());
+
+            if(!chromosome.isAutosome())
+            {
+                if(!(gender == Gender.FEMALE && chromosome == HumanChromosome._X))
+                    continue;
+            }
 
             if(variant.alleleFrequency() * 2 <= somaticPeakPurity || variant.alleleFrequency() > 0.5)
                 continue;
@@ -411,8 +438,7 @@ public class SomaticPurityFitter
             maxHotspotVaf = max(variant.alleleFrequency(), maxHotspotVaf);
         }
 
-        /*
-        for(StructuralVariant sv : structuralVariants)
+        for(StructuralVariant sv : hotspotSVs)
         {
             if(!sv.hotspot() || sv.isFiltered() || sv.end() == null)
                 continue;
@@ -422,17 +448,12 @@ public class SomaticPurityFitter
             if(alleleFrequency < maxHotspotVaf)
                 continue;
 
-            sv.start().tumorVariantFragmentCount()
-            if(!belowRequiredProbability(peakPurity, variant.totalReadCount(), variant.alleleReadCount()))
-                continue;
+            PPL_LOGGER.info(String.format("hotspotSV(%s %s:%d-%s:%d) vaf(%.3f)",
+                    sv.type(), sv.chromosome(true), sv.position(true), sv.chromosome(false), sv.position(false),
+                    alleleFrequency));
 
-            PPL_LOGGER.info(String.format("hotspot(%s:%d) vaf(%.3f %d/%d)",
-                    variant.chromosome(), variant.position(),
-                    variant.alleleFrequency(), variant.alleleReadCount(), variant.totalReadCount()));
-
-            maxHotspotVaf = max(variant.alleleFrequency(), maxHotspotVaf);
+            maxHotspotVaf = alleleFrequency;
         }
-        */
 
         return maxHotspotVaf * 2;
     }

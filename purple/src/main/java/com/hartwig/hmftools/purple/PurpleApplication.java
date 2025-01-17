@@ -115,6 +115,12 @@ public class PurpleApplication
 
     public void run()
     {
+        if(!mConfig.Fitting.hasValidValues())
+        {
+            PPL_LOGGER.error("invalid configured fitting values");
+            System.exit(1);
+        }
+
         long startTimeMs = System.currentTimeMillis();
 
         try
@@ -162,7 +168,7 @@ public class PurpleApplication
         final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
 
         final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
-                new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData, mConfig)
+                new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mConfig)
                 : new SomaticSvCache();
 
         sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
@@ -198,7 +204,7 @@ public class PurpleApplication
         final CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
         final SomaticVariantCache somaticCache = mConfig.runTumor() ? sampleData.SomaticCache : null;
 
-        PPL_LOGGER.info("purple output directory: {}", mConfig.OutputDir);
+        PPL_LOGGER.info("output directory: {}", mConfig.OutputDir);
         mPurpleVersion.write(mConfig.OutputDir);
 
         PPL_LOGGER.info("applying segmentation");
@@ -228,7 +234,7 @@ public class PurpleApplication
             PPL_LOGGER.info("fitting purity");
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions);
+                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender);
 
             purityPloidyFitter.run();
 
@@ -295,7 +301,7 @@ public class PurpleApplication
             if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
             {
                 germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mReferenceData, mConfig,
+                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mConfig,
                         fittedRegions, copyNumbers, purityContext);
 
                 germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
@@ -462,14 +468,18 @@ public class PurpleApplication
             PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
             SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
 
-            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorId, true), Collections.emptyList());
+            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(
+                    mConfig.OutputDir, tumorId, true), Collections.emptyList());
         }
 
         if(mConfig.runGermline())
         {
             if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
             {
-                GermlineSvCache germlineSvCache = new GermlineSvCache();
+                GermlineSvCache germlineSvCache = new GermlineSvCache(
+                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mConfig,
+                        Collections.emptyList(), Collections.emptyList(), null);
+
                 germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
             }
 

@@ -4,12 +4,17 @@ import static java.lang.Integer.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEFAULT_PON_DISTANCE;
 import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
@@ -20,10 +25,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.caller.Breakend;
 import com.hartwig.hmftools.esvee.caller.Variant;
 
@@ -45,10 +52,14 @@ public class PonCache
     private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
     private static final String GERMLINE_PON_MARGIN = "pon_margin";
 
+    private final List<ChrBaseRegion> mSpecificSglFusionRegions;
+
     public PonCache(final ConfigBuilder configBuilder)
     {
         this(configBuilder.getInteger(GERMLINE_PON_MARGIN), configBuilder.getValue(GERMLINE_PON_BED_SV_FILE),
                 configBuilder.getValue(GERMLINE_PON_BED_SGL_FILE), false);
+
+        buildSpecificSglRegion(RefGenomeVersion.from(configBuilder));
     }
 
     public PonCache(final int margin, final String ponSvFile, final String ponSglFile, boolean allowUnordered)
@@ -57,6 +68,8 @@ public class PonCache
         mSglRegions = Maps.newHashMap();
         mAllowUnordered = allowUnordered;
         mHasValidData = true;
+
+        mSpecificSglFusionRegions = Lists.newArrayList();
 
         mPositionMargin = margin;
 
@@ -68,6 +81,20 @@ public class PonCache
 
         mCurrentSglIndex = 0;
         mCurrentSvIndex = 0;
+    }
+
+    private void buildSpecificSglRegion(final RefGenomeVersion refGenomeVersion)
+    {
+        if(refGenomeVersion.is37())
+        {
+            mSpecificSglFusionRegions.addAll(MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37);
+            mSpecificSglFusionRegions.addAll(SSX2_REGIONS_V37);
+        }
+        else
+        {
+            mSpecificSglFusionRegions.addAll(MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38);
+            mSpecificSglFusionRegions.addAll(SSX2_REGIONS_V38);
+        }
     }
 
     public boolean hasValidData() { return mHasValidData; }
@@ -214,8 +241,34 @@ public class PonCache
         return 0;
     }
 
+    private boolean matchesSpecificSglFusionRegion(final Variant var)
+    {
+        // ignore if the SGL has an alt-mapping in a specific known fusion & poorly mapped region
+        String alignmentsStr = var.breakendStart().Context.getAttributeAsString(INSALN, "");
+
+        if(alignmentsStr.isEmpty())
+            return false;
+
+        List<AlternativeAlignment> alignments = AlternativeAlignment.fromVcfTag(alignmentsStr);
+
+        if(alignments == null)
+            return false;
+
+        for(AlternativeAlignment altAlignment : alignments)
+        {
+            if(mSpecificSglFusionRegions.stream().anyMatch(x -> x.containsPosition(altAlignment.Chromosome, altAlignment.Position)))
+                return true;
+        }
+
+        return false;
+    }
+
     private int findSglPonMatch(final List<PonSglRegion> regions, final Variant var)
     {
+        // ignore if the SGL has an alt-mapping in a specific known fusion & poorly mapped region
+        if(matchesSpecificSglFusionRegion(var))
+            return 0;
+
         if(regions == null)
             return 0;
 

@@ -136,7 +136,7 @@ public class PurityPloidyFitTest
         List<ObservedRegion> observedRegions = buildDefaultObservedRegions();
 
         PurityPloidyFitter fitter = new PurityPloidyFitter(
-                mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions);
+                mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions, Gender.FEMALE);
 
         assertTrue(fitter.isValid());
 

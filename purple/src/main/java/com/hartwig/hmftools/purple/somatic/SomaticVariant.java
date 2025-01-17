@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
@@ -19,6 +22,7 @@ public class SomaticVariant implements GenomePosition
     private VariantContextDecorator mDecorator;
     private final AllelicDepth mTumorAllelicDepth;
     private final AllelicDepth mReferenceAllelicDepth;
+    private final boolean mHotspotType;
 
     public SomaticVariant(final VariantContext context, final String sampleId, final String referenceId)
     {
@@ -29,6 +33,9 @@ public class SomaticVariant implements GenomePosition
         mPosition = mContext.getStart();
         mTumorAllelicDepth = sampleId != null ? mDecorator.allelicDepth(sampleId) :  null;
         mReferenceAllelicDepth = referenceId != null ? mDecorator.allelicDepth(referenceId) :  null;
+
+        mHotspotType = isHotspot()
+                || (mDecorator.tier() == PANEL && PathogenicSummaryFactory.fromContext(mContext).Status.isPathogenic());
     }
 
     public VariantContext context() { return mContext; }
@@ -57,6 +64,7 @@ public class SomaticVariant implements GenomePosition
     public double copyNumber() { return mDecorator.variantCopyNumber(); }
 
     public boolean isHotspot() { return mContext.hasAttribute(HOTSPOT_FLAG); }
+    public boolean isHotspotType() { return mHotspotType; }
     public boolean biallelic() { return mDecorator.biallelic(); }
     public String gene() { return mDecorator.variantImpact().GeneName; }
 

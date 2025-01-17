@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.utils.Doubles.positiveOrZero;
 
 import java.util.Collection;
@@ -107,9 +106,20 @@ public class FittedPurityFactory
     {
         FittingConfig config = mConfig.Fitting;
 
+        List<Double> purityValues = Lists.newArrayList();
+
+        double purityValue = config.MinPurity;
+
+        while(purityValue <= config.MaxPurity)
+        {
+            purityValues.add(purityValue);
+
+            purityValue = Doubles.round(purityValue + config.PurityIncrement, 2);
+        }
+
         if(mConfig.Threads <= 1)
         {
-            for(double purity = config.MinPurity; lessOrEqual(purity, config.MaxPurity); purity += config.PurityIncrement)
+            for(Double purity : purityValues)
             {
                 mFittedPurities.addAll(fitPurity(purity));
             }
@@ -117,7 +127,8 @@ public class FittedPurityFactory
         else
         {
             List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
-            for(double purity = config.MinPurity; lessOrEqual(purity, config.MaxPurity); purity += config.PurityIncrement)
+
+            for(Double purity : purityValues)
             {
                 futures.add(mExecutorService.submit(callableFitPurity(purity)));
             }
@@ -261,8 +272,9 @@ public class FittedPurityFactory
         while(Doubles.lessThan(ploidy, exclusiveMax))
         {
             results.add(ploidy);
-            ploidy += increment;
+            ploidy = Doubles.round(ploidy + increment, 2);
         }
+
         return results;
     }
 }

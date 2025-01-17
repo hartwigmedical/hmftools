@@ -21,14 +21,11 @@ public class VariantContextCollection
 {
     private final TreeSet<VariantContext> mVariantContexts;
     private final List<StructuralVariant> mVariants;
-    private final boolean mUseGridssSVs;
 
     private boolean mModified;
 
-    public VariantContextCollection(final VCFHeader header, boolean useGridssSVs)
+    public VariantContextCollection(final VCFHeader header)
     {
-        mUseGridssSVs = useGridssSVs;
-
         if(header != null)
             mVariantContexts = new TreeSet<>(new VCComparator(header.getSequenceDictionary()));
         else
@@ -79,7 +76,7 @@ public class VariantContextCollection
         {
             // converts variant contexts into structural variants
             mModified = false;
-            SvFactoryInterface svFactory = buildSvFactory(mUseGridssSVs, new SegmentationVariantsFilter());
+            SvFactoryInterface svFactory = buildSvFactory(false, new SegmentationVariantsFilter());
             mVariantContexts.forEach(svFactory::addVariantContext);
 
             mVariants.clear();

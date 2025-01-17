@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -32,6 +33,7 @@ public class VariantPurityFitter
 
     // interim state
     private List<SomaticVariant> mFittingSomatics;
+    private final List<StructuralVariant> mHotspotSVs;
 
     private int mSvHotspotCount;
     private int mSvFragmentReadCount;
@@ -52,6 +54,7 @@ public class VariantPurityFitter
         mHasTumor = false;
 
         mFittingSomatics = Lists.newArrayList();
+        mHotspotSVs = Lists.newArrayList();
 
         mSomaticPurityFitter = new SomaticPurityFitter(
                 config.SomaticFitting.MinPeakVariants, config.SomaticFitting.MinTotalVariants,
@@ -106,9 +109,10 @@ public class VariantPurityFitter
         mHasTumor = false;
     }
 
-    public FittedPurity calcSomaticFit(final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers)
+    public FittedPurity calcSomaticFit(
+            final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
-        return mSomaticPurityFitter.fromSomatics(mFittingSomatics, diploidCandidates, copyNumbers);
+        return mSomaticPurityFitter.fromSomatics(mFittingSomatics, mHotspotSVs, diploidCandidates, copyNumbers, gender);
     }
 
     public FittedPurity calcSomaticOnlyFit(final List<FittedPurity> allCandidates)
@@ -133,8 +137,11 @@ public class VariantPurityFitter
             if(variant.isFiltered())
                 continue;
 
-            if(variant.hotspot())
+            if(variant.hotspot() && variant.end() != null)
+            {
                 mSvHotspotCount++;
+                mHotspotSVs.add(variant);
+            }
 
             Integer startTumorVariantFragmentCount = variant.start().tumorVariantFragmentCount();
             if(variant.end() != null && startTumorVariantFragmentCount != null)
@@ -151,7 +158,7 @@ public class VariantPurityFitter
             if(!variant.isPass())
                 continue;
 
-            if(variant.isHotspot())
+            if(variant.isHotspotType())
                 mSomaticHotspotCount++;
 
             if(variant.type() == VariantType.SNP) // they all should be
