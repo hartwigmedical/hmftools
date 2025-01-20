@@ -31,6 +31,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -41,6 +43,7 @@ public class ConsensusReads
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
     private final NonStandardBaseBuilder mNonStandardBaseBuilder;
+    private final NonStandardIndelConsensusReads mNonStandardIndelConsensusReads;
 
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
@@ -49,6 +52,7 @@ public class ConsensusReads
     {
         mRefGenome = new RefGenome(refGenome);
         mNonStandardBaseBuilder = NonStandardBaseBuilder.fromSequencingType(sequencingType, mRefGenome);
+        mNonStandardIndelConsensusReads = NonStandardIndelConsensusReads.fromSequencingType(sequencingType, mNonStandardBaseBuilder);
         if(mNonStandardBaseBuilder == null)
         {
             mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
@@ -124,7 +128,31 @@ public class ConsensusReads
 
         if(mNonStandardBaseBuilder != null)
         {
-            mNonStandardBaseBuilder.buildConsensusRead(readsView, consensusState, hasIndels);
+            // TODO:
+            if(hasIndels)
+            {
+                // TODO:
+                mNonStandardIndelConsensusReads.buildIndelComponents(readsView, consensusState);
+
+                // TODO:
+//                if(consensusState.outcome() == INDEL_FAIL)
+//                {
+//                    mConsensusStats.registerOutcome(INDEL_FAIL);
+//
+//                    logInvalidConsensusRead(readsView, null, consensusReadId, consensusState, INDEL_FAIL.toString());
+//
+//                    // fall-back to selecting the read with the longest aligned bases, highest average qual
+//                    SAMRecord primaryRead = selectPrimaryRead(readsView);
+//                    SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId);
+//
+//                    return new ConsensusReadInfo(consensusRead, templateRead, consensusState.outcome());
+//                }
+            }
+            else
+            {
+                mNonStandardBaseBuilder.buildConsensusRead(readsView, consensusState);
+                consensusState.setOutcome(ALIGNMENT_ONLY);
+            }
         }
         else if(hasIndels)
         {

@@ -35,9 +35,13 @@ public final class TemplateReads
 
         boolean isLowerRead = fragmentCoords.ReadIsLower;
 
+        // TODO: supps get primaries cigar
         List<ReadCigarInfo> readCigarInfos = reads.stream()
                 .map(x -> new ReadCigarInfo(x, isLowerRead, arePrimaries)).collect(Collectors.toList());
 
+        // TODO: get most frequent cigar
+        // TODO: tiebreaker is max aligned bases
+        // TODO: then by read name
         String topReadCigar = findTopFrequencyCigar(readCigarInfos, false);
 
         List<ReadCigarInfo> filteredCigarInfos = readCigarInfos.stream().filter(x -> x.LowerCigar.equals(topReadCigar)).collect(Collectors.toList());

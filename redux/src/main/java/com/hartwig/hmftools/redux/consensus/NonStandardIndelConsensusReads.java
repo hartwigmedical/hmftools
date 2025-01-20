@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
@@ -13,9 +12,7 @@ import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
-import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 
-import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.ArrayDeque;
@@ -27,28 +24,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Comparators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public abstract class NonStandardBaseBuilder
+public abstract class NonStandardIndelConsensusReads
 {
     private final static byte ANY_BASE = (byte) 'N';
 
     protected final RefGenome mRefGenome;
     protected int mChromosomeLength;
 
-    public NonStandardBaseBuilder(final RefGenome refGenome)
+    public NonStandardIndelConsensusReads(final RefGenome refGenome)
     {
         mRefGenome = refGenome;
         mChromosomeLength = 0;
@@ -58,7 +52,7 @@ public abstract class NonStandardBaseBuilder
 
     public void setChromosomeLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }
 
-    public static NonStandardBaseBuilder fromSequencingType(final SequencingType sequencingType, final RefGenome refGenome)
+    public static NonStandardIndelConsensusReads fromSequencingType(final SequencingType sequencingType, final RefGenome refGenome)
     {
         if(sequencingType == SBX)
             return new SBXBaseBuilder(refGenome);
@@ -314,7 +308,7 @@ public abstract class NonStandardBaseBuilder
         consensusState.setBoundaries(unclippedStart, unclippedEnd, readStart, readEnd);
     }
 
-    public static class SBXBaseBuilder extends NonStandardBaseBuilder
+    public static class SBXBaseBuilder extends NonStandardIndelConsensusReads
     {
         public SBXBaseBuilder(final RefGenome refGenome)
         {

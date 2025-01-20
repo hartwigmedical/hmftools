@@ -140,6 +140,15 @@ public final class CigarUtils
         return (lastElement != null && lastElement.getOperator() == S) ? lastElement.getLength() : 0;
     }
 
+    public static int rightSoftClipLength(final List<CigarElement> elements)
+    {
+        if(elements.isEmpty())
+            return 0;
+
+        CigarElement lastElement = elements.get(elements.size() - 1);
+        return lastElement.getOperator() == S ? lastElement.getLength() : 0;
+    }
+
     public static int leftHardClipLength(final SAMRecord record) { return leftHardClipLength(record.getCigar()); }
 
     public static int rightHardClipLength(final SAMRecord record) { return rightHardClipLength(record.getCigar()); }
