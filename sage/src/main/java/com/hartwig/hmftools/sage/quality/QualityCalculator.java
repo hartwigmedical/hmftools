@@ -203,7 +203,7 @@ public class QualityCalculator
 
     public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality, final BqrReadType readType, final BqrReadStrand readStrand)
     {
-        if(rawQuality == 0)
+        if(rawQuality <= 1)
             return 0; // never adjust a zero qual up
 
         if(mQualityRecalibrationMap == null)

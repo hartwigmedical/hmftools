@@ -264,7 +264,7 @@ public class ReadContextMatcher
         int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mAltIndexUpper;
         for (int i = requiredReadIndexLower; i <= requiredReadIndexUpper; ++i)
         {
-            if(readQuals[i] == 0)
+            if(readQuals[i] <= 1)
                 return true;
         }
         return false;

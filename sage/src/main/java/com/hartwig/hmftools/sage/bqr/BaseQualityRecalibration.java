@@ -218,7 +218,7 @@ public class BaseQualityRecalibration
             BqrKey key = entry.getKey();
             int count = entry.getValue();
 
-            if(key.Quality == 0)
+            if(key.Quality <= 1)
                 continue;
 
             BqrKey triNucKey = new BqrKey(noBaseOrQual, noBaseOrQual, key.TrinucleotideContext, noBaseOrQual, key.ReadType, key.ReadStrand);
@@ -233,7 +233,7 @@ public class BaseQualityRecalibration
         {
             BqrKey key = entry.getKey();
 
-            if(key.Quality == 0)
+            if(key.Quality <= 1)
                 continue;
 
             double recalibratedQual = 0;

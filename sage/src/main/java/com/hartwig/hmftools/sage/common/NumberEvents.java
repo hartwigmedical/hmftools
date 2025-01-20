@@ -61,7 +61,7 @@ public final class NumberEvents
             insSequenceIndex = (insSequenceIndex + 1) % insSequence.length;
         }
 
-        return (int) readQuals.subList(startIndex, iterIndex+1).stream().filter(x -> x == 0).count();
+        return (int) readQuals.subList(startIndex, iterIndex+1).stream().filter(x -> x <= 1).count();
     }
 
     public static double calcSoftClipAdjustment(final SAMRecord record)
