@@ -202,9 +202,9 @@ Complexes are scored based on the total fragments that can be aligned to at leas
 ```
 Complex Score = AlignedFragments + FreqPenalty + HomBonus + RecoveryPenalty + Wildcard penalty
 where
-   FreqPenalty = 0.0015 * SUM[max(log10(Frequency),1e-4) * AlignedFragments]
-   HomBonus = 0.0045 * (# of Homozygous alleles) * Fragments
-   RecoveryPenalty = 0.005 * (# of Recovered alleles) * Fragments
+   FreqPenalty = 0.0018 * SUM[max(log10(Frequency),1e-4)] * AlignedFragments
+   HomBonus = 0.0036 * (# of Homozygous alleles) * Fragments
+   RecoveryPenalty = 0.0055 * (# of Recovered alleles) * Fragments
    WildcardPenalty = 0.000015 * (# of wildcard characters in alleles) * Fragments
 ```
 
