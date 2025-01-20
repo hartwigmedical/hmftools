@@ -11,11 +11,18 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 
+import org.jetbrains.annotations.NotNull;
+
 public class VariationParser
 {
     static final String HGVS_FORMAT_REQUIRED = "Required format is GENE:p.XnY where X and Y are amino acids and n is an integer.";
     private final EnsemblDataCache mEnsemblCache;
     private final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap;
+    final String SINGLE_AA = "[A-Z]([a-z][a-z])?+";
+    final String SINGLE_AA_GROUP = "(" + SINGLE_AA + ")";
+    final String BLANK_OR_AA_GROUP = "(" + SINGLE_AA + ")?+";
+    final String NAT = "(\\d+)";
+
 
     public VariationParser(final EnsemblDataCache ensemblDataCache, final Map<String, TranscriptAminoAcids> transcriptAminoAcidsMap)
     {
@@ -25,31 +32,116 @@ public class VariationParser
 
     public SingleAminoAcidVariant parse(String input)
     {
-        String[] geneVar = input.split(":");
-        if (geneVar.length != 2)
-        {
-            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
-        }
-        String description = geneVar[1];
-        String[] descriptionParts = description.split("\\.");
-        if (descriptionParts.length != 2)
-        {
-            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
-        }
-        if (!descriptionParts[0].equals("p"))
-        {
-            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
-        }
+        String[] geneVar = extractGeneAndVariant(input);
+        GeneData geneData = lookupGene(geneVar[0]);
+        TranscriptData canonicalTranscript = getCanonicalTranscriptData(geneData);
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(canonicalTranscript);
 
-        Pattern variationPattern = Pattern.compile("^([a-zA-Z]*)(\\d+)([a-zA-Z]+)$");
-        final Matcher matcher = variationPattern.matcher(descriptionParts[1]);
+        String[] descriptionParts = extractDescription(geneVar);
+        Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + SINGLE_AA_GROUP + "$");
+        final Matcher matcher = matchPattern(variationPattern, descriptionParts[1]);
+
+        String referenceAminoAcid = matcher.group(1);
+        ensureAminoAcidOrBlank(referenceAminoAcid);
+        int position = Integer.parseInt(matcher.group(3));
+        String variantAminoAcid = matcher.group(4);
+        ensureAminoAcid(variantAminoAcid);
+        String singleLetterName = AminoAcids.forceSingleLetterProteinAnnotation(variantAminoAcid);
+
+        return new SingleAminoAcidVariant(geneData, canonicalTranscript, aminoAcidsSequence, position, singleLetterName);
+    }
+
+    public DeletionInsertion parseDeletionInsertion(String input)
+    {
+        String[] geneVar = extractGeneAndVariant(input);
+        GeneData geneData = lookupGene(geneVar[0]);
+        TranscriptData canonicalTranscript = getCanonicalTranscriptData(geneData);
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(canonicalTranscript);
+        String[] descriptionParts = extractDescription(geneVar);
+
+        Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + "_" + BLANK_OR_AA_GROUP + NAT + "delins([a-zA-Z]*)" + "$");
+        final Matcher matcher = matchPattern(variationPattern, descriptionParts[1]);
+
+        ensureAminoAcidOrBlank(matcher.group(1));
+        int startPosition = Integer.parseInt(matcher.group(3));
+        ensureAminoAcid(matcher.group(4));
+        int endPosition = Integer.parseInt(matcher.group(6));
+
+        String variant = matcher.group(7);
+        Pattern variantListPattern = Pattern.compile("([A-Z][a-z]*)");
+        final Matcher variantListMatcher = variantListPattern.matcher(variant);
+        StringBuilder aaListBuilder = new StringBuilder();
+        while (variantListMatcher.find())
+        {
+            String aa = variantListMatcher.group();
+            if (isNotValidAminoAcidIdentifier(aa))
+            {
+                throw new IllegalArgumentException("Not a known amino acid: " + aa);
+            }
+            String singleLetterName = AminoAcids.forceSingleLetterProteinAnnotation(aa);
+            aaListBuilder.append(singleLetterName);
+        }
+        String variantString = aaListBuilder.toString();
+
+        int length = endPosition - startPosition + 1;
+        if (length < 1)
+        {
+            throw new IllegalArgumentException("End position must not be before start position");
+        }
+        return new DeletionInsertion(geneData, canonicalTranscript, aminoAcidsSequence, startPosition, length, variantString);
+    }
+
+    @NotNull
+    private TranscriptAminoAcids lookupTranscriptAminoAcids(final TranscriptData canonicalTranscript)
+    {
+        TranscriptAminoAcids aminoAcidsSequence = mTranscriptAminoAcidsMap.get(canonicalTranscript.TransName);
+        if (aminoAcidsSequence == null)
+        {
+            throw new IllegalStateException("No amino acid sequence found for " + canonicalTranscript.TransName);
+        }
+        return aminoAcidsSequence;
+    }
+
+    @NotNull
+    private static Matcher matchPattern(final Pattern variationPattern, final String description)
+    {
+        final Matcher matcher = variationPattern.matcher(description);
         boolean matches = matcher.find();
         if (!matches)
         {
             throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
         }
+        return matcher;
+    }
 
-        String reference = geneVar[0];
+    private TranscriptData getCanonicalTranscriptData(final GeneData geneData)
+    {
+        List<TranscriptData> transcripts = mEnsemblCache.getTranscripts(geneData.GeneId);
+        return transcripts.stream()
+                .filter(transcriptData -> transcriptData.IsCanonical)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No canonical transcript found for " + geneData.GeneId));
+    }
+
+    private void ensureAminoAcid(final String variantAminoAcid)
+    {
+        if (isNotValidAminoAcidIdentifier(variantAminoAcid))
+        {
+            throw new IllegalArgumentException(variantAminoAcid + " does not represent an amino acid");
+        }
+    }
+
+    private void ensureAminoAcidOrBlank(final String referenceAminoAcid)
+    {
+        if (referenceAminoAcid != null && !referenceAminoAcid.isBlank())
+        {
+            ensureAminoAcid(referenceAminoAcid);
+        }
+    }
+
+    @NotNull
+    private GeneData lookupGene(final String reference)
+    {
         GeneData geneData = mEnsemblCache.getGeneDataByName(reference);
         if (geneData == null)
         {
@@ -59,32 +151,31 @@ public class VariationParser
                 throw new IllegalArgumentException(reference + " is not a known gene");
             }
         }
-        String referenceAminoAcid = matcher.group(1);
-        if (!referenceAminoAcid.isBlank() && isNotValidAminoAcidIdentifier(referenceAminoAcid))
-        {
-            throw new IllegalArgumentException(referenceAminoAcid + " does not represent an amino acid");
-        }
-        int position = Integer.parseInt(matcher.group(2));
-        String variantAminoAcid = matcher.group(3);
-        if (isNotValidAminoAcidIdentifier(variantAminoAcid))
-        {
-            throw new IllegalArgumentException(variantAminoAcid + " does not represent an amino acid");
-        }
-        String singleLetterName = AminoAcids.forceSingleLetterProteinAnnotation(variantAminoAcid);
+        return geneData;
+    }
 
-        List<TranscriptData> transcripts = mEnsemblCache.getTranscripts(geneData.GeneId);
-        TranscriptData canonicalTranscript = transcripts.stream()
-                .filter(transcriptData -> transcriptData.IsCanonical)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No canonical transcript found for " + reference));
-
-        TranscriptAminoAcids aminoAcidsSequence = mTranscriptAminoAcidsMap.get(canonicalTranscript.TransName);
-        if (aminoAcidsSequence == null)
+    private static String[] extractDescription(final String[] geneVar)
+    {
+        String[] descriptionParts = geneVar[1].split("\\.");
+        if (descriptionParts.length != 2)
         {
-            throw new IllegalStateException("No amino acid sequence found for " + canonicalTranscript.TransName);
+            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
         }
+        if (!descriptionParts[0].equals("p"))
+        {
+            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
+        }
+        return descriptionParts;
+    }
 
-        return new SingleAminoAcidVariant(geneData, canonicalTranscript, aminoAcidsSequence, position, singleLetterName);
+    private static String[] extractGeneAndVariant(final String input)
+    {
+        String[] geneVar = input.split(":");
+        if (geneVar.length != 2)
+        {
+            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
+        }
+        return geneVar;
     }
 
     private boolean isNotValidAminoAcidIdentifier(String s)

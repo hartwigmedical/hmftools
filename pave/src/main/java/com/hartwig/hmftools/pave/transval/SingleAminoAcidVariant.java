@@ -1,14 +1,10 @@
 package com.hartwig.hmftools.pave.transval;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -17,27 +13,12 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SingleAminoAcidVariant
+public class SingleAminoAcidVariant extends ProteinVariant
 {
     @NotNull
-    final GeneData Gene;
-    @NotNull
-    final TranscriptData Transcript;
-    @NotNull
-    final TranscriptAminoAcids AminoAcidSequence;
-    int Position;
-    @NotNull
-    final String Variant;
-    @NotNull
-    final List<ChrBaseRegion> CodingRegions;
+    final String Alt;
     @NotNull
     private final CodonRegions RegionsDefiningCodon;
-
-    private static boolean isValidAminoAcidName(String s)
-    {
-        // TODO do we need to handle Z and B???
-        return AminoAcids.AMINO_ACID_TO_CODON_MAP.containsKey(s);
-    }
 
     public SingleAminoAcidVariant(
             @NotNull final GeneData gene,
@@ -46,41 +27,17 @@ public class SingleAminoAcidVariant
             final int position,
             @NotNull final String variant)
     {
-        Preconditions.checkArgument(Objects.equals(transcript.GeneId, gene.GeneId));
-        Preconditions.checkArgument(position >= 0);
-        Preconditions.checkArgument(position < transcript.length());
+        super(gene, transcript, aminoAcidSequence, position);
         Preconditions.checkArgument(isValidAminoAcidName(variant));
-        this.Gene = gene;
-        this.Transcript = transcript;
-        this.AminoAcidSequence = aminoAcidSequence;
         this.Position = position;
-        this.Variant = variant;
-        List<ChrBaseRegion> codingRegions = transcript.exons().stream()
-                .filter(exonData -> exonData.End >= transcript.CodingStart && exonData.Start <= transcript.CodingEnd)
-                .map(exonData -> new ChrBaseRegion(gene.Chromosome, Math.max(exonData.Start, transcript.CodingStart), Math.min(exonData.End, transcript.CodingEnd)))
-                .collect(Collectors.toList());
-        if(Transcript.negStrand())
-        {
-            List<ChrBaseRegion> reversed = new ArrayList<>(codingRegions);
-            Collections.reverse(reversed);
-            CodingRegions = Collections.unmodifiableList(reversed);
-        }
-        else
-        {
-            CodingRegions = codingRegions;
-        }
+        this.Alt = variant;
         int codonPosition = 3 * (Position - 1);
         RegionsDefiningCodon = exonsForCodonPosition(codonPosition);
     }
 
-    public String referenceAminoAcid()
+    public String altValue()
     {
-        return AminoAcidSequence.AminoAcids.substring(Position - 1, Position);
-    }
-
-    public String variantAminoAcid()
-    {
-        return Variant;
+        return Alt;
     }
 
     public String referenceCodon(RefGenomeInterface refGenomeSource)
@@ -102,6 +59,12 @@ public class SingleAminoAcidVariant
     List<Integer> codingRegionLengths()
     {
         return CodingRegions.stream().map(ChrBaseRegion::baseLength).collect(Collectors.toList());
+    }
+
+    @Override
+    int changedReferenceSequenceLength()
+    {
+        return 1;
     }
 
     private CodonRegions exonsForCodonPosition(int codonPosition)

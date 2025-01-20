@@ -39,6 +39,7 @@ public class TestDataCreator
                 "VHL,",
                 "BRAF,",
                 "ADCK2,",
+                "EGFR,",
                 "RNU1-82P,",
                 "ZYX,"
         );
@@ -50,6 +51,7 @@ public class TestDataCreator
                 "ENSG00000134086",  // VHL
                 "ENSG00000133597", // ADCK2
                 "ENSG00000157764", // BRAF
+                "ENSG00000146648", // EGFR
                 "ENSG00000212153", // RNU-82P
                 "ENSG00000159840" // ZYX
         );
@@ -107,13 +109,13 @@ public class TestDataCreator
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna")));
         var chromosomeLengths = refGenomeSource.chromosomeLengths();
         System.out.println(chromosomeLengths.size());
-        int chrLength = chromosomeLengths.get("chr4");
+        int chrLength = chromosomeLengths.get("chr7");
         System.out.println(chrLength);
-        int start = 105_000_000; //105_233_943
+        int start = 55_000_000; //55_174_776
         int end = start + 3_000_000;
-        var chr = refGenomeSource.getBaseString("chr4", start, end);
+        var chr = refGenomeSource.getBaseString("chr7", start, end);
         System.out.println(chr.substring(10000, 10100));
-        File chrFile = new File(outputDir, "chr4_part.txt");
+        File chrFile = new File(outputDir, "chr7_part_55.txt");
         Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
     }
 

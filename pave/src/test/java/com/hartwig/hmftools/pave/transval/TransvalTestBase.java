@@ -27,7 +27,7 @@ public class TransvalTestBase
         transval = new Transval(ensemblDataDir, genome);
     }
 
-    public SingleAminoAcidVariant variant(String definition)
+    public SingleAminoAcidVariant saav(String definition)
     {
         return transval.variationParser().parse(definition);
     }

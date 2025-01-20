@@ -4,30 +4,32 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class TinyGenome extends SimpleTestGenome
 {
-    private final Map<String, ChromosomeSnippet> data = new HashMap<>();
+    private final Set<ChromosomeSnippet> data = new HashSet<>();
 
     public TinyGenome()
     {
         super();
-        data.put("chr1", new ChromosomeSnippet(10_000_000, 3_000_000, "chr1_part.txt"));
-        data.put("chr3", new ChromosomeSnippet(10_000_000, 3_000_000, "chr3_part.txt"));
-        data.put("chr4", new ChromosomeSnippet(105_000_000, 3_000_000, "chr4_part.txt"));
-        data.put("chr7", new ChromosomeSnippet(140_000_000, 10_000_000, "chr7_part.txt"));
+        data.add( new ChromosomeSnippet("chr1", 10_000_000, 3_000_000, "chr1_part.txt"));
+        data.add( new ChromosomeSnippet("chr3", 10_000_000, 3_000_000, "chr3_part.txt"));
+        data.add( new ChromosomeSnippet("chr4", 105_000_000, 3_000_000, "chr4_part.txt"));
+        data.add( new ChromosomeSnippet("chr7", 140_000_000, 10_000_000, "chr7_part.txt"));
+        data.add( new ChromosomeSnippet("chr7", 55_000_000, 3_000_000, "chr7_part_55.txt"));
+        // 55_174_776
     }
 
     @Override
     public byte[] getBases(final String chromosome, final int posStart, final int posEnd)
     {
-        if (!data.containsKey(chromosome)) {
-            throw new IllegalArgumentException("Unknown chromosome: " + chromosome);
-        }
-        return data.get(chromosome).getBases(posStart, posEnd);
+        ChromosomeSnippet relevantSnippet = data.stream()
+                .filter(snippet -> snippet.containsData(chromosome, posStart, posEnd))
+                .findFirst().orElseThrow();
+        return relevantSnippet.getBases(posStart, posEnd);
     }
 
     @Override
@@ -41,12 +43,16 @@ class ChromosomeSnippet
 {
     private final int Start;
     private final int Length;
+    private final int End;
     private final byte[] bytes;
+    private final String Chromosome;
 
-    ChromosomeSnippet(final int start, final int length, final String dataFileName)
+    ChromosomeSnippet(final String chromosome, final int start, final int length, final String dataFileName)
     {
         Start = start;
         Length = length;
+        End = start + length;
+        this.Chromosome = chromosome;
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(Objects.requireNonNull(classLoader.getResource(dataFileName)).getFile());
         try
@@ -57,6 +63,15 @@ class ChromosomeSnippet
         {
             throw new RuntimeException(e);
         }
+    }
+
+    boolean containsData(String chromosome, int start, int end)
+    {
+        if (!chromosome.equals(Chromosome))
+        {
+            return false;
+        }
+        return start >= Start && end <= End;
     }
 
     public byte[] getBases(final int posStart, final int posEnd)

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.pave.transval;
 
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,29 +9,29 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
 {
 
     @Test
-    public void referenceAminoAcidTest()
+    public void referenceValueTest()
     {
         // Forward strand examples:
-        Assert.assertEquals("M", this.variant("ADCK2:p.1E").referenceAminoAcid());
-        Assert.assertEquals("V", this.variant("ADCK2:p.2E").referenceAminoAcid());
-        Assert.assertEquals("R", this.variant("ADCK2:p.71E").referenceAminoAcid());
-        Assert.assertEquals("K", this.variant("ADCK2:p.421E").referenceAminoAcid());
-        Assert.assertEquals("P", this.variant("ADCK2:p.625E").referenceAminoAcid());
-        Assert.assertEquals("P", this.variant("ADCK2:p.626E").referenceAminoAcid());
+        Assert.assertEquals("M", this.saav("ADCK2:p.1E").referenceAminoAcids());
+        Assert.assertEquals("V", this.saav("ADCK2:p.2E").referenceAminoAcids());
+        Assert.assertEquals("R", this.saav("ADCK2:p.71E").referenceAminoAcids());
+        Assert.assertEquals("K", this.saav("ADCK2:p.421E").referenceAminoAcids());
+        Assert.assertEquals("P", this.saav("ADCK2:p.625E").referenceAminoAcids());
+        Assert.assertEquals("P", this.saav("ADCK2:p.626E").referenceAminoAcids());
 
         // Reverse strand examples:
-        Assert.assertEquals("M", this.variant("BRAF:p.1E").referenceAminoAcid());
-        Assert.assertEquals("A", this.variant("BRAF:p.2E").referenceAminoAcid());
-        Assert.assertEquals("V", this.variant("BRAF:p.600E").referenceAminoAcid());
-        Assert.assertEquals("V", this.variant("BRAF:p.765E").referenceAminoAcid());
-        Assert.assertEquals("H", this.variant("BRAF:p.766E").referenceAminoAcid());
+        Assert.assertEquals("M", this.saav("BRAF:p.1E").referenceAminoAcids());
+        Assert.assertEquals("A", this.saav("BRAF:p.2E").referenceAminoAcids());
+        Assert.assertEquals("V", this.saav("BRAF:p.600E").referenceAminoAcids());
+        Assert.assertEquals("V", this.saav("BRAF:p.765E").referenceAminoAcids());
+        Assert.assertEquals("H", this.saav("BRAF:p.766E").referenceAminoAcids());
     }
 
     @Test
     public void codingRegionLengthsTest()
     {
         // TODO cases where there are 1 or 2 exons
-        SingleAminoAcidVariant variant = this.variant("ADCK2:p.3K");
+        SingleAminoAcidVariant variant = this.saav("ADCK2:p.3K");
         Assert.assertEquals(627, variant.AminoAcidSequence.AminoAcids.length()); // sanity
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(8, returned.size());
@@ -46,7 +45,7 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
     @Test
     public void codingRegionExons()
     {
-        SingleAminoAcidVariant variant = this.variant("ZYX:p.1E");
+        SingleAminoAcidVariant variant = this.saav("ZYX:p.1E");
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(9, returned.size());
         Assert.assertEquals(573, variant.AminoAcidSequence.AminoAcids.length()); // sanity
@@ -60,7 +59,7 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
     @Test
     public void codingRegionLengthsReverseStrandTest()
     {
-        SingleAminoAcidVariant variant = this.variant("BRAF:p.600E");
+        SingleAminoAcidVariant variant = this.saav("BRAF:p.600E");
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(18, returned.size());
         Assert.assertEquals(3 * 767, returned.stream().mapToInt(Integer::intValue).sum());
@@ -71,103 +70,103 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
     }
 
     @Test
-    public void variantAminoAcidTest()
+    public void altValueTest()
     {
-        Assert.assertEquals("E", this.variant("BRAF:p.1E").variantAminoAcid());
+        Assert.assertEquals("E", this.saav("BRAF:p.1E").altValue());
     }
 
     @Test
     public void referenceCodonTest()
     {
-        Assert.assertEquals("ATG", variant("ADCK2:p.1E").referenceCodon(genome));
-        Assert.assertEquals("GTG", variant("ADCK2:p.2E").referenceCodon(genome));
-        Assert.assertEquals("CGC", variant("ADCK2:p.71E").referenceCodon(genome));
-        Assert.assertEquals("TCA", variant("ADCK2:p.141E").referenceCodon(genome));
-        Assert.assertEquals("GCT", variant("ADCK2:p.281E").referenceCodon(genome));
-        Assert.assertEquals("GAG", variant("ADCK2:p.301E").referenceCodon(genome));
-        Assert.assertEquals("AAA", variant("ADCK2:p.311E").referenceCodon(genome));
-        Assert.assertEquals("GTG", variant("ADCK2:p.312E").referenceCodon(genome));
-        Assert.assertEquals("TTG", variant("ADCK2:p.313E").referenceCodon(genome));
-        Assert.assertEquals("E", variant("ADCK2:p.351E").referenceAminoAcid()); // sanity
-        Assert.assertEquals("GAG", variant("ADCK2:p.351E").referenceCodon(genome));
+        Assert.assertEquals("ATG", saav("ADCK2:p.1E").referenceCodon(genome));
+        Assert.assertEquals("GTG", saav("ADCK2:p.2E").referenceCodon(genome));
+        Assert.assertEquals("CGC", saav("ADCK2:p.71E").referenceCodon(genome));
+        Assert.assertEquals("TCA", saav("ADCK2:p.141E").referenceCodon(genome));
+        Assert.assertEquals("GCT", saav("ADCK2:p.281E").referenceCodon(genome));
+        Assert.assertEquals("GAG", saav("ADCK2:p.301E").referenceCodon(genome));
+        Assert.assertEquals("AAA", saav("ADCK2:p.311E").referenceCodon(genome));
+        Assert.assertEquals("GTG", saav("ADCK2:p.312E").referenceCodon(genome));
+        Assert.assertEquals("TTG", saav("ADCK2:p.313E").referenceCodon(genome));
+        Assert.assertEquals("E", saav("ADCK2:p.351E").referenceAminoAcids()); // sanity
+        Assert.assertEquals("GAG", saav("ADCK2:p.351E").referenceCodon(genome));
 
-        Assert.assertEquals("Q", variant("ADCK2:p.359E").referenceAminoAcid()); // sanity
-        Assert.assertEquals("CAA", variant("ADCK2:p.359E").referenceCodon(genome));
-        Assert.assertEquals("Q", variant("ADCK2:p.360E").referenceAminoAcid()); // sanity
-        Assert.assertEquals("CAG", variant("ADCK2:p.360E").referenceCodon(genome));
-        Assert.assertEquals("ATT", variant("ADCK2:p.361E").referenceCodon(genome));
-        Assert.assertEquals("AAG", variant("ADCK2:p.580E").referenceCodon(genome));
-        Assert.assertEquals("AAG", variant("ADCK2:p.580E").referenceCodon(genome));
-        Assert.assertEquals("GTA", variant("ADCK2:p.581E").referenceCodon(genome));
-        Assert.assertEquals("AAG", variant("ADCK2:p.582E").referenceCodon(genome));
-        Assert.assertEquals("CCC", variant("ADCK2:p.625E").referenceCodon(genome));
-        Assert.assertEquals("CCG", variant("ADCK2:p.626E").referenceCodon(genome));
-        Assert.assertEquals("TGA", variant("ADCK2:p.627E").referenceCodon(genome)); // stop
+        Assert.assertEquals("Q", saav("ADCK2:p.359E").referenceAminoAcids()); // sanity
+        Assert.assertEquals("CAA", saav("ADCK2:p.359E").referenceCodon(genome));
+        Assert.assertEquals("Q", saav("ADCK2:p.360E").referenceAminoAcids()); // sanity
+        Assert.assertEquals("CAG", saav("ADCK2:p.360E").referenceCodon(genome));
+        Assert.assertEquals("ATT", saav("ADCK2:p.361E").referenceCodon(genome));
+        Assert.assertEquals("AAG", saav("ADCK2:p.580E").referenceCodon(genome));
+        Assert.assertEquals("AAG", saav("ADCK2:p.580E").referenceCodon(genome));
+        Assert.assertEquals("GTA", saav("ADCK2:p.581E").referenceCodon(genome));
+        Assert.assertEquals("AAG", saav("ADCK2:p.582E").referenceCodon(genome));
+        Assert.assertEquals("CCC", saav("ADCK2:p.625E").referenceCodon(genome));
+        Assert.assertEquals("CCG", saav("ADCK2:p.626E").referenceCodon(genome));
+        Assert.assertEquals("TGA", saav("ADCK2:p.627E").referenceCodon(genome)); // stop
     }
 
     @Test
     public void referenceCodonAcrossExonBoundariesTest()
     {
-        Assert.assertEquals("ATG", variant("ZYX:p.1E").referenceCodon(genome));
-        Assert.assertEquals("GCG", variant("ZYX:p.2E").referenceCodon(genome));
-        Assert.assertEquals("CCG", variant("ZYX:p.68E").referenceCodon(genome));
-        Assert.assertEquals("GAA", variant("ZYX:p.69E").referenceCodon(genome));
-        Assert.assertEquals("GAC", variant("ZYX:p.70E").referenceCodon(genome)); // first nuke in exon 2, remainder in exon 3
-        Assert.assertEquals("GTC", variant("ZYX:p.380E").referenceCodon(genome));
-        Assert.assertEquals("AAC", variant("ZYX:p.381E").referenceCodon(genome));
-        Assert.assertEquals("GAA", variant("ZYX:p.382E").referenceCodon(genome)); // first nuke in exon 4, remainder in exon 5
-        Assert.assertEquals("TAC", variant("ZYX:p.496E").referenceCodon(genome));
-        Assert.assertEquals("CAC", variant("ZYX:p.497E").referenceCodon(genome));
-        Assert.assertEquals("AAG", variant("ZYX:p.498E").referenceCodon(genome)); // first 2 nukes in exon 8, last in exon 9
+        Assert.assertEquals("ATG", saav("ZYX:p.1E").referenceCodon(genome));
+        Assert.assertEquals("GCG", saav("ZYX:p.2E").referenceCodon(genome));
+        Assert.assertEquals("CCG", saav("ZYX:p.68E").referenceCodon(genome));
+        Assert.assertEquals("GAA", saav("ZYX:p.69E").referenceCodon(genome));
+        Assert.assertEquals("GAC", saav("ZYX:p.70E").referenceCodon(genome)); // first nuke in exon 2, remainder in exon 3
+        Assert.assertEquals("GTC", saav("ZYX:p.380E").referenceCodon(genome));
+        Assert.assertEquals("AAC", saav("ZYX:p.381E").referenceCodon(genome));
+        Assert.assertEquals("GAA", saav("ZYX:p.382E").referenceCodon(genome)); // first nuke in exon 4, remainder in exon 5
+        Assert.assertEquals("TAC", saav("ZYX:p.496E").referenceCodon(genome));
+        Assert.assertEquals("CAC", saav("ZYX:p.497E").referenceCodon(genome));
+        Assert.assertEquals("AAG", saav("ZYX:p.498E").referenceCodon(genome)); // first 2 nukes in exon 8, last in exon 9
     }
 
     @Test
     public void referenceCodonReverseStrandGeneTest()
     {
-        Assert.assertEquals("ATG", variant("BRAF:p.1E").referenceCodon(genome));
-        Assert.assertEquals("GCG", variant("BRAF:p.2E").referenceCodon(genome));
-        Assert.assertEquals("GCG", variant("BRAF:p.3E").referenceCodon(genome));
-        Assert.assertEquals("CCG", variant("BRAF:p.44E").referenceCodon(genome));
-        Assert.assertEquals("GAG", variant("BRAF:p.45E").referenceCodon(genome));
-        Assert.assertEquals("GAG", variant("BRAF:p.46E").referenceCodon(genome)); // end of first exon
-        Assert.assertEquals("GTG", variant("BRAF:p.47E").referenceCodon(genome));
-        Assert.assertEquals("TGG", variant("BRAF:p.48E").referenceCodon(genome));
-        Assert.assertEquals("CTG", variant("BRAF:p.79E").referenceCodon(genome));
-        Assert.assertEquals("GAG", variant("BRAF:p.80E").referenceCodon(genome)); // end of second exon
+        Assert.assertEquals("ATG", saav("BRAF:p.1E").referenceCodon(genome));
+        Assert.assertEquals("GCG", saav("BRAF:p.2E").referenceCodon(genome));
+        Assert.assertEquals("GCG", saav("BRAF:p.3E").referenceCodon(genome));
+        Assert.assertEquals("CCG", saav("BRAF:p.44E").referenceCodon(genome));
+        Assert.assertEquals("GAG", saav("BRAF:p.45E").referenceCodon(genome));
+        Assert.assertEquals("GAG", saav("BRAF:p.46E").referenceCodon(genome)); // end of first exon
+        Assert.assertEquals("GTG", saav("BRAF:p.47E").referenceCodon(genome));
+        Assert.assertEquals("TGG", saav("BRAF:p.48E").referenceCodon(genome));
+        Assert.assertEquals("CTG", saav("BRAF:p.79E").referenceCodon(genome));
+        Assert.assertEquals("GAG", saav("BRAF:p.80E").referenceCodon(genome)); // end of second exon
 
-        Assert.assertEquals("CAG", variant("BRAF:p.201E").referenceCodon(genome));
-        Assert.assertEquals("GAT", variant("BRAF:p.202E").referenceCodon(genome));
-        Assert.assertEquals("GGA", variant("BRAF:p.203E").referenceCodon(genome)); // 2 nukes in 4th exon, 1 in 5th
+        Assert.assertEquals("CAG", saav("BRAF:p.201E").referenceCodon(genome));
+        Assert.assertEquals("GAT", saav("BRAF:p.202E").referenceCodon(genome));
+        Assert.assertEquals("GGA", saav("BRAF:p.203E").referenceCodon(genome)); // 2 nukes in 4th exon, 1 in 5th
 
-        Assert.assertEquals("TCT", variant("BRAF:p.325E").referenceCodon(genome));
-        Assert.assertEquals("ATT", variant("BRAF:p.326E").referenceCodon(genome));
-        Assert.assertEquals("GGG", variant("BRAF:p.327E").referenceCodon(genome)); // 2 nukes in 7th exon, 1 in 8th
-        Assert.assertEquals("CCC", variant("BRAF:p.328E").referenceCodon(genome));
+        Assert.assertEquals("TCT", saav("BRAF:p.325E").referenceCodon(genome));
+        Assert.assertEquals("ATT", saav("BRAF:p.326E").referenceCodon(genome));
+        Assert.assertEquals("GGG", saav("BRAF:p.327E").referenceCodon(genome)); // 2 nukes in 7th exon, 1 in 8th
+        Assert.assertEquals("CCC", saav("BRAF:p.328E").referenceCodon(genome));
 
-        Assert.assertEquals("TGG", variant("BRAF:p.476E").referenceCodon(genome));
-        Assert.assertEquals("CAT", variant("BRAF:p.477E").referenceCodon(genome));
-        Assert.assertEquals("GGT", variant("BRAF:p.478E").referenceCodon(genome)); // 1 nuke in an exon, 2 in the next
-        Assert.assertEquals("GAT", variant("BRAF:p.479E").referenceCodon(genome));
+        Assert.assertEquals("TGG", saav("BRAF:p.476E").referenceCodon(genome));
+        Assert.assertEquals("CAT", saav("BRAF:p.477E").referenceCodon(genome));
+        Assert.assertEquals("GGT", saav("BRAF:p.478E").referenceCodon(genome)); // 1 nuke in an exon, 2 in the next
+        Assert.assertEquals("GAT", saav("BRAF:p.479E").referenceCodon(genome));
 
-        Assert.assertEquals("GTG", variant("BRAF:p.600E").referenceCodon(genome));
-        Assert.assertEquals("AAA", variant("BRAF:p.601E").referenceCodon(genome));
-        Assert.assertEquals("TCT", variant("BRAF:p.602E").referenceCodon(genome));
-        Assert.assertEquals("GGA", variant("BRAF:p.670E").referenceCodon(genome));
+        Assert.assertEquals("GTG", saav("BRAF:p.600E").referenceCodon(genome));
+        Assert.assertEquals("AAA", saav("BRAF:p.601E").referenceCodon(genome));
+        Assert.assertEquals("TCT", saav("BRAF:p.602E").referenceCodon(genome));
+        Assert.assertEquals("GGA", saav("BRAF:p.670E").referenceCodon(genome));
     }
 
     @Test
     public void mtorTest()
     {
         // See TransvarConverterTest in the serve codebase
-        Assert.assertEquals("TTA", variant("MTOR:p.L2230V").referenceCodon(genome));
+        Assert.assertEquals("TTA", saav("MTOR:p.L2230V").referenceCodon(genome));
     }
 
     @Test
     public void codonIsInSingleExon()
     {
-        Assert.assertTrue(variant("ADCK2:p.1E").codonIsInSingleExon());
-        Assert.assertTrue(variant("BRAF:p.46E").codonIsInSingleExon());
-        Assert.assertFalse(variant("BRAF:p.327E").codonIsInSingleExon());
-        Assert.assertFalse(variant("BRAF:p.478E").codonIsInSingleExon());
+        Assert.assertTrue(saav("ADCK2:p.1E").codonIsInSingleExon());
+        Assert.assertTrue(saav("BRAF:p.46E").codonIsInSingleExon());
+        Assert.assertFalse(saav("BRAF:p.327E").codonIsInSingleExon());
+        Assert.assertFalse(saav("BRAF:p.478E").codonIsInSingleExon());
     }
 }

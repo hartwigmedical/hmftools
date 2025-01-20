@@ -14,7 +14,7 @@ public class TransvalTest extends TransvalTestBase
         // This example is based on TransvarConverterTest in the serve codebase.
         // The idea is to check that the current code agrees with Transval on
         // the key fields used by serve.
-        TransvalSnvMnv record = transval.calculateSNV("MTOR:p.L2230V");
+        TransvalSnvMnv record = transval.calculateVariant("MTOR:p.L2230V");
 
         assertEquals("ENST00000361445", record.TranscriptId);
         assertEquals("1", record.Chromosome);
@@ -43,7 +43,7 @@ public class TransvalTest extends TransvalTestBase
 21:35:20 - [INFO ] -  Hotspot{ref=A, alt=T, chromosome=chr7, position=140753336}
 21:35:20 - [INFO ] -  Hotspot{ref=CA, alt=TT, chromosome=chr7, position=140753335}
 */
-        TransvalSnvMnv record = transval.calculateSNV("BRAF:p.V600E");
+        TransvalSnvMnv record = transval.calculateVariant("BRAF:p.V600E");
 //        assertEquals("ENST00000288602", record.TranscriptId); // Our ensembl data has ENST00000646891 as the canonical transcript
         assertEquals("7", record.Chromosome);
         assertEquals(140_753_336, record.Position); // serve example has 11_182_158, which is from v37, I think
@@ -60,7 +60,7 @@ public class TransvalTest extends TransvalTestBase
     public void vhlMultipleExons()
     {
         // Another example based on a test in serve's TransvarConverterTest.
-        TransvalSnvMnv record = transval.calculateSNV("VHL:p.G114R");
+        TransvalSnvMnv record = transval.calculateVariant("VHL:p.G114R");
         assertEquals("ENST00000256474", record.TranscriptId);
         assertEquals("3", record.Chromosome);
 //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
@@ -85,7 +85,7 @@ public class TransvalTest extends TransvalTestBase
     public void tet2MNV()
     {
         // Another example based on a test in serve's TransvarConverterTest.
-        TransvalSnvMnv record = transval.calculateSNV("TET2:p.Y1294A");
+        TransvalSnvMnv record = transval.calculateVariant("TET2:p.Y1294A");
         assertEquals("ENST00000380013", record.TranscriptId); // TransvarConvertTest has ENST00000540549
         assertEquals("4", record.Chromosome);
         //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
@@ -99,5 +99,11 @@ public class TransvalTest extends TransvalTestBase
         assertEquals("GCG", record.AlternateCodons.get(2));
         assertEquals("GCT", record.AlternateCodons.get(3));
         assertEquals(4, record.AlternateCodons.size());
+    }
+
+    @Test
+    public void egfrDelIns()
+    {
+
     }
 }

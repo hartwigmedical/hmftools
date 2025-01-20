@@ -20,18 +20,22 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void errorMessages()
     {
-        checkInputResultsInErrorWithMessage("BRAF p.V600E", HGVS_FORMAT_REQUIRED);
-        checkInputResultsInErrorWithMessage("BRAF:pV600E", HGVS_FORMAT_REQUIRED);
-        checkInputResultsInErrorWithMessage("BRAF:x.V600E", HGVS_FORMAT_REQUIRED);
-        checkInputResultsInErrorWithMessage("BRAF:p.V6.00E", HGVS_FORMAT_REQUIRED);
-        checkInputResultsInErrorWithMessage("BRAF:p.VsixhundredE", HGVS_FORMAT_REQUIRED);
-        checkInputResultsInErrorWithMessage("BRAF:p.V600", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF p.V600E", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF:pV600E", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF:x.V600E", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.V6.00E", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.VsixhundredE", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.V600", HGVS_FORMAT_REQUIRED);
         // Note that we allow BRAF:p.600E as the V at 600 is known from the transcript, so is redundant
+        checkSaavInputResultsInErrorWithMessage("BRAF p.VV600E", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF p.V600EV", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF p.Vali600E", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRAF p.Val600Isoleucine", HGVS_FORMAT_REQUIRED);
 
-        checkInputResultsInErrorWithMessage("BRUZ:p.A123G", "BRUZ is not a known gene");
-        checkInputResultsInErrorWithMessage("BRAF:p.J123G", "J does not represent an amino acid");
-        checkInputResultsInErrorWithMessage("BRAF:p.G123J", "J does not represent an amino acid");
-        checkInputResultsInErrorWithMessage("BRAF:p.G123,456E", HGVS_FORMAT_REQUIRED);
+        checkSaavInputResultsInErrorWithMessage("BRUZ:p.A123G", "BRUZ is not a known gene");
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.J123G", "J does not represent an amino acid");
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.G123J", "J does not represent an amino acid");
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.G123,456E", HGVS_FORMAT_REQUIRED);
     }
 
     @Test
@@ -55,22 +59,60 @@ public class VariationParserTest extends TransvalTestBase
     {
         SingleAminoAcidVariant variant = variationParser.parse("BRAF:p.600E");
         Assert.assertEquals(600, variant.Position);
-        Assert.assertEquals("E", variant.Variant);
+        Assert.assertEquals("E", variant.Alt);
     }
 
     @Test
     public void aminoAcidNameIsConvertedToSingleLetter()
     {
         SingleAminoAcidVariant variant = variationParser.parse("BRAF:p.Val600Glu");
-        Assert.assertEquals("E", variant.Variant);
+        Assert.assertEquals("E", variant.Alt);
     }
 
-    private void checkInputResultsInErrorWithMessage(String input, String expectedMessage)
+    @Test
+    public void parseDeletionInsertion()
+    {
+        DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
+        Assert.assertEquals("EGFR", di.Gene.GeneName);
+        Assert.assertEquals(747, di.Position);
+        Assert.assertEquals(4, di.DeletionLength);
+        Assert.assertEquals("P", di.Alt);
+
+        // ADCK2 Glu301_Thr303delinsGlnGln, which is E301_T303delinsQQ
+        DeletionInsertion di2 = variationParser.parseDeletionInsertion("ADCK2:p.Glu301_Thr303delinsGlnGln");
+        Assert.assertEquals("ADCK2", di2.Gene.GeneName);
+        Assert.assertEquals(301, di2.Position);
+        Assert.assertEquals(3, di2.DeletionLength);
+        Assert.assertEquals("QQ", di2.Alt);
+    }
+
+    @Test
+    public void deletionInsertionErrors()
+    {
+        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A740delinsP","End position must not be before start position");
+        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A750delinsAlaPralineLeu","Not a known amino acid: Praline");
+    }
+
+    private void checkSaavInputResultsInErrorWithMessage(String input, String expectedMessage)
     {
         String receivedMessage = null;
         try
         {
             variationParser.parse(input);
+        }
+        catch(final IllegalArgumentException e)
+        {
+            receivedMessage = e.getMessage();
+        }
+        Assert.assertEquals(expectedMessage, receivedMessage);
+    }
+
+    private void checkDiInputResultsInErrorWithMessage(String input, String expectedMessage)
+    {
+        String receivedMessage = null;
+        try
+        {
+            variationParser.parseDeletionInsertion(input);
         }
         catch(final IllegalArgumentException e)
         {
