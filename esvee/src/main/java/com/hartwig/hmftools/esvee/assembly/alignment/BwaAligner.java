@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.esvee.assembly.AssemblyConstants;
+
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
@@ -37,7 +39,9 @@ public class BwaAligner implements Aligner
             {
                 mAligner = new BwaMemAligner(index);
                 mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
-                // mAligner.setMismatchPenaltyOption(BWA_MISMATCH_PENALTY);
+                mAligner.setMismatchPenaltyOption(AssemblyConstants.BWA_MISMATCH_PENALTY);
+                updateScoringMatrix();
+
             }
             else
             {
@@ -54,26 +58,21 @@ public class BwaAligner implements Aligner
     {
         int matchScore = mAligner.getMatchScoreOption();
         int mismatchPenalty = mAligner.getMismatchPenaltyOption();
-        byte[] mat = new byte[SCORING_MATRIX_SIZE * SCORING_MATRIX_SIZE];
+        byte[] scoringMatrix = new byte[SCORING_MATRIX_SIZE * SCORING_MATRIX_SIZE];
         int k = 0;
+
         for(int i = 0; i < SCORING_MATRIX_SIZE - 1; i++)
         {
             for(int j = 0; j < SCORING_MATRIX_SIZE - 1; j++)
-                mat[k++] = (byte) (i == j ? matchScore : -mismatchPenalty);
+                scoringMatrix[k++] = (byte) (i == j ? matchScore : -mismatchPenalty);
 
-            mat[k++] = -1;
+            scoringMatrix[k++] = -1;
         }
 
         for(int j = 0; j < SCORING_MATRIX_SIZE; j++)
-            mat[k++] = -1;
+            scoringMatrix[k++] = -1;
 
-        mAligner.setScoringMatrixOption(mat);
-    }
-
-    public void setMismatchPenalty(int mismatchPenalty)
-    {
-        mAligner.setMismatchPenaltyOption(mismatchPenalty);
-        updateScoringMatrix();
+        mAligner.setScoringMatrixOption(scoringMatrix);
     }
 
     @Override
