@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.io.File;
@@ -10,6 +9,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.esvee.assembly.AssemblyConstants;
+
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
@@ -17,7 +18,16 @@ import org.jetbrains.annotations.Nullable;
 
 public class BwaAligner implements Aligner
 {
+    private static final int SCORING_MATRIX_SIZE = 5;
+
     private final BwaMemAligner mAligner;
+
+    private static final String LIBBWA_PATH = "LIBBWA_PATH"; // as expected by the BWA library
+    private static final String LIBBWA_PREFIX = "libbwa.";
+
+    private static final String MAC_OS = "Mac";
+    private static final String MAC_ARCH = "aarch64";
+    private static final String MAC_BWA_LIB = "libbwa.Darwin.dylib";
 
     public BwaAligner(final String refGenomeImageFile)
     {
@@ -38,7 +48,9 @@ public class BwaAligner implements Aligner
             {
                 mAligner = new BwaMemAligner(index);
                 mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
-                // mAligner.setMismatchPenaltyOption(BWA_MISMATCH_PENALTY);
+                mAligner.setMismatchPenaltyOption(AssemblyConstants.BWA_MISMATCH_PENALTY);
+                updateScoringMatrix();
+
             }
             else
             {
@@ -50,13 +62,6 @@ public class BwaAligner implements Aligner
             mAligner = null;
         }
     }
-
-    private static final String LIBBWA_PATH = "LIBBWA_PATH"; // as expected by the BWA library
-    private static final String LIBBWA_PREFIX = "libbwa.";
-
-    private static final String MAC_OS = "Mac";
-    private static final String MAC_ARCH = "aarch64";
-    private static final String MAC_BWA_LIB = "libbwa.Darwin.dylib";
 
     public static void loadAlignerLibrary(@Nullable final String bwaLibraryPath)
     {
@@ -98,6 +103,27 @@ public class BwaAligner implements Aligner
             return ".dll";
         else
             return ".so";
+    }
+
+    private void updateScoringMatrix()
+    {
+        int matchScore = mAligner.getMatchScoreOption();
+        int mismatchPenalty = mAligner.getMismatchPenaltyOption();
+        byte[] scoringMatrix = new byte[SCORING_MATRIX_SIZE * SCORING_MATRIX_SIZE];
+        int k = 0;
+
+        for(int i = 0; i < SCORING_MATRIX_SIZE - 1; i++)
+        {
+            for(int j = 0; j < SCORING_MATRIX_SIZE - 1; j++)
+                scoringMatrix[k++] = (byte) (i == j ? matchScore : -mismatchPenalty);
+
+            scoringMatrix[k++] = -1;
+        }
+
+        for(int j = 0; j < SCORING_MATRIX_SIZE; j++)
+            scoringMatrix[k++] = -1;
+
+        mAligner.setScoringMatrixOption(scoringMatrix);
     }
 
     @Override
