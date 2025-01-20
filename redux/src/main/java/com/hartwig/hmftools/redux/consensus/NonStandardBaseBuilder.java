@@ -256,11 +256,14 @@ public abstract class NonStandardBaseBuilder
             ExtendedRefPos pos = alignedBases.get(0).Pos;
             if(pos.InsertIndex > 0)
             {
+                List nonMissingBases = Lists.newArrayList();
                 int noBaseCount = 0;
                 for(AnnotatedBase base : alignedBases)
                 {
                     if(base.Base == NO_BASE)
                         noBaseCount++;
+                    else
+                        nonMissingBases.add(base);
                 }
 
                 if(2 * noBaseCount >= alignedBases.size())
@@ -269,7 +272,7 @@ public abstract class NonStandardBaseBuilder
                     continue;
                 }
 
-                consensus.add(determineConsensus.apply(alignedBases));
+                consensus.add(determineConsensus.apply(nonMissingBases));
                 continue;
             }
 
@@ -433,14 +436,6 @@ public abstract class NonStandardBaseBuilder
             ExtendedRefPos pos = bases.get(0).Pos;
             int refPos = pos.RefPos;
             CigarOperator consensusOp = getConsensusCigarOp(bases);
-
-            int noBaseCount = 0;
-            for(AnnotatedBase base : bases)
-            {
-                if(base.Base == NO_BASE)
-                    noBaseCount++;
-            }
-
             if(consensusOp != M || refPos < 1 || refPos > mChromosomeLength)
                 refPos = INVALID_POSITION;
 
@@ -561,7 +556,6 @@ public abstract class NonStandardBaseBuilder
                     totalCount += duplexErrorCount;
             }
 
-            totalCount += noBaseCount;
             if(2 * maxCount > totalCount)
             {
                 byte base = DNA_BASE_BYTES[maxIdx];
