@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.nio.file.Files;
@@ -15,6 +14,8 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
 public class BwaAligner implements Aligner
 {
+    private static final int SCORING_MATRIX_SIZE = 5;
+
     private final BwaMemAligner mAligner;
 
     public BwaAligner(final String refGenomeImageFile)
@@ -47,6 +48,32 @@ public class BwaAligner implements Aligner
         {
             mAligner = null;
         }
+    }
+
+    private void updateScoringMatrix()
+    {
+        int matchScore = mAligner.getMatchScoreOption();
+        int mismatchPenalty = mAligner.getMismatchPenaltyOption();
+        byte[] mat = new byte[SCORING_MATRIX_SIZE * SCORING_MATRIX_SIZE];
+        int k = 0;
+        for(int i = 0; i < SCORING_MATRIX_SIZE - 1; i++)
+        {
+            for(int j = 0; j < SCORING_MATRIX_SIZE - 1; j++)
+                mat[k++] = (byte) (i == j ? matchScore : -mismatchPenalty);
+
+            mat[k++] = -1;
+        }
+
+        for(int j = 0; j < SCORING_MATRIX_SIZE; j++)
+            mat[k++] = -1;
+
+        mAligner.setScoringMatrixOption(mat);
+    }
+
+    public void setMismatchPenalty(int mismatchPenalty)
+    {
+        mAligner.setMismatchPenaltyOption(mismatchPenalty);
+        updateScoringMatrix();
     }
 
     @Override
