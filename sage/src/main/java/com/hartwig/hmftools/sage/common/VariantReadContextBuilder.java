@@ -157,9 +157,13 @@ public class VariantReadContextBuilder
 
         if(read.getBaseQualities().length > 0) // will not apply to candidates created by append mode
         {
-            byte[] coreBaseQuals = Arrays.subsetArray(read.getBaseQualities(), readFlankStart + mFlankSize, readFlankEnd - mFlankSize);
-            for (byte coreBaseQual : coreBaseQuals)
-                if (coreBaseQual == (byte) 0)
+            byte[] importantBaseQuals;
+            if(variant.isIndel())
+                importantBaseQuals = Arrays.subsetArray(read.getBaseQualities(), readFlankStart, readFlankEnd);
+            else
+                importantBaseQuals = Arrays.subsetArray(read.getBaseQualities(), readFlankStart + mFlankSize, readFlankEnd - mFlankSize);
+            for (byte coreBaseQual : importantBaseQuals)
+                if (coreBaseQual <= 1)
                     return null;
         }
 
