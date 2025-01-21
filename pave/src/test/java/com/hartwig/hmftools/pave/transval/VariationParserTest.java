@@ -41,7 +41,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void canReferToGeneByName()
     {
-        SingleAminoAcidVariant variant = variationParser.parse("ZYX:p.Pro46Ala");
+        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ZYX:p.Pro46Ala");
         Assert.assertEquals(46, variant.Position);
         Assert.assertEquals("ENSG00000159840", variant.Gene.GeneId);
     }
@@ -49,7 +49,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void canReferToGeneByEnsemblId()
     {
-        SingleAminoAcidVariant variant = variationParser.parse("ENSG00000159840:p.Pro46Ala");
+        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ENSG00000159840:p.Pro46Ala");
         Assert.assertEquals(46, variant.Position);
         Assert.assertEquals("ZYX", variant.Gene.GeneName);
     }
@@ -57,7 +57,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void referenceAminoAcidIsNotRequired()
     {
-        SingleAminoAcidVariant variant = variationParser.parse("BRAF:p.600E");
+        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF:p.600E");
         Assert.assertEquals(600, variant.Position);
         Assert.assertEquals("E", variant.Alt);
     }
@@ -65,12 +65,12 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void aminoAcidNameIsConvertedToSingleLetter()
     {
-        SingleAminoAcidVariant variant = variationParser.parse("BRAF:p.Val600Glu");
+        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF:p.Val600Glu");
         Assert.assertEquals("E", variant.Alt);
     }
 
     @Test
-    public void parseDeletionInsertion()
+    public void parseSingleAminoAcidVariantDeletionInsertion()
     {
         DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
         Assert.assertEquals("EGFR", di.Gene.GeneName);
@@ -98,7 +98,7 @@ public class VariationParserTest extends TransvalTestBase
         String receivedMessage = null;
         try
         {
-            variationParser.parse(input);
+            variationParser.parseSingleAminoAcidVariant(input);
         }
         catch(final IllegalArgumentException e)
         {

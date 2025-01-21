@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,35 +33,6 @@ public abstract class ProteinVariant
     {
         return AminoAcids.AMINO_ACID_TO_CODON_MAP.containsKey(s);
     }
-
-
-    /*
-    SingleAminoAcidVariant
-    - position
-    - length, always 1
-    - alt aa, always length 1
-
-    DeletionInsertion
-    - position
-    - deletion length
-    - inserted values
-
-    Deletion
-    - position
-    - deletion length
-
-    Insertion
-    - position
-    - (deletion length = 0)
-    - inserted values
-
-    Duplication
-    - position
-    - duplication length
-
-    Frameshift
-    - position
-     */
 
     public ProteinVariant(
             @NotNull final GeneData gene,
@@ -97,4 +69,6 @@ public abstract class ProteinVariant
     }
 
     abstract int changedReferenceSequenceLength();
+
+    abstract TransvalVariant calculateVariant(RefGenomeInterface refGenome);
 }

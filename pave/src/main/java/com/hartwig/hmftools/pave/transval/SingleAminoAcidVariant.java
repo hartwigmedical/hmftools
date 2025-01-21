@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -11,6 +15,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class SingleAminoAcidVariant extends ProteinVariant
@@ -35,6 +40,37 @@ public class SingleAminoAcidVariant extends ProteinVariant
         RegionsDefiningCodon = exonsForCodonPosition(codonPosition);
     }
 
+    @Override
+    public TransvalSnvMnv calculateVariant(RefGenomeInterface refGenome)
+    {
+        String referenceCodon = referenceCodon(refGenome);
+        CodonVariantsCalculator change = new CodonVariantsCalculator(referenceAminoAcids(), altValue());
+        SortedSet<CodonVariant> codonChanges = change.possibleCodonsForVariant(referenceCodon);
+        if(codonChanges.isEmpty())
+        {
+            return null;
+        }
+        CodonVariant codonVariant = codonChanges.first();
+        int positionInCodonOfChange = codonVariant.positionOfFirstDifference();
+        int positionInChromosomeOfChange = regionsDefiningCodon().translateCodonPosition(positionInCodonOfChange);
+        Pair<String,String> nucleotideDifferences = codonVariant.differenceStrings();
+        if(!Gene.forwardStrand())
+        {
+            nucleotideDifferences = Pair.of(reverseComplementBases(nucleotideDifferences.getLeft()), reverseComplementBases(nucleotideDifferences.getRight()));
+        }
+        List<String> alternateNucleotides = new ArrayList<>();
+        codonChanges.forEach(cv -> alternateNucleotides.add(cv.AlternateCodon));
+        return new TransvalSnvMnv(
+                Transcript.TransName,
+                Gene.Chromosome,
+                positionInChromosomeOfChange,
+                !codonIsInSingleExon(),
+                nucleotideDifferences.getLeft(),
+                nucleotideDifferences.getRight(),
+                referenceCodon,
+                alternateNucleotides
+        );
+    }
     public String altValue()
     {
         return Alt;

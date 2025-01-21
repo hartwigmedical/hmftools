@@ -30,7 +30,7 @@ public class VariationParser
         mTranscriptAminoAcidsMap = transcriptAminoAcidsMap;
     }
 
-    public SingleAminoAcidVariant parse(String input)
+    public SingleAminoAcidVariant parseSingleAminoAcidVariant(String input)
     {
         String[] geneVar = extractGeneAndVariant(input);
         GeneData geneData = lookupGene(geneVar[0]);

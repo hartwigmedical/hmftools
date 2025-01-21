@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,6 +31,12 @@ public class DeletionInsertion extends ProteinVariant
         this.Position = position;
         this.Alt = variant;
         this.DeletionLength = deletionLength;
+    }
+
+    @Override
+    public TransvalVariant calculateVariant(RefGenomeInterface refGenome)
+    {
+        return null;
     }
 
     public String altAminoAcidSequence()

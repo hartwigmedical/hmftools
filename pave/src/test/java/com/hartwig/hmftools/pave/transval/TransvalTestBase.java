@@ -29,6 +29,6 @@ public class TransvalTestBase
 
     public SingleAminoAcidVariant saav(String definition)
     {
-        return transval.variationParser().parse(definition);
+        return transval.variationParser().parseSingleAminoAcidVariant(definition);
     }
 }

@@ -14,7 +14,7 @@ public class TransvalTest extends TransvalTestBase
         // This example is based on TransvarConverterTest in the serve codebase.
         // The idea is to check that the current code agrees with Transval on
         // the key fields used by serve.
-        TransvalSnvMnv record = transval.calculateVariant("MTOR:p.L2230V");
+        TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("MTOR:p.L2230V");
 
         assertEquals("ENST00000361445", record.TranscriptId);
         assertEquals("1", record.Chromosome);
@@ -43,7 +43,7 @@ public class TransvalTest extends TransvalTestBase
 21:35:20 - [INFO ] -  Hotspot{ref=A, alt=T, chromosome=chr7, position=140753336}
 21:35:20 - [INFO ] -  Hotspot{ref=CA, alt=TT, chromosome=chr7, position=140753335}
 */
-        TransvalSnvMnv record = transval.calculateVariant("BRAF:p.V600E");
+        TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("BRAF:p.V600E");
 //        assertEquals("ENST00000288602", record.TranscriptId); // Our ensembl data has ENST00000646891 as the canonical transcript
         assertEquals("7", record.Chromosome);
         assertEquals(140_753_336, record.Position); // serve example has 11_182_158, which is from v37, I think
@@ -60,7 +60,7 @@ public class TransvalTest extends TransvalTestBase
     public void vhlMultipleExons()
     {
         // Another example based on a test in serve's TransvarConverterTest.
-        TransvalSnvMnv record = transval.calculateVariant("VHL:p.G114R");
+        TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("VHL:p.G114R");
         assertEquals("ENST00000256474", record.TranscriptId);
         assertEquals("3", record.Chromosome);
 //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
@@ -85,7 +85,7 @@ public class TransvalTest extends TransvalTestBase
     public void tet2MNV()
     {
         // Another example based on a test in serve's TransvarConverterTest.
-        TransvalSnvMnv record = transval.calculateVariant("TET2:p.Y1294A");
+        TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("TET2:p.Y1294A");
         assertEquals("ENST00000380013", record.TranscriptId); // TransvarConvertTest has ENST00000540549
         assertEquals("4", record.Chromosome);
         //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
@@ -101,9 +101,22 @@ public class TransvalTest extends TransvalTestBase
         assertEquals(4, record.AlternateCodons.size());
     }
 
-    @Test
+//    @Test
     public void egfrDelIns()
     {
+        TransvalComplexInsertionDeletion record = (TransvalComplexInsertionDeletion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
+        assertEquals("ENST00000275493", record.TranscriptId);
+        assertEquals("7", record.Chromosome);
+        assertEquals(55_242_469, record.Position); // serve example has
+        assertFalse(record.SpansMultipleExons);
 
+        assertEquals(12, record.deletedBasesCount());
+
+        assertEquals(1, record.alternateCodonsCount());
+        assertEquals("CCT", record.alternateCodonsList(0).get(0));
+        assertEquals("CCG", record.alternateCodonsList(0).get(1));
+        assertEquals("CCA", record.alternateCodonsList(0).get(2));
+        assertEquals("CCC", record.alternateCodonsList(0).get(3));
+        assertEquals(4, record.alternateCodonsList(0).size());
     }
 }
