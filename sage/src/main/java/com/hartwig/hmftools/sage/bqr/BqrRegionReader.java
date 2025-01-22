@@ -396,7 +396,7 @@ public class BqrRegionReader implements CigarHandler
     {
         byte[] nearbyQuals = Arrays.copyOfRange(record.getBaseQualities(), Math.max(readIndex - buffer, 0), Math.min(readIndex + buffer + 1, record.getReadLength()));
         for(byte nearbyQual : nearbyQuals)
-            if(nearbyQual == (byte) 0)
+            if(nearbyQual <= 1)
                 return true;
         return false;
     }
