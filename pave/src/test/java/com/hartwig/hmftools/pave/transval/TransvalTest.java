@@ -101,22 +101,22 @@ public class TransvalTest extends TransvalTestBase
         assertEquals(4, record.AlternateCodons.size());
     }
 
-//    @Test
+    @Test
     public void egfrDelIns()
     {
         TransvalComplexInsertionDeletion record = (TransvalComplexInsertionDeletion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
         assertEquals("ENST00000275493", record.TranscriptId);
         assertEquals("7", record.Chromosome);
-        assertEquals(55_242_469, record.Position); // serve example has
-        assertFalse(record.SpansMultipleExons);
-
-        assertEquals(12, record.deletedBasesCount());
-
-        assertEquals(1, record.alternateCodonsCount());
-        assertEquals("CCT", record.alternateCodonsList(0).get(0));
-        assertEquals("CCG", record.alternateCodonsList(0).get(1));
-        assertEquals("CCA", record.alternateCodonsList(0).get(2));
-        assertEquals("CCC", record.alternateCodonsList(0).get(3));
-        assertEquals(4, record.alternateCodonsList(0).size());
+//        assertEquals(55_242_469, record.Position);
+//        assertFalse(record.SpansMultipleExons);
+//
+//        assertEquals(12, record.deletedBasesCount());
+//
+//        assertEquals(1, record.alternateCodonsCount());
+//        assertEquals("CCT", record.alternateCodonsList(0).get(0));
+//        assertEquals("CCG", record.alternateCodonsList(0).get(1));
+//        assertEquals("CCA", record.alternateCodonsList(0).get(2));
+//        assertEquals("CCC", record.alternateCodonsList(0).get(3));
+//        assertEquals(4, record.alternateCodonsList(0).size());
     }
 }

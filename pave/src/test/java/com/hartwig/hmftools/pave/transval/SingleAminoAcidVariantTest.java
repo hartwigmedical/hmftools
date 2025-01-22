@@ -169,4 +169,18 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
         Assert.assertFalse(saav("BRAF:p.327E").codonIsInSingleExon());
         Assert.assertFalse(saav("BRAF:p.478E").codonIsInSingleExon());
     }
+
+    @Test
+    public void positionOfFirstAlteredCodonTest()
+    {
+        Assert.assertEquals(1, saav("ZYX:p.1E").positionOfFirstAlteredCodon());
+        Assert.assertEquals(2230, saav("MTOR:p.L2230V").positionOfFirstAlteredCodon());
+    }
+
+    @Test
+    public void positionOfLastAlteredCodonTest()
+    {
+        Assert.assertEquals(1, saav("ZYX:p.1E").positionOfLastAlteredCodon());
+        Assert.assertEquals(2230, saav("MTOR:p.L2230V").positionOfLastAlteredCodon());
+    }
 }

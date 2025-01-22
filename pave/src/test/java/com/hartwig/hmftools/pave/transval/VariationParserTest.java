@@ -42,7 +42,7 @@ public class VariationParserTest extends TransvalTestBase
     public void canReferToGeneByName()
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ZYX:p.Pro46Ala");
-        Assert.assertEquals(46, variant.Position);
+        Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
         Assert.assertEquals("ENSG00000159840", variant.Gene.GeneId);
     }
 
@@ -50,7 +50,7 @@ public class VariationParserTest extends TransvalTestBase
     public void canReferToGeneByEnsemblId()
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ENSG00000159840:p.Pro46Ala");
-        Assert.assertEquals(46, variant.Position);
+        Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
         Assert.assertEquals("ZYX", variant.Gene.GeneName);
     }
 
@@ -58,15 +58,15 @@ public class VariationParserTest extends TransvalTestBase
     public void referenceAminoAcidIsNotRequired()
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF:p.600E");
-        Assert.assertEquals(600, variant.Position);
-        Assert.assertEquals("E", variant.Alt);
+        Assert.assertEquals(600, variant.positionOfFirstAlteredCodon());
+        Assert.assertEquals("E", variant.altValue());
     }
 
     @Test
     public void aminoAcidNameIsConvertedToSingleLetter()
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF:p.Val600Glu");
-        Assert.assertEquals("E", variant.Alt);
+        Assert.assertEquals("E", variant.altValue());
     }
 
     @Test
@@ -74,16 +74,16 @@ public class VariationParserTest extends TransvalTestBase
     {
         DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
         Assert.assertEquals("EGFR", di.Gene.GeneName);
-        Assert.assertEquals(747, di.Position);
-        Assert.assertEquals(4, di.DeletionLength);
-        Assert.assertEquals("P", di.Alt);
+        Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
+        Assert.assertEquals(4, di.changedReferenceSequenceLength());
+        Assert.assertEquals("P", di.altAminoAcidSequence());
 
         // ADCK2 Glu301_Thr303delinsGlnGln, which is E301_T303delinsQQ
         DeletionInsertion di2 = variationParser.parseDeletionInsertion("ADCK2:p.Glu301_Thr303delinsGlnGln");
         Assert.assertEquals("ADCK2", di2.Gene.GeneName);
-        Assert.assertEquals(301, di2.Position);
-        Assert.assertEquals(3, di2.DeletionLength);
-        Assert.assertEquals("QQ", di2.Alt);
+        Assert.assertEquals(301, di2.positionOfFirstAlteredCodon());
+        Assert.assertEquals(3, di2.changedReferenceSequenceLength());
+        Assert.assertEquals("QQ", di2.altAminoAcidSequence());
     }
 
     @Test

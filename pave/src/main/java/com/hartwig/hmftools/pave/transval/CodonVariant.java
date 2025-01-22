@@ -24,7 +24,7 @@ public class CodonVariant implements Comparable<CodonVariant>
         return isNucleotide(s.charAt(0)) && isNucleotide(s.charAt(1)) && isNucleotide(s.charAt(2));
     }
 
-    private static boolean isNucleotide(char c)
+    static boolean isNucleotide(char c)
     {
         return c == 'A' || c == 'C' || c == 'G' || c == 'T';
     }

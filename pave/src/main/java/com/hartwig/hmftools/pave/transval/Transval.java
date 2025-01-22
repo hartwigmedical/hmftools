@@ -34,7 +34,7 @@ public class Transval
 
     public TransvalVariant calculateVariant(String proteinVariant)
     {
-        ProteinVariant variant = variationParser().parseSingleAminoAcidVariant(proteinVariant);
+        ProteinVariant variant = variationParser().parse(proteinVariant);
         return variant.calculateVariant(mRefGenome);
     }
 }

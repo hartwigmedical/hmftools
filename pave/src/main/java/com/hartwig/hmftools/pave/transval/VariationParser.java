@@ -30,6 +30,15 @@ public class VariationParser
         mTranscriptAminoAcidsMap = transcriptAminoAcidsMap;
     }
 
+    public ProteinVariant parse(@NotNull String expression)
+    {
+        if (expression.contains("delins"))
+        {
+            return parseDeletionInsertion(expression);
+        }
+        return parseSingleAminoAcidVariant(expression);
+    }
+
     public SingleAminoAcidVariant parseSingleAminoAcidVariant(String input)
     {
         String[] geneVar = extractGeneAndVariant(input);
