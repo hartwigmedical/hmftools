@@ -37,4 +37,11 @@ public class SplitSequenceTest extends TransvalTestBase
         assertEquals("TTTAAACCC", seq("TTTAAA", "CCC").completeSequence());
         assertEquals("TTTAAACCC", seq("TTTAA", "ACCC").completeSequence());
     }
+
+    @Test
+    public void spansTwoExonsTest()
+    {
+        assertFalse(seq("TTTAAACCC", null).spansTwoExons());
+        assertTrue(seq("TTTAAA", "CCC").spansTwoExons());
+    }
 }

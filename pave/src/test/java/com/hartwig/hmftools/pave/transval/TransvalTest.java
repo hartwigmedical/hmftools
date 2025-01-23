@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Set;
+
 import org.junit.Test;
 
 public class TransvalTest extends TransvalTestBase
@@ -104,19 +106,30 @@ public class TransvalTest extends TransvalTestBase
     @Test
     public void egfrDelIns()
     {
-        TransvalComplexInsertionDeletion record = (TransvalComplexInsertionDeletion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
+/*
+05:16:53 - [INFO ] - Printing hotspots for 'EGFR:p.747_750delinsP' on transcript null
+05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAGCA, alt=CCT, chromosome=chr7, position=55174776}
+05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAGCA, alt=CCG, chromosome=chr7, position=55174776}
+05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAG, alt=C, chromosome=chr7, position=55174776}
+05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAGCA, alt=CCC, chromosome=chr7, position=55174776}
+ */
+        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
         assertEquals("ENST00000275493", record.TranscriptId);
         assertEquals("7", record.Chromosome);
         assertEquals(55_174_776, record.Position);
         assertFalse(record.SpansMultipleExons);
 
         assertEquals(10, record.deletedBasesCount());
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(4, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("TTAAGAGAAGCA", "CCT", "chr7", 55174776)));
+        assertTrue(hotspots.contains(hotspot("TTAAGAGAAGCA", "CCG", "chr7", 55174776)));
+        assertTrue(hotspots.contains(hotspot("TTAAGAGAAG", "C", "chr7", 55174776)));
+        assertTrue(hotspots.contains(hotspot("TTAAGAGAAGCA", "CCC", "chr7", 55174776)));
+    }
 
-//        assertEquals(1, record.alternateCodonsCount());
-//        assertEquals("CCT", record.alternateCodonsList(0).get(0));
-//        assertEquals("CCG", record.alternateCodonsList(0).get(1));
-//        assertEquals("CCA", record.alternateCodonsList(0).get(2));
-//        assertEquals("CCC", record.alternateCodonsList(0).get(3));
-//        assertEquals(4, record.alternateCodonsList(0).size());
+    private TransvalHotspot hotspot(String ref, String alt, String chr, int position)
+    {
+        return new TransvalHotspot(ref, alt, chr, position);
     }
 }

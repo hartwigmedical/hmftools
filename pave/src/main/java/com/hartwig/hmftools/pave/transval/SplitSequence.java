@@ -62,6 +62,11 @@ public class SplitSequence
         return Left.length() < 3 ? Right : Left;
     }
 
+    public boolean spansTwoExons()
+    {
+        return Right != null;
+    }
+
     public String completeSequence()
     {
         if(Right == null)
@@ -95,10 +100,5 @@ public class SplitSequence
                 "left='" + Left + '\'' +
                 ", right='" + Right + '\'' +
                 '}';
-    }
-
-    public boolean spansTwoExons()
-    {
-        return Right != null; // todo test
     }
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -104,16 +105,23 @@ public class DeletionInsertion extends ProteinVariant
         Set<String> destinationBases = candidateAlternativeNucleotideSequences();
         SortedSet<DeletionInsertionChange> changes = new TreeSet<>();
         destinationBases.forEach(target -> changes.add(new DeletionInsertionChange(modifiedBases, target)));
+
+        ChangeLocation globalLocation = new ChangeLocation(this.Gene.Chromosome, referenceBaseSequences.locationOfDeletedBases());
+        Set<TransvalHotspot> hotspots = changes
+                .stream()
+                .map(change -> change.toHotspot(globalLocation))
+                .collect(Collectors.toSet());
         DeletionInsertionChange bestCandidate = changes.first();
         int positionOfDeletionStart = referenceBaseSequences.locationOfDeletedBases() + bestCandidate.positionOfDeletion();
 
-        return new TransvalComplexInsertionDeletion(
+        return new TransvalInsertionDeletion(
                 Transcript.TransName,
                 Gene.Chromosome,
                 positionOfDeletionStart,
                 referenceBaseSequences.spansTwoExons(),
                 referenceBaseSequences.completeSequence(),
-                bestCandidate.deleted()
+                bestCandidate.deleted(),
+                hotspots
         );
     }
 
