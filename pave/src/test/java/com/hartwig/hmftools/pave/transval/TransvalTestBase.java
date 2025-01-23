@@ -31,4 +31,9 @@ public class TransvalTestBase
     {
         return transval.variationParser().parseSingleAminoAcidVariant(definition);
     }
+
+    protected SplitSequence seq(String left, String right)
+    {
+        return new SplitSequence(left, right, 100);
+    }
 }

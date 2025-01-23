@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -29,11 +28,6 @@ public abstract class ProteinVariant
     private final int PositionOfFirstAlteredCodon;
     @NotNull
     final List<ChrBaseRegion> CodingRegions;
-
-    static boolean isValidAminoAcidName(String s)
-    {
-        return AminoAcids.AMINO_ACID_TO_CODON_MAP.containsKey(s);
-    }
 
     public ProteinVariant(
             @NotNull final GeneData gene,

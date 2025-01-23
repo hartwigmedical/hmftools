@@ -20,14 +20,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.junit.Assert;
-import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class TestDataCreator
 {
 
-    @Test
+//    @Test
     public void createReducedEnsemblDataSet() throws IOException
     {
         File fullEnsemblDataDir = new File("/Users/timlavers/work/data/v6_0/ref/38/common/ensembl_data");

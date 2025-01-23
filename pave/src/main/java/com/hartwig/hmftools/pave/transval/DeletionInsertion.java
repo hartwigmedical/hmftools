@@ -1,9 +1,17 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static com.hartwig.hmftools.pave.transval.Checks.isValidAminoAcidLetter;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -30,14 +38,14 @@ public class DeletionInsertion extends ProteinVariant
         Preconditions.checkArgument(!variant.isBlank());
         for(char ch : variant.toCharArray())
         {
-            Preconditions.checkArgument(isValidAminoAcidName("" + ch));
+            Preconditions.checkArgument(isValidAminoAcidLetter("" + ch));
         }
         this.Alt = variant;
         this.DeletionLength = deletionLength;
     }
 
     @VisibleForTesting
-    public SplitSequence referenceBases(RefGenomeInterface refGenome)
+    public SplitSequence referenceBases(RefGenomeInterface genome)
     {
         int codonPosition = 3 * (positionOfFirstAlteredCodon() - 1);
         List<Integer> regionLengths = codingRegionLengths();
@@ -59,12 +67,11 @@ public class DeletionInsertion extends ProteinVariant
                 else
                 {
                     int positionOfStartInCurrent = exon.start() + (codonPosition - lengthUpToCurrent);
-                    int positionOfEndRelativeToStart = positionOfStartInCurrent + DeletionLength * 3 - 1;
-                    if(positionOfEndRelativeToStart <= exon.end())
+                    int positionOfEnd = positionOfStartInCurrent + DeletionLength * 3 - 1;
+                    if(positionOfEnd <= exon.end())
                     {
-                        String partInCurrent =
-                                refGenome.getBaseString(Gene.Chromosome, positionOfStartInCurrent, positionOfEndRelativeToStart);
-                        return new SplitSequence(partInCurrent, null);
+                        String partInCurrent = genome.getBaseString(Gene.Chromosome, positionOfStartInCurrent, positionOfEnd);
+                        return new SplitSequence(partInCurrent, null, positionOfStartInCurrent);
                     }
                     else
                     {
@@ -72,10 +79,10 @@ public class DeletionInsertion extends ProteinVariant
                         {
                             throw new IllegalStateException("Variant does not fit given exons.");
                         }
-                        String partInCurrentExon = refGenome.getBaseString(Gene.Chromosome, positionOfStartInCurrent, exon.end());
-                        int lengthInNext = positionOfEndRelativeToStart - exon.end();
-                        String partInNext = refGenome.getBaseString(Gene.Chromosome, nextExon.start(), nextExon.start() + lengthInNext - 1);
-                        return new SplitSequence(partInCurrentExon, partInNext);
+                        String partInCurrentExon = genome.getBaseString(Gene.Chromosome, positionOfStartInCurrent, exon.end());
+                        int lengthInNext = positionOfEnd - exon.end();
+                        String partInNext = genome.getBaseString(Gene.Chromosome, nextExon.start(), nextExon.start() + lengthInNext - 1);
+                        return new SplitSequence(partInCurrentExon, partInNext, nextExon.start());
                     }
                 }
             }
@@ -88,23 +95,25 @@ public class DeletionInsertion extends ProteinVariant
     @Override
     public TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
-//        CodonRegions codonRegions = exonsForCodonPosition(positionOfFirstAlteredCodon());
-        //        codonRegions.
+        SplitSequence referenceBaseSequences = referenceBases(refGenome);
+        if(!referenceBaseSequences.couldBeDeletionInsertion())
+        {
+            return null; // todo
+        }
+        String modifiedBases = referenceBaseSequences.segmentThatIsModified();
+        Set<String> destinationBases = candidateAlternativeNucleotideSequences();
+        SortedSet<DeletionInsertionChange> changes = new TreeSet<>();
+        destinationBases.forEach(target -> changes.add(new DeletionInsertionChange(modifiedBases, target)));
+        DeletionInsertionChange bestCandidate = changes.first();
+        int positionOfDeletionStart = referenceBaseSequences.locationOfDeletedBases() + bestCandidate.positionOfDeletion();
 
-        /*
-        We only consider delinses within a single exon.
-        There could conceivably be up to 3 exons involved:
-        ...---|---|-] [--|---|---|-] [--|---|---....
-        In this example we could replace the entire middle exon resulting in a change
-        to the AA that begins in the first exon and finishes in the middle exon
-        and a change to the AA that begins in the middle exon and ends in the last one.
-         */
         return new TransvalComplexInsertionDeletion(
                 Transcript.TransName,
                 Gene.Chromosome,
-                0,
-                false,
-                ""
+                positionOfDeletionStart,
+                referenceBaseSequences.spansTwoExons(),
+                referenceBaseSequences.completeSequence(),
+                bestCandidate.deleted()
         );
     }
 
@@ -117,5 +126,35 @@ public class DeletionInsertion extends ProteinVariant
     int changedReferenceSequenceLength()
     {
         return DeletionLength;
+    }
+
+    @VisibleForTesting
+    public List<Set<String>> candidateAlternativeCodons()
+    {
+        final ArrayList<Set<String>> result = new ArrayList<>(Alt.length());
+        for(char aminoAcid : Alt.toCharArray())
+        {
+            result.add(new HashSet<>(AminoAcids.AMINO_ACID_TO_CODON_MAP.get(aminoAcid + "")));
+        }
+        return result;
+    }
+
+    @VisibleForTesting
+    public Set<String> candidateAlternativeNucleotideSequences()
+    {
+        return combinations(candidateAlternativeCodons());
+    }
+
+    private Set<String> combinations(List<Set<String>> stringSets)
+    {
+        Set<String> leftSet = stringSets.get(0);
+        if(stringSets.size() == 1)
+        {
+            return leftSet;
+        }
+        Set<String> remainderCombinations = combinations(stringSets.subList(1, stringSets.size()));
+        Set<String> result = new HashSet<>();
+        leftSet.forEach(l -> remainderCombinations.forEach(r -> result.add(l + r)));
+        return result;
     }
 }

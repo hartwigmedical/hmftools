@@ -107,11 +107,11 @@ public class TransvalTest extends TransvalTestBase
         TransvalComplexInsertionDeletion record = (TransvalComplexInsertionDeletion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
         assertEquals("ENST00000275493", record.TranscriptId);
         assertEquals("7", record.Chromosome);
-//        assertEquals(55_242_469, record.Position);
-//        assertFalse(record.SpansMultipleExons);
-//
-//        assertEquals(12, record.deletedBasesCount());
-//
+        assertEquals(55_174_776, record.Position);
+        assertFalse(record.SpansMultipleExons);
+
+        assertEquals(10, record.deletedBasesCount());
+
 //        assertEquals(1, record.alternateCodonsCount());
 //        assertEquals("CCT", record.alternateCodonsList(0).get(0));
 //        assertEquals("CCG", record.alternateCodonsList(0).get(1));

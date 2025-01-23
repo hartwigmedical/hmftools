@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static com.hartwig.hmftools.pave.transval.Checks.isValidAminoAcidName;
+
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -27,18 +29,7 @@ public class CodonVariantsCalculator
     {
         Preconditions.checkArgument(Objects.equals(AminoAcids.findAminoAcidForCodon(referenceCodon), Reference));
         SortedSet<CodonVariant> result = new TreeSet<>();
-        AminoAcids.AMINO_ACID_TO_CODON_MAP.get(Variant).forEach(variant -> {
-            result.add(new CodonVariant(referenceCodon, variant));
-        });
+        AminoAcids.AMINO_ACID_TO_CODON_MAP.get(Variant).forEach(variant -> result.add(new CodonVariant(referenceCodon, variant)));
         return result;
-    }
-
-    private static boolean isValidAminoAcidName(String s)
-    {
-        if(AminoAcids.AMINO_ACID_TO_CODON_MAP.containsKey(s))
-        {
-            return true;
-        }
-        return (AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.containsKey(s));
     }
 }

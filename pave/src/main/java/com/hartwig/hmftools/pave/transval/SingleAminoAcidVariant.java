@@ -30,7 +30,7 @@ public class SingleAminoAcidVariant extends ProteinVariant
             @NotNull final String variant)
     {
         super(gene, transcript, aminoAcidSequence, position);
-        Preconditions.checkArgument(isValidAminoAcidName(variant));
+        Preconditions.checkArgument(Checks.isValidAminoAcidName(variant));
         this.Alt = variant;
         int codonPosition = 3 * (positionOfFirstAlteredCodon() - 1);
         RegionsDefiningCodon = exonsForCodonPosition(codonPosition);

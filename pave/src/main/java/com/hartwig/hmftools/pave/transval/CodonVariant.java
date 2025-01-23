@@ -15,24 +15,10 @@ public class CodonVariant implements Comparable<CodonVariant>
     public final String AlternateCodon;
     private final int EditDistance;
 
-    private static boolean isCodon(@NotNull String s)
-    {
-        if(s.length() != 3)
-        {
-            return false;
-        }
-        return isNucleotide(s.charAt(0)) && isNucleotide(s.charAt(1)) && isNucleotide(s.charAt(2));
-    }
-
-    static boolean isNucleotide(char c)
-    {
-        return c == 'A' || c == 'C' || c == 'G' || c == 'T';
-    }
-
     public CodonVariant(@NotNull final String referenceCodon, @NotNull final String alternateCodon)
     {
-        Preconditions.checkArgument(isCodon(referenceCodon));
-        Preconditions.checkArgument(isCodon(alternateCodon));
+        Preconditions.checkArgument(Checks.isCodon(referenceCodon));
+        Preconditions.checkArgument(Checks.isCodon(alternateCodon));
         this.ReferenceCodon = referenceCodon;
         this.AlternateCodon = alternateCodon;
         int distance = 0;
