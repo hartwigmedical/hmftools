@@ -2,12 +2,9 @@ package com.hartwig.hmftools.pave.transval;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -64,19 +61,40 @@ public class DeletionInsertionTest extends TransvalTestBase
     }
 
     @Test
-    public void candidateAlternativeCodonsTest()
-    {
-        checkAltCodons(di("VHL:p.M1_M1delinsW"), "TGG");
-        checkAltCodons(di("VHL:p.M1_M1delinsWW"), "TGG:TGG");
-        checkAltCodons(di("VHL:p.M1_M1delinsAW"), "GCT,GCC,GCA,GCG:TGG");
-        checkAltCodons(di("VHL:p.M1_M1delinsWA"), "TGG:GCT,GCC,GCA,GCG");
-        checkAltCodons(di("VHL:p.M1_M1delinsAA"), "GCT,GCC,GCA,GCG:GCT,GCC,GCA,GCG");
-        checkAltCodons(di("VHL:p.R113_L116delinsKP"), "AAA,AAG:CCT,CCC,CCA,CCG");
-        checkAltCodons(di("VHL:p.R113_L116delinsKPY"), "AAA,AAG:CCT,CCC,CCA,CCG:TAT,TAC");
-    }
-
-    @Test
     public void candidateAlternativeNucleotideSequencesTest()
+    {
+        checkAltSequences(di("VHL:p.M1_M1delinsW"), Collections.singleton("TGG"));
+
+        checkAltSequences(di("VHL:p.M1_M1delinsWW"), Collections.singleton("TGGTGG"));
+
+        Set<String> expectedAW = new HashSet<>();
+        expectedAW.add("GCTTGG");
+        expectedAW.add("GCCTGG");
+        expectedAW.add("GCATGG");
+        expectedAW.add("GCGTGG");
+        checkAltSequences(di("VHL:p.M1_M1delinsAW"), expectedAW);
+
+        Set<String> expectedKPY = new HashSet<>();
+        expectedKPY.add("AAACCTTAT");
+        expectedKPY.add("AAACCTTAC");
+        expectedKPY.add("AAACCCTAT");
+        expectedKPY.add("AAACCCTAC");
+        expectedKPY.add("AAACCATAT");
+        expectedKPY.add("AAACCATAC");
+        expectedKPY.add("AAACCGTAT");
+        expectedKPY.add("AAACCGTAC");
+        expectedKPY.add("AAGCCTTAT");
+        expectedKPY.add("AAGCCTTAC");
+        expectedKPY.add("AAGCCCTAT");
+        expectedKPY.add("AAGCCCTAC");
+        expectedKPY.add("AAGCCATAT");
+        expectedKPY.add("AAGCCATAC");
+        expectedKPY.add("AAGCCGTAT");
+        expectedKPY.add("AAGCCGTAC");
+        checkAltSequences(di("VHL:p.R113_L116delinsKPY"), expectedKPY);
+    }
+    @Test
+    public void candidateAlternativeNucleotideSequencesWithFixedPrefixTest()
     {
         checkAltSequences(di("VHL:p.M1_M1delinsW"), Collections.singleton("TGG"));
 
@@ -111,24 +129,12 @@ public class DeletionInsertionTest extends TransvalTestBase
 
     private void checkAltSequences(DeletionInsertion di, Set<String> expected)
     {
-        Set<String> actual = di.candidateAlternativeNucleotideSequences();
+        Set<String> actual = di.candidateAlternativeNucleotideSequences("", "");
         assertEquals(expected, actual);
-    }
-
-    private void checkAltCodons(DeletionInsertion di, String expectedAltCodonsSeparatedByColonsAndCommas)
-    {
-        List<Set<String>> actual = di.candidateAlternativeCodons();
-        String[] list = expectedAltCodonsSeparatedByColonsAndCommas.split(":");
-        assertEquals(actual.size(), list.length);
-        for(int i = 0; i < actual.size(); ++i) {
-            Set<String> expected = Arrays.stream(list[i].split(",")).collect(Collectors.toSet());
-            assertEquals(expected, actual.get(i));
-        }
     }
 
     private DeletionInsertion di(String definition)
     {
         return transval.variationParser().parseDeletionInsertion(definition);
     }
-
 }

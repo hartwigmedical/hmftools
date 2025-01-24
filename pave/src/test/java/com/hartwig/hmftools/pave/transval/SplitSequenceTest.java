@@ -21,6 +21,26 @@ public class SplitSequenceTest extends TransvalTestBase
     }
 
     @Test
+    public void retainedPrefixTest()
+    {
+        assertEquals("", seq("TTTAAACCC", null).retainedPrefix());
+        assertEquals("", seq("TTTAAACC", "C").retainedPrefix());
+        assertEquals("", seq("TTTAAAC", "CC").retainedPrefix());
+        assertEquals("T", seq("T", "TTAAACCC").retainedPrefix());
+        assertEquals("TT", seq("TT", "TAAACCC").retainedPrefix());
+    }
+
+    @Test
+    public void retainedSuffixTest()
+    {
+        assertEquals("",  seq("TTTAAACCC", null).retainedSuffix());
+        assertEquals("C", seq("TTTAAACC", "C").retainedSuffix());
+        assertEquals("CC", seq("TTTAAAC", "CC").retainedSuffix());
+        assertEquals("", seq("T", "TTAAACCC").retainedSuffix());
+        assertEquals("", seq("TT", "TAAACCC").retainedSuffix());
+    }
+
+    @Test
     public void segmentThatIsModifiedTest()
     {
         assertEquals("TTTAAACCC", seq("TTTAAACCC", null).segmentThatIsModified());

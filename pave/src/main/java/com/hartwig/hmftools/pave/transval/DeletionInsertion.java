@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
-import static com.hartwig.hmftools.pave.transval.Checks.isValidAminoAcidLetter;
+import static com.hartwig.hmftools.pave.transval.Checks.isValidProtein;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -12,7 +10,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -36,11 +33,7 @@ public class DeletionInsertion extends ProteinVariant
             @NotNull final String variant)
     {
         super(gene, transcript, aminoAcidSequence, position);
-        Preconditions.checkArgument(!variant.isBlank());
-        for(char ch : variant.toCharArray())
-        {
-            Preconditions.checkArgument(isValidAminoAcidLetter("" + ch));
-        }
+        Preconditions.checkArgument(isValidProtein(variant));
         this.Alt = variant;
         this.DeletionLength = deletionLength;
     }
@@ -82,8 +75,12 @@ public class DeletionInsertion extends ProteinVariant
                         }
                         String partInCurrentExon = genome.getBaseString(Gene.Chromosome, positionOfStartInCurrent, exon.end());
                         int lengthInNext = positionOfEnd - exon.end();
+                        // If the right hand part is of length 3 or more, then the
+                        // changes are on that side only, and the left hand side is
+                        // a fixed prefix.
+                        int positionOfChange = lengthInNext > 2 ? nextExon.start() : positionOfStartInCurrent;
                         String partInNext = genome.getBaseString(Gene.Chromosome, nextExon.start(), nextExon.start() + lengthInNext - 1);
-                        return new SplitSequence(partInCurrentExon, partInNext, nextExon.start());
+                        return new SplitSequence(partInCurrentExon, partInNext, positionOfChange);
                     }
                 }
             }
@@ -96,30 +93,30 @@ public class DeletionInsertion extends ProteinVariant
     @Override
     public TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
-        SplitSequence referenceBaseSequences = referenceBases(refGenome);
-        if(!referenceBaseSequences.couldBeDeletionInsertion())
+        SplitSequence splitBases = referenceBases(refGenome);
+        if(!splitBases.couldBeDeletionInsertion())
         {
             return null; // todo
         }
-        String modifiedBases = referenceBaseSequences.segmentThatIsModified();
-        Set<String> destinationBases = candidateAlternativeNucleotideSequences();
+        Set<String> destinationBases = candidateAlternativeNucleotideSequences(splitBases.retainedPrefix(), splitBases.retainedSuffix());
+        String modifiedBases = splitBases.segmentThatIsModified();
         SortedSet<DeletionInsertionChange> changes = new TreeSet<>();
         destinationBases.forEach(target -> changes.add(new DeletionInsertionChange(modifiedBases, target)));
 
-        ChangeLocation globalLocation = new ChangeLocation(this.Gene.Chromosome, referenceBaseSequences.locationOfDeletedBases());
+        ChangeLocation globalLocation = new ChangeLocation(this.Gene.Chromosome, splitBases.locationOfDeletedBases());
         Set<TransvalHotspot> hotspots = changes
                 .stream()
                 .map(change -> change.toHotspot(globalLocation))
                 .collect(Collectors.toSet());
         DeletionInsertionChange bestCandidate = changes.first();
-        int positionOfDeletionStart = referenceBaseSequences.locationOfDeletedBases() + bestCandidate.positionOfDeletion();
+        int positionOfDeletionStart = splitBases.locationOfDeletedBases() + bestCandidate.positionOfDeletion();
 
         return new TransvalInsertionDeletion(
                 Transcript.TransName,
                 Gene.Chromosome,
                 positionOfDeletionStart,
-                referenceBaseSequences.spansTwoExons(),
-                referenceBaseSequences.completeSequence(),
+                splitBases.spansTwoExons(),
+                splitBases.completeSequence(),
                 bestCandidate.deleted(),
                 hotspots
         );
@@ -137,32 +134,8 @@ public class DeletionInsertion extends ProteinVariant
     }
 
     @VisibleForTesting
-    public List<Set<String>> candidateAlternativeCodons()
+    public Set<String> candidateAlternativeNucleotideSequences(@NotNull String prefix, @NotNull String suffix)
     {
-        final ArrayList<Set<String>> result = new ArrayList<>(Alt.length());
-        for(char aminoAcid : Alt.toCharArray())
-        {
-            result.add(new HashSet<>(AminoAcids.AMINO_ACID_TO_CODON_MAP.get(aminoAcid + "")));
-        }
-        return result;
-    }
-
-    @VisibleForTesting
-    public Set<String> candidateAlternativeNucleotideSequences()
-    {
-        return combinations(candidateAlternativeCodons());
-    }
-
-    private Set<String> combinations(List<Set<String>> stringSets)
-    {
-        Set<String> leftSet = stringSets.get(0);
-        if(stringSets.size() == 1)
-        {
-            return leftSet;
-        }
-        Set<String> remainderCombinations = combinations(stringSets.subList(1, stringSets.size()));
-        Set<String> result = new HashSet<>();
-        leftSet.forEach(l -> remainderCombinations.forEach(r -> result.add(l + r)));
-        return result;
+        return new NucleotidesCalculator(Alt, prefix, suffix).possibilities();
     }
 }

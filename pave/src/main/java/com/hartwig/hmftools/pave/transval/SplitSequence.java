@@ -44,6 +44,26 @@ public class SplitSequence
         return PositionOfChange;
     }
 
+    @NotNull
+    public String retainedPrefix()
+    {
+        if(Right != null && Right.length() > 2)
+        {
+            return Left;
+        }
+        return "";
+    }
+
+    @NotNull
+    public String retainedSuffix()
+    {
+        if (Left.length() > 2)
+        {
+            return Right == null ? "" : Right;
+        }
+        return "";
+    }
+
     public boolean couldBeDeletionInsertion()
     {
         if(Right == null)
@@ -53,6 +73,7 @@ public class SplitSequence
         return Left.length() < 3 || Right.length() < 3;
     }
 
+    @NotNull
     public String segmentThatIsModified()
     {
         if(Right == null)
@@ -67,6 +88,7 @@ public class SplitSequence
         return Right != null;
     }
 
+    @NotNull
     public String completeSequence()
     {
         if(Right == null)
@@ -94,6 +116,7 @@ public class SplitSequence
     }
 
     @Override
+    @NotNull
     public String toString()
     {
         return "SplitSequence{" +
