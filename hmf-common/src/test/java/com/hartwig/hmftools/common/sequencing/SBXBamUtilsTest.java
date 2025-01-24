@@ -1,18 +1,13 @@
 package com.hartwig.hmftools.common.sequencing;
 
-import static java.lang.Math.min;
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.ALIGNMENT_SCORED_DIFF_TO_MAPQ_DIFF;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_GAP_EXTEND_PENALTY;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_GAP_OPEN_PENALTY;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_MATCH_SCORE;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.INVALID_BASE_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.MAX_MAPQ;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.getAnnotatedBases;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.getDuplexIndels;
@@ -317,7 +312,6 @@ public class SBXBamUtilsTest
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
-        int expectedMapq = min(MAX_MAPQ, round(mapq + ALIGNMENT_SCORED_DIFF_TO_MAPQ_DIFF * alignmentScoreDiff));
         int expectedNm = 0;
         int expectedAlignmentScore = alignmentScore + alignmentScoreDiff;
         String expectedReadStr = "A".repeat(5) + "CT" + "A".repeat(5);
@@ -328,7 +322,7 @@ public class SBXBamUtilsTest
                 createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, expectedReadStr, expectedCigar, false, false, null);
 
         expectedRead.setBaseQualityString(expectedQualStr);
-        expectedRead.setMappingQuality(expectedMapq);
+        expectedRead.setMappingQuality(mapq);
         expectedRead.setAttribute("YC", ycTagStr);
         expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);
         expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
@@ -363,7 +357,6 @@ public class SBXBamUtilsTest
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
-        int expectedMapq = min(MAX_MAPQ, round(mapq + ALIGNMENT_SCORED_DIFF_TO_MAPQ_DIFF * alignmentScoreDiff));
         int expectedNm = 0;
         int expectedAlignmentScore = alignmentScore + alignmentScoreDiff;
         String expectedReadStr = "A".repeat(5) + "CT" + "A".repeat(5);
@@ -374,7 +367,7 @@ public class SBXBamUtilsTest
                 createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, expectedReadStr, expectedCigar, true, false, null);
 
         expectedRead.setBaseQualityString(expectedQualStr);
-        expectedRead.setMappingQuality(expectedMapq);
+        expectedRead.setMappingQuality(mapq);
         expectedRead.setAttribute("YC", ycTagStr);
         expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);
         expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
@@ -406,7 +399,6 @@ public class SBXBamUtilsTest
 
         int alignmentScoreDiff = BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
 
-        int expectedMapq = min(MAX_MAPQ, round(mapq + ALIGNMENT_SCORED_DIFF_TO_MAPQ_DIFF * alignmentScoreDiff));
         int expectedNm = 0;
         int expectedAlignmentScore = alignmentScore + alignmentScoreDiff;
         String expectedReadStr = "A".repeat(10) + "G" + "A".repeat(9);
@@ -416,7 +408,7 @@ public class SBXBamUtilsTest
         SAMRecord expectedRead =
                 createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, expectedReadStr, expectedCigar, false, false, null);
         expectedRead.setBaseQualityString(expectedQualStr);
-        expectedRead.setMappingQuality(expectedMapq);
+        expectedRead.setMappingQuality(mapq);
         expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);
         expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
 

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.sequencing;
 
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
@@ -44,9 +43,6 @@ public class SBXBamUtils
     public static int BWA_MISMATCH_PENALTY = 4;
     public static int BWA_GAP_OPEN_PENALTY = 6;
     public static int BWA_GAP_EXTEND_PENALTY = 1;
-
-    public static float ALIGNMENT_SCORED_DIFF_TO_MAPQ_DIFF = 1.0f;
-    public static int MAX_MAPQ = 60;
 
     @Nullable
     private static String parseInt(final String s, int start)
@@ -243,14 +239,6 @@ public class SBXBamUtils
         {
             int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
             record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
-        }
-
-        int mapqDiff = round(ALIGNMENT_SCORED_DIFF_TO_MAPQ_DIFF * alignmentScoreDiff);
-        if(mapqDiff != 0)
-        {
-            int currentMapq = record.getMappingQuality();
-            int newMapq = currentMapq + mapqDiff;
-            record.setMappingQuality(min(MAX_MAPQ, newMapq));
         }
 
         record.setReadString(newReadString.toString());
@@ -633,14 +621,6 @@ public class SBXBamUtils
         {
             int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
             record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
-        }
-
-        int mapqDiff = round(ALIGNMENT_SCORED_DIFF_TO_MAPQ_DIFF * alignmentScoreDiff);
-        if(mapqDiff != 0)
-        {
-            int currentMapq = record.getMappingQuality();
-            int newMapq = currentMapq + mapqDiff;
-            record.setMappingQuality(min(MAX_MAPQ, newMapq));
         }
     }
 }
