@@ -98,8 +98,8 @@ public class DeletionInsertionChangeTest extends TransvalTestBase
     {
         // VHL A5_W8 => AT
         DeletionInsertionChange change = change("GCGGAGAACTGG", "GCTACG");
-        assertEquals("GGAGAACTGG", change.deleted());
-        assertEquals("TACG", change.inserted());
+        assertEquals("GGAGAACTG", change.deleted());
+        assertEquals("TAC", change.inserted());
         assertEquals(2, change.positionOfDeletion());
     }
 
@@ -108,9 +108,9 @@ public class DeletionInsertionChangeTest extends TransvalTestBase
     {
         // VHL A5_W8 => DR
         DeletionInsertionChange change = change("GCGGAGAACTGG", "GATAGG");
-        assertEquals("GCGGAGAACT", change.deleted());
-        assertEquals("GATA", change.inserted());
-        assertEquals(0, change.positionOfDeletion());
+        assertEquals("CGGAGAACT", change.deleted());
+        assertEquals("ATA", change.inserted());
+        assertEquals(1, change.positionOfDeletion());
     }
 
     @Test
@@ -118,14 +118,14 @@ public class DeletionInsertionChangeTest extends TransvalTestBase
     {
         // VHL A5_W8 => DT
         DeletionInsertionChange change = change("GCGGAGAACTGG", "GATACG");
-        assertEquals("CGGAGAACTGG", change.deleted());
-        assertEquals("ATACG", change.inserted());
+        assertEquals("CGGAGAACTG", change.deleted());
+        assertEquals("ATAC", change.inserted());
         assertEquals(1, change.positionOfDeletion());
 
         // VHL A5_W8 => AW
         change = change("GCGGAGAACTGG", "GCTAGG");
-        assertEquals("GGAGAACTGG", change.deleted());
-        assertEquals("TAGG", change.inserted());
+        assertEquals("GGAGAACT", change.deleted());
+        assertEquals("TA", change.inserted());
         assertEquals(2, change.positionOfDeletion());
     }
 

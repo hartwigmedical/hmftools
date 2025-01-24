@@ -50,19 +50,12 @@ public class DeletionInsertionChange implements Comparable<DeletionInsertionChan
         this.Ref = ref;
         this.Alt = alt;
         int commonPrefixLength = lengthOfCommonPrefix(ref, alt);
-        int commonSuffixLength = lengthOfCommonSuffix(ref, alt);
-        if (commonSuffixLength > commonPrefixLength)
-        {
-            Deleted = ref.substring(0, ref.length() - commonSuffixLength);
-            Inserted = alt.substring(0, alt.length() - commonSuffixLength);
-            DeletionStart = 0;
-        }
-        else
-        {
-            Deleted = ref.substring(commonPrefixLength);
-            Inserted = alt.substring(commonPrefixLength);
-            DeletionStart = commonPrefixLength;
-        }
+        String refWithoutCommonPrefix = ref.substring(commonPrefixLength);
+        String altWithoutCommonPrefix = alt.substring(commonPrefixLength);
+        int commonSuffixLength = lengthOfCommonSuffix(refWithoutCommonPrefix, altWithoutCommonPrefix);
+        Deleted = refWithoutCommonPrefix.substring(0, refWithoutCommonPrefix.length() - commonSuffixLength);
+        Inserted = altWithoutCommonPrefix.substring(0, altWithoutCommonPrefix.length() - commonSuffixLength);
+        DeletionStart = commonPrefixLength;
     }
 
     @NotNull

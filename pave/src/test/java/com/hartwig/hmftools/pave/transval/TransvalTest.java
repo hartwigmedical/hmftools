@@ -177,7 +177,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     }
 
     @Test
-    public void zyxDelInsAtEndOfExon()
+    public void deletionInsertionAtEndOfExon()
     {
         /*
         Consider ZYX:p.P67_D70delinsWKY
@@ -190,18 +190,18 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         So the coding change is: [CCC CCG GAA G] goes to [TGG AAA T] or [TGG AAG T]
 
         This is something that Transvar doesn't handle:
-05:47:32 - [DEBUG] - Converted 'ZYX|null|p.P67_D70delinsWKY' to 0 hotspot(s)
-05:47:32 - [INFO ] - Printing hotspots for 'ZYX:p.P67_D70delinsWKY' on transcript null
-05:47:32 - [DEBUG] - Loaded 39500 genes from /data/resources/public/ensembl_data_cache/38/ensembl_gene_data.csv
-05:47:34 - [DEBUG] - Loaded 39500 genes with 214977 transcripts and 1532157 exons from /data/resources/public/ensembl_data_cache/38/ensembl_trans_exon_data.csv
-05:47:34 - [DEBUG] - Running 'transvar panno --reference /data/resources/bucket/reference_genome/38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --refversion hg38 --noheader --ensembl -i ZYX:p.P67_D70delinsWKY'
-05:47:36 - [DEBUG] - Converting transvar output line to TransvarRecord: 'ZYX:p.P67_D70delinsWKY	ENST00000322764 (protein_coding)	ZYX	+	chr7:g.143381770_143382249delinsTGGAAGTAT/c.199_210delinsTGGAAGTAT/p.P67_D70delinsWKY	inside_[cds_in_exons_[2,3]]	CSQN=MultiAAMissense;4_CandidatesOmitted;aliases=ENSP00000324422;source=Ensembl'
-05:47:36 - [DEBUG] - Converting transvar output line to TransvarRecord: 'ZYX:p.P67_D70delinsWKY	ENST00000457235 (protein_coding)	ZYX	+	chr7:g.143381770_143382249delinsTGGAAGTAT/c.199_210delinsTGGAAGTAT/p.P67_D70delinsWKY	inside_[cds_in_exons_[1,2]]	CSQN=MultiAAMissense;4_CandidatesOmitted;aliases=ENSP00000400537;source=Ensembl'
-05:47:36 - [DEBUG] - Interpreting transvar record: 'TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143381770, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=480, insertedSequence=TGGAAGTAT, candidateAlternativeCodons=[]}}'
-05:47:36 - [DEBUG] - Complex insert/delete spanning multiple exons. Ignoring 'TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143381770, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=480, insertedSequence=TGGAAGTAT, candidateAlternativeCodons=[]}}'
-05:47:36 - [WARN ] - Could not derive any hotspots from record TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143381770, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=480, insertedSequence=TGGAAGTAT, candidateAlternativeCodons=[]}} for 'ZYX:p.P67_D70delinsWKY - null'
-05:47:36 - [DEBUG] - Converted 'ZYX|null|p.P67_D70delinsWKY' to 0 hotspot(s)
-05:47:36 - [INFO ] - Printing hotspots for 'ZYX:p.P67_D70delinsWKY' on transcript null
+        Converted 'ZYX|null|p.P67_D70delinsWKY' to 0 hotspot(s)
+        Printing hotspots for 'ZYX:p.P67_D70delinsWKY' on transcript null
+        Loaded 39500 genes from /data/resources/public/ensembl_data_cache/38/ensembl_gene_data.csv
+        Loaded 39500 genes with 214977 transcripts and 1532157 exons from /data/resources/public/ensembl_data_cache/38/ensembl_trans_exon_data.csv
+        Running 'transvar panno --reference /data/resources/bucket/reference_genome/38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --refversion hg38 --noheader --ensembl -i ZYX:p.P67_D70delinsWKY'
+        Converting transvar output line to TransvarRecord: 'ZYX:p.P67_D70delinsWKY	ENST00000322764 (protein_coding)	ZYX	+	chr7:g.143381770_143382249delinsTGGAAGTAT/c.199_210delinsTGGAAGTAT/p.P67_D70delinsWKY	inside_[cds_in_exons_[2,3]]	CSQN=MultiAAMissense;4_CandidatesOmitted;aliases=ENSP00000324422;source=Ensembl'
+        Converting transvar output line to TransvarRecord: 'ZYX:p.P67_D70delinsWKY	ENST00000457235 (protein_coding)	ZYX	+	chr7:g.143381770_143382249delinsTGGAAGTAT/c.199_210delinsTGGAAGTAT/p.P67_D70delinsWKY	inside_[cds_in_exons_[1,2]]	CSQN=MultiAAMissense;4_CandidatesOmitted;aliases=ENSP00000400537;source=Ensembl'
+        Interpreting transvar record: 'TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143381770, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=480, insertedSequence=TGGAAGTAT, candidateAlternativeCodons=[]}}'
+        Complex insert/delete spanning multiple exons. Ignoring 'TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143381770, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=480, insertedSequence=TGGAAGTAT, candidateAlternativeCodons=[]}}'
+        Could not derive any hotspots from record TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143381770, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=480, insertedSequence=TGGAAGTAT, candidateAlternativeCodons=[]}} for 'ZYX:p.P67_D70delinsWKY - null'
+        Converted 'ZYX|null|p.P67_D70delinsWKY' to 0 hotspot(s)
+        Printing hotspots for 'ZYX:p.P67_D70delinsWKY' on transcript null
          */
 
         TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("ZYX:p.P67_D70delinsWKY");
@@ -215,6 +215,52 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertEquals(2, hotspots.size());
         assertTrue(hotspots.contains(hotspot("CCCCCGGAAG", "TGGAAAT", "chr7", 143_381_770)));
         assertTrue(hotspots.contains(hotspot("CCCCCGGAAG", "TGGAAGT", "chr7", 143_381_770)));
+    }
+
+    @Test
+    public void deletionInsertionAtStartOfExon()
+    {
+        // See https://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=CCDS5883
+        // At position
+        // 350 + LTLKEVEELEQLTQQLMQDMEHPQRQNVAVN.length
+        // There is an E coded as G|AA split across exons 5 and 6.
+        // The following AAs are L C G coded as CTC TGC GGC
+        // Changing the start of exon 6 from
+        // AA CTC TGC GGC
+        // to
+        // {AT, AC} {CCT, CCC, CCA, CCG}
+        // would give
+        // E L C G => D P
+        // Note that exon 6 starts at 143_388_489
+        //  G|AA CTC TGC GGC -> G|AC CCC: del A CTC TGC GG ins CCC
+
+        /*
+        03:00:58 - [DEBUG] - Converting transvar output line to TransvarRecord: 'ZYX:p.E382_G385delinsDP	ENST00000322764 (protein_coding)	ZYX	+	chr7:g.143388339_143388499delinsGACCCT/c.1144_1155delinsGACCCT/p.E382_G385delinsDP	inside_[cds_in_exons_[6,7]]	CSQN=MultiAAMissense;candidate_alternative_sequence=GAC/GAT+CCT/CCG/CCA/CCC;aliases=ENSP00000324422;source=Ensembl'
+03:00:58 - [DEBUG] - Interpreting transvar record: 'TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143388339, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=161, insertedSequence=GACCCT, candidateAlternativeCodons=[GAC, GAT+CCT, CCG, CCA, CCC]}}'
+03:00:58 - [DEBUG] - Complex insert/delete spanning multiple exons. Ignoring 'TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143388339, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=161, insertedSequence=GACCCT, candidateAlternativeCodons=[GAC, GAT+CCT, CCG, CCA, CCC]}}'
+03:00:58 - [WARN ] - Could not derive any hotspots from record TransvarRecord{transcript=ENST00000322764, chromosome=7, gdnaPosition=143388339, variantSpanMultipleExons=true, annotation=TransvarComplexInsertDelete{deletedBaseCount=161, insertedSequence=GACCCT, candidateAlternativeCodons=[GAC, GAT+CCT, CCG, CCA, CCC]}} for 'ZYX:p.E382_G385delinsDP - null'
+03:00:58 - [DEBUG] - Converted 'ZYX|null|p.E382_G385delinsDP' to 0 hotspot(s)
+03:00:58 - [INFO ] - Printing hotspots for 'ZYX:p.E382_G385delinsDP' on transcript null
+         */
+
+        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("ZYX:p.E382_G385delinsDP");
+        assertEquals("ENST00000322764", record.TranscriptId);
+        assertEquals("7", record.Chromosome);
+        assertEquals(143_388_490, record.Position);
+        assertTrue(record.SpansMultipleExons);
+
+        assertEquals(9, record.deletedBasesCount());
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(8, hotspots.size());
+        // G|AA CTC TGC GGC -> G|AT CCC
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGG", "TCC", "chr7", 143_388_490)));
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "TCCT", "chr7", 143_388_490)));
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "TCCA", "chr7", 143_388_490)));
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "TCCG", "chr7", 143_388_490)));
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGG", "CCC", "chr7", 143_388_490)));
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCT", "chr7", 143_388_490)));
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCA", "chr7", 143_388_490)));
+        assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCG", "chr7", 143_388_490)));
     }
 
     private TransvalHotspot hotspot(String ref, String alt, String chr, int position)
