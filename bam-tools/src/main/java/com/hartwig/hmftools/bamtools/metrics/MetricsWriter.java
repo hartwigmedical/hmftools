@@ -256,7 +256,7 @@ public class MetricsWriter
             writer.write(String.format("%s %s", flagStats.statAsString(PAIR_MAPPED), FLAGSTAT_BOTH_MAPPED));
             writer.newLine();
 
-            writer.write(String.format("%s FLAGSTAT_SINGLE %s",
+            writer.write(String.format("%s %s %s",
                     flagStats.statAsString(SINGLETON), FLAGSTAT_SINGLE,
                     flagStatsPercentages(flagStats.getStat(SINGLETON), flagStats.getStat(PAIRED))));
             writer.newLine();
