@@ -121,13 +121,24 @@ public class ResultsWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
-            sj.add(FLD_JUNCTION_FRAGS).add(FLD_EXACT_SUPPORT_FRAGS).add(FLD_OTHER_SUPPORT_FRAGS).add("LowMapQualFrags");
-            sj.add("MaxQual").add(FLD_EXTRA_INFO);
-            sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("InitialReadId");
+            sj.add(FLD_CHROMOSOME);
+            sj.add(FLD_POSITION);
+            sj.add(FLD_ORIENTATION);
+            sj.add(FLD_JUNCTION_FRAGS);
+            sj.add(FLD_EXACT_SUPPORT_FRAGS);
+            sj.add(FLD_OTHER_SUPPORT_FRAGS);
+            sj.add("LowMapQualFrags");
+            sj.add("MaxQual");
+            sj.add(FLD_EXTRA_INFO);
+            sj.add(FLD_INDEL_JUNCTION);
+            sj.add(FLD_HOTSPOT_JUNCTION);
+            sj.add("InitialReadId");
 
             if(mConfig.TrackRemotes)
-                sj.add("RemoteJunctionCount").add("RemoteJunctions");
+            {
+                sj.add("RemoteJunctionCount");
+                sj.add("RemoteJunctions");
+            }
 
             writer.write(sj.toString());
             writer.newLine();
@@ -201,23 +212,6 @@ public class ResultsWriter
                 {
                     // replace soft-clip length with max remote location reads
                     extraInfoValues = !junctionData.RemoteJunctions.isEmpty() ? junctionData.RemoteJunctions.get(0).Fragments : 0;
-
-                    /* was read span distance before
-                    int minReadPosition = -1;
-                    int maxReadPosition = 0;
-
-                    for(ReadGroup readGroup : junctionData.SupportingGroups)
-                    {
-                        PrepRead read = firstPrimaryRead(readGroup);
-
-                        maxMapQual = max(maxMapQual, read.mapQuality());
-
-                        minReadPosition = minReadPosition < 0 ? read.start() : min(read.start(), minReadPosition);
-                        maxReadPosition = max(read.end(), maxReadPosition);
-                    }
-
-                    extraInfoValues = maxReadPosition - minReadPosition + 1;
-                    */
                 }
 
                 mJunctionWriter.write(String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
