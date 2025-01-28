@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -49,6 +50,12 @@ public interface DuplicateGroupCollapser
 
         return false;
     }
+
+    BinaryOperator<DuplicateGroup> DUPLICATE_GROUP_MERGER = (acc, group) ->
+    {
+        acc.addReads(group.reads());
+        return acc;
+    };
 
     private static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
     {
@@ -109,8 +116,7 @@ public interface DuplicateGroupCollapser
             int fragEndPos = coords.ReadIsLower ? coords.PositionUpper : coords.PositionLower;
             String fivePrimeKey = collapseToFivePrimeKey(coords);
             OneDGridMap<DuplicateGroup> fivePrimeGroup = getOrCreateFivePrimeGroup(fivePrimeKey);
-            fivePrimeGroup.merge(
-                    fragEndPos, duplicateGroup, (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+            fivePrimeGroup.merge(fragEndPos, duplicateGroup, DUPLICATE_GROUP_MERGER);
         }
 
         public FragmentCoordReads getCollapsedGroups()
@@ -122,8 +128,7 @@ public interface DuplicateGroupCollapser
             for(OneDGridMap<DuplicateGroup> fivePrimeGroup : mFivePrimeGroups.values())
             {
                 List<DuplicateGroup> collapsedGroups = fivePrimeGroup.mergeValuesByDistance(
-                        ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE,
-                        (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+                        ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, DUPLICATE_GROUP_MERGER);
 
                 if(finalCollapsedGroups == null)
                 {
@@ -171,8 +176,7 @@ public interface DuplicateGroupCollapser
                 FragmentCoords coords = readInfo.coordinates();
                 String fivePrimeKey = collapseToFivePrimeKey(coords);
                 DuplicateGroup duplicateGroup = new DuplicateGroup(null, read, coords);
-                fivePrimeGroups.merge(
-                        fivePrimeKey, duplicateGroup, (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+                fivePrimeGroups.merge(fivePrimeKey, duplicateGroup, DUPLICATE_GROUP_MERGER);
             }
         }
 
@@ -181,8 +185,7 @@ public interface DuplicateGroupCollapser
             for(DuplicateGroup duplicateGroup : duplicateGroups)
             {
                 String fivePrimeKey = collapseToFivePrimeKey(duplicateGroup.fragmentCoordinates());
-                fivePrimeGroups.merge(
-                        fivePrimeKey, duplicateGroup, (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+                fivePrimeGroups.merge(fivePrimeKey, duplicateGroup, DUPLICATE_GROUP_MERGER);
             }
         }
 
@@ -216,8 +219,7 @@ public interface DuplicateGroupCollapser
             int fragStartPos = coords.ReadIsLower ? coords.PositionLower : coords.PositionUpper;
             int fragEndPos = coords.ReadIsLower ? coords.PositionUpper : coords.PositionLower;
             mKeyGroups.computeIfAbsent(collapsedKey, key -> new TwoDGridMap<>());
-            mKeyGroups.get(collapsedKey).merge(fragStartPos, fragEndPos, duplicateGroup,
-                    (oldValue, newValue) -> { oldValue.addReads(newValue.reads()); return oldValue; });
+            mKeyGroups.get(collapsedKey).merge(fragStartPos, fragEndPos, duplicateGroup, DUPLICATE_GROUP_MERGER);
         }
 
         public FragmentCoordReads getCollapsedGroups()
@@ -228,8 +230,7 @@ public interface DuplicateGroupCollapser
             List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
             for(TwoDGridMap<DuplicateGroup> keyGroup : mKeyGroups.values())
             {
-                List<DuplicateGroup> keyGroupCollapsed = keyGroup.mergeValuesByDistance(
-                        mMaxDuplicateDistance, (acc, x) -> { acc.addReads(x.reads()); return acc; });
+                List<DuplicateGroup> keyGroupCollapsed = keyGroup.mergeValuesByDistance(mMaxDuplicateDistance, DUPLICATE_GROUP_MERGER);
 
                 collapsedGroups.addAll(keyGroupCollapsed);
             }

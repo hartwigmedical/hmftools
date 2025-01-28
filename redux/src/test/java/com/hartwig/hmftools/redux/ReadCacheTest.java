@@ -382,7 +382,8 @@ public class ReadCacheTest
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + maxDuplicateDistnace, false));
         readCache.processRead(createUnpairedRecord(CHR_1, 100 - maxDuplicateDistnace, 150 + maxDuplicateDistnace, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100 - maxDuplicateDistnace / 2, 150 + maxDuplicateDistnace + maxDuplicateDistnace / 2, false));
+        readCache.processRead(createUnpairedRecord(CHR_1,
+                100 - maxDuplicateDistnace / 2, 150 + maxDuplicateDistnace + maxDuplicateDistnace / 2, false));
 
         fragmentCoordsReads = readCache.evictAll();
 

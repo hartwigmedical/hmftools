@@ -30,6 +30,7 @@ public abstract class BamWriter
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
     private final JitterAnalyser mJitterAnalyser;
+    private final boolean mRecomputeFragCoords;
 
     protected final AtomicLong mNonConsensusReadCount;
     protected final AtomicLong mConsensusReadCount;
@@ -43,6 +44,7 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
+        mRecomputeFragCoords = mReadDataWriter.enabled() && DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse);
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -81,7 +83,6 @@ public abstract class BamWriter
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
-        boolean recomputeFragCoords = DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse);
         String fragCoords = group.fragmentCoordinates().Key;
         if(group.consensusRead() != null)
         {
@@ -89,7 +90,7 @@ public abstract class BamWriter
             processRecord(read);
             mConsensusReadCount.incrementAndGet();
 
-            if(recomputeFragCoords)
+            if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             if(mReadDataWriter != null && mReadDataWriter.enabled())
@@ -102,7 +103,7 @@ public abstract class BamWriter
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
-            if(recomputeFragCoords)
+            if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             writeRead(read, fragmentStatus, fragCoords, group.umiId());
