@@ -16,6 +16,16 @@ public class TransvalTest extends TransvalTestBase
         // This example is based on TransvarConverterTest in the serve codebase.
         // The idea is to check that the current code agrees with Transval on
         // the key fields used by serve.
+        /*
+        05:47:12 - [DEBUG] - Converting transvar output line to TransvarRecord: 'MTOR:p.L2230V	ENST00000361445 (protein_coding)	MTOR	-	chr1:g.11122101A>C/c.6688T>G/p.L2230V	inside_[cds_in_exon_48]	CSQN=Missense;reference_codon=TTA;candidate_codons=GTA,GTC,GTG,GTT;candidate_mnv_variants=chr1:g.11122099_11122101delTAAinsGAC,chr1:g.11122099_11122101delTAAinsCAC,chr1:g.11122099_11122101delTAAinsAAC;aliases=ENSP00000354558;source=Ensembl'
+05:47:12 - [DEBUG] - Interpreting transvar record: 'TransvarRecord{transcript=ENST00000361445, chromosome=1, gdnaPosition=11122101, variantSpanMultipleExons=false, annotation=TransvarSnvMnv{gdnaRef=A, gdnaAlt=C, referenceCodon=TTA, candidateCodons=[GTA, GTC, GTG, GTT]}}'
+05:47:12 - [DEBUG] - Converted 'MTOR|null|p.L2230V' to 4 hotspot(s)
+05:47:12 - [INFO ] - Printing hotspots for 'MTOR:p.L2230V' on transcript null
+05:47:12 - [INFO ] -  Hotspot{ref=A, alt=C, chromosome=chr1, position=11122101}
+05:47:12 - [INFO ] -  Hotspot{ref=TAA, alt=GAC, chromosome=chr1, position=11122099}
+05:47:12 - [INFO ] -  Hotspot{ref=TAA, alt=CAC, chromosome=chr1, position=11122099}
+05:47:12 - [INFO ] -  Hotspot{ref=TAA, alt=AAC, chromosome=chr1, position=11122099}
+         */
         TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("MTOR:p.L2230V");
 
         assertEquals("ENST00000361445", record.TranscriptId);
@@ -24,6 +34,13 @@ public class TransvalTest extends TransvalTestBase
         assertFalse(record.SpansMultipleExons);
         assertEquals("A", record.ReferenceNucleotides);
         assertEquals("C", record.AlternateNucleotides);
+
+        assertEquals(4, record.hotspots().size());
+        assertTrue(record.hotspots().contains(hotspot("A", "C", "chr1", 11_122_101)));
+        assertTrue(record.hotspots().contains(hotspot("TAA", "GAC", "chr1", 11_122_099)));
+        assertTrue(record.hotspots().contains(hotspot("TAA", "CAC", "chr1", 11_122_099)));
+        assertTrue(record.hotspots().contains(hotspot("TAA", "AAC", "chr1", 11_122_099)));
+
         assertEquals("TTA", record.ReferenceCodon);
         assertEquals("GTA", record.AlternateCodons.get(0));
         assertEquals("GTC", record.AlternateCodons.get(1));
@@ -50,6 +67,11 @@ public class TransvalTest extends TransvalTestBase
         assertEquals("7", record.Chromosome);
         assertEquals(140_753_336, record.Position); // serve example has 11_182_158, which is from v37, I think
         assertFalse(record.SpansMultipleExons);
+
+        assertEquals(2, record.hotspots().size());
+        assertTrue(record.hotspots().contains(hotspot("A", "T", "chr7", 140753336)));
+        assertTrue(record.hotspots().contains(hotspot("CA", "TT", "chr7", 140753335)));
+
         assertEquals("A", record.ReferenceNucleotides);
         assertEquals("T", record.AlternateNucleotides);
         assertEquals("GTG", record.ReferenceCodon);
@@ -62,6 +84,11 @@ public class TransvalTest extends TransvalTestBase
     public void vhlMultipleExons()
     {
         // Another example based on a test in serve's TransvarConverterTest.
+        /*
+        Converted 'VHL|null|p.G114R' to 1 hotspot(s)
+        Printing hotspots for 'VHL:p.G114R' on transcript null
+        Hotspot{ref=G, alt=C, chromosome=chr3, position=10142187}
+         */
         TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("VHL:p.G114R");
         assertEquals("ENST00000256474", record.TranscriptId);
         assertEquals("3", record.Chromosome);
@@ -70,6 +97,9 @@ public class TransvalTest extends TransvalTestBase
         assertEquals("G", record.ReferenceNucleotides);
         assertEquals("C", record.AlternateNucleotides);
         assertEquals("GGT", record.ReferenceCodon);
+
+// todo - should we report all of the items below as hotspots?????????
+
         // The serve test has the alternate codons in the order defined by Transvar,
         // which is simply the order in which they appear in its reverse codon table:
         // 'R': ['AGG', 'AGA', 'CGA', 'CGC', 'CGG', 'CGT'],
@@ -87,11 +117,28 @@ public class TransvalTest extends TransvalTestBase
     public void tet2MNV()
     {
         // Another example based on a test in serve's TransvarConverterTest.
+        /*
+        Converting transvar output line to TransvarRecord: 'TET2:p.Y1294A	ENST00000380013 (protein_coding)	TET2	+	chr4:g.105259695_105259696delTAinsGC/c.3880_3881delTAinsGC/p.Y1294A	inside_[cds_in_exon_7]	CSQN=Missense;reference_codon=TAC;candidate_codons=GCA,GCC,GCG,GCT;candidate_mnv_variants=chr4:g.105259695_105259697delTACinsGCA,chr4:g.105259695_105259697delTACinsGCG,chr4:g.105259695_105259697delTACinsGCT;aliases=ENSP00000369351;source=Ensembl'
+        Interpreting transvar record: 'TransvarRecord{transcript=ENST00000380013, chromosome=4, gdnaPosition=105259695, variantSpanMultipleExons=false, annotation=TransvarSnvMnv{gdnaRef=TA, gdnaAlt=GC, referenceCodon=TAC, candidateCodons=[GCA, GCC, GCG, GCT]}}'
+        Converted 'TET2|null|p.Y1294A' to 4 hotspot(s)
+        Printing hotspots for 'TET2:p.Y1294A' on transcript null
+        Hotspot{ref=TAC, alt=GCA, chromosome=chr4, position=105259695}
+        Hotspot{ref=TA, alt=GC, chromosome=chr4, position=105259695}
+        Hotspot{ref=TAC, alt=GCG, chromosome=chr4, position=105259695}
+        Hotspot{ref=TAC, alt=GCT, chromosome=chr4, position=105259695}
+         */
         TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("TET2:p.Y1294A");
         assertEquals("ENST00000380013", record.TranscriptId); // TransvarConvertTest has ENST00000540549
         assertEquals("4", record.Chromosome);
         //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
         assertFalse(record.SpansMultipleExons);
+
+        assertEquals(4, record.hotspots().size());
+        assertTrue(record.hotspots().contains(hotspot("TA", "GC", "chr4", 105_259_695)));
+        assertTrue(record.hotspots().contains(hotspot("TAC", "GCA", "chr4", 105_259_695)));
+        assertTrue(record.hotspots().contains(hotspot("TAC", "GCG", "chr4", 105_259_695)));
+        assertTrue(record.hotspots().contains(hotspot("TAC", "GCT", "chr4", 105_259_695)));
+
         assertEquals("TA", record.ReferenceNucleotides);
         assertEquals("GC", record.AlternateNucleotides);
         assertEquals("TAC", record.ReferenceCodon);
@@ -261,10 +308,5 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCT", "chr7", 143_388_490)));
         assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCA", "chr7", 143_388_490)));
         assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCG", "chr7", 143_388_490)));
-    }
-
-    private TransvalHotspot hotspot(String ref, String alt, String chr, int position)
-    {
-        return new TransvalHotspot(ref, alt, chr, position);
     }
 }

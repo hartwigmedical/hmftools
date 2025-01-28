@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.gene.GeneData;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +65,20 @@ public class CodonVariant implements Comparable<CodonVariant>
             }
         }
         return -1;
+    }
+
+    public TransvalHotspot hotspot(GeneData gene, int codonPosition)
+    {
+        Pair<String, String> refAlt = differenceStrings();
+        if(gene.forwardStrand())
+        {
+            int position = codonPosition + positionOfFirstDifference();
+            return new TransvalHotspot(refAlt.getLeft(), refAlt.getRight(), gene.Chromosome, position);
+        }
+        return new TransvalHotspot(reverseComplementBases(refAlt.getLeft()),
+                reverseComplementBases(refAlt.getRight()),
+                gene.Chromosome,
+                codonPosition - positionOfFirstDifference() + 1);
     }
 
     public Pair<String,String> differenceStrings()

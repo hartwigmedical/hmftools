@@ -21,7 +21,7 @@ public class Transval
     {
         this.mEnsemblCache = new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), RefGenomeVersion.V38);
         this.mRefGenome = refGenomeVersion;
-        mEnsemblCache.setRequiredData(true, true, true, true);
+        mEnsemblCache.setRequiredData(true, true, true, false);
         mEnsemblCache.load(false);
         mEnsemblCache.createTranscriptIdMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTranscriptAminoAcidsMap, List.of(), false);

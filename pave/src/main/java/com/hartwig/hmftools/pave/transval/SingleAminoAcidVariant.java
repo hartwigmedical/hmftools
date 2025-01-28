@@ -3,7 +3,9 @@ package com.hartwig.hmftools.pave.transval;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 
 import com.google.common.base.Preconditions;
@@ -56,12 +58,28 @@ public class SingleAminoAcidVariant extends ProteinVariant
         }
         List<String> alternateNucleotides = new ArrayList<>();
         codonChanges.forEach(cv -> alternateNucleotides.add(cv.AlternateCodon));
+        Set<TransvalHotspot> hotspots = new HashSet<>();
+        codonChanges.forEach(cv -> {
+            Pair<String,String> refAlt = cv.differenceStrings();
+            if (Gene.forwardStrand())
+            {
+                int position = RegionsDefiningCodon.translateCodonPosition(cv.positionOfFirstDifference());
+                hotspots.add(new TransvalHotspot(refAlt.getLeft(), refAlt.getRight(), Gene.Chromosome, position));
+            } else {
+                int position = RegionsDefiningCodon.translateCodonPosition(cv.positionOfFirstDifference()) - refAlt.getLeft().length() + 1;
+                hotspots.add(new TransvalHotspot(
+                        reverseComplementBases(refAlt.getLeft()),
+                        reverseComplementBases(refAlt.getRight()),
+                        Gene.Chromosome, position));
+            }
+        });
         return new TransvalSnvMnv(
                 Transcript.TransName,
                 Gene.Chromosome,
                 positionOfChangeInChromosome,
                 !codonIsInSingleExon(),
                 nucleotideDifferences.getLeft(),
+                hotspots,
                 nucleotideDifferences.getRight(),
                 referenceCodon,
                 alternateNucleotides

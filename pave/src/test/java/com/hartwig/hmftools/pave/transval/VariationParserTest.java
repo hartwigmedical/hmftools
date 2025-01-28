@@ -63,6 +63,14 @@ public class VariationParserTest extends TransvalTestBase
     }
 
     @Test
+    public void parseSingleAminoAcidVariantTest()
+    {
+        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF", "V600E");
+        Assert.assertEquals(600, variant.positionOfFirstAlteredCodon());
+        Assert.assertEquals("E", variant.altValue());
+    }
+
+    @Test
     public void aminoAcidNameIsConvertedToSingleLetter()
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF:p.Val600Glu");
@@ -70,7 +78,7 @@ public class VariationParserTest extends TransvalTestBase
     }
 
     @Test
-    public void parseSingleAminoAcidVariantDeletionInsertion()
+    public void parseDeletionInsertion()
     {
         DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
         Assert.assertEquals("EGFR", di.Gene.GeneName);

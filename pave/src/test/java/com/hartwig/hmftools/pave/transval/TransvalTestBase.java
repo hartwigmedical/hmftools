@@ -36,4 +36,9 @@ public class TransvalTestBase
     {
         return new SplitSequence(left, right, 100);
     }
+
+    protected TransvalHotspot hotspot(String ref, String alt, String chr, int position)
+    {
+        return new TransvalHotspot(ref, alt, chr, position);
+    }
 }
