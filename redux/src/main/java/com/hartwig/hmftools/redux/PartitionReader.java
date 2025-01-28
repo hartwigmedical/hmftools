@@ -86,7 +86,7 @@ public class PartitionReader
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
-        mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats, mConfig.Sequencing);
+        mConsensusReads = new ConsensusReads(config.RefGenome, mConfig.Sequencing, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mCurrentRegion = null;

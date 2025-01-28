@@ -45,7 +45,7 @@ public class ConsensusReads
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
 
-    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats, final SequencingType sequencingType)
+    public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType, final ConsensusStatistics consensusStats)
     {
         mRefGenome = new RefGenome(refGenome);
         mNonStandardBaseBuilder = NonStandardBaseBuilder.fromSequencingType(sequencingType, mRefGenome);
@@ -67,13 +67,13 @@ public class ConsensusReads
     @VisibleForTesting
     public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType)
     {
-        this(refGenome, new ConsensusStatistics(), sequencingType);
+        this(refGenome, sequencingType, new ConsensusStatistics());
     }
 
     @VisibleForTesting
     public ConsensusReads(final RefGenomeInterface refGenome)
     {
-        this(refGenome, new ConsensusStatistics(), ILLUMINA);
+        this(refGenome, ILLUMINA);
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
@@ -173,10 +173,12 @@ public class ConsensusReads
     public void setChromosomeLength(int chromosomeLength)
     {
         if(mBaseBuilder != null)
+        {
             mBaseBuilder.setChromosomLength(chromosomeLength);
+            return;
+        }
 
-        if(mNonStandardBaseBuilder != null)
-            mNonStandardBaseBuilder.setChromosomeLength(chromosomeLength);
+        mNonStandardBaseBuilder.setChromosomeLength(chromosomeLength);
     }
 
     private static SAMRecord createConsensusRead(final ConsensusState state, final SAMRecord templateRead, final String groupReadId)
