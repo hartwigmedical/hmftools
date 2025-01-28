@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
