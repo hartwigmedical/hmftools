@@ -112,7 +112,7 @@ public class DeletionInsertion extends ProteinVariant
         int positionOfDeletionStart = splitBases.locationOfDeletedBases() + bestCandidate.positionOfDeletion();
 
         return new TransvalInsertionDeletion(
-                Transcript.TransName,
+                Transcript,
                 Gene.Chromosome,
                 positionOfDeletionStart,
                 splitBases.spansTwoExons(),

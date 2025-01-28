@@ -28,7 +28,7 @@ public class TransvalTest extends TransvalTestBase
          */
         TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("MTOR:p.L2230V");
 
-        assertEquals("ENST00000361445", record.TranscriptId);
+        assertEquals("ENST00000361445", record.transcriptId());
         assertEquals("1", record.Chromosome);
         assertEquals(11_122_101, record.Position); // serve example has 11_182_158, which is from v37, I think
         assertFalse(record.SpansMultipleExons);
@@ -90,7 +90,7 @@ public class TransvalTest extends TransvalTestBase
         Hotspot{ref=G, alt=C, chromosome=chr3, position=10142187}
          */
         TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("VHL:p.G114R");
-        assertEquals("ENST00000256474", record.TranscriptId);
+        assertEquals("ENST00000256474", record.transcriptId());
         assertEquals("3", record.Chromosome);
 //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
         assertTrue(record.SpansMultipleExons);
@@ -128,7 +128,7 @@ public class TransvalTest extends TransvalTestBase
         Hotspot{ref=TAC, alt=GCT, chromosome=chr4, position=105259695}
          */
         TransvalSnvMnv record = (TransvalSnvMnv) transval.calculateVariant("TET2:p.Y1294A");
-        assertEquals("ENST00000380013", record.TranscriptId); // TransvarConvertTest has ENST00000540549
+        assertEquals("ENST00000380013", record.transcriptId()); // TransvarConvertTest has ENST00000540549
         assertEquals("4", record.Chromosome);
         //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
         assertFalse(record.SpansMultipleExons);
@@ -161,7 +161,7 @@ public class TransvalTest extends TransvalTestBase
 05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAGCA, alt=CCC, chromosome=chr7, position=55174776}
  */
         TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
-        assertEquals("ENST00000275493", record.TranscriptId);
+        assertEquals("ENST00000275493", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(55_174_776, record.Position);
         assertFalse(record.SpansMultipleExons);
@@ -187,7 +187,7 @@ public class TransvalTest extends TransvalTestBase
         Hotspot{ref=GCGGAGAACTG, alt=AT, chromosome=chr3, position=10141860}
          */
         TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("VHL:p.A5_W8delinsM");
-        assertEquals("ENST00000256474", record.TranscriptId);
+        assertEquals("ENST00000256474", record.transcriptId());
         assertEquals("3", record.Chromosome);
         assertEquals(10_141_860, record.Position);
         assertFalse(record.SpansMultipleExons);
@@ -212,7 +212,7 @@ Printing hotspots for 'EGFR:p.I744_K745delinsKIPVAI' on transcript null
 Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
         TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.I744_K745delinsKIPVAI");
-        assertEquals("ENST00000275493", record.TranscriptId);
+        assertEquals("ENST00000275493", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(55_174_768, record.Position);
         assertFalse(record.SpansMultipleExons);
@@ -252,7 +252,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
 
         TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("ZYX:p.P67_D70delinsWKY");
-        assertEquals("ENST00000322764", record.TranscriptId);
+        assertEquals("ENST00000322764", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(143_381_770, record.Position);
         assertTrue(record.SpansMultipleExons);
@@ -291,7 +291,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
 
         TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("ZYX:p.E382_G385delinsDP");
-        assertEquals("ENST00000322764", record.TranscriptId);
+        assertEquals("ENST00000322764", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(143_388_490, record.Position);
         assertTrue(record.SpansMultipleExons);

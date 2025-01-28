@@ -74,7 +74,7 @@ public class SingleAminoAcidVariant extends ProteinVariant
             }
         });
         return new TransvalSnvMnv(
-                Transcript.TransName,
+                Transcript,
                 Gene.Chromosome,
                 positionOfChangeInChromosome,
                 !codonIsInSingleExon(),

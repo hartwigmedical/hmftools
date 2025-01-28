@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -19,6 +20,8 @@ public class Transval
 
     public Transval(final File ensemblDataDir, final RefGenomeInterface refGenomeVersion)
     {
+        Preconditions.checkArgument(ensemblDataDir.isDirectory());
+        Preconditions.checkArgument(ensemblDataDir.exists());
         this.mEnsemblCache = new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), RefGenomeVersion.V38);
         this.mRefGenome = refGenomeVersion;
         mEnsemblCache.setRequiredData(true, true, true, false);

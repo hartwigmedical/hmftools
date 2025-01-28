@@ -43,7 +43,6 @@ public class VariationParser
     {
         GeneData geneData = lookupGene(gene);
         return buildSingleAminoAcidVariant(variantDescription, geneData);
-
     }
 
     public SingleAminoAcidVariant parseSingleAminoAcidVariant(String input)
@@ -60,11 +59,11 @@ public class VariationParser
         GeneData geneData = lookupGene(geneVar[0]);
         TranscriptData canonicalTranscript = getCanonicalTranscriptData(geneData);
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(canonicalTranscript, false);
-        String[] descriptionParts = extractDescription(geneVar);
+        String description = extractDescription(geneVar)[1];
 
         Pattern variationPattern =
                 Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + "_" + BLANK_OR_AA_GROUP + NAT + "delins([a-zA-Z]*)" + "$");
-        final Matcher matcher = matchPattern(variationPattern, descriptionParts[1]);
+        final Matcher matcher = matchPattern(variationPattern, description);
 
         ensureAminoAcidOrBlank(matcher.group(1));
         int startPosition = Integer.parseInt(matcher.group(3));

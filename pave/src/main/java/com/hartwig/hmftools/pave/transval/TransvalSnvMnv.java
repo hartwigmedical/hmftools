@@ -3,6 +3,8 @@ package com.hartwig.hmftools.pave.transval;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.gene.TranscriptData;
+
 import org.jetbrains.annotations.NotNull;
 
 public class TransvalSnvMnv extends TransvalVariant
@@ -15,7 +17,7 @@ public class TransvalSnvMnv extends TransvalVariant
     public final List<String> AlternateCodons;
 
     public TransvalSnvMnv(
-            @NotNull final String transcriptId,
+            @NotNull final TranscriptData transcript,
             @NotNull final String chromosome,
             final int position,
             final boolean spansMultipleExons,
@@ -25,7 +27,7 @@ public class TransvalSnvMnv extends TransvalVariant
             @NotNull final String referenceCodon,
             @NotNull final List<String> alternateCodons)
     {
-        super(transcriptId, chromosome, position, spansMultipleExons, referenceNucleotides, hotspots);
+        super(transcript, chromosome, position, spansMultipleExons, referenceNucleotides, hotspots);
         AlternateNucleotides = alternateNucleotides;
         ReferenceCodon = referenceCodon;
         AlternateCodons = alternateCodons;
