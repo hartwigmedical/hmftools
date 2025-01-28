@@ -278,7 +278,7 @@ public class DiscordantGroups
                 readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
             }
 
-            if(mTrackRemotes)
+            if(mTrackRemotes || remoteRegion == mainRemoteRegion)
             {
                 RemoteJunction remoteJunction = new RemoteJunction(
                         discordantGroup.Region.Chromosome, discordantGroup.innerPosition(), discordantGroup.Orient);
