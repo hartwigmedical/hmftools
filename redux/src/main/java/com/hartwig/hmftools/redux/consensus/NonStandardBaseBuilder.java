@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -250,7 +251,13 @@ public abstract class NonStandardBaseBuilder
     private static List<AnnotatedBase> getConsensusBases(
             final Collection<List<AnnotatedBase>> alignment, final Function<List<AnnotatedBase>, AnnotatedBase> determineConsensus)
     {
-        List<AnnotatedBase> consensus = Lists.newArrayList();
+        final List<AnnotatedBase> consensus = Lists.newArrayList();
+        Consumer<AnnotatedBase> addBase = base ->
+        {
+            if(base != null)
+                consensus.add(base);
+        };
+
         for(List<AnnotatedBase> alignedBases : alignment)
         {
             ExtendedRefPos pos = alignedBases.get(0).Pos;
@@ -267,12 +274,9 @@ public abstract class NonStandardBaseBuilder
                 }
 
                 if(2 * noBaseCount >= alignedBases.size())
-                {
-                    consensus.add(null);
                     continue;
-                }
 
-                consensus.add(determineConsensus.apply(nonMissingBases));
+                addBase.accept(determineConsensus.apply(nonMissingBases));
                 continue;
             }
 
@@ -290,12 +294,9 @@ public abstract class NonStandardBaseBuilder
             }
 
             if(2 * delCount > alignedBases.size())
-            {
-                consensus.add(null);
                 continue;
-            }
 
-            consensus.add(determineConsensus.apply(nonDelBases));
+            addBase.accept(determineConsensus.apply(nonDelBases));
         }
 
         return consensus;
@@ -606,7 +607,6 @@ public abstract class NonStandardBaseBuilder
 
             Collection<List<AnnotatedBase>> alignment = alignAnnotatedReads(annotatedReads);
             List<AnnotatedBase> consensusBases = getConsensusBases(alignment, records -> determineConsensus(chromosome, consensusState.IsForward, records));
-            consensusBases = consensusBases.stream().filter(x -> x != null).collect(Collectors.toList());
             updateConsensusState(reads, consensusState, hasIndels, consensusBases);
 
             SortedSet<Integer> modCReadIndices = Sets.newTreeSet();
