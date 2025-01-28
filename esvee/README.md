@@ -313,7 +313,7 @@ where:
 AdjustedAlignmentScore = Alignment score – IHOM length – repeatBases[repeatCount>2] 
 ```
  
-Note that if (alignmentScore + 15 < 0.85 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
+Note that if (alignmentScore + 15 < 0.77 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
 
 The interpretation of the alignment depends on both the modified map quality and the XA tag which will display the alternative alignments if there are a small number of alternatives. Assemblies with no alignments or with all alignments with modMAPQ < 10 and NULL XA tags are ignored. 
 
