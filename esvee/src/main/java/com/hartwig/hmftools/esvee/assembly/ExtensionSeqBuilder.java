@@ -14,9 +14,9 @@ import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.getRepeatCount;
@@ -65,7 +65,6 @@ public class ExtensionSeqBuilder
     private boolean mIsValid;
     private boolean mRequiredRebuild;
 
-    private static final double MISMATCH_READ_REBUILD_PERC = 0.1;
     private static final int READ_REPEAT_COUNT_INVALID = -1;
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
@@ -816,10 +815,11 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.extensionLength() + 1, maxValidExtensionLength);
         }
 
-        if(maxValidExtensionLength == 0 || validExtensionReadCount < ASSEMBLY_MIN_READ_SUPPORT || !hasMinLengthSoftClipRead)
+        int minRequiredReadCount = minReadThreshold(mJunction);
+
+        if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < minRequiredReadCount)
         {
             mIsValid = false;
-            return;
         }
     }
 
