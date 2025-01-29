@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.sequencing;
 
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_GAP_EXTEND_PENALTY;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_GAP_OPEN_PENALTY;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_MATCH_SCORE;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;

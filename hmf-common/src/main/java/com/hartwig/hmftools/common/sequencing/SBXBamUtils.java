@@ -3,6 +3,10 @@ package com.hartwig.hmftools.common.sequencing;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
@@ -38,11 +42,6 @@ public class SBXBamUtils
     public static int DUPLEX_QUAL = 93;
     public static int SIMPLEX_QUAL = 18;
     public static int DUPLEX_ERROR_QUAL = 0;
-
-    public static int BWA_MATCH_SCORE = 1;
-    public static int BWA_MISMATCH_PENALTY = 4;
-    public static int BWA_GAP_OPEN_PENALTY = 6;
-    public static int BWA_GAP_EXTEND_PENALTY = 1;
 
     @Nullable
     private static String parseInt(final String s, int start)

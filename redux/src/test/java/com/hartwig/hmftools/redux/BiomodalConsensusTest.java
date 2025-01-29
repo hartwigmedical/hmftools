@@ -259,20 +259,20 @@ public class BiomodalConsensusTest
     @Test
     public void testBiomodalConsensusDropNonStrictMajorityInserts()
     {
-        String refBases = "AAAAAAAA";
+        String refBases = "A".repeat(20) + "AAAAAAAA" + "A".repeat(20);
         ConsensusReads consensusReads = getConsensusReads(refBases);
 
-        String readStr1 = "AATAATAATAA";
+        String readStr1 = "A".repeat(20) + "AATAATAATAA" + "A".repeat(20);
         String qualStr1 = QUAL_25.repeat(readStr1.length());
-        String cigar1 = "2M1I2M1I2M1I2M";
+        String cigar1 = "22M1I2M1I2M1I22M";
 
-        String readStr2 = "AAAATAATAA";
+        String readStr2 = "A".repeat(20) + "AAAATAATAA" + "A".repeat(20);
         String qualStr2 = QUAL_25.repeat(readStr2.length());
-        String cigar2 = "4M1I2M1I2M";
+        String cigar2 = "24M1I2M1I22M";
 
-        String readStr3 = "AAAAAATAA";
+        String readStr3 = "A".repeat(20) + "AAAAAATAA" + "A".repeat(20);
         String qualStr3 = QUAL_25.repeat(readStr3.length());
-        String cigar3 = "6M1I2M";
+        String cigar3 = "26M1I22M";
 
         SAMRecord read1 = createBiomodalSamRecord("READ_001", CHR_1, 1, readStr1, qualStr1, cigar1, true);
         SAMRecord read2 = createBiomodalSamRecord("READ_002", CHR_1, 1, readStr2, qualStr2, cigar2, true);
@@ -299,20 +299,20 @@ public class BiomodalConsensusTest
     @Test
     public void testBiomodalConsensusKeepStrictMajorityDels()
     {
-        String refBases = "ATGCATGC";
+        String refBases = "A".repeat(20) + "ATGCATGC" + "A".repeat(20);
         ConsensusReads consensusReads = getConsensusReads(refBases);
 
-        String readStr1 = "AGCTC";
+        String readStr1 = "A".repeat(20) + "AGCTC" + "A".repeat(20);
         String qualStr1 = QUAL_25.repeat(readStr1.length());
-        String cigar1 = "1M1D2M1D1M1D1M";
+        String cigar1 = "21M1D2M1D1M1D21M";
 
-        String readStr2 = "ATGCTC";
+        String readStr2 = "A".repeat(20) + "ATGCTC" + "A".repeat(20);
         String qualStr2 = QUAL_25.repeat(readStr2.length());
-        String cigar2 = "4M1D1M1D1M";
+        String cigar2 = "24M1D1M1D21M";
 
-        String readStr3 = "ATGCATC";
+        String readStr3 = "A".repeat(20) + "ATGCATC" + "A".repeat(20);
         String qualStr3 = QUAL_25.repeat(readStr3.length());
-        String cigar3 = "6M1D1M";
+        String cigar3 = "26M1D21M";
 
         SAMRecord read1 = createBiomodalSamRecord("READ_001", CHR_1, 1, readStr1, qualStr1, cigar1, true);
         SAMRecord read2 = createBiomodalSamRecord("READ_002", CHR_1, 1, readStr2, qualStr2, cigar2, true);
