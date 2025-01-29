@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder.isLocalA
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 import java.util.Set;
@@ -390,16 +391,6 @@ public final class AssemblyLinker
             if(overlapLength < minOverlapLength)
                 continue;
 
-            // require the overlapping sections to cover min overlap of ref bases if a local DEL or DUP
-            if(requireRefBaseOverlap)
-            {
-                int restrictedSecondSeqEnd = secondIndexStart + overlapLength - 1;
-                int refBaseOverlap = restrictedSecondSeqEnd - secondSeq.junctionIndex() + 1;
-
-                if(refBaseOverlap < minOverlapLength)
-                    continue;
-            }
-
             int mismatchCount = SequenceCompare.compareSequences(
                     firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
                     secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo(),
@@ -408,46 +399,72 @@ public final class AssemblyLinker
             if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
                 continue;
 
+            // try to extend the matched sequence in both directions
+            int[] matchExtensions = tryExtendMatchedSequence(
+                    firstSeq.bases(), firstIndexStart, firstIndexEnd, secondSeq.bases(), secondIndexStart, secondIndexEnd);
+
+            firstIndexStart -= matchExtensions[0];
+            secondIndexStart -= matchExtensions[0];
+            overlapLength += matchExtensions[0] + matchExtensions[1];
+            // firstIndexEnd += matchExtensions[1];
+            // secondIndexEnd += matchExtensions[1];
+
             if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
             {
+                if(requireRefBaseOverlap)
+                {
+                    int minRefOverlapLength = MIN_VARIANT_LENGTH; // minOverlapLength
+                    int firstRefBaseOverlap = firstSeq.junctionIndex() - firstIndexStart + 1;
+
+                    int restrictedSecondSeqEnd = secondIndexStart + overlapLength - 1;
+                    int secondRefBaseOverlap = restrictedSecondSeqEnd - secondSeq.junctionIndex() + 1;
+
+                    if(firstRefBaseOverlap < minRefOverlapLength && secondRefBaseOverlap < minRefOverlapLength)
+                        continue;
+                }
+
                 topMatchLength = overlapLength;
                 topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
                 topMatchMismatches = mismatchCount;
             }
         }
 
-        /* disabled until seen it is required
-        // if there were mismatches, check for a need to factor this into the distance between the first start index and its junction
-        if(topMatchMismatches > 0)
-        {
-            int firstIndexStart = topMatchIndices[0];
-            int firstIndexEnd = firstIndexStart + topMatchLength - 1;
-            int secondIndexStart = topMatchIndices[1];
-            int secondIndexEnd = secondIndexStart + topMatchLength - 1;
-
-            List<SequenceDiffInfo> mismatchDiffs = SequenceCompare.getSequenceMismatchInfo(
-                firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
-                secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo());
-
-            int firstJuncIndex = firstSeq.junctionIndex();
-            int firstJunctionRepeatDiff = 0;
-
-            for(SequenceDiffInfo diffInfo : mismatchDiffs)
-            {
-                if(diffInfo.Type == SequenceDiffType.BASE)
-                    continue;
-
-                if(diffInfo.Index > firstJuncIndex)
-                    break;
-
-                firstJunctionRepeatDiff += diffInfo.BaseCount;
-            }
-
-            topMatchIndices[2] = firstJunctionRepeatDiff;
-        }
-        */
-
         return topMatchIndices;
+    }
+
+    private static int[] tryExtendMatchedSequence(
+            final byte[] firstBases, int firstIndexStart, int firstIndexEnd, final byte[] secondBases, int secondIndexStart, int secondIndexEnd)
+    {
+        int earlierMatchedBases = 0;
+        int latterMatchedBases = 0;
+
+        int firstIndex = firstIndexStart - 1;
+        int secondIndex = secondIndexStart - 1;
+
+        while(firstIndex >= 0 && secondIndex >= 0)
+        {
+            if(firstBases[firstIndex] != secondBases[secondIndex])
+                break;
+
+            ++earlierMatchedBases;
+            --firstIndex;
+            --secondIndex;
+        }
+
+        firstIndex = firstIndexEnd + 1;
+        secondIndex = secondIndexEnd + 1;
+
+        while(firstIndex < firstBases.length && secondIndex < secondBases.length)
+        {
+            if(firstBases[firstIndex] != secondBases[secondIndex])
+                break;
+
+            ++latterMatchedBases;
+            ++firstIndex;
+            ++secondIndex;
+        }
+
+        return new int[] {earlierMatchedBases, latterMatchedBases};
     }
 
     protected static AssemblyLink formLink(
