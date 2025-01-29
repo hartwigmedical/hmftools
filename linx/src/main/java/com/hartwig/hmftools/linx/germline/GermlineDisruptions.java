@@ -74,6 +74,7 @@ public class GermlineDisruptions
     private final Set<SvVarData> mReportableSgls;
 
     private static final int MAX_DELETE_LENGTH = 3000000;
+    private static final int MAX_PON_COUNT = 3;
     private static final int MAX_SGL_MAPPED_LENGTH = 500000;
     private static final String FILTER_PSEUDOGENE = "PSEUDOGENE";
 
@@ -525,6 +526,10 @@ public class GermlineDisruptions
         SvVarData var = disruptionData.Var;
 
         if(!var.getSvData().filter().equals(PASS))
+            return false;
+
+        int ponCount = getPonCount(var);
+        if(ponCount > MAX_PON_COUNT)
             return false;
 
         DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
