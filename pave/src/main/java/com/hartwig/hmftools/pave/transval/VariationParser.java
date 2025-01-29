@@ -39,6 +39,15 @@ public class VariationParser
         return parseSingleAminoAcidVariant(expression);
     }
 
+    public ProteinVariant parseExpressionForGene(@NotNull String gene, @NotNull String expression)
+    {
+        if(expression.contains("delins"))
+        {
+            return parseDeletionInsertion(gene, expression);
+        }
+        return parseSingleAminoAcidVariant(gene, expression);
+    }
+
     public SingleAminoAcidVariant parseSingleAminoAcidVariant(@NotNull String gene, @NotNull String variantDescription)
     {
         GeneData geneData = lookupGene(gene);
@@ -53,13 +62,25 @@ public class VariationParser
         return buildSingleAminoAcidVariant(variantDescription, geneData);
     }
 
+    public DeletionInsertion parseDeletionInsertion(@NotNull String gene, @NotNull String variantDescription)
+    {
+        GeneData geneData = lookupGene(gene);
+        return buildDeletionInsertion(variantDescription, geneData);
+    }
+
     public DeletionInsertion parseDeletionInsertion(String input)
     {
         String[] geneVar = extractGeneAndVariant(input);
         GeneData geneData = lookupGene(geneVar[0]);
+        String description = extractDescription(geneVar)[1];
+        return buildDeletionInsertion(description, geneData);
+    }
+
+    @NotNull
+    private DeletionInsertion buildDeletionInsertion(final String description, final GeneData geneData)
+    {
         TranscriptData canonicalTranscript = getCanonicalTranscriptData(geneData);
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(canonicalTranscript, false);
-        String description = extractDescription(geneVar)[1];
 
         Pattern variationPattern =
                 Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + "_" + BLANK_OR_AA_GROUP + NAT + "delins([a-zA-Z]*)" + "$");
@@ -101,16 +122,17 @@ public class VariationParser
         Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + SINGLE_AA_GROUP + "$");
         final Matcher matcher = matchPattern(variationPattern, variantDescription);
 
-        String referenceAminoAcid = matcher.group(1);
-        ensureAminoAcidOrBlank(referenceAminoAcid);
+        String ref = matcher.group(1);
+        ensureAminoAcidOrBlank(ref);
+        String r = (ref == null || ref.isBlank()) ? null : AminoAcids.forceSingleLetterProteinAnnotation(ref);
         int position = Integer.parseInt(matcher.group(3));
-        String variantAminoAcid = matcher.group(4);
-        ensureAminoAcid(variantAminoAcid);
-        String singleLetterName = AminoAcids.forceSingleLetterProteinAnnotation(variantAminoAcid);
-        TranscriptData transcriptData = getApplicableTranscript(geneData, position, referenceAminoAcid, variantAminoAcid);
+        String alt = matcher.group(4);
+        ensureAminoAcid(alt);
+        String a = AminoAcids.forceSingleLetterProteinAnnotation(alt);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, position, r, a);
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
 
-        return new SingleAminoAcidVariant(geneData, transcriptData, aminoAcidsSequence, position, singleLetterName);
+        return new SingleAminoAcidVariant(geneData, transcriptData, aminoAcidsSequence, position, a);
     }
 
     private TranscriptAminoAcids lookupTranscriptAminoAcids(final TranscriptData transcriptData, final boolean allowNullReturn)
@@ -171,15 +193,25 @@ public class VariationParser
         }
         if(aminoAcidsSequence.AminoAcids.length() <= position)
         {
+//            System.out.println(transcriptData.TransName + " too short to have value at position " + position);
             return false;
         }
 
-        String transcriptValueAtPosition = aminoAcidsSequence.AminoAcids.substring(position, position + ref.length());
-        if(!ref.equals(transcriptValueAtPosition))
+        if (ref != null)
         {
-            return false;
+            String transcriptValueAtPosition = aminoAcidsSequence.AminoAcids.substring(position, position + ref.length());
+            if(!ref.equals(transcriptValueAtPosition))
+            {
+                //            System.out.println(transcriptData.TransName + " does not match ref at position " + position);
+                return false;
+            }
+            if(alt.equals(transcriptValueAtPosition))
+            {
+                //            System.out.println(transcriptData.TransName + " already matches alt at position " + position);
+                return false;
+            }
         }
-        return !alt.equals(transcriptValueAtPosition);
+        return true;
     }
 
     private TranscriptData getCanonicalTranscriptData(final GeneData geneData)

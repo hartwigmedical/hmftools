@@ -95,6 +95,16 @@ public class VariationParserTest extends TransvalTestBase
     }
 
     @Test
+    public void parseDeletionInsertionWithGene()
+    {
+        DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR", "L747_A750delinsP");
+        Assert.assertEquals("EGFR", di.Gene.GeneName);
+        Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
+        Assert.assertEquals(4, di.changedReferenceSequenceLength());
+        Assert.assertEquals("P", di.altAminoAcidSequence());
+    }
+
+    @Test
     public void deletionInsertionErrors()
     {
         checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A740delinsP","End position must not be before start position");
