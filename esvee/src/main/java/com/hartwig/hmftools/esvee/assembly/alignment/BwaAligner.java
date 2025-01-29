@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_PENALTY_ADJUST;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.io.File;
@@ -8,8 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-
-import com.hartwig.hmftools.esvee.assembly.AssemblyConstants;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -48,9 +47,16 @@ public class BwaAligner implements Aligner
             {
                 mAligner = new BwaMemAligner(index);
                 mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
-                mAligner.setMismatchPenaltyOption(AssemblyConstants.BWA_MISMATCH_PENALTY);
-                updateScoringMatrix();
 
+                int mismatchPenalty = mAligner.getMismatchPenaltyOption();
+                mAligner.setMismatchPenaltyOption(mismatchPenalty + BWA_PENALTY_ADJUST);
+
+                int gapOpenPenaltyDel = mAligner.getDGapOpenPenaltyOption();
+                mAligner.setDGapOpenPenaltyOption(gapOpenPenaltyDel + BWA_PENALTY_ADJUST);
+
+                int gapOpenPenaltyInsert = mAligner.getIGapOpenPenaltyOption();
+                mAligner.setIGapOpenPenaltyOption(gapOpenPenaltyInsert + BWA_PENALTY_ADJUST);
+                updateScoringMatrix();
             }
             else
             {
