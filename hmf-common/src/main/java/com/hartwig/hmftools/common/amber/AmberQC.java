@@ -14,7 +14,6 @@ public abstract class AmberQC
 
     public AmberQCStatus status()
     {
-
         if(Doubles.greaterThan(contamination(), CONTAMINATION_MAX_FAIL))
         {
             return AmberQCStatus.FAIL;

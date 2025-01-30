@@ -32,7 +32,7 @@ public class ResultsWriter
         versionInfo.write(mConfig.OutputDir);
     }
 
-    void persistBAF(final List<AmberBAF> result) throws IOException, InterruptedException
+    public void persistBAF(final List<AmberBAF> result) throws IOException, InterruptedException
     {
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
@@ -44,11 +44,8 @@ public class ResultsWriter
         }
     }
 
-    void persistQC(final List<TumorContamination> contaminationRecords,
-            double consanguinityProportion, @Nullable Chromosome uniparentalDisomy) throws IOException
+    public void persistQC(double consanguinityProportion, double contamination, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
-        final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
-
         AmberQC qcStats = ImmutableAmberQC.builder()
                 .contamination(contamination)
                 .consanguinityProportion(consanguinityProportion)
@@ -58,7 +55,7 @@ public class ResultsWriter
         AmberQCFile.write(qcFilename, qcStats);
     }
 
-    void persistContamination(final List<TumorContamination> contaminationList) throws IOException
+    public void persistContamination(final List<TumorContamination> contaminationList) throws IOException
     {
         Collections.sort(contaminationList);
 
@@ -70,7 +67,7 @@ public class ResultsWriter
         TumorContaminationFile.write(filename, contaminationList);
     }
 
-    void persistSnpCheck(final ListMultimap<Chromosome, PositionEvidence> baseDepths)
+    public void persistSnpCheck(final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
         if(baseDepths.size() > 0)
         {
@@ -80,7 +77,7 @@ public class ResultsWriter
         }
     }
 
-    void persistHomozygousRegions(final List<RegionOfHomozygosity> regionOfHomozygosities) throws IOException
+    public void persistHomozygousRegions(final List<RegionOfHomozygosity> regionOfHomozygosities) throws IOException
     {
         final String filename = RegionOfHomozygosityFile.generateFilename(mConfig.OutputDir, mConfig.primaryReference());
         RegionOfHomozygosityFile.write(filename, regionOfHomozygosities);
