@@ -11,7 +11,9 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.purple.PurpleConstants.HOTSPOT_GNOMAD_FREQ_THRESHOLD;
+import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -108,24 +110,37 @@ public class SomaticPurityFitter
         GenomeRegionSelector<ObservedRegion> observedRegionSelector = GenomeRegionSelectorFactory.createImproved(
                 Multimaps.fromRegions(observedRegions));
 
-        final int[] filterCounts = new int[FilterReason.values().length];
-
         for(SomaticVariant variant : variants)
         {
-            if(variant.type() != VariantType.SNP)
-            {
-                ++filterCounts[FilterReason.NON_SNV.ordinal()];
-                continue;
-            }
-
             if(!variant.isPass() || !filter.test(variant.context()))
             {
-                ++filterCounts[FilterReason.FILTERED.ordinal()];
+                logFilteredFittingCandidate(variant, "non-passing");
                 continue;
             }
 
-            if(!isFittingCandidate(variant, filterCounts))
+            if(variant.type() == VariantType.MNP)
+            {
+                logFilteredFittingCandidate(variant, "excluded MNV");
                 continue;
+            }
+            else if(variant.type() == INDEL)
+            {
+                if(variant.decorator().repeatCount() > 0)
+                {
+                    logFilteredFittingCandidate(variant, "invalid indel");
+                    continue;
+                }
+            }
+
+            if(!isFittingCandidate(variant))
+                continue;
+
+            /*
+            if(variant.type() == INDEL)
+            {
+                PPL_LOGGER.debug("variant({}) used for fitting with vaf({})", variant, format("%.2f", variant.alleleFrequency()));
+            }
+            */
 
             Optional<ObservedRegion> region = observedRegionSelector.select(variant);
 
@@ -133,34 +148,31 @@ public class SomaticPurityFitter
 
             if(!variant.isHotspotType() && germlineStatus != GermlineStatus.DIPLOID)
             {
-                ++filterCounts[FilterReason.GERMLINE_DIPLOID.ordinal()];
+                logFilteredFittingCandidate(variant, "germline not diploid");
                 continue;
             }
 
             fittingVariants.add(variant);
         }
 
-        if(PPL_LOGGER.isDebugEnabled())
-        {
-            StringJoiner filterCountsStr = new StringJoiner(", ");
-            for(FilterReason reason : FilterReason.values())
-            {
-                filterCountsStr.add(format("%s=%d", reason, filterCounts[reason.ordinal()]));
-            }
-
-            PPL_LOGGER.debug("variants({}) fitting({}) filters: {}", variants.size(), fittingVariants.size(), filterCountsStr);
-        }
+        PPL_LOGGER.debug("variants({}) used for fitting({})", variants.size(), fittingVariants.size());
 
         return fittingVariants;
     }
 
-    private static boolean isFittingCandidate(final SomaticVariant variant, final int[] filterCounts)
+    private static boolean isFittingCandidate(final SomaticVariant variant)
     {
         if(EXCLUDED_IMMUNE_REGIONS.stream().anyMatch(x -> x.containsPosition(variant.chromosome(), variant.position())))
+        {
+            logFilteredFittingCandidate(variant, "immune region");
             return false;
+        }
         
         if(!variant.hasTumorAlleleDepth() || variant.tumorAlleleDepth().TotalReadCount == 0)
+        {
+            logFilteredFittingCandidate(variant, "zero tumor depth");
             return false;
+        }
 
         VariantTier variantTier = variant.decorator().tier();
 
@@ -175,36 +187,44 @@ public class SomaticPurityFitter
         {
             if(variant.context().hasAttribute(GNOMAD_FREQ))
             {
-                ++filterCounts[FilterReason.GNOMAD_FREQ.ordinal()];
+                logFilteredFittingCandidate(variant, "gnomad frequency");
                 return false;
             }
 
             if(variantTier == VariantTier.LOW_CONFIDENCE || variantTier == VariantTier.UNKNOWN)
             {
-                ++filterCounts[FilterReason.TIER.ordinal()];
+                logFilteredFittingCandidate(variant, "low tier");
                 return false;
             }
 
             if(variant.decorator().repeatCount() > SNV_FITTING_MAX_REPEATS)
             {
-                ++filterCounts[FilterReason.MAX_REPEATS.ordinal()];
+                logFilteredFittingCandidate(variant, "max repeats");
                 return false;
             }
 
             if(variant.context().hasAttribute(MAPPABILITY_TAG) && variant.decorator().mappability() < SNV_FITTING_MAPPABILITY)
             {
-                ++filterCounts[FilterReason.MAPPABILITY.ordinal()];
+                logFilteredFittingCandidate(variant, "mappability");
                 return false;
             }
 
             if(variant.referenceAlleleReadCount() > 0)
             {
-                ++filterCounts[FilterReason.GERMLINE_ALLELE_COUNT.ordinal()];
+                logFilteredFittingCandidate(variant, "germline allele count");
                 return false;
             }
         }
 
         return true;
+    }
+
+    private static void logFilteredFittingCandidate(final SomaticVariant variant, final String reason)
+    {
+        if(!PPL_LOGGER.isTraceEnabled())
+            return;
+
+        PPL_LOGGER.trace("variant({}) excluded from fitting: {}", variant, reason);
     }
 
     @Nullable
@@ -276,6 +296,7 @@ public class SomaticPurityFitter
         // find the closest purity with diploid ploidy
         FittedPurity closestPurity = null;
         double closestDiff = 0;
+        double purityEpsilon = PURITY_INCREMENT_DEFAULT * 0.25;
 
         for(FittedPurity fittedPurity : allCandidates)
         {
@@ -286,6 +307,9 @@ public class SomaticPurityFitter
 
             if(closestPurity == null || diff < closestDiff)
             {
+                if(diff < purityEpsilon)
+                    return fittedPurity;
+
                 closestDiff = diff;
                 closestPurity = fittedPurity;
             }
