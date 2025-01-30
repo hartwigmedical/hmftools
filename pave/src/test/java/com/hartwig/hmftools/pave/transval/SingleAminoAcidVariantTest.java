@@ -83,12 +83,12 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
         Assert.assertEquals("CGC", saav("ADCK2:p.71E").referenceCodon(genome));
         Assert.assertEquals("TCA", saav("ADCK2:p.141E").referenceCodon(genome));
         Assert.assertEquals("GCT", saav("ADCK2:p.281E").referenceCodon(genome));
-        Assert.assertEquals("GAG", saav("ADCK2:p.301E").referenceCodon(genome));
+        Assert.assertEquals("GAG", saav("ADCK2:p.301H").referenceCodon(genome));
         Assert.assertEquals("AAA", saav("ADCK2:p.311E").referenceCodon(genome));
         Assert.assertEquals("GTG", saav("ADCK2:p.312E").referenceCodon(genome));
         Assert.assertEquals("TTG", saav("ADCK2:p.313E").referenceCodon(genome));
-        Assert.assertEquals("E", saav("ADCK2:p.351E").referenceAminoAcids()); // sanity
-        Assert.assertEquals("GAG", saav("ADCK2:p.351E").referenceCodon(genome));
+        Assert.assertEquals("E", saav("ADCK2:p.351H").referenceAminoAcids()); // sanity
+        Assert.assertEquals("GAG", saav("ADCK2:p.351H").referenceCodon(genome));
 
         Assert.assertEquals("Q", saav("ADCK2:p.359E").referenceAminoAcids()); // sanity
         Assert.assertEquals("CAA", saav("ADCK2:p.359E").referenceCodon(genome));
@@ -110,11 +110,11 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
         Assert.assertEquals("ATG", saav("ZYX:p.1E").referenceCodon(genome));
         Assert.assertEquals("GCG", saav("ZYX:p.2E").referenceCodon(genome));
         Assert.assertEquals("CCG", saav("ZYX:p.68E").referenceCodon(genome));
-        Assert.assertEquals("GAA", saav("ZYX:p.69E").referenceCodon(genome));
+        Assert.assertEquals("GAA", saav("ZYX:p.69W").referenceCodon(genome));
         Assert.assertEquals("GAC", saav("ZYX:p.70E").referenceCodon(genome)); // first nuke in exon 2, remainder in exon 3
         Assert.assertEquals("GTC", saav("ZYX:p.380E").referenceCodon(genome));
         Assert.assertEquals("AAC", saav("ZYX:p.381E").referenceCodon(genome));
-        Assert.assertEquals("GAA", saav("ZYX:p.382E").referenceCodon(genome)); // first nuke in exon 4, remainder in exon 5
+        Assert.assertEquals("GAA", saav("ZYX:p.382W").referenceCodon(genome)); // first nuke in exon 4, remainder in exon 5
         Assert.assertEquals("TAC", saav("ZYX:p.496E").referenceCodon(genome));
         Assert.assertEquals("CAC", saav("ZYX:p.497E").referenceCodon(genome));
         Assert.assertEquals("AAG", saav("ZYX:p.498E").referenceCodon(genome)); // first 2 nukes in exon 8, last in exon 9
@@ -127,12 +127,12 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
         Assert.assertEquals("GCG", saav("BRAF:p.2E").referenceCodon(genome));
         Assert.assertEquals("GCG", saav("BRAF:p.3E").referenceCodon(genome));
         Assert.assertEquals("CCG", saav("BRAF:p.44E").referenceCodon(genome));
-        Assert.assertEquals("GAG", saav("BRAF:p.45E").referenceCodon(genome));
-        Assert.assertEquals("GAG", saav("BRAF:p.46E").referenceCodon(genome)); // end of first exon
+        Assert.assertEquals("GAG", saav("BRAF:p.45W").referenceCodon(genome));
+        Assert.assertEquals("GAG", saav("BRAF:p.46W").referenceCodon(genome)); // end of first exon
         Assert.assertEquals("GTG", saav("BRAF:p.47E").referenceCodon(genome));
         Assert.assertEquals("TGG", saav("BRAF:p.48E").referenceCodon(genome));
         Assert.assertEquals("CTG", saav("BRAF:p.79E").referenceCodon(genome));
-        Assert.assertEquals("GAG", saav("BRAF:p.80E").referenceCodon(genome)); // end of second exon
+        Assert.assertEquals("GAG", saav("BRAF:p.80Q").referenceCodon(genome)); // end of second exon
 
         Assert.assertEquals("CAG", saav("BRAF:p.201E").referenceCodon(genome));
         Assert.assertEquals("GAT", saav("BRAF:p.202E").referenceCodon(genome));
@@ -165,7 +165,7 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
     public void codonIsInSingleExon()
     {
         Assert.assertTrue(saav("ADCK2:p.1E").codonIsInSingleExon());
-        Assert.assertTrue(saav("BRAF:p.46E").codonIsInSingleExon());
+        Assert.assertTrue(saav("BRAF:p.46A").codonIsInSingleExon());
         Assert.assertFalse(saav("BRAF:p.327E").codonIsInSingleExon());
         Assert.assertFalse(saav("BRAF:p.478E").codonIsInSingleExon());
     }

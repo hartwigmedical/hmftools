@@ -33,8 +33,8 @@ public class VariationParserTest extends TransvalTestBase
         checkSaavInputResultsInErrorWithMessage("BRAF p.Val600Isoleucine", HGVS_FORMAT_REQUIRED);
 
         checkSaavInputResultsInErrorWithMessage("BRUZ:p.A123G", "BRUZ is not a known gene");
-        checkSaavInputResultsInErrorWithMessage("BRAF:p.J123G", "J does not represent an amino acid");
-        checkSaavInputResultsInErrorWithMessage("BRAF:p.G123J", "J does not represent an amino acid");
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.J123G", "Not a valid amino acid identifier: J");
+        checkSaavInputResultsInErrorWithMessage("BRAF:p.G123J", "Not a valid amino acid identifier: J");
         checkSaavInputResultsInErrorWithMessage("BRAF:p.G123,456E", HGVS_FORMAT_REQUIRED);
     }
 

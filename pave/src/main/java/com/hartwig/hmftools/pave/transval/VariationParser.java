@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -14,7 +16,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VariationParser
+class VariationParser
 {
     static final String HGVS_FORMAT_REQUIRED = "Required format is GENE:p.XnY where X and Y are amino acids and n is an integer.";
     private final EnsemblDataCache mEnsemblCache;
@@ -79,8 +81,9 @@ public class VariationParser
     @NotNull
     private DeletionInsertion buildDeletionInsertion(final String description, final GeneData geneData)
     {
-        TranscriptData canonicalTranscript = getCanonicalTranscriptData(geneData);
-        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(canonicalTranscript, false);
+
+        TranscriptData transcriptData = getCanonicalTranscriptData(geneData);
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
 
         Pattern variationPattern =
                 Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + "_" + BLANK_OR_AA_GROUP + NAT + "delins([a-zA-Z]*)" + "$");
@@ -112,7 +115,7 @@ public class VariationParser
         {
             throw new IllegalArgumentException("End position must not be before start position");
         }
-        return new DeletionInsertion(geneData, canonicalTranscript, aminoAcidsSequence, startPosition, length, variantString);
+        return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, startPosition, length, variantString);
     }
 
     @NotNull
@@ -122,17 +125,19 @@ public class VariationParser
         Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + SINGLE_AA_GROUP + "$");
         final Matcher matcher = matchPattern(variationPattern, variantDescription);
 
-        String ref = matcher.group(1);
-        ensureAminoAcidOrBlank(ref);
-        String r = (ref == null || ref.isBlank()) ? null : AminoAcids.forceSingleLetterProteinAnnotation(ref);
+//        String ref = matcher.group(1);
+        //        ensureAminoAcidOrBlank(ref);
+//        String r = (ref == null || ref.isBlank()) ? null : AminoAcids.forceSingleLetterProteinAnnotation(ref);
         int position = Integer.parseInt(matcher.group(3));
-        String alt = matcher.group(4);
-        ensureAminoAcid(alt);
-        String a = AminoAcids.forceSingleLetterProteinAnnotation(alt);
-        TranscriptData transcriptData = getApplicableTranscript(geneData, position, r, a);
+        AminoAcidSpecification refSpec = new AminoAcidSpecification(position, matcher.group(1));
+//        String alt = matcher.group(4);
+        AminoAcidSpecification altSpec = new AminoAcidSpecification(position, matcher.group(4));
+        //        ensureAminoAcid(alt);
+//        String a = AminoAcids.forceSingleLetterProteinAnnotation(alt);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refSpec, altSpec);
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
 
-        return new SingleAminoAcidVariant(geneData, transcriptData, aminoAcidsSequence, position, a);
+        return new SingleAminoAcidVariant(geneData, transcriptData, aminoAcidsSequence, altSpec);
     }
 
     private TranscriptAminoAcids lookupTranscriptAminoAcids(final TranscriptData transcriptData, final boolean allowNullReturn)
@@ -157,16 +162,58 @@ public class VariationParser
         return matcher;
     }
 
-    public TranscriptData getApplicableTranscript(final GeneData geneData, int position, final String ref, final String alt)
+    //    public TranscriptData getApplicableTranscript(final GeneData geneData, int position, final String ref, final String alt)
+    //    {
+    //        List<TranscriptData> allTranscripts = mEnsemblCache.getTranscripts(geneData.GeneId);
+    //        List<TranscriptData> possibilities = allTranscripts
+    //                .stream()
+    //                .filter(transcriptData -> transcriptMatches(transcriptData, position - 1, ref, alt))
+    //                .collect(Collectors.toList());
+    //        if(possibilities.isEmpty())
+    //        {
+    //            String msg = String.format("No transcript found for gene: %s, pos: %d, ref: %s, alt: %s", geneData.GeneId, position, ref, alt);
+    //            throw new IllegalStateException(msg);
+    //        }
+    //        if(possibilities.size() > 1)
+    //        {
+    //            return possibilities.stream()
+    //                    .filter(transcriptData -> transcriptData.IsCanonical)
+    //                    .findFirst()
+    //                    .orElseThrow(() ->
+    //                    {
+    //                        String msg =
+    //                                String.format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, pos: %d, ref: %s, alt: %s", geneData.GeneId, position, ref, alt);
+    //                        return new IllegalStateException(msg);
+    //                    });
+    //        }
+    //        return possibilities.get(0);
+    //    }
+
+    private List<TranscriptData> filter(List<TranscriptData> transcriptDataList, TranscriptFilter filter)
+    {
+        return transcriptDataList.stream().filter(transcriptData ->
+        {
+            TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, true);
+            return aminoAcidsSequence != null && filter.applies(aminoAcidsSequence);
+        }).collect(Collectors.toList());
+    }
+
+    public TranscriptData getApplicableTranscript(final GeneData geneData,
+            final AminoAcidSpecification refSpec,
+            final AminoAcidSpecification altSpec)
     {
         List<TranscriptData> allTranscripts = mEnsemblCache.getTranscripts(geneData.GeneId);
-        List<TranscriptData> possibilities = allTranscripts
-                .stream()
-                .filter(transcriptData -> transcriptMatches(transcriptData, position - 1, ref, alt))
-                .collect(Collectors.toList());
+        List<TranscriptData> matchingRef = filter(allTranscripts, refSpec);
+        if(matchingRef.isEmpty())
+        {
+            String msg = format("No transcript found for gene: %s matching ref: %s", geneData.GeneId, refSpec);
+            throw new IllegalStateException(msg);
+        }
+        List<TranscriptData> possibilities = filter(matchingRef, new Negation(altSpec));
         if(possibilities.isEmpty())
         {
-            String msg = String.format("No transcript found for gene: %s, pos: %d, ref: %s, alt: %s", geneData.GeneId, position, ref, alt);
+            String msg =
+                    format("No transcript found matching ref but not alt for gene: %s, ref: %s, alt: %s", geneData.GeneId, refSpec, altSpec);
             throw new IllegalStateException(msg);
         }
         if(possibilities.size() > 1)
@@ -177,42 +224,42 @@ public class VariationParser
                     .orElseThrow(() ->
                     {
                         String msg =
-                                String.format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, pos: %d, ref: %s, alt: %s", geneData.GeneId, position, ref, alt);
+                                format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, ref: %s, alt: %s", geneData.GeneId, refSpec, altSpec);
                         return new IllegalStateException(msg);
                     });
         }
         return possibilities.get(0);
     }
 
-    public boolean transcriptMatches(TranscriptData transcriptData, int position, String ref, String alt)
-    {
-        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, true);
-        if(aminoAcidsSequence == null)
-        {
-            return false;
-        }
-        if(aminoAcidsSequence.AminoAcids.length() <= position)
-        {
-//            System.out.println(transcriptData.TransName + " too short to have value at position " + position);
-            return false;
-        }
-
-        if (ref != null)
-        {
-            String transcriptValueAtPosition = aminoAcidsSequence.AminoAcids.substring(position, position + ref.length());
-            if(!ref.equals(transcriptValueAtPosition))
-            {
-                //            System.out.println(transcriptData.TransName + " does not match ref at position " + position);
-                return false;
-            }
-            if(alt.equals(transcriptValueAtPosition))
-            {
-                //            System.out.println(transcriptData.TransName + " already matches alt at position " + position);
-                return false;
-            }
-        }
-        return true;
-    }
+//    public boolean transcriptMatches(TranscriptData transcriptData, int position, String ref, String alt)
+//    {
+//        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, true);
+//        if(aminoAcidsSequence == null)
+//        {
+//            return false;
+//        }
+//        if(aminoAcidsSequence.AminoAcids.length() <= position)
+//        {
+//            //            System.out.println(transcriptData.TransName + " too short to have value at position " + position);
+//            return false;
+//        }
+//
+//        if(ref != null)
+//        {
+//            String transcriptValueAtPosition = aminoAcidsSequence.AminoAcids.substring(position, position + ref.length());
+//            if(!ref.equals(transcriptValueAtPosition))
+//            {
+//                //            System.out.println(transcriptData.TransName + " does not match ref at position " + position);
+//                return false;
+//            }
+//            if(alt.equals(transcriptValueAtPosition))
+//            {
+//                //            System.out.println(transcriptData.TransName + " already matches alt at position " + position);
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
 
     private TranscriptData getCanonicalTranscriptData(final GeneData geneData)
     {

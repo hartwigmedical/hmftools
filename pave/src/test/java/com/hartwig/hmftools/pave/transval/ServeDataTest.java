@@ -161,14 +161,16 @@ public class ServeDataTest
 //        p("Number of annotations that have different hotspots and use non canonical transcript: " + numberWithDifferentHotspotsAndUsingNonCanonicalTranscript);
     }
 
-//    @Test
+    @Test
     public void examples()
     {
-        SingleAminoAcidVariant variant = transval.variationParser().parseSingleAminoAcidVariant("PLCB4", "M549_G556delinsI");
-        TransvalSnvMnv tsm = variant.calculateVariant(transval.mRefGenome);
+        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
+        TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
 
         /*
+NILEDDNEEEIESADQEEEAHPEFKFGNELSADDLGHKEAVANSVKKGLVTVEDEQAW MASYKYVG ATTN
+
 
         UTAF1
         SMARCB1

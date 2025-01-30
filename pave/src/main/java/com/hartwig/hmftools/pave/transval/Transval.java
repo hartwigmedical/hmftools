@@ -16,7 +16,7 @@ public class Transval
 {
     public final RefGenomeInterface mRefGenome;
     public final EnsemblDataCache mEnsemblCache;
-    private final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
+    final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
 
     public Transval(final File ensemblDataDir, final RefGenomeInterface refGenomeVersion)
     {
@@ -30,7 +30,7 @@ public class Transval
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTranscriptAminoAcidsMap, List.of(), false);
     }
 
-    public VariationParser variationParser()
+    VariationParser variationParser()
     {
         return new VariationParser(mEnsemblCache, mTranscriptAminoAcidsMap);
     }

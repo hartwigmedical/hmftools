@@ -4,9 +4,10 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
-public class TransvalTestBase
+class TransvalTestBase
 {
     public final File ensemblDataDir;
     public final Transval transval;
@@ -40,5 +41,15 @@ public class TransvalTestBase
     protected TransvalHotspot hotspot(String ref, String alt, String chr, int position)
     {
         return new TransvalHotspot(ref, alt, chr, position);
+    }
+
+    protected AminoAcid aa(String s)
+    {
+        return new AminoAcid(s);
+    }
+
+    protected TranscriptData transcript(String geneId, String transcriptId)
+    {
+        return transval.mEnsemblCache.getTranscriptData(geneId, transcriptId);
     }
 }
