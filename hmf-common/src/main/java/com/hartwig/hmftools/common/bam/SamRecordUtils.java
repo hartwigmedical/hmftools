@@ -31,6 +31,7 @@ public final class SamRecordUtils
     public static final String NUM_MUTATONS_ATTRIBUTE = SAMTag.NM.name();
     public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
     public static final String ALIGNMENT_SCORE_ATTRIBUTE = SAMTag.AS.name();
+    public static final String BASE_MODIFICATIONS_ATTRIBUTE = "MM";
 
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";

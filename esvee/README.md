@@ -300,7 +300,7 @@ Finally each assembly within the phase group are compared to each other.  If the
 ### STEP 2D: Alignment & variant calling 
 
 #### Alignment 
-ESVEE now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter whichhas the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100) 
+ESVEE now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter whic hhas the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100).  The mismatch penalty is also raised from 4 to 6 to 
 
 BWA may return one primary alignment as well as one or more supplementary alignments. Since BWA can assign an unreliable MAPQ to supplementary alignments, any supplementary alignments are realigned again using BWA with the primary alignment of the re-query kept and any further supplementaries dropped 
 
@@ -313,7 +313,7 @@ where:
 AdjustedAlignmentScore = Alignment score – IHOM length – repeatBases[repeatCount>2] 
 ```
  
-Note that if (alignmentScore + 15 < 0.85 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
+Note that if (alignmentScore + 15 < 0.77 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
 
 The interpretation of the alignment depends on both the modified map quality and the XA tag which will display the alternative alignments if there are a small number of alternatives. Assemblies with no alignments or with all alignments with modMAPQ < 10 and NULL XA tags are ignored. 
 

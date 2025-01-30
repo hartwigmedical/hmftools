@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
 import java.util.Collections;
@@ -14,15 +15,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
-import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
-import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
+import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
@@ -80,14 +80,23 @@ public final class TestUtils
 
     public static FragmentCoords createFragmentCoords(final SAMRecord read)
     {
-        return FragmentCoords.fromRead(read, false, SequencingType.ILLUMINA);
+        return FragmentCoords.fromRead(read, false);
     }
 
     public static ConsensusReadInfo createConsensusRead(
             final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
     {
-        FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false, SequencingType.ILLUMINA);
+        FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false);
         return consensusReads.createConsensusRead(reads, fragmentCoords, umiId);
+    }
+
+    public static SAMRecord createUnpairedRecord(final String readName, final String chromosome, final int readStart, int readEnd,
+            boolean isReversed)
+    {
+        int readLength = readEnd - readStart + 1;
+        String readBases = "A".repeat(readLength);
+        String cigar = readLength + "M";
+        return createSamRecordUnpaired(readName, chromosome, readStart, readBases, cigar, isReversed, false, null);
     }
 
     // unmapping test state

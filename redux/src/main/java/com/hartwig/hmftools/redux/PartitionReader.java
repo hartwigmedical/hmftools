@@ -6,9 +6,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
@@ -30,14 +31,16 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.Statistics;
+import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -66,7 +69,7 @@ public class PartitionReader
     private int mNextLogReadCount;
     private int mProcessedReads;
 
-    // for SBX preprocessing
+    // for SBX preprocessing/postprocessing
     private final static int SBX_REF_BASE_BUFFER_START = 2_000;
     private final static int SBX_REF_BASE_BUFFER_END = 10_000;
     private byte[] mRefBases;
@@ -78,11 +81,12 @@ public class PartitionReader
         mBamReader = bamReader;
         mReadUnmapper = mConfig.UnmapRegions;
 
-        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.Sequencing);
+        mReadCache = new ReadCache(
+                ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
-        mConsensusReads = new ConsensusReads(config.RefGenome, config.Sequencing, mStats.ConsensusStats);
+        mConsensusReads = new ConsensusReads(config.RefGenome, mConfig.Sequencing, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mCurrentRegion = null;
@@ -210,6 +214,24 @@ public class PartitionReader
         {
             stripDuplexIndels(read, mRefBases, mRefBasesStart);
         }
+    }
+
+    private void postProcessSingleReads(final List<ReadInfo> singleReads)
+    {
+        if(mConfig.Sequencing == SBX)
+        {
+            for(ReadInfo readInfo : singleReads)
+                fillQualZeroMismatchesWithRef(readInfo.read(), mRefBases, mRefBasesStart);
+        }
+    }
+
+    private void postProcessPrimaryRead(@Nullable SAMRecord primaryRead)
+    {
+        if(primaryRead == null)
+            return;
+
+        if(mConfig.Sequencing == SBX)
+            fillQualZeroMismatchesWithRef(primaryRead, mRefBases, mRefBasesStart);
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -364,9 +386,11 @@ public class PartitionReader
             if(mConfig.FormConsensus)
                 duplicateGroup.formConsensusRead(mConsensusReads);
 
+            postProcessPrimaryRead(duplicateGroup.primaryRead());
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 
+        postProcessSingleReads(fragmentCoordReads.SingleReads);
         mBamWriter.writeNonDuplicateReads(fragmentCoordReads.SingleReads);
 
         mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());

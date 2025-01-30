@@ -21,6 +21,7 @@ public class DuplicateGroup
 {
     private final String mUmiId; // the UMI if enabled
 
+    // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
     private final FragmentCoords mFragmentCoords;
     private final List<SAMRecord> mReads;
 
@@ -60,6 +61,7 @@ public class DuplicateGroup
     public List<SAMRecord> duplicate() { return mReads; }
     public SAMRecord consensusRead() { return mConsensusRead; }
 
+    public SAMRecord primaryRead() { return mPrimaryRead; }
     public void setPrimaryRead(final SAMRecord read) { mPrimaryRead = read; }
     public boolean isPrimaryRead(final SAMRecord read) { return mPrimaryRead == read; }
 
