@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -54,9 +55,17 @@ public class DeletionInsertion extends ProteinVariant
                 ChrBaseRegion nextExon = (i < CodingRegions.size() - 1) ? CodingRegions.get(i + 1) : null;
                 if(Transcript.negStrand())
                 {
-                    //                        int positionOfCodonInCurrentExon = exon.end() - (codonPosition - lengthUpToCurrent);
-                    //                        return new CodonRegions(positionOfCodonInCurrentExon, exon, nextExon, false);
-                    return null;
+                    int positionOfStartInCurrent = exon.end() - (codonPosition - lengthUpToCurrent);
+                    int positionOfEnd = positionOfStartInCurrent - DeletionLength * 3 + 1;
+                    if(positionOfEnd >= exon.start())
+                    {
+                        String partInCurrent = genome.getBaseString(Gene.Chromosome, positionOfEnd, positionOfStartInCurrent);
+                        return new SplitSequence(Nucleotides.reverseComplementBases(partInCurrent), null, positionOfStartInCurrent);
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
                 else
                 {
@@ -94,30 +103,38 @@ public class DeletionInsertion extends ProteinVariant
     public TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
         SplitSequence splitBases = referenceBases(refGenome);
+        String referenceNucleotides = splitBases.completeSequence();
         if(!splitBases.couldBeDeletionInsertion())
         {
             return null; // todo
         }
         Set<String> destinationBases = candidateAlternativeNucleotideSequences(splitBases.retainedPrefix(), splitBases.retainedSuffix());
-        String modifiedBases = splitBases.segmentThatIsModified();
+        String modifiedBases = Gene.forwardStrand() ? splitBases.segmentThatIsModified() : Nucleotides.reverseComplementBases(splitBases.segmentThatIsModified());
+        int changeStart = splitBases.locationOfDeletedBases();
+        if(Gene.reverseStrand())
+        {
+            destinationBases = destinationBases.stream().map(Nucleotides::reverseComplementBases).collect(Collectors.toSet());
+            changeStart = changeStart - modifiedBases.length() + 1;
+            referenceNucleotides = Nucleotides.reverseComplementBases(referenceNucleotides);
+        }
         SortedSet<DeletionInsertionChange> changes = new TreeSet<>();
         destinationBases.forEach(target -> changes.add(new DeletionInsertionChange(modifiedBases, target)));
 
-        ChangeLocation globalLocation = new ChangeLocation(this.Gene.Chromosome, splitBases.locationOfDeletedBases());
+        ChangeLocation globalLocation = new ChangeLocation(this.Gene.Chromosome, changeStart);
         Set<TransvalHotspot> hotspots = changes
                 .stream()
                 .map(change -> change.toHotspot(globalLocation))
                 .collect(Collectors.toSet());
-        DeletionInsertionChange bestCandidate = changes.first();
-        int positionOfDeletionStart = splitBases.locationOfDeletedBases() + bestCandidate.positionOfDeletion();
+        SortedSet<TransvalHotspot> hotspotsSorted = new TreeSet<>(hotspots);
+        TransvalHotspot bestCandidate = hotspotsSorted.first();
 
         return new TransvalInsertionDeletion(
                 Transcript,
                 Gene.Chromosome,
-                positionOfDeletionStart,
+                bestCandidate.mPosition,
                 splitBases.spansTwoExons(),
-                splitBases.completeSequence(),
-                bestCandidate.deleted(),
+                referenceNucleotides,
+                bestCandidate.Ref,
                 hotspots
         );
     }

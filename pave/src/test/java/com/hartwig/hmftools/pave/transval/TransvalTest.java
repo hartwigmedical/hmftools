@@ -309,4 +309,72 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCA", "chr7", 143_388_490)));
         assertTrue(hotspots.contains(hotspot("ACTCTGCGGC", "CCCG", "chr7", 143_388_490)));
     }
+
+    @Test
+    public void deletionInsertionPositiveStrand()
+    {
+        /*
+        VHL:
+ 10141848
+        1   2   3   4   5   6   ...
+        M   P   R   R   A   E   ...
+        ATG CCC CGG AGG GCG GAG ...
+
+        R3_R4delinsQ
+ 10141854
+        CGG AGG -> CAG|CAA. Options are GGAG -> A and GGAGG -> AA
+        NOTE: Transvar gives essentially the same results, but has a common 'C' prefix
+        for the ref and alt of the second hotspot:
+        Printing hotspots for 'VHL:p.R3_R4delinsQ' on transcript null
+        Hotspot{ref=GGAGG, alt=AA, chromosome=chr3, position=10141855}
+        Hotspot{ref=CGGAG, alt=CA, chromosome=chr3, position=10141854}
+        */
+        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("VHL:p.R3_R4delinsQ");
+        assertEquals("ENST00000256474", record.transcriptId());
+        assertEquals("3", record.Chromosome);
+        assertEquals(10_141_855, record.Position);
+        assertFalse(record.SpansMultipleExons);
+
+        assertEquals(4, record.deletedBasesCount());
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(2, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("GGAG", "A", "chr3", 10_141_855)));
+        assertTrue(hotspots.contains(hotspot("GGAGG", "AA", "chr3", 10_141_855)));
+    }
+    
+    @Test
+    public void deletionInsertionNegativeStrand()
+    {
+        /*
+        BRAF:
+140924703
+        1   2   3   4   5   6   ...
+        M   A   A   L   S   G   ...
+        ATG GCG GCG CTG AGC GGT ...
+
+        A3_L4delinsE
+140924697
+        GCG CTG -> GAA|GAG. Simplest option: GCGCTG -> GAG, so CGCT -> A. C is 140924696
+
+        Reverse strand
+        CAG CGC -> TTC|CTC. Options: CAG CG -> CT|TT, equal complexity. Position is 140924696 - 4
+
+        NOTE: Transvar gives essentially these results, but leaves a leading 'C' on both the ref
+        and alt of its first hotspot:
+        Printing hotspots for 'BRAF:p.A3_L4delinsE' on transcript null
+        Hotspot{ref=CAGCG, alt=CT, chromosome=chr7, position=140924692}
+        Hotspot{ref=CAGCG, alt=TT, chromosome=chr7, position=140924692}
+         */
+        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("BRAF:p.A3_L4delinsE");
+        assertEquals("ENST00000646891", record.transcriptId()); // canonical
+        assertEquals("7", record.Chromosome);
+        assertEquals(140_924_693, record.Position);
+        assertFalse(record.SpansMultipleExons);
+
+        assertEquals(4, record.deletedBasesCount());
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(2, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("AGCG", "T", "chr7", 140_924_693)));
+        assertTrue(hotspots.contains(hotspot("CAGCG", "TT", "chr7", 140_924_692)));
+    }
 }

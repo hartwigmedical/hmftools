@@ -2,24 +2,45 @@ package com.hartwig.hmftools.pave.transval;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
+
 import org.jetbrains.annotations.NotNull;
 
-public final class TransvalHotspot
+public final class TransvalHotspot implements Comparable<TransvalHotspot>
 {
     @NotNull
     public final String Ref;
     @NotNull
     public final String Alt;
     @NotNull
-    public final String Chromosome;
-    public final int Position;
+    public final String mChromosome;
+    public final int mPosition;
 
     public TransvalHotspot(@NotNull final String ref, @NotNull final String alt, @NotNull final String chromosome, final int position)
     {
         this.Ref = ref;
         this.Alt = alt;
-        this.Chromosome = chromosome;
-        this.Position = position;
+        this.mChromosome = chromosome;
+        this.mPosition = position;
+    }
+
+    @Override
+    public int compareTo(@NotNull final TransvalHotspot o)
+    {
+        Preconditions.checkArgument(mChromosome.equals(o.mChromosome));
+        int byAltLength = Alt.length() - o.Alt.length();
+        if (byAltLength != 0) {
+            return byAltLength;
+        }
+        int byRefLength = Ref.length() - o.Ref.length();
+        if (byRefLength != 0) {
+            return byRefLength;
+        }
+        int byPosition = mPosition - o.mPosition;
+        if (byPosition != 0) {
+            return byPosition;
+        }
+        return Alt.compareTo(o.Alt);
     }
 
     @Override
@@ -28,8 +49,8 @@ public final class TransvalHotspot
         return "TransvalHotspot{" +
                 "Ref='" + Ref + '\'' +
                 ", Alt='" + Alt + '\'' +
-                ", Chromosome='" + Chromosome + '\'' +
-                ", Position=" + Position +
+                ", Chromosome='" + mChromosome + '\'' +
+                ", Position=" + mPosition +
                 '}';
     }
 
@@ -41,13 +62,13 @@ public final class TransvalHotspot
             return false;
         }
         final TransvalHotspot transvalHotspot = (TransvalHotspot) o;
-        return Position == transvalHotspot.Position && Objects.equals(Ref, transvalHotspot.Ref) && Objects.equals(Alt, transvalHotspot.Alt)
-                && Objects.equals(Chromosome, transvalHotspot.Chromosome);
+        return mPosition == transvalHotspot.mPosition && Objects.equals(Ref, transvalHotspot.Ref) && Objects.equals(Alt, transvalHotspot.Alt)
+                && Objects.equals(mChromosome, transvalHotspot.mChromosome);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(Ref, Alt, Chromosome, Position);
+        return Objects.hash(Ref, Alt, mChromosome, mPosition);
     }
 }
