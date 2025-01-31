@@ -140,7 +140,7 @@ AMBER first gathers high confidence homozygous ref sites from the normal sample 
   
 OR
 
-- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with two or more ALT support reads and whose VAF is below 5% is greater than or equals to 0.2% of the total AMBER BAF sites
+- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads with VAF below 5% is greater than or equals to 0.2% of the total AMBER BAF sites
 
 otherwise contamination is set to 0.
 
