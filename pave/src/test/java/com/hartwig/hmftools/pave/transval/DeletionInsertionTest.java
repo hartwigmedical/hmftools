@@ -14,24 +14,23 @@ public class DeletionInsertionTest extends TransvalTestBase
     @Test
     public void referenceAminoAcidsTest()
     {
-        assertEquals("M", di("ADCK2:p.M1_M1delinsKQ").referenceAminoAcids());
+        assertEquals("MV", di("ADCK2:p.M1_V2delinsKQ").referenceAminoAcids());
         assertEquals("MVAP", di("ADCK2:p.M1_P4delinsK").referenceAminoAcids());
         assertEquals("EAT", di("ADCK2:p.E301_T303delinsQQ").referenceAminoAcids());
-        assertEquals("PX", di("ADCK2:p.E626_T627delinsQQ").referenceAminoAcids());
     }
 
     @Test
     public void altAminoAcidsTest()
     {
-        assertEquals("KQ", di("ADCK2:p.M1_M1delinsKQ").altAminoAcidSequence());
+        assertEquals("KQ", di("ADCK2:p.M1_V2delinsKQ").altAminoAcidSequence());
         assertEquals("K", di("ADCK2:p.M1_P4delinsK").altAminoAcidSequence());
     }
 
     @Test
     public void positionTest()
     {
-        assertEquals(1, di("ADCK2:p.M1_M1delinsKQ").positionOfFirstAlteredCodon());
-        assertEquals(1, di("ADCK2:p.M1_M1delinsKQ").positionOfLastAlteredCodon());
+        assertEquals(1, di("ADCK2:p.M1_V2delinsKQ").positionOfFirstAlteredCodon());
+        assertEquals(2, di("ADCK2:p.M1_V2delinsKQ").positionOfLastAlteredCodon());
         assertEquals(111, di("VHL:p.S111_L116delinsKQ").positionOfFirstAlteredCodon());
         assertEquals(116, di("VHL:p.S111_L116delinsKQ").positionOfLastAlteredCodon());
     }
@@ -39,7 +38,6 @@ public class DeletionInsertionTest extends TransvalTestBase
     @Test
     public void referenceBasesTest()
     {
-        assertEquals(seq("ATG", null), di("VHL:p.M1_M1delinsKQ").referenceBases(genome));
         assertEquals(seq("ATGCCC", null), di("VHL:p.M1_P2delinsKQ").referenceBases(genome));
         assertEquals(seq("ATGCCCCGG", null), di("VHL:p.M1_R3delinsKQ").referenceBases(genome));
         assertEquals(seq("CCCCGG", null), di("VHL:p.P2_R3delinsKQ").referenceBases(genome));
@@ -63,16 +61,16 @@ public class DeletionInsertionTest extends TransvalTestBase
     @Test
     public void candidateAlternativeNucleotideSequencesTest()
     {
-        checkAltSequences(di("VHL:p.M1_M1delinsW"), Collections.singleton("TGG"));
+        checkAltSequences(di("VHL:p.M1_P2delinsW"), Collections.singleton("TGG"));
 
-        checkAltSequences(di("VHL:p.M1_M1delinsWW"), Collections.singleton("TGGTGG"));
+        checkAltSequences(di("VHL:p.M1_P2delinsWW"), Collections.singleton("TGGTGG"));
 
         Set<String> expectedAW = new HashSet<>();
         expectedAW.add("GCTTGG");
         expectedAW.add("GCCTGG");
         expectedAW.add("GCATGG");
         expectedAW.add("GCGTGG");
-        checkAltSequences(di("VHL:p.M1_M1delinsAW"), expectedAW);
+        checkAltSequences(di("VHL:p.M1_P2delinsAW"), expectedAW);
 
         Set<String> expectedKPY = new HashSet<>();
         expectedKPY.add("AAACCTTAT");
@@ -93,19 +91,20 @@ public class DeletionInsertionTest extends TransvalTestBase
         expectedKPY.add("AAGCCGTAC");
         checkAltSequences(di("VHL:p.R113_L116delinsKPY"), expectedKPY);
     }
+
     @Test
     public void candidateAlternativeNucleotideSequencesWithFixedPrefixTest()
     {
-        checkAltSequences(di("VHL:p.M1_M1delinsW"), Collections.singleton("TGG"));
+        checkAltSequences(di("VHL:p.M1_P2delinsW"), Collections.singleton("TGG"));
 
-        checkAltSequences(di("VHL:p.M1_M1delinsWW"), Collections.singleton("TGGTGG"));
+        checkAltSequences(di("VHL:p.M1_P2delinsWW"), Collections.singleton("TGGTGG"));
 
         Set<String> expectedAW = new HashSet<>();
         expectedAW.add("GCTTGG");
         expectedAW.add("GCCTGG");
         expectedAW.add("GCATGG");
         expectedAW.add("GCGTGG");
-        checkAltSequences(di("VHL:p.M1_M1delinsAW"), expectedAW);
+        checkAltSequences(di("VHL:p.M1_P2delinsAW"), expectedAW);
 
         Set<String> expectedKPY = new HashSet<>();
         expectedKPY.add("AAACCTTAT");

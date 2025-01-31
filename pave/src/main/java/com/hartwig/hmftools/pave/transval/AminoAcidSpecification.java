@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static com.hartwig.hmftools.pave.transval.Checks.matchPattern;
+
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -15,6 +19,15 @@ class AminoAcidSpecification implements TranscriptFilter
 {
     final int position;
     private final AminoAcid aminoAcid;
+
+    @NotNull
+    public static AminoAcidSpecification parse(String aaPos)
+    {
+        Pattern pattern = Pattern.compile("([A-Z](?:[a-z][a-z])?+)(\\d+)");
+        final Matcher matcher = matchPattern(pattern, aaPos);
+
+        return new AminoAcidSpecification(Integer.parseInt(matcher.group(2)), matcher.group(1));
+    }
 
     public AminoAcidSpecification(final int position, final String aminoAcid)
     {

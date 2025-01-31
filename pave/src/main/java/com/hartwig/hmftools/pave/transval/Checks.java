@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.pave.transval;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.hartwig.hmftools.common.codon.AminoAcids;
 
 import org.jetbrains.annotations.NotNull;
 
 public class Checks
 {
+    static final String HGVS_FORMAT_REQUIRED = "Required format is GENE:p.XnY where X and Y are amino acids and n is an integer.";
+
     static boolean isNucleotideSequence(@NotNull String s)
     {
         if(s.isEmpty())
@@ -64,5 +69,17 @@ public class Checks
             return true;
         }
         return (AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.containsKey(s));
+    }
+
+    @NotNull
+    static Matcher matchPattern(final Pattern variationPattern, final String description)
+    {
+        final Matcher matcher = variationPattern.matcher(description);
+        boolean matches = matcher.find();
+        if(!matches)
+        {
+            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
+        }
+        return matcher;
     }
 }

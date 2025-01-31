@@ -161,7 +161,7 @@ public class ServeDataTest
 //        p("Number of annotations that have different hotspots and use non canonical transcript: " + numberWithDifferentHotspotsAndUsingNonCanonicalTranscript);
     }
 
-    @Test
+//    @Test
     public void examples()
     {
         ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");

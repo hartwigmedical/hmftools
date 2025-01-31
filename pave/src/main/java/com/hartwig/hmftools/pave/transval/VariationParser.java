@@ -2,13 +2,14 @@ package com.hartwig.hmftools.pave.transval;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.pave.transval.Checks.HGVS_FORMAT_REQUIRED;
+
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -18,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 class VariationParser
 {
-    static final String HGVS_FORMAT_REQUIRED = "Required format is GENE:p.XnY where X and Y are amino acids and n is an integer.";
     private final EnsemblDataCache mEnsemblCache;
     private final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap;
     final String SINGLE_AA = "[A-Z]([a-z][a-z])?+";
@@ -81,41 +81,21 @@ class VariationParser
     @NotNull
     private DeletionInsertion buildDeletionInsertion(final String description, final GeneData geneData)
     {
+        String[] refAltParts = description.split("delins");
+        String[] refParts = refAltParts[0].split("_");
+        if(refParts.length != 2)
+        {
+            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
+        }
 
-        TranscriptData transcriptData = getCanonicalTranscriptData(geneData);
+        AminoAcidSpecification refStart = AminoAcidSpecification.parse(refParts[0]);
+        AminoAcidSpecification refStop = AminoAcidSpecification.parse(refParts[1]);
+        AminoAcidRange refRange = new AminoAcidRange(refStart, refStop);
+
+        AminoAcidSequence altSequence = AminoAcidSequence.parse(refAltParts[1]);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
-
-        Pattern variationPattern =
-                Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + "_" + BLANK_OR_AA_GROUP + NAT + "delins([a-zA-Z]*)" + "$");
-        final Matcher matcher = matchPattern(variationPattern, description);
-
-        ensureAminoAcidOrBlank(matcher.group(1));
-        int startPosition = Integer.parseInt(matcher.group(3));
-        ensureAminoAcid(matcher.group(4));
-        int endPosition = Integer.parseInt(matcher.group(6));
-
-        String variant = matcher.group(7);
-        Pattern variantListPattern = Pattern.compile("([A-Z][a-z]*)");
-        final Matcher variantListMatcher = variantListPattern.matcher(variant);
-        StringBuilder aaListBuilder = new StringBuilder();
-        while(variantListMatcher.find())
-        {
-            String aa = variantListMatcher.group();
-            if(isNotValidAminoAcidIdentifier(aa))
-            {
-                throw new IllegalArgumentException("Not a known amino acid: " + aa);
-            }
-            String singleLetterName = AminoAcids.forceSingleLetterProteinAnnotation(aa);
-            aaListBuilder.append(singleLetterName);
-        }
-        String variantString = aaListBuilder.toString();
-
-        int length = endPosition - startPosition + 1;
-        if(length < 1)
-        {
-            throw new IllegalArgumentException("End position must not be before start position");
-        }
-        return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, startPosition, length, variantString);
+        return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, refRange, altSequence.sequence());
     }
 
     @NotNull
@@ -123,18 +103,12 @@ class VariationParser
             final GeneData geneData)
     {
         Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + SINGLE_AA_GROUP + "$");
-        final Matcher matcher = matchPattern(variationPattern, variantDescription);
+        final Matcher matcher = Checks.matchPattern(variationPattern, variantDescription);
 
-//        String ref = matcher.group(1);
-        //        ensureAminoAcidOrBlank(ref);
-//        String r = (ref == null || ref.isBlank()) ? null : AminoAcids.forceSingleLetterProteinAnnotation(ref);
         int position = Integer.parseInt(matcher.group(3));
         AminoAcidSpecification refSpec = new AminoAcidSpecification(position, matcher.group(1));
-//        String alt = matcher.group(4);
         AminoAcidSpecification altSpec = new AminoAcidSpecification(position, matcher.group(4));
-        //        ensureAminoAcid(alt);
-//        String a = AminoAcids.forceSingleLetterProteinAnnotation(alt);
-        TranscriptData transcriptData = getApplicableTranscript(geneData, refSpec, altSpec);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refSpec, new Negation(altSpec));
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
 
         return new SingleAminoAcidVariant(geneData, transcriptData, aminoAcidsSequence, altSpec);
@@ -150,45 +124,6 @@ class VariationParser
         return aminoAcidsSequence;
     }
 
-    @NotNull
-    private static Matcher matchPattern(final Pattern variationPattern, final String description)
-    {
-        final Matcher matcher = variationPattern.matcher(description);
-        boolean matches = matcher.find();
-        if(!matches)
-        {
-            throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
-        }
-        return matcher;
-    }
-
-    //    public TranscriptData getApplicableTranscript(final GeneData geneData, int position, final String ref, final String alt)
-    //    {
-    //        List<TranscriptData> allTranscripts = mEnsemblCache.getTranscripts(geneData.GeneId);
-    //        List<TranscriptData> possibilities = allTranscripts
-    //                .stream()
-    //                .filter(transcriptData -> transcriptMatches(transcriptData, position - 1, ref, alt))
-    //                .collect(Collectors.toList());
-    //        if(possibilities.isEmpty())
-    //        {
-    //            String msg = String.format("No transcript found for gene: %s, pos: %d, ref: %s, alt: %s", geneData.GeneId, position, ref, alt);
-    //            throw new IllegalStateException(msg);
-    //        }
-    //        if(possibilities.size() > 1)
-    //        {
-    //            return possibilities.stream()
-    //                    .filter(transcriptData -> transcriptData.IsCanonical)
-    //                    .findFirst()
-    //                    .orElseThrow(() ->
-    //                    {
-    //                        String msg =
-    //                                String.format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, pos: %d, ref: %s, alt: %s", geneData.GeneId, position, ref, alt);
-    //                        return new IllegalStateException(msg);
-    //                    });
-    //        }
-    //        return possibilities.get(0);
-    //    }
-
     private List<TranscriptData> filter(List<TranscriptData> transcriptDataList, TranscriptFilter filter)
     {
         return transcriptDataList.stream().filter(transcriptData ->
@@ -199,21 +134,21 @@ class VariationParser
     }
 
     public TranscriptData getApplicableTranscript(final GeneData geneData,
-            final AminoAcidSpecification refSpec,
-            final AminoAcidSpecification altSpec)
+            final TranscriptFilter refFilter,
+            final TranscriptFilter altFilter)
     {
         List<TranscriptData> allTranscripts = mEnsemblCache.getTranscripts(geneData.GeneId);
-        List<TranscriptData> matchingRef = filter(allTranscripts, refSpec);
+        List<TranscriptData> matchingRef = filter(allTranscripts, refFilter);
         if(matchingRef.isEmpty())
         {
-            String msg = format("No transcript found for gene: %s matching ref: %s", geneData.GeneId, refSpec);
+            String msg = format("No transcript found for gene: %s matching ref: %s", geneData.GeneId, refFilter);
             throw new IllegalStateException(msg);
         }
-        List<TranscriptData> possibilities = filter(matchingRef, new Negation(altSpec));
+        List<TranscriptData> possibilities = filter(matchingRef, altFilter);
         if(possibilities.isEmpty())
         {
             String msg =
-                    format("No transcript found matching ref but not alt for gene: %s, ref: %s, alt: %s", geneData.GeneId, refSpec, altSpec);
+                    format("No transcript found matching ref but not alt for gene: %s, ref: %s, alt: %s", geneData.GeneId, refFilter, altFilter);
             throw new IllegalStateException(msg);
         }
         if(possibilities.size() > 1)
@@ -224,66 +159,11 @@ class VariationParser
                     .orElseThrow(() ->
                     {
                         String msg =
-                                format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, ref: %s, alt: %s", geneData.GeneId, refSpec, altSpec);
+                                format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, ref: %s, alt: %s", geneData.GeneId, refFilter, altFilter);
                         return new IllegalStateException(msg);
                     });
         }
         return possibilities.get(0);
-    }
-
-//    public boolean transcriptMatches(TranscriptData transcriptData, int position, String ref, String alt)
-//    {
-//        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, true);
-//        if(aminoAcidsSequence == null)
-//        {
-//            return false;
-//        }
-//        if(aminoAcidsSequence.AminoAcids.length() <= position)
-//        {
-//            //            System.out.println(transcriptData.TransName + " too short to have value at position " + position);
-//            return false;
-//        }
-//
-//        if(ref != null)
-//        {
-//            String transcriptValueAtPosition = aminoAcidsSequence.AminoAcids.substring(position, position + ref.length());
-//            if(!ref.equals(transcriptValueAtPosition))
-//            {
-//                //            System.out.println(transcriptData.TransName + " does not match ref at position " + position);
-//                return false;
-//            }
-//            if(alt.equals(transcriptValueAtPosition))
-//            {
-//                //            System.out.println(transcriptData.TransName + " already matches alt at position " + position);
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-
-    private TranscriptData getCanonicalTranscriptData(final GeneData geneData)
-    {
-        List<TranscriptData> transcripts = mEnsemblCache.getTranscripts(geneData.GeneId);
-        return transcripts.stream()
-                .filter(transcriptData -> transcriptData.IsCanonical)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No canonical transcript found for " + geneData.GeneId));
-    }
-
-    private void ensureAminoAcid(final String variantAminoAcid)
-    {
-        if(isNotValidAminoAcidIdentifier(variantAminoAcid))
-        {
-            throw new IllegalArgumentException(variantAminoAcid + " does not represent an amino acid");
-        }
-    }
-
-    private void ensureAminoAcidOrBlank(final String referenceAminoAcid)
-    {
-        if(referenceAminoAcid != null && !referenceAminoAcid.isBlank())
-        {
-            ensureAminoAcid(referenceAminoAcid);
-        }
     }
 
     @NotNull
@@ -323,23 +203,5 @@ class VariationParser
             throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
         }
         return geneVar;
-    }
-
-    private boolean isNotValidAminoAcidIdentifier(String s)
-    {
-        if(AminoAcids.AMINO_ACID_TO_CODON_MAP.containsKey(s))
-        {
-            return false;
-        }
-        if(AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.containsKey(s))
-        {
-            return false;
-        }
-        if("Z".equals(s) || "Glx".equals(s)) // means 'Glutamine or Glutamic Acid'
-        {
-            return false;
-        }
-        // B and Asx mean 'Asparagine or Aspartic Acid'
-        return !"B".equals(s) && !"Asx".equals(s);
     }
 }

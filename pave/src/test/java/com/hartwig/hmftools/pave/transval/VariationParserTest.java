@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave.transval;
 
-import static com.hartwig.hmftools.pave.transval.VariationParser.HGVS_FORMAT_REQUIRED;
+import static com.hartwig.hmftools.pave.transval.Checks.HGVS_FORMAT_REQUIRED;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -108,7 +108,7 @@ public class VariationParserTest extends TransvalTestBase
     public void deletionInsertionErrors()
     {
         checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A740delinsP","End position must not be before start position");
-        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A750delinsAlaPralineLeu","Not a known amino acid: Praline");
+        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A750delinsAlaPralineLeu","Not a valid amino acid identifier: Praline");
     }
 
     private void checkSaavInputResultsInErrorWithMessage(String input, String expectedMessage)

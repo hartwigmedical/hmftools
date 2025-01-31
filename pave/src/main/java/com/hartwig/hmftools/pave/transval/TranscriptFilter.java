@@ -21,3 +21,12 @@ class Negation implements TranscriptFilter
         return !filter.applies(aminoAcids);
     }
 }
+
+class PassThroughFilter implements TranscriptFilter
+{
+    @Override
+    public boolean applies(final TranscriptAminoAcids aminoAcids)
+    {
+        return true;
+    }
+}

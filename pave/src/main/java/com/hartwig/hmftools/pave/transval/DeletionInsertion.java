@@ -19,24 +19,26 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DeletionInsertion extends ProteinVariant
+class DeletionInsertion extends ProteinVariant
 {
     final private int DeletionLength;
     @NotNull
+    final AminoAcidRange RefRange;
+    @NotNull
     final private String Alt;
 
-    public DeletionInsertion(
+    DeletionInsertion(
             @NotNull final GeneData gene,
             @NotNull final TranscriptData transcript,
             @NotNull final TranscriptAminoAcids aminoAcidSequence,
-            final int position,
-            final int deletionLength,
+            @NotNull final AminoAcidRange refRange,
             @NotNull final String variant)
     {
-        super(gene, transcript, aminoAcidSequence, position);
+        super(gene, transcript, aminoAcidSequence, refRange.startPosition());
         Preconditions.checkArgument(isValidProtein(variant));
         this.Alt = variant;
-        this.DeletionLength = deletionLength;
+        this.RefRange = refRange;
+        this.DeletionLength = refRange.length();
     }
 
     @VisibleForTesting

@@ -52,4 +52,10 @@ class TransvalTestBase
     {
         return transval.mEnsemblCache.getTranscriptData(geneId, transcriptId);
     }
+
+    protected AminoAcidSpecification aas(int position, String symbol)
+    {
+        final AminoAcid aa = symbol == null ? null : aa(symbol);
+        return new AminoAcidSpecification(position, aa);
+    }
 }
