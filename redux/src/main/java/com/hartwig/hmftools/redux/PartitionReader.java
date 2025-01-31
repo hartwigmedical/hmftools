@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.redux;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
@@ -69,12 +67,6 @@ public class PartitionReader
     private int mNextLogReadCount;
     private int mProcessedReads;
 
-    // for SBX preprocessing/postprocessing
-    private final static int SBX_REF_BASE_BUFFER_START = 2_000;
-    private final static int SBX_REF_BASE_BUFFER_END = 10_000;
-    private byte[] mRefBases;
-    private int mRefBasesStart;
-
     public PartitionReader(final ReduxConfig config, final BamReader bamReader)
     {
         mConfig = config;
@@ -98,9 +90,6 @@ public class PartitionReader
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
         mPcProcessDuplicates = new PerformanceCounter("ProcessDuplicates");
-
-        mRefBases = null;
-        mRefBasesStart = 0;
     }
 
     public List<PerformanceCounter> perfCounters()
@@ -140,26 +129,6 @@ public class PartitionReader
         setUnmappedRegions();
 
         mBamWriter.initialiseRegion(region.Chromosome, region.start());
-
-        if(mConfig.Sequencing == SBX)
-        {
-            mRefBases = null;
-            checkRefBases(region.start());
-        }
-    }
-
-    private void checkRefBases(int refPositionStart)
-    {
-        if(mConfig.Sequencing != SBX)
-            return;
-
-        if(mRefBases != null && refPositionStart < mRefBasesStart + SBX_REF_BASE_BUFFER_END)
-            return;
-
-        int chromosomeLength = mConfig.RefGenome.getChromosomeLength(mCurrentRegion.Chromosome);
-        mRefBasesStart = max(refPositionStart - SBX_REF_BASE_BUFFER_START, 1);
-        int refBaseEnd = min(mRefBasesStart + SBX_REF_BASE_BUFFER_END, chromosomeLength);
-        mRefBases = mConfig.RefGenome.getBases(mCurrentRegion.Chromosome, mRefBasesStart, refBaseEnd);
     }
 
     public void processRegion()
@@ -212,7 +181,7 @@ public class PartitionReader
     {
         if(mConfig.Sequencing == SBX)
         {
-            stripDuplexIndels(read, mRefBases, mRefBasesStart);
+            stripDuplexIndels(mConfig.RefGenome, read);
         }
     }
 
@@ -221,7 +190,7 @@ public class PartitionReader
         if(mConfig.Sequencing == SBX)
         {
             for(ReadInfo readInfo : singleReads)
-                fillQualZeroMismatchesWithRef(readInfo.read(), mRefBases, mRefBasesStart);
+                fillQualZeroMismatchesWithRef(mConfig.RefGenome, readInfo.read());
         }
     }
 
@@ -231,7 +200,7 @@ public class PartitionReader
             return;
 
         if(mConfig.Sequencing == SBX)
-            fillQualZeroMismatchesWithRef(primaryRead, mRefBases, mRefBasesStart);
+            fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -304,8 +273,6 @@ public class PartitionReader
                 }
             }
         }
-
-        checkRefBases(readStart);
 
         preprocessSamRecord(read);
 

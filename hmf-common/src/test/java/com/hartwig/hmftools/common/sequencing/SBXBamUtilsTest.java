@@ -31,7 +31,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SBXBamUtils.AnnotatedBase;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.junit.Test;
 
@@ -231,9 +234,10 @@ public class SBXBamUtilsTest
         List<Boolean> duplexIndels = getDuplexIndels("0-9ZZ5-0");
 
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
+        RefGenomeInterface refGenome = getRefGenome(refBases);
 
         List<AnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
-        boolean readModified = processAnnotatedBases(annotedBases, true, refBases.getBytes(), 1);
+        boolean readModified = processAnnotatedBases(refGenome, CHR_1, annotedBases, true);
 
         List<AnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
 
@@ -266,9 +270,10 @@ public class SBXBamUtilsTest
         Collections.reverse(duplexIndels);
 
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
+        RefGenomeInterface refGenome = getRefGenome(refBases);
 
         List<AnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
-        boolean readModified = processAnnotatedBases(annotedBases, false, refBases.getBytes(), 1);
+        boolean readModified = processAnnotatedBases(refGenome, CHR_1, annotedBases, false);
 
         List<AnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
 
@@ -291,7 +296,7 @@ public class SBXBamUtilsTest
         int alignmentStart = 25;
 
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
-        int refStart = 1;
+        RefGenomeInterface refGenome = getRefGenome(refBases);
 
         int mapq = 10;
         int nm = 2;
@@ -308,7 +313,7 @@ public class SBXBamUtilsTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
-        stripDuplexIndels(read, refBases.getBytes(), refStart);
+        stripDuplexIndels(refGenome, read);
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
@@ -336,7 +341,7 @@ public class SBXBamUtilsTest
         int alignmentStart = 25;
 
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
-        int refStart = 1;
+        RefGenomeInterface refGenome = getRefGenome(refBases);
 
         int mapq = 10;
         int nm = 2;
@@ -353,7 +358,7 @@ public class SBXBamUtilsTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
-        stripDuplexIndels(read, refBases.getBytes(), refStart);
+        stripDuplexIndels(refGenome, read);
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
@@ -393,9 +398,9 @@ public class SBXBamUtilsTest
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
         String refBases = "A".repeat(alignmentStart - 1 + 10) + "G" + "A".repeat(1000);
-        int refStart = 1;
+        RefGenomeInterface refGenome = getRefGenome(refBases);
 
-        fillQualZeroMismatchesWithRef(read, refBases.getBytes(), refStart);
+        fillQualZeroMismatchesWithRef(refGenome, read);
 
         int alignmentScoreDiff = BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
 
@@ -413,5 +418,13 @@ public class SBXBamUtilsTest
         expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
 
         assertEquals(expectedRead, read);
+    }
+
+    private static RefGenomeInterface getRefGenome(final String refBases)
+    {
+        MockRefGenome mockRefGenome = new MockRefGenome(true);
+        mockRefGenome.RefGenomeMap.put(CHR_1, refBases);
+        mockRefGenome.ChromosomeLengths.put(CHR_1, refBases.length());
+        return new CachedRefGenome(mockRefGenome);
     }
 }

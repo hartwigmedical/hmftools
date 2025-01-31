@@ -26,6 +26,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -112,13 +113,14 @@ public class SBXBamUtils
         return duplexIndels;
     }
 
-    public static void stripDuplexIndels(final SAMRecord record, final byte[] refBases, final int refStart)
+    public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
         {
             return;
         }
 
+        String chromosome = record.getReferenceName();
         String ycTagStr = record.getStringAttribute("YC");
         if(ycTagStr == null)
         {
@@ -149,7 +151,7 @@ public class SBXBamUtils
         }
 
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(record, duplexIndels);
-        boolean readModified = processAnnotatedBases(annotatedBases, isForward, refBases, refStart);
+        boolean readModified = processAnnotatedBases(refGenome, chromosome, annotatedBases, isForward);
         if(!readModified)
         {
             return;
@@ -390,9 +392,10 @@ public class SBXBamUtils
     }
 
     @VisibleForTesting
-    public static boolean processAnnotatedBases(final List<AnnotatedBase> annotatedBases, boolean isForward, final byte[] refBases,
-            int refStart)
+    public static boolean processAnnotatedBases(final RefGenomeInterface refGenome, final String chromosome,
+            final List<AnnotatedBase> annotatedBases, boolean isForward)
     {
+        int chromosomeLength = refGenome.getChromosomeLength(chromosome);
         if(!isForward)
             Collections.reverse(annotatedBases);
 
@@ -476,19 +479,20 @@ public class SBXBamUtils
                 continue;
             }
 
-            int refIndex = startRefRepeatPos - refStart;
+            int refPos = startRefRepeatPos;
             repeatStrIndex = duplexIndelBases.length() - 1;
             int refRepeatLength = 0;
-            while(refIndex >= 0 && refIndex < refBases.length)
+            while(refPos >= 1 && refPos <= chromosomeLength)
             {
-                if(refBases[refIndex] != (byte) duplexIndelBases.charAt(repeatStrIndex))
+                byte refBase = refGenome.getBase(chromosome, refPos);
+                if(refBase != (byte) duplexIndelBases.charAt(repeatStrIndex))
                     break;
 
                 refRepeatLength++;
                 if(readRepeatLength <= refRepeatLength)
                     break;
 
-                refIndex += isForward ? -1 : 1;
+                refPos += isForward ? -1 : 1;
 
                 repeatStrIndex--;
                 if(repeatStrIndex < 0)
@@ -555,11 +559,12 @@ public class SBXBamUtils
         return readModified;
     }
 
-    public static void fillQualZeroMismatchesWithRef(final SAMRecord record, final byte[] refBases, int refStart)
+    public static void fillQualZeroMismatchesWithRef(final RefGenomeInterface refGenome, final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
             return;
 
+        String chromosome = record.getReferenceName();
         replaceXwithM(record);
 
         int refPos = record.getAlignmentStart();
@@ -570,42 +575,33 @@ public class SBXBamUtils
         int alignmentScoreDiff = 0;
         for(CigarElement el : record.getCigar().getCigarElements())
         {
-            if(el.getOperator() == M)
+            if(el.getOperator() != M)
             {
-                for(int i = 0; i < el.getLength(); i++)
-                {
-                    int refBasesIndex = refPos + i - refStart;
-                    if(refBasesIndex < 0)
-                    {
-                        i += -refBasesIndex - 1;
-                        continue;
-                    }
+                if(el.getOperator().consumesReadBases())
+                    readIndex += el.getLength();
 
-                    if(refBasesIndex >= refBases.length)
-                        break;
+                if(el.getOperator().consumesReferenceBases())
+                    refPos += el.getLength();
 
-                    int readBaseIndex = readIndex + i;
-                    if(baseQuals[readBaseIndex] > 0)
-                        continue;
-
-                    baseQuals[readBaseIndex] = 1;
-
-                    byte refBase = refBases[refBasesIndex];
-                    byte readBase = readBases[readBaseIndex];
-                    if(refBase != readBase)
-                    {
-                        readBases[readBaseIndex] = refBase;
-                        nmDiff--;
-                        alignmentScoreDiff += BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
-                    }
-                }
+                continue;
             }
 
-            if(el.getOperator().consumesReadBases())
-                readIndex += el.getLength();
+            for(int i = 0; i < el.getLength(); i++, readIndex++, refPos++)
+            {
+                if(baseQuals[readIndex] > 0)
+                    continue;
 
-            if(el.getOperator().consumesReferenceBases())
-                refPos += el.getLength();
+                baseQuals[readIndex] = 1;
+
+                byte refBase = refGenome.getBase(chromosome, refPos);
+                byte readBase = readBases[readIndex];
+                if(refBase == readBase)
+                    continue;
+
+                readBases[readIndex] = refBase;
+                nmDiff--;
+                alignmentScoreDiff += BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
+            }
         }
 
         Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
