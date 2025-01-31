@@ -21,8 +21,8 @@ public class AmberConstants
 
     public static final int THREE_PLUS_READS_MIN = 10;
     public static final double THREE_PLUS_READS_SITE_PERC = 0.03;
-    public static final double TWO_PLUS_READS_SITE_PERC = 0.002;
-    public static final double TWO_PLUS_READS_VAF_MIN = 0.05;
+    public static final double THREE_PLUS_READS_SITE_LOW_VAF_PERC = 0.002;
+    public static final double THREE_PLUS_READS_VAF_MIN = 0.05;
 
     public static final int HOMOZYGOUS_REGION_MIN_SIZE = 500_000;
     public static final int HOMOZYGOUS_REGION_MIN_SNP_LOCI_COUNT = 50;
