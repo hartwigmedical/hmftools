@@ -136,11 +136,11 @@ The contamination algorithm aims to detect potential contamination from other pa
 
 AMBER first gathers high confidence homozygous ref sites from the normal sample – each site requires at least 7 reads supporting the REF and 0 reads supporting the ALT. The tumor sample is considered contaminated if, within these corresponding sites, 
 
-- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads is greater than or equals to 3% of the total AMBER BAF sites
+- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads is greater than or equals to 3% of the total number of heterozygous sites
   
 OR
 
-- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads with VAF below 5% is greater than or equals to 0.2% of the total AMBER BAF sites
+- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads with VAF below 5% is greater than or equals to 0.2% of the total number of heterozygous sites
 
 otherwise contamination is set to 0.
 
