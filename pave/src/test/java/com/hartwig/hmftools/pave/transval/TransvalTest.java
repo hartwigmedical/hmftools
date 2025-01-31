@@ -176,6 +176,48 @@ public class TransvalTest extends TransvalTestBase
     }
 
     @Test
+    public void egfrServeExample()
+    {
+        /*
+        Here's what Transvar says:
+        Printing hotspots for 'EGFR:p.A750_I759delinsG' on transcript null
+        Hotspot{ref=CAACATCTCCGAAAGCCAACAAGGAAATC, alt=GT, chromosome=chr7, position=55174786}
+        Hotspot{ref=CAACATCTCCGAAAGCCAACAAGGAAATC, alt=GG, chromosome=chr7, position=55174786}
+        Hotspot{ref=CAACATCTCCGAAAGCCAACAAGGAAATC, alt=GA, chromosome=chr7, position=55174786}
+        Hotspot{ref=GCAACATCTCCGAAAGCCAACAAGGAAAT, alt=GG, chromosome=chr7, position=55174785}
+
+        Here's my analysis:
+        Section of transcript: ATSPKANKEI
+        Corresponding nukes: GCAACATCTCCGAAAGCCAACAAGGAAATC
+        A   T   S   P   K   A   N   K   E   I
+        GCA ACA TCT CCG AAA GCC AAC AAG GAA ATC
+
+        candidateAlternativeCodons={GGT, GGC, GGA, GGG}
+        EXON starts at 55_174_722
+        GGACTCTGGATCCCAGAAGGTGAGAAAGTTAAAATTCCCGTCGCTATCAAGGAATTAAGAGAA - these 63 nukes precede the codon for A in the exon
+        therefore A is at 55_174_722 + 63 = 55_174_785
+        Changes keep the G of the codon for A, so begin at 55_174_785 + 1
+         */
+        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.A750_I759delinsG");
+        assertEquals("ENST00000275493", record.transcriptId());
+        assertEquals("7", record.Chromosome);
+        assertEquals(55_174_786, record.Position);
+        assertFalse(record.SpansMultipleExons);
+
+        assertEquals(28, record.deletedBasesCount());
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(4, hotspots.size());
+        assertEquals(4, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("CAACATCTCCGAAAGCCAACAAGGAAATC", "GT", "chr7", 55_174_786)));
+        assertTrue(hotspots.contains(hotspot("CAACATCTCCGAAAGCCAACAAGGAAATC", "GG", "chr7", 55_174_786)));
+        assertTrue(hotspots.contains(hotspot("CAACATCTCCGAAAGCCAACAAGGAAATC", "GA", "chr7", 55_174_786)));
+        assertTrue(hotspots.contains(hotspot("CAACATCTCCGAAAGCCAACAAGGAAAT", "G", "chr7", 55_174_786)));
+
+        //        assertTrue(hotspots.contains(hotspot("TTAAGAGAAGCA", "CCT", "chr7", 55174776)));
+
+    }
+
+    @Test
     public void vhlDelIns()
     {
         /*
