@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -73,7 +74,7 @@ public class DiscordantStats
             return;
         }
 
-        int distance = abs(read.record().getInferredInsertSize());
+        int distance = inferredInsertSizeAbs(read.record());
 
         if(read.orientation() == read.mateOrientation())
         {
