@@ -71,7 +71,8 @@ public class TumorContaminationModel
 
         if(!calcContamination)
         {
-            AMB_LOGGER.debug("no evidence of contamination");
+            AMB_LOGGER.debug("siteCount({}) altSites(3={} 2={} 3-lowVaf={})",
+                    amberSiteCount, threePlusReadsSiteCount, twoPlusReadsSiteCount, threePlusReadsLowVafSiteCount);
             return 0;
         }
 

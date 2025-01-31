@@ -192,9 +192,9 @@ public class AmberApplication implements AutoCloseable
 
         List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
 
-        long amberSiteCount = mChromosomeSites.values().stream().count();
+        long sampleHetCount = amberBAFList.size();
 
-        double contamination = new TumorContaminationModel().calcContamination(contaminationList, amberSiteCount);
+        double contamination = new TumorContaminationModel().calcContamination(contaminationList, sampleHetCount);
 
         mPersistence.persistQC(germline.getConsanguinityProportion(), contamination, germline.getUniparentalDisomy());
         mPersistence.persistVersionInfo(mVersionInfo);
