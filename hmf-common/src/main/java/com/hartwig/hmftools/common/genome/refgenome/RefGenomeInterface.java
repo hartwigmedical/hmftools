@@ -13,5 +13,9 @@ public interface RefGenomeInterface
 
     byte[] getBases(final String chromosome, int posStart, int posEnd);
 
+    default byte getBase(final String chromosome, int pos) { return getBases(chromosome, pos, pos)[0]; }
+
     Map<String,Integer> chromosomeLengths();
+
+    default boolean oneBasedIndexing() { return true; }
 }
