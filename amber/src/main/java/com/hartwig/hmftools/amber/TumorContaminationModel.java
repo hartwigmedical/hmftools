@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberConstants.MIN_NORMAL_READ_DEPTH;
 import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_MIN;
 import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_SITE_PERC;
-import static com.hartwig.hmftools.amber.AmberConstants.TWO_PLUS_READS_SITE_PERC;
-import static com.hartwig.hmftools.amber.AmberConstants.TWO_PLUS_READS_VAF_MIN;
+import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_SITE_LOW_VAF_PERC;
+import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_VAF_MIN;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ public class TumorContaminationModel
         AMB_LOGGER.debug("contamination sites median tumor depth({})", medianTumorReadDepth);
 
         long threePlusReadsSiteCount = 0;
-        long twoPlusReadsLowVafSiteCount = 0;
+        long threePlusReadsLowVafSiteCount = 0;
         long twoPlusReadsSiteCount = 0;
 
         for(TumorContamination site : contaminationSites)
@@ -45,11 +45,13 @@ public class TumorContaminationModel
                 ++twoPlusReadsSiteCount;
 
                 if(site.Tumor.altSupport() >= 3)
+                {
                     ++threePlusReadsSiteCount;
 
-                double vaf = site.Tumor.altSupport() / (double)site.Tumor.readDepth();
-                if(vaf < TWO_PLUS_READS_VAF_MIN)
-                    ++twoPlusReadsLowVafSiteCount;
+                    double vaf = site.Tumor.altSupport() / (double) site.Tumor.readDepth();
+                    if(vaf < THREE_PLUS_READS_VAF_MIN)
+                        ++threePlusReadsLowVafSiteCount;
+                }
             }
         }
 
@@ -61,7 +63,7 @@ public class TumorContaminationModel
             {
                 calcContamination = true;
             }
-            else if(twoPlusReadsLowVafSiteCount > TWO_PLUS_READS_SITE_PERC * amberSiteCount)
+            else if(threePlusReadsLowVafSiteCount > THREE_PLUS_READS_SITE_LOW_VAF_PERC * amberSiteCount)
             {
                 calcContamination = true;
             }
@@ -79,8 +81,8 @@ public class TumorContaminationModel
         double contaminationLevel = doCalcContamination(medianTumorReadDepth, twoPlusReadsSiteCount, altSupportFrequencies);
         AMB_LOGGER.info("contamination level identified({}) ", floor(contaminationLevel * 1000) / 10);
 
-        AMB_LOGGER.debug("contamination({}) siteCount({}) altSites(3={} 2={} 2-lowVaf={})",
-                format("%.6f", contaminationLevel), amberSiteCount, threePlusReadsSiteCount, twoPlusReadsSiteCount, twoPlusReadsLowVafSiteCount);
+        AMB_LOGGER.debug("contamination({}) siteCount({}) altSites(3={} 2={} 3-lowVaf={})",
+                format("%.6f", contaminationLevel), amberSiteCount, threePlusReadsSiteCount, twoPlusReadsSiteCount, threePlusReadsLowVafSiteCount);
 
         return contaminationLevel;
     }
