@@ -177,11 +177,11 @@ public class ExtensionSeqBuilder
 
     public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
 
+    protected static int DNA_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // allows for Ns
+
     private void buildSequence(boolean isInitial)
     {
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
-
-        int baseCount = Nucleotides.DNA_BASES.length;
 
         boolean lineBasesSet = false;
 
@@ -275,9 +275,9 @@ public class ExtensionSeqBuilder
                     }
                 }
 
-                if(base == DNA_N_BYTE)
+                if(Nucleotides.baseIndex(base) < 0)
                 {
-                    base = DNA_BASE_BYTES[0];
+                    base = DNA_N_BYTE;
                     qual = 0;
                 }
 
@@ -309,8 +309,8 @@ public class ExtensionSeqBuilder
                         hasMismatch = true;
 
                         // high-qual mismatch so start tracking frequencies for each base
-                        totalQuals = new int[baseCount];
-                        maxQuals = new int[baseCount];
+                        totalQuals = new int[DNA_BASE_COUNT];
+                        maxQuals = new int[DNA_BASE_COUNT];
 
                         // back port existing counts to the per-base arrays
                         int baseIndex = Nucleotides.baseIndex(consensusBase);
@@ -336,7 +336,7 @@ public class ExtensionSeqBuilder
                 // take the bases with the highest qual totals
                 int maxQual = 0;
                 int maxBaseIndex = 0;
-                for(int b = 0; b < baseCount; ++b)
+                for(int b = 0; b < totalQuals.length; ++b)
                 {
                     if(totalQuals[b] > maxQual)
                     {

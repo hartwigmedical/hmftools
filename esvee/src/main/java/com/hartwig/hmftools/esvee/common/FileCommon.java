@@ -106,7 +106,7 @@ public final class FileCommon
         if(bamToolPath == null)
             return;
 
-        SV_LOGGER.info("writing sorted BAM: {}", sortedBam);
+        SV_LOGGER.debug("writing sorted BAM: {}", sortedBam);
 
         BamToolName toolName = fromPath(bamToolPath);
 

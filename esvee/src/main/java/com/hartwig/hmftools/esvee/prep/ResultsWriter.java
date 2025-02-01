@@ -254,26 +254,6 @@ public class ResultsWriter
         }
     }
 
-    private static String getSoftClippedBases(final PrepRead read, final boolean isClippedLeft)
-    {
-        int scLength = isClippedLeft ? read.leftClipLength() : read.rightClipLength();
-
-        if(scLength <= 0)
-            return "";
-
-        int readLength = read.record().getReadBases().length;
-        int scStart = isClippedLeft ? 0 : readLength - scLength;
-        int scEnd = isClippedLeft ? scLength : readLength;
-
-        StringBuilder scStr = new StringBuilder();
-        for(int i = scStart; i < scEnd; ++i)
-        {
-            scStr.append((char)read.record().getReadBases()[i]);
-        }
-
-        return scStr.toString();
-    }
-
     private void writeBamRecords(final ReadGroup readGroup)
     {
         if(mBamWriter == null)
