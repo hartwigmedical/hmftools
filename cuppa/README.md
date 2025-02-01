@@ -100,6 +100,22 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -threads 8
 ```
 
+assuming the input directory structure looks like this:
+```shell
+/data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.somatic.vcf.gz
+/data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.sv.vcf.gz
+/data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.purity.tsv
+/data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.qc
+/data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.clusters.tsv
+/data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.driver.catalog.tsv
+/data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.fusion.tsv
+/data/datasets/SAMPLE_1/virus_interpreter/SAMPLE_1.virus.annotated.tsv
+/data/rna/SAMPLE_1/SAMPLE_1.isf.alt_splice_junc.csv
+/data/rna/SAMPLE_1/SAMPLE_1.isf.gene_data.csv
+/data/datasets/SAMPLE_2/purple/SAMPLE_2.purple.somatic.vcf.gz
+...
+```
+
 Because `-write_by_category` was specified, this will produce multi TSV files:
 * `cuppa_data.cohort.snv.tsv.gz`
 * `cuppa_data.cohort.sv.tsv.gz`
@@ -122,18 +138,20 @@ Source  Category       Key  SAMPLE_1  SAMPLE_2
 
 ### Inputs and arguments
 
-Below is a description of the required input files:
+Below is a description of the input files for `CuppaDataPrep`:
 
-| Tool              | Filename suffix          | File details                                     |
-|-------------------|--------------------------|--------------------------------------------------|
-| PURPLE            | .purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
-| PURPLE            | .purple.sv.vcf.gz        | Structural variants                              |
-| PURPLE            | .purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
-| PURPLE            | .purple.qc               | WGS quality control stats                        |
-| LINX              | .linx.clusters.tsv       | Structural variant clusters                      |
-| LINX              | .linx.driver.catalog.tsv | Driver mutations                                 |
-| LINX              | .linx.fusion.tsv         | Gene fusions                                     |
-| Virus Interpreter | .virus.annotated.tsv     | Viral sequence insertions                        |
+| Category | Tool              | Filename suffix          | File details                                     |
+|----------|-------------------|--------------------------|--------------------------------------------------|
+| DNA      | PURPLE            | .purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
+| DNA      | PURPLE            | .purple.sv.vcf.gz        | Structural variants                              |
+| DNA      | PURPLE            | .purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
+| DNA      | PURPLE            | .purple.qc               | WGS quality control stats                        |
+| DNA      | LINX              | .linx.clusters.tsv       | Structural variant clusters                      |
+| DNA      | LINX              | .linx.driver.catalog.tsv | Driver mutations                                 |
+| DNA      | LINX              | .linx.fusion.tsv         | Gene fusions                                     |
+| DNA      | Virus Interpreter | .virus.annotated.tsv     | Viral sequence insertions                        |
+| RNA      | ISOFOX            | .gene_data.csv           | Gene expression data                             |
+| RNA      | ISOFOX            | .alt_splice_junc.csv     | Alternative splice junction counts               |
 
 
 Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbers mark conditionally required arguments.
