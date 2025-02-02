@@ -406,8 +406,6 @@ public final class AssemblyLinker
             firstIndexStart -= matchExtensions[0];
             secondIndexStart -= matchExtensions[0];
             overlapLength += matchExtensions[0] + matchExtensions[1];
-            // firstIndexEnd += matchExtensions[1];
-            // secondIndexEnd += matchExtensions[1];
 
             if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
             {
