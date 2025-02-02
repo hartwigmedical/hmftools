@@ -126,6 +126,16 @@ public class DeletionInsertionTest extends TransvalTestBase
         checkAltSequences(di("VHL:p.R113_L116delinsKPY"), expectedKPY);
     }
 
+    @Test
+    public void egfrTest()
+    {
+        // This test arose from a bug that lead to the incorrect handling of EGFR:p.L747_K754delinsSPQ.
+        Set<String> candidates = di("EGFR:p.L747_K754delinsSPQ").candidateAlternativeNucleotideSequences("", "");
+        AminoAcidSequence spq = aaSeq("SPQ");
+        candidates.forEach(nucleotides -> assertEquals(spq, AminoAcidSequence.fromNucleotides(nucleotides)));
+        assertEquals(6 * 4 * 2, candidates.size());
+    }
+
     private void checkAltSequences(DeletionInsertion di, Set<String> expected)
     {
         Set<String> actual = di.candidateAlternativeNucleotideSequences("", "");

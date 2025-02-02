@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TransvalTest extends TransvalTestBase
@@ -212,9 +214,41 @@ public class TransvalTest extends TransvalTestBase
         assertTrue(hotspots.contains(hotspot("CAACATCTCCGAAAGCCAACAAGGAAATC", "GG", "chr7", 55_174_786)));
         assertTrue(hotspots.contains(hotspot("CAACATCTCCGAAAGCCAACAAGGAAATC", "GA", "chr7", 55_174_786)));
         assertTrue(hotspots.contains(hotspot("CAACATCTCCGAAAGCCAACAAGGAAAT", "G", "chr7", 55_174_786)));
+    }
 
-        //        assertTrue(hotspots.contains(hotspot("TTAAGAGAAGCA", "CCT", "chr7", 55174776)));
+    @Test
+    public void egfrServeExample2()
+    {
+        /*
+        This is an example where Transvar reports one hotspot, and we report 48.
+        L747_K754delinsSPQ
 
+        Here's what Transvar says:
+        Printing hotspots for 'EGFR:p.L747_K754delinsSPQ' on transcript null
+        Hotspot{ref=TTAAGAGAAGCAACATCTCCGA, alt=AGCCCTC, chromosome=chr7, position=55174776}
+
+        L   R   E   A   T   S   P   K
+        TTA AGA GAA GCA ACA TCT CCG AAA
+        EXON starts at 55_174_722
+        GGACTCTGGATCCCAGAAGGTGAGAAAGTTAAAATTCCCGTCGCTATCAAGGAA - these 54 nukes precede the codon for L
+        therefore L is at 55_174_722 + 54 = 55_174_776
+
+        candidateAlternativeCodons={TCA, AGC, AGT, TCC, TCG, TCT}*{CCA, CCC, CCG, CCT}*{CAA, CAG} (48 possibilities)
+         */
+        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.L747_K754delinsSPQ");
+        assertEquals("ENST00000275493", record.transcriptId());
+        assertEquals("7", record.Chromosome);
+        assertFalse(record.SpansMultipleExons);
+
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(48, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("TTAAGAGAAGCAACATCTCCGA", "AGCCCTC", "chr7", 55_174_776)));
+        String originalBases = StringUtils.remove("TTA AGA GAA GCA ACA TCT CCG AAA", ' ');
+        for (TransvalHotspot hotspot : hotspots) {
+            String newBases = StringUtils.replaceOnce(originalBases, hotspot.Ref, hotspot.Alt);
+            AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
+            Assert.assertEquals("SPQ", newAminoAcids.toString());
+        }
     }
 
     @Test

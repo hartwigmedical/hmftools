@@ -3,8 +3,32 @@ package com.hartwig.hmftools.pave.transval;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AminoAcidTest
+public class AminoAcidTest extends TransvalTestBase
 {
+    private final AminoAcid A = aa("A"); //GCT, GCA, GCC, GCG
+    private final AminoAcid R = aa("R"); // AGG, AGA, CGA, CGC, CGG, CGT
+    private final AminoAcid W = aa("W"); // TGG
+
+    @Test
+    public void matchingTruncatedCodons()
+    {
+        Assert.assertEquals(css("GCT, GCA, GCC, GCG"), A.matchingTruncatedCodons("", ""));
+        Assert.assertEquals(css("CT, CA, CC, CG"), A.matchingTruncatedCodons("G", ""));
+        Assert.assertEquals(css("T, A, C, G"), A.matchingTruncatedCodons("GC", ""));
+        Assert.assertTrue(A.matchingTruncatedCodons("GC", "G").isEmpty());
+        Assert.assertEquals(css("C"), A.matchingTruncatedCodons("G", "G"));
+        Assert.assertEquals(css("GC"), A.matchingTruncatedCodons("", "G"));
+        Assert.assertEquals(css("G"), A.matchingTruncatedCodons("", "CG"));
+        Assert.assertTrue(A.matchingTruncatedCodons("T", "").isEmpty());
+
+        Assert.assertEquals(css("AGG, AGA, CGA, CGC, CGG, CGT"), R.matchingTruncatedCodons("", ""));
+        Assert.assertEquals(css("GG, GA"), R.matchingTruncatedCodons("A", ""));
+        Assert.assertEquals(css("G, A"), R.matchingTruncatedCodons("AG", ""));
+
+        Assert.assertEquals(css("TGG"), W.matchingTruncatedCodons("", ""));
+        Assert.assertEquals(css("TG"), W.matchingTruncatedCodons("", "G"));
+    }
+
     @Test
     public void construction()
     {

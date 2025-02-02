@@ -27,27 +27,6 @@ public class Checks
         return true;
     }
 
-    static boolean isValidAminoAcidLetter(String s)
-    {
-        return AminoAcids.AMINO_ACID_TO_CODON_MAP.containsKey(s);
-    }
-
-    static boolean isValidProtein(String s)
-    {
-        if(s.isEmpty())
-        {
-            return false;
-        }
-        for(int i = 0; i < s.length(); i++)
-        {
-            if (!isValidAminoAcidLetter("" + s.charAt(i)))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
     static boolean isCodon(@NotNull String s)
     {
         if(s.length() != 3)

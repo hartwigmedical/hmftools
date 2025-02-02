@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class NucleotidesCalculatorTest
+public class NucleotidesCalculatorTest extends TransvalTestBase
 {
     @Test
     public void oneAA()
@@ -124,7 +124,7 @@ public class NucleotidesCalculatorTest
 
     private NucleotidesCalculator calculator(String aminoAcids, String prefix, String suffix)
     {
-        return new NucleotidesCalculator(aminoAcids, prefix, suffix);
+        return new NucleotidesCalculator(aaSeq(aminoAcids), prefix, suffix);
     }
 
     private void checkPossibilities(NucleotidesCalculator calculator, String expectedSeparatedByCommas)
@@ -135,7 +135,7 @@ public class NucleotidesCalculatorTest
             return;
         }
         Set<String> actual = calculator.possibilities();
-        Set<String> expected = new HashSet<>(Arrays.asList(expectedSeparatedByCommas.split(",")));
+        Set<String> expected = css(expectedSeparatedByCommas);
         assertEquals(expected, actual);
     }
 

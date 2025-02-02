@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave.transval;
 
-import static com.hartwig.hmftools.pave.transval.Checks.isValidProtein;
-
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -9,7 +7,6 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -25,18 +22,17 @@ class DeletionInsertion extends ProteinVariant
     @NotNull
     final AminoAcidRange RefRange;
     @NotNull
-    final private String Alt;
+    final private AminoAcidSequence Alt;
 
     DeletionInsertion(
             @NotNull final GeneData gene,
             @NotNull final TranscriptData transcript,
             @NotNull final TranscriptAminoAcids aminoAcidSequence,
             @NotNull final AminoAcidRange refRange,
-            @NotNull final String variant)
+            @NotNull final AminoAcidSequence alt)
     {
         super(gene, transcript, aminoAcidSequence, refRange.startPosition());
-        Preconditions.checkArgument(isValidProtein(variant));
-        this.Alt = variant;
+        this.Alt = alt;
         this.RefRange = refRange;
         this.DeletionLength = refRange.length();
     }
@@ -143,7 +139,7 @@ class DeletionInsertion extends ProteinVariant
 
     public String altAminoAcidSequence()
     {
-        return Alt;
+        return Alt.sequence();
     }
 
     @Override

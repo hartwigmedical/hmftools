@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave.transval;
 
-import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class NucleotidesCalculator
 {
     @NotNull
-    private final char[] mAminoAcids;
+    private final AminoAcidSequence mAminoAcids;
 
     @NotNull
     private final String prefix;
@@ -23,13 +21,12 @@ public class NucleotidesCalculator
     @NotNull
     private final String suffix;
 
-    public NucleotidesCalculator(@NotNull final String aminoAcids, @NotNull final String prefix, @NotNull final String suffix)
+    NucleotidesCalculator(@NotNull final AminoAcidSequence aminoAcids, @NotNull final String prefix, @NotNull final String suffix)
     {
-        Preconditions.checkArgument(Checks.isValidProtein(aminoAcids));
         Preconditions.checkArgument(prefix.length() < 3);
         Preconditions.checkArgument(suffix.length() < 3);
-        Preconditions.checkArgument((prefix.length() + suffix.length()) <= (3 * aminoAcids.length()));
-        mAminoAcids = aminoAcids.toCharArray();
+        Preconditions.checkArgument((prefix.length() + suffix.length()) <= (3 * aminoAcids.sequence().length()));
+        mAminoAcids = aminoAcids;
         this.prefix = prefix;
         this.suffix = suffix;
     }
@@ -53,31 +50,12 @@ public class NucleotidesCalculator
     public List<Set<String>> candidateAlternativeTruncatedCodons()
     {
         final ArrayList<Set<String>> result = new ArrayList<>();
-        for(int i = 0; i < mAminoAcids.length; i++)
+        for(int i = 0; i < mAminoAcids.length(); i++)
         {
-            result.add(matchingTruncatedCodons(i));
+            String requiredPrefix = prefixFilter(i);
+            String requiredSuffix = suffixFilter(i);
+            result.add(mAminoAcids.get(i).matchingTruncatedCodons(requiredPrefix, requiredSuffix));
         }
-        return result;
-    }
-
-    private Set<String> matchingTruncatedCodons(int index)
-    {
-        String requiredPrefix = prefixFilter(index);
-        String requiredSuffix = suffixFilter(index);
-        Set<String> result = new HashSet<>();
-        String aminoAcid = mAminoAcids[index] + "";
-        AMINO_ACID_TO_CODON_MAP.get(aminoAcid).forEach(codon ->
-        {
-            if(codon.startsWith(requiredPrefix) && codon.endsWith(requiredSuffix))
-            {
-                String prefixTruncatedCodon = codon.substring(requiredPrefix.length());
-                String truncatedCodon = prefixTruncatedCodon.substring(0, prefixTruncatedCodon.length() - requiredSuffix.length());
-                if(!truncatedCodon.isEmpty())
-                {
-                    result.add(truncatedCodon);
-                }
-            }
-        });
         return result;
     }
 
@@ -105,7 +83,7 @@ public class NucleotidesCalculator
 
     private String suffixFilter(int i)
     {
-        if(i == mAminoAcids.length - 1)
+        if(i == mAminoAcids.length() - 1)
         {
             return suffix;
         }

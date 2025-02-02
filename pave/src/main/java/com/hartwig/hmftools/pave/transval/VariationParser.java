@@ -95,7 +95,7 @@ class VariationParser
         AminoAcidSequence altSequence = AminoAcidSequence.parse(refAltParts[1]);
         TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
-        return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, refRange, altSequence.sequence());
+        return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, refRange, altSequence);
     }
 
     @NotNull

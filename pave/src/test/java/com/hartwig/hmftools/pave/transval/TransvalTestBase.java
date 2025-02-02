@@ -3,9 +3,14 @@ package com.hartwig.hmftools.pave.transval;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+
+import org.jetbrains.annotations.NotNull;
 
 class TransvalTestBase
 {
@@ -26,6 +31,12 @@ class TransvalTestBase
             throw new RuntimeException(e);
         }
         transval = new Transval(ensemblDataDir, genome);
+    }
+
+    @NotNull
+    protected static Set<String> css(final String expectedSeparatedByCommas)
+    {
+        return Arrays.stream(expectedSeparatedByCommas.split(",")).map(String::trim).collect(Collectors.toSet());
     }
 
     public SingleAminoAcidVariant saav(String definition)
@@ -57,5 +68,10 @@ class TransvalTestBase
     {
         final AminoAcid aa = symbol == null ? null : aa(symbol);
         return new AminoAcidSpecification(position, aa);
+    }
+
+    protected AminoAcidSequence aaSeq(String sequence)
+    {
+        return AminoAcidSequence.parse(sequence);
     }
 }

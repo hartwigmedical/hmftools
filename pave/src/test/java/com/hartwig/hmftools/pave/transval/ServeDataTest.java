@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -72,10 +71,11 @@ public class ServeDataTest
             final String alt = str(hotspot, "alt");
             final int position = hotspot.get("position").getAsInt();
 //                        if (gene.equals("FGFR1") && annotation.equals("P283T"))
-//            if (annotation.contains("delins"))
-//            {
+            if (!annotation.contains("delins"))
+            {
 //                p(annotation);
-//            }
+                continue;
+            }
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
             if(!geneToItems.containsKey(gene))
             {
@@ -164,7 +164,8 @@ public class ServeDataTest
 //    @Test
     public void examples()
     {
-        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
+//        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
+        ProteinVariant variant = transval.variationParser().parseExpressionForGene("EGFR", "K25_D34delinsN");
         TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
 
@@ -320,7 +321,20 @@ class VariantStatus
 
     boolean hotspotsSame()
     {
-        return variant.hotspots().containsAll(collator.hotspots);
+        // The variants contain Hotspots such as
+        // Hotspot{ref=GCAACATCTCCGAAAGCCAACAAGGAAAT, alt=GG, chromosome=chr7, position=55174785}
+        // There is a prefix common to the ref and alt that should be removed, and the
+        // position should be adjusted accordingly.
+        Set<TransvalHotspot> reducedCollatorResults = collator.hotspots.stream().map(this::reduceHotspot).collect(Collectors.toSet());
+        final boolean equals = variant.hotspots().equals(reducedCollatorResults);
+        if (!equals)
+        {
+            if(collator.mGene.equals("EGFR"))
+            {
+                System.out.println(">>>>>>>>>>>>>>>>>>>>>>>");
+            }
+        }
+        return equals;
     }
 
     boolean hotspotsSameModuloPosition()
@@ -328,6 +342,12 @@ class VariantStatus
         Set<FloatingHotspot> variantFloatingHotspots = variant.hotspots().stream().map(FloatingHotspot::new).collect(Collectors.toSet());
         Set<FloatingHotspot> collatorFloatingHotspots = collator.hotspots.stream().map(FloatingHotspot::new).collect(Collectors.toSet());
         return variantFloatingHotspots.equals(collatorFloatingHotspots);
+    }
+
+    private TransvalHotspot reduceHotspot(TransvalHotspot hotspot)
+    {
+        DeletionInsertionChange delta = new DeletionInsertionChange(hotspot.Ref, hotspot.Alt);
+        return delta.toHotspot(new ChangeLocation(hotspot.mChromosome, hotspot.mPosition));
     }
 }
 class FloatingHotspot
