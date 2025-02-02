@@ -170,7 +170,7 @@ public final class PhaseSetMerger
                 secondRepeats = RepeatInfo.findRepeats(secondBases);
             }
 
-            int permittedMismatches = min(mismatchesPerComparisonLength(overlapLength), 2);
+            int permittedMismatches = mismatchesPerComparisonLength(overlapLength);
 
             int mismatchCount = SequenceCompare.compareSequences(
                     firstBases, firstBaseQuals, firstMatchIndexStart, firstMatchIndexEnd, firstRepeats,
