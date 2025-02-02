@@ -108,7 +108,7 @@ public class ExtensionCandidate
         public int compare(final ExtensionCandidate first, final ExtensionCandidate second)
         {
             if(first.Type != second.Type)
-                return Integer.compare(-first.Type.ordinal(), -second.Type.ordinal());
+                return Integer.compare(first.Type.ordinal(), second.Type.ordinal());
 
             return Integer.compare(-first.SupportCount, -second.SupportCount);
         }
