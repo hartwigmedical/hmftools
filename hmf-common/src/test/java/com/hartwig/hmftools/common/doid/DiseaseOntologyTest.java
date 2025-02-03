@@ -86,7 +86,7 @@ public class DiseaseOntologyTest
         DoidDefinition doidDefinition2 = doidNode2.doidMetadata().doidDefinition();
         assertEquals("Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of "
                 + "tissue deprived of adequate blood supply by prolonged pressure.", doidDefinition2.definitionVal());
-        assertEquals(Lists.newArrayList("url:http://www2.merriam-webster.com/cgi-bin/mwmednlm?book=Medical&va=bedsore"),
+        assertEquals(Lists.newArrayList(),
                 doidDefinition2.definitionXrefs());
 
         List<String> subset2 = doidNode2.doidMetadata().subsets();

@@ -27,8 +27,7 @@
       "id" : "http://purl.obolibrary.org/obo/DOID_8717",
       "meta" : {
         "definition" : {
-          "val" : "Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of tissue deprived of adequate blood supply by prolonged pressure.",
-          "xrefs" : [ "url:http://www2.merriam-webster.com/cgi-bin/mwmednlm?book=Medical&va=bedsore" ]
+          "val" : "Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of tissue deprived of adequate blood supply by prolonged pressure."
         },
         "comments" : [ "Xref MGI.\nOMIM mapping confirmed by DO. [SN]." ],
         "subsets" : [ "http://purl.obolibrary.org/obo/doid#NCIthesaurus" ],

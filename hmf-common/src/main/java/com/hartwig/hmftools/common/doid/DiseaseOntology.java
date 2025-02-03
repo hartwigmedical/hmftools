@@ -303,7 +303,7 @@ public final class DiseaseOntology
 
         ImmutableDoidDefinition.Builder doidDefinitionBuilder = ImmutableDoidDefinition.builder();
         doidDefinitionBuilder.definitionVal(string(definitionObject, "val"));
-        doidDefinitionBuilder.definitionXrefs(stringList(definitionObject, "xrefs"));
+        doidDefinitionBuilder.definitionXrefs(optionalStringList(definitionObject, "xrefs"));
         return doidDefinitionBuilder.build();
     }
 }
