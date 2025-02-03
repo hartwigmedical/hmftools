@@ -16,8 +16,5 @@ public abstract class DoidSynonym
 
     @NotNull
     public abstract String val();
-
-    @NotNull
-    public abstract List<String> xrefs();
 }
 
