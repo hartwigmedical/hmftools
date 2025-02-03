@@ -299,26 +299,40 @@ public class AlignmentFragments
         int indelLength = 0;
         StructuralVariantType svType = null;
 
-        if(isLocalIndel())
+        if(read.isPairedRead())
         {
-            indelLength = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).length();
-            svType = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).svType();
-        }
-        else if(!read.isDiscordant() && breakends.size() <= 2)
-        {
-            indelLength = breakends.iterator().next().svLength();
-            svType = breakends.iterator().next().svType();
-        }
+            if(isLocalIndel())
+            {
+                indelLength = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).length();
+                svType = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).svType();
+            }
+            else if(!read.isDiscordant() && breakends.size() <= 2)
+            {
+                indelLength = breakends.iterator().next().svLength();
+                svType = breakends.iterator().next().svType();
+            }
 
-        if(svType != null && isIndel(svType) && indelLength != 0)
-        {
-            if(svType == DEL)
-                indelLength = -abs(indelLength);
+            if(svType != null && isIndel(svType) && indelLength != 0)
+            {
+                if(svType == DEL)
+                    indelLength = -abs(indelLength);
 
+                if(read.insertSize() > 0)
+                {
+                    inferredFragmentLength = abs(read.insertSize()) + indelLength;
+
+                    setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
+
+                    if(setValidFragmentLength)
+                        read.setInferredFragmentLength(inferredFragmentLength);
+                }
+            }
+        }
+        else
+        {
             if(read.insertSize() > 0)
             {
-                inferredFragmentLength = abs(read.insertSize()) + indelLength;
-
+                inferredFragmentLength = abs(read.insertSize());
                 setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 
                 if(setValidFragmentLength)

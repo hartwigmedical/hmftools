@@ -59,7 +59,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigItem;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 import com.hartwig.hmftools.esvee.prep.types.WriteType;
@@ -78,7 +77,6 @@ public class PrepConfig
     public final BlacklistLocations Blacklist;
 
     public final int PartitionSize;
-    public int ReadLength; // can be set from default, config or the fragment length distribution routine
     public final boolean CalcFragmentLength;
     public final ValidationStringency BamStringency;
 
@@ -91,7 +89,6 @@ public class PrepConfig
     public final int Threads;
     public final boolean UseCacheBam;
     public final boolean TrimReadId;
-    public final boolean UnpairedReads;
 
     // debug
     public final SpecificRegions SpecificChrRegions;
@@ -103,6 +100,10 @@ public class PrepConfig
     public final boolean NoCleanUp;
 
     private boolean mIsValid;
+
+    // both of these are set from the fragment length distribution
+    private int mReadLength;
+    private boolean mUnpairedReads;
 
     // config strings
     public static final String BAM_FILE = "bam_file";
@@ -167,7 +168,6 @@ public class PrepConfig
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
-        ReadLength = configBuilder.getInteger(READ_LENGTH);
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
 
@@ -202,11 +202,13 @@ public class PrepConfig
 
         // optimisations and debug
         TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters();
-        UnpairedReads = configBuilder.hasFlag(UNPAIRED_READS);
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
+
+        mReadLength = configBuilder.getInteger(READ_LENGTH);
+        mUnpairedReads = false;
     }
 
     public boolean isValid()
@@ -219,6 +221,12 @@ public class PrepConfig
 
         return true;
     }
+
+    public int readLength() { return mReadLength; }
+    public void setReadLength(int length) { mReadLength = length; }
+
+    public boolean unpairedReads() { return mUnpairedReads; }
+    public void setUnpairedReads(boolean unpaired) { mUnpairedReads = unpaired; }
 
     public String sampleId() { return SampleIds.get(0); }
     public String bamFile() { return BamFiles.get(0); }
@@ -281,8 +289,6 @@ public class PrepConfig
 
         PartitionSize = partitionSize;
 
-        ReadLength = DEFAULT_READ_LENGTH;
-
         ReadFiltering = new ReadFilters(new ReadFilterConfig(
                 MIN_ALIGNMENT_BASES,
                 MIN_MAP_QUALITY,
@@ -305,9 +311,11 @@ public class PrepConfig
         UseCacheBam = false;
         PerfDebug = false;
         TrimReadId = false;
-        UnpairedReads = false;
         NoCleanUp = false;
         MaxFragmentLengthOverride = -1;
+
+        mUnpairedReads = false;
+        mReadLength = DEFAULT_READ_LENGTH;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

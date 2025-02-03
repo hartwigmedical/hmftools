@@ -358,7 +358,7 @@ public class JunctionTracker
 
     public void findDiscordantGroups()
     {
-        if(mConfig.UnpairedReads)
+        if(mConfig.unpairedReads())
             return;
 
         perfCounterStart(PerfCounters.DiscordantGroups);
@@ -472,7 +472,7 @@ public class JunctionTracker
         if(!read.hasMate())
             return false;
 
-        return mBlacklist.inBlacklistLocation(read.MateChromosome, read.MatePosStart, read.MatePosStart + mConfig.ReadLength);
+        return mBlacklist.inBlacklistLocation(read.MateChromosome, read.MatePosStart, read.MatePosStart + mConfig.readLength());
     }
 
     private boolean positionInBlacklist(int junctionPosition)
@@ -657,7 +657,7 @@ public class JunctionTracker
         // first check indel support
         checkIndelSupport(read, supportedJunctions);
 
-        int maxSupportDistance = mConfig.UnpairedReads ? UNPAIRED_READ_JUNCTION_DISTANCE : mFilterConfig.maxSupportingFragmentDistance();
+        int maxSupportDistance = mConfig.unpairedReads() ? UNPAIRED_READ_JUNCTION_DISTANCE : mFilterConfig.maxSupportingFragmentDistance();
 
         // first check the last index since the next read is likely to be close by
         int closeJunctionIndex = -1;
@@ -719,7 +719,7 @@ public class JunctionTracker
             return;
         }
 
-        if(readType != ReadType.SUPPORT && !mConfig.UnpairedReads && hasOtherJunctionSupport(read, junctionData, mFilterConfig))
+        if(readType != ReadType.SUPPORT && !mConfig.unpairedReads() && hasOtherJunctionSupport(read, junctionData, mFilterConfig))
         {
             junctionData.addReadType(read, ReadType.SUPPORT);
             read.setReadType(ReadType.SUPPORT, true);
@@ -1109,10 +1109,6 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
-        // first deal with junctions loaded from another sample - keep these if they've found any possible support
-        if(junctionData.isExisting())
-            return junctionData.totalFragmentCount() > 0;
-
         if(junctionData.discordantGroup())
             return true;
 

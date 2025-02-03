@@ -113,6 +113,7 @@ public class FragmentSizeDistribution
     }
 
     public int maxReadLength() { return mMaxReadLength; }
+    public boolean hasPairedReads() { return mHasPairedReads; }
 
     public FragmentLengthBounds calculateFragmentLengthBounds() { return calculateFragmentLengthBounds(mLengthFrequencies); }
 

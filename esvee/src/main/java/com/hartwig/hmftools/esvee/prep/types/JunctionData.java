@@ -14,7 +14,6 @@ public class JunctionData
     public final int Position;
     public final Orientation Orient;
 
-    private final boolean mIsExisting;
     public final List<ReadGroup> JunctionGroups; // with a read matching the junction
     public final List<ReadGroup> SupportingGroups;
     public final List<ReadGroup> ExactSupportGroups;
@@ -32,7 +31,6 @@ public class JunctionData
         Position = position;
         Orient = orientation;
 
-        mIsExisting = read == null;
         JunctionGroups = Lists.newArrayList();
         SupportingGroups = Lists.newArrayList();
         ExactSupportGroups = Lists.newArrayList();
@@ -50,7 +48,6 @@ public class JunctionData
         mDiscordantGroup = false;
     }
 
-    public boolean isExisting() { return mIsExisting; }
     public boolean isForward() { return Orient.isForward(); }
     public boolean isReverse() { return Orient.isReverse(); }
 
