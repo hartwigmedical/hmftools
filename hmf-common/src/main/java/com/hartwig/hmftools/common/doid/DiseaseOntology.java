@@ -223,7 +223,6 @@ public final class DiseaseOntology
             logicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomObject, "definedClassId"))
                     .genusIds(genusIdList)
-                    .restrictions(restrictionList)
                     .build());
         }
 
