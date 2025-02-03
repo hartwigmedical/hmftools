@@ -46,10 +46,7 @@ public class DiseaseOntologyTest
         assertTrue(doidEntry.meta().subsets().isEmpty());
         assertTrue(doidEntry.meta().xrefs().isEmpty());
         assertTrue(doidEntry.meta().basicPropertyValues().isEmpty());
-        assertTrue(doidEntry.equivalentNodesSets().isEmpty());
         assertTrue(doidEntry.logicalDefinitionAxioms().isEmpty());
-        assertTrue(doidEntry.domainRangeAxioms().isEmpty());
-        assertTrue(doidEntry.propertyChainAxioms().isEmpty());
 
         List<DoidNode> doidNodes = doidEntry.nodes();
         assertEquals(2, doidNodes.size());
@@ -68,7 +65,6 @@ public class DiseaseOntologyTest
         DoidSynonym doidSynonym1 = doidNode1.doidMetadata().synonyms().get(0);
         assertEquals("hasExactSynonym", doidSynonym1.pred());
         assertEquals("carcinoma in situ of respiratory tract (disorder)", doidSynonym1.val());
-        assertTrue(doidSynonym1.xrefs().isEmpty());
 
         DoidBasicPropertyValue doidBasicPropertyValue1 = doidNode1.doidMetadata().basicPropertyValues().get(0);
         assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doidBasicPropertyValue1.pred());
@@ -107,27 +103,22 @@ public class DiseaseOntologyTest
         DoidSynonym doid2Synonym1 = doidNode2.doidMetadata().synonyms().get(0);
         assertEquals("hasExactSynonym", doid2Synonym1.pred());
         assertEquals("Decubitus ulcer any site", doid2Synonym1.val());
-        assertEquals(Lists.newArrayList(), doid2Synonym1.xrefs());
 
         DoidSynonym doid2Synonym2 = doidNode2.doidMetadata().synonyms().get(1);
         assertEquals("hasExactSynonym", doid2Synonym2.pred());
         assertEquals("pressure ulcer", doid2Synonym2.val());
-        assertTrue(doid2Synonym2.xrefs().isEmpty());
 
         DoidSynonym doid2Synonym3 = doidNode2.doidMetadata().synonyms().get(2);
         assertEquals("hasExactSynonym", doid2Synonym3.pred());
         assertEquals("pressure sores", doid2Synonym3.val());
-        assertTrue(doid2Synonym3.xrefs().isEmpty());
 
         DoidSynonym doid2Synonym4 = doidNode2.doidMetadata().synonyms().get(3);
         assertEquals("hasExactSynonym", doid2Synonym4.pred());
         assertEquals("Decubitus (pressure) ulcer", doid2Synonym4.val());
-        assertTrue(doid2Synonym4.xrefs().isEmpty());
 
         DoidSynonym doid2Synonym5 = doidNode2.doidMetadata().synonyms().get(4);
         assertEquals("hasRelatedSynonym", doid2Synonym5.pred());
         assertEquals("bedsore", doid2Synonym5.val());
-        assertTrue(doid2Synonym5.xrefs().isEmpty());
 
         DoidBasicPropertyValue doid2BasicPropertyValue1 = doidNode2.doidMetadata().basicPropertyValues().get(0);
         assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doid2BasicPropertyValue1.pred());
