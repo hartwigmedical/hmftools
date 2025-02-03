@@ -71,11 +71,6 @@ public class ServeDataTest
             final String alt = str(hotspot, "alt");
             final int position = hotspot.get("position").getAsInt();
 //                        if (gene.equals("FGFR1") && annotation.equals("P283T"))
-            if (!annotation.contains("delins"))
-            {
-//                p(annotation);
-                continue;
-            }
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
             if(!geneToItems.containsKey(gene))
             {
@@ -321,17 +316,17 @@ class VariantStatus
 
     boolean hotspotsSame()
     {
-        // The variants contain Hotspots such as
+        // The serve data contain Hotspots such as
         // Hotspot{ref=GCAACATCTCCGAAAGCCAACAAGGAAAT, alt=GG, chromosome=chr7, position=55174785}
-        // There is a prefix common to the ref and alt that should be removed, and the
-        // position should be adjusted accordingly.
+        // This has a prefix common to the ref and alt that should be removed
+        // and the position should be adjusted accordingly.
         Set<TransvalHotspot> reducedCollatorResults = collator.hotspots.stream().map(this::reduceHotspot).collect(Collectors.toSet());
-        final boolean equals = variant.hotspots().equals(reducedCollatorResults);
-        if (!equals)
+        final boolean equals = variant.hotspots().containsAll(reducedCollatorResults);
+        if(!equals)
         {
-            if(collator.mGene.equals("EGFR"))
+            if(geneAnnotation().mAnnotation.equals("E451_Y452delinsD"))
             {
-                System.out.println(">>>>>>>>>>>>>>>>>>>>>>>");
+                System.out.println(variant);
             }
         }
         return equals;

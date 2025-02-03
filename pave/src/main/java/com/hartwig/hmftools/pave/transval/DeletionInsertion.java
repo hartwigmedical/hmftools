@@ -126,7 +126,7 @@ class DeletionInsertion extends ProteinVariant
         SortedSet<TransvalHotspot> hotspotsSorted = new TreeSet<>(hotspots);
         TransvalHotspot bestCandidate = hotspotsSorted.first();
 
-        return new TransvalInsertionDeletion(
+        return new TransvalDeletionInsertion(
                 Transcript,
                 Gene.Chromosome,
                 bestCandidate.mPosition,

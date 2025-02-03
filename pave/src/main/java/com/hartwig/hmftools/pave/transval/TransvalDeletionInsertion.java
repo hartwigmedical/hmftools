@@ -7,12 +7,12 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TransvalInsertionDeletion extends  TransvalVariant
+public class TransvalDeletionInsertion extends  TransvalVariant
 {
     @NotNull
     final private String DeletedBases;
 
-    public TransvalInsertionDeletion(
+    public TransvalDeletionInsertion(
             @NotNull final TranscriptData transcript,
             @NotNull final String chromosome,
             final int position,

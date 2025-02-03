@@ -49,12 +49,12 @@ public class DeletionInsertionChange implements Comparable<DeletionInsertionChan
         Preconditions.checkArgument(isNucleotideSequence(alt));
         this.Ref = ref;
         this.Alt = alt;
-        int commonPrefixLength = lengthOfCommonPrefix(ref, alt);
-        String refWithoutCommonPrefix = ref.substring(commonPrefixLength);
-        String altWithoutCommonPrefix = alt.substring(commonPrefixLength);
-        int commonSuffixLength = lengthOfCommonSuffix(refWithoutCommonPrefix, altWithoutCommonPrefix);
-        Deleted = refWithoutCommonPrefix.substring(0, refWithoutCommonPrefix.length() - commonSuffixLength);
-        Inserted = altWithoutCommonPrefix.substring(0, altWithoutCommonPrefix.length() - commonSuffixLength);
+        int commonSuffixLength = lengthOfCommonSuffix(ref, alt);
+        String refWithoutCommonSuffix = ref.substring(0, ref.length() - commonSuffixLength);
+        String altWithoutCommonSuffix = alt.substring(0, alt.length() - commonSuffixLength);
+        int commonPrefixLength = lengthOfCommonPrefix(refWithoutCommonSuffix, altWithoutCommonSuffix);
+        Deleted = refWithoutCommonSuffix.substring(commonPrefixLength);
+        Inserted = altWithoutCommonSuffix.substring(commonPrefixLength);
         DeletionStart = commonPrefixLength;
     }
 

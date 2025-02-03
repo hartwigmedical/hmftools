@@ -162,7 +162,7 @@ public class TransvalTest extends TransvalTestBase
 05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAG, alt=C, chromosome=chr7, position=55174776}
 05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAGCA, alt=CCC, chromosome=chr7, position=55174776}
  */
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("EGFR:p.L747_A750delinsP");
         assertEquals("ENST00000275493", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(55_174_776, record.Position);
@@ -200,7 +200,7 @@ public class TransvalTest extends TransvalTestBase
         therefore A is at 55_174_722 + 63 = 55_174_785
         Changes keep the G of the codon for A, so begin at 55_174_785 + 1
          */
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.A750_I759delinsG");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("EGFR:p.A750_I759delinsG");
         assertEquals("ENST00000275493", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(55_174_786, record.Position);
@@ -235,7 +235,7 @@ public class TransvalTest extends TransvalTestBase
 
         candidateAlternativeCodons={TCA, AGC, AGT, TCC, TCG, TCT}*{CCA, CCC, CCG, CCT}*{CAA, CAG} (48 possibilities)
          */
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.L747_K754delinsSPQ");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("EGFR:p.L747_K754delinsSPQ");
         assertEquals("ENST00000275493", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertFalse(record.SpansMultipleExons);
@@ -262,7 +262,7 @@ public class TransvalTest extends TransvalTestBase
         Printing hotspots for 'VHL:p.A5_W8delinsM' on transcript null
         Hotspot{ref=GCGGAGAACTG, alt=AT, chromosome=chr3, position=10141860}
          */
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("VHL:p.A5_W8delinsM");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("VHL:p.A5_W8delinsM");
         assertEquals("ENST00000256474", record.transcriptId());
         assertEquals("3", record.Chromosome);
         assertEquals(10_141_860, record.Position);
@@ -287,7 +287,7 @@ Converted 'EGFR|null|p.I744_K745delinsKIPVAI' to 1 hotspot(s)
 Printing hotspots for 'EGFR:p.I744_K745delinsKIPVAI' on transcript null
 Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("EGFR:p.I744_K745delinsKIPVAI");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("EGFR:p.I744_K745delinsKIPVAI");
         assertEquals("ENST00000275493", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(55_174_768, record.Position);
@@ -327,7 +327,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Printing hotspots for 'ZYX:p.P67_D70delinsWKY' on transcript null
          */
 
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("ZYX:p.P67_D70delinsWKY");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("ZYX:p.P67_D70delinsWKY");
         assertEquals("ENST00000322764", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(143_381_770, record.Position);
@@ -366,7 +366,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
 03:00:58 - [INFO ] - Printing hotspots for 'ZYX:p.E382_G385delinsDP' on transcript null
          */
 
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("ZYX:p.E382_G385delinsDP");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("ZYX:p.E382_G385delinsDP");
         assertEquals("ENST00000322764", record.transcriptId());
         assertEquals("7", record.Chromosome);
         assertEquals(143_388_490, record.Position);
@@ -405,7 +405,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Hotspot{ref=GGAGG, alt=AA, chromosome=chr3, position=10141855}
         Hotspot{ref=CGGAG, alt=CA, chromosome=chr3, position=10141854}
         */
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("VHL:p.R3_R4delinsQ");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("VHL:p.R3_R4delinsQ");
         assertEquals("ENST00000256474", record.transcriptId());
         assertEquals("3", record.Chromosome);
         assertEquals(10_141_855, record.Position);
@@ -441,7 +441,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Hotspot{ref=CAGCG, alt=CT, chromosome=chr7, position=140924692}
         Hotspot{ref=CAGCG, alt=TT, chromosome=chr7, position=140924692}
          */
-        TransvalInsertionDeletion record = (TransvalInsertionDeletion) transval.calculateVariant("BRAF:p.A3_L4delinsE");
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("BRAF:p.A3_L4delinsE");
         assertEquals("ENST00000646891", record.transcriptId()); // canonical
         assertEquals("7", record.Chromosome);
         assertEquals(140_924_693, record.Position);
@@ -452,5 +452,49 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertEquals(2, hotspots.size());
         assertTrue(hotspots.contains(hotspot("AGCG", "T", "chr7", 140_924_693)));
         assertTrue(hotspots.contains(hotspot("CAGCG", "TT", "chr7", 140_924_692)));
+    }
+
+    @Test
+    public void pik3r1delinsTest()
+    {
+        // A bug found when testing against the serve data.
+        /*
+        PIK3R1 E451_Y452delinsD
+        '+' strand, chr5, exon 10
+        E   Y
+        GAA TAT
+        D: {GAC, GAT}
+        Exon starts at 68_293_709
+        These bases precede E:
+        GATCAAGTTGTCAAAGAAGATAATATTGAAGCTGTAGGGAAAAAATTACAT (51 bases)
+        So the codon for E is at 68_293_709 + 51 = 68_293_760
+
+        Need GAA TAT -> GAC or GAA TAT -> GAT
+        ATAT -> C or AAT -> ""
+         */
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("PIK3R1:p.E451_Y452delinsD");
+        assertEquals("ENST00000521381", record.transcriptId()); // canonical
+        assertEquals("5", record.Chromosome);
+//        assertEquals(140_924_693, record.Position);
+        assertFalse(record.SpansMultipleExons);
+
+//        assertEquals(4, record.deletedBasesCount());
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(2, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("AAT", "", "chr5", 68_293_761)));
+        assertTrue(hotspots.contains(hotspot("ATAT", "C", "chr5", 68_293_762)));
+    }
+
+//    @Test
+    public void delTest()
+    {
+        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("PIK3R1:p.K459del");
+        assertEquals("ENST00000521381", record.transcriptId()); // canonical
+        assertEquals("5", record.Chromosome);
+        assertFalse(record.SpansMultipleExons);
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(2, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("AAT", "", "chr5", 68_293_761)));
+
     }
 }

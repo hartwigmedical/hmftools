@@ -104,6 +104,15 @@ public class DeletionInsertionChangeTest extends TransvalTestBase
     }
 
     @Test
+    public void chooseLeftMost()
+    {
+        DeletionInsertionChange change = change("GAATAT", "GAT");
+        assertEquals("AAT", change.deleted());
+        assertEquals("", change.inserted());
+        assertEquals(1, change.positionOfDeletion());
+    }
+
+    @Test
     public void rightMatchIsLongest()
     {
         // VHL A5_W8 => DR
