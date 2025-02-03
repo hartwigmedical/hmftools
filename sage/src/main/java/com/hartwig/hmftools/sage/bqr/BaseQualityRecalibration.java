@@ -302,7 +302,7 @@ public class BaseQualityRecalibration
         if(triNucRate == 0 || (observedCount + altRefCount) == 0)
             return 0;
 
-        double calcProbability = triNucRate * observedCount / (observedCount + altRefCount);
+        double calcProbability = min(triNucRate * observedCount / (observedCount + altRefCount), 1.0);
         return probabilityToPhredQual(calcProbability);
     }
 

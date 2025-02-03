@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValuesAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -318,8 +319,7 @@ public class AssemblyConfig
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
-        String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
-        configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
+        configBuilder.addConfigItem(WRITE_TYPES, false, enumValuesAsStr(WriteType.values(), "Write types", ITEM_DELIM));
 
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addConfigItem(

@@ -50,6 +50,9 @@ public class LocalSequenceMatcher
         JunctionSequence assemblySeq = JunctionSequence.formStraddlingMatchSequence(
                 assembly, false, PHASED_ASSEMBLY_MATCH_SEQ_LENGTH / 2, -1);
 
+        // consider switching the assembly sequence to purely extension bases since that is what is expected to match the local sequence
+        // JunctionSequence assemblySeq = JunctionSequence.formFullExtensionMatchSequence(assembly, false);
+
         Orientation localRefOrientation = assembly.junction().Orient.opposite();
         JunctionSequence localRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, localRefOrientation, false);
 

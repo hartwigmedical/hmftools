@@ -9,7 +9,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
@@ -32,6 +34,7 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -80,13 +83,16 @@ public class ReadFilters
 
     public static boolean filterLowQualRead(final SAMRecord read)
     {
-        // filter any read with 50% + bases classified as low qual
+        // filter any read with 50% + bases classified as low qual or any invalid base
         int baseLength = read.getReadBases().length;
         int qualCountThreshold = baseLength / 2 + 1;
         int lowQualCount = 0;
 
         for(int i = 0; i < baseLength; ++i)
         {
+            if(Nucleotides.baseIndex(read.getReadBases()[i]) < 0)
+                read.getReadBases()[i] = DNA_N_BYTE; // simplifies usage downstream in assembly for other non-standard letters
+
             if(belowMinQual(read.getBaseQualities()[i]))
             {
                 ++lowQualCount;
@@ -141,7 +147,7 @@ public class ReadFilters
 
         if(!mateUnmapped(record) && !record.getReadUnmappedFlag())
         {
-            int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
+            int insertAlignmentOverlap = abs(inferredInsertSizeAbs(record) - alignedBases);
 
             if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
                 read.addFilter(ReadFilterType.INSERT_MAP_OVERLAP);

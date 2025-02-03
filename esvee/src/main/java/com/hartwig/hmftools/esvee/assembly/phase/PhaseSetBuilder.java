@@ -230,7 +230,7 @@ public class PhaseSetBuilder
             boolean firstHighReadCount = assemblyHasHighReadCount(assembly1);
             populateReadIds(assembly1, firstReadIds, localOnly);
 
-            // allow linking assemblies to be included, so as to allow secondary links to be found
+            // allow linking assemblies to be included, to allow secondary links to be found
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
@@ -239,15 +239,26 @@ public class PhaseSetBuilder
                 if(existingCandidates.stream().anyMatch(x -> x.matchesAssemblies(assembly1, assembly2)))
                     continue;
 
-                boolean isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
+                boolean isLocalIndel = false;
+                boolean isLocalLink = false;
 
-                boolean isLocalLink = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2);
+                if(localOnly)
+                {
+                    isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
 
-                if(localOnly && !isLocalLink)
-                    continue;
+                    isLocalLink = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2);
 
-                if(isLocalLink && (assembly1.discordantOnly() || assembly2.discordantOnly()))
-                    continue;
+                    if(!isLocalLink)
+                        continue;
+
+                    // discordant pairs cannot by definition be short local indel-type links
+                    if(assembly1.discordantOnly() || assembly2.discordantOnly())
+                        continue;
+
+                    // only link indel junctions to each other
+                    if(assembly1.indel() != assembly2.indel())
+                        continue;
+                }
 
                 Set<String> secondReadIds = Sets.newHashSet();
                 boolean secondHighReadCount = assemblyHasHighReadCount(assembly2);
@@ -292,7 +303,7 @@ public class PhaseSetBuilder
                 ExtensionCandidate extensionCandidate = new ExtensionCandidate(type, assemblyLink);
                 mExtensionCandidates.add(extensionCandidate);
 
-                // now count up all possible linking fragments so as to compare with other candidate links and extensions
+                // now count up all possible linking fragments to compare with other candidate links and extensions
                 countSharedFragments(extensionCandidate, firstReadIdsRelated, secondReadIdsRelated);
             }
         }

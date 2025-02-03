@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftCli
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -391,26 +392,35 @@ public class JunctionAssembler
         return true;
     }
 
-    private static boolean aboveMinSupportThreshold(final List<SupportRead> assemblySupport)
+    private boolean aboveMinSupportThreshold(final List<SupportRead> assemblySupport)
     {
+        int minRequiredReadCount = minReadThreshold(mJunction);
+
         // account for overlapping fragments
-        if(assemblySupport.size() >= ASSEMBLY_MIN_READ_SUPPORT * 2)
+        if(assemblySupport.size() >= minRequiredReadCount * 2)
             return true;
 
         Set<String> uniqueReadIds = Sets.newHashSet();
         assemblySupport.forEach(x -> uniqueReadIds.add(x.id()));
 
-        return uniqueReadIds.size() >= ASSEMBLY_MIN_READ_SUPPORT;
+        return uniqueReadIds.size() >= minRequiredReadCount;
     }
 
-    private static boolean aboveMinReadThreshold(final List<Read> reads)
+    private boolean aboveMinReadThreshold(final List<Read> reads)
     {
-        if(reads.size() >= ASSEMBLY_MIN_READ_SUPPORT * 2)
+        int minRequiredReadCount = minReadThreshold(mJunction);
+
+        if(reads.size() >= minRequiredReadCount * 2)
             return true;
 
         Set<String> uniqueReadIds = Sets.newHashSet();
         reads.forEach(x -> uniqueReadIds.add(x.id()));
 
-        return uniqueReadIds.size() >= ASSEMBLY_MIN_READ_SUPPORT;
+        return uniqueReadIds.size() >= minRequiredReadCount;
+    }
+
+    protected static int minReadThreshold(final Junction junction)
+    {
+        return junction.Hotspot ? MIN_HOTSPOT_JUNCTION_SUPPORT : ASSEMBLY_MIN_READ_SUPPORT;
     }
 }

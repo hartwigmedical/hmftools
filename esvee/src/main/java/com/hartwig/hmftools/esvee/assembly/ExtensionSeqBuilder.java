@@ -14,9 +14,9 @@ import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.getRepeatCount;
@@ -65,7 +65,6 @@ public class ExtensionSeqBuilder
     private boolean mIsValid;
     private boolean mRequiredRebuild;
 
-    private static final double MISMATCH_READ_REBUILD_PERC = 0.1;
     private static final int READ_REPEAT_COUNT_INVALID = -1;
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
@@ -178,11 +177,11 @@ public class ExtensionSeqBuilder
 
     public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
 
+    protected static int DNA_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // allows for Ns
+
     private void buildSequence(boolean isInitial)
     {
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
-
-        int baseCount = Nucleotides.DNA_BASES.length;
 
         boolean lineBasesSet = false;
 
@@ -276,9 +275,9 @@ public class ExtensionSeqBuilder
                     }
                 }
 
-                if(base == DNA_N_BYTE)
+                if(Nucleotides.baseIndex(base) < 0)
                 {
-                    base = DNA_BASE_BYTES[0];
+                    base = DNA_N_BYTE;
                     qual = 0;
                 }
 
@@ -310,8 +309,8 @@ public class ExtensionSeqBuilder
                         hasMismatch = true;
 
                         // high-qual mismatch so start tracking frequencies for each base
-                        totalQuals = new int[baseCount];
-                        maxQuals = new int[baseCount];
+                        totalQuals = new int[DNA_BASE_COUNT];
+                        maxQuals = new int[DNA_BASE_COUNT];
 
                         // back port existing counts to the per-base arrays
                         int baseIndex = Nucleotides.baseIndex(consensusBase);
@@ -337,7 +336,7 @@ public class ExtensionSeqBuilder
                 // take the bases with the highest qual totals
                 int maxQual = 0;
                 int maxBaseIndex = 0;
-                for(int b = 0; b < baseCount; ++b)
+                for(int b = 0; b < totalQuals.length; ++b)
                 {
                     if(totalQuals[b] > maxQual)
                     {
@@ -816,10 +815,11 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.extensionLength() + 1, maxValidExtensionLength);
         }
 
-        if(maxValidExtensionLength == 0 || validExtensionReadCount < ASSEMBLY_MIN_READ_SUPPORT || !hasMinLengthSoftClipRead)
+        int minRequiredReadCount = minReadThreshold(mJunction);
+
+        if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < minRequiredReadCount)
         {
             mIsValid = false;
-            return;
         }
     }
 

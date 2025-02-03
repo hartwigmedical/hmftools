@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.bam;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadBoundaryPosition;
@@ -31,6 +32,7 @@ public final class SamRecordUtils
     public static final String NUM_MUTATONS_ATTRIBUTE = SAMTag.NM.name();
     public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
     public static final String ALIGNMENT_SCORE_ATTRIBUTE = SAMTag.AS.name();
+    public static final String BASE_MODIFICATIONS_ATTRIBUTE = "MM";
 
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
@@ -66,6 +68,17 @@ public final class SamRecordUtils
     {
         return record.getReadPairedFlag() && record.getMateNegativeStrandFlag();
     }
+
+    public static int inferredInsertSize(final SAMRecord record)
+    {
+        if(record.getReadPairedFlag())
+            return record.getInferredInsertSize();
+
+        int insertSize = record.getInferredInsertSize();
+        return insertSize > 0 ? insertSize : record.getReadBases().length;
+    }
+
+    public static int inferredInsertSizeAbs(final SAMRecord record) { return abs(inferredInsertSize(record)); }
 
     public static boolean properPair(final SAMRecord record)
     {

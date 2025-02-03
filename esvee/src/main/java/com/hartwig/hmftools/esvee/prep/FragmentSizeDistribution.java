@@ -8,6 +8,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -47,12 +48,14 @@ public class FragmentSizeDistribution
     private final PrepConfig mConfig;
     private final List<LengthFrequency> mLengthFrequencies;
     private int mMaxReadLength;
-    
+    private boolean mHasPairedReads;
+
     public FragmentSizeDistribution(final PrepConfig config)
     {
         mConfig = config;
         mLengthFrequencies = Lists.newArrayList();
         mMaxReadLength = 0;
+        mHasPairedReads = false;
     }
     
     public void run()
@@ -87,6 +90,7 @@ public class FragmentSizeDistribution
         {
             mergeDistributions(mLengthFrequencies, chrTask.lengthFrequencies());
             mMaxReadLength = max(mMaxReadLength, chrTask.maxReadLength());
+            mHasPairedReads |= chrTask.hasPairedRead();
         }
 
         SV_LOGGER.info("maxReadLength({})", mMaxReadLength);
@@ -109,6 +113,7 @@ public class FragmentSizeDistribution
     }
 
     public int maxReadLength() { return mMaxReadLength; }
+    public boolean hasPairedReads() { return mHasPairedReads; }
 
     public FragmentLengthBounds calculateFragmentLengthBounds() { return calculateFragmentLengthBounds(mLengthFrequencies); }
 
@@ -205,12 +210,14 @@ public class FragmentSizeDistribution
         private final SamReader mSamReader;
         private final List<LengthFrequency> mLengthFrequencies;
         private int mMaxReadLength;
+        private boolean mHasPairedReads;
 
         public ChromosomeTask(final String chromosome)
         {
             mChromosome = chromosome;
             mProcessedReads = 0;
             mMaxReadLength = 0;
+            mHasPairedReads = false;
 
             // only run on the first sample if more than 1 are loaded
             mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.bamFile()));
@@ -221,6 +228,7 @@ public class FragmentSizeDistribution
 
         public List<LengthFrequency> lengthFrequencies() { return mLengthFrequencies; }
         public int maxReadLength() { return mMaxReadLength; }
+        public boolean hasPairedRead() { return mHasPairedReads; }
 
         @Override
         public Long call()
@@ -241,6 +249,7 @@ public class FragmentSizeDistribution
                 return;
 
             mMaxReadLength = max(mMaxReadLength, record.getReadBases().length);
+            mHasPairedReads |= record.getReadPairedFlag();
 
             ++mProcessedReads;
 
@@ -259,11 +268,15 @@ public class FragmentSizeDistribution
             if(record.getDuplicateReadFlag())
                 return false;
 
-            int fragmentLength = abs(record.getInferredInsertSize());
+            int fragmentLength = abs(inferredInsertSize(record));
             if(fragmentLength > FRAG_LENGTH_DIST_MAX_LENGTH)
                 return false;
 
             int readLength = record.getReadBases().length;
+
+            if(!record.getReadPairedFlag() && fragmentLength == 0)
+                fragmentLength = readLength;
+
             if(fragmentLength < readLength)
                 return false;
 
@@ -304,7 +317,7 @@ public class FragmentSizeDistribution
 
         private void addFragmentLength(final SAMRecord record)
         {
-            int fragmentLength = getLengthBucket(abs(record.getInferredInsertSize()));
+            int fragmentLength = getLengthBucket(abs(inferredInsertSize(record)));
 
             if(fragmentLength <= 0)
                 return;
@@ -364,7 +377,7 @@ public class FragmentSizeDistribution
             for(LengthFrequency lengthFrequency : mLengthFrequencies)
             {
                 // cap any fragmemt distribution entry at the observed read length to avoid the use of trimmed fragments impacting it
-                if(mMaxReadLength > 0 && lengthFrequency.Length < mMaxReadLength)
+                if(mHasPairedReads &&  mMaxReadLength > 0 && lengthFrequency.Length < mMaxReadLength)
                     continue;
 
                 writer.write(format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));

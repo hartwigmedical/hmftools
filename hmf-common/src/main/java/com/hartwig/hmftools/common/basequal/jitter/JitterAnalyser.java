@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
 
-import com.google.common.collect.Lists;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 

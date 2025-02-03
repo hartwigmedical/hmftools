@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValuesAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
@@ -31,7 +32,6 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESH
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
@@ -77,7 +77,6 @@ public class PrepConfig
     public final BlacklistLocations Blacklist;
 
     public final int PartitionSize;
-    public int ReadLength; // can be set from default, config or the fragment length distribution routine
     public final boolean CalcFragmentLength;
     public final ValidationStringency BamStringency;
 
@@ -90,7 +89,6 @@ public class PrepConfig
     public final int Threads;
     public final boolean UseCacheBam;
     public final boolean TrimReadId;
-    public final boolean UnpairedReads;
 
     // debug
     public final SpecificRegions SpecificChrRegions;
@@ -102,6 +100,10 @@ public class PrepConfig
     public final boolean NoCleanUp;
 
     private boolean mIsValid;
+
+    // both of these are set from the fragment length distribution
+    private int mReadLength;
+    private boolean mUnpairedReads;
 
     // config strings
     public static final String BAM_FILE = "bam_file";
@@ -166,7 +168,6 @@ public class PrepConfig
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
-        ReadLength = configBuilder.getInteger(READ_LENGTH);
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
 
@@ -201,11 +202,13 @@ public class PrepConfig
 
         // optimisations and debug
         TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters();
-        UnpairedReads = configBuilder.hasFlag(UNPAIRED_READS);
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
+
+        mReadLength = configBuilder.getInteger(READ_LENGTH);
+        mUnpairedReads = false;
     }
 
     public boolean isValid()
@@ -219,6 +222,12 @@ public class PrepConfig
         return true;
     }
 
+    public int readLength() { return mReadLength; }
+    public void setReadLength(int length) { mReadLength = length; }
+
+    public boolean unpairedReads() { return mUnpairedReads; }
+    public void setUnpairedReads(boolean unpaired) { mUnpairedReads = unpaired; }
+
     public String sampleId() { return SampleIds.get(0); }
     public String bamFile() { return BamFiles.get(0); }
 
@@ -231,7 +240,7 @@ public class PrepConfig
         switch(writeType)
         {
             case READS:
-                fileExtension = "reads" + TSV_EXTENSION;
+                fileExtension = "read" + TSV_EXTENSION;
                 break;
 
             case UNSORTED_BAM:
@@ -280,8 +289,6 @@ public class PrepConfig
 
         PartitionSize = partitionSize;
 
-        ReadLength = DEFAULT_READ_LENGTH;
-
         ReadFiltering = new ReadFilters(new ReadFilterConfig(
                 MIN_ALIGNMENT_BASES,
                 MIN_MAP_QUALITY,
@@ -304,9 +311,11 @@ public class PrepConfig
         UseCacheBam = false;
         PerfDebug = false;
         TrimReadId = false;
-        UnpairedReads = false;
         NoCleanUp = false;
         MaxFragmentLengthOverride = -1;
+
+        mUnpairedReads = false;
+        mReadLength = DEFAULT_READ_LENGTH;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -320,7 +329,9 @@ public class PrepConfig
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addFlag(CALC_FRAG_LENGTH, "Calculate distribution for fragment length");
-        configBuilder.addConfigItem(WRITE_TYPES, "Write types: " + WriteType.values().toString() + ", separated by ';'");
+
+        configBuilder.addConfigItem(WRITE_TYPES, enumValuesAsStr(WriteType.values(), "Write types", ITEM_DELIM));
+
         configBuilder.addFlag(UNPAIRED_READS, "Unpaired reads ignores non-expect junction support");
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);

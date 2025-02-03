@@ -13,8 +13,10 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -28,6 +30,7 @@ public abstract class BamWriter
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
     private final JitterAnalyser mJitterAnalyser;
+    private final boolean mRecomputeFragCoords;
 
     protected final AtomicLong mNonConsensusReadCount;
     protected final AtomicLong mConsensusReadCount;
@@ -41,6 +44,7 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
+        mRecomputeFragCoords = mReadDataWriter.enabled() && DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse);
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -80,12 +84,14 @@ public abstract class BamWriter
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
         String fragCoords = group.fragmentCoordinates().Key;
-
         if(group.consensusRead() != null)
         {
             SAMRecord read = group.consensusRead();
             processRecord(read);
             mConsensusReadCount.incrementAndGet();
+
+            if(mRecomputeFragCoords)
+                fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             if(mReadDataWriter != null && mReadDataWriter.enabled())
                 mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId());
@@ -97,6 +103,9 @@ public abstract class BamWriter
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+            if(mRecomputeFragCoords)
+                fragCoords = FragmentCoords.fromRead(read, false).Key;
+
             writeRead(read, fragmentStatus, fragCoords, group.umiId());
         }
     }

@@ -7,9 +7,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
@@ -276,10 +273,7 @@ public class GridssSvFactory implements SvFactoryInterface
         double qualityScore = context.getPhredScaledQual();
 
         builder.id(context.getID())
-                .recovered(context.getAttributeAsBoolean(RECOVERED, false))
                 .hotspot(context.getAttributeAsBoolean(HOTSPOT, false))
-                .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
-                .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event(context.getAttributeAsString(EVENT, null))
                 .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "")
                         .stream()
@@ -289,7 +283,6 @@ public class GridssSvFactory implements SvFactoryInterface
                         .stream()
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")))
-                .imprecise(imprecise(context))
                 .qualityScore(qualityScore)
                 .insertSequenceAlignments(context.getAttributeAsStringList(BEALN, "")
                         .stream()

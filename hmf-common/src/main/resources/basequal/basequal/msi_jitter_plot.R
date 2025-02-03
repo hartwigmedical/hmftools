@@ -22,7 +22,6 @@ if (!file.exists(msStatsTableFile))
   stop()
 }
 
-#"~/hartwig/repeat_profiles/ACTN01020270R.ms_table.tsv.gz"
 df <- read.table(msStatsTableFile, header = TRUE, sep = "\t", check.names = FALSE) %>%
   rename("reads" = "readCount")
 
@@ -54,7 +53,6 @@ df <- df %>%
 df$jitter <- factor(df$jitter, levels=c(sprintf("%+d", c(-10:10)), "reads"))
 
 units <- c("A/T", "C/G", "AT/TA", "AG/GA/CT/TC", "AC/CA/GT/TG", "CG/GC", "3bp repeat", "4bp repeat", "5bp repeat")
-#units <- head(units, 1)
 
 msStatsHeatmap <- file.path(outDir, paste0(sampleId, '.ms_stats.png'))
 png(file = msStatsHeatmap, res = 140, height = 2200, width = 4000)
@@ -62,34 +60,30 @@ png(file = msStatsHeatmap, res = 140, height = 2200, width = 4000)
 # Create a list to store individual plots
 plot_list <- list()
 
+format_read_counts <- function(read_counts, scientific_cutoff=10000){
+  ifelse(
+    read_counts < scientific_cutoff,
+    format(read_counts, big.mark=",", scientific=FALSE),
+    sub("E[+]0", "E", sprintf("%.2G", read_counts))
+  )
+}
+
 for (msUnit in units) {
   print(msUnit)
   jitter_df <- df %>%
     filter(unit == msUnit, numUnits %in% 4:20) %>%
     select(-c(unit))
   
-  if(FALSE) {
-    # to fix: https://stackoverflow.com/questions/23478497/ggplot2-y-axis-order-changes-after-subsetting
-  # Create a plot for each unit
-  p <- ggplot(jitter_df, aes(x = jitter, y = reorder(numUnits, desc(numUnits)))) +
-    geom_tile(aes(fill = rate), color = "white", subset(jitter_df, jitter != "reads" & reads > 0)) +
-    geom_tile(aes(fill = 10), color = "grey5", subset(jitter_df, jitter == "reads")) +
-    scale_fill_gradient(low = "white", high = "deepskyblue", trans = "log", limits=c(0.001,100), guide="none") +
-    geom_text(aes(label = sprintf("%.2f", rate)), size=3, subset(jitter_df, jitter != "reads" & reads > 0)) +
-    geom_text(aes(label = format(rate, big.mark=",", scientific=FALSE)), size=3, subset(jitter_df, jitter == "reads")) +
-    theme_minimal() +
-    labs(title = paste("unit =", msUnit), x="jitter", y="num units")
-  }
-  else {
   # Create a plot for each unit
   p <- ggplot(jitter_df, aes(x = jitter, y = reorder(numUnits, desc(numUnits)))) +
     geom_tile(aes(fill = rate), color = "white") +
-    scale_fill_gradient(low = "white", high = "deepskyblue", trans = "log", limits=c(0.001,100), guide="none") +
+    scale_fill_gradient(low = "white", high = "deepskyblue", trans = "log", limits=c(0.001,100), guide="none", na.value="lightgrey") +
     geom_text(aes(label = sprintf("%.2f", rate)), size=3, subset(jitter_df, jitter != "reads" & reads > 0)) +
-    geom_text(aes(label = format(rate, big.mark=",", scientific=FALSE)), size=3, subset(jitter_df, jitter == "reads")) +
+    
+    geom_text(aes(label = format_read_counts(rate)), size=3, subset(jitter_df, jitter == "reads")) +
+    
     theme_minimal() +
     labs(title = paste("unit =", msUnit), x="jitter", y="num units")
-  }
   
   # Add the plot to the list
   plot_list[[msUnit]] <- p

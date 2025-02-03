@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
@@ -188,6 +189,7 @@ public class ReadContextCounter
     public boolean isIndel() { return mIsIndel; }
     public boolean isLongInsert() { return SimpleVariant.isLongInsert(mVariant); }
     public boolean isLongIndel() { return mVariant.indelLengthAbs() >= LONG_INSERT_LENGTH; }
+    public boolean isInLongRepeat() { return mReadContext.maxRepeatCount() >= LONG_REPEAT_LENGTH; }
     public final ReadContextQualCache qualCache() { return mQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }

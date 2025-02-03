@@ -66,11 +66,7 @@ public enum WriteType
 
                 for(String writeType : writeTypeValues)
                 {
-                    // backwards compatibility
-                    if(writeType.equals("ALIGNMENTS"))
-                        writeTypes.add(ALIGNMENT);
-                    else
-                        writeTypes.add(WriteType.valueOf(writeType));
+                    writeTypes.add(WriteType.valueOf(writeType));
                 }
             }
         }

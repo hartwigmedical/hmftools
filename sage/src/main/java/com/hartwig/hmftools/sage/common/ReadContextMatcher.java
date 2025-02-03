@@ -68,7 +68,15 @@ public class ReadContextMatcher
 
         public boolean coversIndex(int index)
         {
-            index += mIndexOffset;
+            boolean covers = coversIndex(index, mIndexOffset);
+            if(mIndexOffset != 0)
+                covers |= coversIndex(index, 0);
+            return covers;
+        }
+
+        public boolean coversIndex(int index, int indexOffset)
+        {
+            index += indexOffset;
 
             if(IsRange)
                 return index >= Indices.get(0) && index <= Indices.get(1);

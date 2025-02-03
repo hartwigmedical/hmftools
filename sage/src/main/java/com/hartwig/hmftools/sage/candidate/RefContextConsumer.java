@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -51,6 +52,8 @@ public class RefContextConsumer
     private RegionBlock mNextRegionBlock;
 
     private int mReadCount;
+
+    private static final String N_BASE = String.valueOf(Nucleotides.DNA_N_BASE);
 
     public RefContextConsumer(
             final SageConfig config, final ChrBaseRegion regionBounds, final RefSequence refSequence, final RefContextCache refContextCache,
@@ -340,6 +343,9 @@ public class RefContextConsumer
 
         String ref = new String(mRefSequence.Bases, refIndex, 1);
         String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
+
+        if(alt.contains(N_BASE))
+            return;
 
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 

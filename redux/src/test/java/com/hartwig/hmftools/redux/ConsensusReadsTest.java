@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.redux.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
@@ -27,23 +26,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.S;
-
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
-import com.hartwig.hmftools.redux.consensus.ReadParseState;
 
 import org.junit.Test;
 
@@ -64,7 +56,7 @@ public class ConsensusReadsTest
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES.length());
-        mConsensusReads = new ConsensusReads(mRefGenome, ILLUMINA);
+        mConsensusReads = new ConsensusReads(mRefGenome);
 
         mRefGenomeOneBased = new MockRefGenome(true);
         mRefGenomeOneBased.RefGenomeMap.put(CHR_1, REF_BASES);
@@ -322,11 +314,11 @@ public class ConsensusReadsTest
         String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
         reads.add(createSamRecord(nextReadId(), posStart, readBases2, "5M5S", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
 
-        consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
+        consensusReads = new ConsensusReads(mRefGenomeOneBased);
         consensusReads.setChromosomeLength(mRefGenomeOneBased.getChromosomeLength(CHR_1));
         readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
@@ -344,11 +336,11 @@ public class ConsensusReadsTest
         String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
         reads.add(createSamRecord(nextReadId(), posStart, readBases2, "1M1D3M5S", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
 
-        consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
+        consensusReads = new ConsensusReads(mRefGenomeOneBased);
         consensusReads.setChromosomeLength(mRefGenomeOneBased.getChromosomeLength(CHR_1));
         readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
@@ -365,7 +357,7 @@ public class ConsensusReadsTest
         String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
         reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S5M", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
     }
@@ -381,7 +373,7 @@ public class ConsensusReadsTest
         String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
         reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S1M1D3M", false));
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased, ILLUMINA);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
     }

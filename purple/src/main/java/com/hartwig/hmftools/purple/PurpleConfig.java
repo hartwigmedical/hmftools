@@ -44,7 +44,6 @@ public class PurpleConfig
     // debug only
     public final boolean FilterSomaticsOnGene;
     public final boolean WriteAllSomatics;
-    public final boolean UseGridssSVs;
     public final SpecificRegions SpecificChrRegions;
 
     private boolean mIsValid;
@@ -107,12 +106,6 @@ public class PurpleConfig
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
         FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
-        UseGridssSVs = SampleFiles.usesGripssSVs();
-
-        if(UseGridssSVs)
-        {
-            PPL_LOGGER.info("using deprecated Gridss/Gripss VCFs");
-        }
 
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",

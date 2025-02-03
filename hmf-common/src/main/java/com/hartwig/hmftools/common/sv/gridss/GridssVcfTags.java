@@ -86,9 +86,4 @@ public class GridssVcfTags
     // may be merged with SV_TYPE? Gripss uses this to set StructuralVariantType
     public static final String EVENT_TYPE = "EVENTTYPE";
     public static final String EVENT_TYPE_DESC = "Structural variant type";
-
-    public static final String ALT_PATH = "ALT_PATH";
-    public static final String ALT_PATH_DESC = "Alternate path";
-    public static final String RESCUE_INFO = "RESCUED";
-    public static final String RESCUE_INFO_DESC = "Partner breakend rescue";
 }

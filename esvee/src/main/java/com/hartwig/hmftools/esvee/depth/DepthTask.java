@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -481,15 +482,16 @@ public class DepthTask implements Callable
             if(!isSupplementary && readGroup.Reads.size() > 1)
             {
                 Orientation orientation = !read.getReadNegativeStrandFlag() ? FORWARD : REVERSE;
+                int fragmentSize = inferredInsertSizeAbs(read);
 
                 if(orientation.isForward() && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
-                && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
+                && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
                 }
                 else if(orientation.isReverse() && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
-                && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
+                && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;

@@ -300,7 +300,7 @@ Finally each assembly within the phase group are compared to each other.  If the
 ### STEP 2D: Alignment & variant calling 
 
 #### Alignment 
-ESVEE now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter whichhas the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100) 
+ESVEE now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter whic hhas the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100).  The mismatch penalty is also raised from 4 to 6 to 
 
 BWA may return one primary alignment as well as one or more supplementary alignments. Since BWA can assign an unreliable MAPQ to supplementary alignments, any supplementary alignments are realigned again using BWA with the primary alignment of the re-query kept and any further supplementaries dropped 
 
@@ -313,7 +313,7 @@ where:
 AdjustedAlignmentScore = Alignment score – IHOM length – repeatBases[repeatCount>2] 
 ```
  
-Note that if (alignmentScore + 15 < 0.85 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
+Note that if (alignmentScore + 15 < 0.77 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
 
 The interpretation of the alignment depends on both the modified map quality and the XA tag which will display the alternative alignments if there are a small number of alternatives. Assemblies with no alignments or with all alignments with modMAPQ < 10 and NULL XA tags are ignored. 
 
@@ -389,7 +389,7 @@ In targeted mode, SGL breakends are only retained if in a targeted region.
 If the same precise breakend is found to PASS multiple times in the VCF then retain the variant with the highest QUAL only 
 
 #### Germline or Somatic determination 
-A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
+A consolidated VCF is produced showing all soft filters. If a germline sample is present and BOTH max(germline AF/TumorAF) > 0.1 AND germlineAD / tumorAD > 0.01 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf based on both a SGL BE PON (for SGL breakends) and a paired BE PON (for junctions). SGL breakends with candidate alignments that fall in the SSX2, SSX2B or DUX4 regions are never PON filtered. For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
 ## Summary of LINE insertion site behaviour
 
@@ -464,12 +464,13 @@ Know sources of errors
 Alignment
 - We should analyse additional supplemementary alignments arising from re-query of initial supplementary alignments (currently dropping)
 - We should requery long softclips to see if additional alignments can be found.
+- We don't take into account homology for pure INS (which may be duplications)
 
 ESVEE has some implicit and explicit assumptions on reads, qualities and alignments:
 - **AS field** - AS is currently required
 - **Low qual masking** -  assumes a high proportion of bases have qual > 30 
 - **Read lengths** - Soft clip & alignment score assumptions require read lengths > 80 bases
-- **Fragment lengts** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
+- **Fragment lengtsh** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
 - **Low Qual INDELS** - Technologies with many low quality indel errors (eg Ultima) may have assembly impacted.  These should be masked from assembly
 - **Hard clipping** - ESVEE prep may not retain reads with hard clipping at or near junctions
 

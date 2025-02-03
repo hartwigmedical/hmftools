@@ -2,7 +2,7 @@
 AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
 When using paired reference/tumor data, AMBER is also able to: 
-  - detect evidence of contamination in the tumor from homozygous sites in the reference; and
+  - detect evidence of contamination in the tumor from homozygous sites in the reference
   - facilitate sample matching / patient deduplication by recording SNPs in the germline
   - identify long regions of homozygosty and consanguinity
 
@@ -124,16 +124,45 @@ No change is made to the SNPCheck or contamination output. These will be run on 
 ## Algorithm 
 
 ### Analysis and filtering of BAF points
-When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
-In tumor only mode, all provided sites are examined in the tumor with additional filtering then applied. 
+When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. Only observations which meet the min map quality, min base quality and min tumor depth and with depth and AF in the specificed range are considered.    In tumor only mode, all provided sites are examined in the tumor with additional filteringon tumor vaf and allelic depth to ensure that the sites are highly unlikely to be homozygous ref or alt in the germline.
  
 ### Segmentation
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
 ### Contamination
+The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage.  It can only be run in Normal/Tumor mode as it works by analysing evidence in the tumor for heterozygosity at corresponding high confidence homozygous reference sites in the normal.  AMBER first detects presence of contamination and then estimates a contamination rate.
+
+**Detect contamination**
+
+AMBER first gathers high confidence homozygous ref sites from the normal sample – each site requires at least 7 reads supporting the REF and 0 reads supporting the ALT. The tumor sample is considered contaminated if, within these corresponding sites, 
+
+- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads is greater than or equals to 3% of the total number of heterozygous sites
+  
+OR
+
+- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads with VAF below 5% is greater than or equals to 0.2% of the total number of heterozygous sites
+
+otherwise contamination is set to 0.
+
+**Determine contamination rate**
+
+The range of the contamination rate is evaluated from 0.001 to 1 in increments of 0.001.
+
+In each candidate site in the Tumor sample with 2 or more ALT support
+- If it is heterozygous, the expected no. contaminated reads = 0.5 * contamination rate * median read depth
+- If it is homozygous with ALT, the expected no. contaminated reads = contamination rate * median read depth
+- If it is homozygous with REF, the expected no. contaminated reads = 0
+
+Assuming a Poisson distribution, the expected probability of detecting a contaminated read is
 ```
-TO DO
+0.5 * Poisson(observation = ALT support, mean = ALT heterozygous mean) 
++ 0.25 * Poisson(observation = ALT support, mean = homozygous mean)
 ```
+AMBER then excludes probabilities associated with ALT support of 0 or 1 and re-normalises the expected probability for all higher ALT support from 3 and more.
+
+AMBER also counts the actual number of positions with ALT support. And similarly calculates the proportion belonging to each ALT support, excluding 0 and 1.
+
+Finally, the contamination rate is chosen whose value minimises the cumulative differences between the predicted and actual proportions. 
 
 ### Regions of Homozygosity
 Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
@@ -210,9 +239,6 @@ ORDER BY sampleCount desc;
 
 # Known issues / future improvements
 - **Population based phasing**: Could significantly increase resolution of subclonal/low tumor fraction BAF segmentation.
-- **TINC**: We should estimate tumor in normal contaminations particularly for leukemias
-
-
  
 # Version History and Download Links
 - [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v4.0rc)
