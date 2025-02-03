@@ -31,6 +31,7 @@ public final class CohortConstants
 
         // Combination of urethra cancer and renal cell cancer cannot easily be mapped.
         DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("734", "2671", "4450"));
+        DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("263", "11819"));
 
         // Combination of esophagus or stomach cancer & gastroesophageal system cancer should resolve to esophagus or stomach.
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080374", "5041"));
