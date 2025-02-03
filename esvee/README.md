@@ -464,12 +464,13 @@ Know sources of errors
 Alignment
 - We should analyse additional supplemementary alignments arising from re-query of initial supplementary alignments (currently dropping)
 - We should requery long softclips to see if additional alignments can be found.
+- We don't take into account homology for pure INS (which may be duplications)
 
 ESVEE has some implicit and explicit assumptions on reads, qualities and alignments:
 - **AS field** - AS is currently required
 - **Low qual masking** -  assumes a high proportion of bases have qual > 30 
 - **Read lengths** - Soft clip & alignment score assumptions require read lengths > 80 bases
-- **Fragment lengts** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
+- **Fragment lengtsh** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
 - **Low Qual INDELS** - Technologies with many low quality indel errors (eg Ultima) may have assembly impacted.  These should be masked from assembly
 - **Hard clipping** - ESVEE prep may not retain reads with hard clipping at or near junctions
 
