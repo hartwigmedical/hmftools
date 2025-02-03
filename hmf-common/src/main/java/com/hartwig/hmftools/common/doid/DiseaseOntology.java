@@ -64,11 +64,6 @@ public final class DiseaseOntology
                 doidEntryBuilder.meta(extractGraphMetaNode(graphObject.getAsJsonObject("meta")));
                 doidEntryBuilder.logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graphObject.getAsJsonArray(
                         "logicalDefinitionAxioms")));
-
-                // Below always seem to be empty string lists
-                doidEntryBuilder.equivalentNodesSets(optionalStringList(graphObject, "equivalentNodesSets"));
-                doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
-                doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
             }
         }
 
@@ -289,7 +284,6 @@ public final class DiseaseOntology
             synonymList.add(ImmutableDoidSynonym.builder()
                     .pred(string(synonymObject, "pred"))
                     .val(string(synonymObject, "val"))
-                    .xrefs(stringList(synonymObject, "xrefs"))
                     .build());
         }
 
