@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +25,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.pon.GnomadCommon;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
@@ -53,8 +56,6 @@ public class PaveConfig
     public static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
 
-    public static final String PON_FILE = "pon_file";
-    public static final String PON_FILTERS = "pon_filters";
     public static final String PON_ARTEFACTS_FILE = "pon_artefact_file";
 
     // optional and debugging config
@@ -123,6 +124,7 @@ public class PaveConfig
         addRefGenomeConfig(configBuilder, true);
         addEnsemblDir(configBuilder, true);
         DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
+
         configBuilder.addPath(PON_FILE, false, "PON entries");
         configBuilder.addPath(PON_ARTEFACTS_FILE, false, "PON artefacts to filter");
         configBuilder.addConfigItem(PON_FILTERS, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
@@ -133,7 +135,7 @@ public class PaveConfig
         configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");
         configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
 
-        GnomadAnnotation.addConfig(configBuilder);
+        GnomadCommon.addConfig(configBuilder);
         Mappability.addConfig(configBuilder);
         ClinvarAnnotation.addConfig(configBuilder);
         Blacklistings.addConfig(configBuilder);

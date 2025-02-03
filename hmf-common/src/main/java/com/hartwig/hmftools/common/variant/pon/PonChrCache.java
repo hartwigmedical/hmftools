@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave.annotation;
+package com.hartwig.hmftools.common.variant.pon;
 
 import static java.lang.String.format;
 
@@ -8,7 +8,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.StringCache;
-import com.hartwig.hmftools.pave.VariantData;
 
 public class PonChrCache
 {
@@ -45,17 +44,12 @@ public class PonChrCache
     public void clear() { mPositionMap.clear(); }
     public int entryCount() { return mPositionMap.values().stream().mapToInt(x -> x.size()).sum(); }
 
-    public PonVariantData getPonData(final VariantData variant)
-    {
-        return getPonData(variant.Position, variant.Ref, variant.Alt);
-    }
-
     public boolean hasEntry(final int position, final String ref, final String alt)
     {
         return getPonData(position, ref, alt) != null;
     }
 
-    private PonVariantData getPonData(final int position, final String ref, final String alt)
+    public PonVariantData getPonData(final int position, final String ref, final String alt)
     {
         List<PonVariantData> posList = mPositionMap.get(position);
 

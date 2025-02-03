@@ -1,14 +1,36 @@
-package com.hartwig.hmftools.pave.annotation;
+package com.hartwig.hmftools.common.variant.pon;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ_DESC;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.StringCache;
-import com.hartwig.hmftools.pave.VariantData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class GnomadChrCache
 {
@@ -16,6 +38,15 @@ public class GnomadChrCache
 
     private final Map<Integer,List<GnomadVariant>> mFrequencies;
     private final StringCache mStringCache;
+
+    public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
+    public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
+    public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
+
+    public static final String PON_GNOMAD_FILTER = "PONGnomad";
+
+    protected static final Logger LOGGER = LogManager.getLogger(GnomadCommon.class);
+
 
     public GnomadChrCache(final String chromosome, final StringCache stringCache)
     {
@@ -58,15 +89,15 @@ public class GnomadChrCache
         public boolean matches(final String ref, final String alt) { return ref.equals(Ref) && alt.equals(Alt); }
     }
 
-    public Double getFrequency(final VariantData variant)
+    public Double getFrequency(final boolean isMnv, final String ref, final String alt, int position)
     {
-        if(variant.isMnv())
+        if(isMnv)
         {
             // check for successive bases for an MNV
             double minFreq = 0;
-            for(int i = 0; i < variant.Ref.length(); ++i)
+            for(int i = 0; i < ref.length(); ++i)
             {
-                Double freq = getFrequency(variant.Position + i, variant.Ref.substring(i, i + 1), variant.Alt.substring(i, i + 1));
+                Double freq = getFrequency(position + i, ref.substring(i, i + 1), alt.substring(i, i + 1));
 
                 if(freq == null)
                     return null;
@@ -79,7 +110,7 @@ public class GnomadChrCache
         }
         else
         {
-            return getFrequency(variant.Position, variant.Ref, variant.Alt);
+            return getFrequency(position, ref, alt);
         }
     }
 
@@ -93,4 +124,19 @@ public class GnomadChrCache
         GnomadVariant match = posList.stream().filter(x -> x.matches(ref, alt)).findFirst().orElse(null);
         return match != null ? match.Frequency : null;
     }
+
+
+    public static void addConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addPath(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
+        configBuilder.addPath(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
+        configBuilder.addFlag(GNOMAD_NO_FILTER, "No Gnomad filter is applied");
+    }
+
+    public static void addHeader(final VCFHeader header)
+    {
+        header.addMetaDataLine(new VCFInfoHeaderLine(GNOMAD_FREQ, 1, VCFHeaderLineType.Float, GNOMAD_FREQ_DESC));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnomad PON"));
+    }
+
 }

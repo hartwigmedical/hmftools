@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
-import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
-import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.util.List;

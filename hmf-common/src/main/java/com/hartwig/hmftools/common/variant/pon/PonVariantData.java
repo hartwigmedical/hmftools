@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave.annotation;
+package com.hartwig.hmftools.common.variant.pon;
 
 import static java.lang.Math.round;
 

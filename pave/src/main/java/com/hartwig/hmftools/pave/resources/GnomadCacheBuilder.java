@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.variant.pon.GnomadCommon.GNOMAD_FILE_ID;
+import static com.hartwig.hmftools.common.variant.pon.GnomadCommon.formFileId;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
@@ -38,7 +40,6 @@ public class GnomadCacheBuilder
     private static final String SPECIFIC_CHROMOSOME = "specific_chr";
     private static final String FREQ_THRESHOLD = "freq_threshold";
 
-    public static final String GNOMAD_FILE_ID = "gnomad_variants";
 
     public GnomadCacheBuilder(final ConfigBuilder configBuilder)
     {
@@ -47,20 +48,6 @@ public class GnomadCacheBuilder
         mOutputId = configBuilder.getValue(OUTPUT_ID);
         mSpecificChromosome = configBuilder.getValue(SPECIFIC_CHROMOSOME, "");
         mFreqThreshold = configBuilder.getDecimal(FREQ_THRESHOLD);
-    }
-
-    public static String formFileId(final String dir, final String chromosome, final String outputId)
-    {
-        String outputFile = dir + GNOMAD_FILE_ID;
-
-        if(chromosome != null && !chromosome.isEmpty())
-            outputFile += "_chr" + chromosome;
-
-        if(outputId != null)
-            outputFile += "_" + outputId;
-
-        outputFile += ".csv";
-        return outputFile;
     }
 
     public void run()
