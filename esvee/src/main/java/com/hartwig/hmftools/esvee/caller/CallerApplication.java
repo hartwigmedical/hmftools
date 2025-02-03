@@ -20,6 +20,9 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDis
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -65,9 +68,16 @@ public class CallerApplication
         mHotspotCache = new HotspotCache(configBuilder);
 
         String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId());
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId());
+
+        if(!Files.exists(Paths.get(fragLengthFilename)) || !Files.exists(Paths.get(discStatsFilename)))
+        {
+            SV_LOGGER.error("missing input files: disc-stats and frag-lengths", discStatsFilename, fragLengthFilename);
+            System.exit(1);
+        }
+
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
-        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId());
         DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);

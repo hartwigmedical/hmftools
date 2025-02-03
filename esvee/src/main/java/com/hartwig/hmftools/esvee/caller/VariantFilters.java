@@ -260,9 +260,6 @@ public class VariantFilters
         if(var.isLineSite())
             return false;
 
-        if(var.inChainedAssembly())
-            return false;
-
         int svAvgLength = var.averageFragmentLength();
 
         if(svAvgLength == 0) // for now treat is this as a pass
