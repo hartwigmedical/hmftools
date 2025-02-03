@@ -358,8 +358,30 @@ public class AlignmentFragments
 
         if(mAssemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL))
         {
-            // soft-clip bases which were realigned locally extend the fragment length beyond the other junctino
-            fragmentLength += read.leftClipLength() + read.rightClipLength();
+            if(read.isPairedRead() && svType == DEL)
+            {
+                JunctionAssembly refAssembly = mAssemblyAlignment.assemblies().stream().filter(x -> x.supportCount() == 0).findFirst().orElse(null);
+
+                if(refAssembly == null)
+                    return 0;
+
+                if((refAssembly.isForwardJunction() && read.orientation().isReverse())
+                || (refAssembly.isReverseJunction() && read.orientation().isForward()))
+                {
+                    // the delete falls within the two reads, so subtract its length as usual
+                    fragmentLength -= indelLength;
+                    return fragmentLength;
+                }
+            }
+
+            // soft-clip bases which were realigned locally extend the fragment length beyond the other junction if the mate is not across
+            // from the junction
+            JunctionAssembly juncAssembly = mAssemblyAlignment.assemblies().stream().filter(x -> x.supportCount() > 0).findFirst().orElse(null);
+
+            if(juncAssembly.isForwardJunction())
+                fragmentLength += read.rightClipLength();
+            else
+                fragmentLength += read.leftClipLength();
         }
         else
         {
