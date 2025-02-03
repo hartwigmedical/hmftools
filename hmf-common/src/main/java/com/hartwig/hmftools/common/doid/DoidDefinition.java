@@ -14,6 +14,6 @@ public abstract class DoidDefinition
     @NotNull
     public abstract String definitionVal();
 
-    @Nullable
+    @NotNull
     public abstract List<String> definitionXrefs();
 }
