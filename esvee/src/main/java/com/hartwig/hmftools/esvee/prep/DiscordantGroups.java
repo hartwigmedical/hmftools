@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantGroup.firstPrimaryRead;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantRemoteRegion.mergeRemoteRegions;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.SHORT_INV_LENGTH;
 
 import java.util.Collections;
 import java.util.Comparator;

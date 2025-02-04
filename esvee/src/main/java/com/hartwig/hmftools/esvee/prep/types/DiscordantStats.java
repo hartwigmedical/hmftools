@@ -36,20 +36,19 @@ public class DiscordantStats
     // note these counts are in fragment terms hence see doubling in rate calc
     public final long[] TypeCounts;
 
-    public static final int SHORT_INV_LENGTH = 5000;
-    public static final int SHORT_LENGTH = 1000;
-    public static final int MEDIUM_LENGTH = 10000;
-    public static final int LONG_LENGTH = 100000;
-
     private enum DiscordantType
     {
         Translocation,
-        ShortInv,
-        DelDup10K,
-        DelDup100K,
-        DelDupLong,
-        Inv100K,
-        InvLong;
+        InvLt1K,
+        Inv1To5K,
+        Inv5To100K,
+        InvGt100K,
+        Del1To5K,
+        Del5To100K,
+        DelGt100K,
+        Dup1To5K,
+        Dup5To100K,
+        DupGt100K;
     }
 
     public DiscordantStats(final long processedReads, final long writtenReads, final long[] typeCounts)
@@ -66,6 +65,10 @@ public class DiscordantStats
         TypeCounts = new long[DiscordantType.values().length];
     }
 
+    private static final int LENGTH_SHORT = 1000;
+    private static final int LENGTH_5K = 5000;
+    private static final int LENGTH_100K = 100_000;
+
     public void addRead(final PrepRead read)
     {
         if(!read.Chromosome.equals(read.MateChromosome))
@@ -78,21 +81,37 @@ public class DiscordantStats
 
         if(read.orientation() == read.mateOrientation())
         {
-            if(distance < SHORT_INV_LENGTH)
-                TypeCounts[DiscordantType.ShortInv.ordinal()] += 2; // assumes mate is in the same read group so not also registered
-            else if(distance < LONG_LENGTH)
-                ++TypeCounts[DiscordantType.Inv100K.ordinal()];
+            if(distance < LENGTH_SHORT)
+                TypeCounts[DiscordantType.InvLt1K.ordinal()] += 2; // assumes mate is in the same read group so not also registered
+            else if(distance < LENGTH_5K)
+                ++TypeCounts[DiscordantType.Inv1To5K.ordinal()];
+            else if(distance < LENGTH_100K)
+                ++TypeCounts[DiscordantType.Inv5To100K.ordinal()];
             else
-                ++TypeCounts[DiscordantType.InvLong.ordinal()];
+                ++TypeCounts[DiscordantType.InvGt100K.ordinal()];
         }
         else
         {
-            if(distance < MEDIUM_LENGTH)
-                ++TypeCounts[DiscordantType.DelDup10K.ordinal()];
-            else if(distance < LONG_LENGTH)
-                ++TypeCounts[DiscordantType.DelDup100K.ordinal()];
+
+            if((read.start() < read.MatePosStart) == read.orientation().isForward())
+            {
+                // DEL-type orientation
+                if(distance < LENGTH_5K)
+                    ++TypeCounts[DiscordantType.Del1To5K.ordinal()];
+                else if(distance < LENGTH_100K)
+                    ++TypeCounts[DiscordantType.Del5To100K.ordinal()];
+                else
+                    ++TypeCounts[DiscordantType.DelGt100K.ordinal()];
+            }
             else
-                ++TypeCounts[DiscordantType.DelDupLong.ordinal()];
+            {
+                if(distance < LENGTH_5K)
+                    ++TypeCounts[DiscordantType.Dup1To5K.ordinal()];
+                else if(distance < LENGTH_100K)
+                    ++TypeCounts[DiscordantType.Dup5To100K.ordinal()];
+                else
+                    ++TypeCounts[DiscordantType.DupGt100K.ordinal()];
+            }
         }
     }
 
@@ -104,7 +123,11 @@ public class DiscordantStats
         }
     }
 
-    public double shortInversionRate() { return ProcessedReads > 0 ? TypeCounts[DiscordantType.ShortInv.ordinal()] / (double)ProcessedReads : 0; }
+    public double shortInversionRate()
+    {
+        long shortInvCount = TypeCounts[DiscordantType.InvLt1K.ordinal()] + TypeCounts[DiscordantType.Inv1To5K.ordinal()];
+        return ProcessedReads > 0 ? shortInvCount / (double)ProcessedReads : 0;
+    }
 
     public double discordantRate()
     {
@@ -185,21 +208,11 @@ public class DiscordantStats
 
             long[] typeCounts = new long[DiscordantType.values().length];
 
-            // backwards compatibility
-            if(values.length == 4)
-            {
-                typeCounts[DiscordantType.ShortInv.ordinal()] = Long.parseLong(values[1]);
-                typeCounts[DiscordantType.Translocation.ordinal()] = Long.parseLong(values[2]);
-                typeCounts[DiscordantType.DelDupLong.ordinal()] = Long.parseLong(values[3]);
-            }
-            else
-            {
-                writtenReads = Long.parseLong(values[1]);
+            writtenReads = Long.parseLong(values[1]);
 
-                for(int i = 0; i < typeCounts.length; ++i)
-                {
-                    typeCounts[i] = Long.parseLong(values[i + 2]);
-                }
+            for(int i = 0; i < typeCounts.length; ++i)
+            {
+                typeCounts[i] = Long.parseLong(values[i + 2]);
             }
 
             return new DiscordantStats(processedReads, writtenReads, typeCounts);
