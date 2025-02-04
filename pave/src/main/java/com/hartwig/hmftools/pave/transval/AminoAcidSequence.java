@@ -32,7 +32,6 @@ class AminoAcidSequence
         return new AminoAcidSequence(aminoAcids);
     }
 
-    @NotNull
     public static AminoAcidSequence fromNucleotides(@NotNull final String nucleotides)
     {
         Preconditions.checkArgument(!nucleotides.isEmpty(), "Non-empty nucleotide sequence required");
@@ -42,7 +41,10 @@ class AminoAcidSequence
         {
             String codon = nucleotides.substring(i, i + 3);
             String acid = AminoAcids.findAminoAcidForCodon(codon);
-            Preconditions.checkArgument(acid != null, "AminoAcid not found for codon " + codon);
+            if(acid == null)
+            {
+                return null; // todo test
+            }
             aminoAcids.add(new AminoAcid(acid));
         }
         return new AminoAcidSequence(aminoAcids);

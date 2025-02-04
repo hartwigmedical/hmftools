@@ -19,7 +19,7 @@ class AminoAcidRange implements TranscriptFilter
 
     AminoAcidRange(@NotNull final AminoAcidSpecification first, @NotNull final AminoAcidSpecification last)
     {
-        Preconditions.checkArgument(first.position < last.position, "End position must not be before start position");
+        Preconditions.checkArgument(first.position <= last.position, "End position must not be before start position");
         this.first = first;
         this.last = last;
     }

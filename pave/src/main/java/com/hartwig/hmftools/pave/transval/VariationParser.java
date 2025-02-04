@@ -38,6 +38,10 @@ class VariationParser
         {
             return parseDeletionInsertion(expression);
         }
+        if(expression.contains("del"))
+        {
+            return parseDeletion(expression);
+        }
         return parseSingleAminoAcidVariant(expression);
     }
 
@@ -78,11 +82,47 @@ class VariationParser
         return buildDeletionInsertion(description, geneData);
     }
 
+    public Deletion parseDeletion(String input)
+    {
+        String[] geneVar = extractGeneAndVariant(input);
+        GeneData geneData = lookupGene(geneVar[0]);
+        String description = extractDescription(geneVar)[1];
+        return buildDeletion(description, geneData);
+    }
+
+    @NotNull
+    private Deletion buildDeletion(final String description, final GeneData geneData)
+    {
+        String rangeDescription = description.substring(0, description.length() - 3);
+        AminoAcidRange refRange;
+        if(rangeDescription.contains("_"))
+        {
+            refRange = parseAminoAcidRange(rangeDescription);
+        } else {
+            AminoAcidSpecification refStart = AminoAcidSpecification.parse(description);
+            refRange = new AminoAcidRange(refStart, refStart);
+        }
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
+        return new Deletion(geneData, transcriptData, aminoAcidsSequence, refRange);
+    }
+
     @NotNull
     private DeletionInsertion buildDeletionInsertion(final String description, final GeneData geneData)
     {
         String[] refAltParts = description.split("delins");
-        String[] refParts = refAltParts[0].split("_");
+        AminoAcidRange refRange = parseAminoAcidRange(refAltParts[0]);
+
+        AminoAcidSequence altSequence = AminoAcidSequence.parse(refAltParts[1]);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
+        return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, refRange, altSequence);
+    }
+
+    @NotNull
+    private static AminoAcidRange parseAminoAcidRange(final String refAltParts)
+    {
+        String[] refParts = refAltParts.split("_");
         if(refParts.length != 2)
         {
             throw new IllegalArgumentException(HGVS_FORMAT_REQUIRED);
@@ -90,12 +130,7 @@ class VariationParser
 
         AminoAcidSpecification refStart = AminoAcidSpecification.parse(refParts[0]);
         AminoAcidSpecification refStop = AminoAcidSpecification.parse(refParts[1]);
-        AminoAcidRange refRange = new AminoAcidRange(refStart, refStop);
-
-        AminoAcidSequence altSequence = AminoAcidSequence.parse(refAltParts[1]);
-        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
-        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
-        return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, refRange, altSequence);
+        return new AminoAcidRange(refStart, refStop);
     }
 
     @NotNull

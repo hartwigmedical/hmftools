@@ -485,16 +485,27 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertTrue(hotspots.contains(hotspot("ATAT", "C", "chr5", 68_293_762)));
     }
 
-//    @Test
-    public void delTest()
+    @Test
+    public void delSingleBaseTest()
     {
-        TransvalDeletionInsertion record = (TransvalDeletionInsertion) transval.calculateVariant("PIK3R1:p.K459del");
+        TransvalVariant record =  transval.calculateVariant("PIK3R1:p.K459del");
         assertEquals("ENST00000521381", record.transcriptId()); // canonical
         assertEquals("5", record.Chromosome);
         assertFalse(record.SpansMultipleExons);
         Set<TransvalHotspot> hotspots = record.hotspots();
-        assertEquals(2, hotspots.size());
-        assertTrue(hotspots.contains(hotspot("AAT", "", "chr5", 68_293_761)));
+        assertEquals(1, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("AAA", "", "chr5", 68_293_782)));
+    }
 
+    @Test
+    public void delRangeTest()
+    {
+        TransvalVariant record =  transval.calculateVariant("PIK3R1:p.D464_Y467del");
+        assertEquals("ENST00000521381", record.transcriptId()); // canonical
+        assertEquals("5", record.Chromosome);
+        assertFalse(record.SpansMultipleExons);
+        Set<TransvalHotspot> hotspots = record.hotspots();
+        assertEquals(1, hotspots.size());
+        assertTrue(hotspots.contains(hotspot("ATATGATAGATT", "", "chr5", 68_293_795)));
     }
 }
