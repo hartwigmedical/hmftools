@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static java.lang.Math.max;
-
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BASE_MODIFICATIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
@@ -35,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -48,6 +52,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -119,6 +124,12 @@ public abstract class NonStandardBaseBuilder
 
             return InsertIndex - o.InsertIndex;
         }
+
+        @Override
+        public String toString()
+        {
+            return RefPos + "." + InsertIndex;
+        }
     }
 
     @VisibleForTesting
@@ -127,16 +138,36 @@ public abstract class NonStandardBaseBuilder
         public final ExtendedRefPos Pos;
         public final byte Base;
         public final byte Qual;
-        public final CigarOperator CigarOp;
         public final Set<String> Annotations;
+
+        private CigarOperator mCigarOp;
 
         public AnnotatedBase(final ExtendedRefPos pos, byte base, byte qual, final CigarOperator cigarOp)
         {
             Pos = pos;
             Base = base;
             Qual = qual;
-            CigarOp = cigarOp;
+            mCigarOp = cigarOp;
             Annotations = Sets.newHashSet();
+        }
+
+        public CigarOperator cigarOp() { return mCigarOp; }
+        public void softclip()
+        {
+            Validate.isTrue(mCigarOp.consumesReadBases());
+            mCigarOp = S;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "AnnotatedBase{" +
+                    "Pos=" + Pos +
+                    ", Base=" + (char) Base +
+                    ", Qual=" + Qual +
+                    ", Annotations=" + Annotations +
+                    ", CigarOp=" + mCigarOp +
+                    '}';
         }
     }
 
@@ -250,13 +281,19 @@ public abstract class NonStandardBaseBuilder
     private static List<AnnotatedBase> getConsensusBases(
             final Collection<List<AnnotatedBase>> alignment, final Function<List<AnnotatedBase>, AnnotatedBase> determineConsensus)
     {
-        List<AnnotatedBase> consensus = Lists.newArrayList();
+        final List<AnnotatedBase> consensus = Lists.newArrayList();
+        Consumer<AnnotatedBase> addBase = base ->
+        {
+            if(base != null)
+                consensus.add(base);
+        };
+
         for(List<AnnotatedBase> alignedBases : alignment)
         {
             ExtendedRefPos pos = alignedBases.get(0).Pos;
             if(pos.InsertIndex > 0)
             {
-                List nonMissingBases = Lists.newArrayList();
+                List<AnnotatedBase> nonMissingBases = Lists.newArrayList();
                 int noBaseCount = 0;
                 for(AnnotatedBase base : alignedBases)
                 {
@@ -267,12 +304,9 @@ public abstract class NonStandardBaseBuilder
                 }
 
                 if(2 * noBaseCount >= alignedBases.size())
-                {
-                    consensus.add(null);
                     continue;
-                }
 
-                consensus.add(determineConsensus.apply(nonMissingBases));
+                addBase.accept(determineConsensus.apply(nonMissingBases));
                 continue;
             }
 
@@ -280,7 +314,7 @@ public abstract class NonStandardBaseBuilder
             int delCount = 0;
             for(AnnotatedBase base : alignedBases)
             {
-                if(base.CigarOp == D)
+                if(base.cigarOp() == D)
                 {
                     delCount++;
                     continue;
@@ -290,12 +324,9 @@ public abstract class NonStandardBaseBuilder
             }
 
             if(2 * delCount > alignedBases.size())
-            {
-                consensus.add(null);
                 continue;
-            }
 
-            consensus.add(determineConsensus.apply(nonDelBases));
+            addBase.accept(determineConsensus.apply(nonDelBases));
         }
 
         return consensus;
@@ -308,7 +339,7 @@ public abstract class NonStandardBaseBuilder
 
         for(AnnotatedBase base : bases)
         {
-            CigarOperator op = base.CigarOp;
+            CigarOperator op = base.cigarOp();
             if(op == M)
                 return M;
         }
@@ -316,53 +347,166 @@ public abstract class NonStandardBaseBuilder
         return S;
     }
 
-    private static void updateConsensusState(final List<SAMRecord> reads, final ConsensusState consensusState, boolean hasIndels,
-            final List<AnnotatedBase> consensusBases)
+    private static List<AnnotatedBase> insertDels(final List<AnnotatedBase> consensusBases)
     {
-        final int alignmentStartBoundary = reads.stream().mapToInt(SAMRecord::getAlignmentStart).min().orElse(INVALID_POSITION);
-        Validate.isTrue(alignmentStartBoundary >= 1);
-
-        int minUnclippedPosStart = INVALID_POSITION;
-        int maxUnclippedPosEnd = 0;
-        int minAlignedPosStart = INVALID_POSITION;
-        int maxAlignedPosEnd = 0;
-
-        List<Byte> bases = new ArrayList<>(consensusBases.size());
-        List<Byte> quals = new ArrayList<>(consensusBases.size());
-        List<CigarOperator> cigarOps = new ArrayList<>(consensusBases.size());
+        List<AnnotatedBase> newConsensusBases = Lists.newArrayList();
         int lastRefPos = INVALID_POSITION;
-        int firstNonClippedIndex = INVALID_POSITION;
-        int lastNonClippedIndex = INVALID_POSITION;
-        int idx = 0;
-        for(AnnotatedBase consensusBase : consensusBases)
+        for(AnnotatedBase base : consensusBases)
         {
-            if(consensusBase == null)
-                continue;
-
-            int refPos = consensusBase.Pos.RefPos;
-
+            int refPos = base.Pos.RefPos;
             if(lastRefPos != INVALID_POSITION && refPos > lastRefPos + 1)
             {
                 for(int i = lastRefPos + 1; i < refPos; i++)
+                    newConsensusBases.add(new AnnotatedBase(base.Pos, NO_BASE, (byte) 0, D));
+            }
+
+            newConsensusBases.add(base);
+            lastRefPos = refPos;
+        }
+
+        return newConsensusBases;
+    }
+
+    private static List<AnnotatedBase> softclipEnds(final RefGenome refGenome, final String chromosome,
+            final List<AnnotatedBase> consensusBases)
+    {
+        List<AnnotatedBase> leftSoftclipBases = Lists.newArrayList();
+        List<AnnotatedBase> rightSoftclipBases = Lists.newArrayList();
+        List<List<AnnotatedBase>> alignedClusters = Lists.newArrayList();
+        List<AnnotatedBase> lastAlignedCluster = null;
+        for(AnnotatedBase base : consensusBases)
+        {
+            if(base.cigarOp() == S)
+            {
+                if(lastAlignedCluster == null)
+                    leftSoftclipBases.add(base);
+                else
+                    rightSoftclipBases.add(base);
+
+                continue;
+            }
+
+            if(lastAlignedCluster == null)
+            {
+                lastAlignedCluster = Lists.newArrayList(base);
+                alignedClusters.add(lastAlignedCluster);
+                continue;
+            }
+
+            CigarOperator lastCigarOp = lastAlignedCluster.get(0).cigarOp();
+            if((lastCigarOp == I || lastCigarOp == D) && lastCigarOp == base.cigarOp())
+            {
+                lastAlignedCluster.add(base);
+                continue;
+            }
+
+            lastAlignedCluster = Lists.newArrayList(base);
+            alignedClusters.add(lastAlignedCluster);
+        }
+
+        if(alignedClusters.isEmpty())
+            return consensusBases;
+
+        int[] cScore = new int[alignedClusters.size() + 1];
+        cScore[0] = 0;
+        for(int i = 0; i < alignedClusters.size(); i++)
+        {
+            List<AnnotatedBase> cluster = alignedClusters.get(i);
+            AnnotatedBase firstBase = cluster.get(0);
+            CigarOperator op = firstBase.cigarOp();
+            if(op == I || op == D)
+            {
+                int gapScore = -BWA_GAP_OPEN_PENALTY - cluster.size() * BWA_GAP_EXTEND_PENALTY;
+                cScore[i + 1] = cScore[i] + gapScore;
+                continue;
+            }
+
+            byte refBase = refGenome.getRefBase(chromosome, firstBase.Pos.RefPos);
+            int score = refBase == firstBase.Base ? BWA_MATCH_SCORE : -BWA_MISMATCH_PENALTY;
+            cScore[i + 1] = cScore[i] + score;
+        }
+
+        int minCScore = 0;
+        int minCIdx = 0;
+        int maxStart = 0;
+        int maxEnd = 1;
+        int maxScore = cScore[1];
+        for(int i = 1; i < cScore.length; i++)
+        {
+            if(i > 1)
+            {
+                int score = cScore[i] - minCScore;
+                if(score >= maxScore)
                 {
-                    cigarOps.add(D);
-                    idx++;
+                    maxScore = score;
+                    maxStart = minCIdx;
+                    maxEnd = i;
                 }
             }
 
-            CigarOperator op = consensusBase.CigarOp;
-            bases.add(consensusBase.Base);
-            quals.add(consensusBase.Qual);
-            cigarOps.add(op);
+            if(cScore[i] < minCScore)
+            {
+                minCScore = cScore[i];
+                minCIdx = i;
+            }
+        }
 
+        List<AnnotatedBase> finalBases = leftSoftclipBases;
+        for(int i = 0; i < alignedClusters.size(); i++)
+        {
+            List<AnnotatedBase> cluster = alignedClusters.get(i);
+            if(i < maxStart || i >= maxEnd)
+            {
+                if(cluster.get(0).cigarOp() == D)
+                    continue;
+
+                cluster.forEach(AnnotatedBase::softclip);
+            }
+
+            finalBases.addAll(cluster);
+        }
+
+        finalBases.addAll(rightSoftclipBases);
+        return finalBases;
+    }
+
+    private static void finalizeConsensusState(final RefGenome refGenome, final List<SAMRecord> reads, final ConsensusState consensusState,
+            boolean hasIndels, final List<AnnotatedBase> consensusBases)
+    {
+        String chromosome = reads.get(0).getReferenceName();
+        final int alignmentStartBoundary = reads.stream().mapToInt(SAMRecord::getAlignmentStart).min().orElse(INVALID_POSITION);
+        Validate.isTrue(alignmentStartBoundary >= 1);
+
+        List<AnnotatedBase> finalBases = insertDels(consensusBases);
+        finalBases = softclipEnds(refGenome, chromosome, finalBases);
+
+        int minAlignedPosStart = INVALID_POSITION;
+        int maxAlignedPosEnd = 0;
+
+        List<Byte> bases = new ArrayList<>(finalBases.size());
+        List<Byte> quals = new ArrayList<>(finalBases.size());
+        List<CigarOperator> cigarOps = new ArrayList<>(finalBases.size());
+        int firstNonClippedIndex = INVALID_POSITION;
+        int lastNonClippedIndex = INVALID_POSITION;
+        int cigarIdx = 0;
+        for(AnnotatedBase base : finalBases)
+        {
+            int refPos = base.Pos.RefPos;
+            CigarOperator op = base.cigarOp();
+            cigarOps.add(op);
+            if(op == D)
+            {
+                cigarIdx++;
+                continue;
+            }
+
+            bases.add(base.Base);
+            quals.add(base.Qual);
             if(firstNonClippedIndex == INVALID_POSITION && !op.isClipping())
-                firstNonClippedIndex = idx;
+                firstNonClippedIndex = cigarIdx;
 
             if(!op.isClipping())
-                lastNonClippedIndex = max(lastNonClippedIndex, idx);
-
-            if(minUnclippedPosStart == INVALID_POSITION && op != I)
-                minUnclippedPosStart = refPos;
+                lastNonClippedIndex = cigarIdx;
 
             if(minAlignedPosStart == INVALID_POSITION && op == M)
             {
@@ -370,14 +514,10 @@ public abstract class NonStandardBaseBuilder
                 minAlignedPosStart = refPos;
             }
 
-            if(op != I)
-                maxUnclippedPosEnd = max(maxUnclippedPosEnd, refPos);
-
             if(op == M)
-                maxAlignedPosEnd = max(maxAlignedPosEnd, refPos);
+                maxAlignedPosEnd = refPos;
 
-            lastRefPos = refPos;
-            idx++;
+            cigarIdx++;
         }
 
         for(int i = firstNonClippedIndex; i <= lastNonClippedIndex; i++)
@@ -386,15 +526,19 @@ public abstract class NonStandardBaseBuilder
                 cigarOps.set(i, M);
         }
 
+        Cigar cigar = new Cigar(collapseCigarOps(cigarOps));
+        int minUnclippedPosStart = minAlignedPosStart - leftSoftClipLength(cigar);
+        int maxUnclippedPosEnd = maxAlignedPosEnd + rightSoftClipLength(cigar);
         consensusState.setBoundaries(minUnclippedPosStart, maxUnclippedPosEnd, minAlignedPosStart, maxAlignedPosEnd);
         consensusState.setBaseLength(bases.size());
+
         for(int i = 0; i < bases.size(); i++)
         {
             consensusState.Bases[i] = bases.get(i);
             consensusState.BaseQualities[i] = quals.get(i);
         }
 
-        consensusState.CigarElements.addAll(collapseCigarOps(cigarOps));
+        consensusState.CigarElements.addAll(cigar.getCigarElements());
 
         if(!hasIndels)
         {
@@ -426,7 +570,7 @@ public abstract class NonStandardBaseBuilder
             List<List<AnnotatedBase>> annotatedReads = annotateReads(reads);
             Collection<List<AnnotatedBase>> alignment = alignAnnotatedReads(annotatedReads);
             List<AnnotatedBase> consensusBases = getConsensusBases(alignment, records -> determineConsensus(chromosome, records));
-            updateConsensusState(reads, consensusState, hasIndels, consensusBases);
+            finalizeConsensusState(mRefGenome, reads, consensusState, hasIndels, consensusBases);
         }
 
         @VisibleForTesting
@@ -606,8 +750,7 @@ public abstract class NonStandardBaseBuilder
 
             Collection<List<AnnotatedBase>> alignment = alignAnnotatedReads(annotatedReads);
             List<AnnotatedBase> consensusBases = getConsensusBases(alignment, records -> determineConsensus(chromosome, consensusState.IsForward, records));
-            consensusBases = consensusBases.stream().filter(x -> x != null).collect(Collectors.toList());
-            updateConsensusState(reads, consensusState, hasIndels, consensusBases);
+            finalizeConsensusState(mRefGenome, reads, consensusState, hasIndels, consensusBases);
 
             SortedSet<Integer> modCReadIndices = Sets.newTreeSet();
             for(int i = 0; i < consensusBases.size(); i++)

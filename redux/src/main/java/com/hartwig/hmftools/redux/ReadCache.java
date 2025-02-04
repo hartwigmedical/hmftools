@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
@@ -73,6 +74,10 @@ public class ReadCache
 
     public void processRead(final SAMRecord read)
     {
+        int readLeftSoftClip = leftSoftClipLength(read);
+        if(readLeftSoftClip > mMaxSoftClipLength)
+            RD_LOGGER.warn("Read's left soft clip overruns mMaxSoftClipLength({}): {}", mMaxSoftClipLength, read.getSAMString());
+
         FragmentCoords fragmentCoords = FragmentCoords.fromRead(read, mUseFragmentOrientation);
 
         String chromosome = read.getReferenceName();

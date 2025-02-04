@@ -1,19 +1,25 @@
 # Redux
 
-The Redux component performs both UMI aware and UMI agnostic duplicate marking. 
-As the first component to run after alignment it also performs post-alignment improvements to the BAM, specifically by unmapping certain reads and deleting supplementary reads in specific problematic regions of the BAM. It also models sample-specific microsatellite jitter.
+The purpose of REDUX is to abstract any platform, library prep and aligner specific artefacts from the BAM.   A key aim of REDUX is to make it simple to adapt to different sequencing technologies or library preparation techniques. 
+ 
+REDUX currently performs 3 key tasks: 
 
-Redux requires the mate CIGAR attribute to be set for all paired reads. This will be the case when alignment is performed with BWA or BWA-mem2.
-Alternatively this can be rectified using the Picard FixMateInformation routine.
+Feature  | Functionality | Why? 
+---|---|---
+Unmapping | Unmap reads that are aligned to a set of predefined problematic regions AND are either discordant, have long soft clipping or are in a region of extreme high depth. The reads are retained in the BAM and used by downstream tools. Supplementary reads that qualify for unmapping are deleted.<br/><br/>Overall, the problematic regions make up ~0.3% of the genome and lead to the ~3-6% of all reads being unmapped depending on genome version | There are 2 types of reads we want to unmap: <br/><br/> 1. Regions with recurrent very high depth – these are generally unmappable regions that have high discordant fragments.  Unmapping reduces false positive variant calling downstream and can drastically reduce runtime and memory usage.  ~98% of unmapped reads fall into this category  <br/> 2. Very long repeats – reads with long homopolymers or dinucleotide repeats may align randomly to arbitrary microsatellite locations based on idosyncratic sequencing errors.  Unmapping improves duplicate marking and detection of LINE insertions (which have a characteristic polyA insert which often is misalgined by BWA). 
+Duplicate marking and consensus | Mark duplicates based off fragment start and end positions and UMI (if available). Unlike many tools, supplementary reads are also deduplicated. <br/><br/> For any fragments found to be duplicates a single consensus fragment is formed and a consensus base and qual is calculated. | Amplification during library preparation or on-sequencer can cause duplicates of fragments. By marking duplicates, we avoid potential multiple counting of evidence from a single source fragment which reduces FP variant calling. <br/><br/> Forming a consensus read for every duplicated fragment ensures we choose the most likely base at each location and a representative base quality. 
+Microsatellite jitter rates | The rate of microsatellite errors is measured genome wide per {consensusType, repeatContext, repeatLength} and fit to a model. | Microsatellite jitter or stutter is a common error caused by PCR amplification and on-sequencer errors.  Some sequencing technologies have specific problems with homopolymers. The rate may be highly sample specific as it depends on the amount of and quality of the amplification process. The sample and context specific rate measured in REDUX is used to inform and improve variant calling in downstream tools 
 
-UMI are used to label each molecule in a sample with a unique sequence prior to PCR amplification.
+### Notes on REDUX compatibilty
 
-The usage of UMIs is recommended primarily for three scenarios:  
-* Counting of individual reads in low input samples
-* very deep sequencing of RNA-seq libraries (> 80 million reads per sample),  
-* detection of ultra-low frequency mutations in DNA sequencing.
+REDUX conforms fully to SAM specifications.   We have validated REDUX on DRAGEN and BWA-MEM / BWA-MEM2.   REDUX may also be run on BAMs with any prior duplicate marking and strip previous consensus results.  Please not that REDUX does require the mate CIGAR attribute to be set for all paired reads. If this is not set for some reason, this can be rectified using tools such as Picard FixMateInformation routine. 
 
-UMI/Duplicate analysis is also a highly useful QC tool for library complexity and error rates
+Whilst REDUX does unmap reads and delete supplemetaries, no primary read information is removed or lost when REDUX is run, and hence the orginal FASTQ is fully recoverable. If you wish a BAM to be converted to FASTQ, note that consensus reads must be deleted prior to conversion.  This functionality is included by default in our BAM2FASTQ tool 
+
+### Performance 
+ 
+On a 100x BAM on a 32 core machine REDUX completes in < 1 hour with a maximum memory usage of <10Gb.  
+
 
 ## Commands
 

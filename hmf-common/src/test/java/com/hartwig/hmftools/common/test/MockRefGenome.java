@@ -127,4 +127,7 @@ public class MockRefGenome implements RefGenomeInterface
 
         return base;
     }
+
+    @Override
+    public boolean oneBasedIndexing() { return mOneBasedIndexing; }
 }

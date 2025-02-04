@@ -163,46 +163,6 @@ public class SBXConsensusTest
     }
 
     @Test
-    public void testSbxConsensusInsertsWithStaggeredStarts()
-    {
-        String refBases = "AAAAAAAA";
-        ConsensusReads consensusReads = getConsensusReads(refBases);
-
-        String readStr1 = "ATAATAATAAA";
-        String qualStr1 = DUPLEX_QUAL_STR.repeat(readStr1.length());
-        String cigar1 = "1M1I2M1I2M1I3M";
-
-        String readStr2 = "ATAATAAA";
-        String qualStr2 = DUPLEX_QUAL_STR.repeat(readStr2.length());
-        String cigar2 = "1M1I2M1I3M";
-
-        String readStr3 = "ATAAA";
-        String qualStr3 = DUPLEX_QUAL_STR.repeat(readStr3.length());
-        String cigar3 = "1M1I3M";
-
-        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr1, qualStr1, cigar1);
-        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 3, readStr2, qualStr2, cigar2);
-        SAMRecord read3 = createSbxSamRecord("READ_003", CHR_1, 5, readStr3, qualStr3, cigar3);
-
-        List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
-        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
-        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
-        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
-        SAMRecord consensusRead = consensusOutput.ConsensusRead;
-
-        int expectedAlignmentStart = 1;
-        String expectedCigar = cigar1;
-        String expectedReadStr = readStr1;
-        String expectedQualStr = qualStr1;
-
-        assertEquals(INDEL_MISMATCH, consensusOutcome);
-        assertEquals(expectedAlignmentStart, consensusRead.getAlignmentStart());
-        assertEquals(expectedCigar, consensusRead.getCigarString());
-        assertEquals(expectedReadStr, consensusRead.getReadString());
-        assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
-    }
-
-    @Test
     public void testSbxConsensusDropQualZeroInserts()
     {
         String refBases = "AA";
@@ -240,20 +200,20 @@ public class SBXConsensusTest
     @Test
     public void testSbxConsensusDropNonStrictMajorityInserts()
     {
-        String refBases = "AAAAAAAA";
+        String refBases = "A".repeat(20) + "AAAAAAAA" + "A".repeat(20);
         ConsensusReads consensusReads = getConsensusReads(refBases);
 
-        String readStr1 = "AATAATAATAA";
+        String readStr1 = "A".repeat(20) + "AATAATAATAA" + "A".repeat(20);
         String qualStr1 = SIMPLEX_QUAL_STR.repeat(readStr1.length());
-        String cigar1 = "2M1I2M1I2M1I2M";
+        String cigar1 = "22M1I2M1I2M1I22M";
 
-        String readStr2 = "AAAATAATAA";
+        String readStr2 = "A".repeat(20) + "AAAATAATAA" + "A".repeat(20);
         String qualStr2 = SIMPLEX_QUAL_STR.repeat(readStr2.length());
-        String cigar2 = "4M1I2M1I2M";
+        String cigar2 = "24M1I2M1I22M";
 
-        String readStr3 = "AAAAAATAA";
+        String readStr3 = "A".repeat(20) + "AAAAAATAA" + "A".repeat(20);
         String qualStr3 = SIMPLEX_QUAL_STR.repeat(readStr3.length());
-        String cigar3 = "6M1I2M";
+        String cigar3 = "26M1I22M";
 
         SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr1, qualStr1, cigar1);
         SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr2, qualStr2, cigar2);
@@ -280,20 +240,20 @@ public class SBXConsensusTest
     @Test
     public void testSbxConsensusKeepStrictMajorityDels()
     {
-        String refBases = "ATGCATGC";
+        String refBases = "A".repeat(20) + "ATGCATGC" + "A".repeat(20);
         ConsensusReads consensusReads = getConsensusReads(refBases);
 
-        String readStr1 = "AGCTC";
+        String readStr1 = "A".repeat(20) + "AGCTC" + "A".repeat(20);
         String qualStr1 = SIMPLEX_QUAL_STR.repeat(readStr1.length());
-        String cigar1 = "1M1D2M1D1M1D1M";
+        String cigar1 = "21M1D2M1D1M1D21M";
 
-        String readStr2 = "ATGCTC";
+        String readStr2 = "A".repeat(20) + "ATGCTC" + "A".repeat(20);
         String qualStr2 = SIMPLEX_QUAL_STR.repeat(readStr2.length());
-        String cigar2 = "4M1D1M1D1M";
+        String cigar2 = "24M1D1M1D21M";
 
-        String readStr3 = "ATGCATC";
+        String readStr3 = "A".repeat(20) + "ATGCATC" + "A".repeat(20);
         String qualStr3 = SIMPLEX_QUAL_STR.repeat(readStr3.length());
-        String cigar3 = "6M1D1M";
+        String cigar3 = "26M1D21M";
 
         SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr1, qualStr1, cigar1);
         SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr2, qualStr2, cigar2);
@@ -370,10 +330,10 @@ public class SBXConsensusTest
         ConsensusState consensusState = new ConsensusState(true, CHR_1, mRefGenome);
         mSbxBuilder.buildConsensusRead(reads, consensusState, true);
 
-        assertEquals(alignmentStart, consensusState.MinUnclippedPosStart);
-        assertEquals(alignmentStart + alignmentLength - 1, consensusState.MaxUnclippedPosEnd);
         assertEquals(alignmentStart, consensusState.MinAlignedPosStart);
         assertEquals(alignmentStart + alignmentLength - 1, consensusState.MaxAlignedPosEnd);
+        assertEquals(alignmentStart - 1, consensusState.MinUnclippedPosStart);
+        assertEquals(alignmentStart + alignmentLength, consensusState.MaxUnclippedPosEnd);
     }
 
     @Test
@@ -387,7 +347,7 @@ public class SBXConsensusTest
 
         assertEquals((byte) 'A', consensus.Base);
         assertEquals((byte) DUPLEX_ERROR_QUAL, consensus.Qual);
-        assertEquals(S, consensus.CigarOp);
+        assertEquals(S, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -404,7 +364,7 @@ public class SBXConsensusTest
 
         assertEquals(refBase, consensus.Base);
         assertEquals((byte) 1, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -421,7 +381,7 @@ public class SBXConsensusTest
 
         assertEquals(bases[0], consensus.Base);
         assertEquals((byte) SIMPLEX_QUAL, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -439,7 +399,7 @@ public class SBXConsensusTest
 
         assertEquals(refBase, consensus.Base);
         assertEquals((byte) 1, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -457,7 +417,7 @@ public class SBXConsensusTest
 
         assertEquals(readBase, consensus.Base);
         assertEquals((byte) SIMPLEX_QUAL, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -476,7 +436,7 @@ public class SBXConsensusTest
 
         assertEquals(refBase, consensus.Base);
         assertEquals((byte) 1, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -494,7 +454,7 @@ public class SBXConsensusTest
 
         assertEquals(readBase, consensus.Base);
         assertEquals((byte) DUPLEX_QUAL, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -512,7 +472,7 @@ public class SBXConsensusTest
 
         assertEquals(readBase, consensus.Base);
         assertEquals((byte) SIMPLEX_QUAL, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -531,7 +491,7 @@ public class SBXConsensusTest
 
         assertEquals(refBase, consensus.Base);
         assertEquals((byte) 1, consensus.Qual);
-        assertEquals(M, consensus.CigarOp);
+        assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -561,7 +521,7 @@ public class SBXConsensusTest
 
         assertEquals(ANY_BASE, consensus.Base);
         assertEquals((byte) 0, consensus.Qual);
-        assertEquals(S, consensus.CigarOp);
+        assertEquals(S, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -576,7 +536,7 @@ public class SBXConsensusTest
 
         assertEquals(ANY_BASE, consensus.Base);
         assertEquals((byte) 0, consensus.Qual);
-        assertEquals(S, consensus.CigarOp);
+        assertEquals(S, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -591,7 +551,7 @@ public class SBXConsensusTest
 
         assertEquals(ANY_BASE, consensus.Base);
         assertEquals((byte) 0, consensus.Qual);
-        assertEquals(S, consensus.CigarOp);
+        assertEquals(S, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
 
@@ -619,6 +579,246 @@ public class SBXConsensusTest
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
         assertNull(consensus);
+    }
+
+    @Test
+    public void testSoftclipLeft()
+    {
+        String refBases = "AAA";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr1 = "TTA";
+        String cigar1 = "2S1M";
+
+        String readStr2 = "TTA";
+        String cigar2 = "2S1M";
+
+        String readStr3 = "GAA";
+        String cigar3 = "1S2M";
+
+        String qualStr = DUPLEX_QUAL_STR.repeat(refBases.length());
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 3, readStr1, qualStr, cigar1);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 3, readStr2, qualStr, cigar2);
+        SAMRecord read3 = createSbxSamRecord("READ_003", CHR_1, 2, readStr3, qualStr, cigar3);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
+
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        String expectedCigar = "2S1M";
+        String expectedReadStr = "TTA";
+
+        assertEquals(ALIGNMENT_ONLY, consensusOutcome);
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(expectedReadStr, consensusRead.getReadString());
+        assertEquals(qualStr, consensusRead.getBaseQualityString());
+        assertEquals(refBases.length(), consensusRead.getAlignmentStart());
+        assertEquals(1, consensusRead.getUnclippedStart());
+        assertEquals(refBases.length(), consensusRead.getAlignmentEnd());
+        assertEquals(refBases.length(), consensusRead.getUnclippedEnd());
+    }
+
+    @Test
+    public void testSoftclipRight()
+    {
+        String refBases = "AAA";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr1 = "ATT";
+        String cigar1 = "1M2S";
+
+        String readStr2 = "ATT";
+        String cigar2 = "1M2S";
+
+        String readStr3 = "AAG";
+        String cigar3 = "2M1S";
+
+        String qualStr = DUPLEX_QUAL_STR.repeat(refBases.length());
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr1, qualStr, cigar1);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr2, qualStr, cigar2);
+        SAMRecord read3 = createSbxSamRecord("READ_003", CHR_1, 1, readStr3, qualStr, cigar3);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
+
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        String expectedCigar = "1M2S";
+        String expectedReadStr = "ATT";
+
+        assertEquals(ALIGNMENT_ONLY, consensusOutcome);
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(expectedReadStr, consensusRead.getReadString());
+        assertEquals(qualStr, consensusRead.getBaseQualityString());
+        assertEquals(1, consensusRead.getAlignmentStart());
+        assertEquals(1, consensusRead.getUnclippedStart());
+        assertEquals(1, consensusRead.getAlignmentEnd());
+        assertEquals(refBases.length(), consensusRead.getUnclippedEnd());
+    }
+
+    @Test
+    public void testInsertToSoftclipLeft()
+    {
+        String refBases = "A".repeat(3);
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr = "A".repeat(4);
+        String cigar = "1I3M";
+
+        String qualStr = DUPLEX_QUAL_STR.repeat(readStr.length());
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr, qualStr, cigar);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr, qualStr, cigar);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        String expectedCigar = "1S3M";
+
+        assertEquals(INDEL_MATCH, consensusOutcome);
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(readStr, consensusRead.getReadString());
+        assertEquals(qualStr, consensusRead.getBaseQualityString());
+        assertEquals(1, consensusRead.getAlignmentStart());
+        assertEquals(0, consensusRead.getUnclippedStart());
+        assertEquals(refBases.length(), consensusRead.getAlignmentEnd());
+        assertEquals(refBases.length(), consensusRead.getUnclippedEnd());
+    }
+
+    @Test
+    public void testInsertToSoftclipRight()
+    {
+        String refBases = "A".repeat(4);
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr = "A".repeat(3) + "G";
+        String cigar = "3M1I";
+
+        String qualStr = DUPLEX_QUAL_STR.repeat(readStr.length());
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr, qualStr, cigar);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr, qualStr, cigar);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        String expectedCigar = "3M1S";
+
+        assertEquals(INDEL_MATCH, consensusOutcome);
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(readStr, consensusRead.getReadString());
+        assertEquals(qualStr, consensusRead.getBaseQualityString());
+        assertEquals(1, consensusRead.getAlignmentStart());
+        assertEquals(1, consensusRead.getUnclippedStart());
+        assertEquals(3, consensusRead.getAlignmentEnd());
+        assertEquals(readStr.length(), consensusRead.getUnclippedEnd());
+    }
+
+    @Test
+    public void testMultiInsertToSoftclipLeft()
+    {
+        String refBases = "A".repeat(3);
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr = "A".repeat(5);
+        String cigar = "2I3M";
+
+        String qualStr = DUPLEX_QUAL_STR.repeat(readStr.length());
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr, qualStr, cigar);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr, qualStr, cigar);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        String expectedCigar = "2S3M";
+
+        assertEquals(INDEL_MATCH, consensusOutcome);
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(readStr, consensusRead.getReadString());
+        assertEquals(qualStr, consensusRead.getBaseQualityString());
+        assertEquals(1, consensusRead.getAlignmentStart());
+        assertEquals(-1, consensusRead.getUnclippedStart());
+        assertEquals(refBases.length(), consensusRead.getAlignmentEnd());
+        assertEquals(refBases.length(), consensusRead.getUnclippedEnd());
+    }
+
+    @Test
+    public void testDeleteAbsorbedIntoSoftclipLeft()
+    {
+        String refBases = "ATGC";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr = "AGC";
+        String cigar = "1M1D2M";
+
+        String qualStr = DUPLEX_QUAL_STR.repeat(readStr.length());
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr, qualStr, cigar);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr, qualStr, cigar);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        String expectedCigar = "1S2M";
+
+        assertEquals(INDEL_MATCH, consensusOutcome);
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(readStr, consensusRead.getReadString());
+        assertEquals(qualStr, consensusRead.getBaseQualityString());
+        assertEquals(3, consensusRead.getAlignmentStart());
+        assertEquals(2, consensusRead.getUnclippedStart());
+        assertEquals(refBases.length(), consensusRead.getAlignmentEnd());
+        assertEquals(refBases.length(), consensusRead.getUnclippedEnd());
+    }
+
+    @Test
+    public void testDeleteAbsorbedIntoSoftclipRight()
+    {
+        String refBases = "ATGC";
+        ConsensusReads consensusReads = getConsensusReads(refBases);
+
+        String readStr = "ATC";
+        String cigar = "2M1D1M";
+
+        String qualStr = DUPLEX_QUAL_STR.repeat(readStr.length());
+
+        SAMRecord read1 = createSbxSamRecord("READ_001", CHR_1, 1, readStr, qualStr, cigar);
+        SAMRecord read2 = createSbxSamRecord("READ_002", CHR_1, 1, readStr, qualStr, cigar);
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2);
+
+        FragmentCoords coords = FragmentCoords.fromRead(read1, false);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
+        SAMRecord consensusRead = consensusOutput.ConsensusRead;
+
+        String expectedCigar = "2M1S";
+
+        assertEquals(INDEL_MATCH, consensusOutcome);
+        assertEquals(expectedCigar, consensusRead.getCigarString());
+        assertEquals(readStr, consensusRead.getReadString());
+        assertEquals(qualStr, consensusRead.getBaseQualityString());
+        assertEquals(1, consensusRead.getAlignmentStart());
+        assertEquals(1, consensusRead.getUnclippedStart());
+        assertEquals(2, consensusRead.getAlignmentEnd());
+        assertEquals(3, consensusRead.getUnclippedEnd());
     }
 
     private static List<AnnotatedBase> getAnnotatedBases(

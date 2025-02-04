@@ -48,6 +48,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -162,7 +163,7 @@ public class ReduxConfig
         }
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        RefGenome = loadRefGenome(RefGenomeFile);
+        RefGenome = new CachedRefGenome(loadRefGenome(RefGenomeFile));
 
         Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
@@ -360,7 +361,7 @@ public class ReduxConfig
         OutputDir = null;
         OutputId = "";
         RefGenVersion = V37;
-        RefGenome = refGenome;
+        RefGenome = new CachedRefGenome(refGenome);
         Sequencing = sequencingType;
 
         BamStringency = ValidationStringency.STRICT;
