@@ -30,8 +30,12 @@ public class TincConfig
     public final String GnomadDirectory;
     public final String GnomadFile;
     public final int Threads;
+    public final boolean WriteFitVariants;
+    public final String FitVariantsFile;
 
     public static final String INPUT_VCF = "input_vcf";
+    public static final String FIT_VARIANTS_FILE = "fit_variants_file";
+    public static final String WRITE_FIT_VARIANTS = "write_fit_variants";
 
     public TincConfig(final ConfigBuilder configBuilder)
     {
@@ -45,6 +49,9 @@ public class TincConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         Threads = parseThreads(configBuilder);
+
+        FitVariantsFile = configBuilder.getValue(FIT_VARIANTS_FILE);
+        WriteFitVariants = !configBuilder.hasValue(FIT_VARIANTS_FILE) && configBuilder.hasFlag(WRITE_FIT_VARIANTS);
     }
 
     public static void registerFullConfig(final ConfigBuilder configBuilder)
@@ -63,6 +70,8 @@ public class TincConfig
         configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addPath(INPUT_VCF, true, "Input unfiltered VCF");
+        configBuilder.addPath(FIT_VARIANTS_FILE, false, "Cache file for fit variants");
+        configBuilder.addFlag(WRITE_FIT_VARIANTS, "Write cache file for fit variants");
         configBuilder.addPath(PON_FILE, false, "PON entries");
         GnomadCache.addConfig(configBuilder);
     }

@@ -3,28 +3,45 @@ package com.hartwig.hmftools.sage.tinc;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.LOGGER;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.genome.region.Orientation.fromByteStr;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincCalculator.TINC_GERMLINE_ABQ_MIN;
 import static com.hartwig.hmftools.sage.tinc.TincCalculator.TINC_GERMLINE_DEPTH_HIGH;
 import static com.hartwig.hmftools.sage.tinc.TincCalculator.TINC_GERMLINE_DEPTH_LOW;
 import static com.hartwig.hmftools.sage.tinc.TincCalculator.TINC_MAX_FITTING_VARIANTS;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -35,7 +52,6 @@ import com.hartwig.hmftools.common.variant.pon.PonCache;
 import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 
-import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -75,8 +91,17 @@ public class VariantCache
         }
     }
 
+    public List<VariantData> variants() { return mVariants; }
+    public List<VariantData> fittingVariants() { return mFittingVariants; }
+
     public void loadVariants()
     {
+        if(mConfig.FitVariantsFile != null)
+        {
+            loadFitVariants();
+            return;
+        }
+
         List<ChromosomeTask> chromosomeTasks = Lists.newArrayList();
         List<String> initialRefChromosomes = Lists.newArrayList();
 
@@ -107,7 +132,7 @@ public class VariantCache
 
         mGnomadCache.initialise(initialRefChromosomes);
 
-        LOGGER.info("loading unfiltered VCF file({})", mConfig.InputVcf);
+        LOGGER.debug("loading unfiltered VCF file({})", mConfig.InputVcf);
 
         final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
 
@@ -117,21 +142,41 @@ public class VariantCache
         }
 
         // calculate and then filter by GL_DP between 0.5x and 1.5x of mean (makes AD comparisons more meaningful with standardised DP)
+        int[] filterCounts = new int[FilterReason.values().length];
 
         for(ChromosomeTask chrTask : chromosomeTasks)
         {
             mVariants.addAll(chrTask.variants());
             mFittingVariants.addAll(chrTask.fittingVariants());
+            chrTask.addFilterCounts(filterCounts);
         }
-
-        LOGGER.info("variants({}) filtered({})", mVariants.size(), mFittingVariants.size());
 
         if(mFittingVariants.size() >= TINC_MAX_FITTING_VARIANTS)
         {
             downsampleFittingVariants();
         }
 
-        filterByAverageReferenceDepth();
+        filterByAverageReferenceDepth(filterCounts);
+
+        String filterCountsStr = Arrays.stream(FilterReason.values()).map(x -> format("%s=%d", x.toString(), filterCounts[x.ordinal()]))
+                .collect(Collectors.joining(","));
+
+        LOGGER.debug("variants({}) fitCount({}) reasons: {}",
+                mVariants.size(), mFittingVariants.size(), filterCountsStr);
+
+        if(mConfig.WriteFitVariants)
+            writeFitVariants();
+    }
+
+    private enum FilterReason
+    {
+        NONE,
+        INDEL,
+        FILTERED,
+        GNOMAD,
+        PON,
+        LOW_ABQ,
+        REF_DEPTH;
     }
 
     private void downsampleFittingVariants()
@@ -140,6 +185,8 @@ public class VariantCache
 
         if(nthCount < 2)
             return;
+
+        int startCount = mFittingVariants.size();
 
         int index = 0;
         int counter = 0;
@@ -150,25 +197,24 @@ public class VariantCache
             if(counter < nthCount)
             {
                 mFittingVariants.remove(index);
-                counter = 0;
             }
             else
             {
                 ++index;
+                counter = 0;
             }
         }
 
-        LOGGER.info("down-sampled variants({})", mFittingVariants.size());
+        LOGGER.debug("down-sampled variants({} -> {})", startCount, mFittingVariants.size());
     }
 
-    private void filterByAverageReferenceDepth()
+    private void filterByAverageReferenceDepth(final int[] filterCounts)
     {
         long depthTotal = 0;
 
         for(VariantData variant : mFittingVariants)
         {
-            int refDepth = variant.Context.getGenotype(mGenotypeIds.ReferenceOrdinal).getDP();
-            depthTotal += refDepth;
+            depthTotal += variant.ReferenceDepth;
         }
 
         if(depthTotal == 0)
@@ -176,19 +222,15 @@ public class VariantCache
 
         int averageDepth = (int)round(depthTotal / (double)mFittingVariants.size());
 
-        int filtered = 0;
-
         int index = 0;
         while(index < mFittingVariants.size())
         {
             VariantData variant = mFittingVariants.get(index);
 
-            int refDepth = variant.Context.getGenotype(mGenotypeIds.ReferenceOrdinal).getDP();
-
-            if(refDepth < TINC_GERMLINE_DEPTH_LOW * averageDepth || refDepth > TINC_GERMLINE_DEPTH_HIGH * averageDepth)
+            if(variant.ReferenceDepth < TINC_GERMLINE_DEPTH_LOW * averageDepth || variant.ReferenceDepth > TINC_GERMLINE_DEPTH_HIGH * averageDepth)
             {
                 mFittingVariants.remove(index);
-                ++filtered;
+                ++filterCounts[FilterReason.REF_DEPTH.ordinal()];
             }
             else
             {
@@ -196,9 +238,10 @@ public class VariantCache
             }
         }
 
-        if(filtered > 0)
+        if(filterCounts[FilterReason.REF_DEPTH.ordinal()] > 0)
         {
-            SG_LOGGER.debug("filtered {} variants vs average ref depth({})", filtered, averageDepth);
+            SG_LOGGER.debug("filtered {} variants vs average ref depth({})",
+                    filterCounts[FilterReason.REF_DEPTH.ordinal()], averageDepth);
         }
     }
 
@@ -212,6 +255,7 @@ public class VariantCache
 
         private GnomadChrCache mGnomadChrCache;
         private PonChrCache mPonChrCache;
+        private final int[] mFilterCounts;
 
         public ChromosomeTask(final HumanChromosome chromosome)
         {
@@ -220,10 +264,20 @@ public class VariantCache
 
             mVariants = Lists.newArrayList();
             mFittingVariants = Lists.newArrayList();
+
+            mFilterCounts = new int[FilterReason.values().length];
         }
 
         public List<VariantData> variants() { return mVariants; }
         public List<VariantData> fittingVariants() { return mFittingVariants; }
+
+        public void addFilterCounts(final int[] filterCounts)
+        {
+            for(int i = 0; i < filterCounts.length; ++i)
+            {
+                filterCounts[i] += mFilterCounts[i];
+            }
+        }
 
         @Override
         public Long call()
@@ -245,12 +299,11 @@ public class VariantCache
                     mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
             ChrBaseRegion chrRegion = new ChrBaseRegion(mChromosomeStr, 1, coordinates.Lengths.get(mChromosome));
 
-            SG_LOGGER.debug("chr({}) starting variant annotation", mChromosome);
+            SG_LOGGER.trace("chr({}) starting variant annotation", mChromosome);
 
             for(VariantContext variantContext : vcfFileReader.regionIterator(chrRegion))
             {
                 /*
-            }
                 if(!mConfig.SpecificRegions.isEmpty())
                 {
                     if(mConfig.SpecificRegions.stream()
@@ -268,43 +321,147 @@ public class VariantCache
                 }
             }
 
+            LOGGER.debug("chr({}) loaded variants({}) unfiltered({})", mChromosome, mVariants.size(), mFittingVariants.size());
+
+            mGnomadCache.removeCompleteChromosome(mChromosomeStr);
+            mPonCache.removeCompleteChromosome(mChromosomeStr);
+
             return (long) 0;
         }
 
         private void processVariant(final VariantContext variantContext)
         {
-            VariantData variant = new VariantData(variantContext);
+            VariantData variant = new VariantData(variantContext, mGenotypeIds);
             mVariants.add(variant);
 
+            FilterReason filterReason = checkFilters(variant);
+
+            if(filterReason == FilterReason.NONE)
+                mFittingVariants.add(variant);
+            else
+                ++mFilterCounts[filterReason.ordinal()];
+        }
+
+        private FilterReason checkFilters(VariantData variant)
+        {
+            // check rules for including variants
             if(variant.isIndel())
-                return;
+                return FilterReason.INDEL;
 
             if(variant.Context.getFilters().stream().anyMatch(x -> !PERMITTED_FILTERS.contains(x)))
-                return;
+                return FilterReason.FILTERED;
 
             // annotate and evaluate for use as a fitting variant
-            Double gnomadFreq = mGnomadChrCache.getFrequency(variant.isMnv(), variant.Ref, variant.Alt, variant.Position);
+            if(mGnomadChrCache != null)
+            {
+                Double gnomadFreq = mGnomadChrCache.getFrequency(variant.isMnv(), variant.Ref, variant.Alt, variant.Position);
 
-            if(gnomadFreq != null)
-                return;
+                if(gnomadFreq != null)
+                    return FilterReason.GNOMAD;
+            }
 
             if(mPonChrCache != null)
             {
                 PonVariantData ponData = mPonChrCache.getPonData(variant.Position, variant.Ref, variant.Alt);
 
                 if(ponData != null && mPonCache.filterOnTierCriteria(variant.tier(), ponData.Samples, ponData.MaxSampleReads))
-                    return;
+                    return FilterReason.PON;
             }
 
             // GL_ABQ >= 30 (removes low qual 1 GL_AD variants from distorting the fit).
             // TODO: Note that we currently don't annotate this field (defaults to 0) if GL_AD = 0, so we should change this
-            Genotype refGenotype = variant.Context.getGenotype(mGenotypeIds.ReferenceOrdinal);
-            int germlineABQ = Integer.parseInt(refGenotype.getAnyAttribute(AVG_BASE_QUAL).toString().split(CSV_DELIM)[1]);
+            if(variant.ReferenceABQ > 0 && variant.ReferenceABQ < TINC_GERMLINE_ABQ_MIN)
+                return FilterReason.LOW_ABQ;
 
-            if(germlineABQ < TINC_GERMLINE_ABQ_MIN)
-                return;
+            return FilterReason.NONE;
+        }
+    }
 
-            mFittingVariants.add(variant);
+    private static final String FLD_REF_DEPTH = "RefDepth";
+    private static final String FLD_TUMOR_DEPTH = "TumorDepth";
+    private static final String FLD_REF_FRAGS = "RefFrags";
+    private static final String FLD_TUMOR_FRAGS = "TumorFrags";
+
+    private void writeFitVariants()
+    {
+        try
+        {
+            String filename = mConfig.InputVcf.replaceAll(".vcf.gz", ".fit_variant.tsv");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_CHROMOSOME);
+            sj.add(FLD_POSITION);
+            sj.add(FLD_REF);
+            sj.add(FLD_ALT);
+            sj.add(FLD_REF_DEPTH);
+            sj.add(FLD_REF_FRAGS);
+            sj.add(FLD_TUMOR_DEPTH);
+            sj.add(FLD_TUMOR_FRAGS);
+
+            writer.write(sj.toString());
+            writer.newLine();
+
+            for(VariantData variant : mFittingVariants)
+            {
+                sj = new StringJoiner(TSV_DELIM);
+                sj.add(variant.Chromosome);
+                sj.add(String.valueOf(variant.Position));
+                sj.add(variant.Ref);
+                sj.add(variant.Alt);
+                sj.add(String.valueOf(variant.ReferenceDepth));
+                sj.add(String.valueOf(variant.ReferenceAltFrags));
+                sj.add(String.valueOf(variant.TumorDepth));
+                sj.add(String.valueOf(variant.TumorAltFrags));
+
+                writer.write(sj.toString());
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            SG_LOGGER.error("failed to write fit variants: {}", e.toString());
+        }
+    }
+
+    private void loadFitVariants()
+    {
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.FitVariantsFile));
+
+            String line = fileReader.readLine();
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
+
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posIndex = fieldsIndexMap.get(FLD_POSITION);
+            int refIndex = fieldsIndexMap.get(FLD_REF);
+            int altIndex = fieldsIndexMap.get(FLD_ALT);
+            int refDepthIndex = fieldsIndexMap.get(FLD_REF_DEPTH);
+            int refFragsIndex = fieldsIndexMap.get(FLD_REF_FRAGS);
+            int tumDepthIndex = fieldsIndexMap.get(FLD_TUMOR_DEPTH);
+            int tumFragsIndex = fieldsIndexMap.get(FLD_TUMOR_FRAGS);
+
+            while((line = fileReader.readLine()) != null)
+            {
+                final String[] values = line.split(TSV_DELIM, -1);
+
+                VariantData variant = new VariantData(
+                        values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex],
+                        Integer.parseInt(values[refDepthIndex]), Integer.parseInt(values[refFragsIndex]),
+                        Integer.parseInt(values[tumDepthIndex]), Integer.parseInt(values[tumFragsIndex]));
+
+                mFittingVariants.add(variant);
+            }
+
+            SG_LOGGER.info("loaded {} fit variants from file: {}", mFittingVariants.size(), mConfig.FitVariantsFile);
+        }
+        catch(IOException exception)
+        {
+            SG_LOGGER.error("failed to read fit variants file({})", mConfig.FitVariantsFile, exception.toString());
+            System.exit(1);
         }
     }
 }

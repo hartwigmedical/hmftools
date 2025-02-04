@@ -4,6 +4,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
+import static org.apache.logging.log4j.Level.DEBUG;
+import static org.apache.logging.log4j.Level.TRACE;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,10 +18,12 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.util.Log;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
@@ -214,7 +219,8 @@ public class PonCache
                 {
                     if(currentCache != null && !currentCache.isComplete())
                     {
-                        LOGGER.debug("chr({}) loaded {} PON entries", currentCache.Chromosome, currentCache.entryCount());
+                        Level logLevel = currentCache.entryCount() > 1000 ? DEBUG : TRACE;
+                        LOGGER.log(logLevel, "chr({}) loaded {} PON entries", currentCache.Chromosome, currentCache.entryCount());
 
                         currentCache.setComplete();
                     }
