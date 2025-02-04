@@ -16,6 +16,11 @@ REDUX conforms fully to SAM specifications.   We have validated REDUX on DRAGEN 
 
 Whilst REDUX does unmap reads and delete supplemetaries, no primary read information is removed or lost when REDUX is run, and hence the orginal FASTQ is fully recoverable. If you wish a BAM to be converted to FASTQ, note that consensus reads must be deleted prior to conversion.  This functionality is included by default in our BAM2FASTQ tool 
 
+## Performance 
+ 
+On a 100x BAM on a 32 core machine REDUX completes in < 1 hour with a maximum memory usage of <10Gb.  
+
+
 ## Commands
 
 ```
