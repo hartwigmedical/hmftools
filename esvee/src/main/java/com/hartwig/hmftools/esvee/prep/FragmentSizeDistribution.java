@@ -234,8 +234,20 @@ public class FragmentSizeDistribution
         public Long call()
         {
             // slice a fixed region from each chromosome
-            ChrBaseRegion region = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
-                mConfig.SpecificChrRegions.Regions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
+
+            ChrBaseRegion region;
+
+            if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+            {
+                region = mConfig.SpecificChrRegions.Regions.stream().filter(x -> x.Chromosome.equals(mChromosome)).findFirst().orElse(null);
+
+                if(region == null)
+                    return (long)1;
+            }
+            else
+            {
+                region = new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
+            }
 
             mBamSlicer.slice(mSamReader, region, this::processBamRead);
 
