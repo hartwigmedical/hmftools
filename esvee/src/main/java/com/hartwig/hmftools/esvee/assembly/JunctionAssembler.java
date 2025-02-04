@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
@@ -151,6 +152,9 @@ public class JunctionAssembler
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
+
+        //if(!passUnpairedReadFilter(firstAssembly.support()))
+        //     return Collections.emptyList();
 
         // test for a second well-supported, alternative assembly at the same junction
         JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
@@ -357,6 +361,9 @@ public class JunctionAssembler
 
         addJunctionReads(newAssembly, extensionSeqBuilder, junctionReads);
 
+        // if(!passUnpairedReadFilter(firstAssembly.support()))
+        //    return null;
+
         return newAssembly;
     }
 
@@ -422,5 +429,28 @@ public class JunctionAssembler
     protected static int minReadThreshold(final Junction junction)
     {
         return junction.Hotspot ? MIN_HOTSPOT_JUNCTION_SUPPORT : ASSEMBLY_MIN_READ_SUPPORT;
+    }
+
+    private boolean passUnpairedReadFilter(final List<SupportRead> reads)
+    {
+        if(reads.isEmpty() || reads.get(0).isPairedRead())
+            return true;
+
+        Set<Integer> startPositions = Sets.newHashSet();
+        Set<Integer> endPositions = Sets.newHashSet();
+
+        for(SupportRead read : reads)
+        {
+            if(read.isPairedRead())
+                return true;
+
+            startPositions.add(read.unclippedStart());
+            endPositions.add(read.unclippedEnd());
+
+            if(startPositions.size() >= ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS && endPositions.size() >= ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS)
+                return true;
+        }
+
+        return false;
     }
 }

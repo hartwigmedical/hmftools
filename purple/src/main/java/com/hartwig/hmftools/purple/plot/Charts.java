@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.plot;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -24,7 +23,7 @@ public class Charts
     private final PurpleConfig mConfig;
     private final CircosCharts mCircosCharts;
 
-    public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38) throws IOException
+    public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38)
     {
         mRCharts = new RCharts(config, executorService);
         mConfig = config;
@@ -54,11 +53,9 @@ public class Charts
 
         for(final Future<Integer> future : chartFutures)
         {
-            // This (intentionally) has side effect of alerting users to any exceptions
             int result = future.get();
             if(result != 0)
             {
-                PPL_LOGGER.warn("error generating charts");
                 throw new Exception("charting failed");
             }
         }

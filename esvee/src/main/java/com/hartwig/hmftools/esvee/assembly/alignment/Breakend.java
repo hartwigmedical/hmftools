@@ -15,8 +15,10 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPO
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
@@ -43,6 +45,9 @@ public class Breakend implements Comparable<Breakend>
     private int mFragmentLengthTotal;
     private int mFragmentLengthCount;
     private int mIncompleteFragmentCount;
+
+    private Set<Integer> mPositionsStart;
+    private Set<Integer> mPositionsEnd;
 
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
@@ -83,6 +88,23 @@ public class Breakend implements Comparable<Breakend>
 
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
+
+    public void setUnpairedReadPositions(int posStart, int posEnd)
+    {
+        if(mPositionsStart == null)
+        {
+            mPositionsStart = Sets.newHashSet();
+            mPositionsEnd = Sets.newHashSet();
+        }
+
+        mPositionsStart.add(posStart);
+        mPositionsEnd.add(posEnd);
+    }
+
+    public int[] unpairedReadPositions()
+    {
+        return mPositionsStart != null ? new int[] { mPositionsStart.size(), mPositionsEnd.size() } : null;
+    }
 
     public List<AlternativeAlignment> alternativeAlignments()
     {

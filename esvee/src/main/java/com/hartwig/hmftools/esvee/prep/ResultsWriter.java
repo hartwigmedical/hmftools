@@ -18,12 +18,10 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantGroup.firstPrimaryRead;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
 
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
-import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
@@ -84,19 +82,22 @@ public class ResultsWriter
             if(filterReadGroup(readGroup))
                 continue;
 
-            writeBamRecords(readGroup);
-
-            String junctionPosStr = readGroup.junctionPositionsStr();
-
-            for(PrepRead read : readGroup.reads())
+            if(mReadWriter != null)
             {
-                if(read.written())
-                    continue;
+                String junctionPosStr = readGroup.junctionPositionsStr();
 
-                writeReadData(
-                        read, readGroup.size(), readGroup.expectedReadCount(), readGroup.groupStatus(), readGroup.spansPartitions(),
-                        junctionPosStr);
+                for(PrepRead read : readGroup.reads())
+                {
+                    if(read.written())
+                        continue;
+
+                    writeReadData(
+                            read, readGroup.size(), readGroup.expectedReadCount(), readGroup.groupStatus(), readGroup.spansPartitions(),
+                            junctionPosStr);
+                }
             }
+
+            writeBamRecords(readGroup);
 
             readGroup.reads().forEach(x -> x.setWritten());
         }

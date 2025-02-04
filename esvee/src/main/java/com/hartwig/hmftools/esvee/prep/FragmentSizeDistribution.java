@@ -93,7 +93,7 @@ public class FragmentSizeDistribution
             mHasPairedReads |= chrTask.hasPairedRead();
         }
 
-        SV_LOGGER.info("maxReadLength({})", mMaxReadLength);
+        SV_LOGGER.info("maxReadLength({}) {}", mMaxReadLength, !mHasPairedReads ? "unpaired reads" : "");
 
         if(!mLengthFrequencies.isEmpty())
         {

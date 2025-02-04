@@ -75,6 +75,9 @@ public final class SvVcfTags
     public static final String LINE_SITE = "LINE";
     public static final String LINE_SITE_DESC = "LINE insertion site";
 
+    public static final String UNPAIRED_READ_POSITIONS = "UPR_POS";
+    public static final String UNPAIRED_READ_POSITIONS_DESC = "Distinct unpaired read positinos";
+
     // per sample
     public static final String SPLIT_FRAGS = "SF";
     public static final String SPLIT_FRAGS_DESC = "Count of fragments supporting the breakend with a read overlapping the breakend";

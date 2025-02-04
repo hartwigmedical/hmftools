@@ -311,27 +311,20 @@ public class AlignmentFragments
             svType = breakends.iterator().next().svType();
         }
 
-        /* need special unpaired logic anymore?
-            if(read.insertSize() > 0)
-        {
-            inferredFragmentLength = abs(read.insertSize());
-            setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
-
-            if(setValidFragmentLength)
-                read.setInferredFragmentLength(inferredFragmentLength);
-        }
-
-         */
-
         if(svType != null && isIndel(svType) && indelLength != 0 && read.insertSize() > 0)
         {
             inferredFragmentLength = calcIndelSoloReadFragmentLength(read, svType, indelLength);
-
             setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 
-            if(setValidFragmentLength)
-                read.setInferredFragmentLength(inferredFragmentLength);
         }
+        else if(!read.isPairedRead())
+        {
+            inferredFragmentLength = abs(read.insertSize());
+            setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
+        }
+
+        if(setValidFragmentLength)
+            read.setInferredFragmentLength(inferredFragmentLength);
 
         boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
 
@@ -345,10 +338,20 @@ public class AlignmentFragments
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
 
+            if(!read.isPairedRead())
+            {
+                breakend.setUnpairedReadPositions(read.unclippedStart(), read.unclippedEnd());
+            }
+
             if(!breakend.isSingle())
             {
                 breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
+
+                if(!read.isPairedRead())
+                {
+                    breakend.otherBreakend().setUnpairedReadPositions(read.unclippedStart(), read.unclippedEnd());
+                }
             }
         }
     }
@@ -384,7 +387,7 @@ public class AlignmentFragments
             else
                 fragmentLength += read.leftClipLength();
         }
-        else
+        else if(read.isPairedRead())
         {
             if(svType == DEL)
             {
