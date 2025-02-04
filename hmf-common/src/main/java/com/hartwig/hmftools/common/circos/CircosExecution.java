@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.circos;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,7 +27,7 @@ public class CircosExecution
 
     @Nullable
     public Integer generateCircos(
-            final String inputConfig, final String outputPath, final String outputFile) throws IOException, InterruptedException
+            final String inputConfig, final String outputPath, final String outputFile) throws Exception
     {
         String plotFilePath = outputPath + File.separator + outputFile;
 
@@ -46,7 +48,7 @@ public class CircosExecution
             "-outputfile",
             outputFile);
 
-        LOGGER.info(String.format("generating " + outputFile + " via command: %s", String.join(" ", command)));
+        LOGGER.info(format("generating " + outputFile + " via command: %s", String.join(" ", command)));
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Map<String, String> environment = processBuilder.environment();
@@ -67,15 +69,14 @@ public class CircosExecution
         if(result != 0)
         {
             System.err.print(new String(process.getInputStream().readAllBytes()));
-            LOGGER.error("Fatal error creating circos plot.");
-            return 0;
+            throw new Exception("failed to create circos plot");
         }
 
         plotFile = new File(outputPath + File.separator + outputFile);
         if(!plotFile.exists())
         {
             System.err.print(new String(process.getInputStream().readAllBytes()));
-            LOGGER.error("Failed to create file {}", plotFile);
+            throw new Exception(format("failed to create file %s", plotFile));
         }
 
         return 0;

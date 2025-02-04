@@ -111,8 +111,8 @@ public class GnomadCache
 
         if(chrFilename == null)
         {
-            LOGGER.error("missing Gnomad file for chromosome({})", chromosome);
-            System.exit(1);
+            LOGGER.warn("missing Gnomad file for chromosome({})", chromosome);
+            return null;
         }
 
         loadChromosomeEntries(chrFilename, chromosome);
