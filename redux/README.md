@@ -10,13 +10,13 @@ Unmapping | Unmap reads that are aligned to a set of predefined problematic regi
 Duplicate marking and consensus | Mark duplicates based off fragment start and end positions and UMI (if available). Unlike many tools, supplementary reads are also deduplicated. <br/><br/> For any fragments found to be duplicates a single consensus fragment is formed and a consensus base and qual is calculated. | Amplification during library preparation or on-sequencer can cause duplicates of fragments. By marking duplicates, we avoid potential multiple counting of evidence from a single source fragment which reduces FP variant calling. <br/><br/> Forming a consensus read for every duplicated fragment ensures we choose the most likely base at each location and a representative base quality. 
 Microsatellite jitter rates | The rate of microsatellite errors is measured genome wide per {consensusType, repeatContext, repeatLength} and fit to a model. | Microsatellite jitter or stutter is a common error caused by PCR amplification and on-sequencer errors.  Some sequencing technologies have specific problems with homopolymers. The rate may be highly sample specific as it depends on the amount of and quality of the amplification process. The sample and context specific rate measured in REDUX is used to inform and improve variant calling in downstream tools 
 
-## Notes on REDUX compatibilty
+### Notes on REDUX compatibilty
 
 REDUX conforms fully to SAM specifications.   We have validated REDUX on DRAGEN and BWA-MEM / BWA-MEM2.   REDUX may also be run on BAMs with any prior duplicate marking and strip previous consensus results.  Please not that REDUX does require the mate CIGAR attribute to be set for all paired reads. If this is not set for some reason, this can be rectified using tools such as Picard FixMateInformation routine. 
 
 Whilst REDUX does unmap reads and delete supplemetaries, no primary read information is removed or lost when REDUX is run, and hence the orginal FASTQ is fully recoverable. If you wish a BAM to be converted to FASTQ, note that consensus reads must be deleted prior to conversion.  This functionality is included by default in our BAM2FASTQ tool 
 
-## Performance 
+### Performance 
  
 On a 100x BAM on a 32 core machine REDUX completes in < 1 hour with a maximum memory usage of <10Gb.  
 
