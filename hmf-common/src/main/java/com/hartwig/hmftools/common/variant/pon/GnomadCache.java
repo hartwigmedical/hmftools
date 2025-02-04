@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.StringCache;
@@ -23,14 +24,23 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public final class GnomadCommon
+public class GnomadCache
 {
+    private final Map<String,GnomadChrCache> mChrCacheMap;
+    private final RefGenomeVersion mRefGenomeVersion;
+    private final Map<String,String> mChromosomeFiles;
+    private boolean mHasValidData;
+    private final boolean mEnabled;
+    private final String mGnomadFilename;
+    private final StringCache mStringCache;
+
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
     public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
@@ -39,7 +49,86 @@ public final class GnomadCommon
 
     public static final String GNOMAD_FILE_ID = "gnomad_variants";
 
-    protected static final Logger LOGGER = LogManager.getLogger(GnomadCommon.class);
+    protected static final Logger LOGGER = LogManager.getLogger(GnomadCache.class);
+
+    public GnomadCache(final RefGenomeVersion refGenomeVersion, @Nullable final String gnomadFilename, @Nullable final String gnomadDirectory)
+    {
+        mChrCacheMap = Maps.newHashMap();
+        mChromosomeFiles = Maps.newHashMap();
+        mHasValidData = true;
+        mStringCache = new StringCache();
+
+        mRefGenomeVersion = refGenomeVersion;
+
+        if(gnomadFilename != null)
+        {
+            mEnabled = true;
+            mGnomadFilename = gnomadFilename;
+        }
+        else if(gnomadDirectory != null)
+        {
+            mEnabled = true;
+            mGnomadFilename = null;
+            String gnomadDir = gnomadDirectory;
+            mHasValidData = loadAllFrequencyFiles(gnomadDir);
+        }
+        else
+        {
+            mGnomadFilename = null;
+            mEnabled = false;
+        }
+    }
+
+    public boolean enabled() { return mGnomadFilename != null || !mChromosomeFiles.isEmpty(); }
+    public boolean hasValidData() { return mHasValidData; }
+
+    public void initialise(final List<String> initialChromosomes)
+    {
+        if(mGnomadFilename != null)
+        {
+            loadChromosomeEntries(mGnomadFilename, null);
+        }
+        else if(!mChromosomeFiles.isEmpty())
+        {
+            for(String chromosome : initialChromosomes)
+            {
+                getChromosomeCache(chromosome);
+            }
+        }
+    }
+
+    public synchronized GnomadChrCache getChromosomeCache(final String chromosome)
+    {
+        if(!mEnabled)
+            return null;
+
+        GnomadChrCache chrCache = mChrCacheMap.get(chromosome);
+
+        if(chrCache != null)
+            return chrCache;
+
+        String chrFilename = mChromosomeFiles.get(chromosome);
+
+        if(chrFilename == null)
+        {
+            LOGGER.error("missing Gnomad file for chromosome({})", chromosome);
+            System.exit(1);
+        }
+
+        loadChromosomeEntries(chrFilename, chromosome);
+        return mChrCacheMap.get(chromosome);
+    }
+
+    public synchronized void removeCompleteChromosome(final String chromosome)
+    {
+        GnomadChrCache chrCache = mChrCacheMap.get(chromosome);
+
+        if(chrCache != null)
+        {
+            chrCache.clear();
+            mChrCacheMap.remove(chromosome);
+        }
+    }
 
     public static String formFileId(final String dir, final String chromosome, final String outputId)
     {
@@ -55,9 +144,7 @@ public final class GnomadCommon
         return outputFile;
     }
 
-    public static boolean loadChromosomeEntries(
-            final String filename, final String fileChromosome, final StringCache stringCache, final Map<String,GnomadChrCache> chrCacheMap,
-            final Map<String,String> chromosomeFiles)
+    private boolean loadChromosomeEntries(final String filename, final String fileChromosome)
     {
         // if file chromosome is supplied then it is not read from the input file
         if(filename == null)
@@ -92,8 +179,8 @@ public final class GnomadCommon
                 if(!chromosome.equals(currentChr))
                 {
                     currentChr = chromosome;
-                    currentChrCache = new GnomadChrCache(chromosome, stringCache);
-                    chrCacheMap.put(chromosome, currentChrCache);
+                    currentChrCache = new GnomadChrCache(chromosome, mStringCache);
+                    mChrCacheMap.put(chromosome, currentChrCache);
                 }
 
                 currentChrCache.addEntry(position, ref, alt,frequency);
@@ -101,7 +188,7 @@ public final class GnomadCommon
                 ++itemCount;
             }
 
-            if(chromosomeFiles.isEmpty())
+            if(mChromosomeFiles.isEmpty())
             {
                 LOGGER.info("loaded {} Gnomad frequency records from file({})", itemCount, filename);
             }
@@ -120,8 +207,7 @@ public final class GnomadCommon
         }
     }
 
-    public static boolean loadAllFrequencyFiles(
-            final String gnomadDir, final RefGenomeVersion refGenomeVersion, final Map<String,String> chromosomeFiles)
+    private boolean loadAllFrequencyFiles(final String gnomadDir)
     {
         try
         {
@@ -143,7 +229,7 @@ public final class GnomadCommon
                         .filter(x -> x.endsWith(fileChrStrNoId) || x.contains(fileChrStrWithId))
                         .findFirst().orElse(null);
 
-                String chrStr = refGenomeVersion.versionedChromosome(humanChr.toString());
+                String chrStr = mRefGenomeVersion.versionedChromosome(humanChr.toString());
 
                 if(chrFile == null)
                 {
@@ -151,7 +237,7 @@ public final class GnomadCommon
                     return false;
                 }
 
-                chromosomeFiles.put(chrStr, chrFile);
+                mChromosomeFiles.put(chrStr, chrFile);
             }
 
             return true;

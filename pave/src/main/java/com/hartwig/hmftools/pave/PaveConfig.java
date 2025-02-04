@@ -25,10 +25,9 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.pon.GnomadCommon;
+import com.hartwig.hmftools.common.variant.pon.GnomadCache;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
-import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.Mappability;
 
 import org.apache.logging.log4j.LogManager;
@@ -135,7 +134,7 @@ public class PaveConfig
         configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");
         configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
 
-        GnomadCommon.addConfig(configBuilder);
+        GnomadCache.addConfig(configBuilder);
         Mappability.addConfig(configBuilder);
         ClinvarAnnotation.addConfig(configBuilder);
         Blacklistings.addConfig(configBuilder);

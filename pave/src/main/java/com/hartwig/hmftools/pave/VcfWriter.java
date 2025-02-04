@@ -20,13 +20,11 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
-import com.hartwig.hmftools.common.variant.pon.GnomadCommon;
+import com.hartwig.hmftools.common.variant.pon.GnomadCache;
 import com.hartwig.hmftools.common.variant.pon.PonCache;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
-import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.Mappability;
-import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
 import com.hartwig.hmftools.pave.annotation.Reportability;
 import com.hartwig.hmftools.pave.impact.VariantTransImpact;
@@ -87,7 +85,7 @@ public class VcfWriter
 
         if(referenceData.Gnomad.enabled())
         {
-            GnomadCommon.addHeader(newHeader);
+            GnomadCache.addHeader(newHeader);
         }
 
         if(referenceData.VariantMappability.enabled()   )

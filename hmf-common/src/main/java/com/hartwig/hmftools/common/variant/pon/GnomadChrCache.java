@@ -2,25 +2,14 @@ package com.hartwig.hmftools.common.variant.pon;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ_DESC;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -38,15 +27,6 @@ public class GnomadChrCache
 
     private final Map<Integer,List<GnomadVariant>> mFrequencies;
     private final StringCache mStringCache;
-
-    public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
-    public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
-    public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
-
-    public static final String PON_GNOMAD_FILTER = "PONGnomad";
-
-    protected static final Logger LOGGER = LogManager.getLogger(GnomadCommon.class);
-
 
     public GnomadChrCache(final String chromosome, final StringCache stringCache)
     {
@@ -124,19 +104,4 @@ public class GnomadChrCache
         GnomadVariant match = posList.stream().filter(x -> x.matches(ref, alt)).findFirst().orElse(null);
         return match != null ? match.Frequency : null;
     }
-
-
-    public static void addConfig(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addPath(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
-        configBuilder.addPath(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
-        configBuilder.addFlag(GNOMAD_NO_FILTER, "No Gnomad filter is applied");
-    }
-
-    public static void addHeader(final VCFHeader header)
-    {
-        header.addMetaDataLine(new VCFInfoHeaderLine(GNOMAD_FREQ, 1, VCFHeaderLineType.Float, GNOMAD_FREQ_DESC));
-        header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnomad PON"));
-    }
-
 }

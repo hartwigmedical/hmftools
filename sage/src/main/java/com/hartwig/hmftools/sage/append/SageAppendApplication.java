@@ -290,7 +290,6 @@ public class SageAppendApplication
         return dictionary;
     }
 
-
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
