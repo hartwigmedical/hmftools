@@ -360,7 +360,10 @@ public class PartitionReader
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
             if(mConfig.FormConsensus)
+            {
                 duplicateGroup.formConsensusRead(mConsensusReads);
+                mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
+            }
 
             postProcessPrimaryRead(duplicateGroup.primaryRead());
             mBamWriter.writeDuplicateGroup(duplicateGroup);
