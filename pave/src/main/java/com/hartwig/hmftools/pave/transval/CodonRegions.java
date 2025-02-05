@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * A codon may be contained in a single exon or may be split across two exons.
  * (The shortest exon in the human genome has length 4,
- * so a codon cqn never require three exons.)
+ * so a codon can never require three exons.)
  * This class encapsulates the mapping of the start of a codon within
  * an exon and its possible extension into the next exon.
  */

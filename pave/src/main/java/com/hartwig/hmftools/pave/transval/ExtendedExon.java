@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave.transval;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -27,13 +28,20 @@ public class ExtendedExon
         Preconditions.checkArgument(totalLength() % 3 == 0);
     }
 
-    public String baseSequenceWithDeletionApplied(int start, int end)
+    public String baseSequenceWithDeletionApplied(int start, int end, boolean positiveStrand)
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start <= end);
         Preconditions.checkArgument((end - start) % 3 == 2);
+        if(!positiveStrand) {
+            int exonEnd = exonBases.length() - 1;
+            String left = exonBases.substring(0, exonBases.length() - end - 1);
+            String right = exonBases.substring(exonEnd - start + 1, exonEnd + 1);
+            return Nucleotides.reverseComplementBases(right) + Nucleotides.reverseComplementBases(left);
+        }
         String left = exonBases.substring(0, start);
         String right = exonBases.substring(end + 1);
+
         return left + right;
     }
 
@@ -45,16 +53,14 @@ public class ExtendedExon
         return exonBases.substring(start, end + 1);
     }
 
-    public String completeBaseSequence()
-    {
-        return prefixFromPreviousExon + exonBases + suffixFromNextExon;
-    }
-
-    public int toStrandCoordinates(int positionInExon)
+    public int toStrandCoordinates(int positionInExon, boolean positiveStrand)
     {
         Preconditions.checkArgument(positionInExon >= 0);
         Preconditions.checkArgument(positionInExon < inExonLength());
-        return positionInExon + exonStart;
+        if(positiveStrand) {
+            return positionInExon + exonStart;
+        }
+        return exonStart + exonBases.length() - positionInExon;
     }
 
     public int inExonLength()

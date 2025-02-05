@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -102,7 +103,7 @@ public class ServeDataTest
         return jsonObject.get(key).getAsString();
     }
 
-//    @Test
+    @Test
     public void check()
     {
         List<StatsForGene> results = new ArrayList<>();
@@ -225,7 +226,11 @@ Current Transvar output matches ours.
             }
             else
             {
+                if(gene.equals("BRAF")) {
+
+                p(annotation);
                 statsForGene.recordNotParsed();
+                }
             }
         });
         return statsForGene;
