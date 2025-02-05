@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.KNOWN_HOTSPOT_FILE;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -24,8 +25,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class HotspotCache
 {
     private final Map<String,List<KnownHotspot>> mHotspotRegions; // keyed by chromosome start
-
-    private static final String KNOWN_HOTSPOT_FILE = "known_hotspot_file";
 
     public HotspotCache(final ConfigBuilder configBuilder)
     {

@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_F
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -21,13 +20,13 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.RAW_VCF_SUFFIX;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
+import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.BAM_FILE;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.BAM_FILE_DESC;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.SAMPLE_ID_DESC;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -46,7 +45,7 @@ public class DepthConfig
     public final String InputVcf;
     public final String OutputDir;
     public final String OutputId;
-    public final List<String> Samples;
+    public final List<String> SampleIds;
     public final List<String> BamFiles;
     public final String RefGenome;
     public final String UnmapRegionsFile;
@@ -70,8 +69,8 @@ public class DepthConfig
 
     public DepthConfig(final ConfigBuilder configBuilder)
     {
-        Samples = Arrays.stream(configBuilder.getValue(SAMPLE).split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList());
-        BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILE).split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList());
+        SampleIds = parseSampleIds(configBuilder);
+        BamFiles = parseBamFiles(configBuilder);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -79,7 +78,7 @@ public class DepthConfig
         if(configBuilder.hasValue(INPUT_VCF))
             InputVcf = configBuilder.getValue(INPUT_VCF);
         else
-            InputVcf = formEsveeInputFilename(OutputDir, Samples.get(0), RAW_VCF_SUFFIX, OutputId);
+            InputVcf = formEsveeInputFilename(OutputDir, SampleIds.get(0), RAW_VCF_SUFFIX, OutputId);
 
         RefGenome = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -106,7 +105,7 @@ public class DepthConfig
         VcfTagPrefix = configBuilder.getValue(VCF_TAG_PREFIX);
     }
 
-    public String sampleId() { return Samples.get(0); }
+    public String sampleId() { return SampleIds.get(0); }
 
     public String getVcfTag(final String vcfTag)
     {
@@ -116,8 +115,8 @@ public class DepthConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
-        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_ID_DESC);
-        configBuilder.addPaths(BAM_FILE, true, BAM_FILE_DESC);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_ID_DESC); // not required, see comment in prep config
+        configBuilder.addPaths(BAM_FILE, false, BAM_FILE_DESC);
         configBuilder.addConfigItem(VCF_TAG_PREFIX, "VCF tag prefix for testing & comparison");
         addRefGenomeConfig(configBuilder, true);
         UnmappedRegions.registerConfig(configBuilder);
@@ -140,7 +139,7 @@ public class DepthConfig
         OutputDir = "";
         OutputId = "";
 
-        Samples = Lists.newArrayList();
+        SampleIds = Lists.newArrayList();
         BamFiles = Lists.newArrayList();
 
         RefGenome = "";

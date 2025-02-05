@@ -36,7 +36,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_DISC_RATE_INCREMENT;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
@@ -45,6 +44,7 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTE
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
@@ -154,13 +154,13 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
-        TumorIds = Arrays.stream(configBuilder.getValue(TUMOR).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-        TumorBams = Arrays.stream(configBuilder.getValue(TUMOR_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        TumorIds = parseSampleBamLists(configBuilder, TUMOR);
+        TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
 
         if(configBuilder.hasValue(REFERENCE) && configBuilder.hasValue(REFERENCE_BAM))
         {
-            ReferenceIds = Arrays.stream(configBuilder.getValue(REFERENCE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-            ReferenceBams = Arrays.stream(configBuilder.getValue(REFERENCE_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+            ReferenceIds = parseSampleBamLists(configBuilder, REFERENCE);
+            ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
         }
         else
         {
@@ -172,6 +172,16 @@ public class AssemblyConfig
         {
             SV_LOGGER.error("tumor and reference IDs must match BAM files");
             System.exit(1);
+        }
+
+        // in germline mode, transfer to reference values to the tumor ones
+        if(TumorIds.isEmpty() && !ReferenceIds.isEmpty())
+        {
+            TumorIds.addAll(ReferenceIds);
+            ReferenceIds.clear();
+
+            TumorBams.addAll(ReferenceBams);
+            ReferenceBams.clear();
         }
 
         OutputDir = parseOutputDir(configBuilder);
@@ -206,7 +216,7 @@ public class AssemblyConfig
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
-        WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
+        WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
 
         AlignmentFile = AlignmentCache.filename(configBuilder);
         RunAlignment = AlignmentFile != null || WriteType.requiresAlignment(WriteTypes);
@@ -326,7 +336,8 @@ public class AssemblyConfig
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
-        configBuilder.addConfigItem(WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"));
+        if(!configBuilder.isRegistered(WRITE_TYPES))
+            configBuilder.addConfigItem(WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"));
 
         SequencingType.registerConfig(configBuilder);
 

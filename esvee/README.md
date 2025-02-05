@@ -12,6 +12,30 @@ Esvee runs is run in 4 steps
 
 The full algorithm for each step is described in the algorithm section below.
 
+### Command
+
+Esvee can be run as a single command or by making the 4 steps described below in turn. 
+A single command example is:
+
+```
+java -jar esvee.jar  
+  -tumor TUMOR_SAMPLE_ID 
+  -reference REF_SAMPLE_ID
+  -tumor_bam /sample_data/TUMOR_SAMPLE_ID.bam
+  -reference_bam /sample_data/REF_SAMPLE_ID.bam
+  -ref_genome /path_to_ref_genome_fasta/
+  -ref_genome_version 38
+  -write_types 'PRE_STANDARD;ASSEMBLY_STANDARD' 
+  -known_hotspot_file /ref_data/known_fusions.38.bedpe
+  -pon_sgl_file /ref_data/sgl_pon.38.bed.gz
+  -pon_sv_file /ref_data/sv_pon.38.bedpe.gz
+  -repeat_mask_file /ref_data/repeat_mask_data.37.fa.gz
+  -bamtool /tools/sambamba/sambamba 
+  -output_dir /sample_data/output/ 
+  -threads 16
+```
+
+
 ## STEP 1: ESVEE Prep
 
 Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 

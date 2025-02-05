@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_JUNCTION;
 
 import java.util.List;
 import java.util.Map;
@@ -237,7 +238,7 @@ public class PartitionSlicer
             mWriter.writeReadGroup(junctionGroups);
         }
 
-        if(mConfig.WriteTypes.contains(WriteType.JUNCTIONS))
+        if(mConfig.WriteTypes.contains(PREP_JUNCTION))
         {
             mWriter.writeJunctionData(mRegion.Chromosome, mJunctionTracker.junctions());
         }

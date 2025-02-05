@@ -191,11 +191,6 @@ public class DiscordantStats
         }
     }
 
-    public static String formDiscordantStatsFilename(final String outputDir, final String sampleId)
-    {
-        return formPrepInputFilename(outputDir, sampleId, PREP_DISC_STATS_FILE_ID, null);
-    }
-
     public static DiscordantStats loadDiscordantStats(final String filename)
     {
         try
@@ -219,7 +214,7 @@ public class DiscordantStats
         }
         catch(Exception e)
         {
-            SV_LOGGER.warn("failed to read discordant read statistics file: {}", e.toString());
+            SV_LOGGER.warn("failed to read discordant read statistics file({}): {}", filename, e.toString());
             return new DiscordantStats();
         }
     }

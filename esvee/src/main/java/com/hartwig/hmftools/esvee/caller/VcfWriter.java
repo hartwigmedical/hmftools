@@ -111,7 +111,7 @@ public class VcfWriter
             genotypeSampleNames.add(mConfig.ReferenceId);
 
         if(mConfig.hasTumor())
-            genotypeSampleNames.add(mConfig.SampleId);
+            genotypeSampleNames.add(mConfig.TumorId);
 
         VCFHeader newHeader = new VCFHeader(vcfHeader.getMetaDataInInputOrder(), genotypeSampleNames);
 
@@ -168,7 +168,7 @@ public class VcfWriter
         List<Genotype> genotypes = Lists.newArrayList();
 
         if(mGenotypeIds.hasTumor())
-            buildGenotype(genotypes, breakend, mConfig.SampleId);
+            buildGenotype(genotypes, breakend, mConfig.TumorId);
 
         if(mGenotypeIds.hasReference())
             buildGenotype(genotypes, breakend, mConfig.ReferenceId);

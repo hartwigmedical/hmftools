@@ -1,17 +1,30 @@
 package com.hartwig.hmftools.esvee.common;
 
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.prep.PrepConfig.BAM_FILE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_DISC_STATS_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -44,14 +57,49 @@ public final class FileCommon
     public static final String JUNCTION_FILE = "junction_file";
     public static final String JUNCTION_FILE_DESC = "Esvee Prep junction file, default is to match by sample name";
 
+    public static final String KNOWN_HOTSPOT_FILE = "known_hotspot_file";
+
     public static final String FILE_NAME_DELIM = ".";
 
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
 
+    public static List<String> parseSampleBamLists(final ConfigBuilder configBuilder, final String configItem)
+    {
+        return Arrays.stream(configBuilder.getValue(configItem).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+    }
+
+    public static List<String> parseSampleIds(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasValue(SAMPLE))
+            return parseSampleBamLists(configBuilder, SAMPLE);
+
+        List<String> sampleIds = Lists.newArrayList();
+        sampleIds.addAll(parseSampleBamLists(configBuilder, TUMOR));
+        sampleIds.addAll(parseSampleBamLists(configBuilder, REFERENCE));
+        return sampleIds;
+    }
+
+    public static List<String> parseBamFiles(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasValue(BAM_FILE))
+            return parseSampleBamLists(configBuilder, BAM_FILE);
+
+        List<String> sampleIds = Lists.newArrayList();
+        sampleIds.addAll(parseSampleBamLists(configBuilder, TUMOR_BAM));
+        sampleIds.addAll(parseSampleBamLists(configBuilder, REFERENCE_BAM));
+        return sampleIds;
+    }
+
     public static String formPrepInputFilename(
             final String outputDir, final String sampleId, final String fileId, @Nullable final String outputId)
     {
-        return formOutputFile(outputDir, sampleId, PREP_FILE_ID, fileId, outputId);
+        // load from the output-id specific file if exists, otherwise revert to one without it
+        String outputIdFilename = formOutputFile(outputDir, sampleId, PREP_FILE_ID, fileId, outputId);
+
+        if(Files.exists(Paths.get(outputIdFilename)))
+            return outputIdFilename;
+
+        return formOutputFile(outputDir, sampleId, PREP_FILE_ID, fileId, null);
     }
 
     public static String formEsveeInputFilename(
@@ -60,10 +108,16 @@ public final class FileCommon
         return formOutputFile(outputDir, sampleId, ESVEE_FILE_ID, fileId, outputId);
     }
 
-    public static String formFragmentLengthDistFilename(final String outputDir, final String sampleId)
+    public static String formFragmentLengthDistFilename(final String outputDir, final String sampleId, final String outputId)
     {
-        return formPrepInputFilename(outputDir, sampleId, PREP_FRAG_LENGTH_FILE_ID, null);
+        return formPrepInputFilename(outputDir, sampleId, PREP_FRAG_LENGTH_FILE_ID, outputId);
     }
+
+    public static String formDiscordantStatsFilename(final String outputDir, final String sampleId, final String outputId)
+    {
+        return formPrepInputFilename(outputDir, sampleId, PREP_DISC_STATS_FILE_ID, outputId);
+    }
+
 
     public static String formOutputFile(
             final String outputDir, final String sampleId, final String appStage, final String fileType, @Nullable final String outputId)

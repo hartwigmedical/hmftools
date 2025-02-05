@@ -18,8 +18,8 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.JUNCTIONS;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_JUNCTION;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_READ;
 
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
@@ -40,6 +40,7 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
+import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
 public class ResultsWriter
 {
@@ -113,12 +114,12 @@ public class ResultsWriter
 
     private BufferedWriter initialiseJunctionWriter()
     {
-        if(!mConfig.WriteTypes.contains(JUNCTIONS))
+        if(!mConfig.WriteTypes.contains(PREP_JUNCTION))
             return null;
 
         try
         {
-            String filename = mConfig.formFilename(JUNCTIONS);
+            String filename = mConfig.formFilename(PREP_JUNCTION);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
@@ -286,12 +287,12 @@ public class ResultsWriter
 
     private BufferedWriter initialiseReadWriter()
     {
-        if(!mConfig.WriteTypes.contains(READS))
+        if(!mConfig.WriteTypes.contains(PREP_READ))
             return null;
 
         try
         {
-            String filename = mConfig.formFilename(READS);
+            String filename = mConfig.formFilename(PREP_READ);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);

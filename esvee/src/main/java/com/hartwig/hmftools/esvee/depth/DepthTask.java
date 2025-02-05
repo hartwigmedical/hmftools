@@ -98,7 +98,7 @@ public class DepthTask implements Callable
     public void addVariants(final List<VariantContext> variants)
     {
         List<Integer> genotypeIds = Lists.newArrayList();
-        mConfig.Samples.forEach(x -> genotypeIds.add(mSampleVcfGenotypeIds.get(x)));
+        mConfig.SampleIds.forEach(x -> genotypeIds.add(mSampleVcfGenotypeIds.get(x)));
 
         for(VariantContext variant : variants)
         {
@@ -170,9 +170,9 @@ public class DepthTask implements Callable
             VariantContext variant = mVariantsList.get(i);
             VariantInfo variantInfo = mVariantInfoList.get(i);
 
-            for(int s = 0; s < mConfig.Samples.size(); ++s)
+            for(int s = 0; s < mConfig.SampleIds.size(); ++s)
             {
-                String sampleId = mConfig.Samples.get(s);
+                String sampleId = mConfig.SampleIds.get(s);
                 RefSupportCounts sampleCounts = variantInfo.SampleSupportCounts[s];
                 int genotypeIndex = mSampleVcfGenotypeIds.get(sampleId);
 
@@ -239,7 +239,7 @@ public class DepthTask implements Callable
             startTime = System.nanoTime();
             readCount = mTotalReadCount;
 
-            SV_LOGGER.trace("sample({}) slice for {} variants", mConfig.Samples.get(i), mSliceRegionState.variantCount());
+            SV_LOGGER.trace("sample({}) slice for {} variants", mConfig.SampleIds.get(i), mSliceRegionState.variantCount());
             mBamSlicer.slice(samReader, region, this::processRead);
 
             times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);

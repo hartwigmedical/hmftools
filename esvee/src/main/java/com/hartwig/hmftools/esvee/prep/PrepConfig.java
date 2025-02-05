@@ -15,8 +15,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -26,8 +24,11 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.KNOWN_HOTSPOT_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
+import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
+import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
@@ -42,15 +43,14 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_DISC_STATS_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_BAM;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_READ;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.parseConfigStr;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -110,7 +110,6 @@ public class PrepConfig
     public static final String BAM_FILE_DESC = "BAM file paths separated by ','";
     public static final String SAMPLE_ID_DESC = "List of samples separated by ','";
 
-    private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     public static final String BLACKLIST_BED = "blacklist_bed";
 
     private static final String WRITE_TYPES = "write_types";
@@ -123,15 +122,20 @@ public class PrepConfig
     private static final String NO_CACHE_BAM = "no_cache_bam";
     private static final String NO_CLEAN_UP = "no_clean_up";
     private static final String NO_TRIM_READ_ID = "no_trim_read_id";
-    private static final String UNPAIRED_READS = "unpaired_reads";
     private static final String MAX_FRAG_LENGTH_OVERRIDE = "max_frag_length_override";
 
     public PrepConfig(final ConfigBuilder configBuilder)
     {
         mIsValid = true;
 
-        SampleIds = Arrays.stream(configBuilder.getValue(SAMPLE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-        BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        SampleIds = parseSampleIds(configBuilder);
+        BamFiles = parseBamFiles(configBuilder);
+
+        if(SampleIds.isEmpty() || SampleIds.size() != BamFiles.size())
+        {
+            SV_LOGGER.error("samples({}) and bam({}) not matched or empty", SampleIds.size(), BamFiles.size());
+            System.exit(1);
+        }
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
@@ -146,17 +150,11 @@ public class PrepConfig
 
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(SampleIds.size() != BamFiles.size())
+        if(OutputDir == null || RefGenomeFile == null)
         {
-            SV_LOGGER.error("samples({}) and bam({}) not matched", SampleIds.size(), BamFiles.size());
-            mIsValid = false;
-        }
-
-        if(SampleIds.isEmpty() || BamFiles.isEmpty() || OutputDir == null || RefGenomeFile == null)
-        {
-            SV_LOGGER.error("missing config: sample({}) bam({}) refGenome({}) outputDir({})",
-                    !SampleIds.isEmpty(), !BamFiles.isEmpty(), RefGenomeFile != null, OutputDir != null);
-            mIsValid = false;
+            SV_LOGGER.error("missing config: refGenome({}) outputDir({})",
+                    RefGenomeFile != null, OutputDir != null);
+            System.exit(1);
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -164,26 +162,14 @@ public class PrepConfig
         SV_LOGGER.info("output({}) {}",
                 OutputDir, OutputId != null ? format("outputId(%s)", OutputId) : "");
 
-        Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_FUSION_BED));
+        Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_HOTSPOT_FILE));
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
 
-        WriteTypes = Sets.newHashSet();
-
-        if(configBuilder.hasValue(WRITE_TYPES))
-        {
-            String[] writeTypes = configBuilder.getValue(WRITE_TYPES).split(ITEM_DELIM, -1);
-            Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
-        }
-        else
-        {
-            WriteTypes.add(WriteType.JUNCTIONS);
-            WriteTypes.add(WriteType.FRAGMENT_LENGTH_DIST);
-            WriteTypes.add(WriteType.BAM);
-        }
+        WriteTypes = Sets.newHashSet(parseConfigStr(configBuilder.getValue(WRITE_TYPES)));
 
         CalcFragmentLength = configBuilder.hasFlag(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
         BamStringency = BamUtils.validationStringency(configBuilder);
@@ -239,7 +225,7 @@ public class PrepConfig
 
         switch(writeType)
         {
-            case READS:
+            case PREP_READ:
                 fileExtension = "read" + TSV_EXTENSION;
                 break;
 
@@ -247,7 +233,7 @@ public class PrepConfig
                 fileExtension = "unsorted.bam";
                 break;
 
-            case BAM:
+            case PREP_BAM:
                 fileExtension = "bam";
                 break;
 
@@ -255,7 +241,7 @@ public class PrepConfig
                 fileExtension = "cache";
                 break;
 
-            case JUNCTIONS:
+            case PREP_JUNCTION:
                 fileExtension = PREP_JUNCTION_FILE_ID;
                 break;
 
@@ -271,7 +257,7 @@ public class PrepConfig
         return formOutputFile(OutputDir, sampleId, PREP_FILE_ID, fileExtension, OutputId);
     }
 
-    public boolean writeReads() { return WriteTypes.contains(BAM) || WriteTypes.contains(READS); }
+    public boolean writeReads() { return WriteTypes.contains(PREP_BAM) || WriteTypes.contains(PREP_READ); }
 
     public PrepConfig(int partitionSize)
     {
@@ -320,11 +306,11 @@ public class PrepConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_ID_DESC);
-        configBuilder.addPaths(BAM_FILE, true, BAM_FILE_DESC);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_ID_DESC); // not required since may take from tumor and ref config values
+        configBuilder.addPaths(BAM_FILE, false, BAM_FILE_DESC);
 
         addRefGenomeConfig(configBuilder, true);
-        configBuilder.addPath(KNOWN_FUSION_BED, false, "Known fusion hotspot BED file");
+        configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion hotspot BED file");
         configBuilder.addPath(BLACKLIST_BED, false, "Blacklist regions BED file");
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
@@ -332,7 +318,6 @@ public class PrepConfig
 
         configBuilder.addConfigItem(WRITE_TYPES, enumValueSelectionAsStr(WriteType.values(), "Write types"));
 
-        configBuilder.addFlag(UNPAIRED_READS, "Unpaired reads ignores non-expect junction support");
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addFlag(NO_CACHE_BAM, "Write a BAM to cache candidate reads");
