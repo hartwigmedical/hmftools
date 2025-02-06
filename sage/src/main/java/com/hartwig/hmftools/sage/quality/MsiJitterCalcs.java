@@ -103,6 +103,7 @@ public class MsiJitterCalcs
         catch(Exception e)
         {
             SG_LOGGER.error("missing jitter param file: {}", e.toString());
+            e.printStackTrace();
             return false;
         }
 

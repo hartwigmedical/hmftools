@@ -54,11 +54,13 @@ public class JitterModelParamsFile
 
         DelimFileReader reader = new DelimFileReader(filename);
 
+        boolean hasConsensusType = reader.hasColumn(Column.consensusType);
+
         for(DelimFileReader.Row row : reader)
         {
             JitterModelParams params = new JitterModelParams(
                     row.get(Column.unit),
-                    ConsensusType.valueOf(row.get(Column.consensusType)),
+                    hasConsensusType ? ConsensusType.valueOf(row.get(Column.consensusType)) : ConsensusType.IGNORE,
                     row.getDouble(Column.optimalScaleRepeat4),
                     row.getDouble(Column.optimalScaleRepeat5),
                     row.getDouble(Column.optimalScaleRepeat6),
