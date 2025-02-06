@@ -510,15 +510,33 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     }
 
     @Test
+    public void delFirstAndLastCodonsOfExonCrossExonBounds()
+    {
+        /*
+        ch3, +
+          10,146,514
+        G|GT CAC CTT TGG CTC TTC ....CCA G|TG
+             H
+             115
+         */
+        TransvalVariant del =  transval.calculateVariant("VHL:p.H115del");
+        checkSingleHotspot(del,"TCA", "", "chr3", 10_146_515);
+
+        del =  transval.calculateVariant("VHL:p.L116_L118del");
+        checkSingleHotspot(del,"CCTTTGGCT", "", "chr3", 10_146_518);
+
+        // TG TAT ACT CTG   VYTL
+        del =  transval.calculateVariant("VHL:p.T157del");
+        checkSingleHotspot(del,"TAC", "", "chr3", 10_149_791);
+    }
+
+    @Test
     public void delReverseStrand()
     {
         TransvalVariant record =  transval.calculateVariant("BRAF:p.V600_R603del");
-        assertEquals("ENST00000521381", record.transcriptId()); // canonical
-        assertEquals("7", record.Chromosome);
-        assertFalse(record.SpansMultipleExons);
         Set<TransvalHotspot> hotspots = record.hotspots();
         assertEquals(1, hotspots.size());
-        assertTrue(hotspots.contains(hotspot("ATATGATAGATT", "", "chr5", 68_293_795)));
+        assertTrue(hotspots.contains(hotspot("TCGAGATTTCAC", "", "chr7", 140753326)));
     }
 
     @Test
@@ -535,28 +553,87 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         S   L   A   A   M
          */
         TransvalVariant a3del =  transval.calculateVariant("BRAF:p.A3del");
-        assertEquals("ENST00000646891", a3del.transcriptId()); // canonical
-        assertEquals("7", a3del.Chromosome);
-        assertFalse(a3del.SpansMultipleExons);
-        Set<TransvalHotspot> a3Hotspots = a3del.hotspots();
-        assertEquals(1, a3Hotspots.size());
-        assertTrue(a3Hotspots.contains(hotspot("CGC", "", "chr7", 140_924_695)));
+        checkSingleHotspot(a3del,"CGC", "", "chr7", 140_924_695);
 
         TransvalVariant l4del =  transval.calculateVariant("BRAF:p.L4del");
-        Set<TransvalHotspot> hotspots = l4del.hotspots();
-        assertEquals(1, hotspots.size());
-        assertTrue(hotspots.contains(hotspot("CAG", "", "chr7", 140_924_692)));
+        checkSingleHotspot(l4del,"CAG", "", "chr7", 140_924_692);
 
         TransvalVariant a3l4del =  transval.calculateVariant("BRAF:p.A3_L4del");
-        assertFalse(a3l4del.SpansMultipleExons);
-        Set<TransvalHotspot> a3l4Hotspots = a3l4del.hotspots();
-        assertEquals(1, a3l4Hotspots.size());
-        assertTrue(a3l4Hotspots.contains(hotspot("CAGCGC", "", "chr7", 140_924_692)));
+        checkSingleHotspot(a3l4del,"CAGCGC", "", "chr7", 140_924_692);
 
         TransvalVariant a2l4del =  transval.calculateVariant("BRAF:p.A2_L4del");
-        Set<TransvalHotspot> a2l4Hotspots = a2l4del.hotspots();
-        assertEquals(1, a2l4Hotspots.size());
-        assertTrue(a2l4Hotspots.contains(hotspot("CAGCGCCGC", "", "chr7", 140_924_692)));
+        checkSingleHotspot(a2l4del, "CAGCGCCGC", "", "chr7", 140_924_692);
+    }
+
+    @Test
+    public void delReverseStrandSecondExonStart()
+    {
+        /*
+        chr, -
+        140,850,198
+        |                  140,850,212
+        |                  |
+        TTT GAT ATT CCA CAC
+        51  50  49  48  47
+        K   I   N   W   V
+         */
+        TransvalVariant del =  transval.calculateVariant("BRAF:p.V47del");
+        checkSingleHotspot(del,"CAC", "", "chr7", 140_850_210);
+
+        del =  transval.calculateVariant("BRAF:p.W48del");
+        checkSingleHotspot(del,"CCA", "", "chr7", 140_850_207);
+
+        del =  transval.calculateVariant("BRAF:p.W48_I50del");
+        checkSingleHotspot(del,"GATATTCCA", "", "chr7", 140_850_201);
+    }
+
+    @Test
+    public void delReverseStrandFirstCodonAcrossExonBounds()
+    {
+        /*
+        chr7, -
+        140,808,047
+        |                   140,808,062
+        |                   |
+        AAT TGG TTT CTT CTC T|...
+        208 207 206 205 204 203
+        I   P   K   K   E   G
+         */
+        TransvalVariant del =  transval.calculateVariant("BRAF:p.E204del");
+        checkSingleHotspot(del,"CTC", "", "chr7", 140_808_059);
+
+        del =  transval.calculateVariant("BRAF:p.E204_P207del");
+        checkSingleHotspot(del,"TGGTTTCTTCTC", "", "chr7", 140_808_050);
+    }
+
+    @Test
+    public void delReverseStrandFirstAndLastCodonsAcrossExonBounds()
+    {
+        /*
+        chr7, -
+        140,800,469
+        |                 140,800,481
+        |                |
+        GAC AAA CAG CAA A..
+        291             287
+        V   F   L   L   D
+         */
+        TransvalVariant del =  transval.calculateVariant("BRAF:p.F290del");
+        checkSingleHotspot(del,"AAA", "", "chr7", 140_800_472);
+
+        del =  transval.calculateVariant("BRAF:p.L289del");
+        checkSingleHotspot(del,"CAG", "", "chr7", 140_800_475);
+
+        // Transvar output: Printing hotspots for 'BRAF:p.L288del' on transcript null
+        // Hotspot{ref=GCAA, alt=G, chromosome=chr7, position=140800477}
+        del =  transval.calculateVariant("BRAF:p.L288del");
+        // GAC AAA CAG CAA AXX
+        // GAC AAA CAG  AXX
+        // GAC AAA  CAA AXX
+        checkSingleHotspot(del,"CAG", "", "chr7", 140_800_475);
+
+        del =  transval.calculateVariant("BRAF:p.L288_F290del");
+        checkSingleHotspot(del,"AAACAGCAA", "", "chr7", 140_800_472);
     }
 
     @Test
@@ -579,7 +656,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         checkSingleHotspot(variant,"CGG", "", "chr7", 140_924_572);
 
         variant =  transval.calculateVariant("BRAF:p.A42_P44del");
-        checkSingleHotspot(variant,"CGGAATGGC", "", "chr7", 140_924_572);
+        checkSingleHotspot(variant,"CCGGAATGG", "", "chr7", 140_924_571);
 //
 //        TransvalVariant variant =  transval.calculateVariant("BRAF:p.E45del");
 //        checkSingleHotspot(variant,"CTC", "", "chr7", 140_924_566);

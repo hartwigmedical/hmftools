@@ -7,22 +7,25 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ExtendedExon
+public class ExonContext
 {
-    @NotNull private final String prefixFromPreviousExon;
-    @NotNull private final String suffixFromNextExon;
+    @NotNull private final String basesOfFirstCodonInPreviousExon;
+    @NotNull private final String basesOfLastCodontInFollowingExon;
     @NotNull private final String exonBases;
     private final int exonStart;
+    @NotNull private final String intronicPrefix;
 
-    public ExtendedExon(@NotNull final String prefixFromPreviousExon,
-            @NotNull final String suffixFromNextExon,
+    public ExonContext(@NotNull final String basesOfFirstCodonInPreviousExon,
+            @NotNull final String basesOfLastCodontInFollowingExon,
             @NotNull final String exonBases,
-            final int exonStart)
+            final int exonStart,
+            @NotNull final String intronicPrefix)
     {
-        Preconditions.checkArgument(prefixFromPreviousExon.length() < 3);
-        Preconditions.checkArgument(suffixFromNextExon.length() < 3);
-        this.prefixFromPreviousExon = prefixFromPreviousExon;
-        this.suffixFromNextExon = suffixFromNextExon;
+        this.intronicPrefix = intronicPrefix;
+        Preconditions.checkArgument(basesOfFirstCodonInPreviousExon.length() < 3);
+        Preconditions.checkArgument(basesOfLastCodontInFollowingExon.length() < 3);
+        this.basesOfFirstCodonInPreviousExon = basesOfFirstCodonInPreviousExon;
+        this.basesOfLastCodontInFollowingExon = basesOfLastCodontInFollowingExon;
         this.exonBases = exonBases;
         this.exonStart = exonStart;
         Preconditions.checkArgument(totalLength() % 3 == 0);
@@ -37,12 +40,15 @@ public class ExtendedExon
             int exonEnd = exonBases.length() - 1;
             String left = exonBases.substring(0, exonBases.length() - end - 1);
             String right = exonBases.substring(exonEnd - start + 1, exonEnd + 1);
-            return Nucleotides.reverseComplementBases(right) + Nucleotides.reverseComplementBases(left);
+            String complete = basesOfLastCodontInFollowingExon + left + right + basesOfFirstCodonInPreviousExon;
+            String result = Nucleotides.reverseComplementBases(complete);
+            return result;
+//            return Nucleotides.reverseComplementBases(right) + Nucleotides.reverseComplementBases(left);
         }
         String left = exonBases.substring(0, start);
         String right = exonBases.substring(end + 1);
 
-        return left + right;
+        return basesOfFirstCodonInPreviousExon + left + right + basesOfLastCodontInFollowingExon;
     }
 
     public String basesBetween(int start, int end)
@@ -70,7 +76,7 @@ public class ExtendedExon
 
     public int totalLength()
     {
-        return prefixFromPreviousExon.length() + suffixFromNextExon.length() + inExonLength();
+        return basesOfFirstCodonInPreviousExon.length() + basesOfLastCodontInFollowingExon.length() + inExonLength();
     }
 
     @Override
@@ -80,23 +86,23 @@ public class ExtendedExon
         {
             return false;
         }
-        final ExtendedExon that = (ExtendedExon) o;
-        return Objects.equals(prefixFromPreviousExon, that.prefixFromPreviousExon)
-                && Objects.equals(suffixFromNextExon, that.suffixFromNextExon) && Objects.equals(exonBases, that.exonBases);
+        final ExonContext that = (ExonContext) o;
+        return Objects.equals(basesOfFirstCodonInPreviousExon, that.basesOfFirstCodonInPreviousExon)
+                && Objects.equals(basesOfLastCodontInFollowingExon, that.basesOfLastCodontInFollowingExon) && Objects.equals(exonBases, that.exonBases);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(prefixFromPreviousExon, suffixFromNextExon, exonBases);
+        return Objects.hash(basesOfFirstCodonInPreviousExon, basesOfLastCodontInFollowingExon, exonBases);
     }
 
     @Override
     public String toString()
     {
         return "ExtendedExon{" +
-                "prefixFromPreviousExon='" + prefixFromPreviousExon + '\'' +
-                ", suffixFromNextExon='" + suffixFromNextExon + '\'' +
+                "prefixFromPreviousExon='" + basesOfFirstCodonInPreviousExon + '\'' +
+                ", suffixFromNextExon='" + basesOfLastCodontInFollowingExon + '\'' +
                 ", exonBases='" + exonBases + '\'' +
                 '}';
     }

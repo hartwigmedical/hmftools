@@ -41,11 +41,10 @@ class AminoAcidSequence
         {
             String codon = nucleotides.substring(i, i + 3);
             String acid = AminoAcids.findAminoAcidForCodon(codon);
-            if(acid == null)
+            if(acid != null)
             {
-                return null; // todo test
+                aminoAcids.add(new AminoAcid(acid));
             }
-            aminoAcids.add(new AminoAcid(acid));
         }
         return new AminoAcidSequence(aminoAcids);
     }

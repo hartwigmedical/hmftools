@@ -2,19 +2,17 @@ package com.hartwig.hmftools.pave.transval;
 
 import java.util.Objects;
 
-import com.hartwig.hmftools.common.codon.Nucleotides;
-
 import org.jetbrains.annotations.NotNull;
 
 public class ChangeContext
 {
     @NotNull
-    final ExtendedExon containingExon;
+    final ExonContext containingExon;
     final int startPositionInExon;
     final int finishPositionInExon;
     final boolean IsPositiveStrand;
 
-    public ChangeContext(@NotNull final ExtendedExon containingExon, final int startPositionInExon,
+    public ChangeContext(@NotNull final ExonContext containingExon, final int startPositionInExon,
             final int finishPositionInExon,
             final boolean isPositiveStrand)
     {

@@ -60,19 +60,18 @@ class Deletion extends ProteinVariant
                         basesOfFirstCodonOfCurrentExonInPreviousExon = genome.getBaseString(Gene.Chromosome, start, stop);
                     }
                     if (lengthOfLastCodonOfCurrentExonInNextExon > 0) {
-                        int stop = nextExon.end() - 1;
-                        int start = stop - lengthOfLastCodonOfCurrentExonInNextExon;
-                        basesOfFirstCodonOfCurrentExonInPreviousExon = genome.getBaseString(Gene.Chromosome, start, stop );
+                        int stop = nextExon.end() ;
+                        int start = stop - lengthOfLastCodonOfCurrentExonInNextExon + 1;
+                        basesOfLastCodonOfCurrentExonInNextExon = genome.getBaseString(Gene.Chromosome, start, stop );
                     }
                     final int relativePositionOfStart = codonPosition - lengthUpToCurrent;
-                    int positionOfStartInCurrent = exon.end() - relativePositionOfStart;
                     int relativePositionOfEnd = relativePositionOfStart + DeletionLength * 3 - 1;
                     int absolutePositionOfEnd = exon.end() - relativePositionOfEnd;
                     if(absolutePositionOfEnd >= exon.start())
                     {
                         String exonBases = genome.getBaseString(Gene.Chromosome, exon.start(), exon.end());
-//                        exonBases = Nucleotides.reverseComplementBases(exonBases);
-                        ExtendedExon containingExon = new ExtendedExon(basesOfFirstCodonOfCurrentExonInPreviousExon, basesOfLastCodonOfCurrentExonInNextExon, exonBases, exon.start());
+                        String prefix = genome.getBaseString(Gene.Chromosome, exon.start() - 5, exon.start() - 1);
+                        ExonContext containingExon = new ExonContext(basesOfFirstCodonOfCurrentExonInPreviousExon, basesOfLastCodonOfCurrentExonInNextExon, exonBases, exon.start(), prefix);
                         return new ChangeContext(containingExon, relativePositionOfStart, relativePositionOfEnd, false);
                     }
                     else
@@ -88,8 +87,19 @@ class Deletion extends ProteinVariant
                     int absolutePositionOfEnd = exon.start() + relativePositionOfEnd;
                     if(absolutePositionOfEnd <= exon.end())
                     {
+                        if (lengthOfFirstCodonOfCurrentExonInPreviousExon > 0) {
+                            int start = previousExon.end() - lengthOfFirstCodonOfCurrentExonInPreviousExon + 1;
+                            int stop = previousExon.end();
+                            basesOfFirstCodonOfCurrentExonInPreviousExon = genome.getBaseString(Gene.Chromosome, start, stop);
+                        }
+                        if (lengthOfLastCodonOfCurrentExonInNextExon > 0) {
+                            int start = nextExon.start();
+                            int stop = start + lengthOfLastCodonOfCurrentExonInNextExon - 1 ;
+                            basesOfLastCodonOfCurrentExonInNextExon = genome.getBaseString(Gene.Chromosome, start, stop );
+                        }
                         String exonBases = genome.getBaseString(Gene.Chromosome, exon.start(), exon.end());
-                        ExtendedExon containingExon = new ExtendedExon("", "", exonBases, exon.start());
+                        String prefix = genome.getBaseString(Gene.Chromosome, exon.start() - 5, exon.start() - 1);
+                        ExonContext containingExon = new ExonContext(basesOfFirstCodonOfCurrentExonInPreviousExon, basesOfLastCodonOfCurrentExonInNextExon, exonBases, exon.start(), prefix);
                         return new ChangeContext(containingExon, relativePositionOfStart, relativePositionOfEnd, true);
                     }
                     else
@@ -113,11 +123,15 @@ class Deletion extends ProteinVariant
     {
         ChangeContext changeContext = getChangeContext(genome);
         AminoAcidSequence targetSequence = changeContext.applyDeletion();
-        int deletionStart = changeContext.startPositionInExon;
-        List<ChangeContext> result = new ArrayList<>();
-        for (int i=0; i<=deletionStart; i++)
+        int maxMoves = changeContext.startPositionInExon;
+        if (Transcript.negStrand())
         {
-            int excisionStart = changeContext.startPositionInExon - i;
+            maxMoves = changeContext.containingExon.inExonLength() - changeContext.finishPositionInExon - 1;
+        }
+        List<ChangeContext> result = new ArrayList<>();
+        for (int i=0; i<=maxMoves; i++)
+        {
+            int excisionStart = Transcript.posStrand() ? changeContext.startPositionInExon - i : changeContext.startPositionInExon + i;
             int excisionEnd = excisionStart + DeletionLength * 3 - 1;
             ChangeContext change = new ChangeContext(changeContext.containingExon, excisionStart, excisionEnd, Transcript.posStrand());
             AminoAcidSequence effect = change.applyDeletion();
@@ -137,8 +151,8 @@ class Deletion extends ProteinVariant
         {
             return null;
         }
-        ChangeContext leftMostChange = Transcript.posStrand() ? changes.get(changes.size() - 1) : changes.get(0);
-//        ChangeContext leftMostChange = changes.get(changes.size() - 1);
+//        ChangeContext leftMostChange = Transcript.posStrand() ? changes.get(changes.size() - 1) : changes.get(0);
+        ChangeContext leftMostChange = changes.get(changes.size() - 1);
 
         TransvalHotspot changeHotspot = leftMostChange.hotspot(Gene.Chromosome);
         Set<TransvalHotspot> hotspots = new HashSet<>();
