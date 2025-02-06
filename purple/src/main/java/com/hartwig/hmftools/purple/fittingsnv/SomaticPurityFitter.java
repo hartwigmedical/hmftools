@@ -32,14 +32,12 @@ import static com.hartwig.hmftools.purple.region.ObservedRegionFactory.EXCLUDED_
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -57,7 +55,6 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import com.google.common.collect.Lists;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,7 +95,8 @@ public class SomaticPurityFitter
         MAPPABILITY;
     }
 
-    public static List<SomaticVariant> findFittingVariants(final List<SomaticVariant> variants, final List<ObservedRegion> observedRegions)
+    public static List<SomaticVariant> findFittingVariants(
+            boolean tumorOnlyMode, final List<SomaticVariant> variants, final List<ObservedRegion> observedRegions)
     {
         List<SomaticVariant> fittingVariants = Lists.newArrayList();
 
@@ -123,8 +121,9 @@ public class SomaticPurityFitter
                 logFilteredFittingCandidate(variant, "excluded MNV");
                 continue;
             }
-            else if(variant.type() == INDEL)
+            else if(tumorOnlyMode && variant.type() == INDEL)
             {
+                // only use in tumor-only mode and if not in a repeat context
                 if(variant.decorator().repeatCount() > 0)
                 {
                     logFilteredFittingCandidate(variant, "invalid indel");
@@ -228,7 +227,7 @@ public class SomaticPurityFitter
     }
 
     @Nullable
-    public FittedPurity fromSomatics(
+    public FittedPurity fitfromSomatics(
             final List<SomaticVariant> somaticVariants, final List<StructuralVariant> hotspotSVs,
             final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
@@ -319,7 +318,7 @@ public class SomaticPurityFitter
     }
 
     @Nullable
-    public FittedPurity fitFromSomatics(
+    public FittedPurity fitFromSomaticsOnly(
             final DriverGenePanel driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
     {
         List<Double> variantVafs = Lists.newArrayList();

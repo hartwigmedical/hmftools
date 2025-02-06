@@ -93,7 +93,7 @@ public class CircosCharts
     }
 
     @Nullable
-    private Integer generateCircos(final String executable, final String type) throws IOException, InterruptedException
+    private Integer generateCircos(final String executable, final String type) throws Exception
     {
         CircosExecution execution = new CircosExecution(executable);
 
