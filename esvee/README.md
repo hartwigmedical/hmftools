@@ -206,7 +206,7 @@ Much of the logic depends in ESVEE depends on assembling reads into contiguous s
 - **Minimum length**: We require 32 bases to call a variant. At the ESVEE-PREP and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support) 
 - **Low Quality SNV errors**: Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
 - **Minimum assembly overlap**: We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
-- **Mismatch tolerance**: When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch
+- **Mismatch tolerance**: When comparing reads and assemblies we allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base indel or a longer indel in microsatellite counts as 1 mismatch
 
 ESVEE also employees concepts of a modified alignment scores and MAPQs to try to represent absolute versus relative likelihood of mismatch.  THese are defined as follows:
 

@@ -127,7 +127,7 @@ public class SortedBamWriter
         mUpperWritablePosition = startPosition;
     }
 
-    public void setUpperBoundPosition(int position) { mUpperBoundPosition = position; }
+    public void setUpperBoundPosition(int position) { mUpperBoundPosition = max(mUpperBoundPosition, position); }
 
     public void setUpperWritablePosition(int position)
     {

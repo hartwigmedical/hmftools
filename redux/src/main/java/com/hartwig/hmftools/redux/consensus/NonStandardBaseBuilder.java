@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_CLIPPING_PENALTY;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
@@ -367,7 +368,7 @@ public abstract class NonStandardBaseBuilder
         return newConsensusBases;
     }
 
-    private static List<AnnotatedBase> softclipEnds(final RefGenome refGenome, final String chromosome,
+    private static List<AnnotatedBase> optimizeSoftClips(final RefGenome refGenome, final String chromosome,
             final List<AnnotatedBase> consensusBases)
     {
         List<AnnotatedBase> leftSoftclipBases = Lists.newArrayList();
@@ -451,11 +452,27 @@ public abstract class NonStandardBaseBuilder
             }
         }
 
+        boolean extendLeftSoftclip = !leftSoftclipBases.isEmpty();
+        if(!extendLeftSoftclip)
+        {
+            int softClipSaving = -cScore[maxStart];
+            if(softClipSaving > BWA_CLIPPING_PENALTY)
+                extendLeftSoftclip = true;
+        }
+
+        boolean extendRightSoftclip = !rightSoftclipBases.isEmpty();
+        if(!extendRightSoftclip)
+        {
+            int softClipSaving = -(cScore[cScore.length - 1] - cScore[maxEnd]);
+            if(softClipSaving > BWA_CLIPPING_PENALTY)
+                extendRightSoftclip = true;
+        }
+
         List<AnnotatedBase> finalBases = leftSoftclipBases;
         for(int i = 0; i < alignedClusters.size(); i++)
         {
             List<AnnotatedBase> cluster = alignedClusters.get(i);
-            if(i < maxStart || i >= maxEnd)
+            if((i < maxStart && extendLeftSoftclip) || (i >= maxEnd && extendRightSoftclip))
             {
                 if(cluster.get(0).cigarOp() == D)
                     continue;
@@ -478,7 +495,7 @@ public abstract class NonStandardBaseBuilder
         Validate.isTrue(alignmentStartBoundary >= 1);
 
         List<AnnotatedBase> finalBases = insertDels(consensusBases);
-        finalBases = softclipEnds(refGenome, chromosome, finalBases);
+        finalBases = optimizeSoftClips(refGenome, chromosome, finalBases);
 
         int minAlignedPosStart = INVALID_POSITION;
         int maxAlignedPosEnd = 0;
