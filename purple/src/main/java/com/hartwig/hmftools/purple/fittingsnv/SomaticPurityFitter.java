@@ -351,23 +351,15 @@ public class SomaticPurityFitter
 
             if(variant.isHotspotType())
             {
-                if(vaf > SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
-                {
-                    vaf = SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
-                    variantVafs.add(vaf);
-                }
-                else
-                {
-                    variantVafs.add(vaf);
-                }
+                vaf = min(vaf, SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF);
             }
             else
             {
-                if(vaf >= SOMATIC_FIT_TUMOR_ONLY_VAF_MIN && vaf <= SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
-                {
-                    variantVafs.add(vaf);
-                }
+                if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN || vaf > SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
+                    continue;
             }
+
+            variantVafs.add(vaf);
         }
 
         if(variantVafs.isEmpty())
@@ -377,9 +369,9 @@ public class SomaticPurityFitter
 
         double vaf75thPercentile;
 
-        if(variantVafs.size() >= 4)
+        if(variantVafs.size() >= 5)
         {
-            double index75thPercentile = 0.75 * (variantVafs.size() + 1);
+            double index75thPercentile = 0.75 * variantVafs.size() - 1;
 
             int lowerIndex = min((int)floor(index75thPercentile), variantVafs.size() - 2);
             int upperIndex = lowerIndex + 1;
@@ -387,10 +379,16 @@ public class SomaticPurityFitter
             double lowerVaf = variantVafs.get(lowerIndex);
             double upperVaf = variantVafs.get(upperIndex);
 
-            vaf75thPercentile = lowerVaf + (index75thPercentile - lowerIndex) * (upperVaf - lowerVaf);
+            double indexFraction = index75thPercentile - lowerIndex;
+            vaf75thPercentile = lowerVaf + indexFraction * (upperVaf - lowerVaf);
+        }
+        else if(variantVafs.size() == 4)
+        {
+            vaf75thPercentile = variantVafs.get(2);
         }
         else if(variantVafs.size() == 3)
         {
+            // take the highest if not at the max value for hotspots
             if(Collections.max(variantVafs) < SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
             {
                 vaf75thPercentile = variantVafs.get(2);
