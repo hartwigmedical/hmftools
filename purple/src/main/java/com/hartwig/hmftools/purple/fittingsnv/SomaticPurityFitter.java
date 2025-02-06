@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -365,47 +366,7 @@ public class SomaticPurityFitter
         if(variantVafs.isEmpty())
             return null;
 
-        Collections.sort(variantVafs);
-
-        double vaf75thPercentile;
-
-        if(variantVafs.size() >= 5)
-        {
-            double index75thPercentile = 0.75 * variantVafs.size() - 1;
-
-            int lowerIndex = min((int)floor(index75thPercentile), variantVafs.size() - 2);
-            int upperIndex = lowerIndex + 1;
-
-            double lowerVaf = variantVafs.get(lowerIndex);
-            double upperVaf = variantVafs.get(upperIndex);
-
-            double indexFraction = index75thPercentile - lowerIndex;
-            vaf75thPercentile = lowerVaf + indexFraction * (upperVaf - lowerVaf);
-        }
-        else if(variantVafs.size() == 4)
-        {
-            vaf75thPercentile = variantVafs.get(2);
-        }
-        else if(variantVafs.size() == 3)
-        {
-            // take the highest if not at the max value for hotspots
-            if(Collections.max(variantVafs) < SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
-            {
-                vaf75thPercentile = variantVafs.get(2);
-            }
-            else
-            {
-                vaf75thPercentile = variantVafs.get(1);
-            }
-        }
-        else if(variantVafs.size() == 2)
-        {
-            vaf75thPercentile = (variantVafs.get(0) + variantVafs.get(1)) * 0.5;
-        }
-        else
-        {
-            vaf75thPercentile = variantVafs.get(0);
-        }
+        double vaf75thPercentile = calc75thPercentileValue(variantVafs);
 
         double somaticPurity = vaf75thPercentile * 2;
 
@@ -417,6 +378,45 @@ public class SomaticPurityFitter
             return matchedFittedPurity;
 
         return null;
+    }
+
+    @VisibleForTesting
+    protected static double calc75thPercentileValue(final List<Double> variantVafs)
+    {
+        if(variantVafs.isEmpty())
+            return 0;
+
+        if(variantVafs.size() == 1)
+            return variantVafs.get(0);
+
+        Collections.sort(variantVafs);
+
+        if(variantVafs.size() <= 3)
+        {
+            // take the highest if not at the max value for hotspots
+            int topIndex = variantVafs.size() - 1;
+
+            if(variantVafs.get(topIndex) < SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF)
+            {
+                return variantVafs.get(topIndex);
+            }
+            else
+            {
+                return variantVafs.get(max(topIndex - 1, 0));
+            }
+        }
+
+        // double index75thPercentile = 0.75 * (variantVafs.size() + 1) - 1;
+        double index75thPercentile = 0.75 * (variantVafs.size() - 1);
+
+        int lowerIndex = min((int)floor(index75thPercentile), variantVafs.size() - 2);
+        int upperIndex = lowerIndex + 1;
+
+        double lowerVaf = variantVafs.get(lowerIndex);
+        double upperVaf = variantVafs.get(upperIndex);
+
+        double indexFraction = index75thPercentile - lowerIndex;
+        return lowerVaf + indexFraction * (upperVaf - lowerVaf);
     }
 
     private double findHotspotPurity(
