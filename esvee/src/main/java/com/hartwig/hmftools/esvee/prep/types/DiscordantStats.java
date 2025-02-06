@@ -4,34 +4,30 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
-import static com.hartwig.hmftools.esvee.common.FragmentLengthBounds.INVALID;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_DISC_STATS_FILE_ID;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.DISCORDANT_STATS;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.prep.PrepConfig;
 
 public class DiscordantStats
 {
     public final long ProcessedReads;
-    public final long WrittenReads;
+    public final long PrepReads;
 
     // note these counts are in fragment terms hence see doubling in rate calc
     public final long[] TypeCounts;
@@ -43,6 +39,7 @@ public class DiscordantStats
         Inv1To5K,
         Inv5To100K,
         InvGt100K,
+        Del1Lt1K,
         Del1To5K,
         Del5To100K,
         DelGt100K,
@@ -51,17 +48,17 @@ public class DiscordantStats
         DupGt100K;
     }
 
-    public DiscordantStats(final long processedReads, final long writtenReads, final long[] typeCounts)
+    public DiscordantStats(final long processedReads, final long prepReads, final long[] typeCounts)
     {
         ProcessedReads = processedReads;
-        WrittenReads = writtenReads;
+        PrepReads = prepReads;
         TypeCounts = typeCounts;
     }
 
     public DiscordantStats()
     {
         ProcessedReads = 0;
-        WrittenReads = 0;
+        PrepReads = 0;
         TypeCounts = new long[DiscordantType.values().length];
     }
 
@@ -71,15 +68,97 @@ public class DiscordantStats
 
     public void addRead(final PrepRead read)
     {
-        if(!read.Chromosome.equals(read.MateChromosome))
+        addToCounts(
+                read.Chromosome, read.MateChromosome, read.start(), read.MatePosStart, read.orientation(), read.mateOrientation(),
+                inferredInsertSizeAbs(read.record()));
+    }
+
+    public void processSupplementaryInfo(final ReadGroup readGroup)
+    {
+        // infer a short DEL or other category from the suppementary and its primary
+        PrepRead read = null; // readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
+
+        for(PrepRead prepRead : readGroup.reads())
+        {
+            if(!prepRead.hasSuppAlignment())
+                continue;
+
+            if(read == null || read.isSupplementaryAlignment() && !prepRead.isSupplementaryAlignment())
+                read = prepRead;
+        }
+
+        if(read == null)
+            return;
+
+        SupplementaryReadData suppData = read.supplementaryAlignment();
+
+        int inferredDelLength = 0;
+        Orientation suppOrientation = Orientation.fromByte(suppData.orientation());
+
+        if(read.Chromosome.equals(suppData.Chromosome))
+        {
+            // only consider short DELs
+            if(abs(suppData.Position - read.start()) > LENGTH_SHORT * 2)
+                return;
+
+            if(positionWithin(suppData.Position, read.start(), read.end()))
+                return;
+
+            boolean suppReadIsRightClipped;
+
+            if(read.isSupplementaryAlignment())
+                suppReadIsRightClipped = read.isRightClipped();
+            else
+                suppReadIsRightClipped = suppData.Cigar.endsWith("S");
+
+            if(suppReadIsRightClipped)
+            {
+                // supp end position needs to be the inner part of a DEL
+                if(!read.isLeftClipped() || read.leftClipLength() < read.rightClipLength())
+                    return;
+
+                int suppPosEnd = SamRecordUtils.getMateAlignmentEnd(suppData.Position, suppData.Cigar);
+
+                if(suppData.Position >= read.start())
+                    return;
+
+                inferredDelLength = abs(read.start() - suppPosEnd);
+            }
+            else
+            {
+                if(!read.isRightClipped() || read.rightClipLength() < read.leftClipLength())
+                    return;
+
+                if(suppData.Position < read.end())
+                    return;
+
+                inferredDelLength = abs(suppData.Position - read.end());
+            }
+
+            if(inferredDelLength < 100 || inferredDelLength > LENGTH_SHORT)
+                return;
+
+            suppOrientation = read.orientation().opposite(); // to register as a DEL
+        }
+
+        addToCounts(
+                read.Chromosome, suppData.Chromosome, read.start(), suppData.Position, read.orientation(),
+                suppOrientation, inferredDelLength);
+    }
+
+    private void addToCounts(
+            final String chromosome1, final String chromosome2, int posStart1, int posStart2,
+            final Orientation orientation1, final Orientation orientation2, int insertSize)
+    {
+        if(!chromosome1.equals(chromosome2))
         {
             ++TypeCounts[DiscordantType.Translocation.ordinal()];
             return;
         }
 
-        int distance = inferredInsertSizeAbs(read.record());
+        int distance = insertSize;
 
-        if(read.orientation() == read.mateOrientation())
+        if(orientation1 == orientation2)
         {
             if(distance < LENGTH_SHORT)
                 TypeCounts[DiscordantType.InvLt1K.ordinal()] += 2; // assumes mate is in the same read group so not also registered
@@ -92,11 +171,12 @@ public class DiscordantStats
         }
         else
         {
-
-            if((read.start() < read.MatePosStart) == read.orientation().isForward())
+            if((posStart1 < posStart2) == orientation1.isForward())
             {
                 // DEL-type orientation
-                if(distance < LENGTH_5K)
+                if(distance < LENGTH_SHORT)
+                    ++TypeCounts[DiscordantType.Del1Lt1K.ordinal()];
+                else if(distance < LENGTH_5K)
                     ++TypeCounts[DiscordantType.Del1To5K.ordinal()];
                 else if(distance < LENGTH_100K)
                     ++TypeCounts[DiscordantType.Del5To100K.ordinal()];
@@ -144,11 +224,11 @@ public class DiscordantStats
             sj.add(format("%s=%d", type, TypeCounts[type.ordinal()]));
         }
 
-        return format("totalReads=%d writtenReads=%d %s", ProcessedReads, WrittenReads, sj);
+        return format("totalReads=%d writtenReads=%d %s", ProcessedReads, PrepReads, sj);
     }
 
     private static final String FLD_TOTAL_READS = "TotalReads";
-    private static final String FLD_WRITTEN_READS = "WrittenReads";
+    private static final String FLD_PREP_READS = "PrepReads";
 
     public static void writeDiscordantStats(
             final PrepConfig config, final long processedReads, final long writtenReads, final DiscordantStats discordantStats)
@@ -161,7 +241,7 @@ public class DiscordantStats
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_TOTAL_READS);
-            sj.add(FLD_WRITTEN_READS);
+            sj.add(FLD_PREP_READS);
 
             for(DiscordantType type : DiscordantType.values())
             {
@@ -199,18 +279,18 @@ public class DiscordantStats
             String[] values = lines.get(1).split(TSV_DELIM);
 
             long processedReads = Long.parseLong(values[0]);
-            long writtenReads = 0;
+            long prepReads = 0;
 
             long[] typeCounts = new long[DiscordantType.values().length];
 
-            writtenReads = Long.parseLong(values[1]);
+            prepReads = Long.parseLong(values[1]);
 
             for(int i = 0; i < typeCounts.length; ++i)
             {
                 typeCounts[i] = Long.parseLong(values[i + 2]);
             }
 
-            return new DiscordantStats(processedReads, writtenReads, typeCounts);
+            return new DiscordantStats(processedReads, prepReads, typeCounts);
         }
         catch(Exception e)
         {

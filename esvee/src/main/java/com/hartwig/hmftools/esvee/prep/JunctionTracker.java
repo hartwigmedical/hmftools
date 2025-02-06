@@ -351,6 +351,10 @@ public class JunctionTracker
                 if(mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
                     mCandidateDiscordantGroups.add(readGroup);
             }
+            else if(readGroup.reads().stream().anyMatch(x -> x.hasSuppAlignment()))
+            {
+                mDiscordantStats.processSupplementaryInfo(readGroup);
+            }
         }
 
         perfCounterStop(PerfCounters.JunctionSupport);
