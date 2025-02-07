@@ -285,7 +285,7 @@ public class PhaseSetBuilder
                 AssemblyLink assemblyLink = null;
 
                 if(hasSharedFragments)
-                    assemblyLink = checkSplitLink(assembly1, assembly2, isLocalIndel);
+                    assemblyLink = checkSplitLink(assembly1, assembly2, isLocalLink);
 
                 if(!hasSharedFragments || assemblyLink == null)
                 {
