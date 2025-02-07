@@ -285,7 +285,7 @@ public class PhaseSetBuilder
                 AssemblyLink assemblyLink = null;
 
                 if(hasSharedFragments)
-                    assemblyLink = checkSplitLink(assembly1, assembly2);
+                    assemblyLink = checkSplitLink(assembly1, assembly2, isLocalIndel);
 
                 if(!hasSharedFragments || assemblyLink == null)
                 {
@@ -591,18 +591,21 @@ public class PhaseSetBuilder
         }
     }
 
-    private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean isLocalIndel)
     {
         if(assembly1.junction() == assembly2.junction()) // ignore duplicates
             return null;
 
-        // handle local INDELs here since the following logic currently applies to them
-        AssemblyLink assemblyLink = AssemblyLinker.tryAssemblyIndel(assembly1, assembly2);
+        if(isLocalIndel)
+        {
+            // handle local INDELs here since the following logic currently applies to them
+            AssemblyLink assemblyLink = AssemblyLinker.tryAssemblyIndel(assembly1, assembly2);
 
-        if(assemblyLink != null)
-            return assemblyLink;
+            if(assemblyLink != null)
+                return assemblyLink;
+        }
 
-        return AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+        return AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2, true, isLocalIndel);
     }
 
     private void addUnlinkedAssemblyRefSupport()
