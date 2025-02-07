@@ -253,7 +253,7 @@ If more than one assembly shares the same breakend after deduplication then seco
 ### STEP 2B: Phasing 
 Phase groups are created by maximally linking any breakends which share at least 1 fragment. Since short DEL, DUP and INS will not share discordant reads on either side of the junction, if there are no supplementary reads that directly support the junction, they will not share any reads.  Hence, we also merge any 2 proximate breakends into the same phase group if: 
 - they form a DUP orientation <500b OR DEL orientation < 1kb AND 
-- both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail sequence with insertino site orientation.
+- both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail sequence with insertion site orientation.
 
 During phasing, all candidate remote linking sites are collected for each breakend. These are taken from discordant reads, breakend assembly read mates and breakend read supplementaries, and are established from the remote read or supplementaries coordinates (ie its chromosome and read start and end alignments). Remote reads with overlapping alignments are merged into sets of remote regions, and then cached against each assembly and are used later in phasing and assembly merging. 
 

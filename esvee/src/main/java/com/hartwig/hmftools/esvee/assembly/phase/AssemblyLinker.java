@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
@@ -190,12 +191,15 @@ public final class AssemblyLinker
         return new AssemblyLink(assembly1, assembly2, INDEL, insertedBases, "");
     }
 
+    @VisibleForTesting
     public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        return tryAssemblyOverlap(assembly1, assembly2, true);
+        boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
+        return tryAssemblyOverlap(assembly1, assembly2, true, isLocalLink);
     }
 
-    public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowMismatches)
+    public static AssemblyLink tryAssemblyOverlap(
+            final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowMismatches, boolean isLocalIndel)
     {
         JunctionAssembly first, second;
         JunctionSequence firstSeq, secondSeq;
@@ -225,8 +229,20 @@ public final class AssemblyLinker
         if(lineLink != null)
             return lineLink;
 
-        firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
-        secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
+        boolean requireRefBaseOverlap = isLocalIndel;
+
+        if(requireRefBaseOverlap)
+        {
+            // assembly pairs in a local INDEL configuration haven't been checked for shared fragments, so it's necessary that they check
+            // for an overlap in their ref bases, not just that they have a common insert sequence
+            firstSeq = JunctionSequence.formStraddlingMatchSequence(first);
+            secondSeq = JunctionSequence.formStraddlingMatchSequence(second);
+        }
+        else
+        {
+            firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
+            secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
+        }
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstMatchSequence = firstSeq.matchSequence();
@@ -312,8 +328,6 @@ public final class AssemblyLinker
 
         if(first.discordantOnly() && second.discordantOnly())
             minOverlapLength = min(minOverlapLength, ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES);
-
-        boolean requireRefBaseOverlap = isLocalAssemblyCandidate(assembly1, assembly2);
 
         int[] topMatchIndices = findBestSequenceMatch(
                 firstSeq, secondSeq, minOverlapLength, requireRefBaseOverlap, alternativeIndexStarts);
