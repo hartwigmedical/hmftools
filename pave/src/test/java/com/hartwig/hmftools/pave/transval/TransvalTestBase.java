@@ -44,9 +44,9 @@ class TransvalTestBase
         return transval.variationParser().parseSingleAminoAcidVariant(definition);
     }
 
-    protected SplitSequence seq(String left, String right)
+    protected SplitCodonSequence seq(String left, String right)
     {
-        return new SplitSequence(left, right, 100);
+        return new SplitCodonSequence(left, right, 100);
     }
 
     protected TransvalHotspot hotspot(String ref, String alt, String chr, int position)

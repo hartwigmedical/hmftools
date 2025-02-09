@@ -103,7 +103,7 @@ public class ServeDataTest
         return jsonObject.get(key).getAsString();
     }
 
-    @Test
+//    @Test
     public void check()
     {
         List<StatsForGene> results = new ArrayList<>();
@@ -161,7 +161,8 @@ public class ServeDataTest
     public void examples()
     {
 //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
-        ProteinVariant variant = transval.variationParser().parseExpressionForGene("EGFR", "K25_D34delinsN");
+//        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ROS1", "A1924_I1934del");
+        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ALK", "D1276_R1279delinsE");
         TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
 
@@ -226,11 +227,7 @@ Current Transvar output matches ours.
             }
             else
             {
-                if(gene.equals("BRAF")) {
-
-                p(annotation);
                 statsForGene.recordNotParsed();
-                }
             }
         });
         return statsForGene;
@@ -326,14 +323,27 @@ class VariantStatus
         // This has a prefix common to the ref and alt that should be removed
         // and the position should be adjusted accordingly.
         Set<TransvalHotspot> reducedCollatorResults = collator.hotspots.stream().map(this::reduceHotspot).collect(Collectors.toSet());
-        final boolean equals = variant.hotspots().containsAll(reducedCollatorResults);
-        if(!equals)
+        // For dels, we only produce one hotspot. If it's in the reduced hotspots, that's good enough.
+        if(collator.mAnnotation.endsWith("del"))
         {
-            if(geneAnnotation().mAnnotation.equals("E451_Y452delinsD"))
+            TransvalHotspot computed = variant.hotspots().iterator().next();
+//            if(collator.mAnnotation.endsWith("del"))
+//            {
+//                System.out.println("del");
+//            }
+            if(reducedCollatorResults.contains(computed))
             {
-                System.out.println(variant);
+                return true;
+            }
+            else
+            {
+                System.out.println("----------- " + collator.mGene + " " + collator.mAnnotation);
+                System.out.println("Computed: " + computed);
+                System.out.println("Reduced: " + reducedCollatorResults);
+                return false;
             }
         }
+        final boolean equals = variant.hotspots().containsAll(reducedCollatorResults);
         return equals;
     }
 

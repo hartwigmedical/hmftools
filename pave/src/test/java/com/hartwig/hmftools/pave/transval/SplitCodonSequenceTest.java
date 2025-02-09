@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class SplitSequenceTest extends TransvalTestBase
+public class SplitCodonSequenceTest extends TransvalTestBase
 {
     @Test
     public void couldBeDeletionInsertionTest()

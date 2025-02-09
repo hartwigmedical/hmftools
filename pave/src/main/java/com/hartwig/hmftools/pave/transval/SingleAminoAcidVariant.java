@@ -29,7 +29,7 @@ class SingleAminoAcidVariant extends ProteinVariant
             @NotNull final TranscriptAminoAcids aminoAcidSequence,
             @NotNull final AminoAcidSpecification alt)
     {
-        super(gene, transcript, aminoAcidSequence, alt.position);
+        super(gene, transcript, aminoAcidSequence, alt.position, 1);
         this.Alt = alt;
         int codonPosition = 3 * (positionOfFirstAlteredCodon() - 1);
         RegionsDefiningCodon = exonsForCodonPosition(codonPosition);
@@ -96,11 +96,5 @@ class SingleAminoAcidVariant extends ProteinVariant
     public boolean codonIsInSingleExon()
     {
         return RegionsDefiningCodon.codonIsInSingleExon();
-    }
-
-    @Override
-    int changedReferenceSequenceLength()
-    {
-        return 1;
     }
 }

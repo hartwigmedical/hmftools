@@ -18,9 +18,6 @@ import org.jetbrains.annotations.NotNull;
 
 class DeletionInsertion extends ProteinVariant
 {
-    final private int DeletionLength;
-    @NotNull
-    final AminoAcidRange RefRange;
     @NotNull
     final private AminoAcidSequence Alt;
 
@@ -31,15 +28,22 @@ class DeletionInsertion extends ProteinVariant
             @NotNull final AminoAcidRange refRange,
             @NotNull final AminoAcidSequence alt)
     {
-        super(gene, transcript, aminoAcidSequence, refRange.startPosition());
+        super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
         this.Alt = alt;
-        this.RefRange = refRange;
-        this.DeletionLength = refRange.length();
     }
 
     @VisibleForTesting
-    public SplitSequence referenceBases(RefGenomeInterface genome)
+    public SplitCodonSequence referenceBases(RefGenomeInterface genome)
     {
+        ChangeContext changeContext = getChangeContext2(genome);
+        ChangeContext changeContext1 = getChangeContext(genome);
+//        SplitCodonicSequence blah = changeContext.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength);
+        if(Transcript.posStrand())
+        {
+            return changeContext.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength);
+        }
+
+
         int codonPosition = 3 * (positionOfFirstAlteredCodon() - 1);
         List<Integer> regionLengths = codingRegionLengths();
         int lengthIncludingCurrent = 0;
@@ -54,11 +58,11 @@ class DeletionInsertion extends ProteinVariant
                 if(Transcript.negStrand())
                 {
                     int positionOfStartInCurrent = exon.end() - (codonPosition - lengthUpToCurrent);
-                    int positionOfEnd = positionOfStartInCurrent - DeletionLength * 3 + 1;
+                    int positionOfEnd = positionOfStartInCurrent - RefLength * 3 + 1;
                     if(positionOfEnd >= exon.start())
                     {
                         String partInCurrent = genome.getBaseString(Gene.Chromosome, positionOfEnd, positionOfStartInCurrent);
-                        return new SplitSequence(Nucleotides.reverseComplementBases(partInCurrent), null, positionOfStartInCurrent);
+                        return new SplitCodonSequence(Nucleotides.reverseComplementBases(partInCurrent), null, positionOfStartInCurrent);
                     }
                     else
                     {
@@ -68,11 +72,11 @@ class DeletionInsertion extends ProteinVariant
                 else
                 {
                     int positionOfStartInCurrent = exon.start() + (codonPosition - lengthUpToCurrent);
-                    int positionOfEnd = positionOfStartInCurrent + DeletionLength * 3 - 1;
+                    int positionOfEnd = positionOfStartInCurrent + RefLength * 3 - 1;
                     if(positionOfEnd <= exon.end())
                     {
                         String partInCurrent = genome.getBaseString(Gene.Chromosome, positionOfStartInCurrent, positionOfEnd);
-                        return new SplitSequence(partInCurrent, null, positionOfStartInCurrent);
+                        return new SplitCodonSequence(partInCurrent, null, positionOfStartInCurrent);
                     }
                     else
                     {
@@ -87,7 +91,7 @@ class DeletionInsertion extends ProteinVariant
                         // a fixed prefix.
                         int positionOfChange = lengthInNext > 2 ? nextExon.start() : positionOfStartInCurrent;
                         String partInNext = genome.getBaseString(Gene.Chromosome, nextExon.start(), nextExon.start() + lengthInNext - 1);
-                        return new SplitSequence(partInCurrentExon, partInNext, positionOfChange);
+                        return new SplitCodonSequence(partInCurrentExon, partInNext, positionOfChange);
                     }
                 }
             }
@@ -100,7 +104,7 @@ class DeletionInsertion extends ProteinVariant
     @Override
     public TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
-        SplitSequence splitBases = referenceBases(refGenome);
+        SplitCodonSequence splitBases = referenceBases(refGenome);
         String referenceNucleotides = splitBases.completeSequence();
         if(!splitBases.couldBeDeletionInsertion())
         {
@@ -140,12 +144,6 @@ class DeletionInsertion extends ProteinVariant
     public String altAminoAcidSequence()
     {
         return Alt.sequence();
-    }
-
-    @Override
-    int changedReferenceSequenceLength()
-    {
-        return DeletionLength;
     }
 
     @VisibleForTesting

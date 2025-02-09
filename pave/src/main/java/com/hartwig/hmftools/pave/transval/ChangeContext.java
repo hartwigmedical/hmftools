@@ -2,24 +2,29 @@ package com.hartwig.hmftools.pave.transval;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
+
 import org.jetbrains.annotations.NotNull;
 
 public class ChangeContext
 {
     @NotNull
-    final ExonContext containingExon;
+    final PaddedExon containingExon;
     final int startPositionInExon;
     final int finishPositionInExon;
     final boolean IsPositiveStrand;
+    private final int aminoAcidNumberOfFirstAminoAcid;
 
-    public ChangeContext(@NotNull final ExonContext containingExon, final int startPositionInExon,
+    public ChangeContext(@NotNull final PaddedExon containingExon, final int startPositionInExon,
             final int finishPositionInExon,
-            final boolean isPositiveStrand)
+            final boolean isPositiveStrand,
+            int aminoAcidNumberOfFirstAminoAcidStartingInExon)
     {
         this.containingExon = containingExon;
         this.startPositionInExon = startPositionInExon;
         this.finishPositionInExon = finishPositionInExon;
         this.IsPositiveStrand = isPositiveStrand;
+        aminoAcidNumberOfFirstAminoAcid = aminoAcidNumberOfFirstAminoAcidStartingInExon;
     }
 
     int positionOfChangeStartInStrand()
@@ -34,6 +39,14 @@ public class ChangeContext
     {
         String exonBasesAfterDeletion = containingExon.baseSequenceWithDeletionApplied(startPositionInExon, finishPositionInExon, IsPositiveStrand);
         return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion);
+    }
+
+    public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged)
+    {
+        Preconditions.checkArgument(firstAminoAcid >= 0);
+        Preconditions.checkArgument(numberOfAminoAcidsChanged >= 0);
+        int codonNumber = firstAminoAcid - aminoAcidNumberOfFirstAminoAcid + 1;
+        return containingExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged);
     }
 
     public TransvalHotspot hotspot(String chromosome)

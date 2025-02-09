@@ -51,6 +51,10 @@ class VariationParser
         {
             return parseDeletionInsertion(gene, expression);
         }
+        if(expression.contains("del"))
+        {
+            return parseDeletion(gene, expression);
+        }
         return parseSingleAminoAcidVariant(gene, expression);
     }
 
@@ -72,6 +76,12 @@ class VariationParser
     {
         GeneData geneData = lookupGene(gene);
         return buildDeletionInsertion(variantDescription, geneData);
+    }
+
+    public Deletion parseDeletion(@NotNull String gene, @NotNull String variantDescription)
+    {
+        GeneData geneData = lookupGene(gene);
+        return buildDeletion(variantDescription, geneData);
     }
 
     public DeletionInsertion parseDeletionInsertion(String input)
@@ -145,6 +155,7 @@ class VariationParser
         AminoAcidSpecification altSpec = new AminoAcidSpecification(position, matcher.group(4));
         TranscriptData transcriptData = getApplicableTranscript(geneData, refSpec, new Negation(altSpec));
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
+        AminoAcidRange refRange = new AminoAcidRange(refSpec, refSpec);
 
         return new SingleAminoAcidVariant(geneData, transcriptData, aminoAcidsSequence, altSpec);
     }

@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
  * This class encapsulates the mapping of the start of a codon within
  * an exon and its possible extension into the next exon.
  */
-public class SplitSequence
+public class SplitCodonSequence
 {
     @NotNull
     private final String Left;
@@ -26,7 +26,7 @@ public class SplitSequence
 
     private final int PositionOfChange;
 
-    public SplitSequence(@NotNull final String left, @Nullable final String right, final int positionOfChange)
+    public SplitCodonSequence(@NotNull final String left, @Nullable final String right, final int positionOfChange)
     {
         PositionOfChange = positionOfChange;
         Preconditions.checkArgument(isNucleotideSequence(left));
@@ -105,23 +105,24 @@ public class SplitSequence
         {
             return false;
         }
-        final SplitSequence that = (SplitSequence) o;
-        return Objects.equals(Left, that.Left) && Objects.equals(Right, that.Right);
+        final SplitCodonSequence that = (SplitCodonSequence) o;
+        return PositionOfChange == that.PositionOfChange && Objects.equals(Left, that.Left)
+                && Objects.equals(Right, that.Right);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(Left, Right);
+        return Objects.hash(Left, Right, PositionOfChange);
     }
 
     @Override
-    @NotNull
     public String toString()
     {
-        return "SplitSequence{" +
-                "left='" + Left + '\'' +
-                ", right='" + Right + '\'' +
+        return "SplitCodonicSequence{" +
+                "Left='" + Left + '\'' +
+                ", Right='" + Right + '\'' +
+                ", PositionOfChange=" + PositionOfChange +
                 '}';
     }
 }

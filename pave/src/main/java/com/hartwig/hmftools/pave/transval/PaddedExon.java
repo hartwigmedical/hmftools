@@ -2,12 +2,13 @@ package com.hartwig.hmftools.pave.transval;
 
 import java.util.Objects;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ExonContext
+public class PaddedExon
 {
     @NotNull private final String basesOfFirstCodonInPreviousExon;
     @NotNull private final String basesOfLastCodontInFollowingExon;
@@ -15,7 +16,7 @@ public class ExonContext
     private final int exonStart;
     @NotNull private final String intronicPrefix;
 
-    public ExonContext(@NotNull final String basesOfFirstCodonInPreviousExon,
+    public PaddedExon(@NotNull final String basesOfFirstCodonInPreviousExon,
             @NotNull final String basesOfLastCodontInFollowingExon,
             @NotNull final String exonBases,
             final int exonStart,
@@ -35,10 +36,10 @@ public class ExonContext
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start <= end);
-        Preconditions.checkArgument((end - start) % 3 == 2);
+        Preconditions.checkArgument((end - start + 1) % 3 == 0);
         if(!positiveStrand) {
             int exonEnd = exonBases.length() - 1;
-            String left = exonBases.substring(0, exonBases.length() - end - 1);
+            String left = exonBases.substring(0, exonBases.length() - end);
             String right = exonBases.substring(exonEnd - start + 1, exonEnd + 1);
             String complete = basesOfLastCodontInFollowingExon + left + right + basesOfFirstCodonInPreviousExon;
             String result = Nucleotides.reverseComplementBases(complete);
@@ -55,14 +56,47 @@ public class ExonContext
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start <= end);
-        Preconditions.checkArgument((end - start) % 3 == 2);
         return exonBases.substring(start, end + 1);
+    }
+
+    public SplitCodonSequence getSplitSequenceForCodons(int startCodon, int count)
+    {
+        Preconditions.checkArgument(startCodon >= 0);
+        if(startCodon == 0)
+        {
+            Preconditions.checkArgument(!basesOfFirstCodonInPreviousExon.isBlank());
+        }
+        Preconditions.checkArgument(count > 0);
+        int start = codonLocationInExonBody(startCodon);
+        int stop = start + count * 3;
+        if(start < 0) {
+            return new SplitCodonSequence(basesOfFirstCodonInPreviousExon, exonBases.substring(0, stop), exonStart);
+        }
+        if(stop >= exonBases.length()) {
+            return new SplitCodonSequence(exonBases.substring(start), basesOfLastCodontInFollowingExon, start + exonStart);
+        }
+        String fragmentInExon = exonBases.substring(start, stop);
+        return new SplitCodonSequence(fragmentInExon, null, start + exonStart);
+    }
+
+    public int codonLocationInExonBody(int codonIndex)
+    {
+        Preconditions.checkArgument(codonIndex >= 0);
+        // |--- --- ---         -|-- --- ---         --|- --- ---
+        int offset = (3 - numberOfBasesInPreviousExon()) % 3;
+        return 3 * (codonIndex - 1) + offset;
+    }
+
+    @VisibleForTesting
+    public int numberOfBasesInPreviousExon()
+    {
+        return basesOfFirstCodonInPreviousExon.length();
     }
 
     public int toStrandCoordinates(int positionInExon, boolean positiveStrand)
     {
         Preconditions.checkArgument(positionInExon >= 0);
-        Preconditions.checkArgument(positionInExon < inExonLength());
+        Preconditions.checkArgument(positionInExon <= inExonLength());
         if(positiveStrand) {
             return positionInExon + exonStart;
         }
@@ -86,7 +120,7 @@ public class ExonContext
         {
             return false;
         }
-        final ExonContext that = (ExonContext) o;
+        final PaddedExon that = (PaddedExon) o;
         return Objects.equals(basesOfFirstCodonInPreviousExon, that.basesOfFirstCodonInPreviousExon)
                 && Objects.equals(basesOfLastCodontInFollowingExon, that.basesOfLastCodontInFollowingExon) && Objects.equals(exonBases, that.exonBases);
     }
