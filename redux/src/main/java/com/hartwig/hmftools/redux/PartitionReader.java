@@ -1,15 +1,19 @@
 package com.hartwig.hmftools.redux;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getThreePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignments;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
@@ -24,6 +28,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -38,6 +44,7 @@ import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -221,15 +228,16 @@ public class PartitionReader
 
         ++mProcessedReads;
 
-        if(mProcessedReads >= mNextLogReadCount)
-        {
-            double processedReads = mProcessedReads / 1000000.0;
-            RD_LOGGER.debug("region({}) position({}) processed {}M reads, cache(coords={} reads={})",
-                    mCurrentRegion, readStart, format("%.0f", processedReads),
-                    mReadCache.cachedFragCoordGroups(), mReadCache.cachedReadCount());
-
-            mNextLogReadCount += LOG_READ_COUNT;
-        }
+        // TODO:
+//        if(mProcessedReads >= mNextLogReadCount)
+//        {
+//            double processedReads = mProcessedReads / 1000000.0;
+//            RD_LOGGER.debug("region({}) position({}) processed {}M reads, cache(coords={} reads={})",
+//                    mCurrentRegion, readStart, format("%.0f", processedReads),
+//                    mReadCache.cachedFragCoordGroups(), mReadCache.cachedReadCount());
+//
+//            mNextLogReadCount += LOG_READ_COUNT;
+//        }
 
         if(mConfig.JitterMsiOnly)
         {
@@ -311,73 +319,189 @@ public class PartitionReader
     private static final double LOG_PERF_TIME_SEC = 1;
     private static final int LOG_PERF_FRAG_COUNT = 3000;
 
+    public static List<Pair<SAMRecord, SAMRecord>> getSwappableReads(final List<SAMRecord> reads)
+    {
+        List<Pair<SAMRecord, SAMRecord>> swappableReads = Lists.newArrayList();
+        for(int i = 0; i < reads.size() - 1; i++)
+        {
+            SAMRecord firstRead = reads.get(i);
+            int firstStartPos = getFivePrimeUnclippedPosition(firstRead);
+            int firstEndPos = getThreePrimeUnclippedPosition(firstRead);
+            for(int j = i + 1; j < reads.size(); j++)
+            {
+                SAMRecord secondRead = reads.get(j);
+                int secondStartPos = getFivePrimeUnclippedPosition(secondRead);
+                int secondEndPos = getThreePrimeUnclippedPosition(secondRead);
+                if(!(firstRead.getSupplementaryAlignmentFlag() ^ secondRead.getSupplementaryAlignmentFlag()))
+                    continue;
+
+                if(firstRead.getReadNegativeStrandFlag() != secondRead.getReadNegativeStrandFlag())
+                    continue;
+
+                // TODO: mConfig.DuplicateGroupCollapse.SbxMaxDuplicateDistance
+                if(abs(firstStartPos - secondStartPos) + abs(firstEndPos - secondEndPos) > 0)
+                    continue;
+
+                List<SupplementaryReadData> firstSuppData = SupplementaryReadData.extractAlignments(firstRead);
+                List<SupplementaryReadData> secondSuppData = SupplementaryReadData.extractAlignments(secondRead);
+
+                if(firstSuppData == null || firstSuppData.isEmpty() || secondSuppData == null || secondSuppData.isEmpty())
+                    continue;
+
+                if(firstSuppData.size() != 1 || secondSuppData.size() != 1)
+                    continue;
+
+                if(firstSuppData.get(0).Strand != secondSuppData.get(0).Strand)
+                    continue;
+
+                if(!firstSuppData.get(0).Chromosome.equals(secondSuppData.get(0).Chromosome))
+                    continue;
+
+                int firstSuppStartPos = getFivePrimeUnclippedPosition(firstSuppData.get(0).Position, firstSuppData.get(0).Cigar, firstSuppData.get(0).Strand == SUPP_POS_STRAND);
+                int firstSuppEndPos = getThreePrimeUnclippedPosition(firstSuppData.get(0).Position, firstSuppData.get(0).Cigar, firstSuppData.get(0).Strand == SUPP_POS_STRAND);
+
+                int secondSuppStartPos = getFivePrimeUnclippedPosition(secondSuppData.get(0).Position, secondSuppData.get(0).Cigar, secondSuppData.get(0).Strand == SUPP_POS_STRAND);
+                int secondSuppEndPos = getThreePrimeUnclippedPosition(secondSuppData.get(0).Position, secondSuppData.get(0).Cigar, secondSuppData.get(0).Strand == SUPP_POS_STRAND);
+
+                // TODO: mConfig.DuplicateGroupCollapse.SbxMaxDuplicateDistance
+                if(abs(firstSuppStartPos - secondSuppStartPos) + abs(firstSuppEndPos - secondSuppEndPos) > 0)
+                    continue;
+
+                if(secondRead.getSupplementaryAlignmentFlag())
+                    swappableReads.add(Pair.of(firstRead, secondRead));
+                else
+                    swappableReads.add(Pair.of(secondRead, firstRead));
+            }
+        }
+
+        return swappableReads;
+    }
+
+    public static List<Pair<SAMRecord, SAMRecord>> getSwappableReads(final FragmentCoordReads fragmentCoordReads)
+    {
+        List<SAMRecord> reads = Lists.newArrayList();
+        for(DuplicateGroup duplicateGroup : fragmentCoordReads.DuplicateGroups)
+            reads.addAll(duplicateGroup.reads());
+
+        for(ReadInfo singleRead : fragmentCoordReads.SingleReads)
+            reads.add(singleRead.read());
+
+        return getSwappableReads(reads);
+    }
+
     private void processReadGroups(final FragmentCoordReads fragmentCoordReads)
     {
         if(fragmentCoordReads == null)
             return;
 
-        mPcProcessDuplicates.resume();
-
-        int readCount = fragmentCoordReads.totalReadCount();
-
-        int minCachedReadPosition = mReadCache.minCachedReadStart();
-        int currentPosition = mReadCache.currentReadMinPosition();
-        int minPoppedReadsPosition = fragmentCoordReads.minReadPositionStart();
-        int readFlushPosition = minCachedReadPosition > 0 ? minCachedReadPosition - 1 : minPoppedReadsPosition - 1;
-
-        if(mLastWriteLowerPosition > 0 && minPoppedReadsPosition < mLastWriteLowerPosition) // mConfig.RunChecks
+        List<Pair<SAMRecord, SAMRecord>> swappableReads = getSwappableReads(fragmentCoordReads);
+        for(Pair<SAMRecord, SAMRecord> swappable : swappableReads)
         {
-            RD_LOGGER.warn("position({}:{})) processing earlier popped read min start({}) vs last({}) minCachedPos({})",
-                    mCurrentRegion.Chromosome, currentPosition, minPoppedReadsPosition, mLastWriteLowerPosition,
-                    minCachedReadPosition);
+            SAMRecord firstRead = swappable.getLeft();
+            SAMRecord secondRead = swappable.getRight();
+            List<SupplementaryReadData> firstSuppData = extractAlignments(firstRead);
+            List<SupplementaryReadData> secondSuppData = extractAlignments(secondRead);
 
-            // find read and report details about why it may not have been popped previously
-            // mReadCache.logNonPoppedReads(fragmentCoordReads, mLastWriteLowerPosition);
+            RD_LOGGER.error("=================================");
+            RD_LOGGER.error("");
+            RD_LOGGER.error(firstRead.getSAMString());
+            RD_LOGGER.error("");
+            RD_LOGGER.error(secondRead.getSAMString());
+            RD_LOGGER.error("");
+            RD_LOGGER.error(String.valueOf(firstSuppData));
+            RD_LOGGER.error("");
+            RD_LOGGER.error(String.valueOf(secondSuppData));
+            RD_LOGGER.error("");
         }
 
-        mLastWriteLowerPosition = readFlushPosition;
+        // TODO: dump supp groups
+//        for(DuplicateGroup duplicateGroup : fragmentCoordReads.DuplicateGroups)
+//        {
+//            if(duplicateGroup.reads().get(0).isSecondaryOrSupplementary())
+//                continue;
+//
+//            boolean suppDataFound = false;
+//            StringJoiner suppDataStr = new StringJoiner(" -- ");
+//            for(SAMRecord read : duplicateGroup.reads())
+//            {
+//                List<SupplementaryReadData> supps = extractAlignments(read);
+//                if(supps == null || supps.isEmpty())
+//                {
+//                    suppDataStr.add(format("%s, []", read.getAttribute(ALIGNMENT_SCORE_ATTRIBUTE).toString()));
+//                    continue;
+//                }
+//
+//                suppDataStr.add(format("%s, %s", read.getAttribute(ALIGNMENT_SCORE_ATTRIBUTE).toString(), supps.toString()));
+//                suppDataFound = true;
+//            }
+//
+//            if(suppDataFound)
+//                RD_LOGGER.error(suppDataStr.toString());
+//        }
 
-        boolean logDetails = mConfig.perfDebug() && readCount > LOG_PERF_FRAG_COUNT;
-        long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
-
-        List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                fragmentCoordReads.DuplicateGroups, fragmentCoordReads.SingleReads, true);
-
-        if(logDetails)
-        {
-            double timeTakenSec = secondsSinceNow(startTimeMs);
-
-            if(timeTakenSec > mConfig.PerfDebugTime)
-            {
-                RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) processing time({})",
-                        mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
-                        fragmentCoordReads.DuplicateGroups.size(), fragmentCoordReads.duplicateGroupReadCount(),
-                        format("%.1fs", timeTakenSec));
-            }
-        }
-
-        // write single fragments and duplicate groups
-        for(DuplicateGroup duplicateGroup : duplicateGroups)
-        {
-            if(mConfig.FormConsensus)
-            {
-                duplicateGroup.formConsensusRead(mConsensusReads);
-                mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
-            }
-
-            postProcessPrimaryRead(duplicateGroup.primaryRead());
-            mBamWriter.writeDuplicateGroup(duplicateGroup);
-        }
-
-        postProcessSingleReads(fragmentCoordReads.SingleReads);
-        mBamWriter.writeNonDuplicateReads(fragmentCoordReads.SingleReads);
-
-        mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
-
-        // mark the lowest read position for reads able to be sorted and written
-        mBamWriter.setBoundaryPosition(readFlushPosition, true);
-
-        mPcProcessDuplicates.pause();
+        // TODO:
+//        mPcProcessDuplicates.resume();
+//
+//        int readCount = fragmentCoordReads.totalReadCount();
+//
+//        int minCachedReadPosition = mReadCache.minCachedReadStart();
+//        int currentPosition = mReadCache.currentReadMinPosition();
+//        int minPoppedReadsPosition = fragmentCoordReads.minReadPositionStart();
+//        int readFlushPosition = minCachedReadPosition > 0 ? minCachedReadPosition - 1 : minPoppedReadsPosition - 1;
+//
+//        if(mLastWriteLowerPosition > 0 && minPoppedReadsPosition < mLastWriteLowerPosition) // mConfig.RunChecks
+//        {
+//            RD_LOGGER.warn("position({}:{})) processing earlier popped read min start({}) vs last({}) minCachedPos({})",
+//                    mCurrentRegion.Chromosome, currentPosition, minPoppedReadsPosition, mLastWriteLowerPosition,
+//                    minCachedReadPosition);
+//
+//            // find read and report details about why it may not have been popped previously
+//            // mReadCache.logNonPoppedReads(fragmentCoordReads, mLastWriteLowerPosition);
+//        }
+//
+//        mLastWriteLowerPosition = readFlushPosition;
+//
+//        boolean logDetails = mConfig.perfDebug() && readCount > LOG_PERF_FRAG_COUNT;
+//        long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
+//
+//        List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
+//                fragmentCoordReads.DuplicateGroups, fragmentCoordReads.SingleReads, true);
+//
+//        if(logDetails)
+//        {
+//            double timeTakenSec = secondsSinceNow(startTimeMs);
+//
+//            if(timeTakenSec > mConfig.PerfDebugTime)
+//            {
+//                RD_LOGGER.debug("position({}:{}-{}) singles({}) groups({} reads={}) processing time({})",
+//                        mCurrentRegion.Chromosome, minPoppedReadsPosition, currentPosition, fragmentCoordReads.SingleReads.size(),
+//                        fragmentCoordReads.DuplicateGroups.size(), fragmentCoordReads.duplicateGroupReadCount(),
+//                        format("%.1fs", timeTakenSec));
+//            }
+//        }
+//
+//        // write single fragments and duplicate groups
+//        for(DuplicateGroup duplicateGroup : duplicateGroups)
+//        {
+//            if(mConfig.FormConsensus)
+//            {
+//                duplicateGroup.formConsensusRead(mConsensusReads);
+//                mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
+//            }
+//
+//            postProcessPrimaryRead(duplicateGroup.primaryRead());
+//            mBamWriter.writeDuplicateGroup(duplicateGroup);
+//        }
+//
+//        postProcessSingleReads(fragmentCoordReads.SingleReads);
+//        mBamWriter.writeNonDuplicateReads(fragmentCoordReads.SingleReads);
+//
+//        mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
+//
+//        // mark the lowest read position for reads able to be sorted and written
+//        mBamWriter.setBoundaryPosition(readFlushPosition, true);
+//
+//        mPcProcessDuplicates.pause();
     }
 
     private void setUnmappedRegions()
