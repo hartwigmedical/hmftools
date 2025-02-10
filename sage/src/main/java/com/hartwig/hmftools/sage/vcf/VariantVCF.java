@@ -77,6 +77,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
+import com.hartwig.hmftools.common.variant.pon.GnomadCache;
+import com.hartwig.hmftools.common.variant.pon.PonCache;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -230,6 +232,9 @@ public class VariantVCF implements AutoCloseable
         }
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+
+        GnomadCache.addAnnotationHeader(header);
+        PonCache.addAnnotationHeader(header);
 
         return header;
     }

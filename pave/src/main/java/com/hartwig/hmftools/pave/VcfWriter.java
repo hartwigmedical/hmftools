@@ -80,15 +80,19 @@ public class VcfWriter
 
         if(referenceData.StandardPon.enabled() || referenceData.ArtefactsPon.enabled())
         {
-            PonCache.addHeader(newHeader);
+            PonCache.addAnnotationHeader(newHeader);
         }
+
+        PonCache.addFilterHeader(newHeader);
 
         if(referenceData.Gnomad.enabled())
         {
-            GnomadCache.addHeader(newHeader);
+            GnomadCache.addAnnotationHeader(newHeader);
         }
 
-        if(referenceData.VariantMappability.enabled()   )
+        GnomadCache.addFilterHeader(newHeader);
+
+        if(referenceData.VariantMappability.enabled())
         {
             Mappability.addHeader(newHeader);
         }

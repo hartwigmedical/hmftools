@@ -34,6 +34,7 @@ import com.hartwig.hmftools.common.variant.pon.GnomadChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
+import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.MappabilityChrCache;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
@@ -215,9 +216,13 @@ public class ChromosomeTask implements Callable
 
         if(mGnomadCache != null)
             mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache);
+        else
+            GnomadAnnotation.annotateFromContext(variant);
 
         if(mStandardPon != null)
             mReferenceData.StandardPon.annotateVariant(variant, mStandardPon);
+        else
+            PonAnnotation.annotateFromContext(variant);
 
         applyFilters(variant);
     }

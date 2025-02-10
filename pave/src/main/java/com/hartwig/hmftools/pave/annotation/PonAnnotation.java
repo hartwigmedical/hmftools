@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_AVG_READS;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
+
 import java.util.concurrent.Callable;
 
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -69,6 +73,17 @@ public class PonAnnotation extends AnnotationData implements Callable
             return;
 
         variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount());
+    }
+
+    public static void annotateFromContext(final VariantData variant)
+    {
+        if(variant.context().hasAttribute(PON_COUNT))
+        {
+            variant.setPonFrequency(
+                    variant.context().getAttributeAsInt(PON_COUNT, 0),
+                    variant.context().getAttributeAsInt(PON_MAX, 0),
+                    variant.context().getAttributeAsInt(PON_AVG_READS, 0));
+        }
     }
 
     public boolean filterOnTierCriteria(final VariantTier tier, final int ponSampleCount, final int ponMaxSampleReads)

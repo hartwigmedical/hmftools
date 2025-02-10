@@ -43,10 +43,13 @@ public class PonCache
     // PON file config
     public static final String PON_FILE = "pon_file";
 
-    // PON filter config
-    public static final String PON_FILTERS = "pon_filters";
+    // annotations
     public static final String PON_COUNT = "PON_COUNT";
     public static final String PON_MAX = "PON_MAX";
+    public static final String PON_AVG_READS = "PON_READS";
+
+    // PON filter config
+    public static final String PON_FILTERS = "pon_filters";
     public static final String PON_FILTER = "PON";
     public static final String PON_ARTEFACT_FILTER = "PONArtefact";
 
@@ -276,7 +279,7 @@ public class PonCache
         }
     }
 
-    public static void addHeader(final VCFHeader header)
+    public static void addAnnotationHeader(final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 PON_COUNT, 1, VCFHeaderLineType.Integer, "Cohort frequency for variant"));
@@ -284,6 +287,12 @@ public class PonCache
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 PON_MAX, 1, VCFHeaderLineType.Integer, "Max read depth in any sample with variant"));
 
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                PON_AVG_READS, 1, VCFHeaderLineType.Integer, "Average reads in sample with variant"));
+    }
+
+    public static void addFilterHeader(final VCFHeader header)
+    {
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_ARTEFACT_FILTER, "Filter PON artefact"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_FILTER, "Filter PON variant"));
     }

@@ -1,16 +1,11 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
-import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUENCY_DIR;
-import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUENCY_FILE;
-import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincAnalyser.generateTincVcfFilename;
-import static com.hartwig.hmftools.sage.tinc.TincConfig.WRITE_TINC_VCF;
+import static com.hartwig.hmftools.sage.tinc.TincConfig.callerTincConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +24,6 @@ import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.tinc.TincAnalyser;
 import com.hartwig.hmftools.sage.tinc.TincConfig;
-import com.hartwig.hmftools.sage.tinc.TincVcfWriter;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -77,14 +71,7 @@ public class SageApplication implements AutoCloseable
 
         if(mConfig.RunTinc && !mConfig.Common.ReferenceIds.isEmpty())
         {
-            String gnomadDirectory = configBuilder.getValue(GNOMAD_FREQUENCY_DIR);
-            String gnomadFile = configBuilder.getValue(GNOMAD_FREQUENCY_FILE);
-            String ponFilename = configBuilder.getValue(PON_FILE);
-            boolean overwriteVcf = !configBuilder.hasFlag(WRITE_TINC_VCF);
-
-            mTincConfig = new TincConfig(
-                    mConfig.Common.RefGenVersion, mConfig.Common.OutputFile, mConfig.TumorIds.get(0),
-                    mConfig.Common.ReferenceIds.get(0), ponFilename, gnomadDirectory, gnomadFile, mConfig.Common.Threads, overwriteVcf);
+            mTincConfig = callerTincConfig(configBuilder, mConfig);
         }
         else
         {

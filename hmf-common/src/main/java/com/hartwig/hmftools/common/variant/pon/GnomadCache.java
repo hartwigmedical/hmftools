@@ -256,9 +256,13 @@ public class GnomadCache
         configBuilder.addFlag(GNOMAD_NO_FILTER, "No Gnomad filter is applied");
     }
 
-    public static void addHeader(final VCFHeader header)
+    public static void addAnnotationHeader(final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(GNOMAD_FREQ, 1, VCFHeaderLineType.Float, GNOMAD_FREQ_DESC));
+    }
+
+    public static void addFilterHeader(final VCFHeader header)
+    {
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnomad PON"));
     }
 }

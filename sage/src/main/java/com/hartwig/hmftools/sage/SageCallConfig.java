@@ -16,6 +16,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.sage.tinc.TincConfig;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -121,9 +122,10 @@ public class SageCallConfig
         configBuilder.addPrefixedPath(HOTSPOTS, false, "Hotspots", RESOURCE_DIR);
         configBuilder.addPrefixedPath(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed", RESOURCE_DIR);
         configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
-        configBuilder.addFlag(RUN_TINC, "Run TINC routine");
 
-        registerCommonConfig(configBuilder);
+        configBuilder.addFlag(RUN_TINC, "Run TINC routine");
+        TincConfig.registerCommonConfig(configBuilder);
+
         addEnsemblDir(configBuilder);
     }
 

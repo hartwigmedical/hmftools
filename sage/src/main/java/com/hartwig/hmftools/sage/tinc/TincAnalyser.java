@@ -31,7 +31,6 @@ import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_RECOVERY_MIN;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadSupportCounts;
@@ -222,7 +221,7 @@ public class TincAnalyser
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        TincConfig.registerFullConfig(configBuilder);
+        TincConfig.registerAppConfig(configBuilder);
         FilterConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
@@ -238,6 +237,8 @@ public class TincAnalyser
         if(config.RewriteVcf && configBuilder.hasValue(REF_GENOME))
         {
             String outputVcf = generateTincVcfFilename(config.InputVcf);
+
+            SG_LOGGER.debug("writing TINC VCF: {}", outputVcf);
             tincAnalyser.writeVcf(loadRefGenome(configBuilder.getValue(REF_GENOME)).refGenomeFile(), config.InputVcf, outputVcf);
         }
 

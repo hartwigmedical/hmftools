@@ -38,6 +38,11 @@ public class VariantData
     public final boolean OnlyGermlineFiltered;
 
     private boolean mPonFiltered;
+    public int mPonSampleCount;
+    public int mPonMaxReadCount;
+    public int mPonMeanReadCount;
+    private Double mGnomadFrequency;
+
     public double mReferenceAltFragsReduction;
 
     private Set<SoftFilter> mNewFilters;
@@ -60,7 +65,13 @@ public class VariantData
 
         Context = null;
         OnlyGermlineFiltered = false;
+
         mPonFiltered = false;
+        mPonSampleCount = 0;
+        mPonMaxReadCount = 0;
+        mPonMeanReadCount = 0;
+        mGnomadFrequency = null;
+
         mReferenceAltFragsReduction = 0;
         mNewFilters = null;
     }
@@ -86,6 +97,11 @@ public class VariantData
         OnlyGermlineFiltered = variantContext.getFilters().stream().allMatch(x -> RECOVERY_FILTERS.contains(x));
 
         mPonFiltered = false;
+        mPonSampleCount = 0;
+        mPonMaxReadCount = 0;
+        mPonMeanReadCount = 0;
+        mGnomadFrequency = null;
+
         mReferenceAltFragsReduction = 0;
         mNewFilters = null;
     }
@@ -107,13 +123,26 @@ public class VariantData
     public void setPonFiltered() { mPonFiltered = true;}
     public boolean ponFiltered() { return mPonFiltered;}
 
+    public int ponSampleCount() { return mPonSampleCount; }
+    public int ponMaxReadCount() { return mPonMaxReadCount; }
+    public int ponMeanReadCount() { return mPonMeanReadCount; }
+
+    public void setPonFrequency(int sampleCount, int maxReadCount, int meanReadCount)
+    {
+        mPonSampleCount = sampleCount;
+        mPonMaxReadCount = maxReadCount;
+        mPonMeanReadCount = meanReadCount;
+    }
+
+    public Double gnomadFrequency() { return mGnomadFrequency; }
+    public void setGnomadFrequency(Double frequency) { mGnomadFrequency = frequency; }
+
     public boolean recovered() { return mNewFilters != null && mNewFilters.isEmpty(); }
 
     public double tumorAf() { return TumorDepth > 0 ? TumorAltFrags / (double)TumorDepth : 0; }
     public double referenceAf() { return ReferenceDepth > 0 ? ReferenceAltFrags / (double)ReferenceDepth : 0; }
 
     public void setReferenceAltFragReduction(double perc) { mReferenceAltFragsReduction = perc; }
-    // public double referenceAltFragReduction() { return mReferenceAltFragsReduction; }
 
     public int calcReducedAltCount(int altCount) { return (int)round(altCount * (1 - mReferenceAltFragsReduction)); }
     public double calcReducedAltValue(double altValue) { return altValue * (1 - mReferenceAltFragsReduction); }

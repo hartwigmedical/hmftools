@@ -26,7 +26,7 @@ public class TincCalculator
         {
             double score = computeContaminationScore(variants, testLevel);
 
-            SG_LOGGER.debug(format("tinc test level(%.3f) score(%.0f)", testLevel, score));
+            SG_LOGGER.trace(format("tinc test level(%.3f) score(%.0f)", testLevel, score));
 
             if(lowestScore < 0 || score < lowestScore)
             {

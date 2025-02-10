@@ -89,6 +89,7 @@ public final class PurpleTestFactory
                 .cobaltGender(Gender.FEMALE)
                 .amberGender(Gender.FEMALE)
                 .lohPercent(0)
+                .tincLevel(0)
                 .build();
     }
 }

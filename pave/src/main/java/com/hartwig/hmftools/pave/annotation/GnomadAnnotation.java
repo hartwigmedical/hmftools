@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUENCY_DIR;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUENCY_FILE;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_NO_FILTER;
@@ -46,6 +47,12 @@ public class GnomadAnnotation extends AnnotationData implements Callable
         {
             variant.setGnomadFrequency(gnomadFreq);
         }
+    }
+
+    public static void annotateFromContext(final VariantData variant)
+    {
+        if(variant.context().hasAttribute(GNOMAD_FREQ))
+            variant.setGnomadFrequency(variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1));
     }
 
     public GnomadChrCache getChromosomeCache(final String chromosome)

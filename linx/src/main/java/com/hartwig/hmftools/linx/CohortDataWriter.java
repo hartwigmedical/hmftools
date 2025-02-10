@@ -163,9 +163,9 @@ public class CohortDataWriter
                 writer.write(",MinorAPStartPrev,MinorAPStartPost,MinorAPEndPrev,MinorAPEndPost,AFStart,AFEnd");
 
                 // SV table info
-                writer.write(",HomologyStart,HomologyEnd,InsertSeq,Imprecise,QualScore");
-                writer.write(",RefContextStart,RefContextEnd,InsSeqAlignments");
-                writer.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
+                writer.write(",HomologyStart,HomologyEnd,InsertSeq,QualScore");
+                writer.write(",InsSeqAlignments");
+                writer.write(",RepeatClass,RepeatType,AnchorStart,AnchorEnd");
             }
 
             writer.newLine();
@@ -309,13 +309,12 @@ public class CohortDataWriter
 
                     final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
-                    writer.write(String.format(",%s,%s,%s,%s,%.0f,%s,%s,%s",
+                    writer.write(String.format(",%s,%s,%s,%.0f,%s",
                             dbData.startHomologySequence(), dbData.endHomologySequence(),
-                            dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
-                            dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
+                            dbData.insertSequence(), dbData.qualityScore(), insSeqAlignments));
 
-                    writer.write(String.format(",%s,%s,%s,%d,%d",
-                            dbData.recovered(), dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
+                    writer.write(String.format(",%s,%s,%d,%d",
+                            dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
                             dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
                 }
 

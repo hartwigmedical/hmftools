@@ -348,7 +348,7 @@ public class VariantCache
                 ++mFilterCounts[filterReason.ordinal()];
         }
 
-        private FilterReason checkFilters(VariantData variant)
+        private FilterReason checkFilters(final VariantData variant)
         {
             // annotate and evaluate for use as a fitting variant
             FilterReason filterReason = FilterReason.NONE;
@@ -370,33 +370,49 @@ public class VariantCache
                     filterReason = FilterReason.LOW_ABQ;
             }
 
+            setPonData(variant);
+
             // check the PON for variants not otherwise filtered
             if(filterReason != FilterReason.FILTERED)
             {
-                if(mGnomadChrCache != null)
+                if(variant.gnomadFrequency() != null)
                 {
-                    Double gnomadFreq = mGnomadChrCache.getFrequency(variant.isMnv(), variant.Ref, variant.Alt, variant.Position);
-
-                    if(gnomadFreq != null)
-                    {
-                        filterReason = FilterReason.GNOMAD;
-                        variant.setPonFiltered();
-                    }
+                    filterReason = FilterReason.GNOMAD;
                 }
-
-                if(filterReason != FilterReason.GNOMAD && mPonChrCache != null)
+                else if(variant.ponFiltered())
                 {
-                    PonVariantData ponData = mPonChrCache.getPonData(variant.Position, variant.Ref, variant.Alt);
-
-                    if(ponData != null && mPonCache.filterOnTierCriteria(variant.tier(), ponData.Samples, ponData.MaxSampleReads))
-                    {
-                        filterReason = FilterReason.PON;
-                        variant.setPonFiltered();
-                    }
+                    filterReason = FilterReason.PON;
                 }
             }
 
             return filterReason;
+        }
+
+        private void setPonData(final VariantData variant)
+        {
+            if(mGnomadChrCache != null)
+            {
+                Double gnomadFreq = mGnomadChrCache.getFrequency(variant.isMnv(), variant.Ref, variant.Alt, variant.Position);
+
+                if(gnomadFreq != null)
+                {
+                    variant.setGnomadFrequency(gnomadFreq);
+                    variant.setPonFiltered();
+                }
+            }
+
+            if(mPonChrCache != null)
+            {
+                PonVariantData ponData = mPonChrCache.getPonData(variant.Position, variant.Ref, variant.Alt);
+
+                if(ponData != null)
+                {
+                    variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount());
+
+                    if(mPonCache.filterOnTierCriteria(variant.tier(), ponData.Samples, ponData.MaxSampleReads))
+                        variant.setPonFiltered();
+                }
+            }
         }
     }
 
