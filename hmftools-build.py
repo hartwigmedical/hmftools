@@ -197,7 +197,7 @@ def build_and_release(raw_tag: str, github_key: str, github_client_id: str, gith
         exit(1)
     module = match.group(1)
     version = match.group(2)
-    is_external_release = re.compile(r'^[0-9\.]+(-rc\.[0-9]+)*$').match(version) != None
+    is_external_release = re.compile(r'^[0-9\.]+(-beta|-rc\.[0-9]+)*$').match(version) != None
 
     # Clean the raw_tag such that it only includes the groups captured by the regex
     # For example: raw_tag = orange-v1.0.0 then tag = orange-1.1.0
