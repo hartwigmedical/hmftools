@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.common.variant.VariantTier.HIGH_CONFIDENCE;
+import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.HIGH_QUAL_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
@@ -13,18 +15,14 @@ import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.sage.common.VariantTier.HIGH_CONFIDENCE;
-import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
-import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.VariantUtils.sageVariantFromReadContextCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_FLANK;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_EDGE_DISTANCE;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 
@@ -32,17 +30,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.dedup.DedupMixedGermlineSomatic;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;

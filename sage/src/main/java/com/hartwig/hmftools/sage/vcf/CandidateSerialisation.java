@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONT
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
-import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
+import static com.hartwig.hmftools.common.variant.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
@@ -33,7 +33,7 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 

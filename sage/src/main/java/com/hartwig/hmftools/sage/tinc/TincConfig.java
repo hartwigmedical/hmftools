@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUEN
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUENCY_FILE;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.pon.GnomadCache;
@@ -30,10 +31,13 @@ public class TincConfig
     public final String GnomadDirectory;
     public final String GnomadFile;
     public final int Threads;
+
+    public final boolean RewriteVcf;
     public final boolean WriteFitVariants;
     public final String FitVariantsFile;
 
     public static final String INPUT_VCF = "input_vcf";
+    public static final String WRITE_TINC_VCF = "write_tinc_vcf";
     public static final String FIT_VARIANTS_FILE = "fit_variants_file";
     public static final String WRITE_FIT_VARIANTS = "write_fit_variants";
 
@@ -52,13 +56,31 @@ public class TincConfig
 
         FitVariantsFile = configBuilder.getValue(FIT_VARIANTS_FILE);
         WriteFitVariants = !configBuilder.hasValue(FIT_VARIANTS_FILE) && configBuilder.hasFlag(WRITE_FIT_VARIANTS);
+        RewriteVcf = configBuilder.hasFlag(WRITE_TINC_VCF);
+    }
+
+    public TincConfig(
+            final RefGenomeVersion refGenVersion, final String inputVcf, final String tumorId, final String referenceId,
+            final String ponFilename, final String gnomadDirectory, final String gnomadFile, final int threads, boolean overwriteVcf)
+    {
+        RefGenVersion = refGenVersion;
+        InputVcf = inputVcf;
+        TumorId = tumorId;
+        ReferenceId = referenceId;
+        PonFilename = ponFilename;
+        GnomadDirectory = gnomadDirectory;
+        GnomadFile = gnomadFile;
+        Threads = threads;
+        WriteFitVariants = false;
+        FitVariantsFile = null;
+        RewriteVcf = overwriteVcf;
     }
 
     public static void registerFullConfig(final ConfigBuilder configBuilder)
     {
         registerConfig(configBuilder);
 
-        addRefGenomeVersion(configBuilder);
+        addRefGenomeConfig(configBuilder, false);
 
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);
@@ -72,6 +94,7 @@ public class TincConfig
         configBuilder.addPath(INPUT_VCF, true, "Input unfiltered VCF");
         configBuilder.addPath(FIT_VARIANTS_FILE, false, "Cache file for fit variants");
         configBuilder.addFlag(WRITE_FIT_VARIANTS, "Write cache file for fit variants");
+        configBuilder.addFlag(WRITE_TINC_VCF, "Write a new VCF with TINC changes if detected");
         configBuilder.addPath(PON_FILE, false, "PON entries");
         GnomadCache.addConfig(configBuilder);
     }

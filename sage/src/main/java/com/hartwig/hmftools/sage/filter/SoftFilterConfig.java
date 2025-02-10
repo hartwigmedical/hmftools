@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantTier;
 
 public class SoftFilterConfig
 {
