@@ -6,7 +6,7 @@ instead. vCHORD employs a convolutional neural network model to predict HRD from
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links).
-vCHORD requires Java 11+ to be installed.
+vCHORD requires Java 17+ to be installed.
 
 ## Usage
 

@@ -65,7 +65,7 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
     install("dplyr")
 ```
 
-COBALT requires Java 11+ and can be run with the minimum set of arguments as follows:
+COBALT requires Java 17+ and can be run with the minimum set of arguments as follows:
 
 ```
 java -jar -Xmx8G cobalt.jar \
