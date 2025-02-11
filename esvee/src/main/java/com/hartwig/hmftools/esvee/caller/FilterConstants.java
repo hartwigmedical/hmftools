@@ -62,6 +62,11 @@ public class FilterConstants
     public static final int MIN_AVG_FRAG_FACTOR = 3;
     public static final double MIN_AVG_FRAG_STD_DEV_FACTOR = 0.6;
 
+    public static final int DEL_ARTEFACT_SHORT_LENGTH = 3000;
+    public static final int DEL_ARTEFACT_MAX_HOMOLOGY = 10;
+    public static final int DEL_ARTEFACT_MIN_STD_DEV_FRAGS = 7;
+    public static final double DEL_ARTEFACT_MIN_AF = 0.05;
+
     public static final int INV_SHORT_LENGTH = 3000;
     public static final double INV_SHORT_MIN_AF_LOWER = 0.1;
     public static final double INV_SHORT_MIN_AF_HIGHER = 0.2;

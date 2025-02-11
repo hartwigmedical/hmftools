@@ -29,7 +29,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class FiltersTest
@@ -185,6 +184,32 @@ public class FiltersTest
         assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
     }
 
+    @Test
+    public void testShortLowVafDeletion()
+    {
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+        commonAttributes.put(HOMSEQ, "AGGCT");
+        commonAttributes.put(IHOMPOS, new int[] {-10,10});
+
+        commonAttributes.put(AVG_FRAG_LENGTH, 300);
+
+        Map<String,Object> tumorAttributes = Maps.newHashMap();
+
+        tumorAttributes.put(SPLIT_FRAGS, 5);
+        tumorAttributes.put(DISC_FRAGS, 0);
+        tumorAttributes.put(TOTAL_FRAGS, 5);
+        tumorAttributes.put(REF_DEPTH, 101);
+
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, 100, 200, POS_ORIENT, NEG_ORIENT, "",
+                commonAttributes, null, tumorAttributes);
+
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 5);
+        var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 5);
+
+        mVariantFilters.applyFilters(var);
+        assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_DEL));
+    }
     @Test
     public void testMarkGermline()
     {

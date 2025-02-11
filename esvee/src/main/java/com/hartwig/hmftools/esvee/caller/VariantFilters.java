@@ -13,6 +13,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MAX_HOMOLOGY;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MIN_AF;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MIN_STD_DEV_FRAGS;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_LOWER;
@@ -32,6 +36,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_SUPPORT;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL;
+import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_LOW_VAF_DEL;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_LOW_VAF_INV;
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
@@ -91,6 +96,9 @@ public class VariantFilters
 
         if(isShortLowVafInversion(var))
             var.addFilter(SHORT_LOW_VAF_INV);
+
+        if(isShortLowVafDeletion(var))
+            var.addFilter(SHORT_LOW_VAF_DEL);
 
         if(failsStrandBias(var))
             var.addFilter(STRAND_BIAS);
@@ -260,24 +268,26 @@ public class VariantFilters
         if(var.isLineSite())
             return false;
 
-        int svAvgLength = var.averageFragmentLength();
+        return fragmentLevelBelowStatisticalLimit(var.averageFragmentLength(), var.splitFragmentCount());
+    }
 
+    private boolean fragmentLevelBelowStatisticalLimit(int svAvgLength, int splitFragCount)
+    {
         if(svAvgLength == 0) // for now treat is this as a pass
             return false;
 
         int medianLength = mFragmentLengthBounds.Median;
         double stdDeviation = mFragmentLengthBounds.StdDeviation;
 
-        int totalSplitFrags = var.splitFragmentCount();
         double lowerStdDevThreshold = MIN_AVG_FRAG_STD_DEV_FACTOR * stdDeviation;
-        double lowerLengthLimit = medianLength - max(MIN_AVG_FRAG_FACTOR * stdDeviation / sqrt(totalSplitFrags), lowerStdDevThreshold);
+        double lowerLengthLimit = medianLength - max(MIN_AVG_FRAG_FACTOR * stdDeviation / sqrt(splitFragCount), lowerStdDevThreshold);
 
         return svAvgLength < lowerLengthLimit;
     }
 
     private boolean isShortLowVafInversion(final Variant var)
     {
-        // FILTER if [TYPE=INV, AF<0.05, LEN<2500
+        // filter INVs if adjusted AF is low and length < 3K
         if(var.type() != INV)
             return false;
 
@@ -303,6 +313,27 @@ public class VariantFilters
         return !anySamplesAboveAfThreshold(var, vafThreshold);
     }
 
+    private boolean isShortLowVafDeletion(final Variant var)
+    {
+        // filter DELs if AF is < 0.05> and length < 3K
+        if(var.type() != DEL)
+            return false;
+
+        if(var.adjustedLength() > DEL_ARTEFACT_SHORT_LENGTH)
+            return false;
+
+        int inexactHomology = var.breakendStart().InexactHomology.length();
+
+        if(inexactHomology < DEL_ARTEFACT_MAX_HOMOLOGY)
+            return false;
+
+        int totalSplitFrags = max(var.splitFragmentCount(), DEL_ARTEFACT_MIN_STD_DEV_FRAGS);
+
+        if(!fragmentLevelBelowStatisticalLimit(var.averageFragmentLength(), totalSplitFrags))
+            return false;
+
+        return !anySamplesAboveAfThreshold(var, DEL_ARTEFACT_MIN_AF);
+    }
     private boolean failsStrandBias(final Variant var)
     {
         Breakend breakend = var.breakendStart();
