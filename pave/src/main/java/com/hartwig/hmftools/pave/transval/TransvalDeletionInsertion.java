@@ -21,7 +21,7 @@ public class TransvalDeletionInsertion extends  TransvalVariant
             @NotNull final String deletedBases,
             @NotNull final Set<TransvalHotspot> hotspots)
     {
-        super(transcript, chromosome, position, spansMultipleExons, referenceNucleotides, hotspots);
+        super(transcript, chromosome, spansMultipleExons, hotspots);
         Preconditions.checkArgument(referenceNucleotides.contains(deletedBases));
         DeletedBases = deletedBases;
     }

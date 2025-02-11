@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.pave.transval;
 
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -24,7 +25,7 @@ class Deletion extends ProteinVariant
     }
 
     @VisibleForTesting
-    List<ChangeContext> fittingChanges(RefGenomeInterface genome)
+    Collection<ChangeContext> fittingChanges(RefGenomeInterface genome)
     {
         ChangeContext changeContext = getChangeContext(genome);
         AminoAcidSequence targetSequence = changeContext.applyDeletion();
@@ -34,41 +35,36 @@ class Deletion extends ProteinVariant
             maxMoves = changeContext.ContainingExon.inExonLength() - changeContext.FinishPositionInExon - 1;
         }
         maxMoves = Math.min(maxMoves, 32);
-        List<ChangeContext> result = new ArrayList<>();
+        Map<String,ChangeContext> results = new HashMap<>();
         for (int i=0; i<=maxMoves; i++)
         {
             int excisionStart = Transcript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
             int excisionEnd = excisionStart + RefLength * 3 - 1;
             ChangeContext change = new ChangeContext(changeContext.ContainingExon, excisionStart, excisionEnd, Transcript.posStrand(), 0);
+            String residualBases = change.exonBasesAfterDeletion();
             AminoAcidSequence effect = change.applyDeletion();
             if(targetSequence.equals(effect))
             {
-                result.add(change);
+                results.put(residualBases, change);
             }
         }
-        return result;
+        return results.values();
     }
 
     @Override
     TransvalVariant calculateVariant(final RefGenomeInterface refGenome)
     {
-        List<ChangeContext> changes = fittingChanges(refGenome);
+        Collection<ChangeContext> changes = fittingChanges(refGenome);
         if(changes.isEmpty())
         {
             return null;
         }
-//        ChangeContext leftMostChange = Transcript.posStrand() ? changes.get(changes.size() - 1) : changes.get(0); CATGTATGAAGTACAGTGGAA
-        ChangeContext leftMostChange = changes.get(changes.size() - 1);
-
-        TransvalHotspot changeHotspot = leftMostChange.hotspot(Gene.Chromosome);
         Set<TransvalHotspot> hotspots = new HashSet<>();
-        hotspots.add(leftMostChange.hotspot(Gene.Chromosome));
+        changes.forEach(change -> hotspots.add(change.hotspot(Gene.Chromosome)));
         return new TransvalVariant(
                 Transcript,
                 Gene.Chromosome,
-                changeHotspot.mPosition,
                 false,
-                changeHotspot.Ref,
                 hotspots);
     }
 }

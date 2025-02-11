@@ -111,6 +111,20 @@ public class VariationParserTest extends TransvalTestBase
         checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A750delinsAlaPralineLeu","Not a valid amino acid identifier: Praline");
     }
 
+    @Test
+    public void parseDuplicationWithGene()
+    {
+        Duplication dup = variationParser.parseDuplication("PIK3R1", "Y452dup");
+        Assert.assertEquals("PIK3R1", dup.Gene.GeneName);
+        Assert.assertEquals(452, dup.positionOfFirstAlteredCodon());
+        Assert.assertEquals(1, dup.RefLength);
+
+        Duplication dup2 = variationParser.parseDuplication("PIK3R1", "E458_Y463dup");
+        Assert.assertEquals("PIK3R1", dup2.Gene.GeneName);
+        Assert.assertEquals(458, dup2.positionOfFirstAlteredCodon());
+        Assert.assertEquals(6, dup2.RefLength);
+    }
+
     private void checkSaavInputResultsInErrorWithMessage(String input, String expectedMessage)
     {
         String receivedMessage = null;

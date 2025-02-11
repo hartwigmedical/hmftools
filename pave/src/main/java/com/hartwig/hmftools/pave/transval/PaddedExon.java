@@ -58,6 +58,16 @@ public class PaddedExon
         return exonBases.substring(start, end + 1);
     }
 
+    public String baseImmediatelyBefore(int position)
+    {
+        Preconditions.checkArgument(position >= 0);
+        if(position == 0)
+        {
+            return BasesOfFirstCodonInPreviousExon.substring(BasesOfFirstCodonInPreviousExon.length() - 1);
+        }
+        return exonBases.substring(position - 1, position);
+    }
+
     public SplitCodonSequence getSplitSequenceForCodons(int startCodon, int count, final boolean isPositiveStrand)
     {
         Preconditions.checkArgument(startCodon >= 0);

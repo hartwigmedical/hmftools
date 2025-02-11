@@ -27,7 +27,7 @@ public class TransvalSnvMnv extends TransvalVariant
             @NotNull final String referenceCodon,
             @NotNull final List<String> alternateCodons)
     {
-        super(transcript, chromosome, position, spansMultipleExons, referenceNucleotides, hotspots);
+        super(transcript, chromosome, spansMultipleExons, hotspots);
         AlternateNucleotides = alternateNucleotides;
         ReferenceCodon = referenceCodon;
         AlternateCodons = alternateCodons;

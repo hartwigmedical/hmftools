@@ -73,6 +73,7 @@ public class ServeDataTest
             final int position = hotspot.get("position").getAsInt();
 //                        if (gene.equals("FGFR1") && annotation.equals("P283T"))
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
+            if(!annotation.contains("dup")) continue;
             if(!geneToItems.containsKey(gene))
             {
                 geneToItems.put(gene, new HashSet<>());
@@ -103,7 +104,7 @@ public class ServeDataTest
         return jsonObject.get(key).getAsString();
     }
 
-//    @Test
+    @Test
     public void check()
     {
         List<StatsForGene> results = new ArrayList<>();
@@ -165,37 +166,6 @@ public class ServeDataTest
         ProteinVariant variant = transval.variationParser().parseExpressionForGene("ALK", "D1276_R1279delinsE");
         TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
-
-        /*
-NILEDDNEEEIESADQEEEAHPEFKFGNELSADDLGHKEAVANSVKKGLVTVEDEQAW MASYKYVG ATTN
-
-
-        UTAF1
-        SMARCB1
-        FGFR1
-        FGFR2
-
-U2AF1 A123V: Transvar uses ENST00000619610, which is not in 38
-U2AF1 A26V: Transvar uses ENST00000619610, which is not in 38
-U2AF1 D14G: Transvar uses ENST00000619610, which is not in 38
-
-SMARCB1 L266A: Transvar uses ENST00000407422 non-canonical, we use ENST00000644036 canonical. Hotspots same apart from positions.
-SMARCB1 R155H: Transvar uses ENST00000407082 non-canonical and in our table only has 147 amino acids, we use ENST00000644036 canonical
-SMARCB1 S274F: Transvar uses ENST00000407082 non-canonical and in our table only has 147 amino acids, we use ENST00000644036 canonical
-
-FGFR1 M546V: Transvar uses ENST00000425967 non-canonical and does not have M at position 546 (in our table), we use ENST00000326324 non canonical.
-Note that the canonical transcript, ENST00000447712, does not have V at position 546.
-FGFR1 P283T: Hotspots in json file do not match current Transvar output.
-Current Transvar output matches ours.
-FGFR1 V592M: Transvar uses ENST00000425967 non-canonical and does not match ref. We use ENST00000326324.
-
-FGFR2 I548V: Hotspots in json file do not match current Transvar output.
-Current Transvar output matches ours.
-FGFR2 K659E: Hotspots in json file do not match current Transvar output.
-Current Transvar output matches ours.
-
-         */
-
     }
 
     private StatsForGene checkItemsForGene(String gene)
@@ -214,6 +184,10 @@ Current Transvar output matches ours.
         {
             ProteinAnnotationCollator collator = collators.get(annotation);
             VariantStatus comparison = checkVariant(collator);
+            if(collator.mGene.contains("PIK3R1") && collator.mAnnotation.contains("Y"))
+            {
+                p(annotation);
+            }
             if(comparison.parsedOk())
             {
                 if(comparison.hasProcessingError())

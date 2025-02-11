@@ -36,11 +36,24 @@ public class ChangeContext
         return ContainingExon.toStrandCoordinates(FinishPositionInExon + 1, IsPositiveStrand);
     }
 
+    String affectedBases()
+    {
+        return ContainingExon.basesBetween(StartPositionInExon, FinishPositionInExon);
+    }
+
+    String baseImmediatelyBeforeChange()
+    {
+        return ContainingExon.baseImmediatelyBefore(StartPositionInExon);
+    }
+
     AminoAcidSequence applyDeletion()
     {
-        String exonBasesAfterDeletion =
-                ContainingExon.baseSequenceWithDeletionApplied(StartPositionInExon, FinishPositionInExon, IsPositiveStrand);
-        return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion);
+        return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion());
+    }
+
+    String exonBasesAfterDeletion()
+    {
+        return ContainingExon.baseSequenceWithDeletionApplied(StartPositionInExon, FinishPositionInExon, IsPositiveStrand);
     }
 
     public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged, boolean isPositiveStrand)
@@ -53,18 +66,20 @@ public class ChangeContext
 
     public TransvalHotspot hotspot(String chromosome)
     {
-        return new TransvalHotspot(affectedBases(), "", chromosome, positionOfChangeStartInStrand());
+        String deleted = refBases();
+        String altBases = deleted.substring(0,  1);
+        return new TransvalHotspot(deleted, altBases, chromosome, positionOfChangeStartInStrand() - 1);
     }
 
-    public String affectedBases()
+    public String refBases()
     {
         if(IsPositiveStrand)
         {
-            return ContainingExon.basesBetween(StartPositionInExon, FinishPositionInExon);
+            return ContainingExon.basesBetween(StartPositionInExon - 1, FinishPositionInExon);
         }
-        int actualEnd = ContainingExon.inExonLength() - StartPositionInExon - 1;
-        int actualStart = ContainingExon.inExonLength() - FinishPositionInExon - 1;
-        return ContainingExon.basesBetween(actualStart, actualEnd);
+        int excisionEnd = ContainingExon.inExonLength() - StartPositionInExon - 1;
+        int excisionStart = ContainingExon.inExonLength() - FinishPositionInExon - 1;
+        return ContainingExon.basesBetween(excisionStart - 1, excisionEnd);
     }
 
     @Override

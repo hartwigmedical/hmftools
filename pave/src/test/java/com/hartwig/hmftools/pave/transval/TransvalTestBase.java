@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -73,5 +76,22 @@ class TransvalTestBase
     protected AminoAcidSequence aaSeq(String sequence)
     {
         return AminoAcidSequence.parse(sequence);
+    }
+
+    protected void checkSingleHotspot(TransvalVariant variant, String ref, String alt, String chr, int position)
+    {
+        Set<TransvalHotspot> hotspots = variant.hotspots();
+        assertEquals(1, hotspots.size());
+        assertTrue(hotspots.contains(hotspot(ref, alt, chr, position)));
+    }
+
+    protected void checkHotspots(TransvalVariant variant, TransvalHotspot... expected)
+    {
+        Set<TransvalHotspot> hotspots = variant.hotspots();
+        assertEquals(expected.length, hotspots.size());
+        for(TransvalHotspot hotspot : expected)
+        {
+            assertTrue(hotspots.contains(hotspot));
+        }
     }
 }

@@ -41,7 +41,8 @@ public class TestDataCreator
                 "EGFR,",
                 "RNU1-82P,",
                 "ZYX,",
-                "PIK3R1"
+                "PIK3R1",
+                "ARID1A"
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneNames);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
@@ -54,7 +55,8 @@ public class TestDataCreator
                 "ENSG00000146648", // EGFR
                 "ENSG00000212153", // RNU-82P
                 "ENSG00000159840", // ZYX
-                "ENSG00000145675" // PIK3R1
+                "ENSG00000145675", // PIK3R1
+                "ENSG00000117713" // ARID1A
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
 
@@ -112,11 +114,11 @@ public class TestDataCreator
         System.out.println(chromosomeLengths.size());
         int chrLength = chromosomeLengths.get("chr5");
         System.out.println(chrLength);
-        int start = 68_000_000; //
+        int start = 26_000_000; //
         int end = start + 1_000_000;
-        var chr = refGenomeSource.getBaseString("chr5", start, end);
+        var chr = refGenomeSource.getBaseString("chr1", start, end);
 //        System.out.println(chr.substring(10000, 10100));
-        File chrFile = new File(outputDir, "chr5_part_68.txt");
+        File chrFile = new File(outputDir, "chr1_part_2.txt");
         Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
     }
 

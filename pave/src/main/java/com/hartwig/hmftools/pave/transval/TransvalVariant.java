@@ -13,25 +13,24 @@ public class TransvalVariant
     public final TranscriptData Transcript;
     @NotNull
     public final String Chromosome;
-    public final int Position;
+//    public final int Position;
     public final boolean SpansMultipleExons;
-    @NotNull
-    public final String ReferenceNucleotides;
+//    @NotNull
+//    public final String ReferenceNucleotides;
     @NotNull
     protected final Set<TransvalHotspot> Hotspots;
 
     public TransvalVariant(
             @NotNull final TranscriptData transcript,
             @NotNull final String chromosome,
-            final int position,
             final boolean spansMultipleExons,
-            @NotNull final String referenceNucleotides, @NotNull final Set<TransvalHotspot> hotspots)
+            @NotNull final Set<TransvalHotspot> hotspots)
     {
         this.Transcript = transcript;
         Chromosome = RefGenomeFunctions.stripChrPrefix(chromosome);
-        Position = position;
+//        Position = position;
         SpansMultipleExons = spansMultipleExons;
-        ReferenceNucleotides = referenceNucleotides;
+//        ReferenceNucleotides = referenceNucleotides;
         Hotspots = hotspots;
     }
 

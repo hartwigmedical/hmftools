@@ -12,6 +12,20 @@ public class PaddedExonTest extends TransvalTestBase
     PaddedExon ec6 = new PaddedExon("TA", "AT", "TTAACCGG", 100, "CATG");
 
     @Test
+    public void baseImmediatelyBeforeTest()
+    {
+        assertEquals("T", ec.baseImmediatelyBefore(1));
+        assertEquals("T", ec.baseImmediatelyBefore(3));
+        assertEquals("G", ec.baseImmediatelyBefore(11));
+
+        assertEquals("A", ec2.baseImmediatelyBefore(0));
+        assertEquals("T", ec2.baseImmediatelyBefore(1));
+
+        assertEquals("A", ec6.baseImmediatelyBefore(0));
+        assertEquals("T", ec6.baseImmediatelyBefore(1));
+    }
+
+    @Test
     public void basesBetweenTest()
     {
         assertEquals("T", ec.basesBetween(0,0));

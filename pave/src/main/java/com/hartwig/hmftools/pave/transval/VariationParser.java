@@ -100,10 +100,29 @@ class VariationParser
         return buildDeletion(description, geneData);
     }
 
+    public Duplication parseDuplication(@NotNull String gene, @NotNull String variantDescription)
+    {
+        GeneData geneData = lookupGene(gene);
+        String rangeDescription = variantDescription.substring(0, variantDescription.length() - 3);
+        AminoAcidRange refRange = getAminoAcidRange(variantDescription, rangeDescription);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
+        return new Duplication(geneData, transcriptData, aminoAcidsSequence, refRange);
+    }
+
     @NotNull
     private Deletion buildDeletion(final String description, final GeneData geneData)
     {
         String rangeDescription = description.substring(0, description.length() - 3);
+        AminoAcidRange refRange = getAminoAcidRange(description, rangeDescription);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
+        return new Deletion(geneData, transcriptData, aminoAcidsSequence, refRange);
+    }
+
+    @NotNull
+    private static AminoAcidRange getAminoAcidRange(final String description, final String rangeDescription)
+    {
         AminoAcidRange refRange;
         if(rangeDescription.contains("_"))
         {
@@ -112,9 +131,7 @@ class VariationParser
             AminoAcidSpecification refStart = AminoAcidSpecification.parse(description);
             refRange = new AminoAcidRange(refStart, refStart);
         }
-        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
-        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
-        return new Deletion(geneData, transcriptData, aminoAcidsSequence, refRange);
+        return refRange;
     }
 
     @NotNull
