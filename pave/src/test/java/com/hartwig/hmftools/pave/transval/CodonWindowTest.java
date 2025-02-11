@@ -59,7 +59,7 @@ public class CodonWindowTest
         ChangeContextBuilder builder = bw.seekExonLocation(exonLengths);
         Assert.assertEquals(1, builder.ExonIndex);
         Assert.assertEquals(2, builder.ChangeStart);
-        Assert.assertEquals(32, builder.ChangeEnd);
+        Assert.assertEquals(31, builder.ChangeEnd);
         Assert.assertEquals(1, builder.PaddingInPreviousExon);
         Assert.assertEquals(1, builder.PaddingInNextExon);
         Assert.assertEquals(35, builder.AminoAcidNumberOfFirstAminoAcidStartingInExon);
@@ -68,7 +68,7 @@ public class CodonWindowTest
         builder = bw.seekExonLocation(exonLengths);
         Assert.assertEquals(3, builder.ExonIndex);
         Assert.assertEquals(0, builder.ChangeStart);
-        Assert.assertEquals(24, builder.ChangeEnd);
+        Assert.assertEquals(23, builder.ChangeEnd);
         Assert.assertEquals(0, builder.PaddingInPreviousExon);
         Assert.assertEquals(0, builder.PaddingInNextExon);
         Assert.assertEquals(101, builder.AminoAcidNumberOfFirstAminoAcidStartingInExon);

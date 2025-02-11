@@ -32,7 +32,7 @@ public class ChangeContextBuilder
     }
 
     @NotNull
-    ChangeContext build(String chromosome, RefGenomeInterface genome, List<ChrBaseRegion> codingRegions)
+    ChangeContext build(String chromosome, RefGenomeInterface genome, List<ChrBaseRegion> codingRegions, boolean isPositiveStrand)
     {
         ChrBaseRegion exon = codingRegions.get(ExonIndex);
         String exonBases = genome.getBaseString(chromosome, exon.start(), exon.end());
@@ -55,6 +55,6 @@ public class ChangeContextBuilder
         }
 
         PaddedExon containingExon = new PaddedExon(basesInPreviousExon, basesInNextExon, exonBases, exon.start(), prefix);
-        return new ChangeContext(containingExon, ChangeStart, ChangeEnd, true, AminoAcidNumberOfFirstAminoAcidStartingInExon);
+        return new ChangeContext(containingExon, ChangeStart, ChangeEnd, isPositiveStrand, AminoAcidNumberOfFirstAminoAcidStartingInExon);
     }
 }

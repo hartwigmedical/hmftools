@@ -11,8 +11,8 @@ public class SplitCodonSequenceTest extends TransvalTestBase
     @Test
     public void couldBeDeletionInsertionTest()
     {
-        assertTrue(seq("TGC", null).couldBeDeletionInsertion());
-        assertTrue(seq("TGCAAT", null).couldBeDeletionInsertion());
+        assertTrue(seq("TGC", "").couldBeDeletionInsertion());
+        assertTrue(seq("TGCAAT", "").couldBeDeletionInsertion());
         assertTrue(seq("TGCAA", "T").couldBeDeletionInsertion());
         assertTrue(seq("TGCA", "AT").couldBeDeletionInsertion());
         assertFalse(seq("TGC", "AAT").couldBeDeletionInsertion());
@@ -23,7 +23,7 @@ public class SplitCodonSequenceTest extends TransvalTestBase
     @Test
     public void retainedPrefixTest()
     {
-        assertEquals("", seq("TTTAAACCC", null).retainedPrefix());
+        assertEquals("", seq("TTTAAACCC", "").retainedPrefix());
         assertEquals("", seq("TTTAAACC", "C").retainedPrefix());
         assertEquals("", seq("TTTAAAC", "CC").retainedPrefix());
         assertEquals("T", seq("T", "TTAAACCC").retainedPrefix());
@@ -33,7 +33,7 @@ public class SplitCodonSequenceTest extends TransvalTestBase
     @Test
     public void retainedSuffixTest()
     {
-        assertEquals("",  seq("TTTAAACCC", null).retainedSuffix());
+        assertEquals("",  seq("TTTAAACCC", "").retainedSuffix());
         assertEquals("C", seq("TTTAAACC", "C").retainedSuffix());
         assertEquals("CC", seq("TTTAAAC", "CC").retainedSuffix());
         assertEquals("", seq("T", "TTAAACCC").retainedSuffix());
@@ -43,7 +43,7 @@ public class SplitCodonSequenceTest extends TransvalTestBase
     @Test
     public void segmentThatIsModifiedTest()
     {
-        assertEquals("TTTAAACCC", seq("TTTAAACCC", null).segmentThatIsModified());
+        assertEquals("TTTAAACCC", seq("TTTAAACCC", "").segmentThatIsModified());
         assertEquals("TTTAAACC", seq("TTTAAACC", "C").segmentThatIsModified());
         assertEquals("TTTAAAC", seq("TTTAAAC", "CC").segmentThatIsModified());
         assertEquals("TAAACCC", seq("TT", "TAAACCC").segmentThatIsModified());
@@ -53,7 +53,7 @@ public class SplitCodonSequenceTest extends TransvalTestBase
     @Test
     public void completeSequenceTest()
     {
-        assertEquals("TTTAAACCC", seq("TTTAAACCC", null).completeSequence());
+        assertEquals("TTTAAACCC", seq("TTTAAACCC", "").completeSequence());
         assertEquals("TTTAAACCC", seq("TTTAAA", "CCC").completeSequence());
         assertEquals("TTTAAACCC", seq("TTTAA", "ACCC").completeSequence());
     }
@@ -61,7 +61,7 @@ public class SplitCodonSequenceTest extends TransvalTestBase
     @Test
     public void spansTwoExonsTest()
     {
-        assertFalse(seq("TTTAAACCC", null).spansTwoExons());
+        assertFalse(seq("TTTAAACCC", "").spansTwoExons());
         assertTrue(seq("TTTAAA", "CCC").spansTwoExons());
     }
 }

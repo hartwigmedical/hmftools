@@ -9,76 +9,71 @@ import org.jetbrains.annotations.NotNull;
 public class ChangeContext
 {
     @NotNull
-    final PaddedExon containingExon;
-    final int startPositionInExon;
-    final int finishPositionInExon;
+    final PaddedExon ContainingExon;
+    final int StartPositionInExon;
+    final int FinishPositionInExon;
     final boolean IsPositiveStrand;
-    private final int aminoAcidNumberOfFirstAminoAcid;
+    private final int AminoAcidNumberOfFirstAminoAcid;
 
     public ChangeContext(@NotNull final PaddedExon containingExon, final int startPositionInExon,
             final int finishPositionInExon,
             final boolean isPositiveStrand,
             int aminoAcidNumberOfFirstAminoAcidStartingInExon)
     {
-        this.containingExon = containingExon;
-        this.startPositionInExon = startPositionInExon;
-        this.finishPositionInExon = finishPositionInExon;
+        this.ContainingExon = containingExon;
+        this.StartPositionInExon = startPositionInExon;
+        this.FinishPositionInExon = finishPositionInExon;
         this.IsPositiveStrand = isPositiveStrand;
-        aminoAcidNumberOfFirstAminoAcid = aminoAcidNumberOfFirstAminoAcidStartingInExon;
+        AminoAcidNumberOfFirstAminoAcid = aminoAcidNumberOfFirstAminoAcidStartingInExon;
     }
 
     int positionOfChangeStartInStrand()
     {
-        if (IsPositiveStrand) {
-            return containingExon.toStrandCoordinates(startPositionInExon, IsPositiveStrand);
+        if(IsPositiveStrand)
+        {
+            return ContainingExon.toStrandCoordinates(StartPositionInExon, IsPositiveStrand);
         }
-        return containingExon.toStrandCoordinates(finishPositionInExon + 1, IsPositiveStrand);
+        return ContainingExon.toStrandCoordinates(FinishPositionInExon + 1, IsPositiveStrand);
     }
 
     AminoAcidSequence applyDeletion()
     {
-        String exonBasesAfterDeletion = containingExon.baseSequenceWithDeletionApplied(startPositionInExon, finishPositionInExon, IsPositiveStrand);
+        String exonBasesAfterDeletion =
+                ContainingExon.baseSequenceWithDeletionApplied(StartPositionInExon, FinishPositionInExon, IsPositiveStrand);
         return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion);
     }
 
-    public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged)
+    public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged, boolean isPositiveStrand)
     {
         Preconditions.checkArgument(firstAminoAcid >= 0);
         Preconditions.checkArgument(numberOfAminoAcidsChanged >= 0);
-        int codonNumber = firstAminoAcid - aminoAcidNumberOfFirstAminoAcid + 1;
-        return containingExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged);
+        int codonNumber = firstAminoAcid - AminoAcidNumberOfFirstAminoAcid + 1;
+        return ContainingExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged, isPositiveStrand);
     }
 
     public TransvalHotspot hotspot(String chromosome)
     {
-//        if (IsPositiveStrand)
-//        {
-            return new TransvalHotspot(affectedBases(), "", chromosome, positionOfChangeStartInStrand());
-//        }
-//        int location = positionOfChangeStartInStrand();
-//        return new TransvalHotspot(affectedBases(), "", chromosome, location);
+        return new TransvalHotspot(affectedBases(), "", chromosome, positionOfChangeStartInStrand());
     }
 
     public String affectedBases()
     {
-        if (IsPositiveStrand)
+        if(IsPositiveStrand)
         {
-            return containingExon.basesBetween(startPositionInExon, finishPositionInExon);
+            return ContainingExon.basesBetween(StartPositionInExon, FinishPositionInExon);
         }
-        int actualEnd = containingExon.inExonLength() - startPositionInExon - 1;
-        int actualStart = containingExon.inExonLength() - finishPositionInExon - 1;
-        final String positiveStrandBases = containingExon.basesBetween(actualStart, actualEnd);
-//        return Nucleotides.reverseComplementBases(positiveStrandBases);
-        return positiveStrandBases;
+        int actualEnd = ContainingExon.inExonLength() - StartPositionInExon - 1;
+        int actualStart = ContainingExon.inExonLength() - FinishPositionInExon - 1;
+        return ContainingExon.basesBetween(actualStart, actualEnd);
     }
 
     @Override
     public String toString()
     {
         return "ChangeContext{" +
-                "containingExon=" + containingExon +
-                ", startPositionInExon=" + startPositionInExon +
-                ", finishPositionInExon=" + finishPositionInExon +
+                "containingExon=" + ContainingExon +
+                ", startPositionInExon=" + StartPositionInExon +
+                ", finishPositionInExon=" + FinishPositionInExon +
                 '}';
     }
 
@@ -90,13 +85,13 @@ public class ChangeContext
             return false;
         }
         final ChangeContext that = (ChangeContext) o;
-        return startPositionInExon == that.startPositionInExon && finishPositionInExon == that.finishPositionInExon
-                && Objects.equals(containingExon, that.containingExon);
+        return StartPositionInExon == that.StartPositionInExon && FinishPositionInExon == that.FinishPositionInExon
+                && Objects.equals(ContainingExon, that.ContainingExon);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(containingExon, startPositionInExon, finishPositionInExon);
+        return Objects.hash(ContainingExon, StartPositionInExon, FinishPositionInExon);
     }
 }

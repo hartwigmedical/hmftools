@@ -44,15 +44,15 @@ class CodonWindow
                     // and is mainly in the next exon.
                     if(i == exonLengths.size() - 1)
                     {
-                        throw new IllegalArgumentException("No exon covering window: " + toString());
+                        throw new IllegalArgumentException("No exon covering window: " + this);
                     }
                     int lengthIncludingNextExon = lengthIncludingCurrent + exonLengths.get(i + 1);
                     int paddingInNextExon = overflowIntoNextExon(lengthIncludingNextExon);
-                    int lengthInThisExon = distanceFromWindowStartToCurrentExonEnd;
                     aminoAcidsStartingInPreviousExons = (lengthIncludingCurrent / 3) + 1;
                     return new ChangeContextBuilder(
                             i + 1, 0,
-                            Length - lengthInThisExon - 1, lengthInThisExon, paddingInNextExon, aminoAcidsStartingInPreviousExons);
+                            Length - distanceFromWindowStartToCurrentExonEnd
+                                    - 1, distanceFromWindowStartToCurrentExonEnd, paddingInNextExon, aminoAcidsStartingInPreviousExons);
                 }
                 int paddingInPreviousExon = lengthUpToCurrent % 3;
                 if(paddingInPreviousExon != 0)
@@ -63,27 +63,26 @@ class CodonWindow
                 int distanceOfWindowEndBeyondCurrentExon = End - lengthIncludingCurrent + 1;
                 if(distanceOfWindowEndBeyondCurrentExon > 2)
                 {
-                    throw new IllegalArgumentException("Window end overlaps by more than one codon with next exon: " + toString());
+                    throw new IllegalArgumentException("Window end overlaps by more than one codon with next exon: " + this);
                 }
                 if(distanceOfWindowEndBeyondCurrentExon == 1 || distanceOfWindowEndBeyondCurrentExon == 2)
                 {
-                    int lengthInCurrentExon = lengthIncludingCurrent - Start;
                     return new ChangeContextBuilder(i, Start - lengthUpToCurrent,
-                            exonLength - 1, paddingInPreviousExon, distanceOfWindowEndBeyondCurrentExon,aminoAcidsStartingInPreviousExons);
+                            exonLength - 1, paddingInPreviousExon, distanceOfWindowEndBeyondCurrentExon, aminoAcidsStartingInPreviousExons);
                 }
                 // The window is entirely within this exon.
                 int paddingInNextExon = overflowIntoNextExon(lengthIncludingCurrent);
                 int startIndexInExon = Start - lengthUpToCurrent;
                 int stopIndex = startIndexInExon + Length - 1;
-                return new ChangeContextBuilder(i, startIndexInExon, stopIndex, paddingInPreviousExon, paddingInNextExon,aminoAcidsStartingInPreviousExons);
+                return new ChangeContextBuilder(i, startIndexInExon, stopIndex, paddingInPreviousExon, paddingInNextExon, aminoAcidsStartingInPreviousExons);
             }
         }
-        throw new IllegalArgumentException("No exon covering window: " + toString());
+        throw new IllegalArgumentException("No exon covering window: " + this);
     }
 
     private static int overflowIntoNextExon(int lengthToEndOfCurrentExon)
     {
-        return  (3 - lengthToEndOfCurrentExon % 3) % 3;
+        return (3 - lengthToEndOfCurrentExon % 3) % 3;
     }
 
     @Override

@@ -26,21 +26,20 @@ class Deletion extends ProteinVariant
     @VisibleForTesting
     List<ChangeContext> fittingChanges(RefGenomeInterface genome)
     {
-        ChangeContext changeContext1 = getChangeContext(genome);
-        ChangeContext changeContext = getChangeContext2(genome);
+        ChangeContext changeContext = getChangeContext(genome);
         AminoAcidSequence targetSequence = changeContext.applyDeletion();
-        int maxMoves = changeContext.startPositionInExon;
+        int maxMoves = changeContext.StartPositionInExon;
         if (Transcript.negStrand())
         {
-            maxMoves = changeContext.containingExon.inExonLength() - changeContext.finishPositionInExon - 1;
+            maxMoves = changeContext.ContainingExon.inExonLength() - changeContext.FinishPositionInExon - 1;
         }
         maxMoves = Math.min(maxMoves, 32);
         List<ChangeContext> result = new ArrayList<>();
         for (int i=0; i<=maxMoves; i++)
         {
-            int excisionStart = Transcript.posStrand() ? changeContext.startPositionInExon - i : changeContext.startPositionInExon + i;
+            int excisionStart = Transcript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
             int excisionEnd = excisionStart + RefLength * 3 - 1;
-            ChangeContext change = new ChangeContext(changeContext.containingExon, excisionStart, excisionEnd, Transcript.posStrand(), 0);
+            ChangeContext change = new ChangeContext(changeContext.ContainingExon, excisionStart, excisionEnd, Transcript.posStrand(), 0);
             AminoAcidSequence effect = change.applyDeletion();
             if(targetSequence.equals(effect))
             {

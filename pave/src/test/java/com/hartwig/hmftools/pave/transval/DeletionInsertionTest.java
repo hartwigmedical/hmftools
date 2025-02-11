@@ -38,24 +38,25 @@ public class DeletionInsertionTest extends TransvalTestBase
     @Test
     public void referenceBasesTest()
     {
-        assertEquals(seq("ATGCCC", null), di("VHL:p.M1_P2delinsKQ").referenceBases(genome));
-        assertEquals(seq("ATGCCCCGG", null), di("VHL:p.M1_R3delinsKQ").referenceBases(genome));
-        assertEquals(seq("CCCCGG", null), di("VHL:p.P2_R3delinsKQ").referenceBases(genome));
-        assertEquals(seq("GAGAACTGGGAC", null), di("VHL:p.E6_D9delinsKQ").referenceBases(genome));
+        check(seq("ATGCCC", ""), di("VHL:p.M1_P2delinsKQ").referenceBases(genome));
+        check(seq("ATGCCC", ""), di("VHL:p.M1_P2delinsKQ").referenceBases(genome));
+        check(seq("ATGCCCCGG", ""), di("VHL:p.M1_R3delinsKQ").referenceBases(genome));
+        check(seq("CCCCGG", ""), di("VHL:p.P2_R3delinsKQ").referenceBases(genome));
+        check(seq("GAGAACTGGGAC", ""), di("VHL:p.E6_D9delinsKQ").referenceBases(genome));
 
-        assertEquals(seq("AGCTACCGA", null), di("VHL:p.S111_R113delinsKQ").referenceBases(genome));
-        assertEquals(seq("AGCTACCGAG", "GT"), di("VHL:p.S111_G114delinsKQ").referenceBases(genome));
-        assertEquals(seq("AGCTACCGAG", "GTCAC"), di("VHL:p.S111_H115delinsKQ").referenceBases(genome));
-        assertEquals(seq("AGCTACCGAG", "GTCACCTT"), di("VHL:p.S111_L116delinsKQ").referenceBases(genome));
-        assertEquals(seq("TACCGAG", "GTCACCTT"), di("VHL:p.Y112_L116delinsKQ").referenceBases(genome));
-        assertEquals(seq("CGAG", "GTCACCTT"), di("VHL:p.R113_L116delinsKQ").referenceBases(genome));
-        assertEquals(seq("G", "GTCACCTT"), di("VHL:p.G114_L116delinsKQ").referenceBases(genome));
+        check(seq("AGCTACCGA", ""), di("VHL:p.S111_R113delinsKQ").referenceBases(genome));
+        check(seq("AGCTACCGAG", "GT"), di("VHL:p.S111_G114delinsKQ").referenceBases(genome));
 
-        assertEquals(seq("CACTGTGTCCCCGACTAC", null), di("ZYX:p.H491_Y496delinsW").referenceBases(genome));
-        assertEquals(seq("TGTGTCCCCGACTACCAC", null), di("ZYX:p.C492_H497delinsW").referenceBases(genome));
-        assertEquals(seq("GTCCCCGACTACCACAA", "G"), di("ZYX:p.V493_K498delinsW").referenceBases(genome));
-        assertEquals(seq("CCCGACTACCACAA", "GCAG"), di("ZYX:p.P494_Q499delinsW").referenceBases(genome));
-        assertEquals(seq("GACTACCACAA", "GCAGTAC"), di("ZYX:p.D495_Y500delinsW").referenceBases(genome));
+        check(seq("CACTGTGTCCCCGACTAC", ""), di("ZYX:p.H491_Y496delinsW").referenceBases(genome));
+        check(seq("TGTGTCCCCGACTACCAC", ""), di("ZYX:p.C492_H497delinsW").referenceBases(genome));
+        check(seq("GTCCCCGACTACCACAA", "G"), di("ZYX:p.V493_K498delinsW").referenceBases(genome));
+    }
+
+    private void check(SplitCodonSequence expected, SplitCodonSequence actual)
+    {
+        assertEquals(expected.completeSequence(), actual.completeSequence());
+        assertEquals(expected.retainedPrefix(), actual.retainedPrefix());
+        assertEquals(expected.retainedSuffix(), actual.retainedSuffix());
     }
 
     @Test

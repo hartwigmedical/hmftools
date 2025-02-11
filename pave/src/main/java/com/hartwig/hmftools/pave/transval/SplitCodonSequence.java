@@ -7,7 +7,6 @@ import java.util.Objects;
 import com.google.common.base.Preconditions;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * A sequence of bases that is subject to an insertion and deletion
@@ -21,16 +20,16 @@ public class SplitCodonSequence
     @NotNull
     private final String Left;
 
-    @Nullable
+    @NotNull
     private final String Right;
 
     private final int PositionOfChange;
 
-    public SplitCodonSequence(@NotNull final String left, @Nullable final String right, final int positionOfChange)
+    public SplitCodonSequence(@NotNull final String left, @NotNull final String right, final int positionOfChange)
     {
         PositionOfChange = positionOfChange;
         Preconditions.checkArgument(isNucleotideSequence(left));
-        if(right != null)
+        if(!right.isBlank())
         {
             Preconditions.checkArgument(isNucleotideSequence(right));
         }
@@ -47,7 +46,7 @@ public class SplitCodonSequence
     @NotNull
     public String retainedPrefix()
     {
-        if(Right != null && Right.length() > 2)
+        if(Right.length() > 2)
         {
             return Left;
         }
@@ -59,14 +58,14 @@ public class SplitCodonSequence
     {
         if (Left.length() > 2)
         {
-            return Right == null ? "" : Right;
+            return Right;
         }
         return "";
     }
 
     public boolean couldBeDeletionInsertion()
     {
-        if(Right == null)
+        if(Right.isBlank())
         {
             return true;
         }
@@ -76,7 +75,7 @@ public class SplitCodonSequence
     @NotNull
     public String segmentThatIsModified()
     {
-        if(Right == null)
+        if(Right.isBlank())
         {
             return Left;
         }
@@ -85,13 +84,13 @@ public class SplitCodonSequence
 
     public boolean spansTwoExons()
     {
-        return Right != null;
+        return !Right.isBlank();
     }
 
     @NotNull
     public String completeSequence()
     {
-        if(Right == null)
+        if(Right.isBlank())
         {
             return Left;
         }

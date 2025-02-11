@@ -30,35 +30,33 @@ public class PaddedExonTest extends TransvalTestBase
     @Test
     public void codonLocationTest()
     {
-        assertEquals(0, ec.codonLocationInExonBody(1));
-        assertEquals(3, ec.codonLocationInExonBody(2));
-        assertEquals(6, ec.codonLocationInExonBody(3));
-        assertEquals(-1, ec2.codonLocationInExonBody(0));
-        assertEquals(2, ec2.codonLocationInExonBody(1));
-        assertEquals(5, ec2.codonLocationInExonBody(2));
-        assertEquals(-2, ec6.codonLocationInExonBody(0));
-        assertEquals(1, ec6.codonLocationInExonBody(1));
-        assertEquals(4, ec6.codonLocationInExonBody(2));
+        assertEquals(0, ec.codonLocationInExonBody(1, true));
+        assertEquals(3, ec.codonLocationInExonBody(2, true));
+        assertEquals(6, ec.codonLocationInExonBody(3, true));
+        assertEquals(-1, ec2.codonLocationInExonBody(0, true));
+        assertEquals(2, ec2.codonLocationInExonBody(1, true));
+        assertEquals(5, ec2.codonLocationInExonBody(2, true));
+        assertEquals(-2, ec6.codonLocationInExonBody(0, true));
+        assertEquals(1, ec6.codonLocationInExonBody(1, true));
+        assertEquals(4, ec6.codonLocationInExonBody(2, true));
     }
 
     @Test
     public void getSplitSequenceTest()
     {
-        assertEquals(new SplitCodonSequence("GGG", null, 109), ec.getSplitSequenceForCodons(4,1));
-        assertEquals(new SplitCodonSequence("CCC", null, 106), ec.getSplitSequenceForCodons(3,1));
-        assertEquals(new SplitCodonSequence("CCCGGG", null, 106), ec.getSplitSequenceForCodons(3,2));
-        assertEquals(new SplitCodonSequence("TTTAAA", null, 100), ec.getSplitSequenceForCodons(1,2));
-        assertEquals(new SplitCodonSequence("A", "TTTAA", 100), ec2.getSplitSequenceForCodons(0,2));
-        assertEquals(new SplitCodonSequence("TAAACC", null, 102), ec2.getSplitSequenceForCodons(1,2));
-        assertEquals(new SplitCodonSequence("TA", "TTAACCG", 100), ec6.getSplitSequenceForCodons(0,3));
+        assertEquals(new SplitCodonSequence("GGG", "", 109), ec.getSplitSequenceForCodons(4,1, true));
+        assertEquals(new SplitCodonSequence("CCC", "", 106), ec.getSplitSequenceForCodons(3,1, true));
+        assertEquals(new SplitCodonSequence("CCCGGG", "", 106), ec.getSplitSequenceForCodons(3,2, true));
+        assertEquals(new SplitCodonSequence("TTTAAA", "", 100), ec.getSplitSequenceForCodons(1,2, true));
+        assertEquals(new SplitCodonSequence("A", "TTTAA", 100), ec2.getSplitSequenceForCodons(0,2, true));
+        assertEquals(new SplitCodonSequence("TAAACC", "", 102), ec2.getSplitSequenceForCodons(1,2, true));
+        assertEquals(new SplitCodonSequence("TA", "TTAACCG", 100), ec6.getSplitSequenceForCodons(0,3, true));
     }
 
     @Test
     public void splitAtEndTest()
     {
-        assertEquals(new SplitCodonSequence("GG", "A", 109), ec3.getSplitSequenceForCodons(4,1));
-        assertEquals(new SplitCodonSequence("CCGGG", "A", 106), ec3.getSplitSequenceForCodons(3,2));
-
+        assertEquals(new SplitCodonSequence("GG", "A", 109), ec3.getSplitSequenceForCodons(4,1, true));
+        assertEquals(new SplitCodonSequence("CCGGG", "A", 106), ec3.getSplitSequenceForCodons(3,2, true));
     }
-
 }
