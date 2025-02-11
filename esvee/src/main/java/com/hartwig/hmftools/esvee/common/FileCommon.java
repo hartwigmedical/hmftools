@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.BAM_FILE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_DISC_STATS_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
@@ -24,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.Nullable;
@@ -62,6 +65,22 @@ public final class FileCommon
     public static final String FILE_NAME_DELIM = ".";
 
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
+
+    public static final String CFG_LOW_BASE_QUAL = "low_base_qual";
+
+    public static void registerCommonConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addInteger(CFG_LOW_BASE_QUAL, "Level below which a base is consider low-quality",
+                DEFAULT_LOW_BASE_QUAL_THRESHOLD);
+
+        SequencingType.registerConfig(configBuilder);
+    }
+
+    public static void setLowBaseQualThreshold(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasValue(CFG_LOW_BASE_QUAL))
+            LOW_BASE_QUAL_THRESHOLD = configBuilder.getInteger(CFG_LOW_BASE_QUAL);
+    }
 
     public static List<String> parseSampleBamLists(final ConfigBuilder configBuilder, final String configItem)
     {

@@ -305,9 +305,6 @@ public class VariantFilters
 
     private boolean failsStrandBias(final Variant var)
     {
-        if(!var.isSgl())
-            return false;
-
         Breakend breakend = var.breakendStart();
 
         boolean hasPassing = false;

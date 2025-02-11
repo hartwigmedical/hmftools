@@ -29,6 +29,8 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
+import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
+import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
@@ -77,7 +79,6 @@ public class PrepConfig
     public final BlacklistLocations Blacklist;
 
     public final int PartitionSize;
-    public final boolean CalcFragmentLength;
     public final ValidationStringency BamStringency;
 
     public final String OutputDir;
@@ -115,7 +116,6 @@ public class PrepConfig
     private static final String WRITE_TYPES = "write_types";
 
     public static final String READ_LENGTH = "read_length";
-    private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
     private static final String PARTITION_SIZE = "partition_size";
 
     private static final String TRACK_REMOTES = "track_remotes";
@@ -166,12 +166,12 @@ public class PrepConfig
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+        setLowBaseQualThreshold(configBuilder);
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
 
         WriteTypes = Sets.newHashSet(parseConfigStr(configBuilder.getValue(WRITE_TYPES)));
 
-        CalcFragmentLength = configBuilder.hasFlag(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
         BamStringency = BamUtils.validationStringency(configBuilder);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
@@ -280,13 +280,11 @@ public class PrepConfig
                 MIN_MAP_QUALITY,
                 MIN_INSERT_ALIGNMENT_OVERLAP,
                 MIN_SOFT_CLIP_LENGTH,
-                LOW_BASE_QUAL_THRESHOLD,
                 MIN_SOFT_CLIP_HIGH_QUAL_PERC,
                 MIN_SUPPORTING_READ_DISTANCE,
                 MIN_INDEL_LENGTH,
                 MIN_JUNCTION_SUPPORT));
 
-        CalcFragmentLength = false;
         BamStringency = ValidationStringency.STRICT;
         WriteTypes = Sets.newHashSet();
         SpecificChrRegions = new SpecificRegions();
@@ -314,7 +312,8 @@ public class PrepConfig
         configBuilder.addPath(BLACKLIST_BED, false, "Blacklist regions BED file");
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
-        configBuilder.addFlag(CALC_FRAG_LENGTH, "Calculate distribution for fragment length");
+
+        registerCommonConfig(configBuilder);
 
         configBuilder.addConfigItem(WRITE_TYPES, enumValueSelectionAsStr(WriteType.values(), "Write types"));
 

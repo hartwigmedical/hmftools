@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -179,7 +180,7 @@ public class ReadFilters
             int scIndex = 0;
             for(int i = scRangeStart; i < scRangeEnd; ++i)
             {
-                if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
+                if(aboveMinQual(baseQualities[i]))
                     ++aboveQual;
 
                 if(scBaseArray != null)

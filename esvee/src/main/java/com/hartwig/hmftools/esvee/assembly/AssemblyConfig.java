@@ -45,6 +45,8 @@ import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
+import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
+import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
@@ -226,6 +228,8 @@ public class AssemblyConfig
         if(configBuilder.hasValue(SEQUENCING_TYPE_CFG))
             Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
+        setLowBaseQualThreshold(configBuilder);
+
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         AssemblyMapQualThreshold = configBuilder.getInteger(ASSEMBLY_MAP_QUAL_THRESHOLD);
@@ -330,6 +334,8 @@ public class AssemblyConfig
         configBuilder.addPaths(JUNCTION_FILE, false, JUNCTION_FILE_DESC);
         configBuilder.addPaths(PREP_DIR, false, PREP_DIR_DESC);
 
+        registerCommonConfig(configBuilder);
+
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
@@ -338,8 +344,6 @@ public class AssemblyConfig
 
         if(!configBuilder.isRegistered(WRITE_TYPES))
             configBuilder.addConfigItem(WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"));
-
-        SequencingType.registerConfig(configBuilder);
 
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addConfigItem(

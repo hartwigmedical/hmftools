@@ -44,7 +44,7 @@ public class FilterConstants
 
     public static final double DEFAULT_MIN_AF_SGL = 0.05;
     public static final double DEFAULT_MIN_AF_HOTSPOT = 0.001;
-    public static final double DEFAULT_MIN_AF_JUNCTION = DEFAULT_MIN_AF_HOTSPOT;
+    public static final double DEFAULT_MIN_AF_JUNCTION = 0.002;
 
     public final boolean FilterSGLs;
     private static final String FILTER_SGLS = "filter_sgls";

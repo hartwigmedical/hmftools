@@ -30,7 +30,6 @@ public class ReadFilterConfig
     public final int MinInsertAlignmentOverlap;
     public final int MinIndelLength;
     public final int MinSoftClipLength;
-    public final int MinSoftClipHighQual;
     public final double MinSoftClipHighQualPerc;
 
     // supporting read config
@@ -49,7 +48,7 @@ public class ReadFilterConfig
 
     public ReadFilterConfig(
             final int minAlignmentBases, final int minMapQuality, final int minInsertAlignmentOverlap, final int minSoftClipLength,
-            final int minSoftClipHighQual, final double minSoftClipHighQualPerc, final int minSupportingReadDistance,
+            final double minSoftClipHighQualPerc, final int minSupportingReadDistance,
             final int minIndelLength, final int minJunctionSupport)
     {
         MinAlignmentBases = minAlignmentBases;
@@ -57,7 +56,6 @@ public class ReadFilterConfig
         MinInsertAlignmentOverlap = minInsertAlignmentOverlap;
         MinSoftClipLength = minSoftClipLength;
         MinIndelLength = minIndelLength;
-        MinSoftClipHighQual = minSoftClipHighQual;
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
         MinSupportingReadDistance = minSupportingReadDistance;
 
@@ -88,7 +86,6 @@ public class ReadFilterConfig
                 MIN_MAP_QUALITY,
                 MIN_INSERT_ALIGNMENT_OVERLAP,
                 MIN_SOFT_CLIP_LENGTH,
-                LOW_BASE_QUAL_THRESHOLD,
                 MIN_SOFT_CLIP_HIGH_QUAL_PERC,
                 MIN_SUPPORTING_READ_DISTANCE,
                 MIN_INDEL_LENGTH,

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.DiscordantGroups.addDiscordantStats;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
@@ -268,7 +269,7 @@ public class JunctionTracker
             }
         }
 
-        mJunctions.forEach(x -> x.setInitialRead(mFilterConfig.MinSoftClipHighQual));
+        mJunctions.forEach(x -> x.setInitialRead(LOW_BASE_QUAL_THRESHOLD));
 
         perfCounterStop(PerfCounters.InitJunctions);
 
@@ -350,10 +351,6 @@ public class JunctionTracker
 
                 if(mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
                     mCandidateDiscordantGroups.add(readGroup);
-            }
-            else if(readGroup.reads().stream().anyMatch(x -> x.hasSuppAlignment()))
-            {
-                mDiscordantStats.processSupplementaryInfo(readGroup);
             }
         }
 

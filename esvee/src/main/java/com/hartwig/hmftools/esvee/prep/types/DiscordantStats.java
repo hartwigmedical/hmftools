@@ -39,7 +39,6 @@ public class DiscordantStats
         Inv1To5K,
         Inv5To100K,
         InvGt100K,
-        Del1Lt1K,
         Del1To5K,
         Del5To100K,
         DelGt100K,
@@ -73,79 +72,6 @@ public class DiscordantStats
                 inferredInsertSizeAbs(read.record()));
     }
 
-    public void processSupplementaryInfo(final ReadGroup readGroup)
-    {
-        // infer a short DEL or other category from the suppementary and its primary
-        PrepRead read = null; // readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
-
-        for(PrepRead prepRead : readGroup.reads())
-        {
-            if(!prepRead.hasSuppAlignment())
-                continue;
-
-            if(read == null || read.isSupplementaryAlignment() && !prepRead.isSupplementaryAlignment())
-                read = prepRead;
-        }
-
-        if(read == null)
-            return;
-
-        SupplementaryReadData suppData = read.supplementaryAlignment();
-
-        int inferredDelLength = 0;
-        Orientation suppOrientation = Orientation.fromByte(suppData.orientation());
-
-        if(read.Chromosome.equals(suppData.Chromosome))
-        {
-            // only consider short DELs
-            if(abs(suppData.Position - read.start()) > LENGTH_SHORT * 2)
-                return;
-
-            if(positionWithin(suppData.Position, read.start(), read.end()))
-                return;
-
-            boolean suppReadIsRightClipped;
-
-            if(read.isSupplementaryAlignment())
-                suppReadIsRightClipped = read.isRightClipped();
-            else
-                suppReadIsRightClipped = suppData.Cigar.endsWith("S");
-
-            if(suppReadIsRightClipped)
-            {
-                // supp end position needs to be the inner part of a DEL
-                if(!read.isLeftClipped() || read.leftClipLength() < read.rightClipLength())
-                    return;
-
-                int suppPosEnd = SamRecordUtils.getMateAlignmentEnd(suppData.Position, suppData.Cigar);
-
-                if(suppData.Position >= read.start())
-                    return;
-
-                inferredDelLength = abs(read.start() - suppPosEnd);
-            }
-            else
-            {
-                if(!read.isRightClipped() || read.rightClipLength() < read.leftClipLength())
-                    return;
-
-                if(suppData.Position < read.end())
-                    return;
-
-                inferredDelLength = abs(suppData.Position - read.end());
-            }
-
-            if(inferredDelLength < 100 || inferredDelLength > LENGTH_SHORT)
-                return;
-
-            suppOrientation = read.orientation().opposite(); // to register as a DEL
-        }
-
-        addToCounts(
-                read.Chromosome, suppData.Chromosome, read.start(), suppData.Position, read.orientation(),
-                suppOrientation, inferredDelLength);
-    }
-
     private void addToCounts(
             final String chromosome1, final String chromosome2, int posStart1, int posStart2,
             final Orientation orientation1, final Orientation orientation2, int insertSize)
@@ -174,9 +100,7 @@ public class DiscordantStats
             if((posStart1 < posStart2) == orientation1.isForward())
             {
                 // DEL-type orientation
-                if(distance < LENGTH_SHORT)
-                    ++TypeCounts[DiscordantType.Del1Lt1K.ordinal()];
-                else if(distance < LENGTH_5K)
+                if(distance < LENGTH_5K)
                     ++TypeCounts[DiscordantType.Del1To5K.ordinal()];
                 else if(distance < LENGTH_100K)
                     ++TypeCounts[DiscordantType.Del5To100K.ordinal()];
