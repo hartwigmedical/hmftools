@@ -129,6 +129,9 @@ public class DriverPrep implements CategoryPrep
 
         boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
 
+        if(!isMicrosatelliteStable)
+            return;
+
         final List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, null);
         for(SomaticVariant variant : variants)
         {
@@ -140,7 +143,7 @@ public class DriverPrep implements CategoryPrep
             // MSI / mismatch repair deficiency
             boolean isIndelDriver = isKnownIndelGene && variant.Type == INDEL && variant.RepeatCount <= INDEL_MAX_REPEAT_COUNT;
 
-            if(isMicrosatelliteStable && isIndelDriver)
+            if(isIndelDriver)
             {
                 String featureName = gene + INDEL_SUFFIX;
                 DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
