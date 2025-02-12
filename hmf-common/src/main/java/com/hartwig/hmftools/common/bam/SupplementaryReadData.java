@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.common.bam;
 
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_CLIPPING_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -18,9 +13,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.TextCigarCodec;
 
 public class SupplementaryReadData
 {
@@ -30,8 +23,6 @@ public class SupplementaryReadData
     public final String Cigar;
     public final int MapQuality;
     public final int NM;
-
-    private Integer mAlignmentScore;
 
     public static final String ALIGNMENTS_DELIM = ";";
 
@@ -50,8 +41,6 @@ public class SupplementaryReadData
         Cigar = cigar;
         MapQuality = mapQuality;
         NM = nm;
-
-        mAlignmentScore = null;
     }
 
     public SupplementaryReadData(final String chromosome, final int position, final char strand, final String cigar, final int mapQuality)
@@ -60,38 +49,6 @@ public class SupplementaryReadData
     }
 
     public byte orientation() { return Strand == SUPP_POS_STRAND ? POS_ORIENT : NEG_ORIENT; }
-
-    public int alignmentScore()
-    {
-        if(mAlignmentScore != null)
-            return mAlignmentScore;
-
-        int mismatchCount = NM;
-        mAlignmentScore = 0;
-        List<CigarElement> cigarElements = TextCigarCodec.decode(Cigar).getCigarElements();
-        for(CigarElement el : cigarElements)
-        {
-            if(el.getOperator().isClipping())
-            {
-                mAlignmentScore -= BWA_CLIPPING_PENALTY;
-                continue;
-            }
-
-            boolean isRef = el.getOperator().consumesReferenceBases();
-            boolean isRead = el.getOperator().consumesReadBases();
-            if(isRead ^ isRef)
-            {
-                mAlignmentScore -= BWA_GAP_OPEN_PENALTY + el.getLength() * BWA_GAP_EXTEND_PENALTY;
-                mismatchCount -= el.getLength();
-                continue;
-            }
-
-            mAlignmentScore += el.getLength() * BWA_MATCH_SCORE;
-        }
-
-        mAlignmentScore -= mismatchCount * (BWA_MATCH_SCORE + BWA_MISMATCH_PENALTY);
-        return mAlignmentScore;
-    }
 
     @Nullable
     @VisibleForTesting
@@ -236,6 +193,7 @@ public class SupplementaryReadData
 
     public String toString()
     {
-        return String.format("location(%s:%d) strand(%c) cigar(%s) mq(%d) nm(%d) alignmentScore(%d)", Chromosome, Position, Strand, Cigar, MapQuality, NM, alignmentScore());
+        return String.format("location(%s:%d) strand(%c) cigar(%s) mq(%d) nm(%d)",
+                Chromosome, Position, Strand, Cigar, MapQuality, NM);
     }
 }

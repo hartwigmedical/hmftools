@@ -2,6 +2,11 @@ package com.hartwig.hmftools.common.bam;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_CLIPPING_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
@@ -420,5 +425,33 @@ public final class CigarUtils
             elems.add(new CigarElement(currentLength, currentOp));
 
         return elems;
+    }
+
+    public static int alignmentScore(final List<CigarElement> cigarElements, final int numMutations)
+    {
+        int mismatchCount = numMutations;
+        int alignmentScore = 0;
+        for(CigarElement el : cigarElements)
+        {
+            if(el.getOperator().isClipping())
+            {
+                alignmentScore -= BWA_CLIPPING_PENALTY;
+                continue;
+            }
+
+            boolean isRef = el.getOperator().consumesReferenceBases();
+            boolean isRead = el.getOperator().consumesReadBases();
+            if(isRead ^ isRef)
+            {
+                alignmentScore -= BWA_GAP_OPEN_PENALTY + el.getLength() * BWA_GAP_EXTEND_PENALTY;
+                mismatchCount -= el.getLength();
+                continue;
+            }
+
+            alignmentScore += el.getLength() * BWA_MATCH_SCORE;
+        }
+
+        alignmentScore -= mismatchCount * (BWA_MATCH_SCORE + BWA_MISMATCH_PENALTY);
+        return alignmentScore;
     }
 }
