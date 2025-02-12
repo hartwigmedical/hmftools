@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftCli
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -313,11 +314,18 @@ public class JunctionAssemblyTest
         readBases = extBases4 + refBases;
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases4.length(), 0));
 
-        List<Read> reads = List.of(read1, read1b, read3, read4);
+        String extBases5 = "CAG"; // insufficient overlap bases
+        readBases = extBases5 + refBases;
+        Read read5 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases5.length(), 0));
+
+        List<Read> reads = List.of(read1, read1b, read3, read4, read5);
 
         ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
+        assertNotNull(extSeqBuilder.maxRepeat());
+        assertEquals(4, extSeqBuilder.maxRepeat().Count);
+        assertEquals(10, extSeqBuilder.refBaseRepeatCount());
 
         String consensusSequence = extSeqBuilder.junctionSequence();
 
@@ -329,6 +337,9 @@ public class JunctionAssemblyTest
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
         assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+
+        String buildInfo = extSeqBuilder.buildInformation();
+        assertEquals("5;5;0;true;28:CAG:4:10;2:2:1:0", buildInfo);
     }
 
     @Test

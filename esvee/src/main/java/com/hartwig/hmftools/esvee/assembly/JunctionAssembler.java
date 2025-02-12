@@ -392,7 +392,7 @@ public class JunctionAssembler
         if(readParseState == null)
             return false;
 
-        if(readParseState.exceedsMaxMismatches() || readParseState.highQualMatches() < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+        if(readParseState.exceedsMaxMismatches() || !extensionSeqBuilder.sufficientHighQualMatches(readParseState))
             return false;
 
         assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());

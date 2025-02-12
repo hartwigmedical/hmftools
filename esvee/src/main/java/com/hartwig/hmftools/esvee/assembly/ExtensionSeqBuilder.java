@@ -155,6 +155,8 @@ public class ExtensionSeqBuilder
     public byte[] baseQualities() { return mBaseQuals; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
     public boolean isValid() { return mIsValid; }
+    public RepeatInfo maxRepeat() { return mMaxRepeat; }
+    public int refBaseRepeatCount() { return mMaxRepeat != null ? mMaxRepeatCount - mMaxRepeat.Count : 0; }
 
     public List<SupportRead> formAssemblySupport()
     {
@@ -165,7 +167,7 @@ public class ExtensionSeqBuilder
             if(read.exceedsMaxMismatches())
                 continue;
 
-            if(read.highQualMatches() < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            if(!sufficientHighQualMatches(read))
                 continue;
 
             supportReads.add(new SupportRead(
@@ -173,6 +175,12 @@ public class ExtensionSeqBuilder
         }
 
         return supportReads;
+    }
+
+    public boolean sufficientHighQualMatches(final ExtReadParseState read)
+    {
+        int refBaseRepeatBuffer = refBaseRepeatCount() > 0 ? 2 : 0;
+        return read.highQualMatches() >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH + refBaseRepeatBuffer;
     }
 
     public List<Read> mismatchReads()
@@ -957,7 +965,7 @@ public class ExtensionSeqBuilder
 
         if(mMaxRepeat != null)
         {
-            sj.add(format("%d:%s:%d:d", mMaxRepeat.Index, mMaxRepeat.Bases, mMaxRepeat.Count, mMaxRepeatCount - mMaxRepeat.Count));
+            sj.add(format("%d:%s:%d:%d", mMaxRepeat.Index, mMaxRepeat.Bases, mMaxRepeat.Count, mMaxRepeatCount - mMaxRepeat.Count));
 
             for(int i = 0; i < mReadRepeatCounts.length; ++i)
             {
