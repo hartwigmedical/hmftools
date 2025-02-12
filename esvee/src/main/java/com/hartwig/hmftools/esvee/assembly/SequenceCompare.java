@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 
 import java.util.Collections;
@@ -19,35 +21,6 @@ import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 public final class SequenceCompare
 {
     private static final int MISMATCH_RECOVERY_BASE_COUNT = 3;
-
-    public static int calcReadSequenceMismatches(
-            final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
-            final Read read, final int readJunctionIndex, final int maxMismatches)
-    {
-        int readStartIndex = isForward ? readJunctionIndex : 0;
-        int readEndIndex = isForward ? read.basesLength() - 1 : readJunctionIndex;
-
-        // for -ve orientations, if extension sequence length = 10, with 0-8 being soft-clip and 9 being the first ref and junction index
-        // and the read has 5 bases of soft-clip then read's start index will be 0 -> 4 + 1 = 5
-        // so the comparison offset in the extension sequence is
-        int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
-
-        if(extSeqReadStartIndex < 0)
-        {
-            readStartIndex += -extSeqReadStartIndex;
-            extSeqReadStartIndex = 0;
-        }
-
-        byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
-        byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
-        List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
-
-        // run the comparison heading out from the junction
-        return compareSequences(
-                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
-                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
-                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches, isForward, false);
-    }
 
     public static boolean matchedAssemblySequences(final JunctionAssembly first, final JunctionAssembly second)
     {
@@ -210,6 +183,11 @@ public final class SequenceCompare
         return mismatchCount;
     }
 
+    public static int permittedRepeatCount(final int repeatCount)
+    {
+        return repeatCount < REPEAT_2_DIFF_COUNT ? 1 : 2;
+    }
+
     private static int checkRepeatDifference(
             int firstIndex, final List<RepeatInfo> firstRepeats, int secondIndex, final List<RepeatInfo> secondRepeats, boolean checkForwards)
     {
@@ -231,14 +209,34 @@ public final class SequenceCompare
             if(!firstRepeat.matchesType(secondRepeat))
             {
                 // consider the longer repeat if it contains the shorter and has the minimum count
+                // how should this make use of max repeat count differences?
                 if(firstRepeat.Bases.contains(secondRepeat.Bases) && firstRepeat.Count == 2)
+                {
+                    int ratio = firstRepeat.baseLength() / secondRepeat.baseLength();
+
+                    if(secondRepeat.Count != firstRepeat.Count * ratio)
+                        return 0;
+
                     return firstRepeat.Bases.length();
+                }
                 else if(secondRepeat.Bases.contains(firstRepeat.Bases) && secondRepeat.Count == 2)
+                {
+                    int ratio = secondRepeat.baseLength() / firstRepeat.baseLength();
+
+                    if(firstRepeat.Count != secondRepeat.Count * ratio)
+                        return 0;
+
                     return secondRepeat.Bases.length();
+                }
                 return 0;
             }
 
             if(firstRepeat.Count == secondRepeat.Count)
+                return 0;
+
+            int permittedRepeatDiff = permittedRepeatCount(max(firstRepeat.Count, secondRepeat.Count));
+
+            if(abs(firstRepeat.Count - secondRepeat.Count) > permittedRepeatDiff)
                 return 0;
 
             return (firstRepeat.Count - secondRepeat.Count) * firstRepeat.Bases.length();
@@ -377,6 +375,35 @@ public final class SequenceCompare
     }
 
     // unused matching routines
+    public static int calcReadSequenceMismatches(
+            final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
+            final Read read, final int readJunctionIndex, final int maxMismatches)
+    {
+        int readStartIndex = isForward ? readJunctionIndex : 0;
+        int readEndIndex = isForward ? read.basesLength() - 1 : readJunctionIndex;
+
+        // for -ve orientations, if extension sequence length = 10, with 0-8 being soft-clip and 9 being the first ref and junction index
+        // and the read has 5 bases of soft-clip then read's start index will be 0 -> 4 + 1 = 5
+        // so the comparison offset in the extension sequence is
+        int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
+
+        if(extSeqReadStartIndex < 0)
+        {
+            readStartIndex += -extSeqReadStartIndex;
+            extSeqReadStartIndex = 0;
+        }
+
+        byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
+        byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
+        List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
+
+        // run the comparison heading out from the junction
+        return compareSequences(
+                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
+                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
+                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches, isForward, false);
+    }
+
     private static boolean hasCompatibleRepeats(
             int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)

@@ -166,6 +166,70 @@ public class ExtReadParseState
         moveNext();
     }
 
+    public int countRefRepeat(final byte[] repeatBytes)
+    {
+        int juncIndex = mJunctionIndex;
+        int repeatLength = repeatBytes.length;
+        int repeatCount = 0;
+
+        if(mIsForwardJunction)
+        {
+            while(true)
+            {
+                boolean matched = true;
+                int index = juncIndex - repeatLength + 1;
+                for(int i = 0; i < repeatLength; ++i)
+                {
+                    if(index + i < 0)
+                    {
+                        matched = false;
+                        break;
+                    }
+                    else if(mRead.getBases()[index + i] != repeatBytes[i])
+                    {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    break;
+
+                ++repeatCount;
+                juncIndex -= repeatLength;
+            }
+        }
+        else
+        {
+            while(true)
+            {
+                boolean matched = true;
+                int index = juncIndex;
+                for(int i = 0; i < repeatLength; ++i)
+                {
+                    if(index + i >= mRead.getBases().length)
+                    {
+                        matched = false;
+                        break;
+                    }
+                    else if(mRead.getBases()[index + i] != repeatBytes[i])
+                    {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    break;
+
+                ++repeatCount;
+                juncIndex += repeatLength;
+            }
+        }
+
+        return repeatCount;
+    }
+
     public String toString()
     {
         return format("%s: range(%d - %d) cigar(%s) extLen(%d) index(junc=%d cur=%d) match(hq=%d mismatch %d/%d)%s%s",

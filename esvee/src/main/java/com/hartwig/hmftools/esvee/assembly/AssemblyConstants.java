@@ -43,6 +43,8 @@ public final class AssemblyConstants
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
     public static final int DISC_RATE_DISC_ONLY_INCREMENT = 3;
 
+    // sequence comparison
+    public static final int REPEAT_2_DIFF_COUNT = 11;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
