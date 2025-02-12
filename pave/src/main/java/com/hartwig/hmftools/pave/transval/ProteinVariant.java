@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.pave.transval;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -83,7 +88,6 @@ public abstract class ProteinVariant
         return CodingRegions.stream().map(ChrBaseRegion::baseLength).collect(Collectors.toList());
     }
 
-    @VisibleForTesting
     ChangeContext getChangeContext(RefGenomeInterface genome)
     {
         CodonWindow window = new CodonWindow(positionOfFirstAlteredCodon(), RefLength);
@@ -92,7 +96,55 @@ public abstract class ProteinVariant
         return exonBuilder.build(Gene.Chromosome, genome, CodingRegions, Transcript.posStrand());
     }
 
-    abstract TransvalVariant calculateVariant(RefGenomeInterface refGenome);
+    ChangeResult applyChange(ChangeContext changeContext)
+    {
+        return null;
+    }
+
+    @VisibleForTesting
+    Collection<ChangeContext> findLeftmostApplicableChanges(RefGenomeInterface genome)
+    {
+        ChangeContext changeContext = getChangeContext(genome);
+        ChangeResult firstExampleResult = applyChange(changeContext);
+        int maxMoves = changeContext.StartPositionInExon;
+        if (Transcript.negStrand())
+        {
+            maxMoves = changeContext.ContainingExon.inExonLength() - changeContext.FinishPositionInExon - 1;
+        }
+        maxMoves = Math.min(maxMoves, 32);
+        Map<String,ChangeContext> results = new HashMap<>();
+        for (int i=0; i<=maxMoves; i++)
+        {
+            int excisionStart = Transcript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
+            int excisionEnd = excisionStart + RefLength * 3 - 1;
+            ChangeContext change = new ChangeContext(changeContext.ContainingExon, excisionStart, excisionEnd, Transcript.posStrand(), 0);
+            ChangeResult changeAtThisPosition = applyChange(change);
+            if(firstExampleResult.mAminoAcids.equals(changeAtThisPosition.mAminoAcids))
+            {
+                results.put(changeAtThisPosition.mBases, change);
+            }
+        }
+        return results.values();
+    }
+
+    TransvalVariant calculateVariant(RefGenomeInterface refGenome)
+    {
+        Collection<ChangeContext> changes = findLeftmostApplicableChanges(refGenome);
+        if(changes.isEmpty())
+        {
+            return null;
+        }
+        Set<TransvalHotspot> hotspots = new HashSet<>();
+        changes.forEach(change -> hotspots.add(convertToHotspot(change)));
+        return new TransvalVariant(
+                Transcript,
+                Gene.Chromosome,
+                false,
+                hotspots);
+
+    }
+
+    abstract TransvalHotspot convertToHotspot(ChangeContext changeContext);
 
     CodonRegions exonsForCodonPosition(int codonPosition)
     {

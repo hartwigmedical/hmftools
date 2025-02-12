@@ -84,6 +84,12 @@ class DeletionInsertion extends ProteinVariant
         return Alt.sequence();
     }
 
+    @Override
+    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
+    {
+        return null;
+    }
+
     @VisibleForTesting
     public Set<String> candidateAlternativeNucleotideSequences(@NotNull String prefix, @NotNull String suffix)
     {

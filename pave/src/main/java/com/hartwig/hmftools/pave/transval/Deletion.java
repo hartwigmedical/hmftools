@@ -1,16 +1,8 @@
 package com.hartwig.hmftools.pave.transval;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,47 +16,19 @@ class Deletion extends ProteinVariant
         super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
     }
 
-    @VisibleForTesting
-    Collection<ChangeContext> fittingChanges(RefGenomeInterface genome)
+    @Override
+    ChangeResult applyChange(ChangeContext changeContext)
     {
-        ChangeContext changeContext = getChangeContext(genome);
-        AminoAcidSequence targetSequence = changeContext.applyDeletion();
-        int maxMoves = changeContext.StartPositionInExon;
-        if (Transcript.negStrand())
-        {
-            maxMoves = changeContext.ContainingExon.inExonLength() - changeContext.FinishPositionInExon - 1;
-        }
-        maxMoves = Math.min(maxMoves, 32);
-        Map<String,ChangeContext> results = new HashMap<>();
-        for (int i=0; i<=maxMoves; i++)
-        {
-            int excisionStart = Transcript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
-            int excisionEnd = excisionStart + RefLength * 3 - 1;
-            ChangeContext change = new ChangeContext(changeContext.ContainingExon, excisionStart, excisionEnd, Transcript.posStrand(), 0);
-            String residualBases = change.exonBasesAfterDeletion();
-            AminoAcidSequence effect = change.applyDeletion();
-            if(targetSequence.equals(effect))
-            {
-                results.put(residualBases, change);
-            }
-        }
-        return results.values();
+        AminoAcidSequence aminoAcidSequence = changeContext.applyDeletion();
+        String residualBases = changeContext.exonBasesAfterDeletion();
+        return new ChangeResult(aminoAcidSequence,residualBases);
     }
 
     @Override
-    TransvalVariant calculateVariant(final RefGenomeInterface refGenome)
+    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
     {
-        Collection<ChangeContext> changes = fittingChanges(refGenome);
-        if(changes.isEmpty())
-        {
-            return null;
-        }
-        Set<TransvalHotspot> hotspots = new HashSet<>();
-        changes.forEach(change -> hotspots.add(change.hotspot(Gene.Chromosome)));
-        return new TransvalVariant(
-                Transcript,
-                Gene.Chromosome,
-                false,
-                hotspots);
+        String deleted = changeContext.refBases();
+        String altBases = deleted.substring(0,  1);
+        return new TransvalHotspot(deleted, altBases, Gene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
     }
 }

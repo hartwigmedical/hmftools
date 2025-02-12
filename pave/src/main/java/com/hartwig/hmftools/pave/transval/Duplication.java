@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.pave.transval;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,17 +17,18 @@ class Duplication extends ProteinVariant
     }
 
     @Override
-    TransvalVariant calculateVariant(final RefGenomeInterface genome)
+    ChangeResult applyChange(ChangeContext changeContext)
     {
-        ChangeContext changeContext = getChangeContext(genome);
-        String duplicated = changeContext.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength, Transcript.posStrand()).segmentThatIsModified();
-        String baseAtChangeLocation = "";
-        Set<TransvalHotspot> hotspots = new HashSet<>();
-//        hotspots.add(changeContext.hotspot())
-        return new TransvalVariant(
-                Transcript,
-                Gene.Chromosome,
-                false,
-                hotspots);
+        return changeContext.applyDuplication();
+    }
+
+    @Override
+    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
+    {
+//        String duplicated = changeContext.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength, Transcript.posStrand()).segmentThatIsModified();
+        String duplicated = changeContext.affectedBases();
+        String baseAtChangeLocation = changeContext.baseImmediatelyBeforeChange();
+        int position = changeContext.positionOfChangeStartInStrand() - 1;
+        return new TransvalHotspot(baseAtChangeLocation, baseAtChangeLocation + duplicated, Gene.Chromosome, position);
     }
 }

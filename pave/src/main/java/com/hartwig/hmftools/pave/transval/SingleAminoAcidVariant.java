@@ -97,4 +97,10 @@ class SingleAminoAcidVariant extends ProteinVariant
     {
         return RegionsDefiningCodon.codonIsInSingleExon();
     }
+
+    @Override
+    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
+    {
+        return null;
+    }
 }

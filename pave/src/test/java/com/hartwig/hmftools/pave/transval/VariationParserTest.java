@@ -78,6 +78,26 @@ public class VariationParserTest extends TransvalTestBase
     }
 
     @Test
+    public void parseVariantForGeneTest()
+    {
+        ProteinVariant pv1 = variationParser.parseVariantForGene("BRAF", "Val600Glu");
+        Assert.assertEquals(600, pv1.positionOfFirstAlteredCodon());
+        Assert.assertTrue(pv1 instanceof SingleAminoAcidVariant);
+
+        ProteinVariant pv2 = variationParser.parseVariantForGene("ADCK2", "Glu301_Thr303delinsGlnGln");
+        Assert.assertEquals(301, pv2.positionOfFirstAlteredCodon());
+        Assert.assertTrue(pv2 instanceof DeletionInsertion);
+
+        ProteinVariant pv3 = variationParser.parseVariantForGene("EGFR", "L747_A750del");
+        Assert.assertEquals(747, pv3.positionOfFirstAlteredCodon());
+        Assert.assertTrue(pv3 instanceof Deletion);
+
+        ProteinVariant pv4 = variationParser.parseVariantForGene("PIK3R1", "Y452dup");
+        Assert.assertEquals(452, pv4.positionOfFirstAlteredCodon());
+        Assert.assertTrue(pv4 instanceof Duplication);
+    }
+
+    @Test
     public void parseDeletionInsertion()
     {
         DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
@@ -122,6 +142,7 @@ public class VariationParserTest extends TransvalTestBase
         Duplication dup2 = variationParser.parseDuplication("PIK3R1", "E458_Y463dup");
         Assert.assertEquals("PIK3R1", dup2.Gene.GeneName);
         Assert.assertEquals(458, dup2.positionOfFirstAlteredCodon());
+        Assert.assertEquals(463, dup2.positionOfLastAlteredCodon());
         Assert.assertEquals(6, dup2.RefLength);
     }
 

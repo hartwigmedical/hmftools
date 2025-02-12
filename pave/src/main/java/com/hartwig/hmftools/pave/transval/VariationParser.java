@@ -45,17 +45,21 @@ class VariationParser
         return parseSingleAminoAcidVariant(expression);
     }
 
-    public ProteinVariant parseExpressionForGene(@NotNull String gene, @NotNull String expression)
+    public ProteinVariant parseVariantForGene(@NotNull String gene, @NotNull String variant)
     {
-        if(expression.contains("delins"))
+        if(variant.contains("delins"))
         {
-            return parseDeletionInsertion(gene, expression);
+            return parseDeletionInsertion(gene, variant);
         }
-        if(expression.contains("del"))
+        if(variant.endsWith("del"))
         {
-            return parseDeletion(gene, expression);
+            return parseDeletion(gene, variant);
         }
-        return parseSingleAminoAcidVariant(gene, expression);
+        if(variant.endsWith("dup"))
+        {
+            return parseDuplication(gene, variant);
+        }
+        return parseSingleAminoAcidVariant(gene, variant);
     }
 
     public SingleAminoAcidVariant parseSingleAminoAcidVariant(@NotNull String gene, @NotNull String variantDescription)

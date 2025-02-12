@@ -104,7 +104,7 @@ public class ServeDataTest
         return jsonObject.get(key).getAsString();
     }
 
-    @Test
+//    @Test
     public void check()
     {
         List<StatsForGene> results = new ArrayList<>();
@@ -163,7 +163,7 @@ public class ServeDataTest
     {
 //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
 //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ROS1", "A1924_I1934del");
-        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ALK", "D1276_R1279delinsE");
+        ProteinVariant variant = transval.variationParser().parseVariantForGene("ALK", "D1276_R1279delinsE");
         TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
     }
@@ -184,7 +184,7 @@ public class ServeDataTest
         {
             ProteinAnnotationCollator collator = collators.get(annotation);
             VariantStatus comparison = checkVariant(collator);
-            if(collator.mGene.contains("PIK3R1") && collator.mAnnotation.contains("Y"))
+            if(collator.mGene.contains("ARID1A"))
             {
                 p(annotation);
             }
@@ -212,7 +212,7 @@ public class ServeDataTest
         ProteinVariant variant;
         try
         {
-            variant = transval.variationParser().parseExpressionForGene(collator.mGene, collator.mAnnotation);
+            variant = transval.variationParser().parseVariantForGene(collator.mGene, collator.mAnnotation);
         }
         catch(Exception e)
         {

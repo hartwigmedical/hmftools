@@ -51,6 +51,17 @@ public class PaddedExon
         return BasesOfFirstCodonInPreviousExon + left + right + BasesOfLastCodonInFollowingExon;
     }
 
+    public String baseSequenceWithDuplicationApplied(int start, int end, boolean positiveStrand)
+    {
+        Preconditions.checkArgument(start >= 0);
+        Preconditions.checkArgument(start < end);
+        Preconditions.checkArgument((end - start) % 3 == 0);
+        String left = exonBases.substring(0, start);
+        String middle = exonBases.substring(start, end);
+        String right = exonBases.substring(end);
+        return BasesOfFirstCodonInPreviousExon + left + middle + middle + right + BasesOfLastCodonInFollowingExon;
+    }
+
     public String basesBetween(int start, int end)
     {
         Preconditions.checkArgument(start >= 0);

@@ -690,4 +690,14 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         );
     }
 
+    @Test
+    public void duplicationInRegionOfRepeatingAminoAcids()
+    {
+        TransvalVariant variant = transval.calculateVariant("ARID1A", "P20_P21dup");
+        checkHotspots(variant,
+                hotspot("A", "ACCCGCC", "chr1", 26_696_447),
+                hotspot("C", "CCCGCCG", "chr1", 26_696_448),
+                hotspot("G", "GCCGCCC", "chr1", 26_696_460)
+        );
+    }
 }

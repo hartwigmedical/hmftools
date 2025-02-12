@@ -46,6 +46,12 @@ public class ChangeContext
         return ContainingExon.baseImmediatelyBefore(StartPositionInExon);
     }
 
+    ChangeResult applyDuplication()
+    {
+        String bases = ContainingExon.baseSequenceWithDuplicationApplied(StartPositionInExon, FinishPositionInExon + 1, IsPositiveStrand);
+        return new ChangeResult(AminoAcidSequence.fromNucleotides(bases), bases);
+    }
+
     AminoAcidSequence applyDeletion()
     {
         return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion());
@@ -62,13 +68,6 @@ public class ChangeContext
         Preconditions.checkArgument(numberOfAminoAcidsChanged >= 0);
         int codonNumber = firstAminoAcid - AminoAcidNumberOfFirstAminoAcid + 1;
         return ContainingExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged, isPositiveStrand);
-    }
-
-    public TransvalHotspot hotspot(String chromosome)
-    {
-        String deleted = refBases();
-        String altBases = deleted.substring(0,  1);
-        return new TransvalHotspot(deleted, altBases, chromosome, positionOfChangeStartInStrand() - 1);
     }
 
     public String refBases()
