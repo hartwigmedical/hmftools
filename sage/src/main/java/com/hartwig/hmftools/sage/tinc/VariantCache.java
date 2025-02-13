@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_ABQ_MIN
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_DEPTH_HIGH;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_DEPTH_LOW;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_MAX_FITTING_VARIANTS;
+import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_RECOVERY_GERMLINE_AF_PROB;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -47,6 +48,8 @@ import com.hartwig.hmftools.common.variant.pon.GnomadChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonCache;
 import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonVariantData;
+
+import org.apache.commons.math3.distribution.BinomialDistribution;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
@@ -182,6 +185,7 @@ public class VariantCache
         GNOMAD,
         PON,
         LOW_ABQ,
+        GERMLINE_AF,
         REF_DEPTH;
     }
 
@@ -382,6 +386,16 @@ public class VariantCache
                 else if(variant.ponFiltered())
                 {
                     filterReason = FilterReason.PON;
+                }
+            }
+
+            if(filterReason == FilterReason.NONE && variant.ReferenceAltFrags > 0)
+            {
+                BinomialDistribution distribution = new BinomialDistribution(variant.ReferenceDepth, 0.5);
+
+                if(distribution.cumulativeProbability(variant.ReferenceAltFrags) >= TINC_RECOVERY_GERMLINE_AF_PROB)
+                {
+                    filterReason = FilterReason.GERMLINE_AF;
                 }
             }
 

@@ -22,6 +22,8 @@ public final class TincConstants
     protected static final double TINC_RECOVERY_FACTOR = 2.5;
     protected static final double TINC_RECOVERY_MIN = 0.03;
 
+    protected static final double TINC_RECOVERY_GERMLINE_AF_PROB = 0.001;
+
     protected static final List<String> RECOVERY_FILTERS = Lists.newArrayList(
             MAX_GERMLINE_RELATIVE_QUAL.filterName(), MAX_GERMLINE_VAF.filterName(), MAX_GERMLINE_ALT_SUPPORT.filterName(), PASS);
 }
