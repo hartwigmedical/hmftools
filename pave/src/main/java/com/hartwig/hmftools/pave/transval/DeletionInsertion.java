@@ -34,7 +34,7 @@ class DeletionInsertion extends ProteinVariant
     public SplitCodonSequence referenceBases(RefGenomeInterface genome)
     {
         ChangeContext changeContext = getChangeContext(genome);
-        return changeContext.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength, Transcript.posStrand());
+        return changeContext.basesForProteinChange(positionOfFirstAlteredCodon(), mRefLength, mTranscript.posStrand());
     }
 
     @Override
@@ -47,11 +47,11 @@ class DeletionInsertion extends ProteinVariant
             return null; // todo
         }
         Set<String> destinationBases = candidateAlternativeNucleotideSequences(splitBases.retainedPrefix(), splitBases.retainedSuffix());
-        String modifiedBases = Gene.forwardStrand()
+        String modifiedBases = mGene.forwardStrand()
                 ? splitBases.segmentThatIsModified()
                 : Nucleotides.reverseComplementBases(splitBases.segmentThatIsModified());
         int changeStart = splitBases.locationOfDeletedBases();
-        if(Gene.reverseStrand())
+        if(mGene.reverseStrand())
         {
             destinationBases = destinationBases.stream().map(Nucleotides::reverseComplementBases).collect(Collectors.toSet());
             changeStart = changeStart - modifiedBases.length() + 1;
@@ -60,7 +60,7 @@ class DeletionInsertion extends ProteinVariant
         SortedSet<DeletionInsertionChange> changes = new TreeSet<>();
         destinationBases.forEach(target -> changes.add(new DeletionInsertionChange(modifiedBases, target)));
 
-        ChangeLocation globalLocation = new ChangeLocation(this.Gene.Chromosome, changeStart);
+        ChangeLocation globalLocation = new ChangeLocation(this.mGene.Chromosome, changeStart);
         Set<TransvalHotspot> hotspots = changes
                 .stream()
                 .map(change -> change.toHotspot(globalLocation))
@@ -69,8 +69,8 @@ class DeletionInsertion extends ProteinVariant
         TransvalHotspot bestCandidate = hotspotsSorted.first();
 
         return new TransvalDeletionInsertion(
-                Transcript,
-                Gene.Chromosome,
+                mTranscript,
+                mGene.Chromosome,
                 bestCandidate.mPosition,
                 splitBases.spansTwoExons(),
                 referenceNucleotides,

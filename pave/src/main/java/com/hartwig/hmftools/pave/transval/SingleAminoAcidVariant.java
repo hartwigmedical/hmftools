@@ -49,7 +49,7 @@ class SingleAminoAcidVariant extends ProteinVariant
         int positionInCodonOfChange = codonVariant.positionOfFirstDifference();
         int positionOfChangeInChromosome = RegionsDefiningCodon.translateCodonPosition(positionInCodonOfChange);
         Pair<String,String> nucleotideDifferences = codonVariant.differenceStrings();
-        if(!Gene.forwardStrand())
+        if(!mGene.forwardStrand())
         {
             nucleotideDifferences = Pair.of(reverseComplementBases(nucleotideDifferences.getLeft()), reverseComplementBases(nucleotideDifferences.getRight()));
         }
@@ -58,21 +58,21 @@ class SingleAminoAcidVariant extends ProteinVariant
         Set<TransvalHotspot> hotspots = new HashSet<>();
         codonChanges.forEach(cv -> {
             Pair<String,String> refAlt = cv.differenceStrings();
-            if (Gene.forwardStrand())
+            if (mGene.forwardStrand())
             {
                 int position = RegionsDefiningCodon.translateCodonPosition(cv.positionOfFirstDifference());
-                hotspots.add(new TransvalHotspot(refAlt.getLeft(), refAlt.getRight(), Gene.Chromosome, position));
+                hotspots.add(new TransvalHotspot(refAlt.getLeft(), refAlt.getRight(), mGene.Chromosome, position));
             } else {
                 int position = RegionsDefiningCodon.translateCodonPosition(cv.positionOfFirstDifference()) - refAlt.getLeft().length() + 1;
                 hotspots.add(new TransvalHotspot(
                         reverseComplementBases(refAlt.getLeft()),
                         reverseComplementBases(refAlt.getRight()),
-                        Gene.Chromosome, position));
+                        mGene.Chromosome, position));
             }
         });
         return new TransvalSnvMnv(
-                Transcript,
-                Gene.Chromosome,
+                mTranscript,
+                mGene.Chromosome,
                 positionOfChangeInChromosome,
                 !codonIsInSingleExon(),
                 nucleotideDifferences.getLeft(),

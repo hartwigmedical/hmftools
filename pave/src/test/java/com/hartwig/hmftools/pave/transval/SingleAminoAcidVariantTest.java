@@ -32,7 +32,7 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
     {
         // TODO cases where there are 1 or 2 exons
         SingleAminoAcidVariant variant = this.saav("ADCK2:p.3K");
-        Assert.assertEquals(627, variant.AminoAcidSequence.AminoAcids.length()); // sanity
+        Assert.assertEquals(627, variant.mAminoAcidSequence.AminoAcids.length()); // sanity
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(8, returned.size());
         Assert.assertEquals(3 * 627, returned.stream().mapToInt(Integer::intValue).sum());
@@ -48,7 +48,7 @@ public class SingleAminoAcidVariantTest extends TransvalTestBase
         SingleAminoAcidVariant variant = this.saav("ZYX:p.1E");
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(9, returned.size());
-        Assert.assertEquals(573, variant.AminoAcidSequence.AminoAcids.length()); // sanity
+        Assert.assertEquals(573, variant.mAminoAcidSequence.AminoAcids.length()); // sanity
         Assert.assertEquals(3 * 573, returned.stream().mapToInt(Integer::intValue).sum());
         Assert.assertEquals(208, returned.get(0).intValue()); // coding start > end of this exon
         Assert.assertEquals(200, returned.get(1).intValue());

@@ -43,7 +43,7 @@ public class VariationParserTest extends TransvalTestBase
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ZYX:p.Pro46Ala");
         Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
-        Assert.assertEquals("ENSG00000159840", variant.Gene.GeneId);
+        Assert.assertEquals("ENSG00000159840", variant.mGene.GeneId);
     }
 
     @Test
@@ -51,7 +51,7 @@ public class VariationParserTest extends TransvalTestBase
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ENSG00000159840:p.Pro46Ala");
         Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
-        Assert.assertEquals("ZYX", variant.Gene.GeneName);
+        Assert.assertEquals("ZYX", variant.mGene.GeneName);
     }
 
     @Test
@@ -101,16 +101,16 @@ public class VariationParserTest extends TransvalTestBase
     public void parseDeletionInsertion()
     {
         DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
-        Assert.assertEquals("EGFR", di.Gene.GeneName);
+        Assert.assertEquals("EGFR", di.mGene.GeneName);
         Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
-        Assert.assertEquals(4, di.RefLength);
+        Assert.assertEquals(4, di.mRefLength);
         Assert.assertEquals("P", di.altAminoAcidSequence());
 
         // ADCK2 Glu301_Thr303delinsGlnGln, which is E301_T303delinsQQ
         DeletionInsertion di2 = variationParser.parseDeletionInsertion("ADCK2:p.Glu301_Thr303delinsGlnGln");
-        Assert.assertEquals("ADCK2", di2.Gene.GeneName);
+        Assert.assertEquals("ADCK2", di2.mGene.GeneName);
         Assert.assertEquals(301, di2.positionOfFirstAlteredCodon());
-        Assert.assertEquals(3, di2.RefLength);
+        Assert.assertEquals(3, di2.mRefLength);
         Assert.assertEquals("QQ", di2.altAminoAcidSequence());
     }
 
@@ -118,9 +118,9 @@ public class VariationParserTest extends TransvalTestBase
     public void parseDeletionInsertionWithGene()
     {
         DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR", "L747_A750delinsP");
-        Assert.assertEquals("EGFR", di.Gene.GeneName);
+        Assert.assertEquals("EGFR", di.mGene.GeneName);
         Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
-        Assert.assertEquals(4, di.RefLength);
+        Assert.assertEquals(4, di.mRefLength);
         Assert.assertEquals("P", di.altAminoAcidSequence());
     }
 
@@ -135,15 +135,15 @@ public class VariationParserTest extends TransvalTestBase
     public void parseDuplicationWithGene()
     {
         Duplication dup = variationParser.parseDuplication("PIK3R1", "Y452dup");
-        Assert.assertEquals("PIK3R1", dup.Gene.GeneName);
+        Assert.assertEquals("PIK3R1", dup.mGene.GeneName);
         Assert.assertEquals(452, dup.positionOfFirstAlteredCodon());
-        Assert.assertEquals(1, dup.RefLength);
+        Assert.assertEquals(1, dup.mRefLength);
 
         Duplication dup2 = variationParser.parseDuplication("PIK3R1", "E458_Y463dup");
-        Assert.assertEquals("PIK3R1", dup2.Gene.GeneName);
+        Assert.assertEquals("PIK3R1", dup2.mGene.GeneName);
         Assert.assertEquals(458, dup2.positionOfFirstAlteredCodon());
         Assert.assertEquals(463, dup2.positionOfLastAlteredCodon());
-        Assert.assertEquals(6, dup2.RefLength);
+        Assert.assertEquals(6, dup2.mRefLength);
     }
 
     private void checkSaavInputResultsInErrorWithMessage(String input, String expectedMessage)

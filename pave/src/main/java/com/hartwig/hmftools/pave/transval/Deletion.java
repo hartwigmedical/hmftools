@@ -29,6 +29,6 @@ class Deletion extends ProteinVariant
     {
         String deleted = changeContext.refBases();
         String altBases = deleted.substring(0,  1);
-        return new TransvalHotspot(deleted, altBases, Gene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
+        return new TransvalHotspot(deleted, altBases, mGene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
     }
 }

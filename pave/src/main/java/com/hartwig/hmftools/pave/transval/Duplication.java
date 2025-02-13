@@ -23,10 +23,24 @@ class Duplication extends ProteinVariant
     }
 
     @Override
+    AminoAcidSequence variantSequence()
+    {
+        String rawAAs = this.mAminoAcidSequence.AminoAcids;
+        int startOfDuplicatedSection = positionOfFirstAlteredCodon() - 1;
+        String left = rawAAs.substring(0, startOfDuplicatedSection);
+        int endOfDuplicatedSection = startOfDuplicatedSection + this.mRefLength;
+        String toDuplicate = rawAAs.substring(startOfDuplicatedSection, endOfDuplicatedSection);
+        String right = rawAAs.substring(endOfDuplicatedSection);
+
+        String duplicatedAAs = left + toDuplicate + toDuplicate + right;
+        return AminoAcidSequence.parse(duplicatedAAs);
+    }
+
+    @Override
     TransvalHotspot convertToHotspot(final ChangeContext changeContext)
     {
         String duplicated = changeContext.refBases();
         String refBase = duplicated.substring(0,  1);
-        return new TransvalHotspot(refBase, duplicated, Gene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
+        return new TransvalHotspot(refBase, duplicated, mGene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
     }
 }

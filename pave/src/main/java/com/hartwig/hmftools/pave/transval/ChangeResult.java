@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ChangeResult
+class ChangeResult
 {
     @NotNull
     public final AminoAcidSequence mAminoAcids;
