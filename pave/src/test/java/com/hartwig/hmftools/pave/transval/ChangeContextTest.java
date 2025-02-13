@@ -19,6 +19,20 @@ public class ChangeContextTest extends TransvalTestBase
         assertEquals(cr("FKPAG", "TTTAAACCCGCCGGG"), cc(ec, 7, 9, true).applyDuplication());
     }
 
+    @Test
+    public void refBasesTest()
+    {
+        assertEquals("GTTT", cc(ec, 0, 2, true).refBases());
+        assertEquals("TTTA", cc(ec, 1, 3, true).refBases());
+        assertEquals("TAAA", cc(ec, 3, 5, true).refBases());
+        assertEquals("CGGG", cc(ec, 9, 11, true).refBases());
+
+        assertEquals("GTTT", cc(ec, 9, 11, false).refBases());
+        assertEquals("TAAA", cc(ec, 6, 8, false).refBases());
+        assertEquals("CCGG", cc(ec, 1, 3, false).refBases());
+        assertEquals("CGGG", cc(ec, 0, 2, false).refBases());
+    }
+
     private ChangeContext cc(PaddedExon pe, int start, int end, boolean isPositiveStrand)
     {
         return new ChangeContext(pe, start, end, isPositiveStrand, 10);

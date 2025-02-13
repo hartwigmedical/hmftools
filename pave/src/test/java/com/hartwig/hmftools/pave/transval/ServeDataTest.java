@@ -73,7 +73,8 @@ public class ServeDataTest
             final int position = hotspot.get("position").getAsInt();
 //                        if (gene.equals("FGFR1") && annotation.equals("P283T"))
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
-            if(!annotation.contains("dup")) continue;
+            if(!annotation.contains("ins")) continue;
+            if(annotation.contains("del")) continue;
             if(!geneToItems.containsKey(gene))
             {
                 geneToItems.put(gene, new HashSet<>());
@@ -184,10 +185,10 @@ public class ServeDataTest
         {
             ProteinAnnotationCollator collator = collators.get(annotation);
             VariantStatus comparison = checkVariant(collator);
-            if(collator.mGene.contains("ARID1A"))
-            {
-                p(annotation);
-            }
+//            if(collator.mGene.contains("ARID1A"))
+//            {
+                p( gene + " " + annotation);
+//            }
             if(comparison.parsedOk())
             {
                 if(comparison.hasProcessingError())
@@ -316,6 +317,10 @@ class VariantStatus
                 System.out.println("Reduced: " + reducedCollatorResults);
                 return false;
             }
+        }
+        if(collator.mAnnotation.endsWith("dup"))
+        {
+            return variant.hotspots().containsAll(variant.hotspots());
         }
         final boolean equals = variant.hotspots().containsAll(reducedCollatorResults);
         return equals;

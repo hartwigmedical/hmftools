@@ -691,6 +691,20 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     }
 
     @Test
+    public void duplicationAtExonBoundary()
+    {
+        TransvalVariant variant = transval.calculateVariant("ARID1A", "D641dup");
+        checkSingleHotspot(variant, "G", "GGAT", "chr1", 26760855);
+    }
+
+    @Test
+    public void duplicationAtExonBoundaryNegativeStrand()
+    {
+        TransvalVariant variant = transval.calculateVariant("BRAF", "V238dup");
+        checkSingleHotspot(variant, "G", "GTAC", "chr7", 140_801_557);
+    }
+
+    @Test
     public void duplicationInRegionOfRepeatingAminoAcids()
     {
         TransvalVariant variant = transval.calculateVariant("ARID1A", "P20_P21dup");
@@ -699,5 +713,27 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
                 hotspot("C", "CCCGCCG", "chr1", 26_696_448),
                 hotspot("G", "GCCGCCC", "chr1", 26_696_460)
         );
+    }
+
+    @Test
+    public void duplicationOnNegativeStrand()
+    {
+        TransvalVariant v600 = transval.calculateVariant("BRAF", "V600dup");
+        checkSingleHotspot(v600, "T", "TCAC", "chr7", 140_753_334);
+
+        TransvalVariant t599 = transval.calculateVariant("BRAF", "T599dup");
+        // CAC TGT
+        // CAC TGT TGT
+        // CA CTG C TGT
+        checkSingleHotspot(t599, "C", "CTGT", "chr7", 140_753_337);
+
+        TransvalVariant interval = transval.calculateVariant("BRAF", "T599_V600dup");
+        //     140_753_335
+        //     |
+        // K   V   T   A
+        // TTT CAC TGT AGC
+        // TTT CAC TGT AGC
+        // TTT CAC TGT CAC TGT AGC
+        checkSingleHotspot(interval, "T", "TTCACTG", "chr7", 140_753_333);
     }
 }

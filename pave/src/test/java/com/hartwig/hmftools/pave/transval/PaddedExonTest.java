@@ -18,11 +18,29 @@ public class PaddedExonTest extends TransvalTestBase
         assertEquals("T", ec.baseImmediatelyBefore(3));
         assertEquals("G", ec.baseImmediatelyBefore(11));
 
-        assertEquals("A", ec2.baseImmediatelyBefore(0));
+        assertEquals("G", ec2.baseImmediatelyBefore(0));
         assertEquals("T", ec2.baseImmediatelyBefore(1));
 
-        assertEquals("A", ec6.baseImmediatelyBefore(0));
+        assertEquals("G", ec6.baseImmediatelyBefore(0));
         assertEquals("T", ec6.baseImmediatelyBefore(1));
+    }
+
+    @Test
+    public void baseSequenceWithDeletionAppliedTest()
+    {
+        assertEquals("AAACCCGGG", ec.baseSequenceWithDeletionApplied(0, 3, true));
+        assertEquals("TTTCCCGGG", ec.baseSequenceWithDeletionApplied(3, 6, true));
+        assertEquals("TTACCCGGG", ec.baseSequenceWithDeletionApplied(2, 5, true));
+
+        assertEquals("AAAACCCGG", ec2.baseSequenceWithDeletionApplied(0, 3, true));
+        assertEquals("TATTAGGAT", ec6.baseSequenceWithDeletionApplied(3, 6, true));
+
+        assertEquals("GGGTTTAAA", ec.baseSequenceWithDeletionApplied(0, 3, false));
+        assertEquals("CCCTTTAAA", ec.baseSequenceWithDeletionApplied(3, 6, false));
+        assertEquals("CCGTTTAAA", ec.baseSequenceWithDeletionApplied(2, 5, false));
+
+        assertEquals("GGTTTAAAT", ec2.baseSequenceWithDeletionApplied(0, 3, false));
+        assertEquals("ATCCGAATA", ec6.baseSequenceWithDeletionApplied(3, 6, false));
     }
 
     @Test
@@ -35,6 +53,12 @@ public class PaddedExonTest extends TransvalTestBase
         assertEquals("ATTTTTTAAACCCGG", ec2.baseSequenceWithDuplicationApplied(0, 3, true));
         assertEquals("TATTAACCACCGGAT", ec6.baseSequenceWithDuplicationApplied(3, 6, true));
 
+        assertEquals("CCCCCCGGGTTTAAA", ec.baseSequenceWithDuplicationApplied(0, 3, false));
+        assertEquals("CCCGGGGGGTTTAAA", ec.baseSequenceWithDuplicationApplied(3, 6, false));
+        assertEquals("CCCGGCGGGTTTAAA", ec.baseSequenceWithDuplicationApplied(2, 5, false));
+
+        assertEquals("CCGCCGGGTTTAAAT", ec2.baseSequenceWithDuplicationApplied(0, 3, false));
+        assertEquals("ATCCGGTTGTTAATA", ec6.baseSequenceWithDuplicationApplied(3, 6, false));
     }
 
     @Test

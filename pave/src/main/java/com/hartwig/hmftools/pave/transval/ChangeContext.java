@@ -36,16 +36,6 @@ public class ChangeContext
         return ContainingExon.toStrandCoordinates(FinishPositionInExon + 1, IsPositiveStrand);
     }
 
-    String affectedBases()
-    {
-        return ContainingExon.basesBetween(StartPositionInExon, FinishPositionInExon);
-    }
-
-    String baseImmediatelyBeforeChange()
-    {
-        return ContainingExon.baseImmediatelyBefore(StartPositionInExon);
-    }
-
     ChangeResult applyDuplication()
     {
         String bases = ContainingExon.baseSequenceWithDuplicationApplied(StartPositionInExon, FinishPositionInExon + 1, IsPositiveStrand);
@@ -59,7 +49,7 @@ public class ChangeContext
 
     String exonBasesAfterDeletion()
     {
-        return ContainingExon.baseSequenceWithDeletionApplied(StartPositionInExon, FinishPositionInExon, IsPositiveStrand);
+        return ContainingExon.baseSequenceWithDeletionApplied(StartPositionInExon, FinishPositionInExon + 1, IsPositiveStrand);
     }
 
     public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged, boolean isPositiveStrand)
@@ -74,11 +64,11 @@ public class ChangeContext
     {
         if(IsPositiveStrand)
         {
-            return ContainingExon.basesBetween(StartPositionInExon - 1, FinishPositionInExon);
+            return ContainingExon.baseImmediatelyBefore(StartPositionInExon) + ContainingExon.basesBetween(StartPositionInExon, FinishPositionInExon);
         }
-        int excisionEnd = ContainingExon.inExonLength() - StartPositionInExon - 1;
-        int excisionStart = ContainingExon.inExonLength() - FinishPositionInExon - 1;
-        return ContainingExon.basesBetween(excisionStart - 1, excisionEnd);
+        int end = ContainingExon.inExonLength() - StartPositionInExon - 1;
+        int start = ContainingExon.inExonLength() - FinishPositionInExon - 1;
+        return ContainingExon.baseImmediatelyBefore(start) + ContainingExon.basesBetween(start, end);
     }
 
     @Override

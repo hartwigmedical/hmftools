@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static com.hartwig.hmftools.common.utils.Strings.last;
+
 import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -32,33 +34,54 @@ public class PaddedExon
         Preconditions.checkArgument(totalLength() % 3 == 0);
     }
 
+    public String baseSequence(boolean positiveStrand)
+    {
+        if (positiveStrand) {
+            return BasesOfFirstCodonInPreviousExon + exonBases + BasesOfLastCodonInFollowingExon;
+        }
+        return Nucleotides.reverseComplementBases(BasesOfFirstCodonInPreviousExon + exonBases + BasesOfLastCodonInFollowingExon);
+    }
+
     public String baseSequenceWithDeletionApplied(int start, int end, boolean positiveStrand)
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start <= end);
-        Preconditions.checkArgument((end - start + 1) % 3 == 0);
+        Preconditions.checkArgument((end - start) % 3 == 0);
         if(!positiveStrand)
         {
-            int exonEnd = exonBases.length() - 1;
-            String left = exonBases.substring(0, exonBases.length() - end - 1);
-            String right = exonBases.substring(exonEnd - start + 1, exonEnd + 1);
-            String complete = BasesOfLastCodonInFollowingExon + left + right + BasesOfFirstCodonInPreviousExon;
+            int exonEnd = exonBases.length();
+            String r = exonBases.substring(exonBases.length() - start);
+            String l = exonBases.substring(0, exonEnd - end);
+            String complete = BasesOfFirstCodonInPreviousExon + l + r + BasesOfLastCodonInFollowingExon;
             return Nucleotides.reverseComplementBases(complete);
         }
         String left = exonBases.substring(0, start);
-        String right = exonBases.substring(end + 1);
+        String right = exonBases.substring(end);
 
         return BasesOfFirstCodonInPreviousExon + left + right + BasesOfLastCodonInFollowingExon;
     }
 
-    public String baseSequenceWithDuplicationApplied(int start, int end, boolean positiveStrand)
+    public String baseSequenceWithDuplicationApplied(final int start, final int end, final boolean positiveStrand)
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start < end);
         Preconditions.checkArgument((end - start) % 3 == 0);
+        if(!positiveStrand)
+        {
+            int exonEnd = exonBases.length();
+            int s = exonEnd - end;
+            int e = exonEnd - start;
+            String r = exonBases.substring(e);
+            String l = exonBases.substring(0, s);
+            String m = exonBases.substring(s, e);
+            Preconditions.checkArgument((l + m + r).equals(exonBases));
+            String complete = BasesOfFirstCodonInPreviousExon + l + m + m + r + BasesOfLastCodonInFollowingExon;
+            return Nucleotides.reverseComplementBases(complete);
+        }
         String left = exonBases.substring(0, start);
         String middle = exonBases.substring(start, end);
         String right = exonBases.substring(end);
+        Preconditions.checkArgument((left + middle + right).equals(exonBases));
         return BasesOfFirstCodonInPreviousExon + left + middle + middle + right + BasesOfLastCodonInFollowingExon;
     }
 
@@ -72,9 +95,10 @@ public class PaddedExon
     public String baseImmediatelyBefore(int position)
     {
         Preconditions.checkArgument(position >= 0);
+        Preconditions.checkArgument(position <= inExonLength());
         if(position == 0)
         {
-            return BasesOfFirstCodonInPreviousExon.substring(BasesOfFirstCodonInPreviousExon.length() - 1);
+            return last(IntronicPrefix);
         }
         return exonBases.substring(position - 1, position);
     }
@@ -120,7 +144,6 @@ public class PaddedExon
         if(!isPositiveStrand)
         {
             return exonBases.length() - 3 * (codonIndex + 1);
-//            int offset = (3 - numberOfBasesInFollowingExon()) %3;
         }
         return 3 * (codonIndex - 1) + offset;
     }

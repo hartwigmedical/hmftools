@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-
 public abstract class ProteinVariant
 {
     @NotNull
@@ -69,7 +68,7 @@ public abstract class ProteinVariant
     public String referenceAminoAcids()
     {
         return AminoAcidSequence.AminoAcids.substring(
-                PositionOfFirstAlteredCodon - 1, PositionOfFirstAlteredCodon +  RefLength - 1);
+                PositionOfFirstAlteredCodon - 1, PositionOfFirstAlteredCodon + RefLength - 1);
     }
 
     public int positionOfFirstAlteredCodon()
@@ -107,17 +106,17 @@ public abstract class ProteinVariant
         ChangeContext changeContext = getChangeContext(genome);
         ChangeResult firstExampleResult = applyChange(changeContext);
         int maxMoves = changeContext.StartPositionInExon;
-        if (Transcript.negStrand())
+        if(Transcript.negStrand())
         {
             maxMoves = changeContext.ContainingExon.inExonLength() - changeContext.FinishPositionInExon - 1;
         }
         maxMoves = Math.min(maxMoves, 32);
-        Map<String,ChangeContext> results = new HashMap<>();
-        for (int i=0; i<=maxMoves; i++)
+        Map<String, ChangeContext> results = new HashMap<>();
+        for(int i = 0; i <= maxMoves; i++)
         {
-            int excisionStart = Transcript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
-            int excisionEnd = excisionStart + RefLength * 3 - 1;
-            ChangeContext change = new ChangeContext(changeContext.ContainingExon, excisionStart, excisionEnd, Transcript.posStrand(), 0);
+            int start = Transcript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
+            int end = start + RefLength * 3 - 1;
+            ChangeContext change = new ChangeContext(changeContext.ContainingExon, start, end, Transcript.posStrand(), 0);
             ChangeResult changeAtThisPosition = applyChange(change);
             if(firstExampleResult.mAminoAcids.equals(changeAtThisPosition.mAminoAcids))
             {
@@ -141,7 +140,6 @@ public abstract class ProteinVariant
                 Gene.Chromosome,
                 false,
                 hotspots);
-
     }
 
     abstract TransvalHotspot convertToHotspot(ChangeContext changeContext);

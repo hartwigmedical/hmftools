@@ -25,10 +25,8 @@ class Duplication extends ProteinVariant
     @Override
     TransvalHotspot convertToHotspot(final ChangeContext changeContext)
     {
-//        String duplicated = changeContext.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength, Transcript.posStrand()).segmentThatIsModified();
-        String duplicated = changeContext.affectedBases();
-        String baseAtChangeLocation = changeContext.baseImmediatelyBeforeChange();
-        int position = changeContext.positionOfChangeStartInStrand() - 1;
-        return new TransvalHotspot(baseAtChangeLocation, baseAtChangeLocation + duplicated, Gene.Chromosome, position);
+        String duplicated = changeContext.refBases();
+        String refBase = duplicated.substring(0,  1);
+        return new TransvalHotspot(refBase, duplicated, Gene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
     }
 }
