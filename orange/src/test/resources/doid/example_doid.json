@@ -86,10 +86,7 @@
         "xrefs": [],
         "basicPropertyValues": []
       },
-      "equivalentNodesSets": [],
-      "logicalDefinitionAxioms": [],
-      "domainRangeAxioms": [],
-      "propertyChainAxioms": []
+      "logicalDefinitionAxioms": []
     }
   ]
 }

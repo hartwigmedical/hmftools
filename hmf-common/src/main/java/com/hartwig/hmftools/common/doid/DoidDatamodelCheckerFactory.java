@@ -93,6 +93,8 @@ final class DoidDatamodelCheckerFactory
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("pred", true);
         map.put("val", true);
+        map.put("xrefs", false);
+        map.put("synonymType", false);
         return new JsonDatamodelChecker("DoidSynonym", map);
     }
 

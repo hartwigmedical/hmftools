@@ -16,5 +16,11 @@ public abstract class DoidSynonym
 
     @NotNull
     public abstract String val();
+
+    @Nullable
+    public abstract String xrefs();
+
+    @Nullable
+    public abstract String synonymType();
 }
 
