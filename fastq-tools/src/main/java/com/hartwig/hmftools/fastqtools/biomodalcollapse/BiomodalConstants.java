@@ -2,8 +2,6 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 public class BiomodalConstants
 {
-    public static int LOW_QUAL_CUTOFF = 30;
-
     public static int MIN_RESOLVED_READ_LENGTH = 30;
     public static int PREFIX_TRIM_LENGTH = 1;
     public static float LOW_QUAL_TRIM_PROPORTION_THRESHOLD = 0.7f;

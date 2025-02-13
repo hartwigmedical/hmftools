@@ -2,6 +2,8 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
+
 import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
@@ -64,7 +66,7 @@ public class ReverseComplementMatchInfo
                 {
                     matchCount++;
                 }
-                else if(qual > BiomodalConstants.LOW_QUAL_CUTOFF)
+                else if(qual > LOW_QUAL_CUTOFF)
                 {
                     highQualMismatchCount++;
                 }

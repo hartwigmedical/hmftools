@@ -3,10 +3,13 @@ package com.hartwig.hmftools.common.basequal.jitter;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.DUPLEX;
+import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.HIGH_QUAL;
 import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.IGNORE;
 import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.NONE;
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.SIMPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 
 import static htsjdk.samtools.CigarOperator.H;
@@ -32,6 +35,9 @@ public abstract class ConsensusMarker
     {
         if(sequencingType == SBX)
             return new SBXConsensusMarker();
+
+        if(sequencingType == BIOMODAL)
+            return new BiomodalConsensusMarker();
 
         return null;
     }
@@ -130,21 +136,35 @@ public abstract class ConsensusMarker
             int endIdx = boundaries.getRight();
             int minQual = Integer.MAX_VALUE;
             for(int i = startIdx; i <= endIdx; i++)
-            {
                 minQual = min(minQual, quals[i]);
-            }
 
             if(minQual == SIMPLEX_QUAL)
-            {
                 return NONE;
-            }
 
             if(minQual == DUPLEX_QUAL)
-            {
                 return DUPLEX;
-            }
 
             return IGNORE;
+        }
+    }
+
+    public static class BiomodalConsensusMarker extends ConsensusMarker
+    {
+        @Override
+        public ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+        {
+            byte[] quals = record.getBaseQualities();
+            Pair<Integer, Integer> boundaries = getMicrosatelliteBoundaries(refGenomeMicrosatellite, record);
+            int startIdx = boundaries.getLeft();
+            int endIdx = boundaries.getRight();
+            int minQual = Integer.MAX_VALUE;
+            for(int i = startIdx; i <= endIdx; i++)
+                minQual = min(minQual, quals[i]);
+
+            if(minQual > LOW_QUAL_CUTOFF)
+                return HIGH_QUAL;
+
+            return NONE;
         }
     }
 }

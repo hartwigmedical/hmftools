@@ -17,6 +17,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class BiomodalBamUtils
 {
+    public static int LOW_QUAL_CUTOFF = 30;
+
     public static String MODC_ANNOTATION = "MODC";
     public static String MM_PREFIX = "C+C.";
     public static String MM_SUFFIX = ";";

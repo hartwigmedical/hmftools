@@ -3,9 +3,10 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_FIRST;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_SECOND;
-import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,9 +16,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -519,7 +520,7 @@ public class BiomodalCollapseUtil
     {
         List<SuffixClipper> suffixClippers = Lists.newArrayList();
         suffixClippers.add(new SuffixClipper(x -> x.Base != BiomodalConstants.MISSING_BASE
-                && x.Qual <= BiomodalConstants.LOW_QUAL_CUTOFF, BiomodalConstants.LOW_QUAL_TRIM_PROPORTION_THRESHOLD));
+                && x.Qual <= LOW_QUAL_CUTOFF, BiomodalConstants.LOW_QUAL_TRIM_PROPORTION_THRESHOLD));
         suffixClippers.add(new SuffixClipper(x -> x.Base == BiomodalConstants.MISSING_BASE, BiomodalConstants.MISSING_BASE_TRIM_PROPORTION_THRESHOLD));
 
         List<BaseQualPair> trimmedSeq = seq.subList(BiomodalConstants.PREFIX_TRIM_LENGTH, seq.size());

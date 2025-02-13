@@ -4,5 +4,6 @@ public enum ConsensusType
 {
     IGNORE,
     NONE,
-    DUPLEX;
+    DUPLEX,
+    HIGH_QUAL;
 }
