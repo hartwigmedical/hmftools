@@ -106,7 +106,7 @@ public abstract class ProteinVariant
     }
 
     @VisibleForTesting
-    Collection<ChangeContext> findLeftmostApplicableChanges(RefGenomeInterface genome)
+    Collection<ChangeResult> findLeftmostApplicableChanges(RefGenomeInterface genome)
     {
         ChangeContext changeContext = getChangeContext(genome);
         ChangeResult firstExampleResult = applyChange(changeContext);
@@ -116,7 +116,7 @@ public abstract class ProteinVariant
             maxMoves = changeContext.ContainingExon.inExonLength() - changeContext.FinishPositionInExon - 1;
         }
         maxMoves = Math.min(maxMoves, 32);
-        Map<String, ChangeContext> results = new HashMap<>();
+        Map<String, ChangeResult> results = new HashMap<>();
         for(int i = 0; i <= maxMoves; i++)
         {
             int start = mTranscript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
@@ -125,7 +125,7 @@ public abstract class ProteinVariant
             ChangeResult changeAtThisPosition = applyChange(change);
             if(firstExampleResult.mAminoAcids.equals(changeAtThisPosition.mAminoAcids))
             {
-                results.put(changeAtThisPosition.mBases, change);
+                results.put(changeAtThisPosition.mBases, changeAtThisPosition);
             }
         }
         return results.values();
@@ -133,19 +133,19 @@ public abstract class ProteinVariant
 
     TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
-        Collection<ChangeContext> changes = findLeftmostApplicableChanges(refGenome);
-        AminoAcidSequence requiredSequence = variantSequence();
-        if(requiredSequence != null)
-        {
-            System.out.println(requiredSequence.sequence());
-            for(ChangeContext change : changes)
-            {
-                ChangeResult cr = change.applyDuplication();
-                System.out.println(cr.mAminoAcids);
+        Collection<ChangeResult> changes = findLeftmostApplicableChanges(refGenome);
+//        AminoAcidSequence requiredSequence = variantSequence();
+//        if(requiredSequence != null)
+//        {
+//            System.out.println(requiredSequence.sequence());
+//            for(ChangeContext change : changes)
+//            {
+//                ChangeResult cr = change.applyDuplication();
+//                System.out.println(cr.mAminoAcids);
 //                Preconditions.checkArgument(requiredSequence.sequence().contains(cr.mAminoAcids.sequence()));
-                System.out.println("------- ok: " + cr.mAminoAcids);
-            }
-        }
+//                System.out.println("------- ok: " + cr.mAminoAcids);
+//            }
+//        }
         if(changes.isEmpty())
         {
             return null;
@@ -159,7 +159,10 @@ public abstract class ProteinVariant
                 hotspots);
     }
 
-    abstract TransvalHotspot convertToHotspot(ChangeContext changeContext);
+    TransvalHotspot convertToHotspot(ChangeResult changeResult)
+    {
+        return new TransvalHotspot(changeResult.mRefBases, changeResult.altBases, mGene.Chromosome, changeResult.mLocation);
+    }
 
     CodonRegions exonsForCodonPosition(int codonPosition)
     {

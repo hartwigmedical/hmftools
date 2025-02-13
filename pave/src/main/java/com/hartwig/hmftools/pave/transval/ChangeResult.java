@@ -14,10 +14,22 @@ class ChangeResult
     @NotNull
     public final String mBases;
 
-    public ChangeResult(@NotNull final AminoAcidSequence mAminoAcids, @NotNull final String mBases)
+    public final int mLocation;
+
+    @NotNull
+    public final String mRefBases;
+
+    @NotNull
+    public final String altBases;
+
+    public ChangeResult(@NotNull final AminoAcidSequence mAminoAcids, @NotNull final String mBases, final int mLocation,
+            @NotNull final String mRefBases, @NotNull final String altBases)
     {
         this.mAminoAcids = mAminoAcids;
         this.mBases = mBases;
+        this.mLocation = mLocation;
+        this.mRefBases = mRefBases;
+        this.altBases = altBases;
     }
 
     @Override
@@ -28,21 +40,26 @@ class ChangeResult
             return false;
         }
         final ChangeResult that = (ChangeResult) o;
-        return Objects.equals(mAminoAcids, that.mAminoAcids) && Objects.equals(mBases, that.mBases);
+        return mLocation == that.mLocation && Objects.equals(mAminoAcids, that.mAminoAcids)
+                && Objects.equals(mBases, that.mBases) && Objects.equals(mRefBases, that.mRefBases)
+                && Objects.equals(altBases, that.altBases);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mAminoAcids, mBases);
+        return Objects.hash(mAminoAcids, mBases, mLocation, mRefBases, altBases);
     }
 
     @Override
     public String toString()
     {
         return "ChangeResult{" +
-                "mAminoAcids='" + mAminoAcids + '\'' +
+                "mAminoAcids=" + mAminoAcids +
                 ", mBases='" + mBases + '\'' +
+                ", mLocation=" + mLocation +
+                ", mRefBases='" + mRefBases + '\'' +
+                ", altBases='" + altBases + '\'' +
                 '}';
     }
 }

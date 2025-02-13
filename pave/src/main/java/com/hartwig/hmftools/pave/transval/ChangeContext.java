@@ -36,16 +36,17 @@ public class ChangeContext
         return ContainingExon.toStrandCoordinates(FinishPositionInExon + 1, IsPositiveStrand);
     }
 
-    ChangeResult applyDuplication()
-    {
-        String bases = ContainingExon.baseSequenceWithDuplicationApplied(StartPositionInExon, FinishPositionInExon + 1, IsPositiveStrand);
-        return new ChangeResult(AminoAcidSequence.fromNucleotides(bases), bases);
-    }
+//    ChangeResult applyDuplication()
+//    {
+//        String bases = ContainingExon.baseSequenceWithDuplicationApplied(StartPositionInExon, FinishPositionInExon + 1, IsPositiveStrand);
+//
+//        return new ChangeResult(AminoAcidSequence.fromNucleotides(bases), bases);
+//    }
 
-    AminoAcidSequence applyDeletion()
-    {
-        return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion());
-    }
+//    AminoAcidSequence applyDeletion()
+//    {
+//        return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion());
+//    }
 
     String exonBasesAfterDeletion()
     {

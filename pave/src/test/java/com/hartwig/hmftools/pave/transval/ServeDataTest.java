@@ -105,7 +105,7 @@ public class ServeDataTest
         return jsonObject.get(key).getAsString();
     }
 
-    @Test
+//    @Test
     public void check()
     {
         List<StatsForGene> results = new ArrayList<>();

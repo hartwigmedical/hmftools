@@ -19,7 +19,14 @@ class Duplication extends ProteinVariant
     @Override
     ChangeResult applyChange(ChangeContext changeContext)
     {
-        return changeContext.applyDuplication();
+        int changeStart = changeContext.StartPositionInExon;
+        int changeEnd = changeContext.FinishPositionInExon + 1;
+        PaddedExon exon = changeContext.ContainingExon;
+        String bases = exon.baseSequenceWithDuplicationApplied(changeStart, changeEnd, changeContext.IsPositiveStrand);
+        AminoAcidSequence resultSequence = AminoAcidSequence.fromNucleotides(bases);
+        String duplicated = changeContext.refBases();
+        String refBase = duplicated.substring(0,  1);
+        return new ChangeResult(resultSequence, bases, changeContext.positionOfChangeStartInStrand() - 1, refBase, duplicated);
     }
 
     @Override
@@ -36,11 +43,11 @@ class Duplication extends ProteinVariant
         return AminoAcidSequence.parse(duplicatedAAs);
     }
 
-    @Override
-    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
-    {
-        String duplicated = changeContext.refBases();
-        String refBase = duplicated.substring(0,  1);
-        return new TransvalHotspot(refBase, duplicated, mGene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
-    }
+//    @Override
+//    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
+//    {
+//        String duplicated = changeContext.refBases();
+//        String refBase = duplicated.substring(0,  1);
+//        return new TransvalHotspot(refBase, duplicated, mGene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
+//    }
 }

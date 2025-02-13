@@ -41,7 +41,7 @@ class Insertion extends ProteinVariant
     @Override
     ChangeResult applyChange(ChangeContext changeContext)
     {
-        return changeContext.applyDuplication();
+        return null;
     }
 
     @Override
@@ -60,13 +60,5 @@ class Insertion extends ProteinVariant
         String right = rawAAs.substring(pointOfInsertion);
         String duplicatedAAs = left + mInsertedSequence.sequence() + right;
         return AminoAcidSequence.parse(duplicatedAAs);
-    }
-
-    @Override
-    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
-    {
-        String duplicated = changeContext.refBases();
-        String refBase = duplicated.substring(0,  1);
-        return new TransvalHotspot(refBase, duplicated, mGene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
     }
 }
