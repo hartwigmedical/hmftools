@@ -26,7 +26,7 @@ final class DoidDatamodelCheckerFactory
         map.put("edges", true);
         map.put("id", true);
         map.put("meta", true);
-        map.put("logicalDefinitionAxioms", true);
+        map.put("logicalDefinitionAxioms", false);
 
         return new JsonDatamodelChecker("DoidGraphs", map);
     }
@@ -103,7 +103,7 @@ final class DoidDatamodelCheckerFactory
     static JsonDatamodelChecker doidDefinitionChecker()
     {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("xrefs", true);
+        map.put("xrefs", false);
         map.put("val", true);
         return new JsonDatamodelChecker("DoidDefinition", map);
     }
