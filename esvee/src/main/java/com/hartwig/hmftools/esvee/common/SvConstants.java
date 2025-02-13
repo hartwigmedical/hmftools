@@ -4,6 +4,8 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 
+import com.hartwig.hmftools.common.sequencing.SequencingType;
+
 public final class SvConstants
 {
     public static final String BAM_HEADER_SAMPLE_INDEX_TAG = "sampleId";
@@ -22,6 +24,9 @@ public final class SvConstants
     {
         return max(observedMaxFragmentLength, MIN_UPPER_FRAGMENT_LENGTH);
     }
+
+    // sequencing type
+    public static SequencingType Sequencing = SequencingType.ILLUMINA;
 
     // indels
     public static final int MIN_INDEL_SUPPORT_LENGTH = 3;

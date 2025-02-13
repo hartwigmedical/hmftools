@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_LOW_BASE_QUAL_THRESHOLD;
@@ -19,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +32,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.sequencing.SBXBamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -82,6 +89,17 @@ public final class FileCommon
             LOW_BASE_QUAL_THRESHOLD = configBuilder.getInteger(CFG_LOW_BASE_QUAL);
     }
 
+    public static void setSequencingType(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasValue(SEQUENCING_TYPE_CFG))
+        {
+            SvConstants.Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+            if(SvConstants.Sequencing == SBX)
+                LOW_BASE_QUAL_THRESHOLD = SBXBamUtils.SIMPLEX_QUAL;
+        }
+    }
+
     public static List<String> parseSampleBamLists(final ConfigBuilder configBuilder, final String configItem)
     {
         return Arrays.stream(configBuilder.getValue(configItem).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
@@ -119,6 +137,23 @@ public final class FileCommon
             return outputIdFilename;
 
         return formOutputFile(outputDir, sampleId, PREP_FILE_ID, fileId, null);
+    }
+
+    public static List<String> formPrepBamFilenames(final String outputDir, final List<String> sampleIds)
+    {
+        List<String> bamFiles = Lists.newArrayListWithExpectedSize(sampleIds.size());
+
+        for(String sampleId : sampleIds)
+        {
+            String bamFile = format("%s%s.%s.bam", outputDir, sampleId, PREP_FILE_ID);
+
+            if(!Files.exists(Paths.get(bamFile)))
+                return Collections.emptyList();
+
+            bamFiles.add(bamFile);
+        }
+
+        return bamFiles;
     }
 
     public static String formEsveeInputFilename(

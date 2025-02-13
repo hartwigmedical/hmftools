@@ -19,7 +19,7 @@ public enum FilterType
     DUPLICATE("dedup", "Event is duplicate of another", false),
     SGL("sgl", "SGLs filtered entirely", false),
     SHORT_LOW_VAF_INV("shortLowVafInv", "Short low-VAF INV artefacts with homology", false),
-    SHORT_LOW_VAF_DEL("shortLowVafDE;", "Short low-VAF DEL artefacts with homology", false),
+    SHORT_LOW_VAF_DEL("shortLowVafDel", "Short low-VAF DEL artefacts with homology", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;

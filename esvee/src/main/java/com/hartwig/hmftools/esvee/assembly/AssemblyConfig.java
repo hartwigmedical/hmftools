@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
@@ -27,11 +26,11 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
@@ -43,18 +42,18 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepBamFilenames;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
+import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -63,7 +62,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -97,8 +95,6 @@ public class AssemblyConfig
     public final List<WriteType> WriteTypes;
 
     public final boolean RunAlignment;
-
-    public static SequencingType Sequencing = SequencingType.ILLUMINA;
 
     public final String OutputDir;
     public final String OutputId;
@@ -156,13 +152,26 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
-        TumorIds = parseSampleBamLists(configBuilder, TUMOR);
-        TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(configBuilder.hasValue(REFERENCE) && configBuilder.hasValue(REFERENCE_BAM))
+        PrepDir = configBuilder.hasValue(PREP_DIR) ? checkAddDirSeparator(configBuilder.getValue(PREP_DIR)) : OutputDir;
+
+        TumorIds = parseSampleBamLists(configBuilder, TUMOR);
+
+        if(configBuilder.hasValue(TUMOR_BAM))
+            TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
+        else
+            TumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+
+        if(configBuilder.hasValue(REFERENCE))
         {
             ReferenceIds = parseSampleBamLists(configBuilder, REFERENCE);
-            ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
+
+            if(configBuilder.hasValue(REFERENCE_BAM))
+                ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
+            else
+                ReferenceBams = formPrepBamFilenames(PrepDir, ReferenceIds);
         }
         else
         {
@@ -185,11 +194,6 @@ public class AssemblyConfig
             TumorBams.addAll(ReferenceBams);
             ReferenceBams.clear();
         }
-
-        OutputDir = parseOutputDir(configBuilder);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
-
-        PrepDir = configBuilder.hasValue(PREP_DIR) ? configBuilder.getValue(PREP_DIR) : OutputDir;
 
         JunctionFiles = Lists.newArrayList();
 
@@ -225,9 +229,7 @@ public class AssemblyConfig
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
-        if(configBuilder.hasValue(SEQUENCING_TYPE_CFG))
-            Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
-
+        setSequencingType(configBuilder);
         setLowBaseQualThreshold(configBuilder);
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
@@ -326,7 +328,7 @@ public class AssemblyConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
-        configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
+        configBuilder.addConfigItem(TUMOR_BAM, false, TUMOR_BAMS_DESC);
 
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);

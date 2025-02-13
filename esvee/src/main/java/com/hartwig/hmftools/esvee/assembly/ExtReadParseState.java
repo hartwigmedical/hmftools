@@ -5,15 +5,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
-import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineExtensionEndIndex;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-
-import java.util.List;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 public class ExtReadParseState
 {
@@ -92,6 +89,30 @@ public class ExtReadParseState
         }
 
         mExhausted = mCurrentIndex < 0 || mCurrentIndex >= mRead.basesLength();
+    }
+
+    public void movePastLowQualBases()
+    {
+        moveNext();
+
+        while(!exhausted() && belowMinQual(currentQual()))
+        {
+            moveNext();
+        }
+    }
+
+    public byte nextHighQualBase()
+    {
+        int index = mCurrentIndex;
+        while(!exhausted() && belowMinQual(mRead.getBaseQuality()[index]))
+        {
+            ++index;
+        }
+
+        if(exhausted())
+            return -1;
+        else
+            return mRead.getBases()[index];
     }
 
     public void resetIndex()
