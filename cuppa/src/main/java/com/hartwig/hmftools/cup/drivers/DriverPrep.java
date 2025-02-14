@@ -120,7 +120,7 @@ public class DriverPrep implements CategoryPrep
         }
     }
 
-    public void getRepeatIndelDrivers(String sampleId) throws IOException
+    public void getIndelDrivers(String sampleId) throws IOException
     {
         PurityContext purityContext = PurityContextFile.readWithQC(
                 mConfig.purpleQcFile(sampleId),
@@ -129,18 +129,21 @@ public class DriverPrep implements CategoryPrep
 
         boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
 
+        if(!isMicrosatelliteStable)
+            return;
+
         final List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, null);
         for(SomaticVariant variant : variants)
         {
             String gene = variant.Gene;
 
-            // TODO: Look for known hotspot mutations in CupConstants. Potentially rename method
-            // KNOWN_MUTATIONS.stream().anyMatch(x -> x.matches(gene, variant.Type, variant.Ref, variant.Alt, variant.Position));
-
             boolean isKnownIndelGene = gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
-            boolean isRepeatIndelDriver = isKnownIndelGene && variant.Type == INDEL && variant.RepeatCount <= INDEL_MAX_REPEAT_COUNT;
 
-            if(isMicrosatelliteStable && isRepeatIndelDriver)
+            // Ignore passenger (likely non-driver) indels in highly repetitive regions which are more likely the result of e.g.
+            // MSI / mismatch repair deficiency
+            boolean isIndelDriver = isKnownIndelGene && variant.Type == INDEL && variant.RepeatCount <= INDEL_MAX_REPEAT_COUNT;
+
+            if(isIndelDriver)
             {
                 String featureName = gene + INDEL_SUFFIX;
                 DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
@@ -216,7 +219,7 @@ public class DriverPrep implements CategoryPrep
     {
         try {
             getDriverMutationsFromCatalog(sampleId);
-            getRepeatIndelDrivers(sampleId);
+            getIndelDrivers(sampleId);
             getFusions(sampleId);
             getVirusAnnotations(sampleId);
         }

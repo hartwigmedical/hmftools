@@ -472,10 +472,10 @@ homozygous disruptions in the driver catalog. Homozygous deletions, disruptions 
 together, but amplifications are treated as a separate feature as some oncogenes tend to be amplified in specific cancer
 types and mutated in others (notable examples are KRAS, EGFR, SPOP & FOXA1).
 
-Indels in repeat contexts of 6 or fewer bases in 3 lineage defining genes: ALB (highly specific to Liver cancer) and 
-SFTPB & SLC34A2 (highly specific to Lung cancer) are also treated as additional features (note though that they are 
-ignored for MSI samples). A set of Lung cancer specific EGFR hotspots (including T790M, L858R and exon 19 and 20 inframe
-deletions) are also treated as a single feature.
+Indels in 3 lineage defining genes ALB (Liver cancer specific), and SFTPB and SLC34A2 (Lung cancer specific), are also treated as additional 
+features. However, passenger (likely non-driver) indels are ignored by removing those in repeat contexts of >6 bases or in MSI samples.
+
+A set of Lung cancer specific EGFR hotspots (including T790M, L858R and exon 19 and 20 inframe deletions) are also treated as a single feature.
 
 #### Fusions
 Known pathogenic fusion pairs, immunoglobulin (IG) rearrangement pairs and exon deletions/duplications configured in the

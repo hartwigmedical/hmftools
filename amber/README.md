@@ -19,7 +19,7 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
     install("copynumber")
 ```
 
-AMBER requires Java 11+ to be installed.
+AMBER requires Java 17+ to be installed.
 
 ## Paired Normal/Tumor Mode
 This is the default and recommended mode.
