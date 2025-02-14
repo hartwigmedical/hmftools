@@ -197,6 +197,27 @@ public final class DiseaseOntology
             JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
             doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomObject);
 
+            List<DoidRestriction> restrictionList = Lists.newArrayList();
+            JsonArray restrictionsArray = logicalDefinitionAxiomObject.has("restrictions")
+                    ? logicalDefinitionAxiomObject.getAsJsonArray("restrictions")
+                    : null;
+
+            if (restrictionsArray != null) {
+                for (JsonElement restrictionElement : restrictionsArray) {
+                    JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionChecker();
+
+                    if (restrictionElement.isJsonObject()) {
+                        JsonObject restrictionObject = restrictionElement.getAsJsonObject();
+                        doidRestrictionChecker.check(restrictionObject);
+
+                        restrictionList.add(ImmutableDoidRestriction.builder()
+                                .propertyId(string(restrictionObject, "propertyId"))
+                                .fillerId(string(restrictionObject, "fillerId"))
+                                .build());
+                    }
+                }
+            }
+
             List<String> genusIdList = Lists.newArrayList();
             for(JsonElement genusIdElement : logicalDefinitionAxiomObject.getAsJsonArray("genusIds"))
             {
