@@ -39,6 +39,16 @@ public class VariationParserTest extends TransvalTestBase
     }
 
     @Test
+    public void parseInsertionWithGene()
+    {
+        Insertion di = variationParser.parseInsertion("EGFR", "N73_Y74insSPQR");
+        Assert.assertEquals("EGFR", di.mGene.GeneName);
+        Assert.assertEquals(74, di.positionOfFirstAlteredCodon());
+        Assert.assertEquals(2, di.mRefLength);
+        Assert.assertEquals("SPQR", di.mInsertedSequence.sequence());
+    }
+
+    @Test
     public void canReferToGeneByName()
     {
         SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ZYX:p.Pro46Ala");

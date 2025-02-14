@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave.transval;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 class Insertion extends ProteinVariant
 {
     @NotNull
-    private final AminoAcidSequence mInsertedSequence;
+    final AminoAcidSequence mInsertedSequence;
 
     public Insertion(@NotNull final GeneData gene,
             @NotNull final TranscriptData transcript,
@@ -38,10 +39,28 @@ class Insertion extends ProteinVariant
         return allPossibilities;
     }
 
+    @NotNull
     @Override
-    ChangeResult applyChange(ChangeContext changeContext)
+    Set<ChangeResult> applyChange(ChangeContext context)
     {
-        return null;
+        int insertionPosition = context.StartPositionInExon;
+        String ref = context.mExon.baseImmediatelyBefore(context.StartPositionInExon);
+        Set<String> baseOptions = possibleInsertedNucleotideSequences();
+        Set<ChangeResult> result = new HashSet<>();
+        baseOptions.forEach(bases -> {
+            String withBasesInserted = context.mExon.baseSequenceWithInsertionApplied(insertionPosition, bases, context.IsPositiveStrand);
+            AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(withBasesInserted);
+            String alt = ref + bases;
+            result.add(new ChangeResult(acids, withBasesInserted, context.positionOfChangeStartInStrand() - 1, ref, alt));
+        });
+
+        return result;
+    }
+
+    @Override
+    boolean singleValueOnlyRequiredForEachStep()
+    {
+        return mInsertedSequence.length() > 1;
     }
 
     @Override

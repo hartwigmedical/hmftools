@@ -59,6 +59,10 @@ class VariationParser
         {
             return parseDuplication(gene, variant);
         }
+        if(variant.contains("ins"))
+        {
+            return parseInsertion(gene, variant);
+        }
         return parseSingleAminoAcidVariant(gene, variant);
     }
 
@@ -112,6 +116,19 @@ class VariationParser
         TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
         TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
         return new Duplication(geneData, transcriptData, aminoAcidsSequence, refRange);
+    }
+
+    public Insertion parseInsertion(@NotNull String gene, @NotNull String description)
+    {
+        GeneData geneData = lookupGene(gene);
+        String[] refAltParts = description.split("ins");
+        AminoAcidRange refRange = parseAminoAcidRange(refAltParts[0]);
+
+        AminoAcidSequence altSequence = AminoAcidSequence.parse(refAltParts[1]);
+        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange, new PassThroughFilter());
+        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
+        return new Insertion(geneData, transcriptData, aminoAcidsSequence, refRange, altSequence);
+
     }
 
     @NotNull

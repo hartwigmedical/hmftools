@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -16,17 +18,18 @@ class Duplication extends ProteinVariant
         super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
     }
 
+    @NotNull
     @Override
-    ChangeResult applyChange(ChangeContext changeContext)
+    Set<ChangeResult> applyChange(ChangeContext changeContext)
     {
         int changeStart = changeContext.StartPositionInExon;
         int changeEnd = changeContext.FinishPositionInExon + 1;
-        PaddedExon exon = changeContext.ContainingExon;
+        PaddedExon exon = changeContext.mExon;
         String bases = exon.baseSequenceWithDuplicationApplied(changeStart, changeEnd, changeContext.IsPositiveStrand);
-        AminoAcidSequence resultSequence = AminoAcidSequence.fromNucleotides(bases);
+        AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(bases);
         String duplicated = changeContext.refBases();
         String refBase = duplicated.substring(0,  1);
-        return new ChangeResult(resultSequence, bases, changeContext.positionOfChangeStartInStrand() - 1, refBase, duplicated);
+        return Set.of( new ChangeResult(acids, bases, changeContext.positionOfChangeStartInStrand() - 1, refBase, duplicated));
     }
 
     @Override
@@ -42,12 +45,4 @@ class Duplication extends ProteinVariant
         String duplicatedAAs = left + toDuplicate + toDuplicate + right;
         return AminoAcidSequence.parse(duplicatedAAs);
     }
-
-//    @Override
-//    TransvalHotspot convertToHotspot(final ChangeContext changeContext)
-//    {
-//        String duplicated = changeContext.refBases();
-//        String refBase = duplicated.substring(0,  1);
-//        return new TransvalHotspot(refBase, duplicated, mGene.Chromosome, changeContext.positionOfChangeStartInStrand() - 1);
-//    }
 }

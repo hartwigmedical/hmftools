@@ -62,6 +62,18 @@ public class PaddedExonTest extends TransvalTestBase
     }
 
     @Test
+    public void baseSequenceWithInsertionAppliedTest()
+    {
+        assertEquals("GTGTTTAAACCCGGG", ec.baseSequenceWithInsertionApplied(0, "GTG", true));
+        assertEquals("TGTGTTAAACCCGGG", ec.baseSequenceWithInsertionApplied(1, "GTG", true));
+        assertEquals("TTTGTGAAACCCGGG", ec.baseSequenceWithInsertionApplied(3, "GTG", true));
+        assertEquals("TTTAAACCCGGTACG", ec.baseSequenceWithInsertionApplied(11, "TAC", true));
+        assertEquals("TTTAAACCCGGGTAC", ec.baseSequenceWithInsertionApplied(12, "TAC", true));
+
+        assertEquals("TTTAAACCCGGGTAC", ec.baseSequenceWithInsertionApplied(12, "TAC", true));
+    }
+
+    @Test
     public void basesBetweenTest()
     {
         assertEquals("T", ec.basesBetween(0,0));

@@ -84,6 +84,17 @@ public class PaddedExon
         Preconditions.checkArgument((left + middle + right).equals(exonBases));
         return BasesOfFirstCodonInPreviousExon + left + middle + middle + right + BasesOfLastCodonInFollowingExon;
     }
+    
+    public String baseSequenceWithInsertionApplied(final int position, final String basesToInsert, final boolean positiveStrand)
+    {
+        Preconditions.checkArgument(position >= 0);
+        Preconditions.checkArgument(position <= exonBases.length());
+        
+        String left = exonBases.substring(0, position);
+        String right = exonBases.substring(position);
+        Preconditions.checkArgument((left + right).equals(exonBases));
+        return BasesOfFirstCodonInPreviousExon + left + basesToInsert + right + BasesOfLastCodonInFollowingExon;
+    }
 
     public String basesBetween(int start, int end)
     {

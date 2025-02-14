@@ -248,7 +248,7 @@ public class TransvalTest extends TransvalTestBase
         {
             String newBases = StringUtils.replaceOnce(originalBases, hotspot.Ref, hotspot.Alt);
             AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
-            Assert.assertEquals("SPQ", newAminoAcids.toString());
+            assertEquals("SPQ", newAminoAcids.toString());
         }
     }
 
@@ -543,11 +543,11 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
 
         del = transval.calculateVariant("VHL:p.L116_L118del");
         // CAC CTT TGG CTC TTC
-        checkSingleHotspot(del,"ACCTTTGGCT", "A", "chr3", 10_146_517);
+        checkSingleHotspot(del, "ACCTTTGGCT", "A", "chr3", 10_146_517);
 
         // TG TAT ACT CTG   VYTL
         del = transval.calculateVariant("VHL:p.T157del");
-        checkSingleHotspot(del,"ATAC", "A", "chr3", 10_149_790);
+        checkSingleHotspot(del, "ATAC", "A", "chr3", 10_149_790);
     }
 
     @Test
@@ -735,5 +735,41 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         // TTT CAC TGT AGC
         // TTT CAC TGT CAC TGT AGC
         checkSingleHotspot(interval, "T", "TTCACTG", "chr7", 140_753_333);
+    }
+
+    @Test
+    public void insertionAtStartOfExon()
+    {
+        TransvalVariant variant = transval.calculateVariant("VHL", "A5_E6insW");
+
+        //RAE: AGG GCG GAG, 2nd G of the A is at 10_141_862
+        checkSingleHotspot(variant, "G", "GTGG", "chr3", 10_141_862);
+
+        // Same location but multiple codons for the inserted amino acid.
+        variant = transval.calculateVariant("VHL", "A5_E6insF");
+        checkHotspots(variant,
+                hotspot("G", "GTTT", "chr3", 10_141_862),
+                hotspot("G", "GTTC", "chr3", 10_141_862)
+        );
+
+        // Same location but inserting multiple amino acid.
+        variant = transval.calculateVariant("VHL", "A5_E6insFARM");
+        Set<TransvalHotspot> hotspots = variant.hotspots();
+        assertEquals(1, hotspots.size());
+        TransvalHotspot hotspot = hotspots.iterator().next();
+        assertEquals("G", hotspot.Ref);
+        String codons = hotspot.Alt.substring(1);
+        assertEquals("FARM", AminoAcidSequence.fromNucleotides(codons).sequence());
+        assertEquals(10_141_862, hotspot.mPosition);
+    }
+
+    @Test
+    public void transvarInsertionTest()
+    {
+        TransvalVariant variant = transval.calculateVariant("EGFR", "P772_H773insY");
+        checkHotspots(variant,
+                hotspot("C", "CTAC", "chr7", 55_181_325),
+                hotspot("C", "CTAT", "chr7", 55_181_325)
+        );
     }
 }
