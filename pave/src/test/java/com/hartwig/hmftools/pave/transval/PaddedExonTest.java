@@ -12,6 +12,26 @@ public class PaddedExonTest extends TransvalTestBase
     PaddedExon ec6 = new PaddedExon("TA", "AT", "TTAACCGG", 100, "CATG");
 
     @Test
+    public void baseAtTest()
+    {
+        assertEquals("T", ec.baseAt(0, true));
+        assertEquals("A", ec.baseAt(3, true));
+        assertEquals("G", ec.baseAt(11, true));
+        assertEquals("T", ec2.baseAt(0, true));
+        assertEquals("T", ec2.baseAt(1, true));
+        assertEquals("T", ec6.baseAt(0, true));
+        assertEquals("A", ec6.baseAt(3, true));
+
+        assertEquals("G", ec.baseAt(0, false));
+        assertEquals("C", ec.baseAt(3, false));
+        assertEquals("T", ec.baseAt(11, false));
+        assertEquals("G", ec2.baseAt(0, false));
+        assertEquals("G", ec2.baseAt(1, false));
+        assertEquals("G", ec6.baseAt(0, false));
+        assertEquals("C", ec6.baseAt(3, false));
+    }
+
+    @Test
     public void baseImmediatelyBeforeTest()
     {
         assertEquals("T", ec.baseImmediatelyBefore(1));
@@ -69,8 +89,12 @@ public class PaddedExonTest extends TransvalTestBase
         assertEquals("TTTGTGAAACCCGGG", ec.baseSequenceWithInsertionApplied(3, "GTG", true));
         assertEquals("TTTAAACCCGGTACG", ec.baseSequenceWithInsertionApplied(11, "TAC", true));
         assertEquals("TTTAAACCCGGGTAC", ec.baseSequenceWithInsertionApplied(12, "TAC", true));
+        assertEquals("AGGGTTTAAACCCGG", ec2.baseSequenceWithInsertionApplied(0, "GGG", true));
 
-        assertEquals("TTTAAACCCGGGTAC", ec.baseSequenceWithInsertionApplied(12, "TAC", true));
+        assertEquals("GTACCCGGGTTTAAA", ec.baseSequenceWithInsertionApplied(0, "TAC", false));
+        assertEquals("CCCGTAGGGTTTAAA", ec.baseSequenceWithInsertionApplied(3, "TAC", false));
+        assertEquals("CCGAAAGGTTTAAAT", ec2.baseSequenceWithInsertionApplied(3, "TTT", false));
+        assertEquals("ATCCGGTACGTAATA", ec6.baseSequenceWithInsertionApplied(5, "CGT", false));
     }
 
     @Test

@@ -36,22 +36,14 @@ public class ChangeContext
         return mExon.toStrandCoordinates(FinishPositionInExon + 1, IsPositiveStrand);
     }
 
-//    ChangeResult applyDuplication()
-//    {
-//        String bases = ContainingExon.baseSequenceWithDuplicationApplied(StartPositionInExon, FinishPositionInExon + 1, IsPositiveStrand);
-//
-//        return new ChangeResult(AminoAcidSequence.fromNucleotides(bases), bases);
-//    }
-
-//    AminoAcidSequence applyDeletion()
-//    {
-//        return AminoAcidSequence.fromNucleotides(exonBasesAfterDeletion());
-//    }
-
-//    String exonBasesAfterDeletion()
-//    {
-//        return ContainingExon.baseSequenceWithDeletionApplied(StartPositionInExon, FinishPositionInExon + 1, IsPositiveStrand);
-//    }
+    int insertionPoint()
+    {
+        if(IsPositiveStrand)
+        {
+            return mExon.toStrandCoordinates(StartPositionInExon, IsPositiveStrand) - 1;
+        }
+        return mExon.toStrandCoordinates(StartPositionInExon, IsPositiveStrand) - 1;
+    }
 
     public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged, boolean isPositiveStrand)
     {

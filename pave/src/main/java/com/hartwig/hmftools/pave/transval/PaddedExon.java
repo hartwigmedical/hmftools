@@ -89,7 +89,15 @@ public class PaddedExon
     {
         Preconditions.checkArgument(position >= 0);
         Preconditions.checkArgument(position <= exonBases.length());
-        
+        if(!positiveStrand)
+        {
+            int s = exonBases.length() - position;
+            String l = exonBases.substring(0, s);
+            String r = exonBases.substring(s);
+            Preconditions.checkArgument((l + r).equals(exonBases));
+            String complete = BasesOfFirstCodonInPreviousExon + l + basesToInsert + r + BasesOfLastCodonInFollowingExon;
+            return Nucleotides.reverseComplementBases(complete);
+        }
         String left = exonBases.substring(0, position);
         String right = exonBases.substring(position);
         Preconditions.checkArgument((left + right).equals(exonBases));
@@ -101,6 +109,17 @@ public class PaddedExon
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start <= end);
         return exonBases.substring(start, end + 1);
+    }
+
+    public String baseAt(int start, boolean positiveStrand)
+    {
+        Preconditions.checkArgument(start >= 0);
+        if(!positiveStrand)
+        {
+            int s = exonBases.length() - start - 1;
+            return exonBases.substring(s, s + 1);
+        }
+        return exonBases.substring(start, start + 1);
     }
 
     public String baseImmediatelyBefore(int position)

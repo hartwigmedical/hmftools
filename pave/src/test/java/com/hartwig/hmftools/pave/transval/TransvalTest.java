@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -771,5 +773,34 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
                 hotspot("C", "CTAC", "chr7", 55_181_325),
                 hotspot("C", "CTAT", "chr7", 55_181_325)
         );
+    }
+
+//    @Test
+    public void insertLongSequence()
+    {
+        TransvalVariant variant = transval.calculateVariant("VHL", "A5_E6insGLVQVTGSSDNEYFYVDFREYE");
+        Set<TransvalHotspot> hotspots = variant.hotspots();
+        assertEquals(1, hotspots.size());
+        TransvalHotspot hotspot = hotspots.iterator().next();
+        assertEquals("G", hotspot.Ref);
+        String codons = hotspot.Alt.substring(1);
+        assertEquals("GLVQVTGSSDNEYFYVDFREYE", AminoAcidSequence.fromNucleotides(codons).sequence());
+        assertEquals(10_141_862, hotspot.mPosition);
+    }
+
+    @Test
+    public void insertionOnNegativeStrand()
+    {
+        TransvalVariant variant = transval.calculateVariant("BRAF", "R506_K507insLLR");
+        Set<TransvalHotspot> hotspots = variant.hotspots();
+        assertEquals(1, hotspots.size());
+        TransvalHotspot hotspot = hotspots.iterator().next();
+        assertEquals("T", hotspot.Ref);
+        String codons = hotspot.Alt.substring(1);
+        assertEquals("LLR", AminoAcidSequence.fromNucleotides(Nucleotides.reverseComplementBases(codons)).sequence());
+        assertEquals(140_777_087, hotspot.mPosition);
+
+        variant = transval.calculateVariant("BRAF", "H510_V511insW");
+        checkSingleHotspot(variant, "C", "CCCA", "chr7", 140_777_075);
     }
 }

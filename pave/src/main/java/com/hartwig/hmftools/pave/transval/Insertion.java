@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -44,14 +45,20 @@ class Insertion extends ProteinVariant
     Set<ChangeResult> applyChange(ChangeContext context)
     {
         int insertionPosition = context.StartPositionInExon;
-        String ref = context.mExon.baseImmediatelyBefore(context.StartPositionInExon);
+        int locationOfChange = context.insertionPoint();
+        String ref = context.mExon.baseAt(insertionPosition, context.IsPositiveStrand);
         Set<String> baseOptions = possibleInsertedNucleotideSequences();
         Set<ChangeResult> result = new HashSet<>();
         baseOptions.forEach(bases -> {
-            String withBasesInserted = context.mExon.baseSequenceWithInsertionApplied(insertionPosition, bases, context.IsPositiveStrand);
+            String basesToInsert = bases;
+            if(!context.IsPositiveStrand)
+            {
+                basesToInsert = Nucleotides.reverseComplementBases(basesToInsert);
+            }
+            String withBasesInserted = context.mExon.baseSequenceWithInsertionApplied(insertionPosition, basesToInsert, context.IsPositiveStrand);
             AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(withBasesInserted);
-            String alt = ref + bases;
-            result.add(new ChangeResult(acids, withBasesInserted, context.positionOfChangeStartInStrand() - 1, ref, alt));
+            String alt = ref + basesToInsert;
+            result.add(new ChangeResult(acids, withBasesInserted, locationOfChange, ref, alt));
         });
 
         return result;

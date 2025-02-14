@@ -11,13 +11,14 @@ public class ChangeContextTest extends TransvalTestBase
     PaddedExon ec3 = new PaddedExon("", "A", "TTAAACCCGGG", 100, "CATG");
     PaddedExon ec6 = new PaddedExon("TA", "AT", "TTAACCGG", 100, "CATG");
     ChangeContext cc1 = new ChangeContext(ec,3, 6, true, 10);
+    ChangeContext cc2 = new ChangeContext(ec,3, 6, false, 10);
 
-//    @Test
-//    public void applyDuplicationTest()
-//    {
-//        assertEquals(cr("FKKPG", "TTTAAAAAACCCGGG"), cc(ec, 3, 5, true).applyDuplication());
-//        assertEquals(cr("FKPAG", "TTTAAACCCGCCGGG"), cc(ec, 7, 9, true).applyDuplication());
-//    }
+    @Test
+    public void insertionPointTest()
+    {
+        assertEquals(102, cc1.insertionPoint());
+        assertEquals(108, cc2.insertionPoint());
+    }
 
     @Test
     public void refBasesTest()
@@ -37,9 +38,4 @@ public class ChangeContextTest extends TransvalTestBase
     {
         return new ChangeContext(pe, start, end, isPositiveStrand, 10);
     }
-
-//    private ChangeResult cr(String aminoAcids, String bases)
-//    {
-//        return new ChangeResult(aaSeq(aminoAcids), bases);
-//    }
 }

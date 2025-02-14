@@ -74,7 +74,7 @@ public class ServeDataTest
 //                        if (gene.equals("FGFR1") && annotation.equals("P283T"))
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
             if(!annotation.contains("ins")) continue;
-            if(annotation.contains("del")) continue;
+//            if(annotation.contains("del")) continue;
             if(!geneToItems.containsKey(gene))
             {
                 geneToItems.put(gene, new HashSet<>());
