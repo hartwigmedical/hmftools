@@ -295,6 +295,7 @@ public final class DiseaseOntology
             synonymList.add(ImmutableDoidSynonym.builder()
                     .pred(string(synonymObject, "pred"))
                     .val(string(synonymObject, "val"))
+                    .xrefs(optionalStringList(synonymObject, "xrefs"))
                     .synonymType(optionalString(synonymObject, "synonymType"))
                     .build());
         }

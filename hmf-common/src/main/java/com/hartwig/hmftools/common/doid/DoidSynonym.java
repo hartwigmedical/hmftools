@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.doid;
 
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +19,7 @@ public abstract class DoidSynonym
     public abstract String val();
 
     @Nullable
-    public abstract String xrefs();
+    public abstract List<String> xrefs();
 
     @Nullable
     public abstract String synonymType();
