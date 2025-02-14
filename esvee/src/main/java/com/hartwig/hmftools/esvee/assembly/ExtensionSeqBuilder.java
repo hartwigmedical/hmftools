@@ -565,15 +565,15 @@ public class ExtensionSeqBuilder
         else
         {
             consensusRepeatCount = maxFreqCounts.get(0);
+
+            // recompute the median from the non-zero repeat counts
+            readRepeatCounts = readRepeatCounts.stream().filter(x -> x.intValue() > 0).collect(Collectors.toList());
+            medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
+
+            // use median if there is no dominant repeat count
+            if(consensusRepeatFreq < readRepeatCounts.size() / 2)
+                consensusRepeatCount = medianRepeatCount;
         }
-
-        // recompute the median from the non-zero repeat counts
-        readRepeatCounts = readRepeatCounts.stream().filter(x -> x.intValue() > 0).collect(Collectors.toList());
-        medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
-
-        // use median if there is no dominant repeat count
-        if(consensusRepeatFreq < readRepeatCounts.size() / 2)
-            consensusRepeatCount = medianRepeatCount;
 
         repeatIndexStart = maxRepeat.Index;
 
