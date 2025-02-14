@@ -12,8 +12,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class DiseaseOntologyTest
-{
+public class DiseaseOntologyTest {
     private static final String DOID_FILE_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     @Test

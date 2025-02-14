@@ -201,11 +201,19 @@ public final class DiseaseOntology
                     ? logicalDefinitionAxiomObject.getAsJsonArray("restrictions")
                     : null;
 
-            if (restrictionsArray != null) {
-                for (JsonElement restrictionElement : restrictionsArray) {
+            if(restrictionsArray == null)
+            {
+                restrictionList = null;
+            }
+
+            else
+            {
+                for(JsonElement restrictionElement : restrictionsArray)
+                {
                     JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionChecker();
 
-                    if (restrictionElement.isJsonObject()) {
+                    if(restrictionElement.isJsonObject())
+                    {
                         JsonObject restrictionObject = restrictionElement.getAsJsonObject();
                         doidRestrictionChecker.check(restrictionObject);
 
@@ -287,7 +295,7 @@ public final class DiseaseOntology
             synonymList.add(ImmutableDoidSynonym.builder()
                     .pred(string(synonymObject, "pred"))
                     .val(string(synonymObject, "val"))
-                    .synonymType(synonymObject.has("synonymType") ? string(synonymObject, "synonymType") : null)
+                    .synonymType(optionalString(synonymObject, "synonymType"))
                     .build());
         }
 
