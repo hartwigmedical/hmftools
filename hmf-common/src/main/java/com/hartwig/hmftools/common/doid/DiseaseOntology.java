@@ -179,14 +179,9 @@ public final class DiseaseOntology
         return basicPropertyValueList;
     }
 
-    @Nullable
-    private static List<DoidLogicalDefinitionAxioms> extractDoidLogicalDefinitionAxioms(@Nullable JsonArray logicalDefinitionAxiomArray)
+    @NotNull
+    private static List<DoidLogicalDefinitionAxioms> extractDoidLogicalDefinitionAxioms(@NotNull JsonArray logicalDefinitionAxiomArray)
     {
-        if(logicalDefinitionAxiomArray == null)
-        {
-            return null;
-        }
-
         List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms = Lists.newArrayList();
 
         for(JsonElement logicalDefinitionAxiomElement : logicalDefinitionAxiomArray)
