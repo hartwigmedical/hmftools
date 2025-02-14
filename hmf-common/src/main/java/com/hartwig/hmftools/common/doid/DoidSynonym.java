@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.doid;
 
-import java.util.List;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

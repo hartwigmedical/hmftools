@@ -10,7 +10,8 @@
         "synonyms" : [ {
           "pred" : "hasExactSynonym",
           "val" : "carcinoma in situ of respiratory tract (disorder)",
-          "xrefs" : [ ]
+          "xrefs" : [ ],
+          "synonymType" : "type"
         } ],
         "basicPropertyValues" : [ {
           "pred" : "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId",

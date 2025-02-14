@@ -65,6 +65,7 @@ public class DiseaseOntologyTest
         DoidSynonym doidSynonym1 = doidNode1.doidMetadata().synonyms().get(0);
         assertEquals("hasExactSynonym", doidSynonym1.pred());
         assertEquals("carcinoma in situ of respiratory tract (disorder)", doidSynonym1.val());
+        assertEquals("type", doidSynonym1.synonymType());
 
         DoidBasicPropertyValue doidBasicPropertyValue1 = doidNode1.doidMetadata().basicPropertyValues().get(0);
         assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doidBasicPropertyValue1.pred());
@@ -103,6 +104,7 @@ public class DiseaseOntologyTest
         DoidSynonym doid2Synonym1 = doidNode2.doidMetadata().synonyms().get(0);
         assertEquals("hasExactSynonym", doid2Synonym1.pred());
         assertEquals("Decubitus ulcer any site", doid2Synonym1.val());
+        assertNull(doid2Synonym1.synonymType());
 
         DoidSynonym doid2Synonym2 = doidNode2.doidMetadata().synonyms().get(1);
         assertEquals("hasExactSynonym", doid2Synonym2.pred());

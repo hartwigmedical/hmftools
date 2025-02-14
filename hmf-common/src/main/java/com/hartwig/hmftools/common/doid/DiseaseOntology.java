@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonO
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -227,6 +226,7 @@ public final class DiseaseOntology
             logicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomObject, "definedClassId"))
                     .genusIds(genusIdList)
+                    .restrictions(restrictionList)
                     .build());
         }
 
@@ -287,6 +287,7 @@ public final class DiseaseOntology
             synonymList.add(ImmutableDoidSynonym.builder()
                     .pred(string(synonymObject, "pred"))
                     .val(string(synonymObject, "val"))
+                    .synonymType(synonymObject.has("synonymType") ? string(synonymObject, "synonymType") : null)
                     .build());
         }
 
