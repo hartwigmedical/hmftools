@@ -87,6 +87,6 @@ class DeletionInsertion extends ProteinVariant
     @VisibleForTesting
     public Set<String> candidateAlternativeNucleotideSequences(@NotNull String prefix, @NotNull String suffix)
     {
-        return new NucleotidesCalculator(Alt, prefix, suffix).possibilities();
+        return new NucleotidesCalculator(Alt, prefix, suffix).allPossibleBaseSequences();
     }
 }

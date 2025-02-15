@@ -15,6 +15,15 @@ import org.junit.Test;
 public class NucleotidesCalculatorTest extends TransvalTestBase
 {
     @Test
+    public void someBaseSequenceTest()
+    {
+        Assert.assertEquals("TGG", calculator("W", "", "").anyBaseSequence());
+        Assert.assertEquals("TGGTGG", calculator("WW", "", "").anyBaseSequence());
+        String s = calculator("FEAST", "", "").anyBaseSequence();
+        Assert.assertEquals("FEAST", AminoAcidSequence.fromNucleotides(s).sequence());
+    }
+
+    @Test
     public void oneAA()
     {
         checkPossibilities(calculator("W", "C", ""), "");
@@ -73,7 +82,7 @@ public class NucleotidesCalculatorTest extends TransvalTestBase
         expected.add("AAAAACGAC");
         expected.add("AAGAATGAC");
         expected.add("AAGAACGAC");
-        Assert.assertEquals(expected, calculator("KND", "", "").possibilities());
+        Assert.assertEquals(expected, calculator("KND", "", "").allPossibleBaseSequences());
     }
 
     @Test
@@ -131,10 +140,10 @@ public class NucleotidesCalculatorTest extends TransvalTestBase
     {
         if(expectedSeparatedByCommas.trim().isBlank())
         {
-            assertTrue(calculator.possibilities().isEmpty());
+            assertTrue(calculator.allPossibleBaseSequences().isEmpty());
             return;
         }
-        Set<String> actual = calculator.possibilities();
+        Set<String> actual = calculator.allPossibleBaseSequences();
         Set<String> expected = css(expectedSeparatedByCommas);
         assertEquals(expected, actual);
     }

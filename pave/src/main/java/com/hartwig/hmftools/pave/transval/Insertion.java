@@ -32,12 +32,12 @@ class Insertion extends ProteinVariant
     @VisibleForTesting
     Set<String> possibleInsertedNucleotideSequences()
     {
-        Set<String> allPossibilities = new NucleotidesCalculator(mInsertedSequence, "", "").possibilities();
+        final NucleotidesCalculator nucleotidesCalculator = new NucleotidesCalculator(mInsertedSequence, "", "");
         if(mInsertedSequence.length() > 1)
         {
-            return Set.of(allPossibilities.iterator().next());
+            return Set.of(nucleotidesCalculator.anyBaseSequence());
         }
-        return allPossibilities;
+        return nucleotidesCalculator.allPossibleBaseSequences();
     }
 
     @NotNull
@@ -62,12 +62,6 @@ class Insertion extends ProteinVariant
         });
 
         return result;
-    }
-
-    @Override
-    boolean singleValueOnlyRequiredForEachStep()
-    {
-        return mInsertedSequence.length() > 1;
     }
 
     @Override

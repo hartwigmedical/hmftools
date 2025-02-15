@@ -118,64 +118,26 @@ public abstract class ProteinVariant
         }
         maxMoves = Math.min(maxMoves, 32);
         Map<String, ChangeResult> results = new HashMap<>();
-        int numberOfMovesWithoutAFittingVariant = 0;
         for(int i = 0; i <= maxMoves; i++)
         {
             int start = mTranscript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
             int end = start + mRefLength * 3 - 1;
             ChangeContext change = new ChangeContext(changeContext.mExon, start, end, mTranscript.posStrand(), 0);
             Set<ChangeResult> changesAtThisPosition = applyChange(change);
-            boolean fittingVariantFound = false;
             for(ChangeResult changeAtThisPosition : changesAtThisPosition)
             {
                 if(firstExampleResult.mAminoAcids.equals(changeAtThisPosition.mAminoAcids))
                 {
-                    fittingVariantFound = true;
                     results.put(changeAtThisPosition.mBases, changeAtThisPosition);
-                    if (singleValueOnlyRequiredForEachStep())
-                    {
-                        break;
-                    }
                 }
-            }
-            if(fittingVariantFound)
-            {
-                numberOfMovesWithoutAFittingVariant = 0;
-            }
-            else
-            {
-//                numberOfMovesWithoutAFittingVariant += 1;
-                break;
-            }
-            if (numberOfMovesWithoutAFittingVariant > 5)
-            {
-                break;
             }
         }
         return results.values();
     }
 
-    @VisibleForTesting
-    boolean singleValueOnlyRequiredForEachStep()
-    {
-        return false;
-    }
-
     TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
         Collection<ChangeResult> changes = findLeftmostApplicableChanges(refGenome);
-//        AminoAcidSequence requiredSequence = variantSequence();
-//        if(requiredSequence != null)
-//        {
-//            System.out.println(requiredSequence.sequence());
-//            for(ChangeContext change : changes)
-//            {
-//                ChangeResult cr = change.applyDuplication();
-//                System.out.println(cr.mAminoAcids);
-//                Preconditions.checkArgument(requiredSequence.sequence().contains(cr.mAminoAcids.sequence()));
-//                System.out.println("------- ok: " + cr.mAminoAcids);
-//            }
-//        }
         if(changes.isEmpty())
         {
             return null;

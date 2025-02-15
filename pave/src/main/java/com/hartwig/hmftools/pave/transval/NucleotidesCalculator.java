@@ -32,7 +32,24 @@ public class NucleotidesCalculator
     }
 
     @NotNull
-    public Set<String> possibilities()
+    public String anyBaseSequence()
+    {
+        // We only need this for situations where there is neither prefix nor suffix,
+        // and we can only guarantee a non-null result with these preconditions.
+        Preconditions.checkArgument(prefix.isEmpty());
+        Preconditions.checkArgument(suffix.isEmpty());
+
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < mAminoAcids.length(); i++)
+        {
+            Set<String> allCodons = mAminoAcids.get(i).matchingTruncatedCodons("","");
+            builder.append(allCodons.iterator().next());
+        }
+        return builder.toString();
+    }
+
+    @NotNull
+    public Set<String> allPossibleBaseSequences()
     {
         List<Set<String>> candidateCodons = candidateAlternativeTruncatedCodons();
         // If there are no options for any of the codons, return the empty set.
