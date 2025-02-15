@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 
 import static java.lang.String.format;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -14,12 +15,12 @@ public class JunctionData
     public final int Position;
     public final Orientation Orient;
 
-    public final List<ReadGroup> JunctionGroups; // with a read matching the junction
-    public final List<ReadGroup> SupportingGroups;
-    public final List<ReadGroup> ExactSupportGroups;
-    public final List<RemoteJunction> RemoteJunctions;
+    private List<ReadGroup> mJunctionGroups; // with a read matching the junction
+    private List<ReadGroup> mSupportingGroups;
+    private List<ReadGroup> mExactSupportGroups;
+    private List<RemoteJunction> mRemoteJunctions;
 
-    public final Map<ReadType,List<PrepRead>> ReadTypeReads;
+    private final Map<ReadType,List<PrepRead>> mReadTypeReads;
 
     private PrepRead mTopJunctionRead;
     private boolean mInternalIndel;
@@ -31,15 +32,15 @@ public class JunctionData
         Position = position;
         Orient = orientation;
 
-        JunctionGroups = Lists.newArrayList();
-        SupportingGroups = Lists.newArrayList();
-        ExactSupportGroups = Lists.newArrayList();
-        RemoteJunctions = Lists.newArrayList();
-        ReadTypeReads = Maps.newHashMap();
+        mJunctionGroups = null;
+        mSupportingGroups = null;
+        mExactSupportGroups = null;
+        mRemoteJunctions = null;
+        mReadTypeReads = Maps.newHashMap();
 
-        ReadTypeReads.put(ReadType.JUNCTION, Lists.newArrayList());
-        ReadTypeReads.put(ReadType.SUPPORT, Lists.newArrayList());
-        ReadTypeReads.put(ReadType.EXACT_SUPPORT, Lists.newArrayList());
+        mReadTypeReads.put(ReadType.JUNCTION, Lists.newArrayList());
+        mReadTypeReads.put(ReadType.SUPPORT, Lists.newArrayList());
+        mReadTypeReads.put(ReadType.EXACT_SUPPORT, Lists.newArrayList());
 
         mTopJunctionRead = read; // initially set to the first
 
@@ -53,10 +54,41 @@ public class JunctionData
 
     public PrepRead topJunctionRead() { return mTopJunctionRead; }
 
-    public int junctionFragmentCount() { return JunctionGroups.size(); }
-    public int supportingFragmentCount() { return SupportingGroups.size(); }
-    public int exactSupportFragmentCount() { return ExactSupportGroups.size(); }
-    public int totalFragmentCount() { return JunctionGroups.size() + SupportingGroups.size() + ExactSupportGroups.size(); }
+    public void addJunctionReadGroup(final ReadGroup readGroup)
+    {
+        if(mJunctionGroups == null)
+            mJunctionGroups = Lists.newArrayList();
+
+        mJunctionGroups.add(readGroup);
+    }
+
+    public void addExactSupportGroup(final ReadGroup readGroup)
+    {
+        if(mExactSupportGroups == null)
+            mExactSupportGroups = Lists.newArrayList();
+
+        mExactSupportGroups.add(readGroup);
+    }
+
+    public void addSupportingGroup(final ReadGroup readGroup)
+    {
+        if(mSupportingGroups == null)
+            mSupportingGroups = Lists.newArrayList();
+
+        mSupportingGroups.add(readGroup);
+    }
+
+    public List<ReadGroup> junctionGroups() { return mJunctionGroups != null ? mJunctionGroups : Collections.emptyList(); }
+    public List<ReadGroup> supportingGroups() { return mSupportingGroups != null ? mSupportingGroups : Collections.emptyList(); }
+    public List<ReadGroup> exactSupportGroups() { return mExactSupportGroups != null ? mExactSupportGroups : Collections.emptyList(); }
+
+    public Map<ReadType,List<PrepRead>> readTypeReads() { return mReadTypeReads; }
+
+    public int junctionFragmentCount() { return mJunctionGroups != null ? mJunctionGroups.size() : 0; }
+    public int supportingFragmentCount() { return mSupportingGroups != null ? mSupportingGroups.size() : 0; }
+    public int exactSupportFragmentCount() { return mExactSupportGroups != null ? mExactSupportGroups.size() : 0; }
+
+    public List<RemoteJunction> remoteJunctions() { return mRemoteJunctions != null ? mRemoteJunctions : Collections.emptyList(); }
 
     public boolean hotspot() { return mHotspot; }
     public void markHotspot() { mHotspot = true; }
@@ -69,9 +101,9 @@ public class JunctionData
 
     public void addReadType(final PrepRead read, final ReadType type)
     {
-        if(ReadTypeReads.containsKey(type))
+        if(mReadTypeReads.containsKey(type))
         {
-            ReadTypeReads.get(type).add(read);
+            mReadTypeReads.get(type).add(read);
         }
     }
 
@@ -86,7 +118,7 @@ public class JunctionData
 
         boolean useLeftSoftClip = Orient.isReverse();
 
-        List<PrepRead> junctionReads = ReadTypeReads.get(ReadType.JUNCTION);
+        List<PrepRead> junctionReads = mReadTypeReads.get(ReadType.JUNCTION);
 
         if(junctionReads.size() == 1)
         {
@@ -125,20 +157,23 @@ public class JunctionData
 
     public void addRemoteJunction(final RemoteJunction remoteJunction)
     {
-        RemoteJunction matched = RemoteJunctions.stream().filter(x -> x.matches(remoteJunction)).findFirst().orElse(null);
+        if(mRemoteJunctions == null)
+            mRemoteJunctions = Lists.newArrayList();
+
+        RemoteJunction matched = mRemoteJunctions.stream().filter(x -> x.matches(remoteJunction)).findFirst().orElse(null);
         if(matched != null)
         {
             ++matched.Fragments;
             return;
         }
 
-        RemoteJunctions.add(remoteJunction);
+        mRemoteJunctions.add(remoteJunction);
     }
 
     public String toString()
     {
         return format("loc(%d:%d) frags(junc=%d exact=%d supp=%d) remotes(%d) disc(%s) indel(%s)",
                 Position, Orient.asByte(), junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
-                RemoteJunctions.size(), mDiscordantGroup, mInternalIndel);
+                mRemoteJunctions != null ? mRemoteJunctions.size() : 0, mDiscordantGroup, mInternalIndel);
     }
 }

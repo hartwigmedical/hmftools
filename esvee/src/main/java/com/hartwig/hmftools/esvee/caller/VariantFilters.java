@@ -13,9 +13,9 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_LENGTH_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MAX_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MIN_AF;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MIN_STD_DEV_FRAGS;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
@@ -327,13 +327,16 @@ public class VariantFilters
         if(inexactHomology < DEL_ARTEFACT_MAX_HOMOLOGY)
             return false;
 
-        int totalSplitFrags = max(var.splitFragmentCount(), DEL_ARTEFACT_MIN_STD_DEV_FRAGS);
+        int inferredFragmentLength = var.averageFragmentLength() + var.adjustedLength();
 
-        if(!fragmentLevelBelowStatisticalLimit(var.averageFragmentLength(), totalSplitFrags))
+        double lengthThreshold = mFragmentLengthBounds.UpperBound * DEL_ARTEFACT_LENGTH_FACTOR;
+
+        if(inferredFragmentLength >= lengthThreshold)
             return false;
 
         return !anySamplesAboveAfThreshold(var, DEL_ARTEFACT_MIN_AF);
     }
+
     private boolean failsStrandBias(final Variant var)
     {
         Breakend breakend = var.breakendStart();
