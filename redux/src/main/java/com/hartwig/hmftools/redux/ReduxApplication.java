@@ -60,7 +60,7 @@ public class ReduxApplication
         {
             JitterAnalyserConfig jitterConfig = new JitterAnalyserConfig(
                     mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile, mConfig.OutputDir,
-                    mConfig.JitterMsiMaxSitePercContribution, false);
+                    mConfig.JitterMsiMaxSitePercContribution, true);
 
             ConsensusMarker consensusMarker = ConsensusMarker.fromSequencingType(mConfig.Sequencing);
             jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER, consensusMarker);
