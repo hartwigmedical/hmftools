@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESH
 import static com.hartwig.hmftools.esvee.prep.DiscordantGroups.addDiscordantStats;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.purgeSupplementaryDuplicates;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
@@ -894,10 +895,14 @@ public class JunctionTracker
                 return false;
         }
 
-        if(junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport)
-            return true;
+        if(junctionFrags + exactSupportCount < mFilterConfig.MinJunctionSupport)
+            return false;
 
-        return false;
+        purgeSupplementaryDuplicates(junctionData);
+
+        junctionFrags = junctionData.junctionFragmentCount(); // re-assessed
+
+        return junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport;
     }
 
     private void perfCounterStart(final PerfCounters pc)

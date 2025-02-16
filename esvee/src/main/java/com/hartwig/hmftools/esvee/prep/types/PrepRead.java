@@ -161,6 +161,7 @@ public class PrepRead
 
     public boolean hasMate() { return MatePosStart > 0; }
     public boolean isMateUnmapped() { return (mRecord.getFlags() & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
+    public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !isMateUnmapped(); }
 
     public boolean hasFlag(final SAMFlag flag) { return (mRecord.getFlags() & flag.intValue()) != 0; }
 

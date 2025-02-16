@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
@@ -13,9 +14,17 @@ import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.esvee.prep.types.FragmentData;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
+import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import htsjdk.samtools.CigarElement;
 
@@ -272,12 +281,83 @@ public final class JunctionUtils
         }
     }
 
-    public static void purgeSupplementaryDuplicates()
+    public static void purgeSupplementaryDuplicates(final JunctionData junctionData)
     {
+        Map<Integer,List<PrepRead>> initialPositionMap = Maps.newHashMap();
 
+        for(ReadGroup readGroup : junctionData.junctionGroups())
+        {
+            if(readGroup.size() < 1)
+                continue;
 
+            // require paired reads with a supplementary read
+            for(PrepRead read : readGroup.reads())
+            {
+                if(!read.isMateMapped() || !read.hasSuppAlignment())
+                    continue;
 
+                if(read.readType() != ReadType.JUNCTION)
+                    continue;
 
+                if(junctionData.Orient.isForward())
+                {
+                    if(read.end() != junctionData.Position)
+                        continue;
+                }
+                else
+                {
+                    if(read.start() != junctionData.Position)
+                        continue;
+                }
+
+                int unclippedPosition = unclippedPosition(read);
+
+                List<PrepRead> matchingGroups = initialPositionMap.get(unclippedPosition);
+
+                if(matchingGroups == null)
+                {
+                    matchingGroups = Lists.newArrayList();
+                    initialPositionMap.put(unclippedPosition, matchingGroups);
+                }
+
+                matchingGroups.add(read);
+                break;
+            }
+        }
+
+        if(initialPositionMap.isEmpty())
+            return;
+
+        for(List<PrepRead> reads : initialPositionMap.values())
+        {
+            if(reads.size() < 2)
+                continue;
+
+             boolean hasSupp = false;
+             boolean hasPrimary = false;
+
+             List<FragmentData> fragments = Lists.newArrayListWithCapacity(reads.size());
+
+             for(PrepRead read : reads)
+             {
+                 fragments.add(new FragmentData(read));
+
+                 if(read.isSupplementaryAlignment())
+                    hasSupp = true;
+                 else
+                    hasPrimary = true;
+             }
+
+             if(!hasSupp || !hasPrimary)
+                 continue;
+
+             // de-dup supplementaries
+
+        }
     }
 
+    private static int unclippedPosition(final PrepRead read)
+    {
+        return read.orientation().isForward() ? read.unclippedStart() : read.unclippedEnd();
+    }
 }
