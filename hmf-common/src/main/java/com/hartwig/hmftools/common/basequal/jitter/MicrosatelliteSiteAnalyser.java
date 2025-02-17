@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,7 +31,7 @@ public class MicrosatelliteSiteAnalyser
     private final EnumMap<ConsensusType, Integer> mNumReadRejectedByConsensusType;
     private int mPassingReadRepeatMatchCount;
 
-    private final EnumMap<ConsensusType, List<Integer>> mAllPassingRepeatLengthsByConsensusType;
+    private final EnumMap<ConsensusType, SortedMap<Integer, Integer>> mPassingRepeatLengthCountsByConsensusType;
 
     public MicrosatelliteSiteAnalyser(final RefGenomeMicrosatellite refGenomeMicrosatellite,
             @Nullable final ConsensusMarker consensusMarker, boolean storeAllPassingRepeatLengths)
@@ -43,7 +44,7 @@ public class MicrosatelliteSiteAnalyser
         mNumReadRejectedByConsensusType = Maps.newEnumMap(ConsensusType.class);
         mPassingReadRepeatMatchCount = 0;
 
-        mAllPassingRepeatLengthsByConsensusType = storeAllPassingRepeatLengths ? Maps.newEnumMap(ConsensusType.class) : null;
+        mPassingRepeatLengthCountsByConsensusType = storeAllPassingRepeatLengths ? Maps.newEnumMap(ConsensusType.class) : null;
     }
 
     public RefGenomeMicrosatellite refGenomeMicrosatellite()
@@ -78,7 +79,19 @@ public class MicrosatelliteSiteAnalyser
 
     public List<Integer> allPassingRepeats(final ConsensusType consensusType)
     {
-        return mAllPassingRepeatLengthsByConsensusType.getOrDefault(consensusType, Collections.emptyList());
+        if(!mPassingRepeatLengthCountsByConsensusType.containsKey(consensusType))
+            return Collections.emptyList();
+
+        List<Integer> passingRepeats = Lists.newArrayList();
+        for(Map.Entry<Integer, Integer> repeatLengthAndCount : mPassingRepeatLengthCountsByConsensusType.get(consensusType).entrySet())
+        {
+            int repeatLength = repeatLengthAndCount.getKey();
+            int repeatCount = repeatLengthAndCount.getValue();
+            for(int i = 0; i < repeatCount; i++)
+                passingRepeats.add(repeatLength);
+        }
+
+        return passingRepeats;
     }
 
     public synchronized void addReadToStats(final SAMRecord read)
@@ -103,10 +116,11 @@ public class MicrosatelliteSiteAnalyser
         mPassingJitterCountsByConsensusType.computeIfAbsent(consensusType, key -> Maps.newHashMap());
         mPassingJitterCountsByConsensusType.get(consensusType).merge(msRead.jitter(), 1, Integer::sum);
 
-        if(mAllPassingRepeatLengthsByConsensusType != null)
+        if(mPassingRepeatLengthCountsByConsensusType != null)
         {
-            mAllPassingRepeatLengthsByConsensusType.computeIfAbsent(consensusType, key -> Lists.newArrayList());
-            mAllPassingRepeatLengthsByConsensusType.get(consensusType).add(msRead.readRepeatLength());
+            int readRepeatLength = msRead.readRepeatLength();
+            mPassingRepeatLengthCountsByConsensusType.computeIfAbsent(consensusType, key -> Maps.newTreeMap());
+            mPassingRepeatLengthCountsByConsensusType.get(consensusType).merge(readRepeatLength, 1, Integer::sum);
         }
     }
 
