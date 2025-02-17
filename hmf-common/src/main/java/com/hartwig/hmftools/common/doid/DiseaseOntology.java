@@ -126,30 +126,14 @@ public final class DiseaseOntology
     }
 
     @NotNull
-    private static DoidGraphMetaData extractGraphMetaNode(@Nullable JsonObject metaObject)
+    private static DoidGraphMetaData extractGraphMetaNode(@NotNull JsonObject metaObject)
     {
         JsonDatamodelChecker doidGraphMetaDataChecker = DoidDatamodelCheckerFactory.doidGraphMetaDataChecker();
+
         doidGraphMetaDataChecker.check(metaObject);
-
-        JsonArray xrefArray = metaObject.getAsJsonArray("xrefs");
-        List<DoidXref> xrefValList = Lists.newArrayList();
-        if(xrefArray != null)
-        {
-            JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
-
-            for(JsonElement xrefElement : xrefArray)
-            {
-                JsonObject xrefObject = xrefElement.getAsJsonObject();
-
-                xrefChecker.check(xrefObject);
-                xrefValList.add(ImmutableDoidXref.builder().val(string(xrefObject, "val")).build());
-            }
-        }
 
         ImmutableDoidGraphMetaData.Builder DoidGraphMetaDataBuilder = ImmutableDoidGraphMetaData.builder();
         DoidGraphMetaDataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaObject, "basicPropertyValues")));
-        DoidGraphMetaDataBuilder.subsets(optionalStringList(metaObject, "subsets"));
-        DoidGraphMetaDataBuilder.xrefs(xrefValList);
         DoidGraphMetaDataBuilder.version(optionalString(metaObject, "version"));
         return DoidGraphMetaDataBuilder.build();
     }
@@ -191,34 +175,6 @@ public final class DiseaseOntology
             JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
             doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomObject);
 
-            List<DoidRestriction> restrictionList = Lists.newArrayList();
-            JsonArray restrictionsArray = logicalDefinitionAxiomObject.has("restrictions")
-                    ? logicalDefinitionAxiomObject.getAsJsonArray("restrictions")
-                    : null;
-
-            if(restrictionsArray == null)
-            {
-                restrictionList = null;
-            }
-            else
-            {
-                for(JsonElement restrictionElement : restrictionsArray)
-                {
-                    JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionChecker();
-
-                    if(restrictionElement.isJsonObject())
-                    {
-                        JsonObject restrictionObject = restrictionElement.getAsJsonObject();
-                        doidRestrictionChecker.check(restrictionObject);
-
-                        restrictionList.add(ImmutableDoidRestriction.builder()
-                                .propertyId(string(restrictionObject, "propertyId"))
-                                .fillerId(string(restrictionObject, "fillerId"))
-                                .build());
-                    }
-                }
-            }
-
             List<String> genusIdList = Lists.newArrayList();
             for(JsonElement genusIdElement : logicalDefinitionAxiomObject.getAsJsonArray("genusIds"))
             {
@@ -228,11 +184,35 @@ public final class DiseaseOntology
             logicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomObject, "definedClassId"))
                     .genusIds(genusIdList)
-                    .restrictions(restrictionList)
+                    .restrictions(extractLogicalDefinitionAxiomRestrictions(optionalJsonArray(logicalDefinitionAxiomObject, "restrictions")))
                     .build());
         }
 
         return logicalDefinitionAxioms;
+    }
+
+    @Nullable
+    private static List<DoidRestriction> extractLogicalDefinitionAxiomRestrictions(@Nullable JsonArray restrictionsArray)
+    {
+        if(restrictionsArray == null)
+        {
+            return null;
+        }
+
+        List<DoidRestriction> restrictionList = Lists.newArrayList();
+        for(JsonElement restrictionElement : restrictionsArray)
+        {
+            JsonObject restrictionObject = restrictionElement.getAsJsonObject();
+            JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionChecker();
+            doidRestrictionChecker.check(restrictionObject);
+
+            restrictionList.add(ImmutableDoidRestriction.builder()
+                    .propertyId(string(restrictionObject, "propertyId"))
+                    .fillerId(string(restrictionObject, "fillerId"))
+                    .build());
+        }
+
+        return restrictionList;
     }
 
     @Nullable

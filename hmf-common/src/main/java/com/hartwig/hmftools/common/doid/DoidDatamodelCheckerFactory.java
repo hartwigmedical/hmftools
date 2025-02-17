@@ -26,7 +26,7 @@ final class DoidDatamodelCheckerFactory
         map.put("edges", true);
         map.put("id", true);
         map.put("meta", true);
-        map.put("logicalDefinitionAxioms", false);
+        map.put("logicalDefinitionAxioms", true);
 
         return new JsonDatamodelChecker("DoidGraphs", map);
     }
@@ -59,10 +59,8 @@ final class DoidDatamodelCheckerFactory
     {
         Map<String, Boolean> map = Maps.newHashMap();
 
-        map.put("xrefs", false);
         map.put("basicPropertyValues", true);
         map.put("version", false);
-        map.put("subsets", false);
 
         return new JsonDatamodelChecker("DoidGraphMetaData", map);
     }
