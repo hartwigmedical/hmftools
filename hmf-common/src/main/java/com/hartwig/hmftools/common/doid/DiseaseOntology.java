@@ -200,7 +200,6 @@ public final class DiseaseOntology
             {
                 restrictionList = null;
             }
-
             else
             {
                 for(JsonElement restrictionElement : restrictionsArray)
