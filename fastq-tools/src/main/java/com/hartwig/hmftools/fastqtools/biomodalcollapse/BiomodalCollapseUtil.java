@@ -619,17 +619,17 @@ public class BiomodalCollapseUtil
         return output.toString();
     }
 
+    private static final int PAIRS_TO_CHECK_FOR_SWAP_DETECTION = 10_000;
+
     public static boolean isSwappedR1R2(final BufferedReader fastq1Reader, final BufferedReader fastq2Reader)
     {
-        // TODO: make constant.
-        int nPairsToCheck = 10000;
         int cSeq1Count = 0;
         int gSeq1Count = 0;
         int cSeq2Count = 0;
         int gSeq2Count = 0;
 
         SynchronizedPairedFastqReader fastqPairReader =
-                new SynchronizedPairedFastqReader(fastq1Reader, fastq2Reader, nPairsToCheck);
+                new SynchronizedPairedFastqReader(fastq1Reader, fastq2Reader, PAIRS_TO_CHECK_FOR_SWAP_DETECTION);
 
         Pair<FastqRecord, FastqRecord> fastqPair;
         while((fastqPair = fastqPairReader.getNext()) != null)
