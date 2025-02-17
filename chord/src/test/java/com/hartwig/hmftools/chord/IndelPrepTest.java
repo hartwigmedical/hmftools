@@ -93,7 +93,7 @@ public class IndelPrepTest
     public void providingWrongVcfTypeThrowsError() throws NoSuchFileException
     {
         ChordConfig config = new ChordConfig.Builder()
-                .sampleIds(List.of(MINIMAL_SAMPLE))
+                .sampleIds(MINIMAL_SAMPLE)
                 .snvIndelVcfFile(MINIMAL_SAMPLE_SV_VCF)
                 .build();
 

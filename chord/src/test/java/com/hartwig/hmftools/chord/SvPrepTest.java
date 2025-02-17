@@ -83,7 +83,7 @@ public class SvPrepTest
     public void canPrepStructuralVariantsFromEmptyVcf()
     {
         ChordConfig config = new ChordConfig.Builder()
-                .sampleIds(List.of(EMPTY_SAMPLE))
+                .sampleIds(EMPTY_SAMPLE)
                 .purpleDir(INPUT_VCF_DIR)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
@@ -105,7 +105,7 @@ public class SvPrepTest
     public void providingWrongVcfTypeThrowsError() throws NoSuchFileException
     {
         ChordConfig config = new ChordConfig.Builder()
-                .sampleIds(List.of(MINIMAL_SAMPLE))
+                .sampleIds(MINIMAL_SAMPLE)
                 .svVcfFile(MINIMAL_SAMPLE_SNV_INDEL_VCF)
                 .build();
 
