@@ -100,5 +100,5 @@ SEX_FEATURE_NAME = "event.trait.is_male"
 PAN_CANCER_CLASS_NAME = ".All"
 
 PREDICT_NA_FILL_VALUE = -0.00000001
-TRAIN_NA_FILL_VALUE = 0 ## chi2 test requires non-negative values
+TRAIN_NA_FILL_VALUE = 0
 
