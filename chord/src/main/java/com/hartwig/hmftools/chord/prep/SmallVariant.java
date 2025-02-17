@@ -55,17 +55,6 @@ public class SmallVariant
         AltBases = altBases;
     }
 
-    public boolean isIndel()
-    {
-        return (RefBases.length()==1 && AltBases.length()>1) ||
-                (AltBases.length()==1 && RefBases.length()>1);
-    }
-
-    public boolean isSnv()
-    {
-        return RefBases.length()==1 && AltBases.length()==1;
-    }
-
     @Override
     public String toString()
     {
