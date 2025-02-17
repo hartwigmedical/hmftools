@@ -82,9 +82,8 @@
       ],
       "id": "http://purl.obolibrary.org/obo/doid.owl",
       "meta": {
-        "subsets": [],
-        "xrefs": [],
-        "basicPropertyValues": []
+        "basicPropertyValues": [],
+        "version": ""
       },
       "logicalDefinitionAxioms": []
     }

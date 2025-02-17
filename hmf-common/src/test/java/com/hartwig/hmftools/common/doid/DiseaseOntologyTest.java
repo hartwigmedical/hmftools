@@ -43,8 +43,6 @@ public class DiseaseOntologyTest
         assertEquals("is_a", doidEdge2.predicate());
         assertEquals("http://purl.obolibrary.org/obo/doid#chebi", doidEdge2.object());
 
-        assertTrue(doidEntry.meta().subsets().isEmpty());
-        assertTrue(doidEntry.meta().xrefs().isEmpty());
         assertTrue(doidEntry.meta().basicPropertyValues().isEmpty());
         assertTrue(doidEntry.logicalDefinitionAxioms().isEmpty());
 
