@@ -1,6 +1,6 @@
 # Redux
 
-The purpose of REDUX is to abstract any platform, library prep and aligner specific artefacts from the BAM.   A key aim of REDUX is to make it simple to adapt to different sequencing technologies or library preparation techniques. 
+The purpose of REDUX (**RE**calibrate **DE**duplicate **U**nmap e**X**tract) is to abstract any platform, library prep and aligner specific artefacts from the BAM.   A key aim of REDUX is to make it simple to adapt to different sequencing technologies or library preparation techniques. 
  
 REDUX currently performs 3 key tasks: 
 
