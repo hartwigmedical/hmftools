@@ -10,17 +10,14 @@ import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstant
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
 
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -31,16 +28,18 @@ public class JitterAnalyser
     private final BamSlicerFilter mBamSlicerFilter;
     private final SampleReadProcessor mSampleReadProcessor;
 
-    private List<ConsensusType> mConsensusTypes;
+    private EnumSet<ConsensusType> mConsensusTypes;
 
-    public JitterAnalyser(final JitterAnalyserConfig config, final Logger logger, @Nullable final ConsensusMarker consensusMarker)
+    public JitterAnalyser(final JitterAnalyserConfig config, final Logger logger)
     {
+
         mConfig = config;
         mLogger = logger;
 
         mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
 
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = loadRefGenomeMicrosatellites();
+        ConsensusMarker consensusMarker = ConsensusMarker.fromSequencingType(config.Sequencing);
         mSampleReadProcessor = new SampleReadProcessor(config, refGenomeMicrosatellites, consensusMarker);
 
         mConsensusTypes = null;
@@ -57,23 +56,12 @@ public class JitterAnalyser
         mSampleReadProcessor.processRead(read);
     }
 
-    private List<ConsensusType> consensusTypes()
+    private EnumSet<ConsensusType> consensusTypes()
     {
         if(mConsensusTypes != null)
-        {
             return mConsensusTypes;
-        }
 
-        Set<String> consensusTypeSet = Sets.newHashSet();
-        for(MicrosatelliteSiteAnalyser msAnalyser : mSampleReadProcessor.getMicrosatelliteSiteAnalysers())
-        {
-            consensusTypeSet.addAll(msAnalyser.seenConsensusTypes());
-        }
-
-        List<ConsensusType> consensusTypes = consensusTypeSet.stream().map(ConsensusType::valueOf).collect(Collectors.toList());
-        consensusTypes.sort(Comparator.comparingInt(ConsensusType::ordinal));
-
-        mConsensusTypes = consensusTypes;
+        mConsensusTypes = ConsensusType.consensusTypesFromSequencing(mConfig.Sequencing);
         return mConsensusTypes;
     }
 
@@ -88,7 +76,6 @@ public class JitterAnalyser
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
         writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile, mConfig);
 
-        // TODO(mkcmkc): Fix this up by consensus type.
         // draw a chart of the 9 ms profiles
     //        if(mConfig.WritePlots)
     //            drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
@@ -199,7 +186,6 @@ public class JitterAnalyser
         // we want to get around 1000 sites for each repeat context
     }
 
-    // TODO(mkcmkc): Fix this up by consensus type.
 //    private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
 //            throws IOException, InterruptedException
 //    {
