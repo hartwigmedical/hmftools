@@ -189,16 +189,21 @@ public final class DiseaseOntology
             logicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomObject, "definedClassId"))
                     .genusIds(genusIdList)
-                    .restrictions(extractLogicalDefinitionAxiomRestrictions(logicalDefinitionAxiomObject.getAsJsonArray("restrictions")))
+                    .restrictions(extractLogicalDefinitionAxiomRestrictions(optionalJsonArray(logicalDefinitionAxiomObject, "restrictions")))
                     .build());
         }
 
         return logicalDefinitionAxioms;
     }
 
-    @NotNull
-    private static List<DoidRestriction> extractLogicalDefinitionAxiomRestrictions(@NotNull JsonArray restrictionsArray)
+    @Nullable
+    private static List<DoidRestriction> extractLogicalDefinitionAxiomRestrictions(@Nullable JsonArray restrictionsArray)
     {
+        if(restrictionsArray == null)
+        {
+            return null;
+        }
+
         List<DoidRestriction> restrictionList = Lists.newArrayList();
         for(JsonElement restrictionElement : restrictionsArray)
         {

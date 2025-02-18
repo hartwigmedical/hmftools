@@ -59,8 +59,8 @@ final class DoidDatamodelCheckerFactory
     {
         Map<String, Boolean> map = Maps.newHashMap();
 
-        map.put("basicPropertyValues", true);
-        map.put("version", false);
+        map.put("basicPropertyValues", false);
+        map.put("version", true);
 
         return new JsonDatamodelChecker("DoidGraphMetaData", map);
     }
