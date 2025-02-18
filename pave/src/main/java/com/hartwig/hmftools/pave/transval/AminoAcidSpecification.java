@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pave.transval;
 
 import static com.hartwig.hmftools.pave.transval.Checks.matchPattern;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,8 +18,8 @@ import org.jetbrains.annotations.NotNull;
  */
 class AminoAcidSpecification implements TranscriptFilter
 {
-    final int position;
-    private final AminoAcid aminoAcid;
+    final int mPosition;
+    private final AminoAcid mAminoAcid;
 
     @NotNull
     public static AminoAcidSpecification parse(String aaPos)
@@ -37,22 +38,32 @@ class AminoAcidSpecification implements TranscriptFilter
     public AminoAcidSpecification(final int position, final AminoAcid aminoAcid)
     {
         Preconditions.checkArgument(position > 0);
-        this.position = position;
-        this.aminoAcid = aminoAcid;
+        this.mPosition = position;
+        this.mAminoAcid = aminoAcid;
+    }
+
+    public AminoAcid value()
+    {
+        return mAminoAcid;
+    }
+
+    public AminoAcidSequence asSequence()
+    {
+        return new AminoAcidSequence(List.of(mAminoAcid));
     }
 
     @Override
     public boolean applies(final TranscriptAminoAcids aminoAcids)
     {
-        if (position > aminoAcids.AminoAcids.length())
+        if (mPosition > aminoAcids.AminoAcids.length())
         {
             return false;
         }
-        if (aminoAcid == null)
+        if (mAminoAcid == null)
         {
             return true;
         }
-        return aminoAcids.AminoAcids.substring(position - 1, position).equals(aminoAcid.symbol);
+        return aminoAcids.AminoAcids.substring(mPosition - 1, mPosition).equals(mAminoAcid.symbol);
     }
 
     @Override
@@ -63,24 +74,24 @@ class AminoAcidSpecification implements TranscriptFilter
             return false;
         }
         final AminoAcidSpecification that = (AminoAcidSpecification) o;
-        return position == that.position && Objects.equals(aminoAcid, that.aminoAcid);
+        return mPosition == that.mPosition && Objects.equals(mAminoAcid, that.mAminoAcid);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(position, aminoAcid);
+        return Objects.hash(mPosition, mAminoAcid);
     }
 
     @Override
     public String toString()
     {
-        return "[" + position + "," + symbol() + ']';
+        return "[" + mPosition + "," + symbol() + ']';
     }
 
     @NotNull
     public String symbol()
     {
-        return aminoAcid == null ? "?" : aminoAcid.symbol;
+        return mAminoAcid == null ? "?" : mAminoAcid.symbol;
     }
 }

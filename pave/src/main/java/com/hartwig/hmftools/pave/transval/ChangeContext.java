@@ -27,22 +27,29 @@ public class ChangeContext
         AminoAcidNumberOfFirstAminoAcid = aminoAcidNumberOfFirstAminoAcidStartingInExon;
     }
 
+    ChangeContext shiftLeft(int i)
+    {
+        int start = IsPositiveStrand ? StartPositionInExon - i : StartPositionInExon + i;
+        int end = IsPositiveStrand ? FinishPositionInExon - i : FinishPositionInExon + i;
+        return new ChangeContext(mExon, start, end, IsPositiveStrand, AminoAcidNumberOfFirstAminoAcid);
+    }
+
     int positionOfChangeStartInStrand()
     {
         if(IsPositiveStrand)
         {
-            return mExon.toStrandCoordinates(StartPositionInExon, IsPositiveStrand);
+            return mExon.toStrandCoordinates(StartPositionInExon, true);
         }
-        return mExon.toStrandCoordinates(FinishPositionInExon + 1, IsPositiveStrand);
+        return mExon.toStrandCoordinates(FinishPositionInExon + 1, false);
     }
 
     int insertionPoint()
     {
         if(IsPositiveStrand)
         {
-            return mExon.toStrandCoordinates(StartPositionInExon, IsPositiveStrand) - 1;
+            return mExon.toStrandCoordinates(StartPositionInExon, true) - 1;
         }
-        return mExon.toStrandCoordinates(StartPositionInExon, IsPositiveStrand) - 1;
+        return mExon.toStrandCoordinates(StartPositionInExon, false) - 1;
     }
 
     public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged, boolean isPositiveStrand)
@@ -51,6 +58,19 @@ public class ChangeContext
         Preconditions.checkArgument(numberOfAminoAcidsChanged >= 0);
         int codonNumber = firstAminoAcid - AminoAcidNumberOfFirstAminoAcid + 1;
         return mExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged, isPositiveStrand);
+    }
+
+    CodonWithinExons codonForProteinChange(int position)
+    {
+        Preconditions.checkArgument(position >= 0);
+        int codonNumber = position - AminoAcidNumberOfFirstAminoAcid + 1;
+        return mExon.getCodon(codonNumber, IsPositiveStrand);
+    }
+
+    String exonBasesWithReplacementApplied(int strandLocationOfChange, String alternateBases)
+    {
+        int relativeLocationOfChange = mExon.fromStrandCoordinates(strandLocationOfChange, IsPositiveStrand);
+        return mExon.baseSequenceWithBasesReplaced(relativeLocationOfChange, alternateBases, IsPositiveStrand);
     }
 
     public String refBases()

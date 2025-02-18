@@ -75,6 +75,57 @@ class AminoAcidSequence
         return aminoAcids.size();
     }
 
+    @NotNull
+    public AminoAcidSequence subsequenceUpToInclusive(int i)
+    {
+        Preconditions.checkArgument(i >= 0 && i <= aminoAcids.size(), "Index out of bounds");
+        return new AminoAcidSequence(aminoAcids.subList(0, i));
+    }
+
+    @NotNull
+    public AminoAcidSequence subsequenceAfterExclusive(int i)
+    {
+        Preconditions.checkArgument(i >= 0 && i < aminoAcids.size(), "Index out of bounds");
+        return new AminoAcidSequence(aminoAcids.subList(i + 1, aminoAcids.size()));
+    }
+
+    @NotNull
+    public AminoAcidSequence append(@NotNull AminoAcidSequence other)
+    {
+        List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids);
+        newAminoAcids.addAll(other.aminoAcids);
+        return new AminoAcidSequence(newAminoAcids);
+    }
+
+    @NotNull
+    public AminoAcidSequence duplicateRange(int startInclusive, int endExclusive)
+    {
+        List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, startInclusive));
+        newAminoAcids.addAll(aminoAcids.subList(startInclusive, endExclusive));
+        newAminoAcids.addAll(aminoAcids.subList(startInclusive, endExclusive));
+        newAminoAcids.addAll(aminoAcids.subList(endExclusive, aminoAcids.size()));
+        return new AminoAcidSequence(newAminoAcids);
+    }
+
+    @NotNull
+    public AminoAcidSequence insert(int positionAfterWhichToInsert, AminoAcidSequence toInsert)
+    {
+        List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, positionAfterWhichToInsert));
+        newAminoAcids.addAll(toInsert.aminoAcids);
+        newAminoAcids.addAll(aminoAcids.subList(positionAfterWhichToInsert, aminoAcids.size()));
+        return new AminoAcidSequence(newAminoAcids);
+    }
+
+    @NotNull
+    public AminoAcidSequence replace(int position, AminoAcid replacement)
+    {
+        Preconditions.checkArgument(position >= 1 && position <= aminoAcids.size(), "Index out of bounds");
+        List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, position - 1));
+        newAminoAcids.add(replacement);
+        newAminoAcids.addAll(aminoAcids.subList(position, aminoAcids.size()));
+        return new AminoAcidSequence(newAminoAcids);
+    }
+
     @Override
     public String toString()
     {

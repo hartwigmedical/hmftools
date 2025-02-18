@@ -12,18 +12,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class PaddedExon
 {
+    public final int mIndex;
     @NotNull private final String BasesOfFirstCodonInPreviousExon;
     @NotNull private final String BasesOfLastCodonInFollowingExon;
     @NotNull private final String exonBases;
     private final int exonStart;
     @NotNull private final String IntronicPrefix;
 
-    public PaddedExon(@NotNull final String basesOfFirstCodonInPreviousExon,
+    public PaddedExon(
+            final int mIndex, @NotNull final String basesOfFirstCodonInPreviousExon,
             @NotNull final String basesOfLastCodontInFollowingExon,
             @NotNull final String exonBases,
             final int exonStart,
             @NotNull final String intronicPrefix)
     {
+        this.mIndex = mIndex;
         this.IntronicPrefix = intronicPrefix;
         Preconditions.checkArgument(basesOfFirstCodonInPreviousExon.length() < 3);
         Preconditions.checkArgument(basesOfLastCodontInFollowingExon.length() < 3);
@@ -104,6 +107,18 @@ public class PaddedExon
         return BasesOfFirstCodonInPreviousExon + left + basesToInsert + right + BasesOfLastCodonInFollowingExon;
     }
 
+    public String baseSequenceWithBasesReplaced(final int position, final String replacementBases, final boolean positiveStrand)
+    {
+        Preconditions.checkArgument(position >= 0);
+        if(!positiveStrand)
+        {
+            return null;
+        }
+        String left = exonBases.substring(0, position);
+        String right = exonBases.substring(position + replacementBases.length());
+        return BasesOfFirstCodonInPreviousExon + left + replacementBases + right + BasesOfLastCodonInFollowingExon;
+    }
+
     public String basesBetween(int start, int end)
     {
         Preconditions.checkArgument(start >= 0);
@@ -133,7 +148,32 @@ public class PaddedExon
         return exonBases.substring(position - 1, position);
     }
 
-    public SplitCodonSequence getSplitSequenceForCodons(int startCodon, int count, final boolean isPositiveStrand)
+    CodonWithinExons getCodon(int codonIndex, boolean isPositiveStrand)
+    {
+        Preconditions.checkArgument(codonIndex >= 0);
+        if(!isPositiveStrand)
+        {
+            return null;
+        }
+        int start = codonLocationInExonBody(codonIndex, true);
+        int stop = start + 3;
+
+        if(start < 0) {
+            String fragmentInExon = exonBases.substring(0, stop);
+            BaseSequence bodySequence = new BaseSequence(exonStart,fragmentInExon);
+            return CodonWithinExons.factory(BasesOfFirstCodonInPreviousExon,  bodySequence, "");
+        }
+        if(stop >= exonBases.length()) {
+            String fragmentInExon = exonBases.substring(start);
+            BaseSequence bodySequence = new BaseSequence(start + exonStart,fragmentInExon);
+            return CodonWithinExons.factory("",  bodySequence, BasesOfLastCodonInFollowingExon);
+        }
+        String fragmentInExon = exonBases.substring(start, stop);
+        BaseSequence bodySequence = new BaseSequence(start + exonStart, fragmentInExon);
+        return CodonWithinExons.factory("", bodySequence, "");
+    }
+
+    SplitCodonSequence getSplitSequenceForCodons(int startCodon, int count, final boolean isPositiveStrand)
     {
         Preconditions.checkArgument(startCodon >= 0);
         if(startCodon == 0)
@@ -153,7 +193,7 @@ public class PaddedExon
             String reversed = Nucleotides.reverseComplementBases(fragmentInExon);
             return new SplitCodonSequence(reversed, "", exonStart + deletionEnd - 1);
         }
-        int start = codonLocationInExonBody(startCodon, isPositiveStrand);
+        int start = codonLocationInExonBody(startCodon, true);
         int stop = start + count * 3;
 
         if(start < 0) {
@@ -198,6 +238,15 @@ public class PaddedExon
             return positionInExon + exonStart;
         }
         return exonStart + exonBases.length() - positionInExon;
+    }
+
+    public int fromStrandCoordinates(int positionInStrand, boolean positiveStrand)
+    {
+        Preconditions.checkArgument(positionInStrand >= 0);
+        if(positiveStrand) {
+            return positionInStrand - exonStart;
+        }
+        return -1000;//exonStart + exonBases.length() - positionInStrand; todo
     }
 
     public int inExonLength()

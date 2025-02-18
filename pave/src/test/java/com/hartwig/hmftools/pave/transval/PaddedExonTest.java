@@ -6,10 +6,10 @@ import org.junit.Test;
 
 public class PaddedExonTest extends TransvalTestBase
 {
-    PaddedExon ec = new PaddedExon("", "", "TTTAAACCCGGG", 100, "CATG");
-    PaddedExon ec2 = new PaddedExon("A", "", "TTTAAACCCGG", 100, "CATG");
-    PaddedExon ec3 = new PaddedExon("", "A", "TTAAACCCGGG", 100, "CATG");
-    PaddedExon ec6 = new PaddedExon("TA", "AT", "TTAACCGG", 100, "CATG");
+    PaddedExon ec = new PaddedExon(0,"", "", "TTTAAACCCGGG", 100, "CATG");
+    PaddedExon ec2 = new PaddedExon(2, "A", "", "TTTAAACCCGG", 100, "CATG");
+    PaddedExon ec3 = new PaddedExon(3, "", "A", "TTAAACCCGGG", 100, "CATG");
+    PaddedExon ec6 = new PaddedExon(6, "TA", "AT", "TTAACCGG", 100, "CATG");
 
     @Test
     public void baseAtTest()
@@ -43,6 +43,59 @@ public class PaddedExonTest extends TransvalTestBase
 
         assertEquals("G", ec6.baseImmediatelyBefore(0));
         assertEquals("T", ec6.baseImmediatelyBefore(1));
+    }
+
+    @Test
+    public void getCodonTest()
+    {
+        CodonWithinExons cwe = ec.getCodon(2, true);
+        assertEquals("AAA", cwe.codon());
+        assertEquals( 103, cwe.strandLocationOfStartOfVariablePart());
+        assertEquals("AAA", cwe.variablePart());
+        assertEquals("", cwe.fixedPrefix());
+        assertEquals("", cwe.fixedSuffix());
+
+        cwe = ec2.getCodon(0, true);
+        assertEquals("ATT", cwe.codon());
+        assertEquals("TT", cwe.variablePart());
+        assertEquals("A", cwe.fixedPrefix());
+        assertEquals("", cwe.fixedSuffix());
+
+        cwe = ec2.getCodon(1, true);
+        assertEquals("TAA", cwe.codon());
+        assertEquals("TAA", cwe.variablePart());
+        assertEquals("", cwe.fixedPrefix());
+        assertEquals("", cwe.fixedSuffix());
+
+        cwe = ec3.getCodon(4, true);
+        assertEquals("GGA", cwe.codon());
+        assertEquals("GG", cwe.variablePart());
+        assertEquals("", cwe.fixedPrefix());
+        assertEquals("A", cwe.fixedSuffix());
+/*
+        cwe = ec.getCodon(1, false);
+        assertEquals("GGG", cwe.codon());
+        assertEquals("GGG", cwe.variablePart());
+        assertEquals("", cwe.fixedPrefix());
+        assertEquals("", cwe.fixedSuffix());
+
+        cwe = ec2.getCodon(0, false);
+        assertEquals("CCG", cwe.codon());
+        assertEquals("CCG", cwe.variablePart());
+        assertEquals("", cwe.fixedPrefix());
+        assertEquals("", cwe.fixedSuffix());
+
+        cwe = ec2.getCodon(4, false);
+        assertEquals("TAA", cwe.codon());
+        assertEquals("AA", cwe.variablePart());
+        assertEquals("", cwe.fixedPrefix());
+        assertEquals("T", cwe.fixedSuffix());
+
+        cwe = ec3.getCodon(0, false);
+        assertEquals("TCC", cwe.codon());
+        assertEquals("CC", cwe.variablePart());
+        assertEquals("T", cwe.fixedPrefix());
+        assertEquals("", cwe.fixedSuffix()); */
     }
 
     @Test

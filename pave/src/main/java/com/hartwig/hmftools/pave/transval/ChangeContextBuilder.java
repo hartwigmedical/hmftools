@@ -67,11 +67,11 @@ public class ChangeContextBuilder
         PaddedExon containingExon;
         if(isPositiveStrand)
         {
-            containingExon = new PaddedExon(basesInPreviousExon, basesInNextExon, exonBases, exon.start(), prefix);
+            containingExon = new PaddedExon(ExonIndex, basesInPreviousExon, basesInNextExon, exonBases, exon.start(), prefix);
         }
         else
         {
-            containingExon = new PaddedExon(basesInNextExon, basesInPreviousExon, exonBases, exon.start(), prefix);
+            containingExon = new PaddedExon(ExonIndex, basesInNextExon, basesInPreviousExon, exonBases, exon.start(), prefix);
         }
         return new ChangeContext(containingExon, ChangeStart, ChangeEnd, isPositiveStrand, AminoAcidNumberOfFirstAminoAcidStartingInExon);
     }

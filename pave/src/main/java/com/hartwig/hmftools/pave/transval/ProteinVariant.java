@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public abstract class ProteinVariant
+public class ProteinVariant
 {
     @NotNull
     final GeneData mGene;
@@ -33,6 +33,8 @@ public abstract class ProteinVariant
     @NotNull
     final List<ChrBaseRegion> mCodingRegions;
     final int mRefLength;
+    @NotNull
+    private final AminoAcidSequence mCompleteReferenceSequence;
 
     public ProteinVariant(
             @NotNull final GeneData gene,
@@ -63,12 +65,18 @@ public abstract class ProteinVariant
         {
             mCodingRegions = codingRegions;
         }
+        mCompleteReferenceSequence = AminoAcidSequence.parse(mAminoAcidSequence.AminoAcids);
     }
 
     public String referenceAminoAcids()
     {
         return mAminoAcidSequence.AminoAcids.substring(
                 mPositionOfFirstAlteredCodon - 1, mPositionOfFirstAlteredCodon + mRefLength - 1);
+    }
+
+    AminoAcidSequence referenceAminoAcidSequence()
+    {
+        return mCompleteReferenceSequence;
     }
 
     public int positionOfFirstAlteredCodon()
@@ -91,8 +99,8 @@ public abstract class ProteinVariant
     {
         CodonWindow window = new CodonWindow(positionOfFirstAlteredCodon(), mRefLength);
         List<Integer> regionLengths = codingRegionLengths();
-        ChangeContextBuilder exonBuilder = window.seekExonLocation(regionLengths);
-        return exonBuilder.build(mGene.Chromosome, genome, mCodingRegions, mTranscript.posStrand());
+        ChangeContextBuilder changeContextBuilder = window.seekExonLocation(regionLengths);
+        return changeContextBuilder.build(mGene.Chromosome, genome, mCodingRegions, mTranscript.posStrand());
     }
 
     @NotNull
@@ -106,29 +114,66 @@ public abstract class ProteinVariant
         return null;
     }
 
+    @NotNull
+    AminoAcidSequence replaceExonAminoAcids(int exon, @NotNull AminoAcidSequence replacement)
+    {
+        int lengthUpToExon = 0;
+        List<Integer> regionLengths = codingRegionLengths();
+        for (int i = 0; i < exon; i++)
+        {
+            lengthUpToExon += regionLengths.get(i);
+        }
+        int numberOfAAsBeforeExon = lengthUpToExon / 3;
+        int lengthIncludingExon = lengthUpToExon + regionLengths.get(exon);
+        int numberOfAAsIncludingExon = lengthIncludingExon / 3;
+        if (lengthIncludingExon % 3 != 0)
+        {
+            numberOfAAsIncludingExon++;
+        }
+        AminoAcidSequence left = mCompleteReferenceSequence.subsequenceUpToInclusive(numberOfAAsBeforeExon);
+        AminoAcidSequence right = mCompleteReferenceSequence.subsequenceAfterExclusive(numberOfAAsIncludingExon - 1);
+        return left.append(replacement).append(right);
+    }
+
+    int numberOfLeftShiftsToTry(ChangeContext changeContext)
+    {
+        int result = changeContext.StartPositionInExon;
+        if(mTranscript.negStrand())
+        {
+            result = changeContext.mExon.inExonLength() - changeContext.FinishPositionInExon - 1;
+        }
+        return Math.min(result, 32);
+    }
+
     @VisibleForTesting
     Collection<ChangeResult> findLeftmostApplicableChanges(RefGenomeInterface genome)
     {
+        AminoAcidSequence targetSequence = variantSequence();
         ChangeContext changeContext = getChangeContext(genome);
         ChangeResult firstExampleResult = applyChange(changeContext).iterator().next();
-        int maxMoves = changeContext.StartPositionInExon;
-        if(mTranscript.negStrand())
-        {
-            maxMoves = changeContext.mExon.inExonLength() - changeContext.FinishPositionInExon - 1;
-        }
-        maxMoves = Math.min(maxMoves, 32);
+        int maxMoves =  numberOfLeftShiftsToTry(changeContext);
         Map<String, ChangeResult> results = new HashMap<>();
         for(int i = 0; i <= maxMoves; i++)
         {
-            int start = mTranscript.posStrand() ? changeContext.StartPositionInExon - i : changeContext.StartPositionInExon + i;
-            int end = start + mRefLength * 3 - 1;
-            ChangeContext change = new ChangeContext(changeContext.mExon, start, end, mTranscript.posStrand(), 0);
+            ChangeContext change = changeContext.shiftLeft(i);
             Set<ChangeResult> changesAtThisPosition = applyChange(change);
             for(ChangeResult changeAtThisPosition : changesAtThisPosition)
             {
-                if(firstExampleResult.mAminoAcids.equals(changeAtThisPosition.mAminoAcids))
+                if (targetSequence != null) // todo should not be null, need to do overrides
                 {
-                    results.put(changeAtThisPosition.mBases, changeAtThisPosition);
+                    AminoAcidSequence effectOfChange = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
+                    if(effectOfChange.equals(targetSequence))
+                    {
+                        results.put(changeAtThisPosition.mBases, changeAtThisPosition);
+                    }
+                }
+                else
+                {
+                    // todo get rid of this once all subclasses implement variantSequence()
+                    if(firstExampleResult.mAminoAcids.equals(changeAtThisPosition.mAminoAcids))
+                    {
+                        results.put(changeAtThisPosition.mBases, changeAtThisPosition);
+                    }
                 }
             }
         }
@@ -143,17 +188,12 @@ public abstract class ProteinVariant
             return null;
         }
         Set<TransvalHotspot> hotspots = new HashSet<>();
-        changes.forEach(change -> hotspots.add(convertToHotspot(change)));
+        changes.forEach(change -> hotspots.add(change.toHotspot(mGene.Chromosome)));
         return new TransvalVariant(
                 mTranscript,
                 mGene.Chromosome,
                 false,
                 hotspots);
-    }
-
-    TransvalHotspot convertToHotspot(ChangeResult changeResult)
-    {
-        return new TransvalHotspot(changeResult.mRefBases, changeResult.altBases, mGene.Chromosome, changeResult.mLocation);
     }
 
     CodonRegions exonsForCodonPosition(int codonPosition)

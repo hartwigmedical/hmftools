@@ -5,8 +5,15 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SingleAminoAcidVariantTest extends TransvalTestBase
+public class SingleAminoAcidVariantTest extends VariantTest
 {
+
+    @Test
+    public void variantSequenceTest()
+    {
+        SingleAminoAcidVariant variant = new SingleAminoAcidVariant(gene, transcript, taa, aas(5, "W"));
+        Assert.assertEquals("MAAQWAPAAS", variant.variantSequence().sequence());
+    }
 
     @Test
     public void referenceValueTest()

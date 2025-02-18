@@ -32,6 +32,11 @@ class ChangeResult
         this.altBases = altBases;
     }
 
+    public TransvalHotspot toHotspot(String chromosome)
+    {
+        return new TransvalHotspot(mRefBases, altBases, chromosome, mLocation);
+    }
+
     @Override
     public boolean equals(final Object o)
     {

@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
-public class CodonVariantTest
+public class CodonChangeTest
 {
     @Test(expected = IllegalArgumentException.class)
     public void cannotCompareVariantsWithDifferingReferenceCodons()
@@ -74,9 +74,9 @@ public class CodonVariantTest
         assertEquals(cv("AAA", "AAG").hashCode(), cv("AAA", "AAG").hashCode());
     }
     
-    private CodonVariant cv(String s, String t)
+    private CodonChange cv(String s, String t)
     {
-        return new CodonVariant(s, t);
+        return new CodonChange(s, t);
     }
 
     private Pair<String,String> p(String s, String t)

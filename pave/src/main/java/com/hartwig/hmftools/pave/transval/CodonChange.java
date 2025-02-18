@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-public class CodonVariant implements Comparable<CodonVariant>
+public class CodonChange implements Comparable<CodonChange>
 {
     @NotNull
     public final String ReferenceCodon;
@@ -18,7 +18,7 @@ public class CodonVariant implements Comparable<CodonVariant>
     public final String AlternateCodon;
     private final int EditDistance;
 
-    public CodonVariant(@NotNull final String referenceCodon, @NotNull final String alternateCodon)
+    public CodonChange(@NotNull final String referenceCodon, @NotNull final String alternateCodon)
     {
         Preconditions.checkArgument(Checks.isCodon(referenceCodon));
         Preconditions.checkArgument(Checks.isCodon(alternateCodon));
@@ -36,7 +36,7 @@ public class CodonVariant implements Comparable<CodonVariant>
     }
 
     @Override
-    public int compareTo(@NotNull final CodonVariant o)
+    public int compareTo(@NotNull final CodonChange o)
     {
         if(!ReferenceCodon.equals(o.ReferenceCodon))
         {
@@ -115,7 +115,7 @@ public class CodonVariant implements Comparable<CodonVariant>
         {
             return false;
         }
-        final CodonVariant that = (CodonVariant) o;
+        final CodonChange that = (CodonChange) o;
         return Objects.equals(ReferenceCodon, that.ReferenceCodon) && Objects.equals(AlternateCodon, that.AlternateCodon);
     }
 
@@ -128,7 +128,7 @@ public class CodonVariant implements Comparable<CodonVariant>
     @Override
     public String toString()
     {
-        return "CodonVariant{" +
+        return "CodonChange{" +
                 "referenceCodon='" + ReferenceCodon + '\'' +
                 ", alternateCodon='" + AlternateCodon + '\'' +
                 '}';

@@ -94,4 +94,14 @@ class TransvalTestBase
             assertTrue(hotspots.contains(hotspot));
         }
     }
+
+    CodonWithinExons sec(int position, String bases)
+    {
+        return new CodonWithinExons(bs(position, bases));
+    }
+
+    BaseSequence bs(int position, String bases)
+    {
+        return new BaseSequence(position, bases);
+    }
 }

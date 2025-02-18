@@ -32,20 +32,41 @@ class AminoAcid
     }
 
     @NotNull
+    public Set<String> matchingCodons(@NotNull final String prefix, @NotNull final String suffix)
+    {
+        Preconditions.checkArgument(prefix.length() < 3);
+        Preconditions.checkArgument(suffix.length() < 3);
+        return matchingCodons(prefix, suffix, false);
+    }
+
+    @NotNull
     public Set<String> matchingTruncatedCodons(@NotNull final String prefix, @NotNull final String suffix)
     {
         Preconditions.checkArgument(prefix.length() < 3);
         Preconditions.checkArgument(suffix.length() < 3);
+        return matchingCodons(prefix, suffix, true);
+    }
+
+    @NotNull
+    private Set<String> matchingCodons(@NotNull final String prefix, @NotNull final String suffix, final boolean truncate)
+    {
         final Set<String> result = new HashSet<>();
         AMINO_ACID_TO_CODON_MAP.get(symbol).forEach(codon ->
         {
             if(codon.startsWith(prefix) && codon.endsWith(suffix))
             {
-                String prefixTruncatedCodon = codon.substring(prefix.length());
-                String truncatedCodon = prefixTruncatedCodon.substring(0, prefixTruncatedCodon.length() - suffix.length());
-                if(!truncatedCodon.isEmpty())
+                if(truncate)
                 {
-                    result.add(truncatedCodon);
+                    String prefixTruncatedCodon = codon.substring(prefix.length());
+                    String truncatedCodon = prefixTruncatedCodon.substring(0, prefixTruncatedCodon.length() - suffix.length());
+                    if(!truncatedCodon.isEmpty())
+                    {
+                        result.add(truncatedCodon);
+                    }
+                }
+                else
+                {
+                    result.add(codon);
                 }
             }
         });

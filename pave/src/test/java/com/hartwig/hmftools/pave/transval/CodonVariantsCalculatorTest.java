@@ -12,10 +12,10 @@ public class CodonVariantsCalculatorTest
     public void variantsTest()
     {
         CodonVariantsCalculator calculator = new CodonVariantsCalculator("D", "E");
-        SortedSet<CodonVariant> variants = calculator.possibleCodonsForVariant("GAC");
+        SortedSet<CodonChange> variants = calculator.possibleCodonsForVariant("GAC");
         Assert.assertEquals(2, variants.size());
-        Iterator<CodonVariant> iterator = variants.iterator();
-        Assert.assertEquals(new CodonVariant("GAC", "GAA"), iterator.next());
-        Assert.assertEquals(new CodonVariant("GAC", "GAG"), iterator.next());
+        Iterator<CodonChange> iterator = variants.iterator();
+        Assert.assertEquals(new CodonChange("GAC", "GAA"), iterator.next());
+        Assert.assertEquals(new CodonChange("GAC", "GAG"), iterator.next());
     }
 }

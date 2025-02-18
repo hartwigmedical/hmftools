@@ -75,4 +75,55 @@ public class AminoAcidSequenceTest extends TransvalTestBase
         assertEquals(1, aaSeq("A").length());
         assertEquals(3, aaSeq("SAT").length());
     }
+
+    @Test
+    public void subsequenceUpToTest()
+    {
+        assertEquals(aaSeq(""), aaSeq("APCDEFGHI").subsequenceUpToInclusive(0));
+        assertEquals(aaSeq("A"), aaSeq("APCDEFGHI").subsequenceUpToInclusive(1));
+        assertEquals(aaSeq("AP"), aaSeq("APCDEFGHI").subsequenceUpToInclusive(2));
+        assertEquals(aaSeq("APC"), aaSeq("APCDEFGHI").subsequenceUpToInclusive(3));
+        assertEquals(aaSeq("APCDEFGH"), aaSeq("APCDEFGHI").subsequenceUpToInclusive(8));
+        assertEquals(aaSeq("APCDEFGHI"), aaSeq("APCDEFGHI").subsequenceUpToInclusive(9));
+    }
+
+    @Test
+    public void subsequenceAfterTest()
+    {
+        assertEquals(aaSeq(""), aaSeq("APCDEFGHI").subsequenceAfterExclusive(8));
+        assertEquals(aaSeq("I"), aaSeq("APCDEFGHI").subsequenceAfterExclusive(7));
+        assertEquals(aaSeq("HI"), aaSeq("APCDEFGHI").subsequenceAfterExclusive(6));
+        assertEquals(aaSeq("CDEFGHI"), aaSeq("APCDEFGHI").subsequenceAfterExclusive(1));
+        assertEquals(aaSeq("PCDEFGHI"), aaSeq("APCDEFGHI").subsequenceAfterExclusive(0));
+    }
+
+    @Test
+    public void duplicateRangeTest()
+    {
+        assertEquals(aaSeq("THECATSAREKIPPING"), aaSeq("THECATSAREKIPPING").duplicateRange(0, 0));
+        assertEquals(aaSeq("THECATCATSAREKIPPING"), aaSeq("THECATSAREKIPPING").duplicateRange(3, 6));
+        assertEquals(aaSeq("THECATSAREKIPPINGTHECATSAREKIPPING"), aaSeq("THECATSAREKIPPING").duplicateRange(0, 17));
+    }
+
+    @Test
+    public void replaceTest()
+    {
+        assertEquals(aaSeq("SHECATSAREKIPPING"), aaSeq("THECATSAREKIPPING").replace(1, aa("S")));
+        assertEquals(aaSeq("THECADSAREKIPPING"), aaSeq("THECATSAREKIPPING").replace(6, aa("D")));
+        assertEquals(aaSeq("THECATSAREKIPPINE"), aaSeq("THECATSAREKIPPING").replace(17, aa("E")));
+    }
+
+    @Test
+    public void insertTest()
+    {
+        assertEquals(aaSeq("ALLTHECATSAREKIPPING"), aaSeq("THECATSAREKIPPING").insert(0, aaSeq("ALL")));
+        assertEquals(aaSeq("THEGIANTCATSAREKIPPING"), aaSeq("THECATSAREKIPPING").insert(3, aaSeq("GIANT")));
+        assertEquals(aaSeq("THECATSAREKIPPINGHERE"), aaSeq("THECATSAREKIPPING").insert(17, aaSeq("HERE")));
+    }
+
+    @Test
+    public void appendTest()
+    {
+        assertEquals(aaSeq("APCDEFGHI"), aaSeq("APCDE").append(aaSeq("FGHI")));
+    }
 }

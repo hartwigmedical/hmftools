@@ -25,11 +25,11 @@ public class CodonVariantsCalculator
     }
 
     @NotNull
-    public SortedSet<CodonVariant> possibleCodonsForVariant(@NotNull final String referenceCodon)
+    public SortedSet<CodonChange> possibleCodonsForVariant(@NotNull final String referenceCodon)
     {
         Preconditions.checkArgument(Objects.equals(AminoAcids.findAminoAcidForCodon(referenceCodon), Reference));
-        SortedSet<CodonVariant> result = new TreeSet<>();
-        AminoAcids.AMINO_ACID_TO_CODON_MAP.get(Variant).forEach(variant -> result.add(new CodonVariant(referenceCodon, variant)));
+        SortedSet<CodonChange> result = new TreeSet<>();
+        AminoAcids.AMINO_ACID_TO_CODON_MAP.get(Variant).forEach(variant -> result.add(new CodonChange(referenceCodon, variant)));
         return result;
     }
 }

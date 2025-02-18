@@ -66,6 +66,7 @@ class Insertion extends ProteinVariant
 
     @Override
     public int positionOfFirstAlteredCodon()
+            // todo do we need this????
     {
         // The insertion happens just after the first AA in the ref seq.
         return super.positionOfFirstAlteredCodon() + 1;
@@ -74,11 +75,7 @@ class Insertion extends ProteinVariant
     @Override
     AminoAcidSequence variantSequence()
     {
-        String rawAAs = this.mAminoAcidSequence.AminoAcids;
-        int pointOfInsertion = positionOfFirstAlteredCodon() - 1;
-        String left = rawAAs.substring(0, pointOfInsertion);
-        String right = rawAAs.substring(pointOfInsertion);
-        String duplicatedAAs = left + mInsertedSequence.sequence() + right;
-        return AminoAcidSequence.parse(duplicatedAAs);
+        int pointOfInsertion = super.positionOfFirstAlteredCodon();
+        return referenceAminoAcidSequence().insert(pointOfInsertion, mInsertedSequence);
     }
 }

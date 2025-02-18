@@ -28,21 +28,15 @@ class Duplication extends ProteinVariant
         String bases = exon.baseSequenceWithDuplicationApplied(changeStart, changeEnd, changeContext.IsPositiveStrand);
         AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(bases);
         String duplicated = changeContext.refBases();
-        String refBase = duplicated.substring(0,  1);
+        String refBase = duplicated.substring(0, 1);
         return Set.of( new ChangeResult(acids, bases, changeContext.positionOfChangeStartInStrand() - 1, refBase, duplicated));
     }
 
     @Override
     AminoAcidSequence variantSequence()
     {
-        String rawAAs = this.mAminoAcidSequence.AminoAcids;
         int startOfDuplicatedSection = positionOfFirstAlteredCodon() - 1;
-        String left = rawAAs.substring(0, startOfDuplicatedSection);
         int endOfDuplicatedSection = startOfDuplicatedSection + this.mRefLength;
-        String toDuplicate = rawAAs.substring(startOfDuplicatedSection, endOfDuplicatedSection);
-        String right = rawAAs.substring(endOfDuplicatedSection);
-
-        String duplicatedAAs = left + toDuplicate + toDuplicate + right;
-        return AminoAcidSequence.parse(duplicatedAAs);
+        return referenceAminoAcidSequence().duplicateRange(startOfDuplicatedSection, endOfDuplicatedSection);
     }
 }
