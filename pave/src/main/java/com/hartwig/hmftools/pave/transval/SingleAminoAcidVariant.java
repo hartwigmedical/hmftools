@@ -36,7 +36,7 @@ class SingleAminoAcidVariant extends ProteinVariant
     @Override
     AminoAcidSequence variantSequence()
     {
-        return null;
+        return referenceAminoAcidSequence().replace(positionOfFirstAlteredCodon(), Alt.value());
     }
 
     @Override

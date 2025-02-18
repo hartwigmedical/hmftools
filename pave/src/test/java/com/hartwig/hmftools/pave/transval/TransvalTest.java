@@ -128,12 +128,10 @@ public class TransvalTest extends TransvalTestBase
         );
 
         // ... A at the end of exon6 is at 105,243,778
-//        var variant = transval.calculateVariant("TET2:p.E1268V");
-//        checkHotspots(variant,
-//                hotspot("G", "T", "chr4", 105_243_777)
-//        );
-/*
-
+        variant = transval.calculateVariant("TET2:p.E1268V");
+        checkHotspots(variant,
+                hotspot("A", "T", "chr4", 105_243_778)
+        );
 
         variant = transval.calculateVariant("TET2:p.E1268Q");
         checkHotspots(variant,
@@ -151,7 +149,7 @@ public class TransvalTest extends TransvalTestBase
         checkHotspots(variant,
                 hotspot("G", "T", "chr4", 105_241_340),
                 hotspot("G", "C", "chr4", 105_241_340)
-        );*/
+        );
     }
 
     @Test

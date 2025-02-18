@@ -148,9 +148,26 @@ public class ProteinVariant
     @VisibleForTesting
     Collection<ChangeResult> findLeftmostApplicableChanges(RefGenomeInterface genome)
     {
-        AminoAcidSequence targetSequence = variantSequence();
         ChangeContext changeContext = getChangeContext(genome);
-        ChangeResult firstExampleResult = applyChange(changeContext).iterator().next();
+        Set<ChangeResult> result = new HashSet<>(findLeftmostApplicableChangesForContext(changeContext));
+        // If the change context has a companion (so it's straddling a splice junction)
+        // we need to consider any changes from that context.
+        if(changeContext.companionContext() != null)
+        {
+            result.addAll(findLeftmostApplicableChangesForContext(changeContext.companionContext()));
+        }
+        return result;
+    }
+
+    private Collection<ChangeResult> findLeftmostApplicableChangesForContext(ChangeContext changeContext)
+    {
+        AminoAcidSequence targetSequence = variantSequence();
+        final Set<ChangeResult> changeResults = applyChange(changeContext);
+        if (changeResults.isEmpty())
+        {
+            return changeResults;
+        }
+        ChangeResult firstExampleResult = changeResults.iterator().next();
         int maxMoves =  numberOfLeftShiftsToTry(changeContext);
         Map<String, ChangeResult> results = new HashMap<>();
         for(int i = 0; i <= maxMoves; i++)
@@ -159,7 +176,7 @@ public class ProteinVariant
             Set<ChangeResult> changesAtThisPosition = applyChange(change);
             for(ChangeResult changeAtThisPosition : changesAtThisPosition)
             {
-                if (targetSequence != null) // todo should not be null, need to do overrides
+                if (targetSequence != null) // todo should not be null, need to do overrides of variantSequence()
                 {
                     AminoAcidSequence effectOfChange = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
                     if(effectOfChange.equals(targetSequence))
@@ -177,7 +194,7 @@ public class ProteinVariant
                 }
             }
         }
-        return results.values();
+        return new HashSet<>(results.values());
     }
 
     TransvalVariant calculateVariant(RefGenomeInterface refGenome)

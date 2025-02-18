@@ -14,6 +14,7 @@ public class ChangeContext
     final int FinishPositionInExon;
     final boolean IsPositiveStrand;
     private final int AminoAcidNumberOfFirstAminoAcid;
+    private ChangeContext companionContext = null;
 
     public ChangeContext(@NotNull final PaddedExon containingExon, final int startPositionInExon,
             final int finishPositionInExon,
@@ -25,6 +26,18 @@ public class ChangeContext
         this.FinishPositionInExon = finishPositionInExon;
         this.IsPositiveStrand = isPositiveStrand;
         AminoAcidNumberOfFirstAminoAcid = aminoAcidNumberOfFirstAminoAcidStartingInExon;
+    }
+
+    ChangeContext companionContext()
+    {
+        return companionContext;
+    }
+
+    void setCompanionContext(@NotNull ChangeContext companionContext)
+    {
+        Preconditions.checkArgument(companionContext.mExon.mIndex == mExon.mIndex - 1);
+        Preconditions.checkArgument(companionContext.IsPositiveStrand == IsPositiveStrand);
+        this.companionContext = companionContext;
     }
 
     ChangeContext shiftLeft(int i)

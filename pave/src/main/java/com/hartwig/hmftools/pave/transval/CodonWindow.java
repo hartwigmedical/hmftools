@@ -34,9 +34,16 @@ class CodonWindow
             lengthIncludingCurrent += exonLength;
             if(Start < lengthIncludingCurrent)
             {
+                int paddingInPreviousExon = lengthUpToCurrent % 3;
+                if(paddingInPreviousExon != 0)
+                {
+                    aminoAcidsStartingInPreviousExons += 1;
+                }
                 // The window starts in this exon.
                 // We first need to handle the special case in which the window
-                // starts at the very end of this exon.
+                // starts at the very end of this exon. In this situation we return
+                // data for a change context based in the next exon, but with
+                // a 'companion' change context based in this exon.
                 int distanceFromWindowStartToCurrentExonEnd = lengthIncludingCurrent - Start;
                 if(distanceFromWindowStartToCurrentExonEnd == 2 || distanceFromWindowStartToCurrentExonEnd == 1)
                 {
@@ -46,18 +53,24 @@ class CodonWindow
                     {
                         throw new IllegalArgumentException("No exon covering window: " + this);
                     }
+                    int startInThisExon = exonLength - distanceFromWindowStartToCurrentExonEnd;
+                    ChangeContextData companionData = new ChangeContextData(
+                            i,
+                            startInThisExon,
+                            exonLength - 1,
+                            paddingInPreviousExon,
+                            overflowIntoNextExon(lengthIncludingCurrent),
+                            aminoAcidsStartingInPreviousExons);
+
                     int lengthIncludingNextExon = lengthIncludingCurrent + exonLengths.get(i + 1);
                     int paddingInNextExon = overflowIntoNextExon(lengthIncludingNextExon);
                     aminoAcidsStartingInPreviousExons = (lengthIncludingCurrent / 3) + 1;
-                    return new ChangeContextBuilder(
-                            i + 1, 0,
-                            Length - distanceFromWindowStartToCurrentExonEnd
-                                    - 1, distanceFromWindowStartToCurrentExonEnd, paddingInNextExon, aminoAcidsStartingInPreviousExons);
-                }
-                int paddingInPreviousExon = lengthUpToCurrent % 3;
-                if(paddingInPreviousExon != 0)
-                {
-                    aminoAcidsStartingInPreviousExons += 1;
+                    ChangeContextData data = new ChangeContextData(
+                            i + 1,
+                            0,
+                            Length - distanceFromWindowStartToCurrentExonEnd - 1,
+                            distanceFromWindowStartToCurrentExonEnd, paddingInNextExon, aminoAcidsStartingInPreviousExons);
+                    return new ChangeContextBuilder(data, companionData);
                 }
                 // The window may extend 1 or 2 bases into the next exon.
                 int distanceOfWindowEndBeyondCurrentExon = End - lengthIncludingCurrent + 1;
