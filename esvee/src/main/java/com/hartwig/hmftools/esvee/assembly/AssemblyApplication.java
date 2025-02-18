@@ -149,7 +149,7 @@ public class AssemblyApplication
             // with the BAM they were read from (ie as used in tumor vs ref counts)
             writeAssemblyBam(finalAssemblies);
 
-            if(mConfig.PerfDebug || (!mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificJunctions.isEmpty()))
+            if(mConfig.PerfDebug)
             {
                 mPerfCounters.forEach(x -> x.logStats());
             }

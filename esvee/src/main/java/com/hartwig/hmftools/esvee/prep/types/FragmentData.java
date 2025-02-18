@@ -14,7 +14,7 @@ public class FragmentData
     public final PrepRead Read;
     public final int MatePosition;
     public final boolean IsPrimary;
-    public final boolean PrimaryIsLower;
+    public final boolean ReadIsLowerVsSuppData;
 
     public FragmentData(final PrepRead read)
     {
@@ -26,11 +26,11 @@ public class FragmentData
 
         if(read.Chromosome.equals(suppData.Chromosome))
         {
-            PrimaryIsLower = read.start() <= suppData.Position;
+            ReadIsLowerVsSuppData = read.start() <= suppData.Position;
         }
         else
         {
-            PrimaryIsLower = HumanChromosome.lowerChromosome(read.Chromosome, suppData.Chromosome);
+            ReadIsLowerVsSuppData = HumanChromosome.lowerChromosome(read.Chromosome, suppData.Chromosome);
         }
 
         if(read.record().hasAttribute(MATE_CIGAR_ATTRIBUTE))
@@ -48,10 +48,22 @@ public class FragmentData
     public String mateChromosome() { return Read.MateChromosome; }
     public Orientation mateOrientation() { return Read.mateOrientation(); }
 
+    public boolean matches(final FragmentData other)
+    {
+        return mateChromosome().equals(other.mateChromosome())
+                && mateOrientation() == other.mateOrientation()
+                && MatePosition == other.MatePosition;
+    }
+
+    public static int unclippedPosition(final PrepRead read)
+    {
+        return read.orientation().isForward() ? read.unclippedStart() : read.unclippedEnd();
+    }
+
     public String toString()
     {
         return format("id(%s) mate(%s:%d:%d) %s %s",
                 Read.id(), mateChromosome(), MatePosition, mateOrientation().asByte(),
-                IsPrimary ? "primary" : "supp", PrimaryIsLower ? "primary-lower" : "primary-upper");
+                IsPrimary ? "primary" : "supp", ReadIsLowerVsSuppData ? "lower" : "upper");
     }
 }

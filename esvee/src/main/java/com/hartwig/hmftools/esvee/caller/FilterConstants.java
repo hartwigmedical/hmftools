@@ -36,7 +36,7 @@ public class FilterConstants
 
     private static final String CFG_MIN_SUPPORT = "min_support";
     private static final String CFG_MIN_SUPPORT_HOTSPOT = "hotspot_min_support";
-    private static final String CFG_MIN_SUPPORT_SGL = "sgl_min_support";
+    private static final String CFG_MIN_SUPPORT_SGL = "java -cp /data/tools/esvee_v1.0.jar com.hartwig.hmftools.esvee.caller.CallerApplication -sample COLO829v004T -reference COLO829v004R -ref_genome_version V38 -known_hotspot_file /opt/resources/fusions/38/known_fusions.38.bedpe -pon_sgl_file /opt/resources/gridss/38/sgl_pon.38.bed.gz -pon_sv_file /opt/resources/gridss/38/sv_pon.38.bedpe.gz -repeat_mask_file /opt/resources/gridss/38/repeat_mask_data.38.fa.gz -min_support 8 -sgl_min_support 8  -output_dir ./ -log_debug";
 
     public final double MinAfJunction;
     public final double MinAfSgl;

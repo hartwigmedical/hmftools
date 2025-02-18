@@ -10,15 +10,18 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.esvee.prep.types.FragmentData.unclippedPosition;
 
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.prep.types.FragmentData;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -283,6 +286,8 @@ public final class JunctionUtils
 
     public static void purgeSupplementaryDuplicates(final JunctionData junctionData)
     {
+        // find duplicates missed by Redux where the primary and supplementary have the same coordinates (and mates match)
+        // in which case keep primaries and dedup (remove) supplementaries at the lower location, and vice versa at the upper location
         Map<Integer,List<PrepRead>> initialPositionMap = Maps.newHashMap();
 
         for(ReadGroup readGroup : junctionData.junctionGroups())
@@ -328,6 +333,8 @@ public final class JunctionUtils
         if(initialPositionMap.isEmpty())
             return;
 
+        Set<String> removeReadIds = Sets.newHashSet();
+
         for(List<PrepRead> reads : initialPositionMap.values())
         {
             if(reads.size() < 2)
@@ -352,12 +359,44 @@ public final class JunctionUtils
                  continue;
 
              // de-dup supplementaries
+            for(int i = 0; i < reads.size() - 1; ++i)
+            {
+                FragmentData firstFrag = fragments.get(i);
 
+                for(int j = i + 1; j < reads.size(); ++j)
+                {
+                    FragmentData nextFrag = fragments.get(j);
+
+                    if(!firstFrag.matches(nextFrag) || firstFrag.IsPrimary == nextFrag.IsPrimary)
+                        continue;
+
+                    // the supp will be removed if it is the lower coordinate of the 2, or its supplementary is likewise
+                    boolean removeNext = (firstFrag.IsPrimary == firstFrag.ReadIsLowerVsSuppData);
+
+                    if(removeNext)
+                        removeReadIds.add(nextFrag.Read.id());
+                    else
+                        removeReadIds.add(firstFrag.Read.id());
+                }
+            }
         }
-    }
 
-    private static int unclippedPosition(final PrepRead read)
-    {
-        return read.orientation().isForward() ? read.unclippedStart() : read.unclippedEnd();
+        if(removeReadIds.isEmpty())
+            return;
+
+        int index = 0;
+        while(index < junctionData.junctionGroups().size())
+        {
+            ReadGroup readGroup = junctionData.junctionGroups().get(index);
+
+            if(removeReadIds.remove(readGroup.id()))
+            {
+                junctionData.junctionGroups().remove(index);
+            }
+            else
+            {
+                ++index;
+            }
+        }
     }
 }
