@@ -23,7 +23,7 @@ public abstract class DoidEntry
     @NotNull
     public abstract DoidGraphMetaData meta();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
 
 }

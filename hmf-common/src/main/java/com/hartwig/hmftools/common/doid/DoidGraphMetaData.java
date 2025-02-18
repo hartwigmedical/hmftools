@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DoidGraphMetaData
 {
-    @NotNull
+    @Nullable
     public abstract List<DoidBasicPropertyValue> basicPropertyValues();
 
     @NotNull
