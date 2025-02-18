@@ -39,6 +39,7 @@ import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.redux.write.ReadOutput.NONE;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -215,6 +216,10 @@ public class ReduxConfig
 
         UMIs = UmiConfig.from(configBuilder);
 
+        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
+        JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
+        JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
+
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
@@ -224,12 +229,19 @@ public class ReduxConfig
         }
         else
         {
-            Map<String, List<UnmappingRegion>> unmappedMap = Maps.newHashMap();
+            Map<String,List<UnmappingRegion>> unmapRegionsMap;
+            if(JitterMsiOnly)
+            {
+                unmapRegionsMap = Collections.emptyMap();
+            }
+            else
+            {
+                unmapRegionsMap = Maps.newHashMap();
+                ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
+                unmapRegionsMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
+            }
 
-            ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
-            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
-
-            UnmapRegions = new ReadUnmapper(unmappedMap);
+            UnmapRegions = new ReadUnmapper(unmapRegionsMap);
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
@@ -248,10 +260,6 @@ public class ReduxConfig
         PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
-
-        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
-        JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
-        JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically

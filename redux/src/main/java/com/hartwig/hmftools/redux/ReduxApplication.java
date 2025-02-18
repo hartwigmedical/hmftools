@@ -48,7 +48,10 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
+        if(!mConfig.JitterMsiOnly)
+        {
+            RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
+        }
 
         long startTimeMs = System.currentTimeMillis();
 
