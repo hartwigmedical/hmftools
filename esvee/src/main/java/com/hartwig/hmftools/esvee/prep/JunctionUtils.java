@@ -286,15 +286,15 @@ public final class JunctionUtils
 
     public static void purgeSupplementaryDuplicates(final JunctionData junctionData)
     {
+        if(junctionData.junctionGroups().size() < 2)
+            return;
+
         // find duplicates missed by Redux where the primary and supplementary have the same coordinates (and mates match)
         // in which case keep primaries and dedup (remove) supplementaries at the lower location, and vice versa at the upper location
         Map<Integer,List<PrepRead>> initialPositionMap = Maps.newHashMap();
 
         for(ReadGroup readGroup : junctionData.junctionGroups())
         {
-            if(readGroup.size() < 1)
-                continue;
-
             // require paired reads with a supplementary read
             for(PrepRead read : readGroup.reads())
             {
@@ -330,7 +330,7 @@ public final class JunctionUtils
             }
         }
 
-        if(initialPositionMap.isEmpty())
+        if(initialPositionMap.values().stream().noneMatch(x -> x.size() > 1)) // early exit if no 5' positions have more than a single entry
             return;
 
         Set<String> removeReadIds = Sets.newHashSet();

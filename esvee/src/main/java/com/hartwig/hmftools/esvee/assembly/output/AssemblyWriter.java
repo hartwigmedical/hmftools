@@ -22,21 +22,17 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class AssemblyWriter
 {
     private final AssemblyConfig mConfig;
 
     private final BufferedWriter mWriter;
-    private final TruthsetAnnotation mTruthsetAnnotation;
 
     // write info about assemblies
-    public AssemblyWriter(final AssemblyConfig config, final TruthsetAnnotation truthsetAnnotation)
+    public AssemblyWriter(final AssemblyConfig config)
     {
         mConfig = config;
-        mTruthsetAnnotation = truthsetAnnotation;
-
         mWriter = initialiseWriter();
     }
 

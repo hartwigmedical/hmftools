@@ -67,7 +67,6 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
-import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -116,7 +115,6 @@ public class AssemblyConfig
 
     public final int Threads;
 
-    public final String TruthsetFile;
     public final String AlignmentFile;
 
     public static boolean WriteCandidateReads;
@@ -284,8 +282,6 @@ public class AssemblyConfig
 
         Threads = parseThreads(configBuilder);
 
-        TruthsetFile = TruthsetAnnotation.filename(configBuilder);
-
         ApplyRemotePhasingReadCheckThreshold = configBuilder.hasFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD);
 
         READ_ID_TRIMMER = new ReadIdTrimmer(!hasFilters);
@@ -377,7 +373,6 @@ public class AssemblyConfig
 
         configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
 
-        TruthsetAnnotation.registerConfig(configBuilder);
         AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
 
@@ -428,7 +423,6 @@ public class AssemblyConfig
         PhaseProcessingLimit = 0;
         DiscordantOnlyDisabled = false;
         Threads = 0;
-        TruthsetFile = null;
         AlignmentFile = null;
         DiscordantRateIncrement = DEFAULT_DISC_RATE_INCREMENT;
 
