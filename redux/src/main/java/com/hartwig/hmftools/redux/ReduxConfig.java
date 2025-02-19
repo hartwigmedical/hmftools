@@ -4,9 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -49,6 +46,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -80,6 +78,7 @@ public class ReduxConfig
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
     public final SequencingType Sequencing;
+    public final JitterAnalyserConfig JitterConfig;
 
     public final ValidationStringency BamStringency;
 
@@ -116,9 +115,6 @@ public class ReduxConfig
     public final boolean DropDuplicates;
     public final int WriteReadBaseLength;
 
-    public final String JitterMsiFile;
-    public final double JitterMsiMaxSitePercContribution;
-
     private boolean mIsValid;
     private int mReadLength;
     private final ReadChecker mReadChecker;
@@ -139,8 +135,6 @@ public class ReduxConfig
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
-
-    private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -217,8 +211,7 @@ public class ReduxConfig
         UMIs = UmiConfig.from(configBuilder);
 
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
-        JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
-        JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
+        JitterConfig = JitterAnalyserConfig.create(SampleId, RefGenomeFile, RefGenVersion, Sequencing, OutputDir, configBuilder);
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
 
@@ -333,12 +326,7 @@ public class ReduxConfig
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
-        configBuilder.addPath(JITTER_MSI_SITES_FILE, false, JITTER_MSI_SITES_FILE_DESC);
-
-        configBuilder.addDecimal(
-                JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Jitter MIS max single alt site perc contribute",
-                DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
-
+        JitterAnalyserConfig.addConfig(configBuilder);
         DuplicateGroupCollapseConfig.addConfig(configBuilder);
 
         addThreadOptions(configBuilder);
@@ -386,9 +374,8 @@ public class ReduxConfig
 
         UnmapRegions = readUnmapper;
 
-        JitterMsiFile = null;
-        JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
         JitterMsiOnly = false;
+        JitterConfig = null;
 
         DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, sbxMaxDuplicateDistance);
 

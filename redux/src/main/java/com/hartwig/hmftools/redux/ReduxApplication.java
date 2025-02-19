@@ -20,9 +20,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusMarker;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -59,15 +57,8 @@ public class ReduxApplication
 
         JitterAnalyser jitterAnalyser = null;
 
-        if(mConfig.JitterMsiFile != null)
-        {
-            JitterAnalyserConfig jitterConfig = new JitterAnalyserConfig(
-                    mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile, mConfig.OutputDir,
-                    mConfig.JitterMsiMaxSitePercContribution, true);
-
-            ConsensusMarker consensusMarker = ConsensusMarker.fromSequencingType(mConfig.Sequencing);
-            jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER, consensusMarker);
-        }
+        if(mConfig.JitterConfig != null)
+            jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig, RD_LOGGER);
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
         UnmapStats unmapStats = mConfig.UnmapRegions.stats();

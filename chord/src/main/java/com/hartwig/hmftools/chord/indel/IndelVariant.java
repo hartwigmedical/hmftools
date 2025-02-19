@@ -14,9 +14,6 @@ public class IndelVariant
 
     public IndelVariant(SmallVariant variant)
     {
-        if(!variant.isIndel())
-            throw new IllegalStateException(variant + " is not an indel");
-
         mVariant = variant;
 
         int signedLength = mVariant.AltBases.length() - mVariant.RefBases.length();

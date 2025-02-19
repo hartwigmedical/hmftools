@@ -3,12 +3,14 @@ package com.hartwig.hmftools.chord;
 import static com.hartwig.hmftools.chord.ChordTestUtils.DUMMY_GENOME_FASTA;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
+import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE_SV_VCF;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
 
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,5 +85,16 @@ public class SnvPrepTest
         }
 
         assertEquals(firstExpectedContextCounts, firstActualContextCounts);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void providingWrongVcfTypeThrowsError() throws NoSuchFileException
+    {
+        ChordConfig config = new ChordConfig.Builder()
+                .sampleIds(MINIMAL_SAMPLE)
+                .snvIndelVcfFile(MINIMAL_SAMPLE_SV_VCF)
+                .build();
+
+        new SnvPrep(config).loadVariants(MINIMAL_SAMPLE);
     }
 }

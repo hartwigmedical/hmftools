@@ -183,6 +183,12 @@ public class ChordConfig
         private boolean IncludeNonPass = false;
         private boolean WriteDetailedFiles = false;
 
+        public Builder sampleIds(String sampleId)
+        {
+            SampleIds = List.of(sampleId);
+            return this;
+        }
+
         public Builder sampleIds(List<String> sampleIds)
         {
             SampleIds = sampleIds;

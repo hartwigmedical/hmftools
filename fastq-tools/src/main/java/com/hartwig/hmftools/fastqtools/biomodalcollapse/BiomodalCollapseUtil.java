@@ -618,4 +618,45 @@ public class BiomodalCollapseUtil
 
         return output.toString();
     }
+
+    private static final int PAIRS_TO_CHECK_FOR_SWAP_DETECTION = 10_000;
+
+    public static boolean isSwappedR1R2(final BufferedReader fastq1Reader, final BufferedReader fastq2Reader)
+    {
+        int cSeq1Count = 0;
+        int gSeq1Count = 0;
+        int cSeq2Count = 0;
+        int gSeq2Count = 0;
+
+        SynchronizedPairedFastqReader fastqPairReader =
+                new SynchronizedPairedFastqReader(fastq1Reader, fastq2Reader, PAIRS_TO_CHECK_FOR_SWAP_DETECTION);
+
+        Pair<FastqRecord, FastqRecord> fastqPair;
+        while((fastqPair = fastqPairReader.getNext()) != null)
+        {
+            FastqRecord fastq1 = fastqPair.getLeft();
+            FastqRecord fastq2 = fastqPair.getRight();
+
+            int trimmedLength = min(fastq1.getReadLength(), fastq2.getReadLength());
+
+            List<BaseQualPair> seq1 = fastqToSeq(fastq1, 0, trimmedLength - 1);
+            List<BaseQualPair> seq2 = fastqToSeq(fastq2, 0, trimmedLength - 1);
+            for(int i = 0; i < trimmedLength; i++)
+            {
+                byte base1 = seq1.get(i).Base;
+                byte base2 = seq2.get(i).Base;
+                if(base1 == (byte) 'C')
+                    cSeq1Count++;
+                else if(base1 == (byte) 'G')
+                    gSeq1Count++;
+
+                if(base2 == (byte) 'C')
+                    cSeq2Count++;
+                else if(base2 == (byte) 'G')
+                    gSeq2Count++;
+            }
+        }
+
+        return cSeq1Count > gSeq1Count && gSeq2Count > cSeq2Count;
+    }
 }

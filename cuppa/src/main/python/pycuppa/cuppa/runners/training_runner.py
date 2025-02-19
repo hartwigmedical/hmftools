@@ -124,8 +124,9 @@ class TrainingRunner(LoggerMixin):
 
     def get_X(self) -> None:
 
-        loader = CuppaFeaturesLoader(self.features_path, na_fill_value=TRAIN_NA_FILL_VALUE)
+        loader = CuppaFeaturesLoader(self.features_path)
         X = loader.load()
+        X = X.fillna(TRAIN_NA_FILL_VALUE)
         self.X = X
         return None
 
