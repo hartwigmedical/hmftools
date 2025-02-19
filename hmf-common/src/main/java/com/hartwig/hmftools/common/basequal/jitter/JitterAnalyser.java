@@ -50,7 +50,6 @@ public class JitterAnalyser
     {
         return mBamSlicerFilter;
     }
-    public SampleReadProcessor sampleReadProcessor() { return mSampleReadProcessor; }
 
     public void processRead(final SAMRecord read)
     {
@@ -90,12 +89,7 @@ public class JitterAnalyser
     private List<RefGenomeMicrosatellite> loadRefGenomeMicrosatellites()
     {
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = RefGenomeMicrosatelliteFile.read(mConfig.RefGenomeMsiFile);
-
         mLogger.info("loaded {} microsatellites regions", refGenomeMicrosatellites.size());
-
-        filterSpecificRegions(refGenomeMicrosatellites);
-        // refGenomeMicrosatellites = filterMicrosatellites(refGenomeMicrosatellites, mConfig.MaxSitesPerType);
-
         return refGenomeMicrosatellites;
     }
 
@@ -170,21 +164,6 @@ public class JitterAnalyser
         }
 
         return fittedParams;
-    }
-
-    private static void filterSpecificRegions(List<RefGenomeMicrosatellite> refGenomeMicrosatellites)
-    {
-        /*
-        if(!mConfig.SpecificRegions.isEmpty())
-        {
-            sLogger.info(mConfig.SpecificRegions);
-
-            refGenomeMicrosatellites.removeIf(refGenomeHomopolymer -> mConfig.SpecificRegions.stream()
-                    .noneMatch(o -> o.overlaps(refGenomeHomopolymer.genomeRegion)));
-        }
-         */
-
-        // we want to get around 1000 sites for each repeat context
     }
 
     private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
