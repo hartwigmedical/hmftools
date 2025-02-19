@@ -2,9 +2,11 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -22,6 +24,7 @@ public class RepeatInfo
         Count = count;
     }
 
+    public int lastIndex() { return Index + length() - 1; }
     public int postRepeatIndex() { return Index + length(); }
     public int length() { return Count * Bases.length(); }
     public int baseLength() { return Bases.length(); }
@@ -86,6 +89,18 @@ public class RepeatInfo
         }
 
         return repeats != null ? repeats : Collections.emptyList();
+    }
+
+    public static List<RepeatInfo> findRepeats(final byte[] bases, int startOffset)
+    {
+        if(startOffset == 0)
+            return findRepeats(bases);
+
+        final byte[] extensionBases = Arrays.copyOfRange(bases, startOffset, bases.length);
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(extensionBases);
+
+        // re-apply the offset skipped in the search
+        return repeats.stream().map(x -> new RepeatInfo(x.Index + startOffset, x.Bases, x.Count)).collect(Collectors.toList());
     }
 
     // see Sage for a flexible repeat-length routine to find these
