@@ -27,7 +27,7 @@ df <- read.table(msStatsTableFile, header = TRUE, sep = "\t", check.names = FALS
 
 # fill in missing rows
 df <- df %>%
-  merge(expand.grid(unit = unique(df$unit), numUnits = c(4:20)), all=TRUE) %>%
+  merge(expand.grid(unit = unique(df$unit), consensusType = unique(df$consensusType), numUnits = c(4:20)), all=TRUE) %>%
   replace(is.na(.), 0)
 
 # https://stackoverflow.com/questions/58515587/heat-map-with-additional-values-in-r
@@ -43,9 +43,9 @@ df$rate <- pmax(df$count / df$reads * 100, 0.001)
 
 df$rate <- replace(df$rate, is.na(df$rate), 0)
 
-# make sure we have a row for read count for every unit, numUnits pair
+# make sure we have a row for read count for every unit, consensusType, numUnits tuple
 df <- df %>%
-  group_by(unit, numUnits) %>%
+  group_by(unit, consensusType, numUnits) %>%
   summarise(jitter="reads", rate=first(reads), .groups = 'keep') %>%
   rbind(df)
 
@@ -53,9 +53,6 @@ df <- df %>%
 df$jitter <- factor(df$jitter, levels=c(sprintf("%+d", c(-10:10)), "reads"))
 
 units <- c("A/T", "C/G", "AT/TA", "AG/GA/CT/TC", "AC/CA/GT/TG", "CG/GC", "3bp repeat", "4bp repeat", "5bp repeat")
-
-msStatsHeatmap <- file.path(outDir, paste0(sampleId, '.ms_stats.png'))
-png(file = msStatsHeatmap, res = 140, height = 2200, width = 4000)
 
 # Create a list to store individual plots
 plot_list <- list()
@@ -68,27 +65,35 @@ format_read_counts <- function(read_counts, scientific_cutoff=10000){
   )
 }
 
-for (msUnit in units) {
-  print(msUnit)
-  jitter_df <- df %>%
-    filter(unit == msUnit, numUnits %in% 4:20) %>%
-    select(-c(unit))
-  
-  # Create a plot for each unit
-  p <- ggplot(jitter_df, aes(x = jitter, y = reorder(numUnits, desc(numUnits)))) +
-    geom_tile(aes(fill = rate), color = "white") +
-    scale_fill_gradient(low = "white", high = "deepskyblue", trans = "log", limits=c(0.001,100), guide="none", na.value="lightgrey") +
-    geom_text(aes(label = sprintf("%.2f", rate)), size=3, subset(jitter_df, jitter != "reads" & reads > 0)) +
-    
-    geom_text(aes(label = format_read_counts(rate)), size=3, subset(jitter_df, jitter == "reads")) +
-    
-    theme_minimal() +
-    labs(title = paste("unit =", msUnit), x="jitter", y="num units")
-  
-  # Add the plot to the list
-  plot_list[[msUnit]] <- p
-}
+consensusTypes <- unique(df$consensusType)
+for(msConsensusType in consensusTypes)
+{
+  msStatsHeatmap <- file.path(outDir, sprintf('%s.%s.ms_stats.png', sampleId, tolower(msConsensusType)))
+  png(file = msStatsHeatmap, res = 140, height = 2200, width = 4000)
 
-# Arrange the plots in a 3x3 grid
-gridExtra::grid.arrange(grobs = plot_list, ncol = 3, nrow = 3)
-dev.off()
+  for (msUnit in units) {
+    plot_key <- sprintf('unit(%s) consensusType(%s)', msUnit, msConsensusType)
+    print(plot_key)
+    jitter_df <- df %>%
+      filter(unit == msUnit & consensusType == msConsensusType, numUnits %in% 4:20) %>%
+      select(-c(unit))
+    
+    # Create a plot for each unit
+    p <- ggplot(jitter_df, aes(x = jitter, y = reorder(numUnits, desc(numUnits)))) +
+      geom_tile(aes(fill = rate), color = "white") +
+      scale_fill_gradient(low = "white", high = "deepskyblue", trans = "log", limits=c(0.001,100), guide="none", na.value="lightgrey") +
+      geom_text(aes(label = sprintf("%.2f", rate)), size=3, subset(jitter_df, jitter != "reads" & reads > 0)) +
+      
+      geom_text(aes(label = format_read_counts(rate)), size=3, subset(jitter_df, jitter == "reads")) +
+      
+      theme_minimal() +
+      labs(title = sprintf('unit = %s consensusType = %s', msUnit, msConsensusType), x="jitter", y="num units")
+    
+    # Add the plot to the list
+    plot_list[[msUnit]] <- p
+  }
+
+  # Arrange the plots in a 3x3 grid
+  gridExtra::grid.arrange(grobs = plot_list, ncol = 3, nrow = 3)
+  dev.off()
+}

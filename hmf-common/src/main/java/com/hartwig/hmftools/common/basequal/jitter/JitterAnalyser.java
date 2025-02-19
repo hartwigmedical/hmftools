@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 
 import org.apache.logging.log4j.Logger;
 
@@ -77,8 +78,8 @@ public class JitterAnalyser
         writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile, mConfig);
 
         // draw a chart of the 9 ms profiles
-    //        if(mConfig.WritePlots)
-    //            drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
+        if(mConfig.WritePlots)
+            drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
 
         // now perform the fitting
         List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers, mConfig.MaxSingleSiteAltContribution);
@@ -186,13 +187,11 @@ public class JitterAnalyser
         // we want to get around 1000 sites for each repeat context
     }
 
-//    private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
-//            throws IOException, InterruptedException
-//    {
-//        int result = RExecutor.executeFromClasspath("basequal/msi_jitter_plot.R", outputDir, sampleId, statsTableFile);
-//        if(result != 0)
-//        {
-//            throw new IOException("R execution failed. Unable to complete segmentation.");
-//        }
-//    }
+    private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
+            throws IOException, InterruptedException
+    {
+        int result = RExecutor.executeFromClasspath("basequal/msi_jitter_plot.R", outputDir, sampleId, statsTableFile);
+        if(result != 0)
+            throw new IOException("R execution failed. Unable to complete segmentation.");
+    }
 }
