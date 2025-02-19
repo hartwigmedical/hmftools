@@ -14,6 +14,7 @@ public class JitterAnalyserConfig
     public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
     public final SequencingType Sequencing;
+    public final boolean UsesDuplexUMIs;
 
     public final String RefGenomeMsiFile;
     public final String OutputDir;
@@ -44,12 +45,13 @@ public class JitterAnalyserConfig
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
 
     private JitterAnalyserConfig(final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
-            final SequencingType sequencing, final String outputDir, final ConfigBuilder configBuilder)
+            final SequencingType sequencing, boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
     {
         SampleId = sampleId;
         RefGenomeFile = refGenomeFile;
         RefGenVersion = refGenVersion;
         Sequencing = sequencing;
+        UsesDuplexUMIs = usesDuplexUMIs;
         OutputDir = outputDir;
 
         RefGenomeMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
@@ -62,12 +64,12 @@ public class JitterAnalyserConfig
 
     @Nullable
     public static JitterAnalyserConfig create(final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
-            final SequencingType sequencing, final String outputDir, final ConfigBuilder configBuilder)
+            final SequencingType sequencing, boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
     {
         if(!configBuilder.hasValue(JITTER_MSI_SITES_FILE))
             return null;
 
-        return new JitterAnalyserConfig(sampleId, refGenomeFile, refGenVersion, sequencing, outputDir, configBuilder);
+        return new JitterAnalyserConfig(sampleId, refGenomeFile, refGenVersion, sequencing, usesDuplexUMIs, outputDir, configBuilder);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)

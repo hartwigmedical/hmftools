@@ -244,7 +244,8 @@ public class ReduxConfig
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
-        JitterConfig = JitterAnalyserConfig.create(SampleId, RefGenomeFile, RefGenVersion, Sequencing, OutputDir, configBuilder);
+        JitterConfig = JitterAnalyserConfig.create(
+                SampleId, RefGenomeFile, RefGenVersion, Sequencing, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically

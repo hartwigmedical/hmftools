@@ -40,7 +40,7 @@ public class JitterAnalyser
         mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
 
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = loadRefGenomeMicrosatellites();
-        ConsensusMarker consensusMarker = ConsensusMarker.fromSequencingType(config.Sequencing);
+        ConsensusMarker consensusMarker = ConsensusMarker.create(config);
         mSampleReadProcessor = new SampleReadProcessor(config, refGenomeMicrosatellites, consensusMarker);
 
         mConsensusTypes = null;
@@ -61,7 +61,7 @@ public class JitterAnalyser
         if(mConsensusTypes != null)
             return mConsensusTypes;
 
-        mConsensusTypes = ConsensusType.consensusTypesFromSequencing(mConfig.Sequencing);
+        mConsensusTypes = ConsensusType.consensusTypes(mConfig);
         return mConsensusTypes;
     }
 
