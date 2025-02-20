@@ -432,7 +432,8 @@ public class ExtensionSeqBuilder
 
         // check the existing sequence for a valid repeat
         int startOffset = mIsForward ? 1 : 0;
-        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases, startOffset);
+        int endOffset = !mIsForward ? 1 : 0;
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases, startOffset, endOffset);
 
         if(repeats.isEmpty())
             return;

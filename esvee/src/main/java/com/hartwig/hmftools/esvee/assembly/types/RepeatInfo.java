@@ -91,13 +91,16 @@ public class RepeatInfo
         return repeats != null ? repeats : Collections.emptyList();
     }
 
-    public static List<RepeatInfo> findRepeats(final byte[] bases, int startOffset)
+    public static List<RepeatInfo> findRepeats(final byte[] bases, int startOffset, int endOffset)
     {
-        if(startOffset == 0)
+        if(startOffset == 0 && endOffset == 0)
             return findRepeats(bases);
 
-        final byte[] extensionBases = Arrays.copyOfRange(bases, startOffset, bases.length);
+        final byte[] extensionBases = Arrays.copyOfRange(bases, startOffset, bases.length - endOffset);
         List<RepeatInfo> repeats = RepeatInfo.findRepeats(extensionBases);
+
+        if(startOffset == 0)
+            return repeats;
 
         // re-apply the offset skipped in the search
         return repeats.stream().map(x -> new RepeatInfo(x.Index + startOffset, x.Bases, x.Count)).collect(Collectors.toList());

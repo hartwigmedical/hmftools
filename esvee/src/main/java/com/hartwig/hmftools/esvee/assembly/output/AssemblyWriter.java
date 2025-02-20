@@ -62,8 +62,6 @@ public class AssemblyWriter
 
             sj.add("MismatchReads");
 
-            sj.add("RefBaseTrimmed");
-            sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
             sj.add("IsLINE");
@@ -78,6 +76,8 @@ public class AssemblyWriter
             // extra detailed fields
             sj.add("InitialReadId");
 
+            sj.add("RefBaseTrimmed");
+            sj.add("RefBaseTrimLength");
             sj.add("RepeatInfo");
             sj.add("RefSideSoftClips");
             sj.add("MergedAssemblies");
@@ -127,9 +127,6 @@ public class AssemblyWriter
 
             sj.add(String.valueOf(assembly.mismatchReadCount()));
 
-            sj.add(assembly.refBasesRepeatedTrimmed());
-            sj.add(String.valueOf(assembly.refBaseTrimLength()));
-
             if(AssemblyUtils.hasUnsetBases(assembly))
             {
                 sj.add("UNSET_BASES");
@@ -153,6 +150,8 @@ public class AssemblyWriter
             sj.add(assembly.assemblyAlignmentInfo());
 
             sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
+            sj.add(assembly.refBasesRepeatedTrimmed());
+            sj.add(String.valueOf(assembly.refBaseTrimLength()));
 
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
