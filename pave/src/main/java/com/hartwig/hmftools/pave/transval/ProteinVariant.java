@@ -167,7 +167,6 @@ public class ProteinVariant
         {
             return changeResults;
         }
-        ChangeResult firstExampleResult = changeResults.iterator().next();
         int maxMoves = numberOfLeftShiftsToTry(changeContext);
         Map<String, ChangeResult> results = new HashMap<>();
         for(int i = 0; i <= maxMoves; i++)
@@ -176,21 +175,10 @@ public class ProteinVariant
             Set<ChangeResult> changesAtThisPosition = applyChange(change);
             for(ChangeResult changeAtThisPosition : changesAtThisPosition)
             {
-                if(targetSequence != null) // todo should not be null, need to do overrides of variantSequence()
+                AminoAcidSequence effectOfChange = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
+                if(effectOfChange.equals(targetSequence))
                 {
-                    AminoAcidSequence effectOfChange = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
-                    if(effectOfChange.equals(targetSequence))
-                    {
-                        results.put(changeAtThisPosition.mBases, changeAtThisPosition);
-                    }
-                }
-                else
-                {
-                    // todo get rid of this once all subclasses implement variantSequence()
-                    if(firstExampleResult.mAminoAcids.equals(changeAtThisPosition.mAminoAcids))
-                    {
-                        results.put(changeAtThisPosition.mBases, changeAtThisPosition);
-                    }
+                    results.put(changeAtThisPosition.mBases, changeAtThisPosition);
                 }
             }
         }

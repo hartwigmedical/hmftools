@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.AminoAcids;
+import com.hartwig.hmftools.common.codon.Codons;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -44,6 +45,15 @@ class AminoAcidSequence
             if(acid != null)
             {
                 aminoAcids.add(new AminoAcid(acid));
+            }
+            else if(Codons.isStopCodon(codon))
+            {
+                aminoAcids.add(new AminoAcid("X"));
+                break;
+            }
+            else
+            {
+                throw new IllegalArgumentException("Unknown codon: " + codon);
             }
         }
         return new AminoAcidSequence(aminoAcids);
@@ -103,6 +113,14 @@ class AminoAcidSequence
         List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, startInclusive));
         newAminoAcids.addAll(aminoAcids.subList(startInclusive, endExclusive));
         newAminoAcids.addAll(aminoAcids.subList(startInclusive, endExclusive));
+        newAminoAcids.addAll(aminoAcids.subList(endExclusive, aminoAcids.size()));
+        return new AminoAcidSequence(newAminoAcids);
+    }
+
+    @NotNull
+    public AminoAcidSequence deleteRange(int startInclusive, int endExclusive)
+    {
+        List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, startInclusive));
         newAminoAcids.addAll(aminoAcids.subList(endExclusive, aminoAcids.size()));
         return new AminoAcidSequence(newAminoAcids);
     }

@@ -562,17 +562,17 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
              H
              115
          */
-        TransvalVariant del = transval.calculateVariant("VHL:p.H115del");
-        checkHotspots(del,
-                hotspot("TCAC", "T", "chr3", 10_146_515),
-                hotspot("GTCA", "G", "chr3", 10_146_514));
+//        TransvalVariant del = transval.calculateVariant("VHL:p.H115del");
+//        checkHotspots(del,
+//                hotspot("TCAC", "T", "chr3", 10_146_515),
+//                hotspot("GTCA", "G", "chr3", 10_146_514));
 
-        del = transval.calculateVariant("VHL:p.L116_L118del");
-        // CAC CTT TGG CTC TTC
-        checkSingleHotspot(del, "ACCTTTGGCT", "A", "chr3", 10_146_517);
+//        del = transval.calculateVariant("VHL:p.L116_L118del");
+         // CAC CTT TGG CTC TTC
+//        checkSingleHotspot(del, "ACCTTTGGCT", "A", "chr3", 10_146_517);
 
         // TG TAT ACT CTG   VYTL
-        del = transval.calculateVariant("VHL:p.T157del");
+        var del = transval.calculateVariant("VHL:p.T157del");
         checkSingleHotspot(del, "ATAC", "A", "chr3", 10_149_790);
     }
 

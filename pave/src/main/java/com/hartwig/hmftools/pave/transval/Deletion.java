@@ -30,4 +30,12 @@ class Deletion extends ProteinVariant
         String altBases = deleted.substring(0,  1);
         return Set.of(new ChangeResult(resultSequence, bases,context.positionOfChangeStartInStrand() - 1, deleted, altBases));
     }
+
+    @Override
+    AminoAcidSequence variantSequence()
+    {
+        int startOfDeletedSection = positionOfFirstAlteredCodon() - 1;
+        int endOfDeletedSection = startOfDeletedSection + this.mRefLength;
+        return referenceAminoAcidSequence().deleteRange(startOfDeletedSection, endOfDeletedSection);
+    }
 }

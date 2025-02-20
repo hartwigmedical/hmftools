@@ -64,6 +64,13 @@ public class AminoAcidSequenceTest extends TransvalTestBase
     }
 
     @Test
+    public void includeStopCodonsWhenParsingNucleotidesTest()
+    {
+        assertEquals(aaSeq("X"), AminoAcidSequence.fromNucleotides("TGA"));
+        assertEquals(aaSeq("AX"), AminoAcidSequence.fromNucleotides("GCTTAG"));
+    }
+
+    @Test
     public void symbolAtTest()
     {
         assertEquals("A", aaSeq("A").symbolAt(0));
@@ -95,6 +102,14 @@ public class AminoAcidSequenceTest extends TransvalTestBase
         assertEquals(aaSeq("HI"), aaSeq("APCDEFGHI").subsequenceAfterExclusive(6));
         assertEquals(aaSeq("CDEFGHI"), aaSeq("APCDEFGHI").subsequenceAfterExclusive(1));
         assertEquals(aaSeq("PCDEFGHI"), aaSeq("APCDEFGHI").subsequenceAfterExclusive(0));
+    }
+
+    @Test
+    public void deleteTest()
+    {
+        assertEquals(aaSeq("HECATSAREKIPPING"), aaSeq("THECATSAREKIPPING").deleteRange(0, 1));
+        assertEquals(aaSeq("THEKIPPING"), aaSeq("THECATSAREKIPPING").deleteRange(3, 10));
+        assertEquals(aaSeq("G"), aaSeq("THECATSAREKIPPING").deleteRange(0, 16));
     }
 
     @Test
