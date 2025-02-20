@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -53,11 +54,22 @@ class SingleAminoAcidVariant extends ProteinVariant
         Set<CodonChange> possibleVariants = codon.possibleVariantsGiving(Alt.value());
         Set<ChangeResult> result = new HashSet<>();
         possibleVariants.forEach(codonChange -> {
-            int locationOnStrandOfChange = codon.strandLocationOfChange(codonChange.positionOfFirstDifference());
-            Pair<String, String> refAlt = codonChange.differenceStrings();
-            String exonBasesAfterChange = context.exonBasesWithReplacementApplied(locationOnStrandOfChange, refAlt.getRight());
+            CodonChange forwardStrandChange = context.IsPositiveStrand ? codonChange : codonChange.reverseComplement();
+            CodonWithinExons forwardStrandCodon = context.IsPositiveStrand ? codon : codon.reverseComplement();
+            Pair<String, String> refAlt = forwardStrandChange.differenceStrings();
+            String forwardStrandReferenceBases = refAlt.getLeft();
+            String forwardStrandReplacementBases = refAlt.getRight();
+//            int locationOnStrandOfChangeX = codon.forwardStrandLocationOfChange(codonChange.positionOfFirstDifference());
+            int locationOnStrandOfChange = forwardStrandCodon.forwardStrandLocationOfChange(forwardStrandChange.positionOfFirstDifference());
+            int locationOnStrandOfChangeY = codon.strandLocationOfStartOfVariablePart() + forwardStrandChange.positionOfFirstDifference();
+//            if(!context.IsPositiveStrand)
+//            {
+//                forwardStrandReferenceBases = Nucleotides.reverseComplementBases(forwardStrandReferenceBases);
+//                forwardStrandReplacementBases = Nucleotides.reverseComplementBases(forwardStrandReplacementBases);
+//            }
+            String exonBasesAfterChange = context.exonBasesWithReplacementAppliedAtStrandLocation(locationOnStrandOfChange, forwardStrandReplacementBases);
             AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(exonBasesAfterChange);
-            result.add( new ChangeResult(acids, exonBasesAfterChange, locationOnStrandOfChange, refAlt.getLeft(), refAlt.getRight()));
+            result.add(new ChangeResult(acids, exonBasesAfterChange, locationOnStrandOfChange, forwardStrandReferenceBases, forwardStrandReplacementBases));
         });
         return result;
     }

@@ -12,6 +12,55 @@ public class PaddedExonTest extends TransvalTestBase
     PaddedExon ec6 = new PaddedExon(6, "TA", "AT", "TTAACCGG", 100, "CATG");
 
     @Test
+    public void fromStrandCoordinatesTest()
+    {
+        assertEquals(0, ec.fromStrandCoordinates(100, true));
+        assertEquals(10, ec.fromStrandCoordinates(110, true));
+        assertEquals(5, ec2.fromStrandCoordinates(105, true));
+
+        assertEquals(12, ec.fromStrandCoordinates(100, false));
+        assertEquals(2, ec.fromStrandCoordinates(110, false));
+        assertEquals(6, ec2.fromStrandCoordinates(105, false));
+    }
+
+    @Test
+    public void toStrandCoordinatesTest()
+    {
+        assertEquals(100, ec.toStrandCoordinates(0, true));
+        assertEquals(110, ec.toStrandCoordinates(10, true));
+        assertEquals(105, ec2.toStrandCoordinates(5, true));
+
+        assertEquals(112, ec.toStrandCoordinates(0, false));
+        assertEquals(111, ec.toStrandCoordinates(1, false));
+        assertEquals(102, ec.toStrandCoordinates(10, false));
+        assertEquals(106, ec2.toStrandCoordinates(5, false));
+
+        for(int i=0; i<12; i++)
+        {
+            assertEquals(i, ec.fromStrandCoordinates(ec.toStrandCoordinates(i, true),true));
+            assertEquals(i, ec3.fromStrandCoordinates(ec3.toStrandCoordinates(i, true),true));
+            assertEquals(i, ec.fromStrandCoordinates(ec.toStrandCoordinates(i, false),false));
+            assertEquals(i, ec3.fromStrandCoordinates(ec3.toStrandCoordinates(i, false),false));
+        }
+    }
+
+    @Test
+    public void baseSequenceWithBasesReplacedTest()
+    {
+        assertEquals("GTGAAACCCGGG", ec.baseSequenceWithBasesReplaced(0, "GTG", true));
+        assertEquals("TGTGAACCCGGG", ec.baseSequenceWithBasesReplaced(1, "GTG", true));
+        assertEquals("TTTCCCCCCGGG", ec.baseSequenceWithBasesReplaced(3, "CCC", true));
+        assertEquals("TTTAAACCCTAC", ec.baseSequenceWithBasesReplaced(9, "TAC", true));
+        assertEquals("AGGGAAACCCGG", ec2.baseSequenceWithBasesReplaced(0, "GGG", true));
+        assertEquals("TATTAACTTTAT", ec6.baseSequenceWithBasesReplaced(5, "TTT", true));
+
+        assertEquals("GTAGGGTTTAAA", ec.baseSequenceWithBasesReplaced(0, "TAC", false));
+        assertEquals("CCCGTATTTAAA", ec.baseSequenceWithBasesReplaced(3, "TAC", false));
+        assertEquals("CCGAAATTAAAT", ec2.baseSequenceWithBasesReplaced(3, "TTT", false));
+        assertEquals("ATCCGGTACGTA", ec6.baseSequenceWithBasesReplaced(5, "CGT", false));
+    }
+
+    @Test
     public void baseAtTest()
     {
         assertEquals("T", ec.baseAt(0, true));
@@ -29,6 +78,35 @@ public class PaddedExonTest extends TransvalTestBase
         assertEquals("G", ec2.baseAt(1, false));
         assertEquals("G", ec6.baseAt(0, false));
         assertEquals("C", ec6.baseAt(3, false));
+    }
+
+    @Test
+    public void codonLocationTest()
+    {
+        assertEquals(0, ec.codonLocationInExonBody(1, true));
+        assertEquals(3, ec.codonLocationInExonBody(2, true));
+        assertEquals(6, ec.codonLocationInExonBody(3, true));
+        assertEquals(-1, ec2.codonLocationInExonBody(0, true));
+        assertEquals(2, ec2.codonLocationInExonBody(1, true));
+        assertEquals(5, ec2.codonLocationInExonBody(2, true));
+        assertEquals(-2, ec6.codonLocationInExonBody(0, true));
+        assertEquals(1, ec6.codonLocationInExonBody(1, true));
+        assertEquals(4, ec6.codonLocationInExonBody(2, true));
+
+        assertEquals(9, ec.codonLocationInExonBody(1, false));
+        assertEquals(6, ec.codonLocationInExonBody(2, false));
+        assertEquals(3, ec.codonLocationInExonBody(3, false));
+        assertEquals(11, ec2.codonLocationInExonBody(0, false));
+        assertEquals(8, ec2.codonLocationInExonBody(1, false));
+        assertEquals(5, ec2.codonLocationInExonBody(2, false));
+        assertEquals(2, ec2.codonLocationInExonBody(3, false));
+        assertEquals(9, ec3.codonLocationInExonBody(0, false));
+        assertEquals(6, ec3.codonLocationInExonBody(1, false));
+        assertEquals(3, ec3.codonLocationInExonBody(2, false));
+        assertEquals(0, ec3.codonLocationInExonBody(3, false));
+//        assertEquals(-2, ec6.codonLocationInExonBody(0, false));
+//        assertEquals(1, ec6.codonLocationInExonBody(1, false));
+//        assertEquals(4, ec6.codonLocationInExonBody(2, false));
     }
 
     @Test
@@ -164,20 +242,6 @@ public class PaddedExonTest extends TransvalTestBase
         assertEquals(0, ec.numberOfBasesInPreviousExon());
         assertEquals(1, ec2.numberOfBasesInPreviousExon());
         assertEquals(2, ec6.numberOfBasesInPreviousExon());
-    }
-
-    @Test
-    public void codonLocationTest()
-    {
-        assertEquals(0, ec.codonLocationInExonBody(1, true));
-        assertEquals(3, ec.codonLocationInExonBody(2, true));
-        assertEquals(6, ec.codonLocationInExonBody(3, true));
-        assertEquals(-1, ec2.codonLocationInExonBody(0, true));
-        assertEquals(2, ec2.codonLocationInExonBody(1, true));
-        assertEquals(5, ec2.codonLocationInExonBody(2, true));
-        assertEquals(-2, ec6.codonLocationInExonBody(0, true));
-        assertEquals(1, ec6.codonLocationInExonBody(1, true));
-        assertEquals(4, ec6.codonLocationInExonBody(2, true));
     }
 
     @Test

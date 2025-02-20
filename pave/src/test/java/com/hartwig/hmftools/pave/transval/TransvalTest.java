@@ -45,24 +45,34 @@ public class TransvalTest extends TransvalTestBase
     @Test
     public void brafSNV()
     {
-    /*
-    This test is based on the following log lines from a serve run:
-21:35:18 - [DEBUG] - Running 'transvar panno --reference /data/resources/bucket/reference_genome/38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --refversion hg38 --noheader --ensembl -i BRAF:p.V600E'
-21:35:20 - [DEBUG] - Converting transvar output line to TransvarRecord: 'BRAF:p.V600E   ENST00000288602 (protein_coding)        BRAF    -       chr7:g.140753336A>T/c.1799T>A/p.V600E   inside_[cds_in_exon_15] CSQN=Missense;reference_codon=GTG;candidate_codons=GAG,GAA;candidate_mnv_variants=chr7:g.140753335_140753336delCAinsTT;aliases=ENSP00000288602;source=Ensembl'
-21:35:20 - [DEBUG] - Interpreting transvar record: 'TransvarRecord{transcript=ENST00000288602, chromosome=7, gdnaPosition=140753336, variantSpanMultipleExons=false, annotation=TransvarSnvMnv{gdnaRef=A, gdnaAlt=T, referenceCodon=GTG, candidateCodons=[GAG, GAA]}}'
-21:35:20 - [DEBUG] - Converted 'BRAF|null|p.V600E' to 2 hotspot(s)
-21:35:20 - [INFO ] - Printing hotspots for 'BRAF:p.V600E' on transcript null
-21:35:20 - [INFO ] -  Hotspot{ref=A, alt=T, chromosome=chr7, position=140753336}
-21:35:20 - [INFO ] -  Hotspot{ref=CA, alt=TT, chromosome=chr7, position=140753335}
-*/
-        TransvalVariant record = transval.calculateVariant("BRAF:p.V600E");
-        //        assertEquals("ENST00000288602", record.TranscriptId); // Our ensembl data has ENST00000646891 as the canonical transcript
-        assertEquals("7", record.Chromosome);
-        assertFalse(record.SpansMultipleExons);
-
-        checkHotspots(record,
+        TransvalVariant variant = transval.calculateVariant("BRAF:p.V600E");
+        assertEquals("7", variant.Chromosome);
+        assertFalse(variant.SpansMultipleExons);
+        checkHotspots(variant,
                 hotspot("A", "T", "chr7", 140753336),
                 hotspot("CA", "TT", "chr7", 140753335)
+        );
+
+        variant = transval.calculateVariant("BRAF:p.F583W");
+        checkSingleHotspot(variant, "AA", "CC", "chr7", 140_753_386);
+
+        variant = transval.calculateVariant("BRAF:p.I582W");
+        checkSingleHotspot(variant, "TAT", "CCA", "chr7", 140_753_389);
+
+        variant = transval.calculateVariant("BRAF:p.I582V");
+        checkHotspots(variant,
+                hotspot("TAT", "GAC", "chr7", 140_753_389),
+                hotspot("TAT", "CAC", "chr7", 140_753_389),
+                hotspot("TAT", "AAC", "chr7", 140_753_389),
+                hotspot("T", "C", "chr7", 140_753_391)
+        );
+
+        variant = transval.calculateVariant("BRAF:p.I582G");
+        checkHotspots(variant,
+                hotspot("TAT", "ACC", "chr7", 140_753_389),
+                hotspot("TAT", "CCC", "chr7", 140_753_389),
+                hotspot("TAT", "GCC", "chr7", 140_753_389),
+                hotspot("AT", "CC", "chr7", 140_753_390)
         );
     }
 
@@ -75,18 +85,12 @@ public class TransvalTest extends TransvalTestBase
         Printing hotspots for 'VHL:p.G114R' on transcript null
         Hotspot{ref=G, alt=C, chromosome=chr3, position=10142187}
          */
+        // exon1/exon2...SYRG/GH... AGG TAC CGA G/GT CAC  End of Exon1 is G, 10142187.
+        // R is {CG*, AGG, AGA}. Need one of these from G**, *GT. Option is C -> G at 10142187
         TransvalVariant record = transval.calculateVariant("VHL:p.G114R");
         assertEquals("ENST00000256474", record.transcriptId());
         assertEquals("3", record.Chromosome);
-        assertTrue(record.SpansMultipleExons);
-        checkHotspots(record,
-                hotspot("G", "C", "chr3", 10_142_187),
-                hotspot("GGT", "AGA", "chr3", 10_142_187),
-                hotspot("GGT", "AGG", "chr3", 10_142_187),
-                hotspot("GGT", "CGA", "chr3", 10_142_187),
-                hotspot("GGT", "CGC", "chr3", 10_142_187),
-                hotspot("GGT", "CGG", "chr3", 10_142_187)
-        );
+        checkSingleHotspot(record, "G", "C", "chr3", 10_142_187);
     }
 
     @Test
@@ -155,17 +159,23 @@ public class TransvalTest extends TransvalTestBase
     @Test
     public void snvAcrossExonNegativeStrand()
     {
-        //<- F I N/N N S   ... AAA TAT AT/T ATT ACT... == ->  TTT ATA TA/A TAA TGA  ... exon15/exon14, end of exon15 is 140,753,393
+        // exon15/exon14 == ...F I N/N N S... ==  ->...AAA TAT AT/T ATT ACT... == <-...TTT ATA TA/A TAA TGA...
+        // end of exon15 is 140,753,393
         TransvalVariant variant = transval.calculateVariant("BRAF:p.N581L");
+        // For L want {TTA, TTG, CT*}. We have [A**] and [*AT] as possible within-exon variants
+        assertTrue(variant.hotspots().isEmpty());
+
+        // For K we have two options from changing the last base of the (reverse strand) codon.
+        // Transvar only reports A->C. Not sure why.
+        variant = transval.calculateVariant("BRAF:p.N581K");
         checkHotspots(variant,
+                hotspot("A", "C", "chr7", 140_753_392),
                 hotspot("A", "T", "chr7", 140_753_392)
         );
 
-        // beginning of exon 14 is at 140,754,187
-        variant = transval.calculateVariant("BRAF:p.N581Y");
-        checkHotspots(variant,
-                hotspot("A", "T", "chr7", 140_754_187)
-        );
+        // For D we have a single option: changing the (reverse strand) T at the beginning of the codon to G.
+        variant = transval.calculateVariant("BRAF:p.N581D");
+        checkSingleHotspot(variant, "T", "C", "chr7", 140_754_187);
     }
 
     @Test

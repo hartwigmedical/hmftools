@@ -95,13 +95,13 @@ class TransvalTestBase
         }
     }
 
-    CodonWithinExons sec(int position, String bases)
+    CodonWithinExons sec(int position, String bases, boolean isForwardStrand)
     {
-        return new CodonWithinExons(bs(position, bases));
+        return new CodonWithinExons(bs(position, bases, isForwardStrand));
     }
 
-    BaseSequence bs(int position, String bases)
+    BaseSequence bs(int position, String bases, boolean isForwardStrand)
     {
-        return new BaseSequence(position, bases);
+        return new BaseSequence(position, bases, isForwardStrand);
     }
 }

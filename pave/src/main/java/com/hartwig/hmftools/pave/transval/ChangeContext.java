@@ -86,6 +86,11 @@ public class ChangeContext
         return mExon.baseSequenceWithBasesReplaced(relativeLocationOfChange, alternateBases, IsPositiveStrand);
     }
 
+    String exonBasesWithReplacementAppliedAtStrandLocation(int strandLocationOfChange, String alternateBases)
+    {
+        return mExon.baseSequenceWithBasesReplacedAtStrandLocation(strandLocationOfChange, alternateBases, IsPositiveStrand);
+    }
+
     public String refBases()
     {
         if(IsPositiveStrand)

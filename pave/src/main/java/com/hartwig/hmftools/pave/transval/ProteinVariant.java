@@ -119,14 +119,14 @@ public class ProteinVariant
     {
         int lengthUpToExon = 0;
         List<Integer> regionLengths = codingRegionLengths();
-        for (int i = 0; i < exon; i++)
+        for(int i = 0; i < exon; i++)
         {
             lengthUpToExon += regionLengths.get(i);
         }
         int numberOfAAsBeforeExon = lengthUpToExon / 3;
         int lengthIncludingExon = lengthUpToExon + regionLengths.get(exon);
         int numberOfAAsIncludingExon = lengthIncludingExon / 3;
-        if (lengthIncludingExon % 3 != 0)
+        if(lengthIncludingExon % 3 != 0)
         {
             numberOfAAsIncludingExon++;
         }
@@ -163,12 +163,12 @@ public class ProteinVariant
     {
         AminoAcidSequence targetSequence = variantSequence();
         final Set<ChangeResult> changeResults = applyChange(changeContext);
-        if (changeResults.isEmpty())
+        if(changeResults.isEmpty())
         {
             return changeResults;
         }
         ChangeResult firstExampleResult = changeResults.iterator().next();
-        int maxMoves =  numberOfLeftShiftsToTry(changeContext);
+        int maxMoves = numberOfLeftShiftsToTry(changeContext);
         Map<String, ChangeResult> results = new HashMap<>();
         for(int i = 0; i <= maxMoves; i++)
         {
@@ -176,7 +176,7 @@ public class ProteinVariant
             Set<ChangeResult> changesAtThisPosition = applyChange(change);
             for(ChangeResult changeAtThisPosition : changesAtThisPosition)
             {
-                if (targetSequence != null) // todo should not be null, need to do overrides of variantSequence()
+                if(targetSequence != null) // todo should not be null, need to do overrides of variantSequence()
                 {
                     AminoAcidSequence effectOfChange = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
                     if(effectOfChange.equals(targetSequence))
@@ -200,17 +200,9 @@ public class ProteinVariant
     TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
         Collection<ChangeResult> changes = findLeftmostApplicableChanges(refGenome);
-        if(changes.isEmpty())
-        {
-            return null;
-        }
         Set<TransvalHotspot> hotspots = new HashSet<>();
         changes.forEach(change -> hotspots.add(change.toHotspot(mGene.Chromosome)));
-        return new TransvalVariant(
-                mTranscript,
-                mGene.Chromosome,
-                false,
-                hotspots);
+        return new TransvalVariant(mTranscript, mGene.Chromosome, false, hotspots);
     }
 
     CodonRegions exonsForCodonPosition(int codonPosition)

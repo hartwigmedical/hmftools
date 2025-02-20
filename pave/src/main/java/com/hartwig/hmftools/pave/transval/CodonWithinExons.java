@@ -3,10 +3,10 @@ package com.hartwig.hmftools.pave.transval;
 import static com.hartwig.hmftools.pave.transval.Checks.isNucleotideSequence;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +59,7 @@ class CodonWithinExons
         return Body.Start;
     }
 
-    int strandLocationOfChange(int positionWithinCodonOfChange)
+    int forwardStrandLocationOfChange(int positionWithinCodonOfChange)
     {
         Preconditions.checkArgument(positionWithinCodonOfChange >= 0);
         Preconditions.checkArgument(positionWithinCodonOfChange <= 2);
@@ -81,6 +81,12 @@ class CodonWithinExons
     {
         return fixedPrefix() + variablePart() + fixedSuffix();
     }
+
+    @NotNull
+    CodonWithinExons reverseComplement()
+    {
+        return new CodonWithinExons(Body.reverseComplement());
+    }
 }
 
 class CodonWithPrefixInPreviousExon extends CodonWithinExons
@@ -94,11 +100,18 @@ class CodonWithPrefixInPreviousExon extends CodonWithinExons
         this.Prefix = prefix;
     }
 
-    int strandLocationOfChange(int positionWithinCodonOfChange)
+    int forwardStrandLocationOfChange(int positionWithinCodonOfChange)
     {
         Preconditions.checkArgument(positionWithinCodonOfChange >= Prefix.length());
         Preconditions.checkArgument(positionWithinCodonOfChange <= 2);
         return Body.Start + positionWithinCodonOfChange - Prefix.length();
+    }
+
+    @Override
+    @NotNull
+    CodonWithinExons reverseComplement()
+    {
+        return new CodonWithSuffixInNextExon(Body.reverseComplement(), Nucleotides.reverseComplementBases(Prefix));
     }
 
     @NotNull
@@ -119,10 +132,24 @@ class CodonWithSuffixInNextExon extends CodonWithinExons
         this.Suffix = suffix;
     }
 
+    int forwardStrandLocationOfChange(int positionWithinCodonOfChange)
+    {
+        Preconditions.checkArgument(positionWithinCodonOfChange >= 0);
+        Preconditions.checkArgument(positionWithinCodonOfChange <= 2 - Suffix.length());
+        return Body.Start + positionWithinCodonOfChange;
+    }
+
     @NotNull
     @Override
     String fixedSuffix()
     {
         return Suffix;
+    }
+
+    @Override
+    @NotNull
+    CodonWithinExons reverseComplement()
+    {
+        return new CodonWithPrefixInPreviousExon(Nucleotides.reverseComplementBases(Suffix), Body.reverseComplement());
     }
 }

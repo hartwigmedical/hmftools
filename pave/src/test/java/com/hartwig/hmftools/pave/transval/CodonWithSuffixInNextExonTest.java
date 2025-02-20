@@ -3,16 +3,16 @@ package com.hartwig.hmftools.pave.transval;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CodonWithPrefixInPreviousExonTest extends TransvalTest
+public class CodonWithSuffixInNextExonTest extends TransvalTest
 {
     @Test
     public void locationTest()
     {
-        CodonWithPrefixInPreviousExon codon = new CodonWithPrefixInPreviousExon("A", bs(100, "TC", true));
+        CodonWithSuffixInNextExon codon = new CodonWithSuffixInNextExon(bs(100, "TC", true), "G");
         Assert.assertEquals(100, codon.forwardStrandLocationOfChange(1));
         Assert.assertEquals(101, codon.forwardStrandLocationOfChange(2));
 
-        codon = new CodonWithPrefixInPreviousExon("AG", bs(100, "T",true));
+        codon = new CodonWithSuffixInNextExon(bs(100, "T", true), "AG");
         Assert.assertEquals(100, codon.forwardStrandLocationOfChange(2));
     }
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave.transval;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,12 +14,25 @@ public class BaseSequence
     @NotNull
     public final String Bases;
 
-    public BaseSequence(final int start, @NotNull final String bases)
+    public final boolean IsForwardStrand;
+
+    public BaseSequence(final int start, @NotNull final String bases, boolean forwardStrand)
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(Checks.isNucleotideSequence(bases));
         Start = start;
         this.Bases = bases;
+        IsForwardStrand = forwardStrand;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "BaseSequence{" +
+                "Start=" + Start +
+                ", Bases='" + Bases + '\'' +
+                ", IsForwardStrand=" + IsForwardStrand +
+                '}';
     }
 
     @Override
@@ -29,21 +43,19 @@ public class BaseSequence
             return false;
         }
         final BaseSequence that = (BaseSequence) o;
-        return Start == that.Start && Objects.equals(Bases, that.Bases);
+        return Start == that.Start && IsForwardStrand == that.IsForwardStrand && Objects.equals(Bases, that.Bases);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(Start, Bases);
+        return Objects.hash(Start, Bases, IsForwardStrand);
     }
 
-    @Override
-    public String toString()
+    @NotNull
+    public BaseSequence reverseComplement()
     {
-        return "BaseSequence{" +
-                "Start=" + Start +
-                ", bases='" + Bases + '\'' +
-                '}';
+        int rcStart = IsForwardStrand ? Start + Bases.length() - 1: Start - Bases.length() + 1;
+        return new BaseSequence(Start, Nucleotides.reverseComplementBases(Bases), !IsForwardStrand);
     }
 }

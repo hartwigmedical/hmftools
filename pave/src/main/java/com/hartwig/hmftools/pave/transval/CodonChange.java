@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBas
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,6 +34,12 @@ public class CodonChange implements Comparable<CodonChange>
             }
         }
         EditDistance = distance;
+    }
+
+    @NotNull
+    public CodonChange reverseComplement()
+    {
+        return new CodonChange(Nucleotides.reverseComplementBases(ReferenceCodon), Nucleotides.reverseComplementBases(AlternateCodon));
     }
 
     @Override
