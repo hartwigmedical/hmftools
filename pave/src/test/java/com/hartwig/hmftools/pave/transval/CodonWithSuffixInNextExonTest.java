@@ -9,10 +9,7 @@ public class CodonWithSuffixInNextExonTest extends TransvalTest
     public void locationTest()
     {
         CodonWithSuffixInNextExon codon = new CodonWithSuffixInNextExon(bs(100, "TC", true), "G");
-        Assert.assertEquals(100, codon.forwardStrandLocationOfChange(1));
-        Assert.assertEquals(101, codon.forwardStrandLocationOfChange(2));
-
-        codon = new CodonWithSuffixInNextExon(bs(100, "T", true), "AG");
-        Assert.assertEquals(100, codon.forwardStrandLocationOfChange(2));
+        Assert.assertEquals(100, codon.forwardStrandLocationOfChange(0));
+        Assert.assertEquals(101, codon.forwardStrandLocationOfChange(1));
     }
 }

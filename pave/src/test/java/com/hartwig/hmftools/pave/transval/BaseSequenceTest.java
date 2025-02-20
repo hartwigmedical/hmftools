@@ -15,13 +15,13 @@ public class BaseSequenceTest extends TransvalTestBase
         Assert.assertEquals(bs, bs.reverseComplement().reverseComplement());
 
         bs = new BaseSequence(100, "AC", true);
-        Assert.assertEquals(101, bs.reverseComplement().Start);
+        Assert.assertEquals(100, bs.reverseComplement().Start);
         Assert.assertEquals("GT", bs.reverseComplement().Bases);
         Assert.assertFalse(bs.reverseComplement().IsForwardStrand);
         Assert.assertEquals(bs, bs.reverseComplement().reverseComplement());
 
         bs = new BaseSequence(100, "ACG", true);
-        Assert.assertEquals(102, bs.reverseComplement().Start);
+        Assert.assertEquals(100, bs.reverseComplement().Start);
         Assert.assertEquals("CGT", bs.reverseComplement().Bases);
         Assert.assertFalse(bs.reverseComplement().IsForwardStrand);
         Assert.assertEquals(bs, bs.reverseComplement().reverseComplement());

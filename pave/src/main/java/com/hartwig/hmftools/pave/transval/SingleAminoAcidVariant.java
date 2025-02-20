@@ -1,16 +1,11 @@
 package com.hartwig.hmftools.pave.transval;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
-
 import java.util.HashSet;
 import java.util.Set;
-import java.util.SortedSet;
 
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -19,8 +14,6 @@ class SingleAminoAcidVariant extends ProteinVariant
 {
     @NotNull
     private final AminoAcidSpecification Alt;
-    @NotNull
-    private final CodonRegions RegionsDefiningCodon;
 
     public SingleAminoAcidVariant(
             @NotNull final GeneData gene,
@@ -30,8 +23,6 @@ class SingleAminoAcidVariant extends ProteinVariant
     {
         super(gene, transcript, aminoAcidSequence, alt.mPosition, 1);
         this.Alt = alt;
-        int codonPosition = 3 * (positionOfFirstAlteredCodon() - 1);
-        RegionsDefiningCodon = exonsForCodonPosition(codonPosition);
     }
 
     @Override
@@ -59,14 +50,7 @@ class SingleAminoAcidVariant extends ProteinVariant
             Pair<String, String> refAlt = forwardStrandChange.differenceStrings();
             String forwardStrandReferenceBases = refAlt.getLeft();
             String forwardStrandReplacementBases = refAlt.getRight();
-//            int locationOnStrandOfChangeX = codon.forwardStrandLocationOfChange(codonChange.positionOfFirstDifference());
             int locationOnStrandOfChange = forwardStrandCodon.forwardStrandLocationOfChange(forwardStrandChange.positionOfFirstDifference());
-            int locationOnStrandOfChangeY = codon.strandLocationOfStartOfVariablePart() + forwardStrandChange.positionOfFirstDifference();
-//            if(!context.IsPositiveStrand)
-//            {
-//                forwardStrandReferenceBases = Nucleotides.reverseComplementBases(forwardStrandReferenceBases);
-//                forwardStrandReplacementBases = Nucleotides.reverseComplementBases(forwardStrandReplacementBases);
-//            }
             String exonBasesAfterChange = context.exonBasesWithReplacementAppliedAtStrandLocation(locationOnStrandOfChange, forwardStrandReplacementBases);
             AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(exonBasesAfterChange);
             result.add(new ChangeResult(acids, exonBasesAfterChange, locationOnStrandOfChange, forwardStrandReferenceBases, forwardStrandReplacementBases));
@@ -74,53 +58,8 @@ class SingleAminoAcidVariant extends ProteinVariant
         return result;
     }
 
-    public TransvalVariant calculateVariant2(RefGenomeInterface refGenome)
-    {
-        String referenceCodon = referenceCodon(refGenome);
-        CodonVariantsCalculator change = new CodonVariantsCalculator(referenceAminoAcids(), altValue());
-        SortedSet<CodonChange> codonChanges = change.possibleCodonsForVariant(referenceCodon);
-        if(codonChanges.isEmpty())
-        {
-            return null;
-        }
-        Set<TransvalHotspot> hotspots = new HashSet<>();
-        codonChanges.forEach(cv ->
-        {
-            Pair<String, String> refAlt = cv.differenceStrings();
-            if(mGene.forwardStrand())
-            {
-                int position = RegionsDefiningCodon.translateCodonPosition(cv.positionOfFirstDifference());
-                hotspots.add(new TransvalHotspot(refAlt.getLeft(), refAlt.getRight(), mGene.Chromosome, position));
-            }
-            else
-            {
-                int position = RegionsDefiningCodon.translateCodonPosition(cv.positionOfFirstDifference()) - refAlt.getLeft().length() + 1;
-                hotspots.add(new TransvalHotspot(
-                        reverseComplementBases(refAlt.getLeft()),
-                        reverseComplementBases(refAlt.getRight()),
-                        mGene.Chromosome, position));
-            }
-        });
-        return new TransvalVariant(
-                mTranscript,
-                mGene.Chromosome,
-                !codonIsInSingleExon(),
-                hotspots
-        );
-    }
-
     public String altValue()
     {
         return Alt.symbol();
-    }
-
-    public String referenceCodon(RefGenomeInterface refGenomeSource)
-    {
-        return RegionsDefiningCodon.retrieveCodon(refGenomeSource);
-    }
-
-    public boolean codonIsInSingleExon()
-    {
-        return RegionsDefiningCodon.codonIsInSingleExon();
     }
 }

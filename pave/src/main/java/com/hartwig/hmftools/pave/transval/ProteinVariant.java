@@ -204,31 +204,4 @@ public class ProteinVariant
         changes.forEach(change -> hotspots.add(change.toHotspot(mGene.Chromosome)));
         return new TransvalVariant(mTranscript, mGene.Chromosome, false, hotspots);
     }
-
-    CodonRegions exonsForCodonPosition(int codonPosition)
-    {
-        List<Integer> regionLengths = codingRegionLengths();
-        int lengthIncludingCurrent = 0;
-        for(int i = 0; i < regionLengths.size(); i++)
-        {
-            int lengthUpToCurrent = lengthIncludingCurrent;
-            ChrBaseRegion exon = mCodingRegions.get(i);
-            lengthIncludingCurrent += regionLengths.get(i);
-            if(lengthIncludingCurrent > codonPosition)
-            {
-                ChrBaseRegion nextExon = (i < mCodingRegions.size() - 1) ? mCodingRegions.get(i + 1) : null;
-                if(mTranscript.negStrand())
-                {
-                    int positionOfCodonInCurrentExon = exon.end() - (codonPosition - lengthUpToCurrent);
-                    return new CodonRegions(positionOfCodonInCurrentExon, exon, nextExon, false);
-                }
-                else
-                {
-                    int positionOfCodonInCurrentExon = exon.start() + (codonPosition - lengthUpToCurrent);
-                    return new CodonRegions(positionOfCodonInCurrentExon, exon, nextExon);
-                }
-            }
-        }
-        throw new IllegalArgumentException("No exon found for codon " + codonPosition);
-    }
 }
