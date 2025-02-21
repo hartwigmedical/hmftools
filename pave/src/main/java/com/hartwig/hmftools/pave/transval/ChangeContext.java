@@ -14,7 +14,7 @@ public class ChangeContext
     final int FinishPositionInExon;
     final boolean IsPositiveStrand;
     private final int AminoAcidNumberOfFirstAminoAcid;
-    private ChangeContext companionContext = null;
+    private ChangeContext mCompanionContext = null;
 
     public ChangeContext(@NotNull final PaddedExon containingExon, final int startPositionInExon,
             final int finishPositionInExon,
@@ -30,14 +30,14 @@ public class ChangeContext
 
     ChangeContext companionContext()
     {
-        return companionContext;
+        return mCompanionContext;
     }
 
     void setCompanionContext(@NotNull ChangeContext companionContext)
     {
         Preconditions.checkArgument(companionContext.mExon.mIndex == mExon.mIndex - 1);
         Preconditions.checkArgument(companionContext.IsPositiveStrand == IsPositiveStrand);
-        this.companionContext = companionContext;
+        this.mCompanionContext = companionContext;
     }
 
     ChangeContext shiftLeft(int i)
@@ -78,12 +78,6 @@ public class ChangeContext
         Preconditions.checkArgument(position >= 0);
         int codonNumber = position - AminoAcidNumberOfFirstAminoAcid + 1;
         return mExon.getCodon(codonNumber, IsPositiveStrand);
-    }
-
-    String exonBasesWithReplacementApplied(int strandLocationOfChange, String alternateBases)
-    {
-        int relativeLocationOfChange = mExon.fromStrandCoordinates(strandLocationOfChange, IsPositiveStrand);
-        return mExon.baseSequenceWithBasesReplaced(relativeLocationOfChange, alternateBases, IsPositiveStrand);
     }
 
     String exonBasesWithReplacementAppliedAtStrandLocation(int strandLocationOfChange, String alternateBases)

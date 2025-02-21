@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class PaddedExon
@@ -22,18 +23,22 @@ public class PaddedExon
     private final int exonStart;
     @NotNull
     private final String IntronicPrefix;
+    @NotNull
+    private final String IntronicSuffix;
 
     public PaddedExon(
             final int mIndex, @NotNull final String basesOfFirstCodonInPreviousExon,
             @NotNull final String basesOfLastCodontInFollowingExon,
             @NotNull final String exonBases,
             final int exonStart,
-            @NotNull final String intronicPrefix)
+            @NotNull final String intronicPrefix,
+            @NotNull final String intronicSuffix)
     {
-        this.mIndex = mIndex;
-        this.IntronicPrefix = intronicPrefix;
         Preconditions.checkArgument(basesOfFirstCodonInPreviousExon.length() < 3);
         Preconditions.checkArgument(basesOfLastCodontInFollowingExon.length() < 3);
+        this.mIndex = mIndex;
+        this.IntronicPrefix = intronicPrefix;
+        this.IntronicSuffix = intronicSuffix;
         this.BasesOfFirstCodonInPreviousExon = basesOfFirstCodonInPreviousExon;
         this.BasesOfLastCodonInFollowingExon = basesOfLastCodontInFollowingExon;
         this.exonBases = exonBases;
@@ -41,7 +46,7 @@ public class PaddedExon
         Preconditions.checkArgument(totalLength() % 3 == 0);
     }
 
-    public String baseSequenceWithDeletionApplied(int start, int end, boolean positiveStrand)
+    public String baseSequenceWithFramePreservingDeletionApplied(int start, int end, boolean positiveStrand)
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start <= end);
@@ -101,6 +106,28 @@ public class PaddedExon
         String right = exonBases.substring(position);
         Preconditions.checkArgument((left + right).equals(exonBases));
         return BasesOfFirstCodonInPreviousExon + left + basesToInsert + right + BasesOfLastCodonInFollowingExon;
+    }
+
+    public Pair<String,String> exonBaseAndImmediatePriorStrandBase(final int position)
+    {
+        Preconditions.checkArgument(position >= 0);
+        Preconditions.checkArgument(position < exonBases.length());
+        String left = position == 0 ? last(IntronicPrefix) : exonBases.substring(position - 1, position);
+        String right = exonBases.substring(position, position + 1);
+        return Pair.of(left, right);
+    }
+
+    public String baseSequenceWithSingleBaseRemoved(final int position)
+    {
+        Preconditions.checkArgument(position >= 0);
+        Preconditions.checkArgument(position < exonBases.length());
+        String left = exonBases.substring(0, position);
+        String right = position == exonBases.length() - 1 ? "" : exonBases.substring(position + 1);
+        // To return a whole number of codons we pad from the suffix.
+        // This will allow a sequence of amino acids to be generated from
+        // the result, even though it might correspond to lost junction.
+        String rightPadding = IntronicSuffix.substring(0,1);
+        return BasesOfFirstCodonInPreviousExon + left + right + rightPadding + BasesOfLastCodonInFollowingExon;
     }
 
     public String baseSequenceWithBasesReplaced(final int position, final String replacementBases, final boolean positiveStrand)

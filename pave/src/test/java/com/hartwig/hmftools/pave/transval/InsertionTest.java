@@ -11,17 +11,9 @@ import org.junit.Test;
 public class InsertionTest extends VariantTest
 {
     @Test
-    public void calculateVariantTest()
-    {
-//        Duplication duplication = new Duplication(gene, transcript, taa, aar);
-//        TransvalVariant variant = duplication.calculateVariant(fsg);
-//        checkSingleHotspot(variant, "C", "CGCGCAG", "chr5", 14);
-    }
-
-    @Test
     public void applySimpleChangeTest()
     {
-        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC" );
+        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC", "TACG" );
         ChangeContext context = new ChangeContext(exon, 9, 10, true, 1);
         Insertion insertion = new Insertion(gene, transcript, taa, aar, aaSeq("Y"));
         Set<ChangeResult> results = insertion.applyChange(context);
@@ -48,7 +40,7 @@ public class InsertionTest extends VariantTest
     @Test
     public void applyChangeTest()
     {
-        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC" );
+        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC", "TACG");
         ChangeContext context = new ChangeContext(exon, 9, 10, true, 1);
         Insertion insertion = new Insertion(gene, transcript, taa, aar, aaSeq("SPQR"));
         Set<ChangeResult> results = insertion.applyChange(context);
@@ -64,7 +56,7 @@ public class InsertionTest extends VariantTest
 //    @Test
     public void applyChangeNegativeStrandTest()
     {
-        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC" );
+        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC", "TACG");
         ChangeContext context = new ChangeContext(exon, 3, 4, false, 1);
         Insertion insertion = new Insertion(gene, transcript, taa, aar, aaSeq("SPQR"));
         Set<ChangeResult> results = insertion.applyChange(context);

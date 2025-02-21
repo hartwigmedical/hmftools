@@ -13,31 +13,36 @@ import org.jetbrains.annotations.NotNull;
 class AminoAcidRange implements TranscriptFilter
 {
     @NotNull
-    private final AminoAcidSpecification first;
+    private final AminoAcidSpecification mFirst;
     @NotNull
-    private final AminoAcidSpecification last;
+    private final AminoAcidSpecification mLast;
 
     AminoAcidRange(@NotNull final AminoAcidSpecification first, @NotNull final AminoAcidSpecification last)
     {
         Preconditions.checkArgument(first.mPosition <= last.mPosition, "End position must not be before start position");
-        this.first = first;
-        this.last = last;
+        this.mFirst = first;
+        this.mLast = last;
     }
 
     public int startPosition()
     {
-        return first.mPosition;
+        return mFirst.mPosition;
+    }
+
+    public AminoAcid aminoAcidAtStart()
+    {
+        return mFirst.value();
     }
 
     public int length()
     {
-        return last.mPosition - first.mPosition + 1;
+        return mLast.mPosition - mFirst.mPosition + 1;
     }
 
     @Override
     public boolean applies(final TranscriptAminoAcids aminoAcids)
     {
-        return first.applies(aminoAcids) && last.applies(aminoAcids);
+        return mFirst.applies(aminoAcids) && mLast.applies(aminoAcids);
     }
 
     @Override
@@ -48,18 +53,18 @@ class AminoAcidRange implements TranscriptFilter
             return false;
         }
         final AminoAcidRange that = (AminoAcidRange) o;
-        return Objects.equals(first, that.first) && Objects.equals(last, that.last);
+        return Objects.equals(mFirst, that.mFirst) && Objects.equals(mLast, that.mLast);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(first, last);
+        return Objects.hash(mFirst, mLast);
     }
 
     @Override
     public String toString()
     {
-        return first + "_" + last;
+        return mFirst + "_" + mLast;
     }
 }

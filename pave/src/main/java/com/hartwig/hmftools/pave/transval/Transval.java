@@ -30,9 +30,9 @@ public class Transval
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTranscriptAminoAcidsMap, List.of(), false);
     }
 
-    VariationParser variationParser()
+    VariantParser variationParser()
     {
-        return new VariationParser(mEnsemblCache, mTranscriptAminoAcidsMap);
+        return new VariantParser(mEnsemblCache, mTranscriptAminoAcidsMap);
     }
 
     public TransvalVariant calculateVariant(String proteinVariant)

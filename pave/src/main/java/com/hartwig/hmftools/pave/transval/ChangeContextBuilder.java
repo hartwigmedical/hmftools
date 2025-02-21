@@ -71,6 +71,7 @@ class ChangeContextBuilder
         ChrBaseRegion exon = codingRegions.get(ccd.ExonIndex);
         String exonBases = genome.getBaseString(chromosome, exon.start(), exon.end());
         String prefix = genome.getBaseString(chromosome, exon.start() - 5, exon.start() - 1);
+        String suffix = genome.getBaseString(chromosome, exon.end() + 1, exon.end() + 5);
         String basesInPreviousExon = "";
         if(ccd.PaddingInPreviousExon > 0)
         {
@@ -101,16 +102,13 @@ class ChangeContextBuilder
         PaddedExon containingExon;
         if(isPositiveStrand)
         {
-            containingExon = new PaddedExon(ccd.ExonIndex, basesInPreviousExon, basesInNextExon, exonBases, exon.start(), prefix);
+            containingExon = new PaddedExon(ccd.ExonIndex, basesInPreviousExon, basesInNextExon, exonBases, exon.start(), prefix, suffix);
         }
         else
         {
-            containingExon = new PaddedExon(ccd.ExonIndex, basesInNextExon, basesInPreviousExon, exonBases, exon.start(), prefix);
+            containingExon = new PaddedExon(ccd.ExonIndex, basesInNextExon, basesInPreviousExon, exonBases, exon.start(), prefix, suffix);
         }
-        ChangeContext result =
-                new ChangeContext(containingExon, ccd.ChangeStart, ccd.ChangeEnd, isPositiveStrand, ccd.AminoAcidNumberOfFirstAminoAcidStartingInExon);
-
-        return result;
+        return new ChangeContext(containingExon, ccd.ChangeStart, ccd.ChangeEnd, isPositiveStrand, ccd.AminoAcidNumberOfFirstAminoAcidStartingInExon);
     }
 
     private String lastN(ChrBaseRegion exon, int n, String chromosome, RefGenomeInterface genome)

@@ -16,25 +16,6 @@ public class SingleAminoAcidVariantTest extends VariantTest
     }
 
     @Test
-    public void referenceValueTest()
-    {
-        // Forward strand examples:
-        Assert.assertEquals("M", this.saav("ADCK2:p.1E").referenceAminoAcids());
-        Assert.assertEquals("V", this.saav("ADCK2:p.2E").referenceAminoAcids());
-        Assert.assertEquals("R", this.saav("ADCK2:p.71E").referenceAminoAcids());
-        Assert.assertEquals("K", this.saav("ADCK2:p.421E").referenceAminoAcids());
-        Assert.assertEquals("P", this.saav("ADCK2:p.625E").referenceAminoAcids());
-        Assert.assertEquals("P", this.saav("ADCK2:p.626E").referenceAminoAcids());
-
-        // Reverse strand examples:
-        Assert.assertEquals("M", this.saav("BRAF:p.1E").referenceAminoAcids());
-        Assert.assertEquals("A", this.saav("BRAF:p.2E").referenceAminoAcids());
-        Assert.assertEquals("V", this.saav("BRAF:p.600E").referenceAminoAcids());
-        Assert.assertEquals("V", this.saav("BRAF:p.765E").referenceAminoAcids());
-        Assert.assertEquals("H", this.saav("BRAF:p.766E").referenceAminoAcids());
-    }
-
-    @Test
     public void codingRegionLengthsTest()
     {
         // TODO cases where there are 1 or 2 exons
@@ -81,17 +62,11 @@ public class SingleAminoAcidVariantTest extends VariantTest
     {
         Assert.assertEquals("E", this.saav("BRAF:p.1E").altValue());
     }
+
     @Test
     public void positionOfFirstAlteredCodonTest()
     {
         Assert.assertEquals(1, saav("ZYX:p.1E").positionOfFirstAlteredCodon());
         Assert.assertEquals(2230, saav("MTOR:p.L2230V").positionOfFirstAlteredCodon());
-    }
-
-    @Test
-    public void positionOfLastAlteredCodonTest()
-    {
-        Assert.assertEquals(1, saav("ZYX:p.1E").positionOfLastAlteredCodon());
-        Assert.assertEquals(2230, saav("MTOR:p.L2230V").positionOfLastAlteredCodon());
     }
 }

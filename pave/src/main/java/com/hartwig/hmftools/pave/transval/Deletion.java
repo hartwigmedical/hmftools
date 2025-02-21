@@ -24,7 +24,7 @@ class Deletion extends ProteinVariant
     {
         int start = context.StartPositionInExon;
         int end = context.FinishPositionInExon + 1;
-        String bases = context.mExon.baseSequenceWithDeletionApplied(start, end, context.IsPositiveStrand);
+        String bases = context.mExon.baseSequenceWithFramePreservingDeletionApplied(start, end, context.IsPositiveStrand);
         AminoAcidSequence resultSequence = AminoAcidSequence.fromNucleotides(bases);
         String deleted = context.refBases();
         String altBases = deleted.substring(0,  1);
@@ -36,6 +36,6 @@ class Deletion extends ProteinVariant
     {
         int startOfDeletedSection = positionOfFirstAlteredCodon() - 1;
         int endOfDeletedSection = startOfDeletedSection + this.mRefLength;
-        return referenceAminoAcidSequence().deleteRange(startOfDeletedSection, endOfDeletedSection);
+        return completeReferenceAminoAcidSequence().deleteRange(startOfDeletedSection, endOfDeletedSection);
     }
 }

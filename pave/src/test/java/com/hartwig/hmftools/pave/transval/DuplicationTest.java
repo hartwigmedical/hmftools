@@ -20,9 +20,4 @@ public class DuplicationTest extends VariantTest
         AminoAcidSequence expected = AminoAcidSequence.parse("MAAQAQVAPAAS");
         Assert.assertEquals(expected, duplication.variantSequence());
     }
-
-    private Duplication dup(String gene, String variant)
-    {
-        return transval.variationParser().parseDuplication(gene, variant);
-    }
 }

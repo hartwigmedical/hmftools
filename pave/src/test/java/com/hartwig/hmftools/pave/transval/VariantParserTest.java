@@ -6,15 +6,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class VariationParserTest extends TransvalTestBase
+public class VariantParserTest extends TransvalTestBase
 {
 
-    private VariationParser variationParser;
+    private VariantParser variantParser;
 
     @Before
     public void setUp()
     {
-        variationParser = transval.variationParser();
+        variantParser = transval.variationParser();
     }
 
     @Test
@@ -39,9 +39,28 @@ public class VariationParserTest extends TransvalTestBase
     }
 
     @Test
+    public void parseDeletionWithGene()
+    {
+        Deletion di = (Deletion) variantParser.parseVariantForGene("EGFR", "N73_Y74del");
+        Assert.assertEquals("EGFR", di.mGene.GeneName);
+        Assert.assertEquals(73, di.positionOfFirstAlteredCodon());
+        Assert.assertEquals(2, di.mRefLength);
+    }
+
+    @Test
+    public void parseFrameshiftWithGene()
+    {
+        Frameshift frameshift = (Frameshift) variantParser.parseVariantForGene("EGFR", "N73fs");
+        Assert.assertEquals("EGFR", frameshift.mGene.GeneName);
+        Assert.assertEquals(73, frameshift.positionOfFirstAlteredCodon());
+        Assert.assertEquals("N", frameshift.mFirstChangedAminoAcid.symbol);
+        Assert.assertEquals(1, frameshift.mRefLength);
+    }
+
+    @Test
     public void parseInsertionWithGene()
     {
-        Insertion di = variationParser.parseInsertion("EGFR", "N73_Y74insSPQR");
+        Insertion di = (Insertion) variantParser.parseInsertion("EGFR", "N73_Y74insSPQR");
         Assert.assertEquals("EGFR", di.mGene.GeneName);
         Assert.assertEquals(74, di.positionOfFirstAlteredCodon());
         Assert.assertEquals(2, di.mRefLength);
@@ -51,7 +70,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void canReferToGeneByName()
     {
-        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ZYX:p.Pro46Ala");
+        SingleAminoAcidVariant variant = variantParser.parseSingleAminoAcidVariant("ZYX:p.Pro46Ala");
         Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
         Assert.assertEquals("ENSG00000159840", variant.mGene.GeneId);
     }
@@ -59,7 +78,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void canReferToGeneByEnsemblId()
     {
-        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("ENSG00000159840:p.Pro46Ala");
+        SingleAminoAcidVariant variant = variantParser.parseSingleAminoAcidVariant("ENSG00000159840:p.Pro46Ala");
         Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
         Assert.assertEquals("ZYX", variant.mGene.GeneName);
     }
@@ -67,7 +86,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void referenceAminoAcidIsNotRequired()
     {
-        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF:p.600E");
+        SingleAminoAcidVariant variant = variantParser.parseSingleAminoAcidVariant("BRAF:p.600E");
         Assert.assertEquals(600, variant.positionOfFirstAlteredCodon());
         Assert.assertEquals("E", variant.altValue());
     }
@@ -75,7 +94,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void parseSingleAminoAcidVariantTest()
     {
-        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF", "V600E");
+        SingleAminoAcidVariant variant = variantParser.parseSingleAminoAcidVariant("BRAF", "V600E");
         Assert.assertEquals(600, variant.positionOfFirstAlteredCodon());
         Assert.assertEquals("E", variant.altValue());
     }
@@ -83,26 +102,26 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void aminoAcidNameIsConvertedToSingleLetter()
     {
-        SingleAminoAcidVariant variant = variationParser.parseSingleAminoAcidVariant("BRAF:p.Val600Glu");
+        SingleAminoAcidVariant variant = variantParser.parseSingleAminoAcidVariant("BRAF:p.Val600Glu");
         Assert.assertEquals("E", variant.altValue());
     }
 
     @Test
     public void parseVariantForGeneTest()
     {
-        ProteinVariant pv1 = variationParser.parseVariantForGene("BRAF", "Val600Glu");
+        ProteinVariant pv1 = variantParser.parseVariantForGene("BRAF", "Val600Glu");
         Assert.assertEquals(600, pv1.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv1 instanceof SingleAminoAcidVariant);
 
-        ProteinVariant pv2 = variationParser.parseVariantForGene("ADCK2", "Glu301_Thr303delinsGlnGln");
+        ProteinVariant pv2 = variantParser.parseVariantForGene("ADCK2", "Glu301_Thr303delinsGlnGln");
         Assert.assertEquals(301, pv2.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv2 instanceof DeletionInsertion);
 
-        ProteinVariant pv3 = variationParser.parseVariantForGene("EGFR", "L747_A750del");
+        ProteinVariant pv3 = variantParser.parseVariantForGene("EGFR", "L747_A750del");
         Assert.assertEquals(747, pv3.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv3 instanceof Deletion);
 
-        ProteinVariant pv4 = variationParser.parseVariantForGene("PIK3R1", "Y452dup");
+        ProteinVariant pv4 = variantParser.parseVariantForGene("PIK3R1", "Y452dup");
         Assert.assertEquals(452, pv4.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv4 instanceof Duplication);
     }
@@ -110,14 +129,14 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void parseDeletionInsertion()
     {
-        DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
+        DeletionInsertion di = (DeletionInsertion) variantParser.parseDeletionInsertion("EGFR:p.L747_A750delinsP");
         Assert.assertEquals("EGFR", di.mGene.GeneName);
         Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
         Assert.assertEquals(4, di.mRefLength);
         Assert.assertEquals("P", di.altAminoAcidSequence());
 
         // ADCK2 Glu301_Thr303delinsGlnGln, which is E301_T303delinsQQ
-        DeletionInsertion di2 = variationParser.parseDeletionInsertion("ADCK2:p.Glu301_Thr303delinsGlnGln");
+        DeletionInsertion di2 = (DeletionInsertion) variantParser.parseDeletionInsertion("ADCK2:p.Glu301_Thr303delinsGlnGln");
         Assert.assertEquals("ADCK2", di2.mGene.GeneName);
         Assert.assertEquals(301, di2.positionOfFirstAlteredCodon());
         Assert.assertEquals(3, di2.mRefLength);
@@ -127,7 +146,7 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void parseDeletionInsertionWithGene()
     {
-        DeletionInsertion di = variationParser.parseDeletionInsertion("EGFR", "L747_A750delinsP");
+        DeletionInsertion di = (DeletionInsertion) variantParser.parseDeletionInsertion("EGFR", "L747_A750delinsP");
         Assert.assertEquals("EGFR", di.mGene.GeneName);
         Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
         Assert.assertEquals(4, di.mRefLength);
@@ -144,15 +163,14 @@ public class VariationParserTest extends TransvalTestBase
     @Test
     public void parseDuplicationWithGene()
     {
-        Duplication dup = variationParser.parseDuplication("PIK3R1", "Y452dup");
+        Duplication dup = (Duplication) variantParser.parseDuplication("PIK3R1", "Y452dup");
         Assert.assertEquals("PIK3R1", dup.mGene.GeneName);
         Assert.assertEquals(452, dup.positionOfFirstAlteredCodon());
         Assert.assertEquals(1, dup.mRefLength);
 
-        Duplication dup2 = variationParser.parseDuplication("PIK3R1", "E458_Y463dup");
+        Duplication dup2 = (Duplication) variantParser.parseDuplication("PIK3R1", "E458_Y463dup");
         Assert.assertEquals("PIK3R1", dup2.mGene.GeneName);
         Assert.assertEquals(458, dup2.positionOfFirstAlteredCodon());
-        Assert.assertEquals(463, dup2.positionOfLastAlteredCodon());
         Assert.assertEquals(6, dup2.mRefLength);
     }
 
@@ -161,7 +179,7 @@ public class VariationParserTest extends TransvalTestBase
         String receivedMessage = null;
         try
         {
-            variationParser.parseSingleAminoAcidVariant(input);
+            variantParser.parseSingleAminoAcidVariant(input);
         }
         catch(final IllegalArgumentException e)
         {
@@ -175,7 +193,7 @@ public class VariationParserTest extends TransvalTestBase
         String receivedMessage = null;
         try
         {
-            variationParser.parseDeletionInsertion(input);
+            variantParser.parseDeletionInsertion(input);
         }
         catch(final IllegalArgumentException e)
         {

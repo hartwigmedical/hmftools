@@ -12,4 +12,14 @@ public class DeletionTest extends VariantTest
         AminoAcidSequence expected = AminoAcidSequence.parse("MAVAPAAS");
         Assert.assertEquals(expected, deletion.variantSequence());
     }
+
+    @Test
+    public void isConsistentWithThisVariantTest()
+    {
+        Deletion deletion = new Deletion(gene, transcript, taa, aar);
+        Assert.assertTrue(deletion.isConsistentWithThisVariant(AminoAcidSequence.parse("MAVAPAAS")));
+        Assert.assertFalse(deletion.isConsistentWithThisVariant(AminoAcidSequence.parse("MAAPAAS")));
+        Assert.assertFalse(deletion.isConsistentWithThisVariant(AminoAcidSequence.parse("MAVAPAA")));
+        Assert.assertFalse(deletion.isConsistentWithThisVariant(AminoAcidSequence.parse("AVAPAAS")));
+    }
 }

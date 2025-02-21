@@ -39,6 +39,12 @@ public class AminoAcidRangeTest extends TransvalTestBase
     }
 
     @Test
+    public void aminoAcidAtStartTest()
+    {
+        Assert.assertEquals(aa("M"), aar(1, "M", 2, "A").aminoAcidAtStart());
+    }
+
+    @Test
     public void lengthTest()
     {
         Assert.assertEquals(2, aar(1, "M", 2, "A").length());

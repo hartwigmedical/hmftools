@@ -6,10 +6,7 @@ import org.junit.Test;
 
 public class ChangeContextTest extends TransvalTestBase
 {
-    PaddedExon ec = new PaddedExon(1, "", "", "TTTAAACCCGGG", 100, "CATG");
-    PaddedExon ec2 = new PaddedExon(2,"A", "", "TTTAAACCCGG", 100, "CATG");
-    PaddedExon ec3 = new PaddedExon(3,"", "A", "TTAAACCCGGG", 100, "CATG");
-    PaddedExon ec6 = new PaddedExon(6, "TA", "AT", "TTAACCGG", 100, "CATG");
+    PaddedExon ec = new PaddedExon(1, "", "", "TTTAAACCCGGG", 100, "CATG", "TACG");
     ChangeContext cc1 = new ChangeContext(ec,3, 6, true, 10);
     ChangeContext cc2 = new ChangeContext(ec,3, 6, false, 10);
 

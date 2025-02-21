@@ -68,13 +68,7 @@ public class ProteinVariant
         mCompleteReferenceSequence = AminoAcidSequence.parse(mAminoAcidSequence.AminoAcids);
     }
 
-    public String referenceAminoAcids()
-    {
-        return mAminoAcidSequence.AminoAcids.substring(
-                mPositionOfFirstAlteredCodon - 1, mPositionOfFirstAlteredCodon + mRefLength - 1);
-    }
-
-    AminoAcidSequence referenceAminoAcidSequence()
+    AminoAcidSequence completeReferenceAminoAcidSequence()
     {
         return mCompleteReferenceSequence;
     }
@@ -82,11 +76,6 @@ public class ProteinVariant
     public int positionOfFirstAlteredCodon()
     {
         return mPositionOfFirstAlteredCodon;
-    }
-
-    public int positionOfLastAlteredCodon()
-    {
-        return mPositionOfFirstAlteredCodon + mRefLength - 1;
     }
 
     @VisibleForTesting
@@ -106,14 +95,17 @@ public class ProteinVariant
     @NotNull
     Set<ChangeResult> applyChange(ChangeContext changeContext)
     {
+        // todo override for DeletionInsertion
         return new HashSet<>();
     }
 
     AminoAcidSequence variantSequence()
     {
+        // todo override for DeletionInsertion
         return null;
     }
 
+    @VisibleForTesting
     @NotNull
     AminoAcidSequence replaceExonAminoAcids(int exon, @NotNull AminoAcidSequence replacement)
     {
@@ -159,9 +151,13 @@ public class ProteinVariant
         return result;
     }
 
+    boolean isConsistentWithThisVariant(AminoAcidSequence aminoAcidSequence)
+    {
+        return aminoAcidSequence.equals(variantSequence());
+    }
+
     private Collection<ChangeResult> findLeftmostApplicableChangesForContext(ChangeContext changeContext)
     {
-        AminoAcidSequence targetSequence = variantSequence();
         final Set<ChangeResult> changeResults = applyChange(changeContext);
         if(changeResults.isEmpty())
         {
@@ -175,8 +171,8 @@ public class ProteinVariant
             Set<ChangeResult> changesAtThisPosition = applyChange(change);
             for(ChangeResult changeAtThisPosition : changesAtThisPosition)
             {
-                AminoAcidSequence effectOfChange = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
-                if(effectOfChange.equals(targetSequence))
+                AminoAcidSequence changedAminoAcidSequence = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
+                if(isConsistentWithThisVariant(changedAminoAcidSequence))
                 {
                     results.put(changeAtThisPosition.mBases, changeAtThisPosition);
                 }

@@ -37,6 +37,6 @@ class Duplication extends ProteinVariant
     {
         int startOfDuplicatedSection = positionOfFirstAlteredCodon() - 1;
         int endOfDuplicatedSection = startOfDuplicatedSection + this.mRefLength;
-        return referenceAminoAcidSequence().duplicateRange(startOfDuplicatedSection, endOfDuplicatedSection);
+        return completeReferenceAminoAcidSequence().duplicateRange(startOfDuplicatedSection, endOfDuplicatedSection);
     }
 }
