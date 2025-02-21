@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 
@@ -12,25 +12,29 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 public enum ConsensusType
 {
-    IGNORE(),
-    NONE(SequencingType.values()),
-    DUPLEX(SBX),
-    HIGH_QUAL(BIOMODAL);
+    IGNORE,
+    NONE,
+    SINGLE,
+    DUAL,
+    HIGH_QUAL;
 
-    public final EnumSet<SequencingType> SequencingTypes;
-
-    ConsensusType(final SequencingType... sequencingTypes)
+    public static EnumSet<ConsensusType> consensusTypes(final JitterAnalyserConfig config)
     {
-        SequencingTypes = Sets.newEnumSet(Arrays.asList(sequencingTypes), SequencingType.class);
-    }
-
-    public static EnumSet<ConsensusType> consensusTypesFromSequencing(final SequencingType sequencingType)
-    {
+        SequencingType sequencingType = config.Sequencing;
         EnumSet<ConsensusType> consensusTypes = Sets.newEnumSet(Collections.emptyList(), ConsensusType.class);
-        for(ConsensusType consensusType : ConsensusType.values())
+        consensusTypes.add(NONE);
+        if(sequencingType == ILLUMINA && config.UsesDuplexUMIs)
         {
-            if(consensusType.SequencingTypes.contains(sequencingType))
-                consensusTypes.add(consensusType);
+            consensusTypes.add(SINGLE);
+            consensusTypes.add(DUAL);
+        }
+        else if(sequencingType == SBX)
+        {
+            consensusTypes.add(DUAL);
+        }
+        else if(sequencingType == BIOMODAL)
+        {
+            consensusTypes.add(HIGH_QUAL);
         }
 
         return consensusTypes;

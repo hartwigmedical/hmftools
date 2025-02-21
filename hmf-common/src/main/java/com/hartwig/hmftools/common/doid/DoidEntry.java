@@ -26,13 +26,4 @@ public abstract class DoidEntry
     @Nullable
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
 
-    @NotNull
-    public abstract List<String> equivalentNodesSets();
-
-    @NotNull
-    public abstract List<String> domainRangeAxioms();
-
-    @NotNull
-    public abstract List<String> propertyChainAxioms();
-
 }

@@ -2,14 +2,17 @@ package com.hartwig.hmftools.common.basequal.jitter;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.DUPLEX;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.HIGH_QUAL;
 import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.IGNORE;
 import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.NONE;
+import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 
 import static htsjdk.samtools.CigarOperator.H;
@@ -17,6 +20,7 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import org.apache.commons.lang3.Validate;
@@ -31,8 +35,12 @@ public abstract class ConsensusMarker
     public abstract ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record);
 
     @Nullable
-    public static ConsensusMarker fromSequencingType(final SequencingType sequencingType)
+    public static ConsensusMarker create(final JitterAnalyserConfig config)
     {
+        SequencingType sequencingType = config.Sequencing;
+        if(sequencingType == ILLUMINA && config.UsesDuplexUMIs)
+            return new IlluminaDuplexUMIsConsensusMarker();
+
         if(sequencingType == SBX)
             return new SBXConsensusMarker();
 
@@ -42,7 +50,7 @@ public abstract class ConsensusMarker
         return null;
     }
 
-    private static int INVALID_INDEX = -1;
+    private static final int INVALID_INDEX = -1;
 
     private static Pair<Integer, Integer> getMicrosatelliteBoundaries(
             final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
@@ -125,6 +133,25 @@ public abstract class ConsensusMarker
         return Pair.of(startReadIdx - 1, endReadIdx + 1);
     }
 
+    public static class IlluminaDuplexUMIsConsensusMarker extends ConsensusMarker
+    {
+        @Override
+        public ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+        {
+            String umiTypeString = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+            if(umiTypeString == null)
+                return NONE;
+
+            UmiReadType umiType = UmiReadType.valueOf(umiTypeString);
+            return switch(umiType)
+            {
+                case NONE -> NONE;
+                case SINGLE -> SINGLE;
+                case DUAL -> DUAL;
+            };
+        }
+    }
+
     public static class SBXConsensusMarker extends ConsensusMarker
     {
         @Override
@@ -142,7 +169,7 @@ public abstract class ConsensusMarker
                 return NONE;
 
             if(minQual == DUPLEX_QUAL)
-                return DUPLEX;
+                return DUAL;
 
             return IGNORE;
         }

@@ -12,14 +12,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class DoidGraphMetaData
 {
     @Nullable
-    public abstract List<String> subsets();
-
-    @Nullable
-    public abstract List<DoidXref> xrefs();
-
-    @Nullable
     public abstract List<DoidBasicPropertyValue> basicPropertyValues();
 
-    @Nullable
+    @NotNull
     public abstract String version();
 }

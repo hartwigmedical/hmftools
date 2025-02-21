@@ -22,7 +22,7 @@ class MicrosatelliteRead
 {
     public static final Logger sLogger = LogManager.getLogger(MicrosatelliteRead.class);
 
-    private static ThreadLocal<MicrosatelliteRead> THREAD_INSTANCE = new ThreadLocal<>()
+    private static final ThreadLocal<MicrosatelliteRead> THREAD_INSTANCE = new ThreadLocal<>()
     {
         @Override
         protected MicrosatelliteRead initialValue()
@@ -91,13 +91,9 @@ class MicrosatelliteRead
         if(!shouldDropRead)
         {
             if(consensusMarker == null)
-            {
                 mConsensusType = NONE;
-            }
             else
-            {
                 mConsensusType = consensusMarker.consensusType(refGenomeMicrosatellite, record);
-            }
         }
         else
         {
