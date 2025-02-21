@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.slice.SliceConfig.UNMAPPED_READS_DISABLED;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
@@ -20,6 +21,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -74,13 +77,23 @@ public class RegionSlicer
 
         List<RemotePositions> remoteChrPositions = Lists.newArrayList();
 
+        RefGenomeSource refGenome = loadRefGenome(mConfig.RefGenomeFile);
+
         for(Map.Entry<String,List<RemotePosition>> entry : readCache.chrRemotePositions().entrySet())
         {
-            // no reason not to include MT and any alt contigs
+            // no reason not to include MT and any alt contigs unless they are not defined in the ref genome dictionary
+            String contig = entry.getKey();
+
+            if(refGenome.refGenomeFile().getSequenceDictionary().getSequence(contig) == null)
+            {
+                BT_LOGGER.debug("skipping remote slice for contig({}) not in ref genome", contig);
+                continue;
+            }
+
             List<RemotePosition> remotePositions = entry.getValue();
             Collections.sort(remotePositions);
 
-            remoteChrPositions.add(new RemotePositions(entry.getKey(), remotePositions));
+            remoteChrPositions.add(new RemotePositions(contig, remotePositions));
         }
 
         if(!remoteChrPositions.isEmpty())
