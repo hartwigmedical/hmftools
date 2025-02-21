@@ -827,4 +827,21 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         variant = transval.calculateVariant("BRAF", "H510_V511insW");
         checkSingleHotspot(variant, "C", "CCCA", "chr7", 140_777_075);
     }
+
+    @Test
+    public void vhlQ132fs()
+    {
+        TransvalVariant variant = transval.calculateVariant("VHL", "Q132fs");
+        // chr3, Q starts at 10146567
+        // ...V N Q T...     ...GTT AAC CAA ACT...
+        // AC>A at 565 gives ...GTT AA C AA ACT... which is ...V N K ....
+        // Note that transvar gives CC>C @566
+        checkSingleHotspot(variant, "AC", "A", "chr3", 10_146_565);
+
+        // Similarly: VHL D9fs
+        // ...N W D...     ...AAC TGG GAC G... the W starts at 10141869
+        // TG>T @869 gives ...AAC TG GAC G...  which is ...N W T ....
+        variant = transval.calculateVariant("VHL", "D9fs");
+        checkSingleHotspot(variant, "TG", "T", "chr3", 10_141_869);
+    }
 }
