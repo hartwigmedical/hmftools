@@ -116,7 +116,8 @@ public class RegionUnmapper extends Thread
             return Collections.emptyList();
 
         // add in an entry to extract fully unmapped reads
-        unmappingRegions.add(UNMAPPED_READS);
+        if(!config.SkipUnmapped)
+            unmappingRegions.add(UNMAPPED_READS);
 
         List<RegionUnmapper> regionUnmapperTasks = Lists.newArrayList();
 

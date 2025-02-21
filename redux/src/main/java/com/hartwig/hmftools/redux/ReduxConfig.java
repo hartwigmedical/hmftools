@@ -113,6 +113,7 @@ public class ReduxConfig
     public final double PerfDebugTime;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
+    public final boolean SkipUnmapped;
     public final int WriteReadBaseLength;
 
     private boolean mIsValid;
@@ -135,6 +136,7 @@ public class ReduxConfig
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
+    private static final String SKIP_UNAMPPED = "skip_unmapped";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -205,6 +207,7 @@ public class ReduxConfig
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
+        SkipUnmapped = configBuilder.hasFlag(SKIP_UNAMPPED);
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
 
@@ -332,6 +335,7 @@ public class ReduxConfig
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
+        configBuilder.addFlag(SKIP_UNAMPPED, "Skip processing existing fully unmapped reads");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -382,6 +386,7 @@ public class ReduxConfig
         WriteBam = false;
         MultiBam = false;
         KeepInterimBams = false;
+        SkipUnmapped = false;
         LogReadType = NONE;
 
         LogReadIds = Lists.newArrayList();
