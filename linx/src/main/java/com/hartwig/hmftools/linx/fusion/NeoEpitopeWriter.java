@@ -12,8 +12,10 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.CohortDataWriter.cohortDataFilename;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LINKS;
@@ -44,8 +46,6 @@ public class NeoEpitopeWriter
     private final EnsemblDataCache mGeneTransCache;
     private final KnownFusionCache mKnownFusionCache;
     private final List<NeoEpitopeFusion> mFusions;
-
-    public static final String NE_FUSION_COHORT_FILE = "LNX_NEO_EPITOPES.tsv";
 
     public NeoEpitopeWriter(
             final String outputDir, final EnsemblDataCache geneDataCache, final KnownFusionCache knownFusionCache)
@@ -297,14 +297,17 @@ public class NeoEpitopeWriter
             if(mWriter == null)
             {
                 String outputFileName = mIsMultiSample ?
-                        mOutputDir + NE_FUSION_COHORT_FILE : NeoEpitopeFusion.generateFilename(mOutputDir, mSampleId);
+                        cohortDataFilename(mOutputDir, "NEO_EPITOPES") : NeoEpitopeFusion.generateFilename(mOutputDir, mSampleId);
 
                 mWriter = createBufferedWriter(outputFileName, false);
 
-                if(mIsMultiSample)
-                    mWriter.write("sampleId,");
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-                mWriter.write(NeoEpitopeFusion.header());
+                if(mIsMultiSample)
+                    sj.add("sampleId");
+
+                sj.add(NeoEpitopeFusion.header());
+                mWriter.write(sj.toString());
                 mWriter.newLine();
             }
         }
@@ -321,10 +324,13 @@ public class NeoEpitopeWriter
 
         try
         {
-            if(mIsMultiSample)
-                mWriter.write(String.format("%s,",mSampleId));
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            mWriter.write(NeoEpitopeFusion.toString(fusion));
+            if(mIsMultiSample)
+                sj.add(mSampleId);
+
+            sj.add(NeoEpitopeFusion.toString(fusion));
+            mWriter.write(sj.toString());
             mWriter.newLine();
         }
         catch (final IOException e)

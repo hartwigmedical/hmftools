@@ -22,10 +22,7 @@ public enum AnnotationExtension
 
         for(String extension : configStr.split(ITEM_DELIM, -1))
         {
-            if(extension.equals("DM")) // old value
-                extensions.add(DOUBLE_MINUTES);
-            else
-                extensions.add(AnnotationExtension.valueOf(extension));
+            extensions.add(AnnotationExtension.valueOf(extension));
         }
 
         return extensions;

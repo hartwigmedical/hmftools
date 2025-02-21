@@ -1,19 +1,29 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.linx.WriteType.CLUSTERING;
+import static com.hartwig.hmftools.linx.WriteType.LINK;
+import static com.hartwig.hmftools.linx.WriteType.STANDARD_TYPES;
+import static com.hartwig.hmftools.linx.WriteType.SV_DATA;
+import static com.hartwig.hmftools.linx.WriteType.VIS_DATA;
+import static com.hartwig.hmftools.linx.WriteType.WRITE_STANDARD;
+
+import java.util.List;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class LinxOutput
 {
-    public final boolean WriteAll;
-    public final boolean WriteSvData; // all SV table fields to cohort file
-    public final boolean WriteVisualisationData;
-
-    public final boolean WriteClusterHistory;
-    public final boolean WriteSingleSVClusters;
-    public final boolean WriteLinks;
+    public final List<WriteType> WriteTypes;
     public final boolean WriteCohortFiles;
+    public final boolean WriteSingleSVClusters;
 
     public final int LogChainingMaxSize;
+
+    private final boolean mWriteAll;
+
+    private static final String WRITE_TYPES = "write_type";
 
     private static final String WRITE_ALL = "write_all";
     private static final String WRITE_SV_DATA = "write_sv_data";
@@ -25,28 +35,21 @@ public class LinxOutput
     private static final String NO_VIS_FILES = "no_vis_files";
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
 
-    public static final char ITEM_DELIM_CHR = ';';
+    public static final char ITEM_DELIM_CHR = ITEM_DELIM.charAt(0);
 
     public LinxOutput(final ConfigBuilder configBuilder, boolean defaultWrite)
     {
-        WriteAll = configBuilder.hasFlag(WRITE_ALL);
+        WriteTypes = WriteType.parseConfig(configBuilder.getValue(WRITE_TYPES));
 
-        if(WriteAll)
+        mWriteAll = configBuilder.getValue(WRITE_TYPES).equals(WRITE_ALL);
+
+        if(mWriteAll)
         {
-            WriteSvData = true;
-            WriteVisualisationData = true;
-            WriteClusterHistory = true;
             WriteSingleSVClusters = true;
-            WriteLinks = true;
         }
         else
         {
-            WriteVisualisationData = (configBuilder.hasFlag(WRITE_VIS_DATA) || defaultWrite) && !configBuilder.hasFlag(NO_VIS_FILES);
-
-            WriteSvData = configBuilder.hasFlag(WRITE_SV_DATA) || defaultWrite;
-            WriteClusterHistory = configBuilder.hasFlag(WRITE_CLUSTER_HISTORY);
             WriteSingleSVClusters = configBuilder.hasFlag(WRITE_SINGLE_SV_CLUSTERS) || defaultWrite;
-            WriteLinks = configBuilder.hasFlag(WRITE_LINKS) || defaultWrite;
         }
 
         WriteCohortFiles = configBuilder.hasFlag(WRITE_COHORT_FILES);
@@ -54,8 +57,17 @@ public class LinxOutput
         LogChainingMaxSize = configBuilder.getInteger(LOG_CHAIN_MAX_SIZE);
     }
 
+    public boolean writeAll() { return mWriteAll; }
+    public boolean writeVisualisationData() { return WriteTypes.contains(VIS_DATA); }
+    public boolean writeSvData() { return WriteTypes.contains(SV_DATA); }
+    public boolean writeLinks() { return WriteTypes.contains(LINK); }
+    public boolean writeClusterHistory() { return WriteTypes.contains(CLUSTERING); }
+
     public static void addConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(
+                WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"), WRITE_STANDARD);
+
         configBuilder.addFlag(WRITE_ALL, "Optional: write all batch-run output files");
         configBuilder.addFlag(WRITE_SV_DATA, "Optional: include all SV table fields (batch-mode)");
         configBuilder.addFlag(WRITE_LINKS, "Optional: write chain links (batch-mode)");
@@ -72,14 +84,10 @@ public class LinxOutput
 
     public LinxOutput()
     {
-        WriteAll = false;
-        WriteSvData = false;
-        WriteVisualisationData = false;
-        WriteClusterHistory = false;
+        mWriteAll = false;
+        WriteTypes = STANDARD_TYPES;
         WriteSingleSVClusters = false;
-        WriteLinks = false;
         WriteCohortFiles = false;
-
         LogChainingMaxSize = 0;
     }
 }

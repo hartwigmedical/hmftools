@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -14,6 +16,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
@@ -64,11 +67,16 @@ public class CohortDataWriter
         mWriters = Maps.newHashMap();
 
         mVisWriter = new VisDataWriter(
-                config.OutputDataPath, geneDataCache, config.Output.WriteVisualisationData, config.hasMultipleSamples(), config.IsGermline);
+                config.OutputDataPath, geneDataCache, config.Output.writeVisualisationData(), config.hasMultipleSamples(), config.IsGermline);
 
-        mWriters.put(COHORT_WRITER_SV, createSvDataFile());
-        mWriters.put(COHORT_WRITER_CLUSTER, createClusterFile());
-        mWriters.put(COHORT_WRITER_LINK, createLinksFile());
+        if(mConfig.Output.WriteTypes.contains(WriteType.SV_DATA))
+            mWriters.put(COHORT_WRITER_SV, createSvDataFile());
+
+        if(mConfig.Output.WriteTypes.contains(WriteType.CLUSTER))
+            mWriters.put(COHORT_WRITER_CLUSTER, createClusterFile());
+
+        if(mConfig.Output.WriteTypes.contains(WriteType.LINK))
+            mWriters.put(COHORT_WRITER_LINK, createLinksFile());
     }
 
     public final VisDataWriter getVisWriter() { return mVisWriter; }
@@ -116,6 +124,11 @@ public class CohortDataWriter
         }
     }
 
+    public static String cohortDataFilename(final String outputDir, final String fileId)
+    {
+        return outputDir + "LNX_" + fileId + TSV_EXTENSION;
+    }
+
     private BufferedWriter createSvDataFile()
     {
         if(!writeCohortFiles())
@@ -123,49 +136,49 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = mConfig.OutputDataPath + "LNX_SVS.csv";
+            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, "SVS");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             // definitional fields
-            writer.write("SampleId,Id,Type,ClusterId,ClusterCount");
-            writer.write(",ChrStart,PosStart,OrientStart,ArmStart,ChrEnd,PosEnd,OrientEnd,ArmEnd");
+            writer.write("SampleId\tId\tType\tClusterId\tClusterCount");
+            writer.write("\tChrStart\tPosStart\tOrientStart\tArmStart\tChrEnd\tPosEnd\tOrientEnd\tArmEnd");
 
             // position and copy number
-            writer.write(",CNStart,CNChgStart,CNEnd,CNChgEnd,Jcn,JcnMin,JcnMax");
+            writer.write("\tCNStart\tCNChgStart\tCNEnd\tCNChgEnd\tJcn\tJcnMin\tJcnMax");
 
             // cluster info
-            writer.write(",ClusterReason,ClusterDesc,ResolvedType");
+            writer.write("\tClusterReason\tClusterDesc\tResolvedType");
 
-            writer.write(",FSStart,FSEnd,LEStart,LEEnd");
+            writer.write("\tFSStart\tFSEnd\tLEStart\tLEEnd");
 
             // linked pair info
-            writer.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd,AsmbStart,AsmbEnd");
+            writer.write("\tLnkSvStart\tLnkLenStart\tLnkSvEnd\tLnkLenEnd\tAsmbStart\tAsmbEnd");
 
             // chain info
-            writer.write(",ChainId,ChainCount,ChainIndex");
+            writer.write("\tChainId\tChainCount\tChainIndex");
 
             // proximity info and other link info
-            writer.write(",NearestLen,NearestType,DBLenStart,DBLenEnd");
+            writer.write("\tNearestLen\tNearestType\tDBLenStart\tDBLenEnd");
 
             // proximity info and other link info
-            writer.write(",FoldbackLnkStart,FoldbackLenStart,FoldbackInfoStart,FoldbackLnkEnd,FoldbackLenEnd,FoldbackInfoEnd");
+            writer.write("\tFoldbackLnkStart\tFoldbackLenStart\tFoldbackInfoStart\tFoldbackLnkEnd\tFoldbackLenEnd\tFoldbackInfoEnd");
 
             // local topology from arm cluster
-            writer.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
+            writer.write("\tLocTopIdStart\tLocTopTypeStart\tLocTopTIStart\tLocTopIdEnd\tLocTopTypeEnd\tLocTopTIEnd");
 
             // gene info
-            writer.write(",GeneStart,GeneEnd");
+            writer.write("\tGeneStart\tGeneEnd");
 
-            if(mConfig.Output.WriteSvData)
+            if(mConfig.Output.writeSvData())
             {
                 // extra copy number info
-                writer.write(",MinorAPStartPrev,MinorAPStartPost,MinorAPEndPrev,MinorAPEndPost,AFStart,AFEnd");
+                writer.write("\tMinorAPStartPrev\tMinorAPStartPost\tMinorAPEndPrev\tMinorAPEndPost\tAFStart\tAFEnd");
 
                 // SV table info
-                writer.write(",HomologyStart,HomologyEnd,InsertSeq,QualScore");
-                writer.write(",InsSeqAlignments");
-                writer.write(",RepeatClass,RepeatType,AnchorStart,AnchorEnd");
+                writer.write("\tHomologyStart\tHomologyEnd\tInsertSeq\tQualScore");
+                writer.write("\tInsSeqAlignments");
+                writer.write("\tRepeatClass\tRepeatType\tAnchorStart\tAnchorEnd");
             }
 
             writer.newLine();
@@ -208,22 +221,22 @@ public class CohortDataWriter
 
                 final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
-                writer.write(String.format("%s,%d,%s,%d,%d",
+                writer.write(String.format("%s\t%d\t%s\t%d\t%d",
                         sampleId, var.id(), var.typeStr(), cluster.id(), cluster.getSvCount()));
 
-                writer.write(String.format(",%s,%d,%d,%s,%s,%d,%d,%s",
+                writer.write(String.format("\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s",
                         var.chromosome(true), var.position(true), var.orientation(true), asStr(var.arm(true)),
                         var.chromosome(false), var.position(false), var.orientation(false), asStr(var.arm(false))));
 
-                writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                writer.write(String.format("\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",
                         dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
                         dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(),
                         dbData.junctionCopyNumber(), var.jcnMin(), var.jcnMax()));
 
-                writer.write(String.format(",%s,%s,%s",
+                writer.write(String.format("\t%s\t%s\t%s",
                         var.getClusterReason(), cluster.getDesc(), cluster.getResolvedType()));
 
-                writer.write(String.format(",%s,%s,%s,%s",
+                writer.write(String.format("\t%s\t%s\t%s\t%s",
                         var.isFragileSite(true), var.isFragileSite(false),
                         LineElementType.toString(var.getLineElement(true)), LineElementType.toString(var.getLineElement(false))));
 
@@ -234,17 +247,17 @@ public class CohortDataWriter
                     final LinkedPair link = var.getLinkedPair(isStart);
                     if(link != null)
                     {
-                        writer.write(String.format(",%s,%d",
+                        writer.write(String.format("\t%s\t%d",
                                 link.first() == var ? link.second().id() : link.first().id(), link.baseLength()));
                     }
                     else
                     {
-                        writer.write(",,-1");
+                        writer.write("\t\t-1");
                     }
                 }
 
                 // assembly info
-                writer.write(String.format(",%s,%s", var.assemblyInfoStr(true), var.assemblyInfoStr(false)));
+                writer.write(String.format("\t%s\t%s", var.assemblyInfoStr(true), var.assemblyInfoStr(false)));
 
                 // chain info
                 final SvChain chain = cluster.findChain(var);
@@ -252,11 +265,11 @@ public class CohortDataWriter
 
                 if(chain != null)
                 {
-                    chainStr = String.format(",%d,%d,%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
+                    chainStr = String.format("\t%d\t%d\t%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
                 }
                 else
                 {
-                    chainStr = String.format(",%d,0,", cluster.getChainId(var));
+                    chainStr = String.format("\t%d\t0\t", cluster.getChainId(var));
                 }
 
                 writer.write(chainStr);
@@ -278,10 +291,10 @@ public class CohortDataWriter
                     dbLenEnd = (!var.isInferredSgl() && !dbEnd.getOtherSV(var).isInferredSgl()) ? dbEnd.length() : INF_DB_MARKER;
                 }
 
-                writer.write(String.format(",%d,%s,%d,%d",
+                writer.write(String.format("\t%d\t%s\t%d\t%d",
                         var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd));
 
-                writer.write(String.format(",%d,%d,%s,%d,%d,%s",
+                writer.write(String.format("\t%d\t%d\t%s\t%d\t%d\t%s",
                         var.getFoldbackId(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
                         var.getFoldbackId(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
@@ -290,17 +303,17 @@ public class CohortDataWriter
                     ArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
 
                     if(armCluster != null)
-                        writer.write(String.format(",%d,%s,%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
+                        writer.write(String.format("\t%d\t%s\t%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
                     else
-                        writer.write(",-1,,0");
+                        writer.write("\t-1\t\t0");
                 }
 
-                writer.write(String.format(",%s,%s",
+                writer.write(String.format("\t%s\t%s",
                         var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true)));
 
-                if(mConfig.Output.WriteSvData)
+                if(mConfig.Output.writeSvData())
                 {
-                    writer.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                    writer.write(String.format("\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",
                             var.getBreakend(true).minorAlleleJcn(true),
                             var.getBreakend(true).minorAlleleJcn(false),
                             !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(true) : 0,
@@ -309,11 +322,11 @@ public class CohortDataWriter
 
                     final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
-                    writer.write(String.format(",%s,%s,%s,%.0f,%s",
+                    writer.write(String.format("\t%s\t%s\t%s\t%.0f\t%s",
                             dbData.startHomologySequence(), dbData.endHomologySequence(),
                             dbData.insertSequence(), dbData.qualityScore(), insSeqAlignments));
 
-                    writer.write(String.format(",%s,%s,%d,%d",
+                    writer.write(String.format("\t%s\t%s\t%d\t%d",
                             dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
                             dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
                 }
@@ -334,23 +347,23 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = mConfig.OutputDataPath + "LNX_CLUSTERS.csv";
+            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, "CLUSTERS");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId,ClusterId,ClusterDesc,ClusterCount,Category,ResolvedType,Synthetic,FullyChained,ChainCount");
-            writer.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
-            writer.write(",ClusterReasons,Consistency,IsLINE,Replication,MinJcn,MaxJcn,Foldbacks");
-            writer.write(",ArmCount,OriginArms,FragmentArms,ConsistentArms,ComplexArms,Annotations,AlleleValidPerc");
+            writer.write("SampleId\tClusterId\tClusterDesc\tClusterCount\tCategory\tResolvedType\tSynthetic\tFullyChained\tChainCount");
+            writer.write("\tDelCount\tDupCount\tInsCount\tInvCount\tBndCount\tSglCount\tInfCount");
+            writer.write("\tClusterReasons\tConsistency\tIsLINE\tReplication\tMinJcn\tMaxJcn\tFoldbacks");
+            writer.write("\tArmCount\tOriginArms\tFragmentArms\tConsistentArms\tComplexArms\tAnnotations\tAlleleValidPerc");
 
-            writer.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain");
-            writer.write(",ExtTIsCnGain,OverlapTIs,ChainEndsFace,ChainEndsAway,UnchainedSVs");
+            writer.write("\tTotalTIs\tAssemblyTIs\tShortTIs\tIntTIs\tExtTIs\tIntShortTIs\tExtShortTIs\tIntTIsCnGain");
+            writer.write("\tExtTIsCnGain\tOverlapTIs\tChainEndsFace\tChainEndsAway\tUnchainedSVs");
 
-            writer.write(",DBs,ShortDBs,TotalDBLength,TotalDeleted,TravDelCount,TravDelLength");
-            writer.write(",TotalRange,ChainedLength,ImpliedTIs");
+            writer.write("\tDBs\tShortDBs\tTotalDBLength\tTotalDeleted\tTravDelCount\tTravDelLength");
+            writer.write("\tTotalRange\tChainedLength\tImpliedTIs");
 
-            writer.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
-            writer.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
+            writer.write("\tArmClusterCount\tAcTotalTIs\tAcIsolatedBE\tAcTIOnly\tAcDsb\tAcSimpleDup");
+            writer.write("\tAcSingleFb\tAcFbDsb\tAcComplexFb\tAcComplexLine\tAcSameOrient\tAcComplexOther");
 
             writer.newLine();
             return writer;
@@ -391,12 +404,12 @@ public class CohortDataWriter
 
                 final String category = getClusterCategory(cluster);
 
-                writer.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%d",
+                writer.write(String.format("%s\t%d\t%s\t%d\t%s\t%s\t%s\t%s\t%d",
                         sampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
                         category, resolvedType, cluster.isSyntheticType(),
                         cluster.isFullyChained(false), cluster.getChains().size()));
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
+                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
                         cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
                         cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL), cluster.getTypeCount(INF)));
 
@@ -411,39 +424,39 @@ public class CohortDataWriter
                         foldbackCount += 0.5;
                 }
 
-                writer.write(String.format(",%s,%d,%s,%s,%.1f,%.1f,%.0f",
+                writer.write(String.format("\t%s\t%d\t%s\t%s\t%.1f\t%.1f\t%.0f",
                         cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.hasLinkingLineElements(),
                         cluster.requiresReplication(), cluster.getMinJcn(), cluster.getMaxJcn(), foldbackCount));
 
                 final ClusterMetrics metrics = cluster.getMetrics();
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
+                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%s\t%.2f",
                         cluster.getArmCount(), metrics.OriginArms, metrics.FragmentArms, metrics.ConsistentArms,
                         metrics.ComplexArms, cluster.getAnnotations(), metrics.ValidAlleleJcnSegmentPerc));
 
                 long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.baseLength() <= SHORT_TI_LENGTH).count();
 
-                writer.write(String.format(",%d,%d,%d",
+                writer.write(String.format("\t%d\t%d\t%d",
                         cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), shortTIs));
 
                 final ChainMetrics chainMetrics = cluster.getLinkMetrics();
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
                         chainMetrics.InternalTIs, chainMetrics.ExternalTIs, chainMetrics.InternalShortTIs, chainMetrics.ExternalShortTIs,
                         chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
                         chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway, cluster.getUnlinkedSVs().size()));
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d",
+                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d",
                         metrics.DBCount, metrics.ShortDBCount, metrics.TotalDBLength,
                         metrics.TotalDeleted, metrics.TraversedDelCount, metrics.TraversedDelLength));
 
-                writer.write(String.format(",%d,%d,%d",
+                writer.write(String.format("\t%d\t%d\t%d",
                         metrics.TotalRange, metrics.ChainedLength, metrics.ImpliedTICount));
 
                 final int[] armClusterData = getArmClusterData(cluster);
                 long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
                         cluster.getArmClusters().size(), armClusterTIs, armClusterData[ArmClusterType.ISOLATED_BE.ordinal()],
                         armClusterData[ArmClusterType.TI_ONLY.ordinal()], armClusterData[ArmClusterType.DSB.ordinal()],
                         armClusterData[ArmClusterType.SIMPLE_DUP.ordinal()], armClusterData[ArmClusterType.FOLDBACK.ordinal()],
@@ -463,20 +476,20 @@ public class CohortDataWriter
 
     private BufferedWriter createLinksFile()
     {
-        if(!mConfig.Output.WriteLinks || !writeCohortFiles())
+        if(!mConfig.Output.writeLinks() || !writeCohortFiles())
             return null;
 
         try
         {
-            String outputFileName = mConfig.OutputDataPath + "LNX_LINKS.csv";
+            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, "LINKS");;
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId,ClusterId,ClusterCount,ResolvedType");
-            writer.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChainIndex,Jcn,JcnUncertainty");
-            writer.write(",IsAssembled,TILength,NextSvDist,NextClusteredSvDist,TraversedSVCount");
-            writer.write(",LocationType,OverlapCount,CopyNumberGain");
-            writer.write(",Id1,Id2,ChrArm,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch,IsDM");
+            writer.write("SampleId\tClusterId\tClusterCount\tResolvedType");
+            writer.write("\tChainId\tChainCount\tChainConsistent\tLinkReason\tLinkIndex\tChainIndex\tJcn\tJcnUncertainty");
+            writer.write("\tIsAssembled\tTILength\tNextSvDist\tNextClusteredSvDist\tTraversedSVCount");
+            writer.write("\tLocationType\tOverlapCount\tCopyNumberGain");
+            writer.write("\tId1\tId2\tChrArm\tPosStart\tPosEnd\tLocTopTypeStart\tLocTopTypeEnd\tGeneStart\tGeneEnd\tExonMatch\tIsDM");
             writer.newLine();
 
             return writer;
@@ -490,7 +503,7 @@ public class CohortDataWriter
 
     public synchronized void writeLinksData(final String sampleId, final List<SvCluster> clusters)
     {
-        if(!mConfig.Output.WriteLinks)
+        if(!mConfig.Output.writeLinks())
             return;
 
         BufferedWriter writer = mWriters.get(COHORT_WRITER_LINK);
@@ -530,21 +543,21 @@ public class CohortDataWriter
                         {
                             if(chainLinks.get(j).matches(pair))
                             {
-                                chainIndexStr = appendStr(chainIndexStr, String.valueOf(j), ';');
+                                chainIndexStr = appendStr(chainIndexStr, String.valueOf(j), ITEM_DELIM_CHR);
                             }
                         }
 
                         final SvBreakend beStart = pair.getBreakend(true);
                         final SvBreakend beEnd = pair.getBreakend(false);
 
-                        writer.write(String.format("%s,%d,%d,%s",
+                        writer.write(String.format("%s\t%d\t%d\t%s",
                                 sampleId, cluster.id(), clusterSvCount, cluster.getResolvedType()));
 
-                        writer.write(String.format(",%d,%d,%s,%s,%d,%s,%s,%.3f",
+                        writer.write(String.format("\t%d\t%d\t%s\t%s\t%d\t%s\t%s\t%.3f",
                                 chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex(),
                                 chainIndexStr, formatJcn(chain.jcn()), chain.jcnUncertainty()));
 
-                        writer.write(String.format(",%s,%d,%d,%d,%d,%s,%d,%s",
+                        writer.write(String.format("\t%s\t%d\t%d\t%d\t%d\t%s\t%d\t%s",
                                 pair.isAssembled(), pair.baseLength(),
                                 pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
                                 pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
@@ -552,7 +565,7 @@ public class CohortDataWriter
                         ArmCluster acStart = cluster.findArmCluster(beStart);
                         ArmCluster acEnd = cluster.findArmCluster(beEnd);
 
-                        writer.write(String.format(",%d,%d,%s,%d,%d,%s,%s,%s,%s,%s,%s",
+                        writer.write(String.format("\t%d\t%d\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s",
                                 beStart.getSV().id(), beEnd.getSV().id(),
                                 beStart.getChrArm(), beStart.position(), beEnd.position(),
                                 acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
