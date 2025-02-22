@@ -2,9 +2,11 @@ package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -29,6 +31,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -390,17 +393,20 @@ public class DoubleMinuteFinder implements CohortFileInterface
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            if(sampleId.isEmpty())
-                writer.write("SampleId\t");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("ClusterId\tClusterDesc\tResolvedType\tClusterCount");
-            writer.write("\tSamplePurity\tSamplePloidy\tIsDM\tDMSvCount\tDMSvTypes\tSvIds\tChromosomes");
-            writer.write("\tChains\tFullyChained\tClosedChains\tClosedSegLength\tChainedSVs\tReplication");
-            writer.write("\tClosedBreakends\tClosedJcnTotal\tOpenBreakends\tOpenJcnTotal\tOpenJcnMax");
-            writer.write("\tNonSegFoldbacks\tNonSegFoldbackJcnTotal\tSimpleDels");
-            writer.write("\tIntExtCount\tIntExtJcnTotal\tIntExtMaxJcn\tFbIntCount\tFbIntJcnTotal\tFbIntJcnMax");
-            writer.write("\tSglbIntCount\tSglIntJcnTotal\tSglIntJcnMax\tInfIntCount\tInfIntJcnTotal\tInfIntJcnMax");
-            writer.write("\tMaxCopyNumber\tMinJcn\tMaxJcn\tAmpGenes\tCrossCentro\tMinOfMaxAdjMajRatio\tMinOfMinAdjMajRatio");
+            if(sampleId.isEmpty())
+                sj.add("SampleId");
+
+            sj.add("ClusterId").add("ClusterDesc").add("ResolvedType").add("ClusterCount");
+            sj.add("SamplePurity").add("SamplePloidy").add("IsDM").add("DMSvCount").add("DMSvTypes").add("SvIds").add("Chromosomes");
+            sj.add("Chains").add("FullyChained").add("ClosedChains").add("ClosedSegLength").add("ChainedSVs").add("Replication");
+            sj.add("ClosedBreakends").add("ClosedJcnTotal").add("OpenBreakends").add("OpenJcnTotal").add("OpenJcnMax");
+            sj.add("NonSegFoldbacks").add("NonSegFoldbackJcnTotal").add("SimpleDels").add("IntExtCount");
+            // sj.add("IntExtJcnTotal").add("IntExtMaxJcn").add("FbIntCount").add("FbIntJcnTotal").add("FbIntJcnMax");
+            /// sj.add("SglbIntCount").add("SglIntJcnTotal").add("SglIntJcnMax").add("InfIntCount").add("InfIntJcnTotal").add("InfIntJcnMax");
+            sj.add("MaxCopyNumber").add("MinJcn").add("MaxJcn").add("AmpGenes").add("CrossCentro").add("MinOfMaxAdjMajRatio").add("MinOfMinAdjMajRatio");
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -476,29 +482,47 @@ public class DoubleMinuteFinder implements CohortFileInterface
 
         final String chromosomeStr = chromosomes.stream().collect(Collectors.joining(ITEM_DELIM));
 
-        StringBuilder sb = new StringBuilder();
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         if(!mConfig.isSingleSample())
         {
-            sb.append(String.format("%s\t", sampleId));
+            sj.add(sampleId);
         }
 
-        sb.append(String.format("%d\t%s\t%s\t%d",
-                cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
+        sj.add(String.valueOf(cluster.id()));
+        sj.add(cluster.getDesc());
+        sj.add(String.valueOf(cluster.getResolvedType()));
+        sj.add(String.valueOf(cluster.getSvCount()));
 
-        sb.append(String.format("\t%.1f\t%.1f\t%s\t%d\t%s\t%s\t%s",
-                samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.ValidSVs.size(), dmTypesStr, svIds, chromosomeStr));
+        sj.add(format("%.2f", samplePurity));
+        sj.add(format("%.2f", samplePloidy));
+        sj.add(String.valueOf(dmData.isDoubleMinute()));
+        sj.add(String.valueOf(dmData.ValidSVs.size()));
+        sj.add(dmTypesStr);
+        sj.add(svIds);
+        sj.add(chromosomeStr);
 
-        sb.append(String.format("\t%d\t%s\t%d\t%d\t%d\t%s",
-                dmData.ValidChains.size(), dmData.FullyChained, dmData.ValidChains.stream().filter(x -> x.isClosedLoop()).count(),
-                dmData.ClosedSegmentLength, dmData.SVs.size() - dmData.UnchainedSVs.size(),
-                dmData.ValidChains.stream().anyMatch(x -> x.hasRepeatedSV())));
+        sj.add(String.valueOf(dmData.ValidChains.size()));
+        sj.add(String.valueOf(dmData.FullyChained));
+        sj.add(String.valueOf(dmData.ValidChains.stream().filter(x -> x.isClosedLoop()).count()));
+        sj.add(String.valueOf(dmData.ClosedSegmentLength));
+        sj.add(String.valueOf(dmData.SVs.size() - dmData.UnchainedSVs.size()));
+        sj.add(String.valueOf(dmData.ValidChains.stream().anyMatch(x -> x.hasRepeatedSV())));
 
-        sb.append(String.format("\t%d\t%.1f\t%d\t%.1f\t%.1f\t%d\t%.1f\t%d",
-                dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,
-                dmData.NonSegmentFoldbacks, dmData.NonSegmentFoldbackJcnTotal, dmData.SimpleDels));
+        sj.add(String.valueOf(dmData.ClosedBreakends));
+        sj.add(format("%.1f", dmData.ClosedJcnTotal));
+        sj.add(String.valueOf(dmData.OpenBreakends));
+        sj.add(format("%.1f", dmData.OpenJcnTotal));
+        sj.add(format("%.1f", dmData.OpenJcnMax));
+        sj.add(String.valueOf(dmData.NonSegmentFoldbacks));
+        sj.add(format("%.1f", dmData.NonSegmentFoldbackJcnTotal));
+        sj.add(String.valueOf(dmData.SimpleDels));
 
-        sb.append(String.format("\t%s", dmData.internalTypeCountsAsStr()));
+        // not populated
+        // sj.add("IntExtCount").add("IntExtJcnTotal").add("IntExtMaxJcn").add("FbIntCount").add("FbIntJcnTotal").add("FbIntJcnMax");
+        // sj.add("SglbIntCount").add("SglIntJcnTotal").add("SglIntJcnMax").add("InfIntCount").add("InfIntJcnTotal").add("InfIntJcnMax");
+
+        sj.add(dmData.internalTypeCountsAsStr());
 
         double minMinAmr = 0;
         if(dmData.SVs.size() == 1)
@@ -510,15 +534,19 @@ public class DoubleMinuteFinder implements CohortFileInterface
                     getMajorAlleleJcnRatio(var.getBreakend(false)));
         }
 
-        sb.append(String.format("\t%.1f\t%.1f\t%.1f\t%s\t%s\t%.1f\t%.1f",
-                maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere,
-                dmData.MinAdjMAJcnRatio, minMinAmr));
+        sj.add(format("%.2f", maxDMCopyNumber));
+        sj.add(format("%.2f", minDMJcn));
+        sj.add(format("%.2f", dmData.MaxJcn));
+        sj.add(amplifiedGenesStr);
+        sj.add(String.valueOf(dmData.ChainsCentromere));
+        sj.add(format("%.2f", dmData.MinAdjMAJcnRatio));
+        sj.add(format("%.2f", minMinAmr));
 
         if(mConfig.isSingleSample())
         {
             try
             {
-                mSampleWriter.write(sb.toString());
+                mSampleWriter.write(sj.toString());
                 mSampleWriter.newLine();
             }
             catch (final IOException e)
@@ -528,7 +556,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
         }
         else
         {
-            mCohortDataWriter.write(this, Lists.newArrayList(sb.toString()));
+            mCohortDataWriter.write(this, Lists.newArrayList(sj.toString()));
         }
 
     }
