@@ -28,12 +28,17 @@ class Frameshift extends ProteinVariant
     @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
-        Pair<String,String> baseToLeftAndBaseDeleted = context.mExon.exonBaseAndImmediatePriorStrandBase(context.StartPositionInExon);
-        String newBases = context.mExon.baseSequenceWithSingleBaseRemoved(context.StartPositionInExon);
+        Pair<String,String> baseToLeftAndBaseDeleted = context.forwardStrandBaseAndLeftNeighbour();
+        String newBases = context.mExon.baseSequenceWithSingleBaseRemoved(context.StartPositionInExon, context.IsPositiveStrand);
         AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
         String alt = baseToLeftAndBaseDeleted.getLeft();
         String ref = alt + baseToLeftAndBaseDeleted.getRight();
-        return Set.of(new ChangeResult(newAminoAcids, newBases, context.insertionPoint(), ref, alt));
+        int changePosition = context.insertionPoint();
+        if(!context.IsPositiveStrand)
+        {
+            changePosition -= 1;
+        }
+        return Set.of(new ChangeResult(newAminoAcids, newBases, changePosition, ref, alt));
     }
 
     @Override

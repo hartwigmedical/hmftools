@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class ChangeContext
@@ -38,6 +39,11 @@ public class ChangeContext
         Preconditions.checkArgument(companionContext.mExon.mIndex == mExon.mIndex - 1);
         Preconditions.checkArgument(companionContext.IsPositiveStrand == IsPositiveStrand);
         this.mCompanionContext = companionContext;
+    }
+
+    Pair<String, String> forwardStrandBaseAndLeftNeighbour()
+    {
+        return mExon.forwardStrandBaseAndLeftNeighbour(StartPositionInExon, IsPositiveStrand);
     }
 
     ChangeContext shiftLeft(int i)

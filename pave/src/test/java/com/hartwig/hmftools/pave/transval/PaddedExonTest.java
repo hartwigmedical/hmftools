@@ -17,19 +17,32 @@ public class PaddedExonTest extends TransvalTestBase
     @Test
     public void baseSequenceWithSingleBaseRemovedTest()
     {
-        assertEquals("ACGTAT", ec7.baseSequenceWithSingleBaseRemoved(5));
-        assertEquals("ACGTCT", ec7.baseSequenceWithSingleBaseRemoved(4));
-        assertEquals("AGTACT", ec7.baseSequenceWithSingleBaseRemoved(1));
-        assertEquals("CGTACT", ec7.baseSequenceWithSingleBaseRemoved(0));
-        assertEquals("TACGACTAG", ec8.baseSequenceWithSingleBaseRemoved(3));
+        assertEquals("ACGTAT", ec7.baseSequenceWithSingleBaseRemoved(5, true));
+        assertEquals("ACGTCT", ec7.baseSequenceWithSingleBaseRemoved(4, true));
+        assertEquals("AGTACT", ec7.baseSequenceWithSingleBaseRemoved(1, true));
+        assertEquals("CGTACT", ec7.baseSequenceWithSingleBaseRemoved(0, true));
+        assertEquals("TACGACTAG", ec8.baseSequenceWithSingleBaseRemoved(3, true));
+
+        assertEquals("GTACGC", ec7.baseSequenceWithSingleBaseRemoved(5, false));
+        assertEquals("GTACTC", ec7.baseSequenceWithSingleBaseRemoved(4, false));
+        assertEquals("GACGTC", ec7.baseSequenceWithSingleBaseRemoved(1, false));
+        assertEquals("TACGTC", ec7.baseSequenceWithSingleBaseRemoved(0, false));
+        // T  C AC TAC AG >> CTGTAGTGA
+        assertEquals("CTGTAGTGA", ec8.baseSequenceWithSingleBaseRemoved(3, false));
+
     }
 
    @Test
-    public void exonBaseAndImmediatePriorStrandBaseTest()
+    public void forwardStrandBaseAndLeftNeighbourTest()
     {
-        assertEquals(Pair.of("G", "A"), ec7.exonBaseAndImmediatePriorStrandBase(0));
-        assertEquals(Pair.of("A", "C"), ec7.exonBaseAndImmediatePriorStrandBase(1));
-        assertEquals(Pair.of("A", "C"), ec7.exonBaseAndImmediatePriorStrandBase(5));
+        assertEquals(Pair.of("G", "A"), ec7.forwardStrandBaseAndLeftNeighbour(0, true));
+        assertEquals(Pair.of("A", "C"), ec7.forwardStrandBaseAndLeftNeighbour(1, true));
+        assertEquals(Pair.of("A", "C"), ec7.forwardStrandBaseAndLeftNeighbour(5, true));
+
+        // TG ACGTAC TA
+        assertEquals(Pair.of("A", "C"), ec7.forwardStrandBaseAndLeftNeighbour(0, false));
+        assertEquals(Pair.of("T", "A"), ec7.forwardStrandBaseAndLeftNeighbour(1, false));
+        assertEquals(Pair.of("G", "A"), ec7.forwardStrandBaseAndLeftNeighbour(5, false));
     }
 
     @Test

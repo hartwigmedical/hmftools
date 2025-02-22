@@ -73,7 +73,7 @@ public class ServeDataTest
             final int position = hotspot.get("position").getAsInt();
 //                        if (gene.equals("FGFR1") && annotation.equals("P283T"))
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
-            if(!annotation.contains("ins")) continue;
+//            if(!annotation.contains("ins")) continue;
 //            if(annotation.contains("del")) continue;
             if(!geneToItems.containsKey(gene))
             {
@@ -146,8 +146,8 @@ public class ServeDataTest
         }
         p("UNNACOUNTED DIFFERENCES:");
         p("************************");
-        unaccountedDifferences.forEach(difference ->
-                p(difference.mGene + " " + difference.mAnnotation));
+//        unaccountedDifferences.forEach(difference ->
+//                p(difference.mGene + " " + difference.mAnnotation));
         p("OVERALL STATS");
         p("*************");
         p("Number of genes: " + numberOfGenes);
@@ -187,7 +187,7 @@ public class ServeDataTest
             VariantStatus comparison = checkVariant(collator);
 //            if(collator.mGene.contains("ARID1A"))
 //            {
-                p( gene + " " + annotation);
+//                p( gene + " " + annotation);
 //            }
             if(comparison.parsedOk())
             {
@@ -202,6 +202,18 @@ public class ServeDataTest
             }
             else
             {
+                if(annotation.contains("fs") )//|| annotation.contains("*") || annotation.contains("?"))
+                {
+//                   if(gene.equals("BRAF") || gene.equals("BRAF2") || gene.contains("VHL") || gene.contains("MTOR") || gene.contains("ZYX"))
+//                   {
+                       p(gene + " " + annotation);
+//                   }
+                }
+                else
+                {
+//                    p(gene + " " + annotation);
+                }
+//                if(annotation.contains())
                 statsForGene.recordNotParsed();
             }
         });
@@ -312,9 +324,9 @@ class VariantStatus
             }
             else
             {
-                System.out.println("----------- " + collator.mGene + " " + collator.mAnnotation);
-                System.out.println("Computed: " + computed);
-                System.out.println("Reduced: " + reducedCollatorResults);
+//                System.out.println("----------- " + collator.mGene + " " + collator.mAnnotation);
+//                System.out.println("Computed: " + computed);
+//                System.out.println("Reduced: " + reducedCollatorResults);
                 return false;
             }
         }

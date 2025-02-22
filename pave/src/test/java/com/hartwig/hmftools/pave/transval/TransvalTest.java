@@ -742,7 +742,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     }
 
     @Test
-    public void duplicationOnNegativeStrand()
+    public void duplicationOnReverseStrand()
     {
         TransvalVariant v600 = transval.calculateVariant("BRAF", "V600dup");
         checkSingleHotspot(v600, "T", "TCAC", "chr7", 140_753_334);
@@ -813,7 +813,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     }
 
     @Test
-    public void insertionOnNegativeStrand()
+    public void insertionOnReverseStrand()
     {
         TransvalVariant variant = transval.calculateVariant("BRAF", "R506_K507insLLR");
         Set<TransvalHotspot> hotspots = variant.hotspots();
@@ -829,7 +829,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     }
 
     @Test
-    public void vhlQ132fs()
+    public void frameshiftForwardStrand()
     {
         TransvalVariant variant = transval.calculateVariant("VHL", "Q132fs");
         // chr3, Q starts at 10146567
@@ -843,5 +843,22 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         // TG>T @869 gives ...AAC TG GAC G...  which is ...N W T ....
         variant = transval.calculateVariant("VHL", "D9fs");
         checkSingleHotspot(variant, "TG", "T", "chr3", 10_141_869);
+    }
+
+    @Test
+    public void frameshiftReverseStrand()
+    {
+        TransvalVariant variant = transval.calculateVariant("BRAF", "H585fs");
+        checkHotspots(variant,
+                hotspot("CA", "C", "chr7", 140_753_379),
+                hotspot("AT", "A", "chr7", 140_753_380),
+                hotspot("TG", "T", "chr7", 140_753_381)
+        );
+
+        variant = transval.calculateVariant("BRAF", "V600fs");
+        checkHotspots(variant,
+                hotspot("CA", "C", "chr7", 140_753_335),
+                hotspot("AC", "A", "chr7", 140_753_336)
+        );
     }
 }

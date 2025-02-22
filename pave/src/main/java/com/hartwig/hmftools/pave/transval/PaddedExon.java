@@ -53,10 +53,9 @@ public class PaddedExon
         Preconditions.checkArgument((end - start) % 3 == 0);
         if(!positiveStrand)
         {
-            int exonEnd = exonBases.length();
-            String r = exonBases.substring(exonBases.length() - start);
-            String l = exonBases.substring(0, exonEnd - end);
-            String complete = BasesOfFirstCodonInPreviousExon + l + r + BasesOfLastCodonInFollowingExon;
+            String right = exonBases.substring(exonBases.length() - start);
+            String left = exonBases.substring(0, exonBases.length() - end);
+            String complete = BasesOfFirstCodonInPreviousExon + left + right + BasesOfLastCodonInFollowingExon;
             return Nucleotides.reverseComplementBases(complete);
         }
         String left = exonBases.substring(0, start);
@@ -108,25 +107,40 @@ public class PaddedExon
         return BasesOfFirstCodonInPreviousExon + left + basesToInsert + right + BasesOfLastCodonInFollowingExon;
     }
 
-    public Pair<String,String> exonBaseAndImmediatePriorStrandBase(final int position)
+    public Pair<String, String> forwardStrandBaseAndLeftNeighbour(final int position, final boolean isPositiveStrand)
     {
         Preconditions.checkArgument(position >= 0);
         Preconditions.checkArgument(position < exonBases.length());
+        if(!isPositiveStrand)
+        {
+            int p = exonBases.length() - position - 1;
+            String right = exonBases.substring(p, p + 1);
+            String left = p == 0 ? last(IntronicPrefix) : exonBases.substring(p - 1, p);
+            return Pair.of(left, right);
+        }
         String left = position == 0 ? last(IntronicPrefix) : exonBases.substring(position - 1, position);
         String right = exonBases.substring(position, position + 1);
         return Pair.of(left, right);
     }
 
-    public String baseSequenceWithSingleBaseRemoved(final int position)
+    public String baseSequenceWithSingleBaseRemoved(final int position, final boolean isPositiveStrand)
     {
         Preconditions.checkArgument(position >= 0);
         Preconditions.checkArgument(position < exonBases.length());
+        if(!isPositiveStrand)
+        {
+            String right = exonBases.substring(exonBases.length() - position);
+            String left = exonBases.substring(0, exonBases.length() - position - 1);
+            String leftPadding = last(IntronicPrefix);
+            String complete = BasesOfFirstCodonInPreviousExon + leftPadding + left + right + BasesOfLastCodonInFollowingExon;
+            return Nucleotides.reverseComplementBases(complete);
+        }
         String left = exonBases.substring(0, position);
         String right = position == exonBases.length() - 1 ? "" : exonBases.substring(position + 1);
         // To return a whole number of codons we pad from the suffix.
         // This will allow a sequence of amino acids to be generated from
         // the result, even though it might correspond to lost junction.
-        String rightPadding = IntronicSuffix.substring(0,1);
+        String rightPadding = IntronicSuffix.substring(0, 1);
         return BasesOfFirstCodonInPreviousExon + left + right + rightPadding + BasesOfLastCodonInFollowingExon;
     }
 
@@ -152,12 +166,7 @@ public class PaddedExon
         Preconditions.checkArgument(location >= 0);
         if(!positiveStrand)
         {
-            //            int s = exonBases.length() - position - replacementBases.length();
-            // ->  xyz
-
-            //            int leftEnd = location - exonStart - forwardStrandReplacementBases.length() + 1;
             int leftEnd = location - exonStart;
-
             String l = exonBases.substring(0, leftEnd);
             String r = exonBases.substring(leftEnd + forwardStrandReplacementBases.length());
             String complete = BasesOfFirstCodonInPreviousExon + l + forwardStrandReplacementBases + r + BasesOfLastCodonInFollowingExon;
@@ -290,10 +299,7 @@ public class PaddedExon
             int b = exonBases.length();
             int numberUsedInExon0 = (3 - numberOfBasesInFollowingExon()) % 3;
             int startOfExon0 = b - numberUsedInExon0;
-            int result = startOfExon0 - 3 * codonIndex;
-            return result;
-            //            int rightOffset = numberOfBasesInFollowingExon();
-            //            return exonBases.length() - (3 * codonIndex + 1) + rightOffset;
+            return startOfExon0 - 3 * codonIndex;
         }
         int offset = (3 - numberOfBasesInPreviousExon()) % 3;
         return 3 * (codonIndex - 1) + offset;
