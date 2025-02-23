@@ -174,6 +174,8 @@ public class FragmentReadTracker
 
                     if(pendingReads.stream().noneMatch(saReadKey::equals))
                     {
+                        // no need to check if processedReads contains this saReadKey as the outer
+                        // if case protects against it
                         pendingReads.add(saReadKey);
                         BT_LOGGER.trace("{} added SA read key({}) to pending", read, saReadKey);
                     }
@@ -210,7 +212,8 @@ public class FragmentReadTracker
                             sa.Chromosome,
                             null); // do not populate cigar for primary alignment
                 }
-                if(mateReadKey != null && processedReads.stream().noneMatch(mateReadKey::equals))
+                if(mateReadKey != null && processedReads.stream().noneMatch(mateReadKey::equals) &&
+                        pendingReads.stream().noneMatch(mateReadKey::equals))
                 {
                     pendingReads.add(mateReadKey);
                     BT_LOGGER.trace("{} added mate read key({}) to pending", read, mateReadKey);
