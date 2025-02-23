@@ -28,11 +28,11 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.StringUtil;
 
-public class SliceWriter
+public class SliceWriter implements AutoCloseable
 {
     private final SliceConfig mConfig;
 
-    private int mRecordWriteCount;
+    private long mRecordWriteCount;
     private final SAMFileWriter mBamWriter;
     private final BufferedWriter mReadWriter;
     private String mUnsortedOutputBam;
@@ -157,6 +157,7 @@ public class SliceWriter
         }
     }
 
+    @Override
     public void close()
     {
         if(mBamWriter != null)
