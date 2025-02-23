@@ -37,7 +37,6 @@ class VariantParser
         @NotNull
         private final TranscriptAminoAcids aminoAcidsSequence;
 
-
         private VariantFactory(@NotNull final GeneData geneData, @NotNull final AminoAcidRange refRange,
                 @NotNull final TranscriptData transcriptData, @NotNull final TranscriptAminoAcids aminoAcidsSequence)
         {
@@ -55,6 +54,11 @@ class VariantParser
         ProteinVariant buildFrameshift()
         {
             return new Frameshift(geneData, transcriptData, aminoAcidsSequence, refRange);
+        }
+
+        ProteinVariant buildStopGained()
+        {
+            return new StopGained(geneData, transcriptData, aminoAcidsSequence, refRange);
         }
 
         ProteinVariant buildDeletion()
@@ -115,6 +119,10 @@ class VariantParser
         if(variant.endsWith("fs"))
         {
             return parseFactory(gene, variant).buildFrameshift();
+        }
+        if(variant.endsWith("*"))
+        {
+            return parseFactory(gene, variant).buildStopGained();
         }
         return parseSingleAminoAcidVariant(gene, variant);
     }

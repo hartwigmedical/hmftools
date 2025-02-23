@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pave.transval;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CodonWithSuffixInNextExonTest extends TransvalTest
+public class CodonWithSuffixInNextExonTest extends TransvalTestBase
 {
     @Test
     public void locationTest()

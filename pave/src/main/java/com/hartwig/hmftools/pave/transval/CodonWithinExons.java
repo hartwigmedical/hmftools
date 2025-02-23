@@ -67,12 +67,17 @@ class CodonWithinExons
     }
 
     @NotNull
-    public Set<CodonChange> possibleVariantsGiving(AminoAcid aminoAcid) {
+    public Set<CodonChange> possibleVariantsGivingStop()
+    {
+        return possibleVariantsGiving(new AminoAcid("X"));
+    }
+
+    @NotNull
+    public Set<CodonChange> possibleVariantsGiving(AminoAcid aminoAcid)
+    {
         Set<String> possibleCodons = aminoAcid.matchingCodons(fixedPrefix(), fixedSuffix());
         final HashSet<CodonChange> result = new HashSet<>();
-        possibleCodons.forEach(altCodon -> {
-            result.add(new CodonChange(codon(), altCodon));
-        });
+        possibleCodons.forEach(altCodon -> result.add(new CodonChange(codon(), altCodon)));
         return result;
     }
 
@@ -121,6 +126,7 @@ class CodonWithPrefixInPreviousExon extends CodonWithinExons
         return Prefix;
     }
 }
+
 class CodonWithSuffixInNextExon extends CodonWithinExons
 {
     @NotNull

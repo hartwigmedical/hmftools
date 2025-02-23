@@ -202,12 +202,12 @@ public class ServeDataTest
             }
             else
             {
-                if(annotation.contains("fs") )//|| annotation.contains("*") || annotation.contains("?"))
+                if(annotation.contains("*") || annotation.contains("?"))
                 {
-//                   if(gene.equals("BRAF") || gene.equals("BRAF2") || gene.contains("VHL") || gene.contains("MTOR") || gene.contains("ZYX"))
-//                   {
+                   if(gene.equals("BRAF") || gene.equals("BRAF2") || gene.contains("VHL") || gene.contains("MTOR") || gene.contains("ZYX"))
+                   {
                        p(gene + " " + annotation);
-//                   }
+                   }
                 }
                 else
                 {

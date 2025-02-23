@@ -58,6 +58,16 @@ public class VariantParserTest extends TransvalTestBase
     }
 
     @Test
+    public void parseStopGainedWithGene()
+    {
+        StopGained variant = (StopGained) variantParser.parseVariantForGene("EGFR", "N73*");
+        Assert.assertEquals("EGFR", variant.mGene.GeneName);
+        Assert.assertEquals(73, variant.positionOfFirstAlteredCodon());
+        Assert.assertEquals("N", variant.mFirstChangedAminoAcid.symbol);
+        Assert.assertEquals(1, variant.mRefLength);
+    }
+
+    @Test
     public void parseInsertionWithGene()
     {
         Insertion di = (Insertion) variantParser.parseInsertion("EGFR", "N73_Y74insSPQR");
@@ -156,8 +166,8 @@ public class VariantParserTest extends TransvalTestBase
     @Test
     public void deletionInsertionErrors()
     {
-        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A740delinsP","End position must not be before start position");
-        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A750delinsAlaPralineLeu","Not a valid amino acid identifier: Praline");
+        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A740delinsP", "End position must not be before start position");
+        checkDiInputResultsInErrorWithMessage("EGFR:p.L747_A750delinsAlaPralineLeu", "Not a valid amino acid identifier: Praline");
     }
 
     @Test

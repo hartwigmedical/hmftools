@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
-public class TransvalTest extends TransvalTestBase
+public final class TransvalTest extends TransvalTestBase
 {
     @Test
     public void mtorSNV()
@@ -562,14 +562,14 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
              H
              115
          */
-//        TransvalVariant del = transval.calculateVariant("VHL:p.H115del");
-//        checkHotspots(del,
-//                hotspot("TCAC", "T", "chr3", 10_146_515),
-//                hotspot("GTCA", "G", "chr3", 10_146_514));
+        //        TransvalVariant del = transval.calculateVariant("VHL:p.H115del");
+        //        checkHotspots(del,
+        //                hotspot("TCAC", "T", "chr3", 10_146_515),
+        //                hotspot("GTCA", "G", "chr3", 10_146_514));
 
-//        del = transval.calculateVariant("VHL:p.L116_L118del");
-         // CAC CTT TGG CTC TTC
-//        checkSingleHotspot(del, "ACCTTTGGCT", "A", "chr3", 10_146_517);
+        //        del = transval.calculateVariant("VHL:p.L116_L118del");
+        // CAC CTT TGG CTC TTC
+        //        checkSingleHotspot(del, "ACCTTTGGCT", "A", "chr3", 10_146_517);
 
         // TG TAT ACT CTG   VYTL
         var del = transval.calculateVariant("VHL:p.T157del");
@@ -859,6 +859,28 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         checkHotspots(variant,
                 hotspot("CA", "C", "chr7", 140_753_335),
                 hotspot("AC", "A", "chr7", 140_753_336)
+        );
+    }
+
+    @Test
+    public void stopGainedForwardStrand()
+    {
+        TransvalVariant variant = transval.calculateVariant("VHL", "S65*");
+        checkHotspots(variant,
+                hotspot("CG", "AA", "chr3", 10_142_041),
+                hotspot("CG", "GA", "chr3", 10_142_041),
+                hotspot("C", "A", "chr3", 10_142_041)
+        );
+    }
+
+    @Test
+    public void stopGainedReverseStrand()
+    {
+        TransvalVariant variant = transval.calculateVariant("BRAF", "R603*");
+        checkHotspots(variant,
+                hotspot("CG", "TA", "chr7", 140_753_327),
+                hotspot("TCG", "CTA", "chr7", 140_753_326),
+                hotspot("G", "A", "chr7", 140_753_328)
         );
     }
 }

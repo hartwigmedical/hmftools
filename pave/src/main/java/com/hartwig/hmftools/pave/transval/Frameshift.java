@@ -14,6 +14,7 @@ class Frameshift extends ProteinVariant
 {
     @NotNull
     final AminoAcid mFirstChangedAminoAcid;
+
     public Frameshift(@NotNull final GeneData gene,
             @NotNull final TranscriptData transcript,
             @NotNull final TranscriptAminoAcids aminoAcidSequence,
@@ -28,7 +29,7 @@ class Frameshift extends ProteinVariant
     @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
-        Pair<String,String> baseToLeftAndBaseDeleted = context.forwardStrandBaseAndLeftNeighbour();
+        Pair<String, String> baseToLeftAndBaseDeleted = context.forwardStrandBaseAndLeftNeighbour();
         String newBases = context.mExon.baseSequenceWithSingleBaseRemoved(context.StartPositionInExon, context.IsPositiveStrand);
         AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
         String alt = baseToLeftAndBaseDeleted.getLeft();
@@ -52,18 +53,10 @@ class Frameshift extends ProteinVariant
     {
         // The sequences need to match up to the change point and then differ
         // at least at that position.
-        AminoAcidSequence variant = variantSequence();
-        if(candidate.length() < variant.length() + 1)
+        if(!matchesVariantUpToLastAminoAcid(candidate))
         {
             return false;
         }
-        for (int i = 0; i < variant.length(); i++)
-        {
-            if(!candidate.get(i).equals(variant.get(i)))
-            {
-                return false;
-            }
-        }
-        return !candidate.get(variant.length()).equals(mFirstChangedAminoAcid);
+        return !candidate.get(variantSequence().length()).equals(mFirstChangedAminoAcid);
     }
 }

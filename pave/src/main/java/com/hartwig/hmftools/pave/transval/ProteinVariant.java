@@ -188,4 +188,21 @@ public class ProteinVariant
         changes.forEach(change -> hotspots.add(change.toHotspot(mGene.Chromosome)));
         return new TransvalVariant(mTranscript, mGene.Chromosome, false, hotspots);
     }
+
+    boolean matchesVariantUpToLastAminoAcid(AminoAcidSequence candidate)
+    {
+        AminoAcidSequence variant = variantSequence();
+        if(candidate.length() < variant.length() + 1)
+        {
+            return false;
+        }
+        for (int i = 0; i < variant.length(); i++)
+        {
+            if(!candidate.get(i).equals(variant.get(i)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }
