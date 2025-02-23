@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.bamtools.slice;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import htsjdk.samtools.SAMRecord;
 
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +16,6 @@ import javax.annotation.Nullable;
 
 public class FragmentReadTracker
 {
-    private static final Logger logger = LogManager.getLogger(FragmentReadTracker.class);
-
     public record ReadKey(boolean secondaryOrSupplementary, boolean firstInPair, boolean isNegativeStrand,
                           int alignmentStart,
                           String referenceName, @Nullable String cigar)
@@ -81,11 +79,11 @@ public class FragmentReadTracker
     {
         if(!pendingReads.isEmpty())
         {
-            if(logger.isEnabled(logLevel))
+            if(BT_LOGGER.isEnabled(logLevel))
             {
                 for(ReadKey readKey : pendingReads)
                 {
-                    logger.log(logLevel, "read id({}) pending read({}) ", name, readKey);
+                    BT_LOGGER.log(logLevel, "read id({}) pending read({}) ", name, readKey);
                 }
             }
             return false;
@@ -177,7 +175,7 @@ public class FragmentReadTracker
                     if(pendingReads.stream().noneMatch(saReadKey::equals))
                     {
                         pendingReads.add(saReadKey);
-                        // logger.trace("{} Missing supplementary read: aligned to {}:{}", read, sa.Chromosome, sa.Position);
+                        BT_LOGGER.trace("{} added SA read key({}) to pending", read, saReadKey);
                     }
                 }
             }
@@ -215,10 +213,7 @@ public class FragmentReadTracker
                 if(mateReadKey != null && processedReads.stream().noneMatch(mateReadKey::equals))
                 {
                     pendingReads.add(mateReadKey);
-                    logger.trace("{} added mate read key for pending: aligned to {}:{}",
-                            read,
-                            read.getMateReferenceName(),
-                            read.getMateAlignmentStart());
+                    BT_LOGGER.trace("{} added mate read key({}) to pending", read, mateReadKey);
                 }
             }
         }
