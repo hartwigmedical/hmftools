@@ -44,7 +44,7 @@ class TransvalTestBase
 
     public SingleAminoAcidVariant saav(String definition)
     {
-        return transval.variationParser().parseSingleAminoAcidVariant(definition);
+        return (SingleAminoAcidVariant) transval.variationParser().parse(definition);
     }
 
     protected SplitCodonSequence seq(String left, String right)

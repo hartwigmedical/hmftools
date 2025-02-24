@@ -43,7 +43,7 @@ public class Transval
 
     public TransvalVariant calculateVariant(String gene, String proteinVariant)
     {
-        ProteinVariant variant = variationParser().parseVariantForGene(gene, proteinVariant);
+        ProteinVariant variant = variationParser().parseGeneVariant(gene, proteinVariant);
         return variant.calculateVariant(mRefGenome);
     }
 }

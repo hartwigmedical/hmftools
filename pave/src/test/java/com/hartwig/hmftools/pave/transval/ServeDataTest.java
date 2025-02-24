@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -58,8 +57,10 @@ public class ServeDataTest
         Gson gson = new Gson();
         var map = gson.fromJson(contents, JsonObject.class);
         var records = map.get("records");
-        var hotspotsArray =
-                ((JsonObject) records).get("V38").getAsJsonObject().get("knownEvents").getAsJsonObject().get("hotspots").getAsJsonArray();
+        var hotspotsArray = ((JsonObject) records).get("V38")
+                .getAsJsonObject()
+                .get("knownEvents")
+                .getAsJsonObject().get("hotspots").getAsJsonArray();
         int start = 0;
         int stop = hotspotsArray.size();
         for(int i = start; i < stop; i++)
@@ -71,17 +72,11 @@ public class ServeDataTest
             final String ref = str(hotspot, "ref");
             final String alt = str(hotspot, "alt");
             final int position = hotspot.get("position").getAsInt();
-//                        if (gene.equals("EGFR") && annotation.equals("L643V"))
-//                        {
-//                            p("found it");
-//                        }
             if(annotation.isBlank())
             {
                 continue;
             }
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
-//            if(!annotation.contains("ins")) continue;
-//            if(annotation.contains("del")) continue;
             if(!geneToItems.containsKey(gene))
             {
                 geneToItems.put(gene, new HashSet<>());
@@ -100,10 +95,10 @@ public class ServeDataTest
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(Objects.requireNonNull(classLoader.getResource("serve_differences.txt")).getFile());
         Files.readAllLines(file.toPath()).forEach(line ->
-            {
-                String[] parts = line.split(" ");
-                knownDifferences.add(new GeneAnnotation(parts[0], parts[1]));
-            }
+                {
+                    String[] parts = line.split(" ");
+                    knownDifferences.add(new GeneAnnotation(parts[0], parts[1]));
+                }
         );
     }
 
@@ -128,8 +123,8 @@ public class ServeDataTest
         int numberOfGenes = 0;
         int numberNotParsed = 0;
         int numberWithSameHotspots = 0;
-//        int numberWithSameHotspotsAndUsingNonCanonicalTranscript = 0;
-//        int numberWithDifferentHotspotsAndUsingNonCanonicalTranscript = 0;
+        //        int numberWithSameHotspotsAndUsingNonCanonicalTranscript = 0;
+        //        int numberWithDifferentHotspotsAndUsingNonCanonicalTranscript = 0;
         SortedSet<GeneAnnotation> unaccountedDifferences = new TreeSet<>();
         SortedSet<GeneAnnotation> unaccountedDifferencesButWithHotspotsSameApartFromPosition = new TreeSet<>();
         for(StatsForGene stats : statsForGenes)
@@ -137,14 +132,14 @@ public class ServeDataTest
             numberOfGenes++;
             numberNotParsed += stats.NumberNotParsed;
             numberWithSameHotspots += stats.NumberWithSameHotspots;
-//            numberWithSameHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithSameHotspotsThatUseNonCanonicalTranscript;
-//            numberWithDifferentHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithDifferentHotspotsThatUseNonCanonicalTranscript;
+            //            numberWithSameHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithSameHotspotsThatUseNonCanonicalTranscript;
+            //            numberWithDifferentHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithDifferentHotspotsThatUseNonCanonicalTranscript;
             stats.AnnotationsWithDifferentHotspots.forEach(variantStatus ->
             {
                 if(!knownDifferences.contains(variantStatus.geneAnnotation()))
                 {
                     unaccountedDifferences.add(variantStatus.geneAnnotation());
-                    if (variantStatus.hotspotsSameModuloPosition())
+                    if(variantStatus.hotspotsSameModuloPosition())
                     {
                         unaccountedDifferencesButWithHotspotsSameApartFromPosition.add(variantStatus.geneAnnotation());
                     }
@@ -153,25 +148,26 @@ public class ServeDataTest
         }
         p("UNNACOUNTED DIFFERENCES:");
         p("************************");
-//        unaccountedDifferences.forEach(difference ->
-//                p(difference.mGene + " " + difference.mAnnotation));
+        //        unaccountedDifferences.forEach(difference ->
+        //                p(difference.mGene + " " + difference.mAnnotation));
         p("OVERALL STATS");
         p("*************");
         p("Number of genes: " + numberOfGenes);
         p("Number of annotations not parsed: " + numberNotParsed);
         p("Number of annotations with same hotspots: " + numberWithSameHotspots);
         p("Unaccounted differences: " + unaccountedDifferences.size());
-        p("Unaccounted differences but with hotspots same apart from position: " + unaccountedDifferencesButWithHotspotsSameApartFromPosition.size());
-//        p("Number of annotations that have same hotspots and use non canonical transcript: " + numberWithSameHotspotsAndUsingNonCanonicalTranscript);
-//        p("Number of annotations that have different hotspots and use non canonical transcript: " + numberWithDifferentHotspotsAndUsingNonCanonicalTranscript);
+        p("Unaccounted differences but with hotspots same apart from position: "
+                + unaccountedDifferencesButWithHotspotsSameApartFromPosition.size());
+        //        p("Number of annotations that have same hotspots and use non canonical transcript: " + numberWithSameHotspotsAndUsingNonCanonicalTranscript);
+        //        p("Number of annotations that have different hotspots and use non canonical transcript: " + numberWithDifferentHotspotsAndUsingNonCanonicalTranscript);
     }
 
-//    @Test
+    //    @Test
     public void examples()
     {
-//        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
-//        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ROS1", "A1924_I1934del");
-        ProteinVariant variant = transval.variationParser().parseVariantForGene("EGFR", "L643V");
+        //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
+        //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ROS1", "A1924_I1934del");
+        ProteinVariant variant = transval.variationParser().parseGeneVariant("EGFR", "L643V");
         TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
     }
@@ -192,10 +188,6 @@ public class ServeDataTest
         {
             ProteinAnnotationCollator collator = collators.get(annotation);
             VariantStatus comparison = checkVariant(collator);
-//            if(collator.mGene.contains("ARID1A"))
-//            {
-//                p( gene + " " + annotation);
-//            }
             if(comparison.parsedOk())
             {
                 if(comparison.hasProcessingError())
@@ -209,18 +201,7 @@ public class ServeDataTest
             }
             else
             {
-                if(annotation.contains("?"))
-                {
-//                   if(gene.equals("BRAF") || gene.equals("BRAF2") || gene.contains("VHL") || gene.contains("MTOR") || gene.contains("ZYX"))
-                   {
-                       p(gene + " " + annotation);
-                   }
-                }
-                else
-                {
-//                    p(gene + " " + annotation);
-                }
-//                if(annotation.contains())
+                p(gene + " " + annotation);
                 statsForGene.recordNotParsed();
             }
         });
@@ -232,7 +213,7 @@ public class ServeDataTest
         ProteinVariant variant;
         try
         {
-            variant = transval.variationParser().parseVariantForGene(collator.mGene, collator.mAnnotation);
+            variant = transval.variationParser().parseGeneVariant(collator.mGene, collator.mAnnotation);
         }
         catch(Exception e)
         {
@@ -321,19 +302,19 @@ class VariantStatus
         if(collator.mAnnotation.endsWith("del"))
         {
             TransvalHotspot computed = variant.hotspots().iterator().next();
-//            if(collator.mAnnotation.endsWith("del"))
-//            {
-//                System.out.println("del");
-//            }
+            //            if(collator.mAnnotation.endsWith("del"))
+            //            {
+            //                System.out.println("del");
+            //            }
             if(reducedCollatorResults.contains(computed))
             {
                 return true;
             }
             else
             {
-//                System.out.println("----------- " + collator.mGene + " " + collator.mAnnotation);
-//                System.out.println("Computed: " + computed);
-//                System.out.println("Reduced: " + reducedCollatorResults);
+                //                System.out.println("----------- " + collator.mGene + " " + collator.mAnnotation);
+                //                System.out.println("Computed: " + computed);
+                //                System.out.println("Reduced: " + reducedCollatorResults);
                 return false;
             }
         }
@@ -358,6 +339,7 @@ class VariantStatus
         return delta.toHotspot(new ChangeLocation(hotspot.mChromosome, hotspot.mPosition));
     }
 }
+
 class FloatingHotspot
 {
     @NotNull
@@ -394,6 +376,7 @@ class FloatingHotspot
         return Objects.hash(mChromosome, Ref, Alt);
     }
 }
+
 class ServeItem
 {
     @NotNull
