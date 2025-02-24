@@ -68,6 +68,7 @@ public class TincConfig
         String gnomadFile = configBuilder.getValue(GNOMAD_FREQUENCY_FILE);
         String ponFilename = configBuilder.getValue(PON_FILE);
         boolean overwriteVcf = !configBuilder.hasFlag(WRITE_TINC_VCF);
+        boolean writeFitVariants = configBuilder.hasFlag(WRITE_FIT_VARIANTS);
 
         if((!Files.exists(Paths.get(gnomadFile)) && !Files.exists(Paths.get(gnomadDirectory))) || !Files.exists(Paths.get(ponFilename)))
         {
@@ -77,12 +78,14 @@ public class TincConfig
 
         return new TincConfig(
                 sageConfig.Common.RefGenVersion, sageConfig.Common.OutputFile, sageConfig.TumorIds.get(0),
-                sageConfig.Common.ReferenceIds.get(0), ponFilename, gnomadDirectory, gnomadFile, sageConfig.Common.Threads, overwriteVcf);
+                sageConfig.Common.ReferenceIds.get(0), ponFilename, gnomadDirectory, gnomadFile, sageConfig.Common.Threads,
+                overwriteVcf, writeFitVariants);
     }
 
     public TincConfig(
             final RefGenomeVersion refGenVersion, final String inputVcf, final String tumorId, final String referenceId,
-            final String ponFilename, final String gnomadDirectory, final String gnomadFile, final int threads, boolean overwriteVcf)
+            final String ponFilename, final String gnomadDirectory, final String gnomadFile, final int threads,
+            boolean overwriteVcf, boolean writeFitVariants)
     {
         RefGenVersion = refGenVersion;
         InputVcf = inputVcf;
@@ -92,7 +95,7 @@ public class TincConfig
         GnomadDirectory = gnomadDirectory;
         GnomadFile = gnomadFile;
         Threads = threads;
-        WriteFitVariants = false;
+        WriteFitVariants = writeFitVariants;
         FitVariantsFile = null;
         RewriteVcf = overwriteVcf;
     }
@@ -105,7 +108,6 @@ public class TincConfig
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addPath(INPUT_VCF, true, "Input unfiltered VCF");
         configBuilder.addPath(FIT_VARIANTS_FILE, false, "Cache file for fit variants");
-        configBuilder.addFlag(WRITE_FIT_VARIANTS, "Write cache file for fit variants");
 
         addRefGenomeConfig(configBuilder, false);
 
@@ -117,6 +119,7 @@ public class TincConfig
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addFlag(WRITE_TINC_VCF, "Write a new VCF with TINC changes if detected");
+        configBuilder.addFlag(WRITE_FIT_VARIANTS, "Write cache file for TINC fit variants");
         configBuilder.addPath(PON_FILE, false, "PON entries");
         GnomadCache.addConfig(configBuilder);
     }

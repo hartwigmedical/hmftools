@@ -125,6 +125,7 @@ public class SageApplication implements AutoCloseable
 
         coverage.writeFiles(mConfig.Common.OutputFile);
         mFragmentLengths.close();
+        mVcfWriter.close();
 
         if(mTincConfig != null && !mConfig.Common.ReferenceIds.isEmpty())
         {
@@ -158,7 +159,6 @@ public class SageApplication implements AutoCloseable
     public void close() throws IOException
     {
         mRefData.RefGenome.close();
-        mVcfWriter.close();
     }
 
     public static void main(final String... args) throws IOException

@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DE
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConfig.registerCommonConfig;
 
 import java.io.File;
 import java.util.Arrays;
@@ -41,7 +40,8 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
-    private static final String RUN_TINC = "run_tinc";
+
+    public static final String RUN_TINC = "run_tinc";
 
     public SageCallConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -115,6 +115,7 @@ public class SageCallConfig
     {
         configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
+        SageConfig.registerCommonConfig(configBuilder);
 
         configBuilder.addPath(RESOURCE_DIR, false, "Path to Sage resource files");
         configBuilder.addPrefixedPath(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file", RESOURCE_DIR);

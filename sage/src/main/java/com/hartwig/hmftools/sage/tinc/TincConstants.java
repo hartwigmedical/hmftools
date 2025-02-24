@@ -11,6 +11,8 @@ import com.google.common.collect.Lists;
 
 public final class TincConstants
 {
+    protected static final int TINC_MIN_VARIANTS = 200;
+
     protected static final int TINC_GERMLINE_ABQ_MIN = 30;
     protected static final int TINC_MAX_FITTING_VARIANTS = 15_000;
 
