@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.redux;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.alignmentsToSamTag;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
@@ -28,6 +30,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -430,6 +434,147 @@ public class PartitionReaderTest
 
         assertEquals(15, writer.nonConsensusWriteCount());
         assertEquals(3, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaPCRClusterCount()
+    {
+        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()), ILLUMINA);
+
+        Function<String, SAMRecord> getSamRecord =
+                readName -> createSamRecord(readName, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1000, false, false, null, false, TEST_READ_CIGAR);
+
+        // invalid read names
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        String readName1 = "READ_001";
+        String readName2 = "READ_002";
+
+        partitionReader.processRead(getSamRecord.apply(readName1));
+        partitionReader.processRead(getSamRecord.apply(readName2));
+
+        partitionReader.postProcessRegion();
+
+        List<SAMRecord> consensusReads = writer.WrittenRecords.stream()
+                .filter(read -> read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+                .collect(Collectors.toList());
+
+        assertEquals(1, consensusReads.size());
+
+        SAMRecord consensusRead = consensusReads.get(0);
+        String crAttributeValue = consensusRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        assertEquals("2;2", crAttributeValue);
+
+        // two optical duplicates
+        writer = new TestBamWriter(config);
+        partitionReader = createPartitionRead(config, writer);
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        readName1 = "A00624:8:HHKYHDSXX:4:2140:1:1";
+        readName2 = "A00624:8:HHKYHDSXX:4:2141:1:1";
+
+        partitionReader.processRead(getSamRecord.apply(readName1));
+        partitionReader.processRead(getSamRecord.apply(readName2));
+
+        partitionReader.postProcessRegion();
+
+        consensusReads = writer.WrittenRecords.stream().
+                filter(read -> read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+                .collect(Collectors.toList());
+
+        assertEquals(1, consensusReads.size());
+
+        consensusRead = consensusReads.get(0);
+        crAttributeValue = consensusRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        assertEquals("2;2;1", crAttributeValue);
+
+        // two pcr duplicates
+        writer = new TestBamWriter(config);
+        partitionReader = createPartitionRead(config, writer);
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        readName1 = "A00624:8:HHKYHDSXX:4:2140:1:1";
+        readName2 = "A00624:8:HHKYHDSXX:5:2140:1:1";
+
+        partitionReader.processRead(getSamRecord.apply(readName1));
+        partitionReader.processRead(getSamRecord.apply(readName2));
+
+        partitionReader.postProcessRegion();
+
+        consensusReads = writer.WrittenRecords.stream()
+                .filter(read -> read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+                .collect(Collectors.toList());
+
+        assertEquals(1, consensusReads.size());
+
+        consensusRead = consensusReads.get(0);
+        crAttributeValue = consensusRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        assertEquals("2;2;2", crAttributeValue);
+
+        // three duplicates on different tiles
+        writer = new TestBamWriter(config);
+        partitionReader = createPartitionRead(config, writer);
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        readName1 = "A00624:8:HHKYHDSXX:4:2140:1:1";
+        readName2 = "A00624:8:HHKYHDSXX:4:2141:1:1";
+        String readName3 = "A00624:8:HHKYHDSXX:4:2142:1:1";
+
+        partitionReader.processRead(getSamRecord.apply(readName1));
+        partitionReader.processRead(getSamRecord.apply(readName2));
+        partitionReader.processRead(getSamRecord.apply(readName3));
+
+        partitionReader.postProcessRegion();
+
+        consensusReads = writer.WrittenRecords.stream()
+                .filter(read -> read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+                .collect(Collectors.toList());
+
+        assertEquals(1, consensusReads.size());
+
+        consensusRead = consensusReads.get(0);
+        crAttributeValue = consensusRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        assertEquals("3;3;3", crAttributeValue);
+
+        // seven duplicates with five pcr clusters
+        writer = new TestBamWriter(config);
+        partitionReader = createPartitionRead(config, writer);
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        readName1 = "A00624:8:HHKYHDSXX:4:2140:1:1";
+        readName2 = "A00624:8:HHKYHDSXX:4:2140:1:1";
+        readName3 = "A00624:8:HHKYHDSXX:4:2141:1:1";
+        String readName4 = "A00624:8:HHKYHDSXX:4:2141:3001:1";
+        String readName5 = "A00624:8:HHKYHDSXX:4:2142:1:1";
+        String readName6 = "A00624:8:HHKYHDSXX:4:2142:1:1";
+        String readName7 = "A00624:8:HHKYHDSXX:4:2142:3001:1";
+
+        partitionReader.processRead(getSamRecord.apply(readName1));
+        partitionReader.processRead(getSamRecord.apply(readName2));
+        partitionReader.processRead(getSamRecord.apply(readName3));
+        partitionReader.processRead(getSamRecord.apply(readName4));
+        partitionReader.processRead(getSamRecord.apply(readName5));
+        partitionReader.processRead(getSamRecord.apply(readName6));
+        partitionReader.processRead(getSamRecord.apply(readName7));
+
+        partitionReader.postProcessRegion();
+
+        consensusReads = writer.WrittenRecords.stream()
+                .filter(read -> read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+                .collect(Collectors.toList());
+
+        assertEquals(1, consensusReads.size());
+
+        consensusRead = consensusReads.get(0);
+        crAttributeValue = consensusRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        assertEquals("7;7;5", crAttributeValue);
     }
 
     private static SAMRecord createUnpairedRecord(final String chromosome, final int readStart, int readEnd, boolean isReversed)

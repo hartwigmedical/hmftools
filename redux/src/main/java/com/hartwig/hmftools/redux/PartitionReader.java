@@ -361,6 +361,7 @@ public class PartitionReader
         {
             if(mConfig.FormConsensus)
             {
+                duplicateGroup.setPCRClusterCount(mConfig.Sequencing);
                 duplicateGroup.formConsensusRead(mConsensusReads);
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
