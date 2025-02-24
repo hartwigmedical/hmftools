@@ -61,14 +61,14 @@ public class ReadCache
         for(FragmentReadTracker fragmentReadTracker : mFragmentReadTrackers.values())
         {
             assert fragmentReadTracker.invariant();
-            remoteReadPositions.addAll(fragmentReadTracker.findPendingReadBaseRegions());
+            remoteReadPositions.addAll(fragmentReadTracker.findPendingReadPositions());
         }
 
         // sort the mate regions
         remoteReadPositions.sort(Comparator.comparing((BasePosition o) -> o.Chromosome).thenComparingInt(o -> o.Position));
         List<ChrBaseRegion> remoteBaseRegions = new ArrayList<>();
 
-        // now we go through the mate regions and create a new condense list
+        // now we go through the remote positions and create a new condense list
         ChrBaseRegion overlapRegion = null;
         for(BasePosition br : remoteReadPositions)
         {

@@ -27,11 +27,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-/*
-Assumptions: read length are max 800. Max number of reads in region.
 
-
- */
 public class RegionSlicer
 {
     private final SliceConfig mConfig;

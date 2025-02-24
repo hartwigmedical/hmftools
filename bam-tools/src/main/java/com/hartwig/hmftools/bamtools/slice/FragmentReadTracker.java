@@ -14,18 +14,32 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+// The FragmentReadTracker class is responsible for tracking the status of reads
+// in a sequencing fragment. It processes single-end or paired-end reads along
+// with their supplementary alignments, ensuring all reads in a fragment are accounted for.
+// It maintains a list of pending and processed reads and provides utilities for:
+// - Adding and processing reads.
+// - Determining if a fragment is complete.
+// - Finding genomic positions of pending reads for further processing.
+//
+// Assumptions:
+// - Mate position: If the read is paired, mate position is taken from the SAMRecord, except in the case
+//   where current alignment is supplementary and the mate is unmapped, in this case the mate alignment
+//   is derived from the first alignment in the SA (supplementary alignment) tag.
+// - SA tag: SA tag is populated. For supplementary reads, the first entry in SA tag is the primary read.
+//
 public class FragmentReadTracker
 {
-    public record ReadKey(boolean secondaryOrSupplementary, boolean firstInPair, boolean isNegativeStrand,
+    public record ReadKey(boolean isSupplementary, boolean firstInPair, boolean isNegativeStrand,
                           int alignmentStart,
                           String referenceName, @Nullable String cigar)
     {
         public ReadKey {
-            if(secondaryOrSupplementary && cigar == null)
+            if(isSupplementary && cigar == null)
             {
                 throw new IllegalArgumentException("cigar string missing for supplementary read");
             }
-            if(!secondaryOrSupplementary && cigar != null)
+            if(!isSupplementary && cigar != null)
             {
                 throw new IllegalArgumentException("cigar string present for primary read");
             }
@@ -34,7 +48,7 @@ public class FragmentReadTracker
         @Override
         public String toString()
         {
-            return "2ndaryOrSuppl?=" + secondaryOrSupplementary + ", firstInPair?=" + firstInPair +
+            return "supplementary?=" + isSupplementary + ", firstInPair?=" + firstInPair +
                     ", aligned to " + referenceName + ':' + alignmentStart + '(' +
                     (isNegativeStrand ? '-' : '+') + "), cigar=" + cigar;
         }
@@ -43,9 +57,9 @@ public class FragmentReadTracker
         {
             // NOTE: we only need cigar string for supplementary reads
             // also use intern String to save memory as most cigar strings are 151M
-            String cigarString = read.isSecondaryOrSupplementary() ? read.getCigarString().intern() : null;
+            String cigarString = read.getSupplementaryAlignmentFlag() ? read.getCigarString().intern() : null;
             return new ReadKey(
-                    read.isSecondaryOrSupplementary(),
+                    read.getSupplementaryAlignmentFlag(),
                     SamRecordUtils.firstInPair(read),
                     read.getReadNegativeStrandFlag(),
                     read.getAlignmentStart(),
@@ -54,52 +68,54 @@ public class FragmentReadTracker
         }
     }
 
-    private final String name;
-    private final boolean isReadPaired;
-    private final List<ReadKey> pendingReads = new ArrayList<>();
-    private final List<ReadKey> processedReads = new ArrayList<>();
+    private final String mName;
+    private final boolean mIsReadPaired;
+    private final List<ReadKey> mPendingReads = new ArrayList<>();
+    private final List<ReadKey> mProcessedReads = new ArrayList<>();
 
     public FragmentReadTracker(String name, boolean isReadPaired)
     {
-        this.name = name;
-        this.isReadPaired = isReadPaired;
+        mName = name;
+        mIsReadPaired = isReadPaired;
     }
 
     public String getName()
     {
-        return name;
+        return mName;
     }
 
     public List<ReadKey> getPendingReads()
     {
-        return pendingReads;
+        return mPendingReads;
     }
 
     public boolean isComplete(Level logLevel)
     {
-        if(!pendingReads.isEmpty())
+        if(!mPendingReads.isEmpty())
         {
             if(BT_LOGGER.isEnabled(logLevel))
             {
-                for(ReadKey readKey : pendingReads)
+                for(ReadKey readKey : mPendingReads)
                 {
-                    BT_LOGGER.log(logLevel, "read id({}) pending read({}) ", name, readKey);
+                    BT_LOGGER.log(logLevel, "read id({}) pending read({}) ", mName, readKey);
                 }
             }
             return false;
         }
-        if(isReadPaired)
+        if(mIsReadPaired)
         {
             // paired reads then we need minimum of two non supplementary
-            if(processedReads.size() < 2 || processedReads.stream().filter(x -> !x.secondaryOrSupplementary).count() < 2)
+            if(mProcessedReads.size() < 2 || mProcessedReads.stream().filter(x -> !x.isSupplementary).count() < 2)
             {
                 return false;
             }
         }
         else
         {
-            if(processedReads.isEmpty() || processedReads.stream().allMatch(x -> x.secondaryOrSupplementary))
+            if(mProcessedReads.isEmpty() || mProcessedReads.stream().allMatch(x -> x.isSupplementary))
+            {
                 return false;
+            }
         }
 
         // if we got all the primary reads, that means we got all the supplementary information as well
@@ -107,21 +123,14 @@ public class FragmentReadTracker
         return true;
     }
 
-    @Override
-    public String toString()
-    {
-        return String.format("%s processed reads(%d), pending reads(%d) complete(%s)",
-                name, processedReads.size(), pendingReads.size(), isComplete(null));
-    }
-
     public boolean invariant()
     {
-        if(isReadPaired && pendingReads.isEmpty() && processedReads.stream().filter(x -> !x.secondaryOrSupplementary).count() != 2)
+        if(mIsReadPaired && mPendingReads.isEmpty() && mProcessedReads.stream().filter(x -> !x.isSupplementary).count() != 2)
         {
             // if read is paired then we expect to have two processed reads
             return false;
         }
-        if(!isReadPaired && pendingReads.isEmpty() && processedReads.stream().filter(x -> !x.secondaryOrSupplementary).count() != 1)
+        if(!mIsReadPaired && mPendingReads.isEmpty() && mProcessedReads.stream().filter(x -> !x.isSupplementary).count() != 1)
         {
             // if read is not paired then we expect to have one processed reads
             return false;
@@ -129,12 +138,12 @@ public class FragmentReadTracker
         return true;
     }
 
-    public List<BasePosition> findPendingReadBaseRegions()
+    public List<BasePosition> findPendingReadPositions()
     {
         List<BasePosition> baseRegions = new ArrayList<>();
         assert invariant();
 
-        for(ReadKey readKey : pendingReads)
+        for(ReadKey readKey : mPendingReads)
         {
             baseRegions.add(new BasePosition(readKey.referenceName, readKey.alignmentStart));
         }
@@ -145,7 +154,7 @@ public class FragmentReadTracker
     {
         ReadKey readKey = ReadKey.fromRead(read);
 
-        if(processedReads.stream().anyMatch(x -> x.equals(readKey)))
+        if(mProcessedReads.stream().anyMatch(x -> x.equals(readKey)))
         {
             // we have already seen this
             return false;
@@ -153,7 +162,7 @@ public class FragmentReadTracker
 
         // add pending mate + supplementary alignments
         // we only need to do this for the first alignment of the read
-        if(processedReads.stream().noneMatch(o -> o.firstInPair == SamRecordUtils.firstInPair(read)))
+        if(mProcessedReads.stream().noneMatch(o -> o.firstInPair == SamRecordUtils.firstInPair(read)))
         {
             // we want to find all the supplementary alignments and add to pending
             List<SupplementaryReadData> supplementaryAlignments = SupplementaryReadData.extractAlignments(read);
@@ -164,7 +173,7 @@ public class FragmentReadTracker
                     SupplementaryReadData sa = supplementaryAlignments.get(i);
 
                     // if this read is supplementary, then first read in SA tag is primary
-                    boolean isSupplementary = !read.isSecondaryOrSupplementary() || i > 0;
+                    boolean isSupplementary = !read.getSupplementaryAlignmentFlag() || i > 0;
                     ReadKey saReadKey = new ReadKey(isSupplementary,
                             SamRecordUtils.firstInPair(read),
                             sa.Strand == SupplementaryReadData.SUPP_NEG_STRAND,
@@ -172,11 +181,11 @@ public class FragmentReadTracker
                             sa.Chromosome,
                             isSupplementary ? sa.Cigar.intern() : null);
 
-                    if(pendingReads.stream().noneMatch(saReadKey::equals))
+                    if(mPendingReads.stream().noneMatch(saReadKey::equals))
                     {
                         // no need to check if processedReads contains this saReadKey as the outer
                         // if case protects against it
-                        pendingReads.add(saReadKey);
+                        mPendingReads.add(saReadKey);
                         BT_LOGGER.trace("{} added SA read key({}) to pending", read, saReadKey);
                     }
                 }
@@ -190,7 +199,7 @@ public class FragmentReadTracker
             if(read.getReadPairedFlag())
             {
                 ReadKey mateReadKey = null;
-                if(!read.isSecondaryOrSupplementary() || !read.getMateUnmappedFlag())
+                if(!read.getSupplementaryAlignmentFlag() || !read.getMateUnmappedFlag())
                 {
                     mateReadKey = new ReadKey(false,
                             !SamRecordUtils.firstInPair(read),
@@ -212,16 +221,16 @@ public class FragmentReadTracker
                             sa.Chromosome,
                             null); // do not populate cigar for primary alignment
                 }
-                if(mateReadKey != null && processedReads.stream().noneMatch(mateReadKey::equals) &&
-                        pendingReads.stream().noneMatch(mateReadKey::equals))
+                if(mateReadKey != null && mProcessedReads.stream().noneMatch(mateReadKey::equals) &&
+                        mPendingReads.stream().noneMatch(mateReadKey::equals))
                 {
-                    pendingReads.add(mateReadKey);
+                    mPendingReads.add(mateReadKey);
                     BT_LOGGER.trace("{} added mate read key({}) to pending", read, mateReadKey);
                 }
             }
         }
-        processedReads.add(readKey);
-        pendingReads.removeIf(x -> x.equals(readKey));
+        mProcessedReads.add(readKey);
+        mPendingReads.removeIf(x -> x.equals(readKey));
 
         return true;
     }
