@@ -109,6 +109,10 @@ public class ProteinVariant
     @NotNull
     AminoAcidSequence replaceExonAminoAcids(int exon, @NotNull AminoAcidSequence replacement)
     {
+        if(exon == 0 && (replacement.length() == 0 || !replacement.get(0).equals(AminoAcid.START)))
+        {
+            return AminoAcidSequence.empty();
+        }
         int lengthUpToExon = 0;
         List<Integer> regionLengths = codingRegionLengths();
         for(int i = 0; i < exon; i++)
@@ -189,20 +193,20 @@ public class ProteinVariant
         return new TransvalVariant(mTranscript, mGene.Chromosome, false, hotspots);
     }
 
-    boolean matchesVariantUpToLastAminoAcid(AminoAcidSequence candidate)
+    boolean doesNotMatchVariantUpToLastAminoAcid(AminoAcidSequence candidate)
     {
         AminoAcidSequence variant = variantSequence();
         if(candidate.length() < variant.length() + 1)
         {
-            return false;
+            return true;
         }
         for (int i = 0; i < variant.length(); i++)
         {
             if(!candidate.get(i).equals(variant.get(i)))
             {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 }

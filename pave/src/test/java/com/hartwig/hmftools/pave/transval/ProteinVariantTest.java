@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.pave.transval;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -21,17 +18,16 @@ public class ProteinVariantTest extends VariantTest
         final int iId = 111;
         GeneData g = new GeneData("GeneId", "BLAH", "chr5", (byte) 1, 10, 115, "q13.1");
         TranscriptData transcriptData = new TranscriptData(500, "TrName", g.GeneId, true, (byte) 1, 10, 115, 10, 115, "protein_coding");
-        String aminoAcids = "LARGEFLAPPYELEPHANTSEARS";
+        String aminoAcids = "MANGYFLAPPYELEPHANTSEARS";
         TranscriptAminoAcids transcriptAminoAcids = new TranscriptAminoAcids(g.GeneId, g.GeneName, transcriptData.TransName, true, aminoAcids);
 
-        // TTAGCAAGGGGAGAATTCTTAGCACCACCATATGAATTAGAACCACACGCAAACACCTCAGAAGCAAGGTCA
-        // L   A   R   G    E   F   L    A   P    P   Y   E    L   E   P    H   A   N    T   S   E    A   R   S
-        // TTA|GCA|AGG|G GA|GAA|TTC|TT A|GCA|CCA| CCA|TAT|GAA| TTA|GAA|C CA|CAC|GCA|A AC|ACC|TCA|GA A|GCA|AGG|TCA
-        // TTAGCAAGGG GAGAATTCTT AGCACCA CCATATGAA TTAGAAC CACACGCAA ACACCTCAGA AGCAAGGTCA
+        // M   A   N   G    Y   F   L    A   P    P   Y   E    L   E   P    H   A   N    T   S   E    A   R   S
+        // ATG|GCA|AAC|G GA|TAT|TTC|TT A|GCA|CCA| CCA|TAT|GAA| TTA|GAA|C CA|CAC|GCA|A AC|ACC|TCA|GA A|GCA|AGG|TCA
+        // ATGGCAAACG GATATTTCTT AGCACCA CCATATGAA TTAGAAC CACACGCAA ACACCTCAGA AGCAAGGTCA
         // 10         10         7       9         7       9         10         10
-        final String b0 = "TTAGCAAGGG";
+        final String b0 = "ATGGCAAACG";
         final ExonData e0 = new ExonData(iId, 10, 19, 1, 0, 1);
-        final String b1 = "GAGAATTCTT";
+        final String b1 = "GATATTTCTT";
         final ExonData e1 = new ExonData(iId, 22, 31, 2, 2, 2);
         final String b2 = "AGCACCA";
         final ExonData e2 = new ExonData(iId, 36, 42, 3, 1, 0);
@@ -60,15 +56,17 @@ public class ProteinVariantTest extends VariantTest
         transcriptData.setExons(List.of(e0, e1, e2, e3, e4, e5, e6, e7));
 
         ProteinVariant variant = new ProteinVariant(g, transcriptData, transcriptAminoAcids, 1, 2);
-        //LARg gEFl lAP PYE LEp pHAn nTSe eARS
-        checkExonReplacement("QQEFLAPPYELEPHANTSEARS", variant, 0, "QQ");
-        checkExonReplacement("LARQQQAPPYELEPHANTSEARS", variant, 1, "QQQ");
-        checkExonReplacement("LARGEFWWWPYELEPHANTSEARS", variant, 2, "WWW");
-        checkExonReplacement("LARGEFLAPTTTLEPHANTSEARS", variant, 3, "TTT");
-        checkExonReplacement("LARGEFLAPPYEWWWHANTSEARS", variant, 4, "WWW");
-        checkExonReplacement("LARGEFLAPPYELERRRRTSEARS", variant, 5, "RRRR");
-        checkExonReplacement("LARGEFLAPPYELEPHAFFFARS", variant, 6, "FFF");
-        checkExonReplacement("LARGEFLAPPYELEPHANTSWWW", variant, 7, "WWW");
+        // If the replacement results in the loss of the initial M, return an empty sequence.
+        AminoAcidSequence expectedAAs = variant.replaceExonAminoAcids(0, AminoAcidSequence.parse("QQ"));
+        Assert.assertEquals(0, expectedAAs.length());
+        //MANg gYFl lAP PYE LEp pHAn nTSe eARS
+        checkExonReplacement("MANQQQAPPYELEPHANTSEARS", variant, 1, "QQQ");
+        checkExonReplacement("MANGYFWWWPYELEPHANTSEARS", variant, 2, "WWW");
+        checkExonReplacement("MANGYFLAPTTTLEPHANTSEARS", variant, 3, "TTT");
+        checkExonReplacement("MANGYFLAPPYEWWWHANTSEARS", variant, 4, "WWW");
+        checkExonReplacement("MANGYFLAPPYELERRRRTSEARS", variant, 5, "RRRR");
+        checkExonReplacement("MANGYFLAPPYELEPHAFFFARS", variant, 6, "FFF");
+        checkExonReplacement("MANGYFLAPPYELEPHANTSWWW", variant, 7, "WWW");
     }
 
     private void checkExonReplacement(String expected, ProteinVariant variant, int exon, String newAminoAcids)

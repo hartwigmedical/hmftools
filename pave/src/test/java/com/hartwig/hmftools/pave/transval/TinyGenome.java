@@ -18,10 +18,12 @@ public class TinyGenome extends SimpleTestGenome
         data.add( new ChromosomeSnippet("chr1", 10_000_000, 3_000_000, "chr1_part.txt"));
         data.add( new ChromosomeSnippet("chr1", 26_000_000, 1_000_000, "chr1_part_26.txt"));
         data.add( new ChromosomeSnippet("chr3", 10_000_000, 3_000_000, "chr3_part.txt"));
+        data.add( new ChromosomeSnippet("chr4", 54_000_000, 1_000_000, "chr4_part_54.txt"));
         data.add( new ChromosomeSnippet("chr4", 105_000_000, 3_000_000, "chr4_part.txt"));
         data.add( new ChromosomeSnippet("chr5", 68_000_000, 1_000_000, "chr5_part_68.txt"));
         data.add( new ChromosomeSnippet("chr7", 140_000_000, 10_000_000, "chr7_part.txt"));
         data.add( new ChromosomeSnippet("chr7", 55_000_000, 3_000_000, "chr7_part_55.txt"));
+        data.add( new ChromosomeSnippet("chr17", 43_000_000, 1_000_000, "chr17_part_43.txt"));
     }
 
     @Override

@@ -68,6 +68,14 @@ public class VariantParserTest extends TransvalTestBase
     }
 
     @Test
+    public void parseStartLostWithGene()
+    {
+        StartLost variant = (StartLost) variantParser.parseVariantForGene("KIT", "M1?");
+        Assert.assertEquals("KIT", variant.mGene.GeneName);
+        Assert.assertEquals(1, variant.positionOfFirstAlteredCodon());
+    }
+
+    @Test
     public void parseInsertionWithGene()
     {
         Insertion di = (Insertion) variantParser.parseInsertion("EGFR", "N73_Y74insSPQR");

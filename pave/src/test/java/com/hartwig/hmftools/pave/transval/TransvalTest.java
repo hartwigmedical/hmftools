@@ -883,4 +883,38 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
                 hotspot("G", "A", "chr7", 140_753_328)
         );
     }
+
+    @Test
+    public void startLostForwardStrand()
+    {
+        TransvalVariant variant = transval.calculateVariant("KIT", "M1?");
+        checkHotspots(variant,
+                hotspot("A", "G", "chr4", 54_658_015),
+                hotspot("A", "C", "chr4", 54_658_015),
+                hotspot("A", "T", "chr4", 54_658_015),
+                hotspot("T", "C", "chr4", 54_658_016),
+                hotspot("T", "G", "chr4", 54_658_016),
+                hotspot("T", "A", "chr4", 54_658_016),
+                hotspot("G", "C", "chr4", 54_658_017),
+                hotspot("G", "A", "chr4", 54_658_017),
+                hotspot("G", "T", "chr4", 54_658_017)
+        );
+    }
+
+    @Test
+    public void startLostReverseStrand()
+    {
+        TransvalVariant variant = transval.calculateVariant("BRCA1", "M1?");
+        checkHotspots(variant,
+                hotspot("C", "T", "chr17", 43_124_094),
+                hotspot("C", "G", "chr17", 43_124_094),
+                hotspot("C", "A", "chr17", 43_124_094),
+                hotspot("A", "C", "chr17", 43_124_095),
+                hotspot("A", "G", "chr17", 43_124_095),
+                hotspot("A", "T", "chr17", 43_124_095),
+                hotspot("T", "A", "chr17", 43_124_096),
+                hotspot("T", "C", "chr17", 43_124_096),
+                hotspot("T", "G", "chr17", 43_124_096)
+        );
+    }
 }

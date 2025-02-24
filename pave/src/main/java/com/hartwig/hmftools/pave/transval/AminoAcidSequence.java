@@ -59,6 +59,11 @@ class AminoAcidSequence
         return new AminoAcidSequence(aminoAcids);
     }
 
+    public static AminoAcidSequence empty()
+    {
+        return new AminoAcidSequence(Lists.newArrayList());
+    }
+
     AminoAcidSequence(@NotNull final List<AminoAcid> aminoAcids)
     {
         this.aminoAcids = List.copyOf(aminoAcids);

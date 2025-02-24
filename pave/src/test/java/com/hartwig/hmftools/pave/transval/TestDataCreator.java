@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.junit.Assert;
+import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -42,7 +43,9 @@ public class TestDataCreator
                 "RNU1-82P,",
                 "ZYX,",
                 "PIK3R1",
-                "ARID1A"
+                "ARID1A",
+                "KIT",
+                "BRCA1"
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneNames);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
@@ -56,7 +59,9 @@ public class TestDataCreator
                 "ENSG00000212153", // RNU-82P
                 "ENSG00000159840", // ZYX
                 "ENSG00000145675", // PIK3R1
-                "ENSG00000117713" // ARID1A
+                "ENSG00000117713", // ARID1A
+                "ENSG00000157404", // KIT
+                "ENSG00000012048"  // BRCA1
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
 
@@ -112,13 +117,13 @@ public class TestDataCreator
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna")));
         var chromosomeLengths = refGenomeSource.chromosomeLengths();
         System.out.println(chromosomeLengths.size());
-        int chrLength = chromosomeLengths.get("chr5");
+        int chrLength = chromosomeLengths.get("chr17");
         System.out.println(chrLength);
-        int start = 26_000_000; //
+        int start = 54_000_000; //
         int end = start + 1_000_000;
-        var chr = refGenomeSource.getBaseString("chr1", start, end);
+        var chr = refGenomeSource.getBaseString("chr4", start, end);
 //        System.out.println(chr.substring(10000, 10100));
-        File chrFile = new File(outputDir, "chr1_part_2.txt");
+        File chrFile = new File(outputDir, "chr4_part_54.txt");
         Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
     }
 

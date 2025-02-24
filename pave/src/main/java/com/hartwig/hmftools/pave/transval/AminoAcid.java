@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 class AminoAcid
 {
+    static final AminoAcid START = new AminoAcid("M");
+
     @NotNull
     final String symbol;
 

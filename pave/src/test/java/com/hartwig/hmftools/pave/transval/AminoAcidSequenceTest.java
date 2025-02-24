@@ -105,6 +105,12 @@ public class AminoAcidSequenceTest extends TransvalTestBase
     }
 
     @Test
+    public void emptyTest()
+    {
+        assertEquals(0, AminoAcidSequence.empty().length());
+    }
+
+    @Test
     public void deleteTest()
     {
         assertEquals(aaSeq("HECATSAREKIPPING"), aaSeq("THECATSAREKIPPING").deleteRange(0, 1));

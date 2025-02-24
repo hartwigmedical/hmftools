@@ -42,7 +42,7 @@ class StopGained extends SingleCodonVariant
     boolean isConsistentWithThisVariant(AminoAcidSequence candidate)
     {
         // The sequences need to match up to the change point and then stop.
-        if(!matchesVariantUpToLastAminoAcid(candidate))
+        if(doesNotMatchVariantUpToLastAminoAcid(candidate))
         {
             return false;
         }

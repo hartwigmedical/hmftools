@@ -53,7 +53,7 @@ class Frameshift extends ProteinVariant
     {
         // The sequences need to match up to the change point and then differ
         // at least at that position.
-        if(!matchesVariantUpToLastAminoAcid(candidate))
+        if(doesNotMatchVariantUpToLastAminoAcid(candidate))
         {
             return false;
         }

@@ -20,6 +20,14 @@ class Negation implements TranscriptFilter
     {
         return !filter.applies(aminoAcids);
     }
+
+    @Override
+    public String toString()
+    {
+        return "Negation{" +
+                "filter=" + filter +
+                '}';
+    }
 }
 
 class PassThroughFilter implements TranscriptFilter
@@ -28,5 +36,11 @@ class PassThroughFilter implements TranscriptFilter
     public boolean applies(final TranscriptAminoAcids aminoAcids)
     {
         return true;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "PassThroughFilter{}";
     }
 }

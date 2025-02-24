@@ -60,6 +60,10 @@ class VariantParser
         {
             return new StopGained(geneData, transcriptData, aminoAcidsSequence, refRange);
         }
+        ProteinVariant buildStartLost()
+        {
+            return new StartLost(geneData, transcriptData, aminoAcidsSequence, refRange);
+        }
 
         ProteinVariant buildDeletion()
         {
@@ -123,6 +127,10 @@ class VariantParser
         if(variant.endsWith("*"))
         {
             return parseFactory(gene, variant).buildStopGained();
+        }
+        if(variant.endsWith("?"))
+        {
+            return parseFactory(gene, variant).buildStartLost();
         }
         return parseSingleAminoAcidVariant(gene, variant);
     }

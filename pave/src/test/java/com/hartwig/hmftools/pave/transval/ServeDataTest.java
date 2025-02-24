@@ -71,7 +71,14 @@ public class ServeDataTest
             final String ref = str(hotspot, "ref");
             final String alt = str(hotspot, "alt");
             final int position = hotspot.get("position").getAsInt();
-//                        if (gene.equals("FGFR1") && annotation.equals("P283T"))
+//                        if (gene.equals("EGFR") && annotation.equals("L643V"))
+//                        {
+//                            p("found it");
+//                        }
+            if(annotation.isBlank())
+            {
+                continue;
+            }
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
 //            if(!annotation.contains("ins")) continue;
 //            if(annotation.contains("del")) continue;
@@ -164,7 +171,7 @@ public class ServeDataTest
     {
 //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
 //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ROS1", "A1924_I1934del");
-        ProteinVariant variant = transval.variationParser().parseVariantForGene("ALK", "D1276_R1279delinsE");
+        ProteinVariant variant = transval.variationParser().parseVariantForGene("EGFR", "L643V");
         TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
     }
@@ -202,9 +209,9 @@ public class ServeDataTest
             }
             else
             {
-                if(annotation.contains("*") || annotation.contains("?"))
+                if(annotation.contains("?"))
                 {
-                   if(gene.equals("BRAF") || gene.equals("BRAF2") || gene.contains("VHL") || gene.contains("MTOR") || gene.contains("ZYX"))
+//                   if(gene.equals("BRAF") || gene.equals("BRAF2") || gene.contains("VHL") || gene.contains("MTOR") || gene.contains("ZYX"))
                    {
                        p(gene + " " + annotation);
                    }
@@ -409,6 +416,8 @@ class ServeItem
     ServeItem(@NotNull final String gene, @NotNull final String annotation, @NotNull final String chromosome, @NotNull final String ref,
             @NotNull final String alt, final int position)
     {
+        Preconditions.checkArgument(!gene.isEmpty());
+        Preconditions.checkArgument(!annotation.isEmpty());
         Gene = gene;
         Annotation = annotation;
         Chromosome = chromosome;
