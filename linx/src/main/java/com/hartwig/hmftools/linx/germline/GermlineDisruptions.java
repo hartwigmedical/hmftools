@@ -378,7 +378,7 @@ public class GermlineDisruptions
             StructuralVariantData svData = var.getSvData();
             SvCluster cluster = var.getCluster();
 
-            int ponCount = getPonCount(var);
+            int ponCount = var.getSvData().ponCount();
 
             Set<String> allFilters = Sets.newHashSet(svData.filter());
             String geneName = "";
@@ -528,8 +528,7 @@ public class GermlineDisruptions
         if(!var.getSvData().filter().equals(PASS))
             return false;
 
-        int ponCount = getPonCount(var);
-        if(ponCount > MAX_PON_COUNT)
+        if(var.getSvData().ponCount() > MAX_PON_COUNT)
             return false;
 
         DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
@@ -564,10 +563,5 @@ public class GermlineDisruptions
 
         // a clustered DEL or DUP is also reportable
         return var.type() == DEL || var.type() == DUP;
-    }
-
-    private int getPonCount(final SvVarData var)
-    {
-        return var.getSvData().filter().equals(PON_FILTER_PON) ? var.getSvData().ponCount() : 0;
     }
 }
