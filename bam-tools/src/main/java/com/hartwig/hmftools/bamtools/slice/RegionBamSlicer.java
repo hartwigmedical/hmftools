@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.slice;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
@@ -64,11 +66,14 @@ public class RegionBamSlicer implements Runnable
     @VisibleForTesting
     public void processSamRecord(final SAMRecord read)
     {
-        if(!positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), mCurrentRegion.start(), mCurrentRegion.end()))
+        int readStart = read.getAlignmentStart();
+        int readEnd = max(read.getAlignmentEnd(), readStart); // accounting for unmapped mates
+
+        if(!positionsOverlap(readStart, readEnd, mCurrentRegion.start(), mCurrentRegion.end()))
             return;
 
         // also ignore if the read overlaps with an earlier region
-        if(mLowerRegions.stream().anyMatch(x -> positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), x.start(), x.end())))
+        if(mLowerRegions.stream().anyMatch(x -> positionsOverlap(readStart, readEnd, x.start(), x.end())))
             return;
 
         if(mConfig.OnlySupplementaries && !read.getSupplementaryAlignmentFlag())
@@ -79,7 +84,7 @@ public class RegionBamSlicer implements Runnable
         if((mReadsProcessed % READ_LOG_COUNT) == 0)
         {
             BT_LOGGER.debug("region({}) processed {} reads, current pos({})",
-                    mCurrentRegion, mReadsProcessed, read.getAlignmentStart());
+                    mCurrentRegion, mReadsProcessed, readStart);
         }
 
         mReadCache.addReadRecord(read);

@@ -12,6 +12,7 @@ import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,6 +49,8 @@ public final class SamRecordUtils
     public static final int NO_CHROMOSOME_INDEX = -1;
     public static final int NO_POSITION = 0;
     public static final int INVALID_READ_INDEX = -1;
+
+    public static final int UNSET_COUNT = -1;
 
     private static final int PHRED_OFFSET = 33;
 
@@ -99,10 +102,20 @@ public final class SamRecordUtils
         return quality - PHRED_OFFSET;
     }
 
+    public static void addConsensusReadAttribute(
+            final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType, int pcrClusterCount)
+    {
+        String consensusReadValue = pcrClusterCount == UNSET_COUNT
+                ? format("%d;%d", readCount, firstInPairCount)
+                : format("%d;%d;%d", readCount, firstInPairCount, pcrClusterCount);
+        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, consensusReadValue);
+        record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
+    }
+
+    @VisibleForTesting
     public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
     {
-        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, format("%d;%d", readCount, firstInPairCount));
-        record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
+        addConsensusReadAttribute(record, readCount, firstInPairCount, umiReadType, UNSET_COUNT);
     }
 
     public static UmiReadType extractUmiType(final SAMRecord record)

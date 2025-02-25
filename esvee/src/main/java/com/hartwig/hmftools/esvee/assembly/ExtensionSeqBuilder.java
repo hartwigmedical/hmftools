@@ -357,7 +357,7 @@ public class ExtensionSeqBuilder
                     }
                 }
 
-                consensusBase = DNA_BASE_BYTES[maxBaseIndex];
+                consensusBase = maxBaseIndex < DNA_BASE_BYTES.length ? DNA_BASE_BYTES[maxBaseIndex] : DNA_N_BYTE;
                 consensusMaxQual = (byte)maxQuals[maxBaseIndex];
 
                 if(!isInitial)
@@ -431,7 +431,9 @@ public class ExtensionSeqBuilder
             return;
 
         // check the existing sequence for a valid repeat
-        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases);
+        int startOffset = mIsForward ? 1 : 0;
+        int endOffset = !mIsForward ? 1 : 0;
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases, startOffset, endOffset);
 
         if(repeats.isEmpty())
             return;
@@ -443,9 +445,9 @@ public class ExtensionSeqBuilder
         Collections.sort(repeats, Comparator.comparingInt(x -> -x.Count));
         maxRepeat = repeats.get(0);
 
-        // consider an extension of the repeat at the first index back into the repeat bases
+        // consider an extension of the repeat starting/ending at the first extension bases then going into the following ref bases
         RepeatInfo startingRepeat = repeats.stream()
-                .filter(x -> (mIsForward && x.Index == 0) || (!mIsForward && x.Index == mBases.length - x.length() - 1))
+                .filter(x -> (mIsForward && x.Index == 1) || (!mIsForward && x.lastIndex() == mBases.length - 2))
                 .findFirst().orElse(null);
 
         int maxRefRepeatCount = 0;
@@ -460,6 +462,8 @@ public class ExtensionSeqBuilder
                 if(readRefRepeat > maxRefRepeatCount)
                 {
                     maxRefRepeatCount = readRefRepeat;
+
+                    // exit the search if the ref base repeat exceeds the threshold to impact required extension high-qual overlaps
                     if(maxRefRepeatCount + startingRepeat.Count >= REPEAT_2_DIFF_COUNT)
                         break;
                 }
@@ -482,8 +486,7 @@ public class ExtensionSeqBuilder
         {
             ExtReadParseState read = mReads.get(readIndex);
 
-            int readJunctionIndex = read.junctionIndex();
-            int readRepeatIndexStart = readJunctionIndex + (mIsForward ? repeatJunctionOffset : -repeatJunctionOffset);
+            int readRepeatIndexStart = read.junctionIndex() + (mIsForward ? repeatJunctionOffset : -repeatJunctionOffset);
 
             int readRepeatCount = getRepeatCount(read.read(), maxRepeat, readRepeatIndexStart, mIsForward);
 
@@ -565,15 +568,15 @@ public class ExtensionSeqBuilder
         else
         {
             consensusRepeatCount = maxFreqCounts.get(0);
+
+            // recompute the median from the non-zero repeat counts
+            readRepeatCounts = readRepeatCounts.stream().filter(x -> x.intValue() > 0).collect(Collectors.toList());
+            medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
+
+            // use median if there is no dominant repeat count
+            if(consensusRepeatFreq < readRepeatCounts.size() / 2)
+                consensusRepeatCount = medianRepeatCount;
         }
-
-        // recompute the median from the non-zero repeat counts
-        readRepeatCounts = readRepeatCounts.stream().filter(x -> x.intValue() > 0).collect(Collectors.toList());
-        medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
-
-        // use median if there is no dominant repeat count
-        if(consensusRepeatFreq < readRepeatCounts.size() / 2)
-            consensusRepeatCount = medianRepeatCount;
 
         repeatIndexStart = maxRepeat.Index;
 

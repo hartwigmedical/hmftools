@@ -18,23 +18,15 @@ public class BreakendMatcher
 
     private final List<BreakendMatch> mBreakendMatches = new ArrayList<>();
 
-    public BreakendMatcher(RefGenomeVersion refGenomeVersion, boolean includeNonPass)
-    {
-        mRefGenomeVersion = refGenomeVersion;
-        mIncludeNonPass = includeNonPass;
-    }
-
-    public BreakendMatcher(CompareConfig config)
+    public BreakendMatcher(final CompareConfig config)
     {
         mRefGenomeVersion = config.RefGenVersion;
         mIncludeNonPass = config.IncludeNonPass;
     }
 
     public void matchBreakends(
-            Map<String, List<VariantBreakend>> oldChrBreakendMap,
-            Map<String,List<VariantBreakend>> newChrBreakendMap,
-            MatchType matchType,
-            boolean checkOtherSide
+            final Map<String, List<VariantBreakend>> oldChrBreakendMap, final Map<String,List<VariantBreakend>> newChrBreakendMap,
+            final MatchType matchType, boolean checkOtherSide
     )
     {
         MatchFunctions.MatchFunction breakendMatcher = MatchType.getMatcher(matchType);
@@ -81,13 +73,10 @@ public class BreakendMatcher
     }
 
     public void matchBreakends(
-            Map<String,List<VariantBreakend>> oldChrBreakendMap,
-            Map<String,List<VariantBreakend>> newChrBreakendMap,
-            boolean checkOtherSide
-    )
+            final Map<String,List<VariantBreakend>> oldChrBreakendMap, final Map<String,List<VariantBreakend>> newChrBreakendMap,
+            boolean checkOtherSide)
     {
-        SV_LOGGER.info("Performing breakend matching using {} variants",
-                mIncludeNonPass ? "ALL" : "PASS");
+        SV_LOGGER.debug("performing breakend matching using {} variants", mIncludeNonPass ? "ALL" : "PASS");
 
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.EXACT_MATCH, checkOtherSide);
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, MatchType.COORDS_ONLY, checkOtherSide);
@@ -95,14 +84,12 @@ public class BreakendMatcher
     }
 
     public void matchBreakends(
-            Map<String,List<VariantBreakend>> oldChrBreakendMap,
-            Map<String,List<VariantBreakend>> newChrBreakendMap
-    )
+            final Map<String,List<VariantBreakend>> oldChrBreakendMap, final Map<String,List<VariantBreakend>> newChrBreakendMap)
     {
         matchBreakends(oldChrBreakendMap, newChrBreakendMap, true);
     }
 
-    private int gatherUnmatchedVariants(Map<String,List<VariantBreakend>> chrBreakendMap, boolean isOld)
+    private int gatherUnmatchedVariants(final Map<String,List<VariantBreakend>> chrBreakendMap, boolean isOld)
     {
         int unmatchedVariantsCount = 0;
 
@@ -132,9 +119,7 @@ public class BreakendMatcher
     }
 
     public void gatherUnmatchedVariants(
-            Map<String,List<VariantBreakend>> oldChrBreakendMap,
-            Map<String,List<VariantBreakend>> newChrBreakendMap
-    )
+            final Map<String,List<VariantBreakend>> oldChrBreakendMap, final Map<String,List<VariantBreakend>> newChrBreakendMap)
     {
         int unmatchedVariantsCount = 0;
 
@@ -143,7 +128,7 @@ public class BreakendMatcher
 
         if(unmatchedVariantsCount > 0)
         {
-            SV_LOGGER.debug("Found {} unmatched variants", unmatchedVariantsCount);
+            SV_LOGGER.debug("found {} unmatched variants", unmatchedVariantsCount);
         }
     }
 

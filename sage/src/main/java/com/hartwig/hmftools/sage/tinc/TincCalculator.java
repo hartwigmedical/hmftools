@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_MAX_AD;
+import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_MIN_VARIANTS;
 
 import java.util.List;
 
@@ -18,6 +19,9 @@ public class TincCalculator
 
     public static double calculate(final List<VariantData> variants, final List<Double> testLevels)
     {
+        if(variants.size() < TINC_MIN_VARIANTS)
+            return 0;
+
         double lowestScore = -1;
         double lowestTestLevel = -1;
         int levelsSinceLowest = 0;

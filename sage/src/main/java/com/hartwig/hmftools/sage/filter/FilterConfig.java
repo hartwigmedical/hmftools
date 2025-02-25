@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.filter;
 
+import static com.hartwig.hmftools.sage.SageCallConfig.RUN_TINC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_VAF;
@@ -47,7 +49,14 @@ public class FilterConfig
     {
         DisableSoftFilter = configBuilder.hasFlag(DISABLE_SOFT_FILTER);
         DisableHardFilter = configBuilder.hasFlag(DISABLE_HARD_FILTER);
-        FilteredMaxGermlineAltSupport = configBuilder.getInteger(FILTERED_MAX_GERMLINE_ALT_SUPPORT);
+
+        if(configBuilder.hasValue(FILTERED_MAX_GERMLINE_ALT_SUPPORT))
+            FilteredMaxGermlineAltSupport = configBuilder.getInteger(FILTERED_MAX_GERMLINE_ALT_SUPPORT);
+        else if(configBuilder.hasFlag(RUN_TINC))
+            FilteredMaxGermlineAltSupport = DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC;
+        else
+            FilteredMaxGermlineAltSupport = DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;
+
         HardMinTumorQual = configBuilder.getInteger(HARD_MIN_TUMOR_QUAL);
         HardMinTumorVaf = configBuilder.getDecimal(HARD_MIN_TUMOR_VAF);
         HardMinTumorRawAltSupport = configBuilder.getInteger(HARD_MIN_TUMOR_RAW_ALT_SUPPORT);

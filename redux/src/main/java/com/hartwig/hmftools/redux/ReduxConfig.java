@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.redux.write.ReadOutput.NONE;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,6 +113,7 @@ public class ReduxConfig
     public final double PerfDebugTime;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
+    public final boolean SkipUnmapped;
     public final int WriteReadBaseLength;
 
     private boolean mIsValid;
@@ -134,6 +136,7 @@ public class ReduxConfig
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
+    private static final String SKIP_UNAMPPED = "skip_unmapped";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -204,10 +207,15 @@ public class ReduxConfig
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
+        SkipUnmapped = configBuilder.hasFlag(SKIP_UNAMPPED);
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
 
         UMIs = UmiConfig.from(configBuilder);
+
+        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
+        JitterConfig = JitterAnalyserConfig.create(
+                SampleId, RefGenomeFile, RefGenVersion, Sequencing, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
 
@@ -218,12 +226,19 @@ public class ReduxConfig
         }
         else
         {
-            Map<String, List<UnmappingRegion>> unmappedMap = Maps.newHashMap();
+            Map<String,List<UnmappingRegion>> unmapRegionsMap;
+            if(JitterMsiOnly)
+            {
+                unmapRegionsMap = Collections.emptyMap();
+            }
+            else
+            {
+                unmapRegionsMap = Maps.newHashMap();
+                ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
+                unmapRegionsMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
+            }
 
-            ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
-            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
-
-            UnmapRegions = new ReadUnmapper(unmappedMap);
+            UnmapRegions = new ReadUnmapper(unmapRegionsMap);
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
@@ -242,10 +257,6 @@ public class ReduxConfig
         PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
-
-        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
-        JitterConfig = JitterAnalyserConfig.create(
-                SampleId, RefGenomeFile, RefGenVersion, Sequencing, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically
@@ -325,6 +336,7 @@ public class ReduxConfig
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
+        configBuilder.addFlag(SKIP_UNAMPPED, "Skip processing existing fully unmapped reads");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -375,6 +387,7 @@ public class ReduxConfig
         WriteBam = false;
         MultiBam = false;
         KeepInterimBams = false;
+        SkipUnmapped = false;
         LogReadType = NONE;
 
         LogReadIds = Lists.newArrayList();

@@ -6,23 +6,17 @@ import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
 
 public class MatchFunctions
 {
-    public static boolean coordsMatchExactly(
-            String chrom1, int pos1, byte orient1,
-            String chrom2, int pos2, byte orient2
-    )
+    public static boolean coordsMatchExactly(final String chrom1, int pos1, byte orient1, final String chrom2, int pos2, byte orient2)
     {
         return orient1 == orient2 && pos1 == pos2 && chrom1.equals(chrom2);
     }
 
     public static boolean coordsMatchApproximately(
-            String chrom1, int pos1, byte orient1,
-            String chrom2, int pos2, byte orient2,
-            int upperLowerBounds
-    )
+            final String chrom1, int pos1, byte orient1, final String chrom2, int pos2, byte orient2, int upperLowerBounds)
     {
-        return orient1 == orient2 &&
-                chrom1.equals(chrom2) &&
-                positionWithin(pos1, pos2 - upperLowerBounds, pos2 + upperLowerBounds);
+        return orient1 == orient2
+            && chrom1.equals(chrom2)
+            && positionWithin(pos1, pos2 - upperLowerBounds, pos2 + upperLowerBounds);
     }
 
     @FunctionalInterface

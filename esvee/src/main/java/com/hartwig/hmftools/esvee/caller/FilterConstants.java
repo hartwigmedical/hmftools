@@ -64,7 +64,7 @@ public class FilterConstants
 
     public static final int DEL_ARTEFACT_SHORT_LENGTH = 3000;
     public static final int DEL_ARTEFACT_MAX_HOMOLOGY = 10;
-    public static final int DEL_ARTEFACT_MIN_STD_DEV_FRAGS = 7;
+    public static final double DEL_ARTEFACT_LENGTH_FACTOR = 1.5;
     public static final double DEL_ARTEFACT_MIN_AF = 0.05;
 
     public static final int INV_SHORT_LENGTH = 3000;

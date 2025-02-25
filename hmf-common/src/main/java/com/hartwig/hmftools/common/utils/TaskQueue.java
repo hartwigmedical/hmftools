@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.redux.unmap;
+package com.hartwig.hmftools.common.utils;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.LOGGER;
 
 import java.util.Queue;
 
@@ -39,7 +39,7 @@ public class TaskQueue<E extends Object>
 
         if(mLogCount > 0 && (processed % mLogCount) == 0)
         {
-            RD_LOGGER.debug("processed {} {}, remaining({})", processed, mItemType, mRemainingCount);
+            LOGGER.debug("processed {} {}, remaining({})", processed, mItemType, mRemainingCount);
         }
     }
 

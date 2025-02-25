@@ -232,7 +232,7 @@ public class DiscordantGroups
                 }
             }
 
-            junctionData.SupportingGroups.add(readGroup);
+            junctionData.addSupportingGroup(readGroup);
             readGroup.addJunctionPosition(junctionData);
 
             readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
@@ -271,7 +271,7 @@ public class DiscordantGroups
 
             for(ReadGroup readGroup : remoteRegion.ReadGroups)
             {
-                remoteJunctionData.SupportingGroups.add(readGroup);
+                remoteJunctionData.addSupportingGroup(readGroup);
                 readGroup.addJunctionPosition(remoteJunctionData);
 
                 readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));

@@ -36,7 +36,7 @@ public class FiltersTest
     private static final FilterConstants FILTER_CONSTANTS = FilterConstants.from(false, V37, FilterConstants.DEFAULT_PON_DISTANCE);
 
     private static final FragmentLengthBounds FRAG_LENGTHS = new FragmentLengthBounds(
-            100, 100, 500, 0.1);
+            100, 900, 500, 0.1);
 
     private final VariantFilters mVariantFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.001);
 

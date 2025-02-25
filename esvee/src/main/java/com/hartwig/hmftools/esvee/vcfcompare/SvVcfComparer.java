@@ -27,7 +27,7 @@ public class SvVcfComparer
 
     public void run()
     {
-        SV_LOGGER.info("Comparing VCFs for sample: " + mSampleId);
+        SV_LOGGER.info("comparing VCFs for sample: " + mSampleId);
 
         if(mCompareTasks.contains(CompareTask.MATCH_BREAKENDS))
             new BreakendMatchTask(mConfig).run();

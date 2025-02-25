@@ -169,14 +169,14 @@ public class ResultsWriter
                 int extraInfoValues = 0;
 
                 int junctionFrags = junctionData.junctionFragmentCount();
-                int exactSupportFrags = junctionData.ExactSupportGroups.size();
-                int otherSupportFrags = junctionData.SupportingGroups.size();
+                int exactSupportFrags = junctionData.exactSupportFragmentCount();
+                int otherSupportFrags = junctionData.supportingFragmentCount();
 
                 if(!junctionData.discordantGroup())
                 {
                     boolean expectLeftClipped = junctionData.Orient.isReverse();
 
-                    for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+                    for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
                     {
                         // check the read supports this junction (it can also support another junction)
                         boolean supportsJunction =
@@ -202,7 +202,7 @@ public class ResultsWriter
                         }
                     }
 
-                    for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
+                    for(PrepRead read : junctionData.readTypeReads().get(ReadType.EXACT_SUPPORT))
                     {
                         maxMapQual = max(maxMapQual, read.mapQuality());
 
@@ -213,7 +213,7 @@ public class ResultsWriter
                 else
                 {
                     // replace soft-clip length with max remote location reads
-                    extraInfoValues = !junctionData.RemoteJunctions.isEmpty() ? junctionData.RemoteJunctions.get(0).Fragments : 0;
+                    extraInfoValues = !junctionData.remoteJunctions().isEmpty() ? junctionData.remoteJunctions().get(0).Fragments : 0;
                 }
 
                 mJunctionWriter.write(String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
@@ -229,22 +229,24 @@ public class ResultsWriter
                     // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
                     String remoteJunctionsStr = "";
 
-                    if(!junctionData.RemoteJunctions.isEmpty())
+                    List<RemoteJunction> remoteJunctions = junctionData.remoteJunctions();
+
+                    if(!junctionData.remoteJunctions().isEmpty())
                     {
-                        Collections.sort(junctionData.RemoteJunctions, Comparator.comparingInt(x -> -x.Fragments));
+                        Collections.sort(remoteJunctions, Comparator.comparingInt(x -> -x.Fragments));
 
                         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 
-                        for(int i = 0; i < min(junctionData.RemoteJunctions.size(), 5); ++i)
+                        for(int i = 0; i < min(remoteJunctions.size(), 5); ++i)
                         {
-                            RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
+                            RemoteJunction remoteJunction = remoteJunctions.get(i);
                             sj.add(String.format("%s:%d:%d:%d",
                                     remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orient.asByte(), remoteJunction.Fragments));
                         }
                         remoteJunctionsStr = sj.toString();
                     }
 
-                    mJunctionWriter.write(String.format("\t%d\t%s", junctionData.RemoteJunctions.size(), remoteJunctionsStr));
+                    mJunctionWriter.write(String.format("\t%d\t%s", remoteJunctions.size(), remoteJunctionsStr));
                 }
 
                 mJunctionWriter.newLine();

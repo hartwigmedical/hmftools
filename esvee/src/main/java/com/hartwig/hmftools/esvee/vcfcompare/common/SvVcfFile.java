@@ -19,13 +19,16 @@ public class SvVcfFile
     private final SvCallerType mSvCallerType;
     private final VcfType mSourceVcfType;
 
-    private Map<String, List<VariantBreakend>> mChrBreakendMap = null;
-    private List<VariantBreakend> mBreakendListCache = null;
+    private Map<String, List<VariantBreakend>> mChrBreakendMap;
+    private List<VariantBreakend> mBreakendListCache;
 
     public SvVcfFile(String path, String label)
     {
         mPath = path;
         mLabel = label;
+
+        mChrBreakendMap = null;
+        mBreakendListCache = null;
 
         mSvCallerType = SvCallerType.fromVcfPath(mPath);
         mSourceVcfType = VcfType.fromVcfPath(mPath);
@@ -33,7 +36,7 @@ public class SvVcfFile
 
     public SvVcfFile loadVariants()
     {
-        SV_LOGGER.info("Loading {}: {}", mLabel, mPath);
+        SV_LOGGER.info("loading {} from file({})", mLabel, mPath);
 
         VcfFileReader reader = new VcfFileReader(mPath);
 
@@ -56,7 +59,7 @@ public class SvVcfFile
 
         mChrBreakendMap = chrBreakendMap;
 
-        SV_LOGGER.debug("Loaded {} structural variants", variantCount);
+        SV_LOGGER.debug("loaded {} SVs", variantCount);
 
         return this;
     }
@@ -67,7 +70,7 @@ public class SvVcfFile
             throw new IllegalStateException("loadVariants() not yet called");
     }
 
-    public Map<String, List<VariantBreakend>> getVariantsAsMap()
+    public Map<String,List<VariantBreakend>> getVariantsAsMap()
     {
         checkVariantsLoaded();
         return mChrBreakendMap;

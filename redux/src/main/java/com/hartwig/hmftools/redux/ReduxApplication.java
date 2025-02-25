@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
-import com.hartwig.hmftools.redux.unmap.TaskQueue;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 import com.hartwig.hmftools.redux.unmap.UnmapStats;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.FinalBamWriter;
@@ -46,7 +46,10 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
+        if(!mConfig.JitterMsiOnly)
+        {
+            RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
+        }
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -253,6 +256,12 @@ public class ReduxApplication
         else
         {
             RD_LOGGER.debug("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+        }
+
+        if(!bamSampler.hasMateCigarSet())
+        {
+            RD_LOGGER.warn("required mate CIGAR not set, exiting");
+            System.exit(1);
         }
 
         mConfig.setReadLength(readLength);

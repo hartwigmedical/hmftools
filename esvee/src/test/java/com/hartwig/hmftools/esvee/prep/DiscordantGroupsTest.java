@@ -103,7 +103,7 @@ public class DiscordantGroupsTest
 
         junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(2, junctions.size());
-        assertTrue(junctions.get(0).JunctionGroups.isEmpty());
+        assertTrue(junctions.get(0).junctionGroups().isEmpty());
         assertEquals(540, junctions.get(0).Position);
         assertEquals(FORWARD, junctions.get(0).Orient);
 
@@ -117,7 +117,7 @@ public class DiscordantGroupsTest
 
         junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(2, junctions.size());
-        assertEquals(8, junctions.get(0).SupportingGroups.size());
+        assertEquals(8, junctions.get(0).supportingGroups().size());
 
         // a local DEL needs more support
         discordantCandidates.clear();
@@ -197,6 +197,6 @@ public class DiscordantGroupsTest
         List<JunctionData> junctions = discordantGroups.formDiscordantJunctions(discordantCandidates);
         assertEquals(2, junctions.size());
 
-        assertEquals(5, junctions.get(0).SupportingGroups.size());
+        assertEquals(5, junctions.get(0).supportingGroups().size());
     }
 }

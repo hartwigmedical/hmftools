@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -361,6 +362,7 @@ public class PartitionReader
         {
             if(mConfig.FormConsensus)
             {
+                duplicateGroup.setPCRClusterCount(mConfig.Sequencing);
                 duplicateGroup.formConsensusRead(mConsensusReads);
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
@@ -419,7 +421,7 @@ public class PartitionReader
         mPcProcessDuplicates.stop();
     }
 
-    private boolean isAltContigRegion() { return PartitionInfo.isAltRegionContig(mCurrentRegion.Chromosome); }
+    private boolean isAltContigRegion() { return Chromosome.isAltRegionContig(mCurrentRegion.Chromosome); }
 
     @VisibleForTesting
     public void setBamWriter(final BamWriter writer) { mBamWriter = writer; }
