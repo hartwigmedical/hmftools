@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPP
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsUnmapRegion;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 
 import java.io.File;
 import java.util.Collections;

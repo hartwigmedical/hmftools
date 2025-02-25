@@ -15,7 +15,7 @@ import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
-import com.hartwig.hmftools.esvee.common.TaskQueue;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 
 public class PhaseSetTask extends ThreadTask
 {

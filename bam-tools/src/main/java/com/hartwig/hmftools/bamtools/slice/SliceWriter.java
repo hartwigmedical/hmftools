@@ -123,7 +123,7 @@ public class SliceWriter
             sj.add(record.getContig());
             sj.add(String.valueOf(record.getAlignmentStart()));
             sj.add(String.valueOf(record.getAlignmentEnd()));
-            sj.add(record.getCigar().toString());
+            sj.add(record.getCigarString());
 
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
@@ -137,7 +137,7 @@ public class SliceWriter
             sj.add(String.valueOf(record.getFirstOfPairFlag()));
             sj.add(String.valueOf(record.getReadNegativeStrandFlag()));
             sj.add(String.valueOf(record.getProperPairFlag()));
-            sj.add(String.valueOf(record.getProperPairFlag()));
+            sj.add(String.valueOf(record.getReadUnmappedFlag()));
             sj.add(String.valueOf(record.getMateUnmappedFlag()));
             sj.add(String.valueOf(record.getSupplementaryAlignmentFlag()));
             sj.add(String.valueOf(record.getDuplicateReadFlag()));
