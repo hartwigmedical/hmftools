@@ -127,6 +127,7 @@ public class PaddedExonTest extends TransvalTestBase
         assertEquals(1, ec6.codonLocationInExonBody(1, true));
         assertEquals(4, ec6.codonLocationInExonBody(2, true));
 
+        // TTTAAACCCGGG
         assertEquals(9, ec1.codonLocationInExonBody(1, false));
         assertEquals(6, ec1.codonLocationInExonBody(2, false));
         assertEquals(3, ec1.codonLocationInExonBody(3, false));

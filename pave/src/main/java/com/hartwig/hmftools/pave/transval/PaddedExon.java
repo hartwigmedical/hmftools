@@ -265,15 +265,25 @@ public class PaddedExon
         Preconditions.checkArgument(count > 0);
         if(!isPositiveStrand)
         {
-            if(numberOfBasesInPreviousExon() + numberOfBasesInFollowingExon() > 0)
+            int stop = codonLocationInExonBody(startCodon, false) + 3; //end of deletion is the codon end.
+            int start = stop - (3 * count);
+            if(start < 0)
             {
-                throw new IllegalArgumentException("Not yet implemented");
+                String forwardBasesInExon = exonBases.substring(0, stop);
+                String reversed = Nucleotides.reverseComplementBases(forwardBasesInExon);
+                String suffix = Nucleotides.reverseComplementBases(BasesOfFirstCodonInPreviousExon);
+                return new SplitCodonSequence(reversed, suffix, exonStart);
             }
-            int deletionEnd = exonBases.length() - 3 * (startCodon - 1);
-            int deletionStart = deletionEnd - 3 * count;
-            String fragmentInExon = exonBases.substring(deletionStart, deletionEnd);
-            String reversed = Nucleotides.reverseComplementBases(fragmentInExon);
-            return new SplitCodonSequence(reversed, "", exonStart + deletionEnd - 1);
+            if(stop >= exonBases.length())
+            {
+                String forwardBasesInExon = exonBases.substring(start);
+                String reversed = Nucleotides.reverseComplementBases(forwardBasesInExon);
+                String prefix = Nucleotides.reverseComplementBases(BasesOfLastCodonInFollowingExon);
+                return new SplitCodonSequence(prefix, reversed, exonStart + start);
+            }
+            String forwardBases = exonBases.substring(start, stop);
+            String reversed = Nucleotides.reverseComplementBases(forwardBases);
+            return new SplitCodonSequence(reversed, "", exonStart + start);
         }
         int start = codonLocationInExonBody(startCodon, true);
         int stop = start + count * 3;

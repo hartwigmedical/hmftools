@@ -41,24 +41,27 @@ class DeletionInsertion extends ProteinVariant
     public TransvalVariant calculateVariant(RefGenomeInterface refGenome)
     {
         SplitCodonSequence splitBases = referenceBases(refGenome);
-        String referenceNucleotides = splitBases.completeSequence();
+        String referenceNucleotidesForwardStrand = splitBases.completeSequence();
+        if(mGene.reverseStrand())
+        {
+            referenceNucleotidesForwardStrand = Nucleotides.reverseComplementBases(referenceNucleotidesForwardStrand);
+        }
         if(!splitBases.couldBeDeletionInsertion())
         {
             return null; // todo
         }
-        Set<String> destinationBases = candidateAlternativeNucleotideSequences(splitBases.retainedPrefix(), splitBases.retainedSuffix());
-        String modifiedBases = mGene.forwardStrand()
-                ? splitBases.segmentThatIsModified()
-                : Nucleotides.reverseComplementBases(splitBases.segmentThatIsModified());
-        int changeStart = splitBases.locationOfDeletedBases();
+        Set<String> destinationBasesForwardStrand = candidateAlternativeNucleotideSequences(splitBases.retainedPrefix(), splitBases.retainedSuffix());
         if(mGene.reverseStrand())
         {
-            destinationBases = destinationBases.stream().map(Nucleotides::reverseComplementBases).collect(Collectors.toSet());
-            changeStart = changeStart - modifiedBases.length() + 1;
-            referenceNucleotides = Nucleotides.reverseComplementBases(referenceNucleotides);
+            destinationBasesForwardStrand = destinationBasesForwardStrand.stream().map(Nucleotides::reverseComplementBases).collect(Collectors.toSet());
+            //            changeStart = changeStart - modifiedForwardStrandBases.length() + 1;
         }
+        int changeStart = splitBases.locationOfDeletedBases();
+        String modifiedForwardStrandBases = mGene.forwardStrand()
+                ? splitBases.segmentThatIsModified()
+                : Nucleotides.reverseComplementBases(splitBases.segmentThatIsModified());
         SortedSet<DeletionInsertionChange> changes = new TreeSet<>();
-        destinationBases.forEach(target -> changes.add(new DeletionInsertionChange(modifiedBases, target)));
+        destinationBasesForwardStrand.forEach(target -> changes.add(new DeletionInsertionChange(modifiedForwardStrandBases, target)));
 
         ChangeLocation globalLocation = new ChangeLocation(this.mGene.Chromosome, changeStart);
         Set<TransvalHotspot> hotspots = changes
@@ -73,7 +76,7 @@ class DeletionInsertion extends ProteinVariant
                 mGene.Chromosome,
                 bestCandidate.mPosition,
                 splitBases.spansTwoExons(),
-                referenceNucleotides,
+                referenceNucleotidesForwardStrand,
                 bestCandidate.Ref,
                 hotspots
         );

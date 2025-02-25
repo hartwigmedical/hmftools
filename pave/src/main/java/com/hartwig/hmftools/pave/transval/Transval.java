@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.pave.transval;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -45,5 +48,32 @@ public class Transval
     {
         ProteinVariant variant = variationParser().parseGeneVariant(gene, proteinVariant);
         return variant.calculateVariant(mRefGenome);
+    }
+
+    public TransvalVariant calculateVariantAllowMultipleNonCanonicalTranscriptMatches(String gene, String proteinVariant)
+    {
+        Set<ProteinVariant> allMatchingVariants = variationParser().parseGeneVariants(gene, proteinVariant);
+        Map<String, TransvalVariant> transcriptIdToVariant  = new HashMap<>();
+        allMatchingVariants.forEach(variant -> {
+            transcriptIdToVariant.put(variant.mTranscript.TransName, variant.calculateVariant(mRefGenome));
+        });
+        if(transcriptIdToVariant.size() == 1)
+        {
+            return transcriptIdToVariant.values().iterator().next();
+        }
+        else
+        {
+            TransvalVariant example = transcriptIdToVariant.values().iterator().next();
+            transcriptIdToVariant.values().forEach(variant -> {
+               if(!variant.hotspots().equals(example.hotspots()))
+               {
+                   String name1 = variant.Transcript.TransName;
+                   String name2 = example.Transcript.TransName;
+                   String msg = format("Transcripts %s and %s both match %s but produce different hotspots", name1, name2, proteinVariant);
+                   throw new IllegalArgumentException(msg);
+               }
+            });
+            return example;
+        }
     }
 }

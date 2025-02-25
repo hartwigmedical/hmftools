@@ -14,6 +14,16 @@ import org.junit.Test;
 public final class TransvalTest extends TransvalTestBase
 {
     @Test
+    public void handleMultipleMatchingNonCanonicalTranscriptsThatReturnSameHotspots()
+    {
+        TransvalVariant variant = transval.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("KIT", "N560_Y574del");
+        checkHotspots(variant,
+                hotspot("TAAATGGAAACAATTATGTTTACATAGACCCAACACAACTTCCTTA", "T", "chr4", 54727456),
+                hotspot("AAATGGAAACAATTATGTTTACATAGACCCAACACAACTTCCTTAT", "A", "chr4", 54727457)
+        );
+    }
+
+    @Test
     public void mtorSNV()
     {
         // This example is based on TransvarConverterTest in the serve codebase.
@@ -508,6 +518,38 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertEquals(2, hotspots.size());
         assertTrue(hotspots.contains(hotspot("AAT", "", "chr5", 68_293_761)));
         assertTrue(hotspots.contains(hotspot("ATAT", "C", "chr5", 68_293_762)));
+    }
+
+    @Test
+    public void reverseStrandDelinsTest()
+    {
+        TransvalVariant variant = transval.calculateVariant("BRAF", "N486_T491delinsK");
+        checkHotspots(variant,
+                hotspot("GTAGGTGCTGTCACA", "", "chr7", 140778036),
+                hotspot("TGTAGGTGCTGTCACA", "C", "chr7", 140778035)
+        );
+    }
+
+    @Test
+    public void delinsReverseStrandAtExonEndTest()
+    {
+        // -> ...TGC CAC ATC AC|C (...<- ACG GTG TAG TG|G ...A V D G|G)
+        TransvalVariant variant = transval.calculateVariant("BRAF", "G478_V480delinsE");
+        // so -> GTG TAG TG|G goes to {AA|G, GA|G}. So delete TG TAG TG
+        checkHotspots(variant,
+                hotspot("ACATCAC", "T", "chr7", 140778069),
+                hotspot("CACATCAC", "TT", "chr7", 140778068)
+        );
+    }
+
+    @Test
+    public void delinsReverseStrandAtExonStartTest()
+    {
+        // -> ...C|CC AAT AGA GTC...CAA A|TC
+        // <- ...G|GG TTA TCT CAG...GTT T|AG
+        //       G    I   S   D...
+        TransvalVariant variant = transval.calculateVariant("BRAF", "D324_G327delinsQ");
+        checkHotspots(variant, hotspot("CCAATAGAGTC", "TG", "chr7", 140800362));
     }
 
     @Test

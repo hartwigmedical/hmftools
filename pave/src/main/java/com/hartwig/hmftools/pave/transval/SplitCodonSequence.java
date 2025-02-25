@@ -12,8 +12,6 @@ import org.jetbrains.annotations.NotNull;
  * A sequence of bases that is subject to an insertion and deletion
  * mutation may be split across two exons. (We don't consider any
  * larger changes to be deletion insertions.)
- * This class encapsulates the mapping of the start of a codon within
- * an exon and its possible extension into the next exon.
  */
 public class SplitCodonSequence
 {
@@ -118,7 +116,7 @@ public class SplitCodonSequence
     @Override
     public String toString()
     {
-        return "SplitCodonicSequence{" +
+        return "SplitCodonSequence{" +
                 "Left='" + Left + '\'' +
                 ", Right='" + Right + '\'' +
                 ", PositionOfChange=" + PositionOfChange +

@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -107,7 +108,7 @@ public class ServeDataTest
         return jsonObject.get(key).getAsString();
     }
 
-//    @Test
+    @Test
     public void check()
     {
         List<StatsForGene> results = new ArrayList<>();
@@ -123,6 +124,8 @@ public class ServeDataTest
         int numberOfGenes = 0;
         int numberNotParsed = 0;
         int numberWithSameHotspots = 0;
+        int numberWithNoTranscriptFound = 0;
+        int numberWithMultipleTranscriptFound = 0;
         //        int numberWithSameHotspotsAndUsingNonCanonicalTranscript = 0;
         //        int numberWithDifferentHotspotsAndUsingNonCanonicalTranscript = 0;
         SortedSet<GeneAnnotation> unaccountedDifferences = new TreeSet<>();
@@ -132,6 +135,8 @@ public class ServeDataTest
             numberOfGenes++;
             numberNotParsed += stats.NumberNotParsed;
             numberWithSameHotspots += stats.NumberWithSameHotspots;
+            numberWithNoTranscriptFound += stats.NumberWithNoMatchingTranscript;
+            numberWithMultipleTranscriptFound += stats.NumberWithNoUniqueMatchingTranscript;
             //            numberWithSameHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithSameHotspotsThatUseNonCanonicalTranscript;
             //            numberWithDifferentHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithDifferentHotspotsThatUseNonCanonicalTranscript;
             stats.AnnotationsWithDifferentHotspots.forEach(variantStatus ->
@@ -154,20 +159,20 @@ public class ServeDataTest
         p("*************");
         p("Number of genes: " + numberOfGenes);
         p("Number of annotations not parsed: " + numberNotParsed);
-        p("Number of annotations with same hotspots: " + numberWithSameHotspots);
-        p("Unaccounted differences: " + unaccountedDifferences.size());
-        p("Unaccounted differences but with hotspots same apart from position: "
-                + unaccountedDifferencesButWithHotspotsSameApartFromPosition.size());
+        p("Number with no transcript found: " + numberWithNoTranscriptFound);
+        p("Number with no unique transcript found: " + numberWithMultipleTranscriptFound);
+//        p("Number of annotations with same hotspots: " + numberWithSameHotspots);
+//        p("Unaccounted differences: " + unaccountedDifferences.size());
+//        p("Unaccounted differences but with hotspots same apart from position: "
+//                + unaccountedDifferencesButWithHotspotsSameApartFromPosition.size());
         //        p("Number of annotations that have same hotspots and use non canonical transcript: " + numberWithSameHotspotsAndUsingNonCanonicalTranscript);
         //        p("Number of annotations that have different hotspots and use non canonical transcript: " + numberWithDifferentHotspotsAndUsingNonCanonicalTranscript);
     }
 
-    //    @Test
+//    @Test
     public void examples()
     {
-        //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("PLCB4", "M549_G556delinsI");
-        //        ProteinVariant variant = transval.variationParser().parseExpressionForGene("ROS1", "A1924_I1934del");
-        ProteinVariant variant = transval.variationParser().parseGeneVariant("EGFR", "L643V");
+        ProteinVariant variant = transval.variationParser().parseGeneVariant("BRAF", "N486_T491delinsK");
         TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
         Assert.assertEquals(6, tsm.hotspots().size());
     }
@@ -192,7 +197,29 @@ public class ServeDataTest
             {
                 if(comparison.hasProcessingError())
                 {
-                    p("Processing error for: " + collator);
+                    //                    p("Processing error for: " + collator);
+                    String msg = comparison.mProcessingError.getMessage();
+                    if(msg == null)
+                    {
+                        p("This one had an error with no message: " + collator);
+                        p("The processing error was: " + comparison.mProcessingError);
+                    }
+                    else
+                    {
+                        if(msg.startsWith("No transcript found for gene"))
+                        {
+                            statsForGene.NumberWithNoMatchingTranscript++;
+                        }
+                        else if(msg.endsWith("but produce different hotspots"))
+                        {
+                            statsForGene.NumberWithNoUniqueMatchingTranscript++;
+                        }
+                        else
+                        {
+                            p("Processing error for: " + collator);
+                            p(msg);
+                        }
+                    }
                 }
                 else
                 {
@@ -210,18 +237,10 @@ public class ServeDataTest
 
     private VariantStatus checkVariant(ProteinAnnotationCollator collator)
     {
-        ProteinVariant variant;
         try
         {
-            variant = transval.variationParser().parseGeneVariant(collator.mGene, collator.mAnnotation);
-        }
-        catch(Exception e)
-        {
-            return new VariantStatus(collator, e);
-        }
-        try
-        {
-            TransvalVariant transvalVariant = variant.calculateVariant(transval.mRefGenome);
+            TransvalVariant transvalVariant =
+                    transval.calculateVariantAllowMultipleNonCanonicalTranscriptMatches(collator.mGene, collator.mAnnotation);
             return new VariantStatus(collator, transvalVariant);
         }
         catch(Throwable t)
@@ -455,6 +474,8 @@ class StatsForGene
 
     public int NumberWithSameHotspotsThatUseNonCanonicalTranscript = 0;
     public int NumberWithDifferentHotspotsThatUseNonCanonicalTranscript = 0;
+    public int NumberWithNoMatchingTranscript = 0;
+    public int NumberWithNoUniqueMatchingTranscript = 0;
 
     public final List<VariantStatus> AnnotationsWithDifferentHotspots = new ArrayList<>();
     private final List<VariantStatus> AnnotationResults = new ArrayList<>();
@@ -466,6 +487,16 @@ class StatsForGene
 
     public void recordResultsForAnnotation(VariantStatus comparison)
     {
+        if(comparison.mParseException != null)
+        {
+            System.out.println(comparison.mParseException.getMessage());
+        }
+        if(comparison.hasProcessingError())
+        {
+            Throwable t = comparison.mProcessingError;
+            //            if(t.getMessage().contains())
+            System.out.println(t.getMessage());
+        }
         if(comparison.hotspotsSame())
         {
             NumberWithSameHotspots++;

@@ -2,6 +2,12 @@ package com.hartwig.hmftools.pave.transval;
 
 import static com.hartwig.hmftools.pave.transval.Checks.HGVS_FORMAT_REQUIRED;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +21,58 @@ public class VariantParserTest extends TransvalTestBase
     public void setUp()
     {
         variantParser = transval.variationParser();
+    }
+
+    @Test
+    public void returnMultipleVariantsIfCanonicalDoesNotMatchSpecification()
+    {
+        Set<ProteinVariant> variants = variantParser.parseGeneVariants("ZYX", "S2V");
+        // See ensembl_trans_amino_acids.csv
+        assertEquals(3, variants.size());
+        Set<String> transcriptNames = variants.stream().map(variant -> variant.mTranscript.TransName).collect(Collectors.toSet());
+        assertTrue(transcriptNames.contains("ENST00000436448"));
+        assertTrue(transcriptNames.contains("ENST00000446634"));
+        assertTrue(transcriptNames.contains("ENST00000449630"));
+    }
+
+    @Test
+    public void returnJustTheCanonicalTranscriptIfItMatchesTheSpecification()
+    {
+        Set<ProteinVariant> variants = variantParser.parseGeneVariants("ZYX", "A2V");
+        // See ensembl_trans_amino_acids.csv
+        assertEquals(1, variants.size());
+        ProteinVariant variant = variants.iterator().next();
+        assertEquals("ENST00000322764", variant.mTranscript.TransName);
+    }
+
+    @Test
+    public void reportErrorIfNoMatchingTranscriptsFound()
+    {
+        String receivedMessage = null;
+        try
+        {
+            variantParser.parseGeneVariants("ZYX", "F2V");
+        }
+        catch(final IllegalArgumentException e)
+        {
+            receivedMessage = e.getMessage();
+        }
+        assertEquals("No transcript found for gene: ENSG00000159840 matching ref: [2,F]_[2,F]", receivedMessage);
+    }
+
+    @Test
+    public void reportErrorIfSingleTranscriptExpectedButMultipleNonCanonicalTranscriptsFound()
+    {
+        String receivedMessage = null;
+        try
+        {
+            variantParser.parseGeneVariant("ZYX", "S2V");
+        }
+        catch(final IllegalArgumentException e)
+        {
+            receivedMessage = e.getMessage();
+        }
+        assertEquals("No canonical transcript, but multiple non-canonical transcripts, found for gene: ENSG00000159840, ref: [2,S]_[2,S]", receivedMessage);
     }
 
     @Test
@@ -42,105 +100,105 @@ public class VariantParserTest extends TransvalTestBase
     public void parseDeletionWithGene()
     {
         Deletion di = (Deletion) variantParser.parseGeneVariant("EGFR", "N73_Y74del");
-        Assert.assertEquals("EGFR", di.mGene.GeneName);
-        Assert.assertEquals(73, di.positionOfFirstAlteredCodon());
-        Assert.assertEquals(2, di.mRefLength);
+        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals(73, di.positionOfFirstAlteredCodon());
+        assertEquals(2, di.mRefLength);
     }
 
     @Test
     public void parseFrameshiftWithGene()
     {
         Frameshift frameshift = (Frameshift) variantParser.parseGeneVariant("EGFR", "N73fs");
-        Assert.assertEquals("EGFR", frameshift.mGene.GeneName);
-        Assert.assertEquals(73, frameshift.positionOfFirstAlteredCodon());
-        Assert.assertEquals("N", frameshift.mFirstChangedAminoAcid.symbol);
-        Assert.assertEquals(1, frameshift.mRefLength);
+        assertEquals("EGFR", frameshift.mGene.GeneName);
+        assertEquals(73, frameshift.positionOfFirstAlteredCodon());
+        assertEquals("N", frameshift.mFirstChangedAminoAcid.symbol);
+        assertEquals(1, frameshift.mRefLength);
     }
 
     @Test
     public void parseStopGainedWithGene()
     {
         StopGained variant = (StopGained) variantParser.parseGeneVariant("EGFR", "N73*");
-        Assert.assertEquals("EGFR", variant.mGene.GeneName);
-        Assert.assertEquals(73, variant.positionOfFirstAlteredCodon());
-        Assert.assertEquals("N", variant.mFirstChangedAminoAcid.symbol);
-        Assert.assertEquals(1, variant.mRefLength);
+        assertEquals("EGFR", variant.mGene.GeneName);
+        assertEquals(73, variant.positionOfFirstAlteredCodon());
+        assertEquals("N", variant.mFirstChangedAminoAcid.symbol);
+        assertEquals(1, variant.mRefLength);
     }
 
     @Test
     public void parseStartLostWithGene()
     {
         StartLost variant = (StartLost) variantParser.parseGeneVariant("KIT", "M1?");
-        Assert.assertEquals("KIT", variant.mGene.GeneName);
-        Assert.assertEquals(1, variant.positionOfFirstAlteredCodon());
+        assertEquals("KIT", variant.mGene.GeneName);
+        assertEquals(1, variant.positionOfFirstAlteredCodon());
     }
 
     @Test
     public void parseInsertionWithGene()
     {
         Insertion di = (Insertion) variantParser.parseGeneVariant("EGFR", "N73_Y74insSPQR");
-        Assert.assertEquals("EGFR", di.mGene.GeneName);
-        Assert.assertEquals(74, di.positionOfFirstAlteredCodon());
-        Assert.assertEquals(2, di.mRefLength);
-        Assert.assertEquals("SPQR", di.mInsertedSequence.sequence());
+        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals(74, di.positionOfFirstAlteredCodon());
+        assertEquals(2, di.mRefLength);
+        assertEquals("SPQR", di.mInsertedSequence.sequence());
     }
 
     @Test
     public void canReferToGeneByName()
     {
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("ZYX:p.Pro46Ala");
-        Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
-        Assert.assertEquals("ENSG00000159840", variant.mGene.GeneId);
+        assertEquals(46, variant.positionOfFirstAlteredCodon());
+        assertEquals("ENSG00000159840", variant.mGene.GeneId);
     }
 
     @Test
     public void canReferToGeneByEnsemblId()
     {
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("ENSG00000159840:p.Pro46Ala");
-        Assert.assertEquals(46, variant.positionOfFirstAlteredCodon());
-        Assert.assertEquals("ZYX", variant.mGene.GeneName);
+        assertEquals(46, variant.positionOfFirstAlteredCodon());
+        assertEquals("ZYX", variant.mGene.GeneName);
     }
 
-    @Test
+//    @Test TODO ask if we needd this flexibility
     public void referenceAminoAcidIsNotRequired()
     {
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("BRAF:p.600E");
-        Assert.assertEquals(600, variant.positionOfFirstAlteredCodon());
-        Assert.assertEquals("E", variant.altValue());
+        assertEquals(600, variant.positionOfFirstAlteredCodon());
+        assertEquals("E", variant.altValue());
     }
 
     @Test
     public void parseSingleAminoAcidVariantTest()
     {
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parseGeneVariant("BRAF", "V600E");
-        Assert.assertEquals(600, variant.positionOfFirstAlteredCodon());
-        Assert.assertEquals("E", variant.altValue());
+        assertEquals(600, variant.positionOfFirstAlteredCodon());
+        assertEquals("E", variant.altValue());
     }
 
     @Test
     public void aminoAcidNameIsConvertedToSingleLetter()
     {
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("BRAF:p.Val600Glu");
-        Assert.assertEquals("E", variant.altValue());
+        assertEquals("E", variant.altValue());
     }
 
     @Test
     public void parseGeneVariantTest()
     {
         ProteinVariant pv1 = variantParser.parseGeneVariant("BRAF", "Val600Glu");
-        Assert.assertEquals(600, pv1.positionOfFirstAlteredCodon());
+        assertEquals(600, pv1.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv1 instanceof SingleAminoAcidVariant);
 
         ProteinVariant pv2 = variantParser.parseGeneVariant("ADCK2", "Glu301_Thr303delinsGlnGln");
-        Assert.assertEquals(301, pv2.positionOfFirstAlteredCodon());
+        assertEquals(301, pv2.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv2 instanceof DeletionInsertion);
 
         ProteinVariant pv3 = variantParser.parseGeneVariant("EGFR", "L747_A750del");
-        Assert.assertEquals(747, pv3.positionOfFirstAlteredCodon());
+        assertEquals(747, pv3.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv3 instanceof Deletion);
 
         ProteinVariant pv4 = variantParser.parseGeneVariant("PIK3R1", "Y452dup");
-        Assert.assertEquals(452, pv4.positionOfFirstAlteredCodon());
+        assertEquals(452, pv4.positionOfFirstAlteredCodon());
         Assert.assertTrue(pv4 instanceof Duplication);
     }
 
@@ -148,27 +206,27 @@ public class VariantParserTest extends TransvalTestBase
     public void parseDeletionInsertion()
     {
         DeletionInsertion di = (DeletionInsertion) variantParser.parse("EGFR:p.L747_A750delinsP");
-        Assert.assertEquals("EGFR", di.mGene.GeneName);
-        Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
-        Assert.assertEquals(4, di.mRefLength);
-        Assert.assertEquals("P", di.altAminoAcidSequence());
+        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals(747, di.positionOfFirstAlteredCodon());
+        assertEquals(4, di.mRefLength);
+        assertEquals("P", di.altAminoAcidSequence());
 
         // ADCK2 Glu301_Thr303delinsGlnGln, which is E301_T303delinsQQ
         DeletionInsertion di2 = (DeletionInsertion) variantParser.parse("ADCK2:p.Glu301_Thr303delinsGlnGln");
-        Assert.assertEquals("ADCK2", di2.mGene.GeneName);
-        Assert.assertEquals(301, di2.positionOfFirstAlteredCodon());
-        Assert.assertEquals(3, di2.mRefLength);
-        Assert.assertEquals("QQ", di2.altAminoAcidSequence());
+        assertEquals("ADCK2", di2.mGene.GeneName);
+        assertEquals(301, di2.positionOfFirstAlteredCodon());
+        assertEquals(3, di2.mRefLength);
+        assertEquals("QQ", di2.altAminoAcidSequence());
     }
 
     @Test
     public void parseDeletionInsertionWithGene()
     {
         DeletionInsertion di = (DeletionInsertion) variantParser.parseGeneVariant("EGFR", "L747_A750delinsP");
-        Assert.assertEquals("EGFR", di.mGene.GeneName);
-        Assert.assertEquals(747, di.positionOfFirstAlteredCodon());
-        Assert.assertEquals(4, di.mRefLength);
-        Assert.assertEquals("P", di.altAminoAcidSequence());
+        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals(747, di.positionOfFirstAlteredCodon());
+        assertEquals(4, di.mRefLength);
+        assertEquals("P", di.altAminoAcidSequence());
     }
 
     @Test
@@ -182,14 +240,14 @@ public class VariantParserTest extends TransvalTestBase
     public void parseDuplicationWithGene()
     {
         Duplication dup = (Duplication) variantParser.parseGeneVariant("PIK3R1", "Y452dup");
-        Assert.assertEquals("PIK3R1", dup.mGene.GeneName);
-        Assert.assertEquals(452, dup.positionOfFirstAlteredCodon());
-        Assert.assertEquals(1, dup.mRefLength);
+        assertEquals("PIK3R1", dup.mGene.GeneName);
+        assertEquals(452, dup.positionOfFirstAlteredCodon());
+        assertEquals(1, dup.mRefLength);
 
         Duplication dup2 = (Duplication) variantParser.parseGeneVariant("PIK3R1", "E458_Y463dup");
-        Assert.assertEquals("PIK3R1", dup2.mGene.GeneName);
-        Assert.assertEquals(458, dup2.positionOfFirstAlteredCodon());
-        Assert.assertEquals(6, dup2.mRefLength);
+        assertEquals("PIK3R1", dup2.mGene.GeneName);
+        assertEquals(458, dup2.positionOfFirstAlteredCodon());
+        assertEquals(6, dup2.mRefLength);
     }
 
     private void checkSaavInputResultsInErrorWithMessage(String input, String expectedMessage)
@@ -203,7 +261,7 @@ public class VariantParserTest extends TransvalTestBase
         {
             receivedMessage = e.getMessage();
         }
-        Assert.assertEquals(expectedMessage, receivedMessage);
+        assertEquals(expectedMessage, receivedMessage);
     }
 
     private void checkDiInputResultsInErrorWithMessage(String input, String expectedMessage)
@@ -217,6 +275,6 @@ public class VariantParserTest extends TransvalTestBase
         {
             receivedMessage = e.getMessage();
         }
-        Assert.assertEquals(expectedMessage, receivedMessage);
+        assertEquals(expectedMessage, receivedMessage);
     }
 }

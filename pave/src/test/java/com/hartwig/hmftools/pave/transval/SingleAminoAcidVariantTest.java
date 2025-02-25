@@ -19,7 +19,7 @@ public class SingleAminoAcidVariantTest extends VariantTest
     public void codingRegionLengthsTest()
     {
         // TODO cases where there are 1 or 2 exons
-        SingleAminoAcidVariant variant = this.saav("ADCK2:p.3K");
+        SingleAminoAcidVariant variant = this.saav("ADCK2:p.V2K");
         Assert.assertEquals(627, variant.mAminoAcidSequence.AminoAcids.length()); // sanity
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(8, returned.size());
@@ -33,7 +33,7 @@ public class SingleAminoAcidVariantTest extends VariantTest
     @Test
     public void codingRegionExons()
     {
-        SingleAminoAcidVariant variant = this.saav("ZYX:p.1E");
+        SingleAminoAcidVariant variant = this.saav("ZYX:p.A2E");
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(9, returned.size());
         Assert.assertEquals(573, variant.mAminoAcidSequence.AminoAcids.length()); // sanity
@@ -47,7 +47,7 @@ public class SingleAminoAcidVariantTest extends VariantTest
     @Test
     public void codingRegionLengthsReverseStrandTest()
     {
-        SingleAminoAcidVariant variant = this.saav("BRAF:p.600E");
+        SingleAminoAcidVariant variant = this.saav("BRAF:p.V600E");
         List<Integer> returned = variant.codingRegionLengths();
         Assert.assertEquals(18, returned.size());
         Assert.assertEquals(3 * 767, returned.stream().mapToInt(Integer::intValue).sum());
@@ -60,13 +60,13 @@ public class SingleAminoAcidVariantTest extends VariantTest
     @Test
     public void altValueTest()
     {
-        Assert.assertEquals("E", this.saav("BRAF:p.1E").altValue());
+        Assert.assertEquals("E", this.saav("VHL:p.P2E").altValue());
     }
 
     @Test
     public void positionOfFirstAlteredCodonTest()
     {
-        Assert.assertEquals(1, saav("ZYX:p.1E").positionOfFirstAlteredCodon());
+        Assert.assertEquals(2, saav("VHL:p.P2E").positionOfFirstAlteredCodon());
         Assert.assertEquals(2230, saav("MTOR:p.L2230V").positionOfFirstAlteredCodon());
     }
 }

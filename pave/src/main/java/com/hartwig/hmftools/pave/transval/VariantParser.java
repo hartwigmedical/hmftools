@@ -4,12 +4,15 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.pave.transval.Checks.HGVS_FORMAT_REQUIRED;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -26,6 +29,20 @@ class VariantParser
     final String BLANK_OR_AA_GROUP = "(" + SINGLE_AA + ")?+";
     final String NAT = "(\\d+)";
 
+    private static class ProteinTranscript
+    {
+        @NotNull
+        final TranscriptAminoAcids aminoAcids;
+        @NotNull
+        final TranscriptData transcriptData;
+
+        private ProteinTranscript(@NotNull final TranscriptAminoAcids aminoAcids, @NotNull final TranscriptData transcriptData)
+        {
+            this.aminoAcids = aminoAcids;
+            this.transcriptData = transcriptData;
+        }
+    }
+
     private static class VariantFactory
     {
         @NotNull
@@ -33,54 +50,72 @@ class VariantParser
         @NotNull
         private final AminoAcidRange refRange;
         @NotNull
-        private final TranscriptData transcriptData;
-        @NotNull
-        private final TranscriptAminoAcids aminoAcidsSequence;
+        private final Set<ProteinTranscript> transcriptd;
 
         private VariantFactory(@NotNull final GeneData geneData, @NotNull final AminoAcidRange refRange,
-                @NotNull final TranscriptData transcriptData, @NotNull final TranscriptAminoAcids aminoAcidsSequence)
+                @NotNull final Set<ProteinTranscript> transcriptd)
         {
             this.geneData = geneData;
             this.refRange = refRange;
-            this.transcriptData = transcriptData;
-            this.aminoAcidsSequence = aminoAcidsSequence;
+            this.transcriptd = transcriptd;
         }
 
-        ProteinVariant buildDuplication()
+        Set<ProteinVariant> buildSingleAminoAcidVariants(AminoAcidSpecification altSpec)
         {
-            return new Duplication(geneData, transcriptData, aminoAcidsSequence, refRange);
+            return transcriptd.stream()
+                    .map(t -> new SingleAminoAcidVariant(geneData, t.transcriptData, t.aminoAcids, altSpec))
+                    .collect(Collectors.toSet());
         }
 
-        ProteinVariant buildFrameshift()
+        Set<ProteinVariant> buildDuplication()
         {
-            return new Frameshift(geneData, transcriptData, aminoAcidsSequence, refRange);
+            return transcriptd.stream()
+                    .map(t -> new Duplication(geneData, t.transcriptData, t.aminoAcids, refRange))
+                    .collect(Collectors.toSet());
         }
 
-        ProteinVariant buildStopGained()
+        Set<ProteinVariant> buildFrameshift()
         {
-            return new StopGained(geneData, transcriptData, aminoAcidsSequence, refRange);
+            return transcriptd.stream()
+                    .map(t -> new Frameshift(geneData, t.transcriptData, t.aminoAcids, refRange))
+                    .collect(Collectors.toSet());
         }
 
-        ProteinVariant buildStartLost()
+        Set<ProteinVariant> buildStopGained()
         {
-            return new StartLost(geneData, transcriptData, aminoAcidsSequence, refRange);
+            return transcriptd.stream()
+                    .map(t -> new StopGained(geneData, t.transcriptData, t.aminoAcids, refRange))
+                    .collect(Collectors.toSet());
         }
 
-        ProteinVariant buildDeletion()
+        Set<ProteinVariant> buildStartLost()
         {
-            return new Deletion(geneData, transcriptData, aminoAcidsSequence, refRange);
+            return transcriptd.stream()
+                    .map(t -> new StartLost(geneData, t.transcriptData, t.aminoAcids, refRange))
+                    .collect(Collectors.toSet());
         }
 
-        ProteinVariant buildDeletionInsertion(String altSequence)
+        Set<ProteinVariant> buildDeletion()
+        {
+            return transcriptd.stream()
+                    .map(t -> new Deletion(geneData, t.transcriptData, t.aminoAcids, refRange))
+                    .collect(Collectors.toSet());
+        }
+
+        Set<ProteinVariant> buildDeletionInsertion(String altSequence)
         {
             AminoAcidSequence altAminoAcids = AminoAcidSequence.parse(altSequence);
-            return new DeletionInsertion(geneData, transcriptData, aminoAcidsSequence, refRange, altAminoAcids);
+            return transcriptd.stream()
+                    .map(t -> new DeletionInsertion(geneData, t.transcriptData, t.aminoAcids, refRange, altAminoAcids))
+                    .collect(Collectors.toSet());
         }
 
-        ProteinVariant buildInsertion(String inserted)
+        Set<ProteinVariant> buildInsertion(String inserted)
         {
             AminoAcidSequence altAminoAcids = AminoAcidSequence.parse(inserted);
-            return new Insertion(geneData, transcriptData, aminoAcidsSequence, refRange, altAminoAcids);
+            return transcriptd.stream()
+                    .map(t -> new Insertion(geneData, t.transcriptData, t.aminoAcids, refRange, altAminoAcids))
+                    .collect(Collectors.toSet());
         }
     }
 
@@ -88,6 +123,18 @@ class VariantParser
     {
         mEnsemblCache = ensemblDataCache;
         mTranscriptAminoAcidsMap = transcriptAminoAcidsMap;
+    }
+
+    public Set<ProteinVariant> parseGeneVariants(@NotNull String gene, @NotNull String variant)
+    {
+        return parseGeneVariant(gene, variant, true);
+    }
+
+    public ProteinVariant parseGeneVariant(@NotNull String gene, @NotNull String variant)
+    {
+        Set<ProteinVariant> variants = parseGeneVariant(gene, variant, false);
+        Preconditions.checkArgument(variants.size() == 1);
+        return variants.iterator().next();
     }
 
     public ProteinVariant parse(@NotNull String expression)
@@ -101,50 +148,54 @@ class VariantParser
         return parseGeneVariant(geneVar[0], variantDescription);
     }
 
-    public ProteinVariant parseGeneVariant(@NotNull String gene, @NotNull String variant)
+    private Set<ProteinVariant> parseGeneVariant(@NotNull String gene, @NotNull String variant,
+            boolean returnVariantForEachMatchingTranscript)
     {
         if(variant.contains("delins"))
         {
             String[] refAltParts = variant.split("delins");
-            return parseFactory(gene, variant).buildDeletionInsertion(refAltParts[1]);
+            return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildDeletionInsertion(refAltParts[1]);
         }
         if(variant.endsWith("del"))
         {
-            return parseFactory(gene, variant).buildDeletion();
+            return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildDeletion();
         }
         if(variant.endsWith("dup"))
         {
-            return parseFactory(gene, variant).buildDuplication();
+            return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildDuplication();
         }
         if(variant.contains("ins"))
         {
             String[] refAltParts = variant.split("ins");
-            return parseFactory(gene, variant).buildInsertion(refAltParts[1]);
+            return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildInsertion(refAltParts[1]);
         }
         if(variant.endsWith("fs"))
         {
-            return parseFactory(gene, variant).buildFrameshift();
+            return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildFrameshift();
         }
         if(variant.endsWith("*"))
         {
-            return parseFactory(gene, variant).buildStopGained();
+            return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildStopGained();
         }
         if(variant.endsWith("?"))
         {
-            return parseFactory(gene, variant).buildStartLost();
+            return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildStartLost();
         }
-        GeneData geneData = lookupGene(gene);
-        return buildSingleAminoAcidVariant(variant, geneData);
+        Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + SINGLE_AA_GROUP + "$");
+        final Matcher matcher = Checks.matchPattern(variationPattern, variant);
+        int position = Integer.parseInt(matcher.group(3));
+        AminoAcidSpecification altSpec = new AminoAcidSpecification(position, matcher.group(4));
+        return parseFactory(gene, variant, returnVariantForEachMatchingTranscript).buildSingleAminoAcidVariants(altSpec);
     }
 
-    private VariantFactory parseFactory(@NotNull String gene, @NotNull String variantDescription)
+    private VariantFactory parseFactory(@NotNull String gene, @NotNull String variantDescription,
+            final boolean returnVariantForEachNonCanonicalTranscript)
     {
         GeneData geneData = lookupGene(gene);
         String rangeDescription = variantDescription.substring(0, variantDescription.length() - 3);
         AminoAcidRange refRange = getAminoAcidRange(variantDescription, rangeDescription);
-        TranscriptData transcriptData = getApplicableTranscript(geneData, refRange);
-        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
-        return new VariantFactory(geneData, refRange, transcriptData, aminoAcidsSequence);
+        Set<ProteinTranscript> transcriptData = getApplicableTranscripts(geneData, refRange, returnVariantForEachNonCanonicalTranscript);
+        return new VariantFactory(geneData, refRange, transcriptData);
     }
 
     @NotNull
@@ -176,61 +227,47 @@ class VariantParser
         return new AminoAcidRange(refStart, refStop);
     }
 
-    @NotNull
-    private SingleAminoAcidVariant buildSingleAminoAcidVariant(@NotNull final String variantDescription, final GeneData geneData)
+    private Set<ProteinTranscript> filter(List<TranscriptData> transcriptDataList, TranscriptFilter filter)
     {
-        Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + SINGLE_AA_GROUP + "$");
-        final Matcher matcher = Checks.matchPattern(variationPattern, variantDescription);
-
-        int position = Integer.parseInt(matcher.group(3));
-        AminoAcidSpecification refSpec = new AminoAcidSpecification(position, matcher.group(1));
-        AminoAcidSpecification altSpec = new AminoAcidSpecification(position, matcher.group(4));
-        TranscriptData transcriptData = getApplicableTranscript(geneData, refSpec);
-        TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, false);
-        return new SingleAminoAcidVariant(geneData, transcriptData, aminoAcidsSequence, altSpec);
-    }
-
-    private TranscriptAminoAcids lookupTranscriptAminoAcids(final TranscriptData transcriptData, final boolean allowNullReturn)
-    {
-        TranscriptAminoAcids aminoAcidsSequence = mTranscriptAminoAcidsMap.get(transcriptData.TransName);
-        if(aminoAcidsSequence == null && !allowNullReturn)
+        Set<ProteinTranscript> result = new HashSet<>();
+        transcriptDataList.forEach(transcriptData ->
         {
-            throw new IllegalStateException("No amino acid sequence found for " + transcriptData.TransName);
-        }
-        return aminoAcidsSequence;
+            TranscriptAminoAcids aminoAcidsSequence = mTranscriptAminoAcidsMap.get(transcriptData.TransName);
+            if(aminoAcidsSequence != null && filter.applies(aminoAcidsSequence))
+            {
+                result.add(new ProteinTranscript(aminoAcidsSequence, transcriptData));
+            }
+        });
+        return result;
     }
 
-    private List<TranscriptData> filter(List<TranscriptData> transcriptDataList, TranscriptFilter filter)
-    {
-        return transcriptDataList.stream().filter(transcriptData ->
-        {
-            TranscriptAminoAcids aminoAcidsSequence = lookupTranscriptAminoAcids(transcriptData, true);
-            return aminoAcidsSequence != null && filter.applies(aminoAcidsSequence);
-        }).collect(Collectors.toList());
-    }
-
-    public TranscriptData getApplicableTranscript(final GeneData geneData, final TranscriptFilter refFilter)
+    Set<ProteinTranscript> getApplicableTranscripts(final GeneData geneData,
+            final TranscriptFilter refFilter,
+            boolean returnVariantForEachNonCanonicalTranscript)
     {
         List<TranscriptData> allTranscripts = mEnsemblCache.getTranscripts(geneData.GeneId);
-        List<TranscriptData> matchingRef = filter(allTranscripts, refFilter);
+        Set<ProteinTranscript> matchingRef = filter(allTranscripts, refFilter);
         if(matchingRef.isEmpty())
         {
             String msg = format("No transcript found for gene: %s matching ref: %s", geneData.GeneId, refFilter);
-            throw new IllegalStateException(msg);
+            throw new IllegalArgumentException(msg);
         }
-        if(matchingRef.size() > 1)
+        ProteinTranscript canonical = matchingRef.stream()
+                .filter(pt -> pt.transcriptData.IsCanonical)
+                .findFirst()
+                .orElse(null);
+        if(canonical != null)
         {
-            return matchingRef.stream()
-                    .filter(transcriptData -> transcriptData.IsCanonical)
-                    .findFirst()
-                    .orElseThrow(() ->
-                    {
-                        String msg =
-                                format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, ref: %s", geneData.GeneId, refFilter);
-                        return new IllegalStateException(msg);
-                    });
+            return Set.of(canonical);
         }
-        return matchingRef.get(0);
+        if(matchingRef.size() > 1 && !returnVariantForEachNonCanonicalTranscript)
+        {
+            String msg =
+                    format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, ref: %s", geneData.GeneId, refFilter);
+            throw new IllegalArgumentException(msg);
+
+        }
+        return new HashSet<>(matchingRef);
     }
 
     @NotNull
