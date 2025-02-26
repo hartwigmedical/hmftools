@@ -43,7 +43,6 @@ public class GnomadCache
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
-    public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
 
     public static final String PON_GNOMAD_FILTER = "PONGnomad";
 
@@ -253,7 +252,6 @@ public class GnomadCache
     {
         configBuilder.addPath(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
         configBuilder.addPath(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
-        configBuilder.addFlag(GNOMAD_NO_FILTER, "No Gnomad filter is applied");
     }
 
     public static void addAnnotationHeader(final VCFHeader header)

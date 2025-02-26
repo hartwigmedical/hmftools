@@ -3,7 +3,6 @@ package com.hartwig.hmftools.pave.annotation;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUENCY_DIR;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_FREQUENCY_FILE;
-import static com.hartwig.hmftools.common.variant.pon.GnomadCache.GNOMAD_NO_FILTER;
 
 import java.util.concurrent.Callable;
 
@@ -17,6 +16,8 @@ public class GnomadAnnotation extends AnnotationData implements Callable
 {
     private final GnomadCache mGnomadCache;
     private final boolean mNoFilter;
+
+    public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
 
     public GnomadAnnotation(final ConfigBuilder configBuilder)
     {

@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS;
+import static com.hartwig.hmftools.pave.annotation.GnomadAnnotation.GNOMAD_NO_FILTER;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -135,6 +136,7 @@ public class PaveConfig
         configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
 
         GnomadCache.addConfig(configBuilder);
+        configBuilder.addFlag(GNOMAD_NO_FILTER, "No Gnomad filter is applied");
         Mappability.addConfig(configBuilder);
         ClinvarAnnotation.addConfig(configBuilder);
         Blacklistings.addConfig(configBuilder);
