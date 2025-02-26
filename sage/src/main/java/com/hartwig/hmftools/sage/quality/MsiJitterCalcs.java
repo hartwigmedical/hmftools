@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.sage.quality.JitterConstants.DEFAULT_JITTER_P
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -82,15 +83,21 @@ public class MsiJitterCalcs
 
                 if(!Files.exists(Paths.get(jitterParamFile)) || !Files.exists(Paths.get(jitterCountFile)))
                 {
-                    SG_LOGGER.error("missing jitter param files: params({}) counts({})",
-                            jitterParamFile, jitterCountFile);
+                    SG_LOGGER.error("missing jitter param files: params({}) counts({})", jitterParamFile, jitterCountFile);
                     return false;
                 }
 
-                List<JitterModelParams> rawParams = JitterModelParamsFile.read(jitterParamFile);
-                List<MsiModelParams> msiParams = rawParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());
                 List<MsiModelParams> defaultMsiParams = defaultParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());
                 Collection<JitterCountsTable> jitterCounts = JitterCountsTableFile.read(jitterCountFile);
+                ConsensusType consensusType = selectConsensusType(jitterCounts);
+
+                List<JitterModelParams> rawParams = JitterModelParamsFile.read(jitterParamFile);
+                List<MsiModelParams> msiParams = rawParams.stream()
+                        .filter(x -> x.ConsensusType == consensusType)
+                        .map(x -> new MsiModelParams(x))
+                        .collect(Collectors.toList());
+
+                jitterCounts = jitterCounts.stream().filter(x -> x.ConsensusType == consensusType).collect(Collectors.toList());
 
                 PerSampleJitterParams sampleJitterParams = shouldRevertToDefaults(msiParams, defaultMsiParams, jitterCounts);
 
@@ -108,6 +115,31 @@ public class MsiJitterCalcs
         }
 
         return true;
+    }
+
+    private ConsensusType selectConsensusType(final Collection<JitterCountsTable> jitterCounts)
+    {
+        EnumMap<ConsensusType, Integer> readCountByConsensusType = Maps.newEnumMap(ConsensusType.class);
+        for(JitterCountsTable jitterCount : jitterCounts)
+            readCountByConsensusType.merge(jitterCount.ConsensusType, jitterCount.totalReadCount(), Integer::sum);
+
+        if(readCountByConsensusType.size() == 1)
+            return readCountByConsensusType.keySet().stream().findAny().orElse(null);
+
+        int maxReadCount = -1;
+        ConsensusType maxConsensusType = ConsensusType.NONE;
+        for(Map.Entry<ConsensusType, Integer> entry : readCountByConsensusType.entrySet())
+        {
+            ConsensusType consensusType = entry.getKey();
+            int readCount = entry.getValue();
+            if(readCount > maxReadCount || (readCount == maxReadCount && consensusType == ConsensusType.NONE))
+            {
+                maxReadCount = readCount;
+                maxConsensusType = consensusType;
+            }
+        }
+
+        return maxConsensusType;
     }
 
     private class PerSampleJitterParams
@@ -138,7 +170,7 @@ public class MsiJitterCalcs
             double relevantMsiSkew = relevantMsiParams.params().MicrosatelliteSkew;
 
             JitterModelParams sampleJitterParams = new JitterModelParams(
-                    relevantDefaultParams.params().RepeatUnit, ConsensusType.IGNORE, relevantDefaultParams.params().OptimalScaleRepeat4,
+                    relevantDefaultParams.params().RepeatUnit, relevantDefaultParams.params().ConsensusType, relevantDefaultParams.params().OptimalScaleRepeat4,
                     relevantDefaultParams.params().OptimalScaleRepeat5, relevantDefaultParams.params().OptimalScaleRepeat6,
                     relevantDefaultParams.params().ScaleFitGradient, relevantDefaultParams.params().ScaleFitIntercept, relevantMsiSkew);
 
