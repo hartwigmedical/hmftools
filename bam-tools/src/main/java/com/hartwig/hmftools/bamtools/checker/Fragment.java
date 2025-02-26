@@ -17,6 +17,7 @@ public class Fragment
     private final String mReadId;
     private final List<SAMRecord> mReads;
 
+    // counts of supplementary and secondary reads
     private int mExpectedSupplementaryCount;
     private int mReceivedSupplementaryCount;
 

@@ -68,9 +68,33 @@ public class BamChecker
         if(!runThreadTasks(allThreads))
             System.exit(1);
 
-        BT_LOGGER.info("all partition tasks complete, mins({runTimeMinsStr(startTimeMs)})");
+        BT_LOGGER.info("all partition tasks complete, mins({})", runTimeMinsStr(startTimeMs));
 
-        finaliseBam(partitionThreads, fragmentCache);
+        List<SAMRecord> incompleteReads = fragmentCache.extractReads();
+
+        if(!incompleteReads.isEmpty())
+        {
+            BT_LOGGER.debug("incomplete {} reads", incompleteReads.size());
+
+            long primaryCount = incompleteReads.stream().filter(x -> !x.getSupplementaryAlignmentFlag()).count();
+
+            if(primaryCount > 0)
+            {
+                BT_LOGGER.warn("incomplete {} primary reads", primaryCount);
+            }
+
+            if(mConfig.WriteIncompleteFragments)
+            {
+                writeIncompleteReads(incompleteReads);
+            }
+
+            fragmentCache.clear();
+        }
+
+        if(mConfig.writeBam())
+        {
+            finaliseBam(partitionThreads, incompleteReads);
+        }
 
         BT_LOGGER.info("BamChecker complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -78,8 +102,6 @@ public class BamChecker
     private List<PartitionThread> createPartitionThreads(final FragmentCache fragmentCache)
     {
         List<PartitionThread> partitionThreads = Lists.newArrayListWithCapacity(mConfig.Threads);
-
-        RefGenomeInterface refGenome = loadRefGenome(mConfig.RefGenomeFile);
 
         List<ChrBaseRegion> partitionRegions = splitRegionsIntoPartitions(mConfig);
 
@@ -102,22 +124,10 @@ public class BamChecker
         return partitionThreads;
     }
 
-    private void finaliseBam(final List<PartitionThread> partitionThreads, final FragmentCache fragmentCache)
+    private void finaliseBam(final List<PartitionThread> partitionThreads, final List<SAMRecord> incompleteReads)
     {
-        List<SAMRecord> incompleteReads = fragmentCache.extractReads();
-
         if(!incompleteReads.isEmpty())
         {
-            long primaryCount = incompleteReads.stream().filter(x -> !x.getSupplementaryAlignmentFlag()).count();
-            BT_LOGGER.warn("writing {} incomplete reads, primaries({})", incompleteReads.size(), primaryCount);
-
-            if(mConfig.WriteIncompleteFragments)
-            {
-                writeIncompleteReads(incompleteReads);
-            }
-
-            fragmentCache.clear();
-
             partitionThreads.get(0).writeIncompleteReads(incompleteReads);
         }
 

@@ -5,9 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.formHumanChromosomeRegions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
-import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 
 import java.io.File;
@@ -15,14 +13,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.TaskQueue;
-
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -54,13 +46,21 @@ public class PartitionThread extends Thread
                 .referenceSequence(new File(config.RefGenomeFile))
                 .open(new File(config.BamFile));
 
-        // create a BAM writer per thread
-        mBamFilename = config.formFilename(format("%s_%02d", UNSORTED_BAM_ID, threadId), BAM_EXTENSION);
+        if(config.writeBam())
+        {
+            // create a BAM writer per thread
+            mBamFilename = config.formFilename(format("%s_%02d", UNSORTED_BAM_ID, threadId), BAM_EXTENSION);
 
-        SAMFileHeader fileHeader = mSamReader.getFileHeader().clone();
-        fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+            SAMFileHeader fileHeader = mSamReader.getFileHeader().clone();
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-        mBamWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mBamFilename));
+            mBamWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mBamFilename));
+        }
+        else
+        {
+            mBamWriter = null;
+            mBamFilename = "";
+        }
 
         mPartitionChecker = new PartitionChecker(config, fragmentCache, mSamReader, mBamWriter);
     }
@@ -109,7 +109,8 @@ public class PartitionThread extends Thread
 
     public void close()
     {
-        mBamWriter.close();
+        if(mBamWriter != null)
+            mBamWriter.close();
     }
 
     public static List<ChrBaseRegion> splitRegionsIntoPartitions(final CheckConfig config)

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.checker;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class PartitionChecker
     private long mReadCount;
     private long mNextLogReadCount;
     private long mCompleteFragments;
+    private final boolean mLogReadIds;
 
     private static final int LOG_READ_COUNT = 10_000_000;
 
@@ -50,6 +52,7 @@ public class PartitionChecker
         mReadCount = 0;
         mCompleteFragments = 0;
         mNextLogReadCount = LOG_READ_COUNT;
+        mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
     public void processPartition(final ChrBaseRegion region)
@@ -75,6 +78,11 @@ public class PartitionChecker
 
     private void processSamRecord(final SAMRecord read)
     {
+        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
+        {
+            BT_LOGGER.debug("specific read({})", readToString(read));
+        }
+
         if(!mRegion.containsPosition(read.getAlignmentStart()))
             return;
 
@@ -87,9 +95,9 @@ public class PartitionChecker
             BT_LOGGER.info("region({}) processed reads({}), cached fragments({})", mRegion, mReadCount, mFragmentMap.size());
         }
 
-        if(!read.getReadPairedFlag())
+        if(!read.getReadPairedFlag() || read.isSecondaryAlignment())
         {
-            mBamWriter.addAlignment(read);
+            writeRecord(read);
             return;
         }
 
@@ -115,7 +123,7 @@ public class PartitionChecker
 
         if(!completeReads.isEmpty())
         {
-            completeReads.forEach(x -> mBamWriter.addAlignment(x));
+            completeReads.forEach(x -> writeRecord(x));
 
             if(fragment.isComplete())
             {
@@ -129,6 +137,12 @@ public class PartitionChecker
     {
         List<SAMRecord> completeReads = mFragmentCache.handleIncompleteFragments(mFragmentMap.values());
 
-        completeReads.forEach(x -> mBamWriter.addAlignment(x));
+        completeReads.forEach(x -> writeRecord(x));
+    }
+
+    private void writeRecord(final SAMRecord read)
+    {
+        if(mBamWriter != null)
+            mBamWriter.addAlignment(read);
     }
 }

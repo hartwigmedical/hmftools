@@ -139,6 +139,7 @@ public class CompareConfig
         addSpecificChromosomesRegionsConfig(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
     }
 
     public boolean ignoreUnmapped() { return SpecificChrRegions != null && !SpecificChrRegions.Regions.isEmpty(); }

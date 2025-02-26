@@ -15,7 +15,10 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -23,6 +26,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
+
+import java.util.Collections;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bamops.BamToolName;
@@ -48,6 +54,7 @@ public class CheckConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
+    public final List<String> LogReadIds;
     public final boolean PerfDebug;
 
     public static final String SKIP_UNMAPPED = "skip_unmapped";
@@ -74,6 +81,7 @@ public class CheckConfig
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
         Threads = parseThreads(configBuilder);
+        LogReadIds = parseLogReadIds(configBuilder);
 
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         SkipUnmapped = configBuilder.hasFlag(SKIP_UNMAPPED);
@@ -95,6 +103,8 @@ public class CheckConfig
         return outputFile;
     }
 
+    public boolean writeBam() { return BamToolPath != null; }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
@@ -115,6 +125,7 @@ public class CheckConfig
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
     }
 
     @VisibleForTesting
@@ -132,5 +143,6 @@ public class CheckConfig
         PerfDebug = false;
         SkipUnmapped = false;
         WriteIncompleteFragments = false;
+        LogReadIds = Collections.emptyList();
     }
 }
