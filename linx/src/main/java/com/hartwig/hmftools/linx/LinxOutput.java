@@ -37,7 +37,7 @@ public class LinxOutput
 
     public static final char ITEM_DELIM_CHR = ITEM_DELIM.charAt(0);
 
-    public LinxOutput(final ConfigBuilder configBuilder, boolean defaultWrite)
+    public LinxOutput(final ConfigBuilder configBuilder, boolean singleSampleSomatic)
     {
         WriteTypes = WriteType.parseConfig(configBuilder.getValue(WRITE_TYPES));
 
@@ -49,7 +49,10 @@ public class LinxOutput
         }
         else
         {
-            WriteSingleSVClusters = configBuilder.hasFlag(WRITE_SINGLE_SV_CLUSTERS) || defaultWrite;
+            if(singleSampleSomatic && !configBuilder.hasFlag(NO_VIS_FILES))
+                WriteTypes.add(VIS_DATA);
+
+            WriteSingleSVClusters = configBuilder.hasFlag(WRITE_SINGLE_SV_CLUSTERS) || singleSampleSomatic;
         }
 
         WriteCohortFiles = configBuilder.hasFlag(WRITE_COHORT_FILES);

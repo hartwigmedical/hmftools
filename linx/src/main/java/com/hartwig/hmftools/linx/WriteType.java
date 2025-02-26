@@ -20,7 +20,7 @@ public enum WriteType
     public static final String WRITE_ALL = "ALL";
     public static final String WRITE_STANDARD = "STANDARD";
 
-    public static final List<WriteType> STANDARD_TYPES = List.of(SV_DATA, CLUSTER, LINK);
+    public static final List<WriteType> STANDARD_TYPES = Lists.newArrayList(SV_DATA, CLUSTER, LINK);
 
     public static List<WriteType> parseConfig(final String configStr)
     {
