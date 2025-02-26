@@ -26,7 +26,8 @@ public class BamSampler
 
     private int mReadCount;
     private int mMaxReadLength;
-    private boolean mHasMateCigar;
+    private boolean mReadsPaired;
+    private boolean mMateCigarSet;
 
     private static final int DEFAULT_MAX_READS = 1000;
 
@@ -41,13 +42,15 @@ public class BamSampler
         mMaxReadLength = 0;
         mMaxReadCount = maxReadCount;
         mRefGenome = loadRefGenome(referenceGenome);
-        mHasMateCigar = false;
+        mMateCigarSet = false;
+        mReadsPaired = false;
 
         mSlicer = new BamSlicer(0);
     }
 
     public int maxReadLength() { return mMaxReadLength; }
-    public boolean hasMateCigarSet() { return mHasMateCigar; }
+    public boolean readsPaired() { return mReadsPaired; }
+    public boolean hasMateCigarSet() { return mMateCigarSet; }
 
     public ChrBaseRegion defaultRegion()
     {
@@ -82,7 +85,11 @@ public class BamSampler
 
         mMaxReadLength = max(mMaxReadLength, record.getReadBases().length);
 
-        mHasMateCigar |= record.hasAttribute(MATE_CIGAR_ATTRIBUTE);
+        if(record.getReadPairedFlag())
+        {
+            mReadsPaired = true;
+            mMateCigarSet |= record.hasAttribute(MATE_CIGAR_ATTRIBUTE);
+        }
 
         if(mReadCount >= mMaxReadCount)
         {

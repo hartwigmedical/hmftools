@@ -258,7 +258,7 @@ public class ReduxApplication
             RD_LOGGER.debug("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
         }
 
-        if(!bamSampler.hasMateCigarSet())
+        if(bamSampler.readsPaired() && !bamSampler.hasMateCigarSet())
         {
             RD_LOGGER.warn("required mate CIGAR not set, exiting");
             System.exit(1);
