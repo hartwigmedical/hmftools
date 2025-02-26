@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
@@ -72,12 +72,12 @@ public class SupplementaryJunctionData
         if(scSide.isLeft())
         {
             suppJuncData.LocalJunctionPos = read.getCoordsBoundary(SE_START);
-            suppJuncData.LocalJunctionOrient = NEG_ORIENT;
+            suppJuncData.LocalJunctionOrient = ORIENT_REV;
         }
         else
         {
             suppJuncData.LocalJunctionPos = read.getCoordsBoundary(SE_END);
-            suppJuncData.LocalJunctionOrient = POS_ORIENT;
+            suppJuncData.LocalJunctionOrient = ORIENT_FWD;
         }
 
         suppJuncData.RemoteChromosome = suppData.Chromosome;

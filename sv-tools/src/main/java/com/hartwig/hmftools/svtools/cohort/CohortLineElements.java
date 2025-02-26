@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
 
 import java.io.BufferedWriter;
@@ -293,7 +293,7 @@ public class CohortLineElements
                 final int[] positions =
                         new int[] { Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]) };
 
-                final byte strand = items[strandIndex].equals("+") ? POS_ORIENT : NEG_ORIENT;
+                final byte strand = items[strandIndex].equals("+") ? ORIENT_FWD : ORIENT_REV;
 
                 RepeatMaskerData rmData = new RepeatMaskerData(rmId, new ChrBaseRegion(chromosome, positions), strand);
                 ++itemCount;
@@ -542,7 +542,7 @@ public class CohortLineElements
             // teh line element is expected to be up-stream of the SV activity
             final int[] rmMatchLimits = {0, 0};
 
-            if(rmData.Strand == POS_ORIENT)
+            if(rmData.Strand == ORIENT_FWD)
             {
                 rmMatchLimits[SE_START] = rmData.Region.start() - LINE_ELEMENT_PROXIMITY_DISTANCE;
                 rmMatchLimits[SE_END] = rmData.Region.end() + LINE_ELEMENT_PROXIMITY_DISTANCE * 4;
@@ -602,7 +602,7 @@ public class CohortLineElements
 
                     int[] coords = new int[] { rmData.Region.start(), rmData.Region.end() };
 
-                    if(rmData.Strand == POS_ORIENT)
+                    if(rmData.Strand == ORIENT_FWD)
                         coords[SE_END] += 5000;
                     else
                         coords[SE_START] -= 5000;

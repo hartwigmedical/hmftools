@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -1063,7 +1063,7 @@ public class SimpleClustering implements CohortFileInterface
 
             for(final SvBreakend breakend : breakendList)
             {
-                if(breakend.orientation() == POS_ORIENT)
+                if(breakend.orientation() == ORIENT_FWD)
                     continue;
 
                 if(breakend.getCluster().getResolvedType() == LINE)
@@ -1082,7 +1082,7 @@ public class SimpleClustering implements CohortFileInterface
                 {
                     final SvBreakend nextBreakend = breakendList.get(index);
 
-                    if(nextBreakend.orientation() == NEG_ORIENT)
+                    if(nextBreakend.orientation() == ORIENT_REV)
                         continue;
 
                     double nextAdjacentMaJcn = nextBreakend.majorAlleleJcn(false);

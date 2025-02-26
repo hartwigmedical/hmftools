@@ -4,8 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
@@ -228,7 +228,7 @@ public class LinkFinder
         if(orient1 == orient2)
             return false;
 
-        return (pos1 <= pos2 - minDistance && orient1 == NEG_ORIENT) || (pos1 >= pos2 + minDistance && orient1 == POS_ORIENT);
+        return (pos1 <= pos2 - minDistance && orient1 == ORIENT_REV) || (pos1 >= pos2 + minDistance && orient1 == ORIENT_FWD);
     }
 
     public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)

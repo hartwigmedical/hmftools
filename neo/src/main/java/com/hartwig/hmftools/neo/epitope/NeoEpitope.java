@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBas
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.neo.NeoCommon.transcriptsToStr;
@@ -89,7 +89,7 @@ public abstract class NeoEpitope
 
     public byte orientation(int fs)
     {
-        return (fs == FS_UP) == (TransData[fs].Strand == POS_STRAND) ? POS_ORIENT : NEG_ORIENT;
+        return (fs == FS_UP) == (TransData[fs].Strand == POS_STRAND) ? ORIENT_FWD : ORIENT_REV;
     }
 
     public byte strand(int stream) { return TransData[stream].Strand; }
@@ -214,8 +214,8 @@ public abstract class NeoEpitope
         }
 
         // cache bases downstream of mutation in the reference to check for non-novel AAs later on
-        int upstreamAAPosStart = orientation(FS_UP) == POS_ORIENT ? ExtPositions[FS_UP][SE_START] : ExtPositions[FS_UP][SE_END];
-        byte wtOrient = orientation(FS_UP) == POS_ORIENT ? NEG_ORIENT : POS_ORIENT;
+        int upstreamAAPosStart = orientation(FS_UP) == ORIENT_FWD ? ExtPositions[FS_UP][SE_START] : ExtPositions[FS_UP][SE_END];
+        byte wtOrient = orientation(FS_UP) == ORIENT_FWD ? ORIENT_REV : ORIENT_FWD;
         int requiredBases = CodingBases[FS_UP].length() + reqWildtypeAminoAcids * 3;
 
         CodingBaseExcerpt wildTypeUpExcerpt = EpitopeUtils.getDownstreamCodingBaseExcerpt(

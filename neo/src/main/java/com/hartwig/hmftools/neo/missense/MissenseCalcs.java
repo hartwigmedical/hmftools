@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBas
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingStartPositionAdjustment;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.util.List;
@@ -169,9 +169,9 @@ public class MissenseCalcs
                             altCodon += codingBases.charAt(codonIndex * 3 + i);
                     }
 
-                    peptideData.Context = geneData.Strand == POS_ORIENT ? refCodon : reverseComplementBases(refCodon);
-                    peptideData.RefBase = geneData.Strand == POS_ORIENT ? codonRefBase : swapDnaBase(codonRefBase);
-                    peptideData.AltBase = geneData.Strand == POS_ORIENT ? dnaBase : swapDnaBase(dnaBase);
+                    peptideData.Context = geneData.Strand == ORIENT_FWD ? refCodon : reverseComplementBases(refCodon);
+                    peptideData.RefBase = geneData.Strand == ORIENT_FWD ? codonRefBase : swapDnaBase(codonRefBase);
+                    peptideData.AltBase = geneData.Strand == ORIENT_FWD ? dnaBase : swapDnaBase(dnaBase);
 
                     String codonAltAminoAcid = AminoAcids.findAminoAcidForCodon(altCodon);
 

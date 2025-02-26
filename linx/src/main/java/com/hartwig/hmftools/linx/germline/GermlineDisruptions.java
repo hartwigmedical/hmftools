@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
@@ -216,13 +216,13 @@ public class GermlineDisruptions
             {
                 posStart = mapping.Position;
                 posEnd = breakendStart.position();
-                impliedType = mapping.Orientation == POS_ORIENT ? DEL : DUP;
+                impliedType = mapping.Orientation == ORIENT_FWD ? DEL : DUP;
             }
             else
             {
                 posStart = breakendStart.position();
                 posEnd = mapping.Position;
-                impliedType = breakendStart.orientation() == POS_ORIENT ? DEL : DUP;
+                impliedType = breakendStart.orientation() == ORIENT_FWD ? DEL : DUP;
             }
 
             if(abs(mapping.Position - breakendStart.position()) > MAX_SGL_MAPPED_LENGTH)
@@ -404,7 +404,7 @@ public class GermlineDisruptions
                     allFilters.add(FILTER_PSEUDOGENE);
                 }
 
-                boolean isUpstream = (var.orientation(disruptionData.IsStart) == POS_ORIENT) == (gene.forwardStrand());
+                boolean isUpstream = (var.orientation(disruptionData.IsStart) == ORIENT_FWD) == (gene.forwardStrand());
 
                 ImmutableLinxBreakend.Builder builder = ImmutableLinxBreakend.builder()
                         .id(breakendId++)

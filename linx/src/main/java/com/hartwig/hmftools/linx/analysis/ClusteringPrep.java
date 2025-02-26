@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -127,7 +127,7 @@ public class ClusteringPrep
             }
             else
             {
-                if((sglSvData.startOrientation() == POS_ORIENT) == (sglSvData.startPosition() < infSvData.startPosition()))
+                if((sglSvData.startOrientation() == ORIENT_FWD) == (sglSvData.startPosition() < infSvData.startPosition()))
                     newType = DEL;
                 else
                     newType = DUP;

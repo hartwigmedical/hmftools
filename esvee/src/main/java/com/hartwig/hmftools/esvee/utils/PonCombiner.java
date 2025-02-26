@@ -116,17 +116,7 @@ public class PonCombiner
 
                 for(PonSvRegion region : combinedRegions)
                 {
-                    // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                    // note: convert position starts to BED convention
                     writer.write(region.toBedRecord());
-
-                    /*
-                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                            chrStr, region.RegionStart.start() - 1, region.RegionStart.end(),
-                            region.RegionEnd.chromosome(), region.RegionEnd.start() - 1, region.RegionEnd.end(), ".",
-                            region.PonCount, region.OrientStart.asChar(), region.OrientEnd.asChar()));
-                    */
-
                     writer.newLine();
                 }
             }
@@ -241,13 +231,6 @@ public class PonCombiner
 
                 for(PonSglRegion ponRegion : combinedRegions)
                 {
-                    /*
-                    // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                    // note: convert to BED position at start
-                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%s",
-                            chrStr, region.Region.start() - 1, region.Region.end(), ".", region.PonCount, region.Orient.asChar()));
-                    */
-
                     writer.write(ponRegion.toBedRecord());
                     writer.newLine();
                 }

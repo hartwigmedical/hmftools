@@ -5,11 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.genome.region.Orientation.flipOrientation;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT_ID;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
@@ -183,24 +180,6 @@ public class PonLiftOver
 
                     convertedRegions.add(convertedRegion);
 
-                    /*
-                    if(chrDestStart.equals(chrDestEnd) && posStartStart > posEndStart)
-                    {
-
-                        // swap coords if the start region is now after the end region
-                        writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                                chrDestStart, posEndStart, posEndEnd, chrDestEnd, posStartStart, posStartEnd, ".",
-                                region.PonCount, orientToId(orientEnd), orientToId(orientStart)));
-                    }
-                    else
-                    {
-                        // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                        writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                                chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd, ".",
-                                region.PonCount, orientToId(orientStart), orientToId(orientEnd)));
-                    }
-                    */
-
                     ++mConverted;
 
                     if((mConverted % LOG_COUNT) == 0)
@@ -312,11 +291,6 @@ public class PonLiftOver
             SV_LOGGER.error("failed to write SGL PON output file: {}", e.toString());
             System.exit(1);
         }
-    }
-
-    private static String orientToId(final byte orientation)
-    {
-        return orientation == POS_ORIENT ? POS_ORIENT_ID : NEG_ORIENT_ID;
     }
 
     public static void main(@NotNull final String[] args)

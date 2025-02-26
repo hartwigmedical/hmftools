@@ -5,8 +5,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadBoundaryPosition;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
 import static htsjdk.samtools.CigarOperator.D;
 
@@ -93,7 +93,7 @@ public final class SamRecordUtils
         return record.getReadPairedFlag() && record.getMateUnmappedFlag();
     }
 
-    public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
+    public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? ORIENT_FWD : ORIENT_REV; }
 
     public static boolean isFlagSet(final int flags, final SAMFlag flag) { return (flags & flag.intValue()) != 0; }
 
@@ -161,7 +161,7 @@ public final class SamRecordUtils
         // returns the 5' or 3' position of the read, factoring in any soft-clipped bases
         int position;
 
-        if((orientation(read) == POS_ORIENT) == fivePrime)
+        if((orientation(read) == ORIENT_FWD) == fivePrime)
         {
             position = read.getAlignmentStart();
             if(read.getCigar().isLeftClipped())

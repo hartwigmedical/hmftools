@@ -18,8 +18,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -348,7 +348,7 @@ public class GermlineSvCache
                     continue;
 
                 double refCnChange = region.refNormalisedCopyNumber() - prevRegion.refNormalisedCopyNumber();
-                byte impliedOrientation = refCnChange > 0 ? NEG_ORIENT : POS_ORIENT;
+                byte impliedOrientation = refCnChange > 0 ? ORIENT_REV : ORIENT_FWD;
 
                 if(impliedOrientation != leg.orientation())
                     continue;

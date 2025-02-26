@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
@@ -152,13 +152,13 @@ public class FusionFragmentBuilder
             if(read.isLongestSoftClip(SE_START))
             {
                 junctionPositions[posIndex] = read.getCoordsBoundary(SE_START);
-                junctionOrientations[posIndex] = NEG_ORIENT;
+                junctionOrientations[posIndex] = ORIENT_REV;
                 geneCollections[posIndex] = read.GeneCollections[SE_START];
             }
             else
             {
                 junctionPositions[posIndex] = read.getCoordsBoundary(SE_END);
-                junctionOrientations[posIndex] = POS_ORIENT;
+                junctionOrientations[posIndex] = ORIENT_FWD;
                 geneCollections[posIndex] = read.GeneCollections[SE_END];
             }
 
@@ -204,8 +204,8 @@ public class FusionFragmentBuilder
                 fragment.junctionPositions()[se] = splitJunction[se];
             }
 
-            fragment.junctionOrientations()[SE_START] = fragment.orientations()[SE_START] = POS_ORIENT;
-            fragment.junctionOrientations()[SE_END] = fragment.orientations()[SE_END] = NEG_ORIENT;
+            fragment.junctionOrientations()[SE_START] = fragment.orientations()[SE_START] = ORIENT_FWD;
+            fragment.junctionOrientations()[SE_END] = fragment.orientations()[SE_END] = ORIENT_REV;
             fragment.setType(MATCHED_JUNCTION);
         }
     }
@@ -238,7 +238,7 @@ public class FusionFragmentBuilder
 
         // by convention store the junction in the start slot since the other potential junction is unknown at this stage
         fragment.junctionPositions()[SE_START] = realignRead.getCoordsBoundary(scSide);
-        fragment.junctionOrientations()[SE_START] = scSide == SE_START ? NEG_ORIENT : POS_ORIENT;
+        fragment.junctionOrientations()[SE_START] = scSide == SE_START ? ORIENT_REV : ORIENT_FWD;
         fragment.orientations()[SE_START] = fragment.junctionOrientations()[SE_START];
 
         fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = realignRead.GeneCollections[scSide];
@@ -297,8 +297,8 @@ public class FusionFragmentBuilder
             fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = geneCollections.get(0);
 
             // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
-            fragment.orientations()[SE_START] = POS_ORIENT;
-            fragment.orientations()[SE_END] = NEG_ORIENT;
+            fragment.orientations()[SE_START] = ORIENT_FWD;
+            fragment.orientations()[SE_END] = ORIENT_REV;
             return;
         }
 
@@ -342,12 +342,12 @@ public class FusionFragmentBuilder
             if(requiredScSide == SE_START)
             {
                 scPositions[se] = read.getCoordsBoundary(SE_START);
-                scOrientations[se] = NEG_ORIENT;
+                scOrientations[se] = ORIENT_REV;
             }
             else
             {
                 scPositions[se] = read.getCoordsBoundary(SE_END);
-                scOrientations[se] = POS_ORIENT;
+                scOrientations[se] = ORIENT_FWD;
             }
         }
 

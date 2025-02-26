@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDi
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -210,9 +210,9 @@ public class InsertSequenceAnalyser
         }
 
         if(sgl1.Position < sgl2.Position)
-            return sgl1.Orientation == POS_ORIENT ? DEL : DUP;
+            return sgl1.Orientation == ORIENT_FWD ? DEL : DUP;
         else
-            return sgl2.Orientation == POS_ORIENT ? DEL : DUP;
+            return sgl2.Orientation == ORIENT_FWD ? DEL : DUP;
     }
 
     private BufferedWriter initialiseWriter()

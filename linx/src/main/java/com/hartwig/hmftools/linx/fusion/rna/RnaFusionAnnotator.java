@@ -4,9 +4,9 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -308,7 +308,7 @@ public class RnaFusionAnnotator
 
         if(requireHigherBreakendPos)
         {
-            if(breakend.orientation() != POS_ORIENT)
+            if(breakend.orientation() != ORIENT_FWD)
                 return false;
 
             // factor in any uncertainty around the precise breakend, eg from homology
@@ -316,7 +316,7 @@ public class RnaFusionAnnotator
         }
         else
         {
-            if(breakend.orientation() != NEG_ORIENT)
+            if(breakend.orientation() != ORIENT_REV)
                 return false;
 
             return (position - offsetMargin <= rnaPosition);

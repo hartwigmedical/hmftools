@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
@@ -83,19 +83,19 @@ public class ExternalFusionData
 
         if(svType.contains("deletion"))
         {
-            orientations[0] = positions[1] > positions[0] ? POS_ORIENT : NEG_ORIENT;
-            orientations[1] = positions[1] > positions[0] ? NEG_ORIENT : POS_ORIENT;
+            orientations[0] = positions[1] > positions[0] ? ORIENT_FWD : ORIENT_REV;
+            orientations[1] = positions[1] > positions[0] ? ORIENT_REV : ORIENT_FWD;
         }
         else if(svType.contains("duplication"))
         {
-            orientations[0] = positions[1] > positions[0] ? NEG_ORIENT : POS_ORIENT;
-            orientations[1] = positions[1] > positions[0] ? POS_ORIENT : NEG_ORIENT;
+            orientations[0] = positions[1] > positions[0] ? ORIENT_REV : ORIENT_FWD;
+            orientations[1] = positions[1] > positions[0] ? ORIENT_FWD : ORIENT_REV;
         }
         else if(svType.contains("inversion") || svType.contains("translocation"))
         {
             final String[] geneStrands = { items[2], items[3] };
-            orientations[0] = geneStrands[0].charAt(0) == '+' ? POS_ORIENT : NEG_ORIENT;
-            orientations[1] = geneStrands[1].charAt(0) == '+' ? POS_ORIENT : NEG_ORIENT;
+            orientations[0] = geneStrands[0].charAt(0) == '+' ? ORIENT_FWD : ORIENT_REV;
+            orientations[1] = geneStrands[1].charAt(0) == '+' ? ORIENT_FWD : ORIENT_REV;
         }
 
         FusionJunctionType[] junctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };

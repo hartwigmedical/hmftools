@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.AMP;
@@ -199,7 +199,7 @@ public class StructuralVariant extends Variant
 
         String sequence;
 
-        if(orientation == POS_ORIENT)
+        if(orientation == ORIENT_FWD)
         {
             int probeStart = position - refBaseLength + 1;
             String refBases = refGenome.getBaseString(chromosome, probeStart, position);
@@ -239,14 +239,14 @@ public class StructuralVariant extends Variant
         String basesStart;
         String basesEnd;
 
-        if(orientStart == POS_ORIENT)
+        if(orientStart == ORIENT_FWD)
         {
             int probeStart = positionStart - halfNonInsSeqLength + 1;
             basesStart = refGenome.getBaseString(chrStart, probeStart, positionStart);
 
             int endBaseLength = probeLength - basesStart.length() - insSeqLength;
 
-            if(orientEnd == NEG_ORIENT)
+            if(orientEnd == ORIENT_REV)
             {
                 basesEnd = refGenome.getBaseString(chrEnd, positionEnd, positionEnd + endBaseLength - 1);
             }
@@ -258,7 +258,7 @@ public class StructuralVariant extends Variant
         }
         else
         {
-            if(orientEnd == POS_ORIENT)
+            if(orientEnd == ORIENT_FWD)
             {
                 // swap ends and treat as +1/-1
                 int probeStart = positionEnd - halfNonInsSeqLength + 1;
@@ -545,16 +545,16 @@ public class StructuralVariant extends Variant
 
     public static boolean matchesDelRegion(final StructuralVariant sv, final GeneCopyNumber geneCopyNumber)
     {
-        if(sv.variantData().startOrientation() == POS_ORIENT && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(sv.variantData().startOrientation() == ORIENT_FWD && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)
             return true;
 
-        if(sv.variantData().endOrientation() == POS_ORIENT && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(sv.variantData().endOrientation() == ORIENT_FWD && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionStart()) <= 1)
             return true;
 
-        if(sv.variantData().startOrientation() == NEG_ORIENT && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(sv.variantData().startOrientation() == ORIENT_REV && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
             return true;
 
-        if(sv.variantData().endOrientation() == NEG_ORIENT && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(sv.variantData().endOrientation() == ORIENT_REV && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
             return true;
 
         return false;

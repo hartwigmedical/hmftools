@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.esvee.utils.PonCombiner.mergeSglRegions;
 import static com.hartwig.hmftools.esvee.utils.PonCombiner.mergeSvRegions;
 
@@ -30,36 +30,36 @@ public class PonTest
         List<PonSvRegion> combinedRegions = Lists.newArrayList();
 
         combinedRegions.add(new PonSvRegion(
-                new BaseRegion(100, 105), FORWARD,
+                new ChrBaseRegion(CHR_1,100, 105), FORWARD,
                 new ChrBaseRegion(CHR_2, 100, 110), REVERSE, 10));
 
         // will be combine with 2
         combinedRegions.add(new PonSvRegion(
-                new BaseRegion(98, 103), FORWARD,
+                new ChrBaseRegion(CHR_1, 98, 103), FORWARD,
                 new ChrBaseRegion(CHR_2, 102, 104), REVERSE, 10));
 
         // not combined, diff orientation
         combinedRegions.add(new PonSvRegion(
-                new BaseRegion(102, 107), REVERSE,
+                new ChrBaseRegion(CHR_1, 102, 107), REVERSE,
                 new ChrBaseRegion(CHR_2, 100, 110), REVERSE, 10));
 
         // not combined, latter breakend doesn't overlap
         combinedRegions.add(new PonSvRegion(
-                new BaseRegion(104, 109), FORWARD,
+                new ChrBaseRegion(CHR_1, 104, 109), FORWARD,
                 new ChrBaseRegion(CHR_2, 120, 125), REVERSE, 10));
 
         // latter start but still overlaps, will be combined
         combinedRegions.add(new PonSvRegion(
-                new BaseRegion(105, 106), FORWARD,
+                new ChrBaseRegion(CHR_1, 105, 106), FORWARD,
                 new ChrBaseRegion(CHR_2, 105, 115), REVERSE, 10));
 
         // new region
         combinedRegions.add(new PonSvRegion(
-                new BaseRegion(200, 205), FORWARD,
+                new ChrBaseRegion(CHR_1, 200, 205), FORWARD,
                 new ChrBaseRegion(CHR_2, 100, 105), REVERSE, 10));
 
         combinedRegions.add(new PonSvRegion(
-                new BaseRegion(202, 207), FORWARD,
+                new ChrBaseRegion(CHR_1, 202, 207), FORWARD,
                 new ChrBaseRegion(CHR_2, 95, 100), REVERSE, 10));
 
         mergeSvRegions(CHR_1, combinedRegions);
@@ -97,26 +97,26 @@ public class PonTest
         List<PonSglRegion> combinedRegions = Lists.newArrayList();
 
         combinedRegions.add(new PonSglRegion(
-                new BaseRegion(100, 105), FORWARD, 10));
+                new ChrBaseRegion(CHR_1, 100, 105), FORWARD, 10));
 
         // will be combine with 2
         combinedRegions.add(new PonSglRegion(
-                new BaseRegion(98, 103), FORWARD, 10));
+                new ChrBaseRegion(CHR_1, 98, 103), FORWARD, 10));
 
         // not combined, diff orientation
         combinedRegions.add(new PonSglRegion(
-                new BaseRegion(100, 105), REVERSE, 10));
+                new ChrBaseRegion(CHR_1, 100, 105), REVERSE, 10));
 
         // latter start but still overlaps, will be combined
         combinedRegions.add(new PonSglRegion(
-                new BaseRegion(105, 106), FORWARD, 10));
+                new ChrBaseRegion(CHR_1, 105, 106), FORWARD, 10));
 
         // new region
         combinedRegions.add(new PonSglRegion(
-                new BaseRegion(200, 205), REVERSE, 10));
+                new ChrBaseRegion(CHR_1, 200, 205), REVERSE, 10));
 
         combinedRegions.add(new PonSglRegion(
-                new BaseRegion(203, 210), REVERSE, 10));
+                new ChrBaseRegion(CHR_1, 203, 210), REVERSE, 10));
 
         mergeSglRegions(CHR_1, combinedRegions);
 

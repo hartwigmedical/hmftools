@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
@@ -490,8 +490,8 @@ public class ChimericReadTracker
         {
             int[] splitJunction = findSplitReadJunction(splitRead);
 
-            addJunction(splitRead, SE_START, splitJunction[SE_START], POS_ORIENT);
-            addJunction(splitRead, SE_END, splitJunction[SE_END], NEG_ORIENT);
+            addJunction(splitRead, SE_START, splitJunction[SE_START], ORIENT_FWD);
+            addJunction(splitRead, SE_END, splitJunction[SE_END], ORIENT_REV);
 
             return;
         }
@@ -508,7 +508,7 @@ public class ChimericReadTracker
             {
                 junctionPositions[scSide.Side] = suppRead.getCoordsBoundary(scSide.Side);
 
-                addJunction(suppRead, scSide.Side, junctionPositions[scSide.Side], scSide.Side == SE_START ? NEG_ORIENT : POS_ORIENT);
+                addJunction(suppRead, scSide.Side, junctionPositions[scSide.Side], scSide.Side == SE_START ? ORIENT_REV : ORIENT_FWD);
             }
 
             return;
@@ -528,12 +528,12 @@ public class ChimericReadTracker
             if(scSide.isLeft())
             {
                 junctionPositions[SE_START] = read.getCoordsBoundary(SE_START);
-                addJunction(read, SE_START, junctionPositions[SE_START], NEG_ORIENT);
+                addJunction(read, SE_START, junctionPositions[SE_START], ORIENT_REV);
             }
             else
             {
                 junctionPositions[SE_END] = read.getCoordsBoundary(SE_END);
-                addJunction(read, SE_END, junctionPositions[SE_END], POS_ORIENT);
+                addJunction(read, SE_END, junctionPositions[SE_END], ORIENT_FWD);
             }
         }
     }
