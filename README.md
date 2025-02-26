@@ -6,9 +6,7 @@ WiGiTS is a universal open source suite of genome and transcriptome analysis too
 
 We recommend to run WiGiTS using the NextFlow implementation called [OncoAnalyser](./pipeline/README_ONCOANALYSER.md).
 
-Alternatively, an example WGS pipeline which runs each of these components in turn is detailed [here](./pipeline/README_WGS.md).
-
-An example targeted-panel pipeline, including support for the HMF and TSO-500 panels, is detailed [here](./pipeline/README_TARGETED.md).
+The pipeline can be run on a targeted panel eg TSO500 - see detailed information [here](./pipeline/README_TARGETED.md).
 
 ## Pipeline overview
 Here is a schematic showing how the interactions between the core molecular components of the tool suite:
@@ -17,8 +15,7 @@ Here is a schematic showing how the interactions between the core molecular comp
 
 ## Latest Pipeline Version
 
-The latest HMF pipeline is v6.0. Release notes
-are [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/docs/PipelineReleaseNotes.v5.34.pdf).
+The next planned release of the WiGiTs pipeline is v2.0.
 
 The table below has links for the each tool used in this release.
 
