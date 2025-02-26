@@ -75,12 +75,12 @@ public class PonCombiner
             System.exit(1);
         }
 
-        SV_LOGGER.info("Gripss PON file merge");
+        SV_LOGGER.info("SV PON file merge");
 
         mergeSvPonFiles();
         mergeSglPonFiles();
 
-        SV_LOGGER.info("Gripss PON merge complete");
+        SV_LOGGER.info("SV PON merge complete");
     }
 
     private static final int LOG_COUNT = 1000000;
@@ -117,10 +117,15 @@ public class PonCombiner
                 for(PonSvRegion region : combinedRegions)
                 {
                     // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
+                    // note: convert position starts to BED convention
+                    writer.write(region.toBedRecord());
+
+                    /*
                     writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                            chrStr, region.RegionStart.start(), region.RegionStart.end(),
-                            region.RegionEnd.chromosome(), region.RegionEnd.start(), region.RegionEnd.end(), ".",
+                            chrStr, region.RegionStart.start() - 1, region.RegionStart.end(),
+                            region.RegionEnd.chromosome(), region.RegionEnd.start() - 1, region.RegionEnd.end(), ".",
                             region.PonCount, region.OrientStart.asChar(), region.OrientEnd.asChar()));
+                    */
 
                     writer.newLine();
                 }
@@ -234,12 +239,16 @@ public class PonCombiner
 
                 SV_LOGGER.debug("chr({}) writing {} SGL regions", chrStr, combinedRegions.size());
 
-                for(PonSglRegion region : combinedRegions)
+                for(PonSglRegion ponRegion : combinedRegions)
                 {
+                    /*
                     // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
+                    // note: convert to BED position at start
                     writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%s",
-                            chrStr, region.Region.start(), region.Region.end(), ".", region.PonCount, region.Orient.asChar()));
+                            chrStr, region.Region.start() - 1, region.Region.end(), ".", region.PonCount, region.Orient.asChar()));
+                    */
 
+                    writer.write(ponRegion.toBedRecord());
                     writer.newLine();
                 }
             }
