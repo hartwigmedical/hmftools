@@ -19,6 +19,12 @@ public final class TincConstants
     protected static final double TINC_GERMLINE_DEPTH_LOW = 0.5;
     protected static final double TINC_GERMLINE_DEPTH_HIGH = 1 + TINC_GERMLINE_DEPTH_LOW;
 
+    protected static final int TINC_MQF_LIMIT = 25;
+
+    protected static final int TINC_TUMOR_AF_LOWER_LIMIT = 50;
+    protected static final int TINC_TUMOR_AF_UPPER_LIMIT = 300;
+    protected static final double TINC_TUMOR_AF_UPPER_TEST_MIN = 0.011;
+
     protected static final int TINC_GERMLINE_MAX_AD = 10;
 
     protected static final double TINC_RECOVERY_FACTOR = 2.5;

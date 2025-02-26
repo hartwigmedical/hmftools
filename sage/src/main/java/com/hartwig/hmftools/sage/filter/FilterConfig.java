@@ -52,7 +52,7 @@ public class FilterConfig
 
         if(configBuilder.hasValue(FILTERED_MAX_GERMLINE_ALT_SUPPORT))
             FilteredMaxGermlineAltSupport = configBuilder.getInteger(FILTERED_MAX_GERMLINE_ALT_SUPPORT);
-        else if(configBuilder.hasFlag(RUN_TINC))
+        else if(configBuilder.isRegistered(RUN_TINC) && configBuilder.hasFlag(RUN_TINC))
             FilteredMaxGermlineAltSupport = DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC;
         else
             FilteredMaxGermlineAltSupport = DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;

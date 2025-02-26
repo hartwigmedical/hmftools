@@ -6,6 +6,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_MAX_AD;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_MIN_VARIANTS;
+import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_TUMOR_AF_LOWER_LIMIT;
+import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_TUMOR_AF_UPPER_LIMIT;
+import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_TUMOR_AF_UPPER_TEST_MIN;
 
 import java.util.List;
 
@@ -22,12 +25,22 @@ public class TincCalculator
         if(variants.size() < TINC_MIN_VARIANTS)
             return 0;
 
+        double tumorAfTotal = variants.stream().mapToDouble(x -> x.tumorAf()).sum();
+
+        if(tumorAfTotal < TINC_TUMOR_AF_LOWER_LIMIT)
+            return 0;
+
+        boolean excludeLowerLevels = tumorAfTotal < TINC_TUMOR_AF_UPPER_LIMIT;
+
         double lowestScore = -1;
         double lowestTestLevel = -1;
         int levelsSinceLowest = 0;
 
         for(double testLevel : testLevels)
         {
+            if(excludeLowerLevels && testLevel > 0 && testLevel < TINC_TUMOR_AF_UPPER_TEST_MIN)
+                continue;
+
             double score = computeContaminationScore(variants, testLevel);
 
             SG_LOGGER.trace(format("tinc test level(%.3f) score(%.0f)", testLevel, score));
@@ -45,7 +58,7 @@ public class TincCalculator
             }
         }
 
-        SG_LOGGER.debug(format("tinc level(%.3f) minPenalty(%.0f)", lowestTestLevel, lowestScore));
+        SG_LOGGER.debug(format("tinc level(%.3f) tumorAFTotal(%.0f) minPenalty(%.0f)", lowestTestLevel, tumorAfTotal, lowestScore));
 
         return lowestTestLevel;
     }

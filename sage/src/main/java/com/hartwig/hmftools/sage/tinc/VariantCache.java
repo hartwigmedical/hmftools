@@ -16,11 +16,14 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_ABQ_MIN;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_DEPTH_HIGH;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_DEPTH_LOW;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_MAX_FITTING_VARIANTS;
+import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_MQF_LIMIT;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_RECOVERY_GERMLINE_AF_PROB;
 
 import java.io.BufferedReader;
@@ -118,14 +121,6 @@ public class VariantCache
         {
             String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            /*
-            if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chrStr)))
-            {
-                mVcfWriter.onChromosomeComplete(chromosome);
-                continue;
-            }
-            */
-
             ChromosomeTask chromosomeTask = new ChromosomeTask(chromosome);
 
             chromosomeTasks.add(chromosomeTask);
@@ -186,6 +181,8 @@ public class VariantCache
         PON,
         LOW_ABQ,
         GERMLINE_AF,
+        MQF,
+        NEAR_INDEL,
         REF_DEPTH;
     }
 
@@ -374,10 +371,20 @@ public class VariantCache
                     filterReason = FilterReason.LOW_ABQ;
             }
 
+            if(filterReason == FilterReason.NONE)
+            {
+                double mqf = variant.Context.getAttributeAsDouble(MAP_QUAL_FACTOR, 0);
+
+                if(mqf < TINC_MQF_LIMIT)
+                    filterReason = FilterReason.MQF;
+                else if(variant.Context.hasAttribute(NEARBY_INDEL_FLAG))
+                    filterReason = FilterReason.NEAR_INDEL;
+            }
+
             setPonData(variant);
 
             // check the PON for variants not otherwise filtered
-            if(filterReason != FilterReason.FILTERED)
+            if(filterReason == FilterReason.NONE)
             {
                 if(variant.gnomadFrequency() != null)
                 {
