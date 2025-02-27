@@ -8,18 +8,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDi
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PeachConfig
 {
-    @NotNull
     public final String vcfFile;
-    @NotNull
     public final String sampleName;
-    @NotNull
     public final String haplotypesFile;
-    @NotNull
     public final String outputDir;
     @Nullable
     public final String drugsFile;
@@ -32,7 +27,7 @@ public class PeachConfig
     private static final String DRUGS_FILE = "drugs_file";
     private static final String FUNCTION_FILE = "function_file";
 
-    public PeachConfig(@NotNull ConfigBuilder configBuilder)
+    public PeachConfig(final ConfigBuilder configBuilder)
     {
         String nullableVcfFile = configBuilder.getValue(VCF_FILE);
         String nullableHaplotypesFile = configBuilder.getValue(HAPLOTYPES_FILE);
@@ -53,7 +48,7 @@ public class PeachConfig
         functionFile = configBuilder.hasValue(FUNCTION_FILE) ? configBuilder.getValue(FUNCTION_FILE) : null;
     }
 
-    public static void addOptions(@NotNull ConfigBuilder configBuilder)
+    public static void addOptions(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(VCF_FILE, true, "VCF input file");
         configBuilder.addPath(HAPLOTYPES_FILE, true, "Haplotype config file");
@@ -64,31 +59,26 @@ public class PeachConfig
         addLoggingOptions(configBuilder);
     }
 
-    @NotNull
     public String getEventsOutputPath()
     {
         return checkAddDirSeparator(outputDir) + sampleName + ".peach.events.tsv";
     }
 
-    @NotNull
     public String getEventsPerGeneOutputPath()
     {
         return checkAddDirSeparator(outputDir) + sampleName + ".peach.gene.events.tsv";
     }
 
-    @NotNull
     public String getAllHaplotypeCombinationsOutputPath()
     {
         return checkAddDirSeparator(outputDir) + sampleName + ".peach.haplotypes.all.tsv";
     }
 
-    @NotNull
     public String getBestHaplotypeCombinationsOutputPath()
     {
         return PeachGenotypeFile.generateFileName(outputDir, sampleName);
     }
 
-    @NotNull
     public String getQcStatusOutputPath()
     {
         return checkAddDirSeparator(outputDir) + sampleName + ".peach.qc.tsv";

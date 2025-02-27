@@ -9,5 +9,5 @@ public interface HaplotypeEvent
     @NotNull
     String id();
 
-    boolean isRelevantFor(@NotNull HaplotypeEvent event);
+    boolean isRelevantFor(final HaplotypeEvent event);
 }

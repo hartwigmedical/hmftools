@@ -30,8 +30,7 @@ public class PanelLoader
 {
     public static final String HAPLOTYPE_EVENT_DELIMITER = ";";
 
-    @NotNull
-    public static HaplotypePanel loadHaplotypePanel(@NotNull String filename)
+    public static HaplotypePanel loadHaplotypePanel(final String filename)
     {
         try
         {
@@ -47,8 +46,7 @@ public class PanelLoader
         }
     }
 
-    @NotNull
-    private static HaplotypePanel loadHaplotypePanel(@NotNull List<String> lines)
+    private static HaplotypePanel loadHaplotypePanel(final List<String> lines)
     {
         Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes = new HashMap<>();
         Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes = new HashMap<>();
@@ -96,10 +94,9 @@ public class PanelLoader
         return new HaplotypePanel(geneToGeneHaplotypePanel);
     }
 
-    @NotNull
     private static Map<String, GeneHaplotypePanel> createGeneToGeneHaplotypePanel(
-            @NotNull Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes,
-            @NotNull Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes)
+            final Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes,
+            final Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes)
     {
         Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = new HashMap<>();
         Set<String> genes = Streams.concat(geneToDefaultHaplotypes.keySet().stream(), geneToNonDefaultHaplotypes.keySet().stream())
@@ -128,9 +125,8 @@ public class PanelLoader
         return geneToGeneHaplotypePanel;
     }
 
-    @NotNull
-    private static String getWildTypeHaplotypeName(@NotNull DefaultHaplotype defaultHaplotype,
-            @NotNull List<NonDefaultHaplotype> nonDefaultHaplotypes, @NotNull String gene)
+    private static String getWildTypeHaplotypeName(
+            final DefaultHaplotype defaultHaplotype, final List<NonDefaultHaplotype> nonDefaultHaplotypes, final String gene)
     {
         List<String> wildTypeHaplotypeNames = nonDefaultHaplotypes.stream()
                 .filter(NonDefaultHaplotype::isWildType)
@@ -158,8 +154,7 @@ public class PanelLoader
         return wildTypeHaplotypeName;
     }
 
-    @NotNull
-    private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(@NotNull String haplotypeEventsString)
+    private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(final String haplotypeEventsString)
     {
         if(haplotypeEventsString.isEmpty())
         {

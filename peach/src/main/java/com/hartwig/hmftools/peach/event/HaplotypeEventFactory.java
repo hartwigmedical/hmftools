@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.peach.event;
 
-import org.jetbrains.annotations.NotNull;
-
 public class HaplotypeEventFactory
 {
-    @NotNull
-    public static HaplotypeEvent fromId(@NotNull String eventId)
+    public static HaplotypeEvent fromId(final String eventId)
     {
         String[] splitEventId = eventId.split(HaplotypeEvent.EVENT_ID_DELIMITER);
         String eventTypeId = splitEventId[0];

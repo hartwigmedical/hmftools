@@ -8,12 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HaplotypeFunction
 {
-    @NotNull
     public abstract String geneName();
-
-    @NotNull
     public abstract String haplotypeName();
-
-    @NotNull
     public abstract String function();
 }
