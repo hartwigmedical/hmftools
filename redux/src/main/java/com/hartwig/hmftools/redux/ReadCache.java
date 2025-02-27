@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
 import java.util.List;
 import java.util.Map;
@@ -51,8 +52,8 @@ public class ReadCache
     private static final int CHECK_CACHE_READ_COUNT = 10000;
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
 
-    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation,
-            final DuplicateGroupCollapseConfig groupCollapseConfig)
+    public ReadCache(
+            int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicateGroupCollapseConfig groupCollapseConfig)
     {
         mGroupSize = groupSize;
         mMaxSoftClipLength = maxSoftClipLength;
@@ -75,8 +76,12 @@ public class ReadCache
     public void processRead(final SAMRecord read)
     {
         int readLeftSoftClip = leftSoftClipLength(read);
+
         if(readLeftSoftClip > mMaxSoftClipLength)
-            RD_LOGGER.warn("Read's left soft clip overruns mMaxSoftClipLength({}): {}", mMaxSoftClipLength, read.getSAMString());
+        {
+            RD_LOGGER.warn("read({}) leftClip({}) exceeds maxSoftClipLength({})",
+                    readToString(read), readLeftSoftClip, mMaxSoftClipLength);
+        }
 
         FragmentCoords fragmentCoords = FragmentCoords.fromRead(read, mUseFragmentOrientation);
 

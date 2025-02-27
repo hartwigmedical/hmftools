@@ -156,6 +156,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             mateOrient = read.getMateNegativeStrandFlag() ? REVERSE : FORWARD;
 
             String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+
+            // if mate CIGAR isn't present, continue assuming a fully-aligned mate read - only supplementaries conditionally use this logic
+            if(mateCigar == null)
+                mateCigar = format("%dM", read.getReadBases().length);
+
             matePosition = getFivePrimeUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateOrient.isForward());
         }
 

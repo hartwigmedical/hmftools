@@ -111,6 +111,7 @@ public class ReduxConfig
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final double PerfDebugTime;
+    public final boolean FailOnMissingSuppMateCigar;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
     public final boolean SkipUnmapped;
@@ -137,6 +138,7 @@ public class ReduxConfig
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
     private static final String SKIP_UNAMPPED = "skip_unmapped";
+    private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -208,6 +210,7 @@ public class ReduxConfig
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
         SkipUnmapped = configBuilder.hasFlag(SKIP_UNAMPPED);
+        FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
 
@@ -345,6 +348,7 @@ public class ReduxConfig
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
+        configBuilder.addFlag(FAIL_SUPP_NO_MATE_CIGAR, "Fail if supplementary is missing mate CIGAR ");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
@@ -389,6 +393,7 @@ public class ReduxConfig
         KeepInterimBams = false;
         SkipUnmapped = false;
         LogReadType = NONE;
+        FailOnMissingSuppMateCigar = false;
 
         LogReadIds = Lists.newArrayList();
         Threads = 0;
