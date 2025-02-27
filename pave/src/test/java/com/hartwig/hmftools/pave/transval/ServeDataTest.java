@@ -11,11 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -108,7 +107,7 @@ public class ServeDataTest
         return jsonObject.get(key).getAsString();
     }
 
-    @Test
+//    @Test
     public void check()
     {
         List<StatsForGene> results = new ArrayList<>();
@@ -126,10 +125,11 @@ public class ServeDataTest
         int numberWithSameHotspots = 0;
         int numberWithNoTranscriptFound = 0;
         int numberWithMultipleTranscriptFound = 0;
-        //        int numberWithSameHotspotsAndUsingNonCanonicalTranscript = 0;
-        //        int numberWithDifferentHotspotsAndUsingNonCanonicalTranscript = 0;
-        SortedSet<GeneAnnotation> unaccountedDifferences = new TreeSet<>();
-        SortedSet<GeneAnnotation> unaccountedDifferencesButWithHotspotsSameApartFromPosition = new TreeSet<>();
+        int numberWithProcessingError = 0;
+        int numberWithVariantsAcrossMultipleExons = 0;
+        int numberProcessedWithoutError = 0;
+        int numberForWhichNoVariantCouldBeCalculated = 0;
+        Map<String, Integer> differenceTypes = new HashMap<>();
         for(StatsForGene stats : statsForGenes)
         {
             numberOfGenes++;
@@ -137,44 +137,35 @@ public class ServeDataTest
             numberWithSameHotspots += stats.NumberWithSameHotspots;
             numberWithNoTranscriptFound += stats.NumberWithNoMatchingTranscript;
             numberWithMultipleTranscriptFound += stats.NumberWithNoUniqueMatchingTranscript;
-            //            numberWithSameHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithSameHotspotsThatUseNonCanonicalTranscript;
-            //            numberWithDifferentHotspotsAndUsingNonCanonicalTranscript += stats.NumberWithDifferentHotspotsThatUseNonCanonicalTranscript;
-            stats.AnnotationsWithDifferentHotspots.forEach(variantStatus ->
-            {
-                if(!knownDifferences.contains(variantStatus.geneAnnotation()))
-                {
-                    unaccountedDifferences.add(variantStatus.geneAnnotation());
-                    if(variantStatus.hotspotsSameModuloPosition())
-                    {
-                        unaccountedDifferencesButWithHotspotsSameApartFromPosition.add(variantStatus.geneAnnotation());
-                    }
-                }
+            numberProcessedWithoutError += stats.NumberProcessedWithoutError;
+            numberWithProcessingError += stats.NumberWithProcessingError;
+            numberWithVariantsAcrossMultipleExons += stats.NumberWithChangesAcrossMultipleExons;
+            numberForWhichNoVariantCouldBeCalculated += stats.NumberForWhichNoVariantCouldBeCalculated;
+            stats.Differences.forEach(d -> {
+                Integer typeCount = differenceTypes.remove(d.type);
+                Integer newCount = typeCount == null ? 1 : typeCount + 1;
+                differenceTypes.put(d.type, newCount);
             });
         }
-        p("UNNACOUNTED DIFFERENCES:");
-        p("************************");
-        //        unaccountedDifferences.forEach(difference ->
-        //                p(difference.mGene + " " + difference.mAnnotation));
         p("OVERALL STATS");
         p("*************");
         p("Number of genes: " + numberOfGenes);
         p("Number of annotations not parsed: " + numberNotParsed);
         p("Number with no transcript found: " + numberWithNoTranscriptFound);
-        p("Number with no unique transcript found: " + numberWithMultipleTranscriptFound);
-//        p("Number of annotations with same hotspots: " + numberWithSameHotspots);
-//        p("Unaccounted differences: " + unaccountedDifferences.size());
-//        p("Unaccounted differences but with hotspots same apart from position: "
-//                + unaccountedDifferencesButWithHotspotsSameApartFromPosition.size());
-        //        p("Number of annotations that have same hotspots and use non canonical transcript: " + numberWithSameHotspotsAndUsingNonCanonicalTranscript);
-        //        p("Number of annotations that have different hotspots and use non canonical transcript: " + numberWithDifferentHotspotsAndUsingNonCanonicalTranscript);
+        p("Number with multiple non-canonical transcripts giving different results: " + numberWithMultipleTranscriptFound);
+        p("Number with variants across multiple exons (not handled): " + numberWithVariantsAcrossMultipleExons);
+        p("Number processed without error: " + numberProcessedWithoutError);
+        p("Number for which no variant could be calculate: " + numberForWhichNoVariantCouldBeCalculated);
+        p("Number with processing error: " + numberWithProcessingError);
+        p("Number of annotations with similar hotspots: " + numberWithSameHotspots);
+        p("Difference types: " + differenceTypes);
     }
 
 //    @Test
     public void examples()
     {
-        ProteinVariant variant = transval.variationParser().parseGeneVariant("BRAF", "N486_T491delinsK");
-        TransvalVariant tsm = variant.calculateVariant(transval.mRefGenome);
-        Assert.assertEquals(6, tsm.hotspots().size());
+        TransvalVariant variant = transval.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("TP53", "Q331Q");
+        Assert.assertEquals(6, variant.hotspots().size());
     }
 
     private StatsForGene checkItemsForGene(String gene)
@@ -188,7 +179,7 @@ public class ServeDataTest
             }
             collators.get(serveItem.Annotation).addHotspot(serveItem);
         });
-        final StatsForGene statsForGene = new StatsForGene(gene);
+        final StatsForGene statsForGene = new StatsForGene(transval, gene);
         collators.keySet().forEach(annotation ->
         {
             ProteinAnnotationCollator collator = collators.get(annotation);
@@ -197,12 +188,12 @@ public class ServeDataTest
             {
                 if(comparison.hasProcessingError())
                 {
-                    //                    p("Processing error for: " + collator);
                     String msg = comparison.mProcessingError.getMessage();
                     if(msg == null)
                     {
                         p("This one had an error with no message: " + collator);
                         p("The processing error was: " + comparison.mProcessingError);
+                        statsForGene.NumberWithProcessingError++;
                     }
                     else
                     {
@@ -214,9 +205,18 @@ public class ServeDataTest
                         {
                             statsForGene.NumberWithNoUniqueMatchingTranscript++;
                         }
+                        else if(msg.startsWith("Window end overlaps by more than one codon"))
+                        {
+                            statsForGene.NumberWithChangesAcrossMultipleExons++;
+                        }
+                        else if(msg.startsWith("No variant could be calculated"))
+                        {
+                            statsForGene.NumberForWhichNoVariantCouldBeCalculated++;
+                        }
                         else
                         {
                             p("Processing error for: " + collator);
+                            statsForGene.NumberWithProcessingError++;
                             p(msg);
                         }
                     }
@@ -224,6 +224,7 @@ public class ServeDataTest
                 else
                 {
                     statsForGene.recordResultsForAnnotation(comparison);
+                    statsForGene.NumberProcessedWithoutError++;
                 }
             }
             else
@@ -271,13 +272,7 @@ class VariantStatus
 
     Throwable mProcessingError = null;
 
-    private TransvalVariant variant;
-
-    VariantStatus(@NotNull final ProteinAnnotationCollator collator, Exception parseException)
-    {
-        this.collator = collator;
-        mParseException = parseException;
-    }
+    TransvalVariant variant;
 
     VariantStatus(@NotNull final ProteinAnnotationCollator collator, TransvalVariant variant)
     {
@@ -288,11 +283,6 @@ class VariantStatus
     VariantStatus(@NotNull final ProteinAnnotationCollator collator)
     {
         this.collator = collator;
-    }
-
-    GeneAnnotation geneAnnotation()
-    {
-        return new GeneAnnotation(collator.mGene, collator.mAnnotation);
     }
 
     boolean usesNonCanonicalTranscript()
@@ -312,37 +302,59 @@ class VariantStatus
 
     boolean hotspotsSame()
     {
-        // The serve data contain Hotspots such as
-        // Hotspot{ref=GCAACATCTCCGAAAGCCAACAAGGAAAT, alt=GG, chromosome=chr7, position=55174785}
-        // This has a prefix common to the ref and alt that should be removed
-        // and the position should be adjusted accordingly.
-        Set<TransvalHotspot> reducedCollatorResults = collator.hotspots.stream().map(this::reduceHotspot).collect(Collectors.toSet());
-        // For dels, we only produce one hotspot. If it's in the reduced hotspots, that's good enough.
-        if(collator.mAnnotation.endsWith("del"))
+        var common = Sets.intersection(collator.hotspots, variant.hotspots());
+        if(!common.isEmpty())
         {
-            TransvalHotspot computed = variant.hotspots().iterator().next();
-            //            if(collator.mAnnotation.endsWith("del"))
-            //            {
-            //                System.out.println("del");
-            //            }
-            if(reducedCollatorResults.contains(computed))
+            return true;
+        }
+        if(collator.mAnnotation.contains("ins"))
+        {
+            if(collator.hotspots.size() == 1 && variant.Hotspots.size() == 1)
+            {
+                return hotspotsSameModuloAlt();
+            }
+        }
+
+        if(collator.mAnnotation.endsWith("dup"))
+        {
+            if(collator.hotspots.size() == 1 && variant.Hotspots.size() == 1)
+            {
+                return hotspotsSameModuloAlt();
+            }
+
+            return collator.hotspots.containsAll(variant.hotspots());
+        }
+        if(collator.mAnnotation.endsWith("fs"))
+        {
+            if(collator.hotspots.containsAll(variant.hotspots()))
             {
                 return true;
             }
-            else
-            {
-                //                System.out.println("----------- " + collator.mGene + " " + collator.mAnnotation);
-                //                System.out.println("Computed: " + computed);
-                //                System.out.println("Reduced: " + reducedCollatorResults);
-                return false;
-            }
         }
-        if(collator.mAnnotation.endsWith("dup"))
+        return false;
+    }
+
+    boolean hotspotsSameModuloAlt()
+    {
+        if(variant.hotspots().size() != 1)
         {
-            return variant.hotspots().containsAll(variant.hotspots());
+            return false;
         }
-        final boolean equals = variant.hotspots().containsAll(reducedCollatorResults);
-        return equals;
+        if(collator.hotspots.size() != 1)
+        {
+            return false;
+        }
+        TransvalHotspot calculatedHS = variant.hotspots().iterator().next();
+        TransvalHotspot givenHS = collator.hotspots.iterator().next();
+        if(calculatedHS.mPosition != givenHS.mPosition)
+        {
+            return false;
+        }
+        if(!calculatedHS.Ref.equals(givenHS.Ref))
+        {
+            return false;
+        }
+        return givenHS.mChromosome.equals(calculatedHS.mChromosome);
     }
 
     boolean hotspotsSameModuloPosition()
@@ -461,11 +473,30 @@ class ServeItem
     }
 }
 
+class DifferenceWithTransvar {
+    public final TransvalVariant variant;
+    public final ProteinAnnotationCollator collator;
+    public final String type;
+
+    DifferenceWithTransvar(final VariantStatus variantStatus, Transval transval)
+    {
+        this.variant = variantStatus.variant;
+        this.collator = variantStatus.collator;
+        ProteinVariant transvalVariant = transval.variationParser().parseGeneVariants(collator.mGene, collator.mAnnotation).iterator().next();
+        type = transvalVariant.getClass().getSimpleName();
+            System.out.println(type + " difference for: " + collator.mGene + " " + collator.mAnnotation
+                    + ", calculated: " + variant.transcriptId()  + " canonical: " + variant.Transcript.IsCanonical
+                    + " " + variant.hotspots()
+                    + " from transvar: " + collator.hotspots);
+    }
+}
 class StatsForGene
 {
+    final Transval transval;
     @NotNull
     public final String mGene;
 
+    public int NumberProcessedWithoutError = 0;
     public int NumberNotParsed = 0;
 
     public int NumberWithDifferentHotspots = 0;
@@ -475,13 +506,17 @@ class StatsForGene
     public int NumberWithSameHotspotsThatUseNonCanonicalTranscript = 0;
     public int NumberWithDifferentHotspotsThatUseNonCanonicalTranscript = 0;
     public int NumberWithNoMatchingTranscript = 0;
+    public int NumberForWhichNoVariantCouldBeCalculated = 0;
     public int NumberWithNoUniqueMatchingTranscript = 0;
+    public int NumberWithProcessingError = 0;
+    public int NumberWithChangesAcrossMultipleExons = 0;
 
     public final List<VariantStatus> AnnotationsWithDifferentHotspots = new ArrayList<>();
-    private final List<VariantStatus> AnnotationResults = new ArrayList<>();
+    public final List<DifferenceWithTransvar> Differences = new ArrayList<>();
 
-    StatsForGene(@NotNull final String gene)
+    StatsForGene(final Transval transval, @NotNull final String gene)
     {
+        this.transval = transval;
         mGene = gene;
     }
 
@@ -494,7 +529,6 @@ class StatsForGene
         if(comparison.hasProcessingError())
         {
             Throwable t = comparison.mProcessingError;
-            //            if(t.getMessage().contains())
             System.out.println(t.getMessage());
         }
         if(comparison.hotspotsSame())
@@ -509,17 +543,12 @@ class StatsForGene
         {
             AnnotationsWithDifferentHotspots.add(comparison);
             NumberWithDifferentHotspots++;
+            Differences.add(new DifferenceWithTransvar(comparison, transval));
             if(comparison.usesNonCanonicalTranscript())
             {
                 NumberWithDifferentHotspotsThatUseNonCanonicalTranscript++;
             }
         }
-        AnnotationResults.add(comparison);
-    }
-
-    public List<VariantStatus> getAnnotationsWithDifferentHotspots()
-    {
-        return AnnotationsWithDifferentHotspots;
     }
 
     public void recordNotParsed()

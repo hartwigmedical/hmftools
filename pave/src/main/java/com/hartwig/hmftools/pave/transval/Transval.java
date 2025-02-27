@@ -55,9 +55,21 @@ public class Transval
         Set<ProteinVariant> allMatchingVariants = variationParser().parseGeneVariants(gene, proteinVariant);
         Map<String, TransvalVariant> transcriptIdToVariant  = new HashMap<>();
         allMatchingVariants.forEach(variant -> {
-            transcriptIdToVariant.put(variant.mTranscript.TransName, variant.calculateVariant(mRefGenome));
+            try
+            {
+                transcriptIdToVariant.put(variant.mTranscript.TransName, variant.calculateVariant(mRefGenome));
+            }
+            catch (IllegalArgumentException e)
+            {
+                // eg incomplete transcript... just ignore it.
+            }
         });
-        if(transcriptIdToVariant.size() == 1)
+        if(transcriptIdToVariant.isEmpty())
+        {
+            // Maybe the only transcripts had problems.
+            throw new IllegalArgumentException("No variant could be calculated for " + gene + " " + proteinVariant);
+        }
+        else if(transcriptIdToVariant.size() == 1)
         {
             return transcriptIdToVariant.values().iterator().next();
         }

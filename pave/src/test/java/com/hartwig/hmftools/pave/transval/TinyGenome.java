@@ -24,6 +24,7 @@ public class TinyGenome extends SimpleTestGenome
         data.add( new ChromosomeSnippet("chr7", 140_000_000, 10_000_000, "chr7_part.txt"));
         data.add( new ChromosomeSnippet("chr7", 55_000_000, 3_000_000, "chr7_part_55.txt"));
         data.add( new ChromosomeSnippet("chr17", 43_000_000, 1_000_000, "chr17_part_43.txt"));
+        data.add( new ChromosomeSnippet("chr21", 37_000_000, 1_000_000, "chr21_part_37.txt"));
     }
 
     @Override

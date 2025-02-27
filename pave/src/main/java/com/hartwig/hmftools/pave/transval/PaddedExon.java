@@ -380,7 +380,7 @@ public class PaddedExon
     @Override
     public String toString()
     {
-        return "ExtendedExon{" +
+        return "PaddedExon{" +
                 "prefixFromPreviousExon='" + BasesOfFirstCodonInPreviousExon + '\'' +
                 ", suffixFromNextExon='" + BasesOfLastCodonInFollowingExon + '\'' +
                 ", exonBases='" + exonBases + '\'' +

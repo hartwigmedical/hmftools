@@ -25,7 +25,7 @@ class Insertion extends ProteinVariant
     {
         super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
         Preconditions.checkArgument(insertedSequence.length() > 0);
-        Preconditions.checkArgument( refRange.length() == 2);
+        Preconditions.checkArgument(refRange.length() == 2);
         mInsertedSequence = insertedSequence;
     }
 
@@ -46,16 +46,20 @@ class Insertion extends ProteinVariant
     {
         int insertionPosition = context.StartPositionInExon;
         int locationOfChange = context.insertionPoint();
-        String ref = context.mExon.baseAt(insertionPosition, context.IsPositiveStrand);
+        String ref = context.IsPositiveStrand
+                ? context.forwardStrandBaseAndLeftNeighbour().getLeft()
+                : context.forwardStrandBaseAndLeftNeighbour().getRight();
         Set<String> baseOptions = possibleInsertedNucleotideSequences();
         Set<ChangeResult> result = new HashSet<>();
-        baseOptions.forEach(bases -> {
+        baseOptions.forEach(bases ->
+        {
             String basesToInsert = bases;
             if(!context.IsPositiveStrand)
             {
                 basesToInsert = Nucleotides.reverseComplementBases(basesToInsert);
             }
-            String withBasesInserted = context.mExon.baseSequenceWithInsertionApplied(insertionPosition, basesToInsert, context.IsPositiveStrand);
+            String withBasesInserted =
+                    context.mExon.baseSequenceWithInsertionApplied(insertionPosition, basesToInsert, context.IsPositiveStrand);
             AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(withBasesInserted);
             String alt = ref + basesToInsert;
             result.add(new ChangeResult(acids, withBasesInserted, locationOfChange, ref, alt));
@@ -69,6 +73,12 @@ class Insertion extends ProteinVariant
     {
         // The insertion happens just after the first AA in the ref seq.
         return super.positionOfFirstAlteredCodon() + 1;
+    }
+
+    @Override
+    int numberOfLeftShiftsToTry(ChangeContext changeContext)
+    {
+        return super.numberOfLeftShiftsToTry(changeContext) - 1;
     }
 
     @Override

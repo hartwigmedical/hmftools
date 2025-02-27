@@ -41,15 +41,6 @@ public class Checks
         return c == 'A' || c == 'C' || c == 'G' || c == 'T';
     }
 
-    static boolean isValidAminoAcidName(String s)
-    {
-        if(AminoAcids.AMINO_ACID_TO_CODON_MAP.containsKey(s))
-        {
-            return true;
-        }
-        return (AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.containsKey(s));
-    }
-
     @NotNull
     static Matcher matchPattern(final Pattern variationPattern, final String description)
     {

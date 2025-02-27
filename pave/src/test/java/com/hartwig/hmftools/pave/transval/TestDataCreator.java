@@ -26,7 +26,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class TestDataCreator
 {
-
 //    @Test
     public void createReducedEnsemblDataSet() throws IOException
     {
@@ -45,7 +44,8 @@ public class TestDataCreator
                 "PIK3R1",
                 "ARID1A",
                 "KIT",
-                "BRCA1"
+                "BRCA1",
+                "DYRK1A"
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneNames);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
@@ -61,7 +61,8 @@ public class TestDataCreator
                 "ENSG00000145675", // PIK3R1
                 "ENSG00000117713", // ARID1A
                 "ENSG00000157404", // KIT
-                "ENSG00000012048"  // BRCA1
+                "ENSG00000012048",  // BRCA1
+                "ENSG00000157540" // DYRK1A
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
 
@@ -117,13 +118,13 @@ public class TestDataCreator
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna")));
         var chromosomeLengths = refGenomeSource.chromosomeLengths();
         System.out.println(chromosomeLengths.size());
-        int chrLength = chromosomeLengths.get("chr17");
+        int chrLength = chromosomeLengths.get("chr21");
         System.out.println(chrLength);
-        int start = 54_000_000; //
+        int start = 37_000_000; //
         int end = start + 1_000_000;
-        var chr = refGenomeSource.getBaseString("chr4", start, end);
+        var chr = refGenomeSource.getBaseString("chr21", start, end);
 //        System.out.println(chr.substring(10000, 10100));
-        File chrFile = new File(outputDir, "chr4_part_54.txt");
+        File chrFile = new File(outputDir, "chr21_part_37.txt");
         Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
     }
 

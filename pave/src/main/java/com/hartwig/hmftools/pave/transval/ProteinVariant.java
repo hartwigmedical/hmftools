@@ -109,7 +109,7 @@ public class ProteinVariant
     @NotNull
     AminoAcidSequence replaceExonAminoAcids(int exon, @NotNull AminoAcidSequence replacement)
     {
-        if(exon == 0 && (replacement.length() == 0 || !replacement.get(0).equals(AminoAcid.START)))
+        if(exon == 0 && (replacement.length() == 0))
         {
             return AminoAcidSequence.empty();
         }

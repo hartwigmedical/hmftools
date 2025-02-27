@@ -88,6 +88,13 @@ class ChangeContextBuilder
         String basesInNextExon = "";
         if(ccd.PaddingInNextExon > 0)
         {
+            // If a transcript is incomplete, the sum of its coding region lengths
+            // might not be a multiple of 3, in which case the PaddingInNextExon
+            // value is non-zero, despite there not being a next exon.
+            if(ccd.ExonIndex == codingRegions.size() - 1)
+            {
+                throw new IllegalArgumentException("Transcript is incomplete.");
+            }
             ChrBaseRegion nextExon = codingRegions.get(ccd.ExonIndex + 1);
             if(isPositiveStrand)
             {
