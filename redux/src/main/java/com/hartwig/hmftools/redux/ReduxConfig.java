@@ -90,6 +90,7 @@ public class ReduxConfig
     public final boolean JitterMsiOnly;
 
     public final ReadUnmapper UnmapRegions;
+    public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
 
     public final String OutputBam;
     public final String OutputDir;
@@ -114,7 +115,7 @@ public class ReduxConfig
     public final boolean FailOnMissingSuppMateCigar;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
-    public final boolean SkipUnmapped;
+    public final boolean SkipFullyUnmappedReads;
     public final int WriteReadBaseLength;
 
     private boolean mIsValid;
@@ -137,7 +138,8 @@ public class ReduxConfig
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
-    private static final String SKIP_UNAMPPED = "skip_unmapped";
+    private static final String SKIP_FULL_UNAMPPED_READS = "skip_fully_unmapped";
+    private static final String SKIP_UNAMPPING = "skip_unmapping";
     private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
 
     // dev and options
@@ -209,18 +211,21 @@ public class ReduxConfig
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
-        SkipUnmapped = configBuilder.hasFlag(SKIP_UNAMPPED);
+        SkipFullyUnmappedReads = configBuilder.hasFlag(SKIP_FULL_UNAMPPED_READS);
         FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
 
         UMIs = UmiConfig.from(configBuilder);
 
+
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
         JitterConfig = JitterAnalyserConfig.create(
                 SampleId, RefGenomeFile, RefGenVersion, Sequencing, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
+
+        SkipUnmapping = configBuilder.hasFlag(SKIP_UNAMPPING);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
@@ -230,7 +235,8 @@ public class ReduxConfig
         else
         {
             Map<String,List<UnmappingRegion>> unmapRegionsMap;
-            if(JitterMsiOnly)
+
+            if(JitterMsiOnly || SkipUnmapping)
             {
                 unmapRegionsMap = Collections.emptyMap();
             }
@@ -339,7 +345,8 @@ public class ReduxConfig
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
-        configBuilder.addFlag(SKIP_UNAMPPED, "Skip processing existing fully unmapped reads");
+        configBuilder.addFlag(SKIP_FULL_UNAMPPED_READS, "Skip processing existing fully unmapped reads");
+        configBuilder.addFlag(SKIP_UNAMPPING, "Skip unmapping routine, including excluded regions");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -391,7 +398,8 @@ public class ReduxConfig
         WriteBam = false;
         MultiBam = false;
         KeepInterimBams = false;
-        SkipUnmapped = false;
+        SkipFullyUnmappedReads = false;
+        SkipUnmapping = false;
         LogReadType = NONE;
         FailOnMissingSuppMateCigar = false;
 
