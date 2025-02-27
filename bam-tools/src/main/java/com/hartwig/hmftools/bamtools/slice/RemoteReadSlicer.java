@@ -37,22 +37,14 @@ public class RemoteReadSlicer implements Runnable
         mCurrentSlice = slice;
     }
 
-    //private static final int MAX_POSITION_DIFF = 300;
     private static final int READ_LOG_COUNT = 1_000_000;
 
     @Override
     public void run()
     {
-        sliceRemotePosition();
-        BT_LOGGER.trace("remote slice({}) complete, processed {} reads", mCurrentSlice, mReadsProcessed);
-    }
-
-    private void sliceRemotePosition()
-    {
-        //BT_LOGGER.trace("remote region slice({}), matched({}/{}), processed {} reads",
-          //      mCurrentSlice, mMatchedPositions, mRemotePositions.size(), mTotalReads);
-
+        BT_LOGGER.trace("remote slice({})", mCurrentSlice);
         mBamSlicer.slice(mSamReader.get(), mCurrentSlice, this::processSamRecord);
+        BT_LOGGER.trace("remote slice({}) complete, processed {} reads", mCurrentSlice, mReadsProcessed);
     }
 
     private void processSamRecord(final SAMRecord read)

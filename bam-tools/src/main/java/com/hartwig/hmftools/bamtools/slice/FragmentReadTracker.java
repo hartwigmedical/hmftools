@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 public class FragmentReadTracker
 {
     public record ReadKey(boolean isSupplementary, boolean firstInPair, boolean isNegativeStrand,
-                          int alignmentStart,
+                          boolean isSecondary, int alignmentStart,
                           String referenceName, @Nullable String cigar)
     {
         public ReadKey {
@@ -48,9 +48,14 @@ public class FragmentReadTracker
         @Override
         public String toString()
         {
-            return "supplementary?=" + isSupplementary + ", firstInPair?=" + firstInPair +
-                    ", aligned to " + referenceName + ':' + alignmentStart + '(' +
-                    (isNegativeStrand ? '-' : '+') + "), cigar=" + cigar;
+            return String.format("supplementary?=%b, firstInPair?=%b, isSecondary?=%b, aligned to %s:%d(%c), cigar=%s",
+                    isSupplementary,
+                    firstInPair,
+                    isSecondary,
+                    referenceName,
+                    alignmentStart,
+                    isNegativeStrand ? '-' : '+',
+                    cigar);
         }
 
         static ReadKey fromRead(SAMRecord read)
@@ -62,6 +67,7 @@ public class FragmentReadTracker
                     read.getSupplementaryAlignmentFlag(),
                     SamRecordUtils.firstInPair(read),
                     read.getReadNegativeStrandFlag(),
+                    read.isSecondaryAlignment(),
                     read.getAlignmentStart(),
                     read.getReferenceName(),
                     cigarString);
@@ -160,6 +166,14 @@ public class FragmentReadTracker
             return false;
         }
 
+        if(read.isSecondaryAlignment())
+        {
+            // secondary alignments are added the processed reads to make sure they are recorded, but
+            // they are not used to find other pending alignments
+            mProcessedReads.add(readKey);
+            return true;
+        }
+
         // add pending mate + supplementary alignments
         // we only need to do this for the first alignment of the read
         if(mProcessedReads.stream().noneMatch(o -> o.firstInPair == SamRecordUtils.firstInPair(read)))
@@ -177,6 +191,7 @@ public class FragmentReadTracker
                     ReadKey saReadKey = new ReadKey(isSupplementary,
                             SamRecordUtils.firstInPair(read),
                             sa.Strand == SupplementaryReadData.SUPP_NEG_STRAND,
+                            false,
                             sa.Position,
                             sa.Chromosome,
                             isSupplementary ? sa.Cigar.intern() : null);
@@ -204,6 +219,7 @@ public class FragmentReadTracker
                     mateReadKey = new ReadKey(false,
                             !SamRecordUtils.firstInPair(read),
                             read.getMateNegativeStrandFlag(),
+                            false,
                             read.getMateAlignmentStart(),
                             read.getMateReferenceName(),
                             null); // do not populate cigar for primary alignment
@@ -217,6 +233,7 @@ public class FragmentReadTracker
                     mateReadKey = new ReadKey(false,
                             !SamRecordUtils.firstInPair(read),
                             sa.Strand == SupplementaryReadData.SUPP_NEG_STRAND,
+                            false,
                             sa.Position,
                             sa.Chromosome,
                             null); // do not populate cigar for primary alignment
