@@ -174,9 +174,8 @@ public class PonCombiner
                     }
 
                     // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                    SV_LOGGER.trace("merging region({}:{} -> {}) with next({}:{} -> {})",
-                            chromosomeStart, currentRegion.RegionStart, currentRegion.RegionEnd,
-                            chromosomeStart, nextRegion.RegionStart, nextRegion.RegionEnd);
+                    SV_LOGGER.trace("merging region({} -> {}) with next({} -> {})",
+                            currentRegion.RegionStart, currentRegion.RegionEnd, nextRegion.RegionStart, nextRegion.RegionEnd);
 
                     currentRegion.RegionStart.setStart(Math.min(currentRegion.RegionStart.start(), nextRegion.RegionStart.start()));
                     currentRegion.RegionStart.setEnd(Math.max(currentRegion.RegionStart.end(), nextRegion.RegionStart.end()));
@@ -278,8 +277,7 @@ public class PonCombiner
                 }
 
                 // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                SV_LOGGER.trace("merging region({}:{}) with next({}:{})",
-                        chromosomeStart, currentRegion.Region, chromosomeStart, nextRegion.Region);
+                SV_LOGGER.trace("merging region({}) with next({})", currentRegion.Region, nextRegion.Region);
 
                 currentRegion.Region.setEnd(Math.max(currentRegion.Region.end(), nextRegion.Region.end()));
                 combinedRegions.remove(nextIndex);

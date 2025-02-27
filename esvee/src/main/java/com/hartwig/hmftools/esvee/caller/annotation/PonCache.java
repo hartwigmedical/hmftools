@@ -413,8 +413,13 @@ public class PonCache
                 if(!ponRegion.RegionStart.Chromosome.equals(currentChr))
                 {
                     currentChr = ponRegion.RegionStart.Chromosome;
-                    svRegions = Lists.newArrayList();
-                    mSvRegions.put(ponRegion.RegionStart.Chromosome, svRegions);
+
+                    if(!mSvRegions.containsKey(ponRegion.RegionStart.Chromosome))
+                    {
+                        svRegions = Lists.newArrayList();
+                        mSvRegions.put(ponRegion.RegionStart.Chromosome, svRegions);
+                    }
+
                     lastRegionStart = null;
                 }
 
@@ -461,8 +466,13 @@ public class PonCache
                 if(!ponRegion.Region.Chromosome.equals(currentChr))
                 {
                     currentChr = ponRegion.Region.Chromosome;
-                    sglRegions = Lists.newArrayList();
-                    mSglRegions.put(ponRegion.Region.Chromosome, sglRegions);
+
+                    if(!mSglRegions.containsKey(ponRegion.Region.Chromosome))
+                    {
+                        sglRegions = Lists.newArrayList();
+                        mSglRegions.put(ponRegion.Region.Chromosome, sglRegions);
+                    }
+
                     lastRegion = null;
                 }
 
