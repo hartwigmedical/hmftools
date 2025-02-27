@@ -51,7 +51,10 @@ public class PonCache
 
     private static final String GERMLINE_PON_BED_SV_FILE = "pon_sv_file";
     private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
-    private static final String GERMLINE_PON_MARGIN = "pon_margin";
+    public static final String GERMLINE_PON_MARGIN = "pon_margin";
+
+    public static final String ARTEFACT_PON_BED_SV_FILE = "artefact_pon_sv_file";
+    public static final String ARTEFACT_PON_BED_SGL_FILE = "artefact_pon_sgl_file";
 
     private final List<ChrBaseRegion> mSpecificSglFusionRegions;
 
@@ -130,6 +133,9 @@ public class PonCache
                 lastPosStart = breakend.Position;
 
                 Variant var = breakend.sv();
+
+                if(var.ponCount() > 0) // ignore if already annotated
+                    continue;
 
                 int ponCount = 0;
                 int compareCount = 0;

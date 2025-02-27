@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AD_THRE
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SGL_FILE;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SV_FILE;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.GERMLINE_PON_MARGIN;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
@@ -50,6 +53,7 @@ public class CallerApplication
     public final FilterConstants mFilterConstants;
 
     private final PonCache mPonCache;
+    private final PonCache mArtefactPonCache;
     private final HotspotCache mHotspotCache;
     private final VariantFilters mVariantFilters;
     private final RepeatMaskAnnotator mRepeatMaskAnnotator;
@@ -68,6 +72,20 @@ public class CallerApplication
 
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
+
+        if(configBuilder.hasValue(ARTEFACT_PON_BED_SV_FILE) && configBuilder.hasValue(ARTEFACT_PON_BED_SGL_FILE))
+        {
+            mArtefactPonCache = new PonCache(
+                    configBuilder.getInteger(GERMLINE_PON_MARGIN),
+                    configBuilder.getValue(ARTEFACT_PON_BED_SV_FILE),
+                    configBuilder.getValue(ARTEFACT_PON_BED_SGL_FILE),
+                    false);
+        }
+        else
+        {
+            mArtefactPonCache = null;
+        }
+
         mHotspotCache = new HotspotCache(configBuilder);
 
         String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId(), mConfig.OutputId);
@@ -212,6 +230,12 @@ public class CallerApplication
         {
             SV_LOGGER.info("applying PON filters");
             mPonCache.annotateVariants(mSvDataCache.getBreakendMap());
+        }
+
+        if(mArtefactPonCache != null && mArtefactPonCache.hasValidData())
+        {
+            SV_LOGGER.info("applying artefacts PON filters");
+            mArtefactPonCache.annotateVariants(mSvDataCache.getBreakendMap());
         }
 
         if(mRepeatMaskAnnotator.hasData())

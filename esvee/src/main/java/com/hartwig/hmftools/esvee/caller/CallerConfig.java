@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SGL_FILE;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SV_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.DEPTH_VCF_SUFFIX;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF;
 import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
@@ -128,6 +130,10 @@ public class CallerConfig
         addSpecificChromosomesRegionsConfig(configBuilder);
 
         PonCache.addConfig(configBuilder);
+
+        configBuilder.addPath(ARTEFACT_PON_BED_SV_FILE, false, "Additional artefact SV PON file");
+        configBuilder.addPath(ARTEFACT_PON_BED_SGL_FILE, false, "Additional artefact SGL PON file");
+
         HotspotCache.addConfig(configBuilder);
         FilterConstants.addConfig(configBuilder);
         RepeatMaskAnnotations.addConfig(configBuilder);
