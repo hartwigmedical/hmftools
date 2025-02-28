@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave.transval;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -71,12 +72,12 @@ public class ChangeContext
         return mExon.toStrandCoordinates(StartPositionInExon, false) - 1;
     }
 
-    public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged, boolean isPositiveStrand)
+    public SplitCodonSequence basesForProteinChange(int firstAminoAcid, int numberOfAminoAcidsChanged)
     {
         Preconditions.checkArgument(firstAminoAcid >= 0);
         Preconditions.checkArgument(numberOfAminoAcidsChanged >= 0);
         int codonNumber = firstAminoAcid - AminoAcidNumberOfFirstAminoAcid + 1;
-        return mExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged, isPositiveStrand);
+        return mExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged, IsPositiveStrand);
     }
 
     CodonWithinExons codonForProteinChange(int position)
@@ -86,9 +87,10 @@ public class ChangeContext
         return mExon.getCodon(codonNumber, IsPositiveStrand);
     }
 
-    String exonBasesWithReplacementAppliedAtStrandLocation(int strandLocationOfChange, String alternateBases)
+    String exonBasesWithReplacementAppliedAtStrandLocation(int strandLocationOfChange, String currentBases, String alternateBases)
     {
-        return mExon.baseSequenceWithBasesReplacedAtStrandLocation(strandLocationOfChange, alternateBases, IsPositiveStrand);
+        String result = mExon.baseSequenceWithBasesReplacedAtStrandLocation(strandLocationOfChange, currentBases, alternateBases);
+        return IsPositiveStrand ? result : Nucleotides.reverseComplementBases(result);
     }
 
     public String refBases()

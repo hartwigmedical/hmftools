@@ -59,10 +59,10 @@ public class DeletionInsertionChange implements Comparable<DeletionInsertionChan
     }
 
     @NotNull
-    public TransvalHotspot toHotspot(@NotNull final ChangeLocation changeLocation)
+    public BaseSequenceChange toHotspot(@NotNull final ChangeLocation changeLocation)
     {
         int localPosition = changeLocation.Location + DeletionStart;
-        return new TransvalHotspot(Deleted, Inserted, changeLocation.Chromosome, localPosition);
+        return new BaseSequenceChange(Deleted, Inserted, changeLocation.Chromosome, localPosition);
     }
 
     @Override

@@ -2,8 +2,6 @@ package com.hartwig.hmftools.pave.transval;
 
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
-
 import org.jetbrains.annotations.NotNull;
 
 class ChangeResult
@@ -32,9 +30,9 @@ class ChangeResult
         this.altBases = altBases;
     }
 
-    public TransvalHotspot toHotspot(String chromosome)
+    public BaseSequenceChange toHotspot(String chromosome)
     {
-        return new TransvalHotspot(mRefBases, altBases, chromosome, mLocation);
+        return new BaseSequenceChange(mRefBases, altBases, chromosome, mLocation);
     }
 
     @Override

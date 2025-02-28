@@ -15,6 +15,17 @@ public class PaddedExonTest extends TransvalTestBase
     PaddedExon ec8 = new PaddedExon(0,"T", "AG", "ACGTAC", 100, "CCCC", "TTTT");
 
     @Test
+    public void baseSequenceWithBasesReplacedAtStrandLocTest()
+    {
+        assertEquals("GTGCACAAACCCGGG", ec1.baseSequenceWithBasesReplacedAtStrandLocation(100,"TTT", "GTGCAC"));
+        assertEquals("TGAACCCGGG", ec1.baseSequenceWithBasesReplacedAtStrandLocation(101, "TTA", "G"));
+        assertEquals("TTTCCCTTTAAACCCGGG", ec1.baseSequenceWithBasesReplacedAtStrandLocation(103, "AAA", "CCCTTTAAA"));
+        assertEquals("TTTAAACCCTACTAC", ec1.baseSequenceWithBasesReplacedAtStrandLocation(109, "GGG", "TACTAC"));
+        assertEquals("AGGGAAACCCGG", ec2.baseSequenceWithBasesReplacedAtStrandLocation(100, "TTT", "GGG"));
+        assertEquals("TATTAACTTTAAGAT", ec6.baseSequenceWithBasesReplacedAtStrandLocation(105, "CG", "TTTAA"));
+    }
+
+    @Test
     public void baseSequenceWithSingleBaseRemovedTest()
     {
         assertEquals("ACGTAT", ec7.baseSequenceWithSingleBaseRemoved(5, true));
@@ -76,22 +87,6 @@ public class PaddedExonTest extends TransvalTestBase
             assertEquals(i, ec1.fromStrandCoordinates(ec1.toStrandCoordinates(i, false),false));
             assertEquals(i, ec3.fromStrandCoordinates(ec3.toStrandCoordinates(i, false),false));
         }
-    }
-
-    @Test
-    public void baseSequenceWithBasesReplacedTest()
-    {
-        assertEquals("GTGAAACCCGGG", ec1.baseSequenceWithBasesReplaced(0, "GTG", true));
-        assertEquals("TGTGAACCCGGG", ec1.baseSequenceWithBasesReplaced(1, "GTG", true));
-        assertEquals("TTTCCCCCCGGG", ec1.baseSequenceWithBasesReplaced(3, "CCC", true));
-        assertEquals("TTTAAACCCTAC", ec1.baseSequenceWithBasesReplaced(9, "TAC", true));
-        assertEquals("AGGGAAACCCGG", ec2.baseSequenceWithBasesReplaced(0, "GGG", true));
-        assertEquals("TATTAACTTTAT", ec6.baseSequenceWithBasesReplaced(5, "TTT", true));
-
-        assertEquals("GTAGGGTTTAAA", ec1.baseSequenceWithBasesReplaced(0, "TAC", false));
-        assertEquals("CCCGTATTTAAA", ec1.baseSequenceWithBasesReplaced(3, "TAC", false));
-        assertEquals("CCGAAATTAAAT", ec2.baseSequenceWithBasesReplaced(3, "TTT", false));
-        assertEquals("ATCCGGTACGTA", ec6.baseSequenceWithBasesReplaced(5, "CGT", false));
     }
 
     @Test

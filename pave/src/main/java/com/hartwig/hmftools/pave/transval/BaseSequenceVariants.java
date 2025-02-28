@@ -7,30 +7,22 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TransvalVariant
+public class BaseSequenceVariants
 {
     @NotNull
     public final TranscriptData Transcript;
     @NotNull
     public final String Chromosome;
-//    public final int Position;
-    public final boolean SpansMultipleExons;
-//    @NotNull
-//    public final String ReferenceNucleotides;
     @NotNull
-    protected final Set<TransvalHotspot> Hotspots;
+    protected final Set<BaseSequenceChange> Hotspots;
 
-    public TransvalVariant(
+    public BaseSequenceVariants(
             @NotNull final TranscriptData transcript,
             @NotNull final String chromosome,
-            final boolean spansMultipleExons,
-            @NotNull final Set<TransvalHotspot> hotspots)
+            @NotNull final Set<BaseSequenceChange> hotspots)
     {
         this.Transcript = transcript;
         Chromosome = RefGenomeFunctions.stripChrPrefix(chromosome);
-//        Position = position;
-        SpansMultipleExons = spansMultipleExons;
-//        ReferenceNucleotides = referenceNucleotides;
         Hotspots = hotspots;
     }
 
@@ -40,7 +32,7 @@ public class TransvalVariant
     }
 
     @NotNull
-    public Set<TransvalHotspot> hotspots()
+    public Set<BaseSequenceChange> hotspots()
     {
         return Hotspots;
     }

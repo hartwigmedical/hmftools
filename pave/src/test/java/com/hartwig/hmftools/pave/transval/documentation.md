@@ -1,8 +1,8 @@
-# Transval
+# BaseSequenceVariantsCalculator
 This is a tool for evaluating the possible DNA changes that give rise to a given protein variant.
 
 ## Inputs
-Right now, the main class is `Transval`, which is created with a path to the ensembl data, and a genome.
+Right now, the main class is `BaseSequenceVariantsCalculator`, which is created with a path to the ensembl data, and a genome.
 The main method is `calculateVariant(String gene, String proteinVariant)` and a couple of 
 slightly different options.
 
@@ -11,25 +11,25 @@ We can change things to add a `main` function, batch processing, etc, as require
 ## Outputs
 The output format was decided after looking at `TransvarConverter` in the `serve` project. 
 We can change it to provide more or less information, if required.
-Currently, the output is a `TransvalVariant` object, which consists of:
+Currently, the output is a `BaseSequenceVariants` object, which consists of:
 - `TranscriptData` for the transcript found
 - `Chromosome`
-- a collection of `TransvalHotspot` objects
+- a collection of `BaseSequenceChange` objects
 
-In turn, a `TransvalHotspot` has position, ref, alt and chromosome (which is redundant, perhaps) fields.
+In turn, a `BaseSequenceChange` has position, ref, alt and chromosome (which is redundant, perhaps) fields.
 
 Here's a code example:
 ```java
-Transval transval = new Transval(ensemblDataDir, genome);
-TransvalVariant variant = transval.calculateVariant("MTOR", "L2230V");
+BaseSequenceVariantsCalculator baseSequenceVariantsCalculator = new Transval(ensemblDataDir, genome);
+BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("MTOR", "L2230V");
 
 assertEquals("ENST00000361445", variant.transcriptId());
 assertEquals("1", variant.Chromosome);
-checkHotspots(variant,
-        hotspot("A", "C", "chr1", 11_122_101),
-        hotspot("TAA", "GAC", "chr1", 11_122_099),
-        hotspot("TAA", "CAC", "chr1", 11_122_099),
-        hotspot("TAA", "AAC", "chr1", 11_122_099)
+checkChanges(variant,
+        basesChange("A", "C", "chr1", 11_122_101),
+        basesChange("TAA", "GAC", "chr1", 11_122_099),
+        basesChange("TAA", "CAC", "chr1", 11_122_099),
+        basesChange("TAA", "AAC", "chr1", 11_122_099)
 );
 ```
 
@@ -134,20 +134,20 @@ OVERALL STATS
 Number of genes: 1243
 Number of annotations not parsed: 0
 Number with no transcript found: 87
-Number with multiple non-canonical transcripts giving different results: 236
-Number with variants across multiple exons (not handled): 4
-Number processed without error: 38786
-Number with processing error: 11
-Number of annotations with similar hotspots: 38029
+Number with multiple non-canonical transcripts giving different results: 237
+Number processed without error: 38796
+Number for which no variant could be calculated: 7
+Number with processing error: 0
+Number of annotations with similar hotspots: 38034
 Difference types: {
     StartLost=1, 
     Frameshift=290, 
-    Duplication=75, 
-    SingleAminoAcidVariant=149, 
+    Duplication=76, 
+    SingleAminoAcidVariant=152, 
     Deletion=9, 
     Insertion=88, 
     DeletionInsertion=133, 
-    StopGained=12
+    StopGained=13
 }
 ```
 The differences are discussed on a per-type basis below, but:
@@ -165,17 +165,17 @@ in the required protein change.
 
 ```text
 Difference for: ARAF T253fs, calculated:
-[TransvalHotspot{Ref='GA', Alt='G', Chromosome='chrX', Position=47567013}]
+[BaseSequenceChange{Ref='GA', Alt='G', Chromosome='chrX', Position=47567013}]
 from transvar:
-[TransvalHotspot{Ref='A', Alt='AG', Chromosome='chrX', Position=47567014},
-TransvalHotspot{Ref='A', Alt='AG', Chromosome='chrX', Position=47567015},
-TransvalHotspot{Ref='AA', Alt='A', Chromosome='chrX', Position=47567014},
-TransvalHotspot{Ref='A', Alt='AA', Chromosome='chrX', Position=47567015},
-TransvalHotspot{Ref='A', Alt='AC', Chromosome='chrX', Position=47567014},
-TransvalHotspot{Ref='A', Alt='AT', Chromosome='chrX', Position=47567014},
-TransvalHotspot{Ref='A', Alt='AT', Chromosome='chrX', Position=47567015},
-TransvalHotspot{Ref='AAC', Alt='A', Chromosome='chrX', Position=47567014},
-TransvalHotspot{Ref='A', Alt='AA', Chromosome='chrX', Position=47567014}]
+[BaseSequenceChange{Ref='A', Alt='AG', Chromosome='chrX', Position=47567014},
+BaseSequenceChange{Ref='A', Alt='AG', Chromosome='chrX', Position=47567015},
+BaseSequenceChange{Ref='AA', Alt='A', Chromosome='chrX', Position=47567014},
+BaseSequenceChange{Ref='A', Alt='AA', Chromosome='chrX', Position=47567015},
+BaseSequenceChange{Ref='A', Alt='AC', Chromosome='chrX', Position=47567014},
+BaseSequenceChange{Ref='A', Alt='AT', Chromosome='chrX', Position=47567014},
+BaseSequenceChange{Ref='A', Alt='AT', Chromosome='chrX', Position=47567015},
+BaseSequenceChange{Ref='AAC', Alt='A', Chromosome='chrX', Position=47567014},
+BaseSequenceChange{Ref='A', Alt='AA', Chromosome='chrX', Position=47567014}]
 ```
 
 Explanation:
@@ -189,20 +189,20 @@ GGA ACC CCC...the 2nd G of the G is at 47567014
 ```text
 Difference for: ARAF Q349_A350del,
 calculated:
-[TransvalHotspot{Ref='CCAGGCT', Alt='C', Chromosome='chrX', Position=47567400},
-TransvalHotspot{Ref='GCAGGCC', Alt='G', Chromosome='chrX', Position=47567394}]
+[BaseSequenceChange{Ref='CCAGGCT', Alt='C', Chromosome='chrX', Position=47567400},
+BaseSequenceChange{Ref='GCAGGCC', Alt='G', Chromosome='chrX', Position=47567394}]
 from transvar:
-[TransvalHotspot{Ref='CCAGGCT', Alt='C', Chromosome='chrX', Position=47567400}]
+[BaseSequenceChange{Ref='CCAGGCT', Alt='C', Chromosome='chrX', Position=47567400}]
 ```
 
 ```text
 Difference for: CASP8 T272del,
 calculated ENST00000673742:
-[TransvalHotspot{Ref='GACC', Alt='G', Chromosome='chr2', Position=201284823},
-TransvalHotspot{Ref='CACG', Alt='C', Chromosome='chr2', Position=201284826}]
+[BaseSequenceChange{Ref='GACC', Alt='G', Chromosome='chr2', Position=201284823},
+BaseSequenceChange{Ref='CACG', Alt='C', Chromosome='chr2', Position=201284826}]
 from transvar:
-[TransvalHotspot{Ref='ACTG', Alt='A', Chromosome='chr2', Position=201284870},
-TransvalHotspot{Ref='CTGC', Alt='C', Chromosome='chr2', Position=201284871}]
+[BaseSequenceChange{Ref='ACTG', Alt='A', Chromosome='chr2', Position=201284870},
+BaseSequenceChange{Ref='CTGC', Alt='C', Chromosome='chr2', Position=201284871}]
 ```
 Explanation:  Transvar uses a different transcript
 
@@ -211,9 +211,9 @@ Explanation:  Transvar uses a different transcript
 ```text
 Duplication difference for: HRAS G13dup,
 calculated: ENST00000311189 canonical: true
-[TransvalHotspot{Ref='A', Alt='ACAC', Chromosome='chr11', Position=534282}]
+[BaseSequenceChange{Ref='A', Alt='ACAC', Chromosome='chr11', Position=534282}]
 from transvar:
-[TransvalHotspot{Ref='C', Alt='CACC', Chromosome='chr11', Position=534283}]
+[BaseSequenceChange{Ref='C', Alt='CACC', Chromosome='chr11', Position=534283}]
 ```
 
 Explanation: there are many options for base sequences to produce G and the new code
@@ -222,7 +222,7 @@ happened to pick a different one from Transvar.
 <- 14 13 12 11... V   G   G   A...
 <-                GTG TGG CGG CCG....
 ->                CAC ACC GCC GGC...A of V is at 534282
-transval: CACACC ACC GCC = GTG TGG TGG CGG = V G G G A..
+baseSequenceVariantsCalculator: CACACC ACC GCC = GTG TGG TGG CGG = V G G G A..
 ```
 
 ### Start lost changes
@@ -240,9 +240,9 @@ but this is not really feasible and would be of questionable value.
 ```text
 Difference for: AKT2 L78_Q79insHANTFVIRCL,
 calculated: ENST00000392038 canonical: true
-[TransvalHotspot{Ref='G', Alt='GTAAACACCTGATTACGAAGGTGTTTGCGTG', Chromosome='chr19', Position=40255210}]
+[BaseSequenceChange{Ref='G', Alt='GTAAACACCTGATTACGAAGGTGTTTGCGTG', Chromosome='chr19', Position=40255210}]
 from transvar:
-[TransvalHotspot{Ref='G', Alt='GAAGACACCTGATTACAAATGTGTTTGCATG', Chromosome='chr19', Position=40255210}]
+[BaseSequenceChange{Ref='G', Alt='GAAGACACCTGATTACAAATGTGTTTGCATG', Chromosome='chr19', Position=40255210}]
 >> different choices of codons for the required amino acids
 ```
 
@@ -251,13 +251,13 @@ by Transvar:
 ```text
 Difference for: ERBB2 E698_P699insLL,
 calculated: ENST00000269571 canonical: true
-[TransvalHotspot{Ref='G', Alt='GTTATTA', Chromosome='chr17', Position=39723546}]
+[BaseSequenceChange{Ref='G', Alt='GTTATTA', Chromosome='chr17', Position=39723546}]
 from transvar:
-[TransvalHotspot{Ref='C', Alt='CTTCTTC', Chromosome='chr17', Position=39723547}]
+[BaseSequenceChange{Ref='C', Alt='CTTCTTC', Chromosome='chr17', Position=39723547}]
 
 V E P... GTG GAG CCG...second G of E is at 39723546
 transvar: GTG GAG CTTCTTCCG...V E L L P...
-transval: GTG GAGTTATTA CCG...V E L L P...
+baseSequenceVariantsCalculator: GTG GAGTTATTA CCG...V E L L P...
 ```
 
 ### Single Amino Acid Differences

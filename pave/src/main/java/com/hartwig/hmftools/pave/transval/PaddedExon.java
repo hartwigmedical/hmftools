@@ -144,39 +144,17 @@ public class PaddedExon
         return BasesOfFirstCodonInPreviousExon + left + right + rightPadding + BasesOfLastCodonInFollowingExon;
     }
 
-    public String baseSequenceWithBasesReplaced(final int position, final String replacementBases, final boolean positiveStrand)
+    public String baseSequenceWithBasesReplacedAtStrandLocation(final int location, final String current, final String replacementBases)
     {
-        Preconditions.checkArgument(position >= 0);
-        if(!positiveStrand)
-        {
-            int s = exonBases.length() - position - replacementBases.length();
-            String l = exonBases.substring(0, s);
-            String r = exonBases.substring(s + replacementBases.length());
-            String complete = BasesOfFirstCodonInPreviousExon + l + replacementBases + r + BasesOfLastCodonInFollowingExon;
-            return Nucleotides.reverseComplementBases(complete);
-        }
-        String left = exonBases.substring(0, position);
-        String right = exonBases.substring(position + replacementBases.length());
-        return BasesOfFirstCodonInPreviousExon + left + replacementBases + right + BasesOfLastCodonInFollowingExon;
-    }
-
-    public String baseSequenceWithBasesReplacedAtStrandLocation(final int location, final String forwardStrandReplacementBases,
-            final boolean positiveStrand)
-    {
-        Preconditions.checkArgument(location >= 0);
-        if(!positiveStrand)
-        {
-            int leftEnd = location - exonStart;
-            String l = exonBases.substring(0, leftEnd);
-            String r = exonBases.substring(leftEnd + forwardStrandReplacementBases.length());
-            String complete = BasesOfFirstCodonInPreviousExon + l + forwardStrandReplacementBases + r + BasesOfLastCodonInFollowingExon;
-            return Nucleotides.reverseComplementBases(complete);
-        }
+        // Prefix|-------l      r----|Suffix
         int leftEnd = location - exonStart;
+        int rightEnd = leftEnd + current.length();
+        String existing = exonBases.substring(leftEnd, rightEnd);
+        Preconditions.checkArgument(existing.equals(current));
 
         String left = exonBases.substring(0, leftEnd);
-        String right = exonBases.substring(leftEnd + forwardStrandReplacementBases.length());
-        return BasesOfFirstCodonInPreviousExon + left + forwardStrandReplacementBases + right + BasesOfLastCodonInFollowingExon;
+        String right = exonBases.substring(rightEnd);
+        return BasesOfFirstCodonInPreviousExon + left + replacementBases + right + BasesOfLastCodonInFollowingExon;
     }
 
     public String basesBetween(int start, int end)

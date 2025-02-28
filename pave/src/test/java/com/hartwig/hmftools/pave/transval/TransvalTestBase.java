@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 class TransvalTestBase
 {
     public final File ensemblDataDir;
-    public final Transval transval;
+    public final BaseSequenceVariantsCalculator baseSequenceVariantsCalculator;
     public final RefGenomeInterface genome = new TinyGenome();
 
     public TransvalTestBase()
@@ -33,7 +33,7 @@ class TransvalTestBase
         {
             throw new RuntimeException(e);
         }
-        transval = new Transval(ensemblDataDir, genome);
+        baseSequenceVariantsCalculator = new BaseSequenceVariantsCalculator(ensemblDataDir, genome);
     }
 
     @NotNull
@@ -44,7 +44,7 @@ class TransvalTestBase
 
     public SingleAminoAcidVariant saav(String definition)
     {
-        return (SingleAminoAcidVariant) transval.variationParser().parse(definition);
+        return (SingleAminoAcidVariant) baseSequenceVariantsCalculator.variationParser().parse(definition);
     }
 
     protected SplitCodonSequence seq(String left, String right)
@@ -52,9 +52,9 @@ class TransvalTestBase
         return new SplitCodonSequence(left, right, 100);
     }
 
-    protected TransvalHotspot hotspot(String ref, String alt, String chr, int position)
+    protected BaseSequenceChange basesChange(String ref, String alt, String chr, int position)
     {
-        return new TransvalHotspot(ref, alt, chr, position);
+        return new BaseSequenceChange(ref, alt, chr, position);
     }
 
     protected AminoAcid aa(String s)
@@ -64,7 +64,7 @@ class TransvalTestBase
 
     protected TranscriptData transcript(String geneId, String transcriptId)
     {
-        return transval.mEnsemblCache.getTranscriptData(geneId, transcriptId);
+        return baseSequenceVariantsCalculator.mEnsemblCache.getTranscriptData(geneId, transcriptId);
     }
 
     protected AminoAcidSpecification aas(int position, String symbol)
@@ -78,18 +78,18 @@ class TransvalTestBase
         return AminoAcidSequence.parse(sequence);
     }
 
-    protected void checkSingleHotspot(TransvalVariant variant, String ref, String alt, String chr, int position)
+    protected void checkSingleChange(BaseSequenceVariants variant, String ref, String alt, String chr, int position)
     {
-        Set<TransvalHotspot> hotspots = variant.hotspots();
+        Set<BaseSequenceChange> hotspots = variant.hotspots();
         assertEquals(1, hotspots.size());
-        assertTrue(hotspots.contains(hotspot(ref, alt, chr, position)));
+        assertTrue(hotspots.contains(basesChange(ref, alt, chr, position)));
     }
 
-    protected void checkHotspots(TransvalVariant variant, TransvalHotspot... expected)
+    protected void checkChanges(BaseSequenceVariants variant, BaseSequenceChange... expected)
     {
-        Set<TransvalHotspot> hotspots = variant.hotspots();
+        Set<BaseSequenceChange> hotspots = variant.hotspots();
         assertEquals(expected.length, hotspots.size());
-        for(TransvalHotspot hotspot : expected)
+        for(BaseSequenceChange hotspot : expected)
         {
             assertTrue(hotspots.contains(hotspot));
         }

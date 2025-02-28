@@ -17,7 +17,7 @@ public class AminoAcidRangeTest extends TransvalTestBase
         M   A   A   L   S   G   ... P V H X
          */
         final TranscriptData brafCanonicalTranscript = transcript("ENSG00000157764", "ENST00000646891");
-        final TranscriptAminoAcids brafCanonical = transval.mTranscriptAminoAcidsMap.get(brafCanonicalTranscript.TransName);
+        final TranscriptAminoAcids brafCanonical = baseSequenceVariantsCalculator.mTranscriptAminoAcidsMap.get(brafCanonicalTranscript.TransName);
         final int brafLength = brafCanonical.AminoAcids.length();
         Assert.assertTrue(aar(1, "M", 2, "A").applies(brafCanonical));
         Assert.assertTrue(aar(1, "M", 6, "G").applies(brafCanonical));

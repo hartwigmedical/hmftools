@@ -47,7 +47,7 @@ abstract class SingleCodonVariant extends ProteinVariant
             int locationOnStrandOfChange =
                     forwardStrandCodon.forwardStrandLocationOfChange(forwardStrandChange.positionOfFirstDifference());
             String exonBasesAfterChange =
-                    context.exonBasesWithReplacementAppliedAtStrandLocation(locationOnStrandOfChange, forwardStrandReplacementBases);
+                    context.exonBasesWithReplacementAppliedAtStrandLocation(locationOnStrandOfChange, forwardStrandReferenceBases, forwardStrandReplacementBases);
             AminoAcidSequence acids = convertBaseSequence(exonBasesAfterChange);
             result.add(new ChangeResult(acids, exonBasesAfterChange, locationOnStrandOfChange, forwardStrandReferenceBases, forwardStrandReplacementBases));
         });

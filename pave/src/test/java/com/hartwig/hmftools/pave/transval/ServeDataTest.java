@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -32,7 +31,7 @@ public class ServeDataTest
     private final Map<String, Set<ServeItem>> geneToItems = new HashMap<>();
     //    private final File ensemblDataDir = new File("/Users/timlavers/work/data/v6_0/ref/38/common/ensembl_data");
     private final File ensemblDataDir = new File("/Users/timlavers/work/scratch/ensembl");
-    private Transval transval;
+    private BaseSequenceVariantsCalculator baseSequenceVariantsCalculator;
     private Set<GeneAnnotation> knownDifferences;
 
     @Before
@@ -47,7 +46,7 @@ public class ServeDataTest
     {
         final String genomePath = "/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
         RefGenomeInterface genome = new RefGenomeSource(new IndexedFastaSequenceFile(new File(genomePath)));
-        transval = new Transval(ensemblDataDir, genome);
+        baseSequenceVariantsCalculator = new BaseSequenceVariantsCalculator(ensemblDataDir, genome);
     }
 
     private void loadServeItems() throws IOException
@@ -164,7 +163,7 @@ public class ServeDataTest
 //    @Test
     public void examples()
     {
-        TransvalVariant variant = transval.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("TP53", "Q331Q");
+        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("TP53", "Q331Q");
         Assert.assertEquals(6, variant.hotspots().size());
     }
 
@@ -179,7 +178,7 @@ public class ServeDataTest
             }
             collators.get(serveItem.Annotation).addHotspot(serveItem);
         });
-        final StatsForGene statsForGene = new StatsForGene(transval, gene);
+        final StatsForGene statsForGene = new StatsForGene(baseSequenceVariantsCalculator, gene);
         collators.keySet().forEach(annotation ->
         {
             ProteinAnnotationCollator collator = collators.get(annotation);
@@ -240,9 +239,9 @@ public class ServeDataTest
     {
         try
         {
-            TransvalVariant transvalVariant =
-                    transval.calculateVariantAllowMultipleNonCanonicalTranscriptMatches(collator.mGene, collator.mAnnotation);
-            return new VariantStatus(collator, transvalVariant);
+            BaseSequenceVariants baseSequenceVariants =
+                    baseSequenceVariantsCalculator.calculateVariantAllowMultipleNonCanonicalTranscriptMatches(collator.mGene, collator.mAnnotation);
+            return new VariantStatus(collator, baseSequenceVariants);
         }
         catch(Throwable t)
         {
@@ -272,9 +271,9 @@ class VariantStatus
 
     Throwable mProcessingError = null;
 
-    TransvalVariant variant;
+    BaseSequenceVariants variant;
 
-    VariantStatus(@NotNull final ProteinAnnotationCollator collator, TransvalVariant variant)
+    VariantStatus(@NotNull final ProteinAnnotationCollator collator, BaseSequenceVariants variant)
     {
         this.collator = collator;
         this.variant = variant;
@@ -344,8 +343,8 @@ class VariantStatus
         {
             return false;
         }
-        TransvalHotspot calculatedHS = variant.hotspots().iterator().next();
-        TransvalHotspot givenHS = collator.hotspots.iterator().next();
+        BaseSequenceChange calculatedHS = variant.hotspots().iterator().next();
+        BaseSequenceChange givenHS = collator.hotspots.iterator().next();
         if(calculatedHS.mPosition != givenHS.mPosition)
         {
             return false;
@@ -364,7 +363,7 @@ class VariantStatus
         return variantFloatingHotspots.equals(collatorFloatingHotspots);
     }
 
-    private TransvalHotspot reduceHotspot(TransvalHotspot hotspot)
+    private BaseSequenceChange reduceHotspot(BaseSequenceChange hotspot)
     {
         DeletionInsertionChange delta = new DeletionInsertionChange(hotspot.Ref, hotspot.Alt);
         return delta.toHotspot(new ChangeLocation(hotspot.mChromosome, hotspot.mPosition));
@@ -382,7 +381,7 @@ class FloatingHotspot
     @NotNull
     public final String Alt;
 
-    public FloatingHotspot(TransvalHotspot hotspot)
+    public FloatingHotspot(BaseSequenceChange hotspot)
     {
         mChromosome = hotspot.mChromosome;
         Ref = hotspot.Ref;
@@ -474,15 +473,15 @@ class ServeItem
 }
 
 class DifferenceWithTransvar {
-    public final TransvalVariant variant;
+    public final BaseSequenceVariants variant;
     public final ProteinAnnotationCollator collator;
     public final String type;
 
-    DifferenceWithTransvar(final VariantStatus variantStatus, Transval transval)
+    DifferenceWithTransvar(final VariantStatus variantStatus, BaseSequenceVariantsCalculator baseSequenceVariantsCalculator)
     {
         this.variant = variantStatus.variant;
         this.collator = variantStatus.collator;
-        ProteinVariant transvalVariant = transval.variationParser().parseGeneVariants(collator.mGene, collator.mAnnotation).iterator().next();
+        ProteinVariant transvalVariant = baseSequenceVariantsCalculator.variationParser().parseGeneVariants(collator.mGene, collator.mAnnotation).iterator().next();
         type = transvalVariant.getClass().getSimpleName();
             System.out.println(type + " difference for: " + collator.mGene + " " + collator.mAnnotation
                     + ", calculated: " + variant.transcriptId()  + " canonical: " + variant.Transcript.IsCanonical
@@ -492,7 +491,7 @@ class DifferenceWithTransvar {
 }
 class StatsForGene
 {
-    final Transval transval;
+    final BaseSequenceVariantsCalculator baseSequenceVariantsCalculator;
     @NotNull
     public final String mGene;
 
@@ -514,9 +513,9 @@ class StatsForGene
     public final List<VariantStatus> AnnotationsWithDifferentHotspots = new ArrayList<>();
     public final List<DifferenceWithTransvar> Differences = new ArrayList<>();
 
-    StatsForGene(final Transval transval, @NotNull final String gene)
+    StatsForGene(final BaseSequenceVariantsCalculator baseSequenceVariantsCalculator, @NotNull final String gene)
     {
-        this.transval = transval;
+        this.baseSequenceVariantsCalculator = baseSequenceVariantsCalculator;
         mGene = gene;
     }
 
@@ -543,7 +542,7 @@ class StatsForGene
         {
             AnnotationsWithDifferentHotspots.add(comparison);
             NumberWithDifferentHotspots++;
-            Differences.add(new DifferenceWithTransvar(comparison, transval));
+            Differences.add(new DifferenceWithTransvar(comparison, baseSequenceVariantsCalculator));
             if(comparison.usesNonCanonicalTranscript())
             {
                 NumberWithDifferentHotspotsThatUseNonCanonicalTranscript++;
@@ -580,7 +579,7 @@ class ProteinAnnotationCollator
     final String mAnnotation;
 
     @NotNull
-    Set<TransvalHotspot> hotspots = new HashSet<>();
+    Set<BaseSequenceChange> hotspots = new HashSet<>();
 
     public ProteinAnnotationCollator(ServeItem serveItem)
     {
@@ -594,7 +593,7 @@ class ProteinAnnotationCollator
         Preconditions.checkArgument(serveItem.Chromosome.equals(mChromosome));
         Preconditions.checkArgument(serveItem.Gene.equals(mGene));
         Preconditions.checkArgument(serveItem.Annotation.equals(mAnnotation));
-        hotspots.add(new TransvalHotspot(serveItem.Ref, serveItem.Alt, mChromosome, serveItem.Position));
+        hotspots.add(new BaseSequenceChange(serveItem.Ref, serveItem.Alt, mChromosome, serveItem.Position));
     }
 
     @Override

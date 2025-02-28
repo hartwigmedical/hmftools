@@ -55,7 +55,8 @@ public class ProteinVariantTest extends VariantTest
         FixedStringGenome fixedGenome = new FixedStringGenome(allBases);
         transcriptData.setExons(List.of(e0, e1, e2, e3, e4, e5, e6, e7));
 
-        ProteinVariant variant = new ProteinVariant(g, transcriptData, transcriptAminoAcids, 1, 2);
+        AminoAcidRange fsRange = new AminoAcidRange(aas(5, "F"), aas(5, "F"));
+        ProteinVariant variant = new Frameshift(g, transcriptData, transcriptAminoAcids, fsRange);
         // If the replacement results in the loss of the initial M, return an empty sequence.
         AminoAcidSequence expectedAAs = variant.replaceExonAminoAcids(0, AminoAcidSequence.parse("QQ"));
 //        Assert.assertEquals(0, expectedAAs.length());

@@ -20,7 +20,7 @@ public class VariantParserTest extends TransvalTestBase
     @Before
     public void setUp()
     {
-        variantParser = transval.variationParser();
+        variantParser = baseSequenceVariantsCalculator.variationParser();
     }
 
     @Test
@@ -209,14 +209,14 @@ public class VariantParserTest extends TransvalTestBase
         assertEquals("EGFR", di.mGene.GeneName);
         assertEquals(747, di.positionOfFirstAlteredCodon());
         assertEquals(4, di.mRefLength);
-        assertEquals("P", di.altAminoAcidSequence());
+        assertEquals(aaSeq("P"), di.mAlt);
 
         // ADCK2 Glu301_Thr303delinsGlnGln, which is E301_T303delinsQQ
         DeletionInsertion di2 = (DeletionInsertion) variantParser.parse("ADCK2:p.Glu301_Thr303delinsGlnGln");
         assertEquals("ADCK2", di2.mGene.GeneName);
         assertEquals(301, di2.positionOfFirstAlteredCodon());
         assertEquals(3, di2.mRefLength);
-        assertEquals("QQ", di2.altAminoAcidSequence());
+        assertEquals(aaSeq("QQ"), di2.mAlt);
     }
 
     @Test
@@ -226,7 +226,7 @@ public class VariantParserTest extends TransvalTestBase
         assertEquals("EGFR", di.mGene.GeneName);
         assertEquals(747, di.positionOfFirstAlteredCodon());
         assertEquals(4, di.mRefLength);
-        assertEquals("P", di.altAminoAcidSequence());
+        assertEquals(aaSeq("P"), di.mAlt);
     }
 
     @Test

@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ProteinVariant
+public abstract class ProteinVariant
 {
     @NotNull
     final GeneData mGene;
@@ -93,21 +93,13 @@ public class ProteinVariant
     }
 
     @NotNull
-    Set<ChangeResult> applyChange(ChangeContext changeContext)
-    {
-        // todo override for DeletionInsertion
-        return new HashSet<>();
-    }
+    abstract Set<ChangeResult> applyChange(ChangeContext changeContext);
 
-    AminoAcidSequence variantSequence()
-    {
-        // todo override for DeletionInsertion
-        return null;
-    }
+    abstract AminoAcidSequence variantSequence();
 
     @VisibleForTesting
     @NotNull
-    AminoAcidSequence replaceExonAminoAcids(int exon, @NotNull AminoAcidSequence replacement)
+    final AminoAcidSequence replaceExonAminoAcids(int exon, @NotNull AminoAcidSequence replacement)
     {
         if(exon == 0 && (replacement.length() == 0))
         {
@@ -148,11 +140,16 @@ public class ProteinVariant
         Set<ChangeResult> result = new HashSet<>(findLeftmostApplicableChangesForContext(changeContext));
         // If the change context has a companion (so it's straddling a splice junction)
         // we need to consider any changes from that context.
-        if(changeContext.companionContext() != null)
+        if(changeContext.companionContext() != null && seekResultsInCompanionContext(!result.isEmpty()))
         {
             result.addAll(findLeftmostApplicableChangesForContext(changeContext.companionContext()));
         }
         return result;
+    }
+
+    boolean seekResultsInCompanionContext(boolean resultsFoundAlready)
+    {
+        return true;
     }
 
     boolean isConsistentWithThisVariant(AminoAcidSequence aminoAcidSequence)
@@ -185,12 +182,12 @@ public class ProteinVariant
         return new HashSet<>(results.values());
     }
 
-    TransvalVariant calculateVariant(RefGenomeInterface refGenome)
+    BaseSequenceVariants calculateVariant(RefGenomeInterface refGenome)
     {
         Collection<ChangeResult> changes = findLeftmostApplicableChanges(refGenome);
-        Set<TransvalHotspot> hotspots = new HashSet<>();
+        Set<BaseSequenceChange> hotspots = new HashSet<>();
         changes.forEach(change -> hotspots.add(change.toHotspot(mGene.Chromosome)));
-        return new TransvalVariant(mTranscript, mGene.Chromosome, false, hotspots);
+        return new BaseSequenceVariants(mTranscript, mGene.Chromosome, hotspots);
     }
 
     boolean doesNotMatchVariantUpToLastAminoAcid(AminoAcidSequence candidate)

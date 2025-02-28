@@ -74,15 +74,15 @@ public class CodonChange implements Comparable<CodonChange>
         return -1;
     }
 
-    public TransvalHotspot hotspot(GeneData gene, int codonPosition)
+    public BaseSequenceChange hotspot(GeneData gene, int codonPosition)
     {
         Pair<String, String> refAlt = differenceStrings();
         if(gene.forwardStrand())
         {
             int position = codonPosition + positionOfFirstDifference();
-            return new TransvalHotspot(refAlt.getLeft(), refAlt.getRight(), gene.Chromosome, position);
+            return new BaseSequenceChange(refAlt.getLeft(), refAlt.getRight(), gene.Chromosome, position);
         }
-        return new TransvalHotspot(reverseComplementBases(refAlt.getLeft()),
+        return new BaseSequenceChange(reverseComplementBases(refAlt.getLeft()),
                 reverseComplementBases(refAlt.getRight()),
                 gene.Chromosome,
                 codonPosition - positionOfFirstDifference() + 1);

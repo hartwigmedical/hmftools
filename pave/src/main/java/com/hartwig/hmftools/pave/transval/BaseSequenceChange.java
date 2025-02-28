@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TransvalHotspot implements Comparable<TransvalHotspot>
+public final class BaseSequenceChange implements Comparable<BaseSequenceChange>
 {
     @NotNull
     public final String Ref;
@@ -16,7 +16,7 @@ public final class TransvalHotspot implements Comparable<TransvalHotspot>
     public final String mChromosome;
     public final int mPosition;
 
-    public TransvalHotspot(@NotNull final String ref, @NotNull final String alt, @NotNull final String chromosome, final int position)
+    public BaseSequenceChange(@NotNull final String ref, @NotNull final String alt, @NotNull final String chromosome, final int position)
     {
         this.Ref = ref;
         this.Alt = alt;
@@ -25,7 +25,7 @@ public final class TransvalHotspot implements Comparable<TransvalHotspot>
     }
 
     @Override
-    public int compareTo(@NotNull final TransvalHotspot o)
+    public int compareTo(@NotNull final BaseSequenceChange o)
     {
         Preconditions.checkArgument(mChromosome.equals(o.mChromosome));
         int byAltLength = Alt.length() - o.Alt.length();
@@ -61,9 +61,9 @@ public final class TransvalHotspot implements Comparable<TransvalHotspot>
         {
             return false;
         }
-        final TransvalHotspot transvalHotspot = (TransvalHotspot) o;
-        return mPosition == transvalHotspot.mPosition && Objects.equals(Ref, transvalHotspot.Ref) && Objects.equals(Alt, transvalHotspot.Alt)
-                && Objects.equals(mChromosome, transvalHotspot.mChromosome);
+        final BaseSequenceChange baseSequenceChange = (BaseSequenceChange) o;
+        return mPosition == baseSequenceChange.mPosition && Objects.equals(Ref, baseSequenceChange.Ref) && Objects.equals(Alt, baseSequenceChange.Alt)
+                && Objects.equals(mChromosome, baseSequenceChange.mChromosome);
     }
 
     @Override

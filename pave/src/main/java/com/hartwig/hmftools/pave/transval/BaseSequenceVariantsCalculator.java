@@ -15,13 +15,13 @@ import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public class Transval
+public class BaseSequenceVariantsCalculator
 {
     public final RefGenomeInterface mRefGenome;
     public final EnsemblDataCache mEnsemblCache;
     final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
 
-    public Transval(final File ensemblDataDir, final RefGenomeInterface refGenomeVersion)
+    public BaseSequenceVariantsCalculator(final File ensemblDataDir, final RefGenomeInterface refGenomeVersion)
     {
         Preconditions.checkArgument(ensemblDataDir.isDirectory());
         Preconditions.checkArgument(ensemblDataDir.exists());
@@ -38,22 +38,22 @@ public class Transval
         return new VariantParser(mEnsemblCache, mTranscriptAminoAcidsMap);
     }
 
-    public TransvalVariant calculateVariant(String proteinVariant)
+    public BaseSequenceVariants calculateVariant(String proteinVariant)
     {
         ProteinVariant variant = variationParser().parse(proteinVariant);
         return variant.calculateVariant(mRefGenome);
     }
 
-    public TransvalVariant calculateVariant(String gene, String proteinVariant)
+    public BaseSequenceVariants calculateVariant(String gene, String proteinVariant)
     {
         ProteinVariant variant = variationParser().parseGeneVariant(gene, proteinVariant);
         return variant.calculateVariant(mRefGenome);
     }
 
-    public TransvalVariant calculateVariantAllowMultipleNonCanonicalTranscriptMatches(String gene, String proteinVariant)
+    public BaseSequenceVariants calculateVariantAllowMultipleNonCanonicalTranscriptMatches(String gene, String proteinVariant)
     {
         Set<ProteinVariant> allMatchingVariants = variationParser().parseGeneVariants(gene, proteinVariant);
-        Map<String, TransvalVariant> transcriptIdToVariant  = new HashMap<>();
+        Map<String, BaseSequenceVariants> transcriptIdToVariant  = new HashMap<>();
         allMatchingVariants.forEach(variant -> {
             try
             {
@@ -75,7 +75,7 @@ public class Transval
         }
         else
         {
-            TransvalVariant example = transcriptIdToVariant.values().iterator().next();
+            BaseSequenceVariants example = transcriptIdToVariant.values().iterator().next();
             transcriptIdToVariant.values().forEach(variant -> {
                if(!variant.hotspots().equals(example.hotspots()))
                {

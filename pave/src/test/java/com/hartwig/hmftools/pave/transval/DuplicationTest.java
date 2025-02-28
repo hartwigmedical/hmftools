@@ -9,8 +9,8 @@ public class DuplicationTest extends VariantTest
     public void calculateVariantTest()
     {
         Duplication duplication = new Duplication(gene, transcript, taa, aar);
-        TransvalVariant variant = duplication.calculateVariant(fsg);
-        checkSingleHotspot(variant, "C", "CGCGCAG", "chr5", 14);
+        BaseSequenceVariants variant = duplication.calculateVariant(fsg);
+        checkSingleChange(variant, "C", "CGCGCAG", "chr5", 14);
     }
 
     @Test

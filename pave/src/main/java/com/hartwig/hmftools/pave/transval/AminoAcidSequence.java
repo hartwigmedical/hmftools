@@ -140,6 +140,15 @@ class AminoAcidSequence
     }
 
     @NotNull
+    public AminoAcidSequence replaceRange(int start, int end, @NotNull AminoAcidSequence replacement)
+    {
+        List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, start - 1));
+        newAminoAcids.addAll(replacement.aminoAcids);
+        newAminoAcids.addAll(aminoAcids.subList(end, aminoAcids.size()));
+        return new AminoAcidSequence(newAminoAcids);
+    }
+
+    @NotNull
     public AminoAcidSequence replace(int position, AminoAcid replacement)
     {
         Preconditions.checkArgument(position >= 1 && position <= aminoAcids.size(), "Index out of bounds");

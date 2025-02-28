@@ -34,9 +34,9 @@ public class AminoAcidSequenceTest extends TransvalTestBase
     {
         List<AminoAcid> acids = List.of(aa("A"), aa("W"), aa("R"));
         AminoAcidSequence aa = new AminoAcidSequence(acids);
-        assertEquals(aa,  aaSeq("AWR"));
-        assertNotEquals(aa,  aaSeq("AWRA"));
-        assertNotEquals(aa,  aaSeq("WR"));
+        assertEquals(aa, aaSeq("AWR"));
+        assertNotEquals(aa, aaSeq("AWRA"));
+        assertNotEquals(aa, aaSeq("WR"));
     }
 
     @Test
@@ -44,7 +44,7 @@ public class AminoAcidSequenceTest extends TransvalTestBase
     {
         List<AminoAcid> acids = List.of(aa("A"), aa("W"), aa("R"));
         AminoAcidSequence aa = new AminoAcidSequence(acids);
-        assertEquals(aa.hashCode(),  aaSeq("AWR").hashCode());
+        assertEquals(aa.hashCode(), aaSeq("AWR").hashCode());
     }
 
     @Test
@@ -61,6 +61,14 @@ public class AminoAcidSequenceTest extends TransvalTestBase
         assertEquals(aaSeq("AA"), AminoAcidSequence.fromNucleotides("GCTGCA"));
         assertEquals(aaSeq("SA"), AminoAcidSequence.fromNucleotides("AGTGCA"));
         assertEquals(aaSeq("SAT"), AminoAcidSequence.fromNucleotides("AGTGCAACC"));
+    }
+
+    @Test
+    public void replaceRangeTest()
+    {
+        assertEquals(aaSeq("SHECATSAREKIPPING"), aaSeq("THECATSAREKIPPING").replaceRange(1, 1, aaSeq("S")));
+        assertEquals(aaSeq("THECARPAREKIPPING"), aaSeq("THECATSAREKIPPING").replaceRange(6, 7, aaSeq("RP")));
+        assertEquals(aaSeq("THECATSAREKIPPINEES"), aaSeq("THECATSAREKIPPING").replaceRange(17, 17, aaSeq("EES")));
     }
 
     @Test
