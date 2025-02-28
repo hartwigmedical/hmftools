@@ -53,9 +53,6 @@ public final class VcfTags
     public static final String LOCAL_PHASE_SET_READ_COUNT = "LPS_RC";
     public static final String LPS_READ_COUNT_DESC = "Local Phase Set Read Count";
 
-    public static final String QUAL_MODEL_TYPE = "QMT";
-    public static final String QUAL_MODEL_TYPE_DESC = "Qual model type if applicable";
-
     public static final String TUMOR_QUALITY_PROB = "TQP";
     public static final String TUMOR_QUALITY_PROB_DESC = "Probability as used in min tumor quality filter";
 

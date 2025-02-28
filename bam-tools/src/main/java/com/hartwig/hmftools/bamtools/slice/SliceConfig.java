@@ -53,6 +53,7 @@ public class SliceConfig
     public final boolean DropExcluded;
     public final boolean OnlySupplementaries;
     public final boolean WriteReadBases;
+    public final boolean LogMissingReads;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
     public final int MaxUnmappedReads;
@@ -75,6 +76,7 @@ public class SliceConfig
     private static final String MAX_REMOTE_READS = "max_remote_reads";
     private static final String WRITE_READ_BASES = "write_read_bases";
     private static final String MAX_UNMAPPED_READS = "max_unmapped_reads";
+    private static final String LOG_MISSING_READS = "log_missing_reads";
 
     public static final int UNMAPPED_READS_DISABLED = -1;
     public static final int UNMAPPED_READS_ALL = 0;
@@ -107,6 +109,7 @@ public class SliceConfig
         DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
         WriteReadBases = WriteReads && configBuilder.hasFlag(WRITE_READ_BASES);
         OnlySupplementaries = configBuilder.hasFlag(ONLY_SUPPS);
+        LogMissingReads = configBuilder.hasFlag(LOG_MISSING_READS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
         MaxUnmappedReads = configBuilder.getInteger(MAX_UNMAPPED_READS);
@@ -187,6 +190,7 @@ public class SliceConfig
         configBuilder.addFlag(WRITE_READ_BASES, "Write read bases to TSV file");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
         configBuilder.addFlag(ONLY_SUPPS, "Only capture supplementary reads");
+        configBuilder.addFlag(LOG_MISSING_READS, "Log missing reads");
         configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
         BamToolName.addConfig(configBuilder);
         addThreadOptions(configBuilder);
@@ -210,6 +214,7 @@ public class SliceConfig
         UnsortedBam = false;
         DropExcluded = false;
         OnlySupplementaries = false;
+        LogMissingReads = false;
         MaxRemoteReads = 0;
         MaxPartitionReads = 0;
         MaxUnmappedReads = UNMAPPED_READS_DISABLED;

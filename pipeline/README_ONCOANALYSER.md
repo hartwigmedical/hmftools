@@ -47,7 +47,7 @@ This section will assume that:
 > - Starting from FASTQ or other pipeline steps (see: **[Sample sheet](#sample-sheet)**)
 > - Using reference genome GRCh38 (see: **[Configuring general resource files](#configuring-general-resource-files)**)
 > - Analysing panel sequencing data (see: **[Configuring panel resource files](#configuring-panel-resource-files)**)
-> - Using Singularity images (see: **[Container images](#container-images)**)
+> - Using **[Singularity](https://docs.sylabs.io/guides/3.0/user-guide/installation.html)** images which is **recommended for HPC environments** (see: **[Container images](#container-images)**)
 
 **1. Install Nextflow**
 
@@ -143,8 +143,9 @@ nextflow run nf-core/oncoanalyser \
     * [Maximum resources](#maximum-resources)
     * [Error handling](#error-handling)
   * [Container images](#container-images)
-    * [Caching Singularity images](#caching-singularity-images)
+    * [Container image URLs](#container-image-urls)
     * [Configuring container images](#configuring-container-images)
+    * [Caching Singularity images](#caching-singularity-images)
   * [Outputs](#outputs)
     * [Pipeline information](#pipeline-information)
     * [Read alignment](#read-alignment)
@@ -718,8 +719,9 @@ process {
 
 ## Container images
 
-Oncoanalyser by default uses **[Docker](https://www.docker.com/)** and [**Singularity**](https://docs.sylabs.io/guides/3.0/user-guide/quick_start.html#) 
-images built by the **[bioconda-recipes](https://github.com/bioconda/bioconda-recipes/tree/master/recipes)** Azure CI/CD infrastructure.
+Oncoanalyser runs each tool using **[Docker](https://docs.docker.com/engine/install/)** or [**Singularity**](https://docs.sylabs.io/guides/3.0/user-guide/quick_start.html#)
+container images which are built by the **[bioconda-recipes](https://github.com/bioconda/bioconda-recipes/tree/master/recipes)** Azure CI/CD 
+infrastructure. Singularity images are recommended for HPC environments which often do not allow Docker for security reasons.
 
 Use `-profile docker` or `-profile singularity` to tell Oncoanalyser whether to run with Docker or Singularity respectively. For example:
 ```shell
@@ -728,19 +730,19 @@ nextflow run nf-core/oncoanalyser
 # other arguments
 ```
 
-Docker images built by Hartwig's Google Cloud CI/CD infrastructure are also available (though not used by default by Oncoanalyser).
+### Container image URLs
 
-> [!NOTE]
-> Configuration of container images is fully detailed in the **[nf-core](https://nf-co.re/docs/usage/configuration#docker-registries)** and 
-> **[Nextflow](https://www.nextflow.io/docs/edge/container.html#containers)** documentation
+Docker and singularity image URIs/URLs have consistent patterns: 
 
-Docker and singularity image URIs/URLs have consistent patterns:
+| Source      | Platform    | Host                                                           | URI or URL                                                                                                                                                                         |
+|:------------|:------------|:---------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bioconda    | Docker      | [quay.io](https://quay.io/organization/biocontainers)          | **Pattern**: `quay.io/biocontainers/hmftools-{TOOL}:{TAG}`<br/> **Example**: `quay.io/biocontainers/hmftools-sage:4.0_beta--hdfd78af_4`                                            |
+| Bioconda    | Singularity | [Galaxy Project](https://depot.galaxyproject.org/singularity/) | **Pattern**: `https://depot.galaxyproject.org/singularity/hmftools-{tool}:{tag}` <br/> **Example**: https://depot.galaxyproject.org/singularity/hmftools-sage:4.0_beta--hdfd78af_4 |
+| Hartwig [1] | Docker      | [Dockerhub](https://hub.docker.com/r/hartwigmedicalfoundation) | **Pattern**: `docker.io/hartwigmedicalfoundation/{TOOL}:{TAG}` <br/> **Example**: `docker.io/hartwigmedicalfoundation/sage:4.0-rc.2`                                               |
 
-| Source   | Platform    | Host                                                           | URI or URL                                                                                                                                                                         |
-|:---------|:------------|:---------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Bioconda | Docker      | [quay.io](https://quay.io/organization/biocontainers)          | **Pattern**: `quay.io/biocontainers/hmftools-{TOOL}:{TAG}`<br/> **Example**: `quay.io/biocontainers/hmftools-sage:4.0_beta--hdfd78af_4`                                            |
-| Bioconda | Singularity | [Galaxy Project](https://depot.galaxyproject.org/singularity/) | **Pattern**: `https://depot.galaxyproject.org/singularity/hmftools-{tool}:{tag}` <br/> **Example**: https://depot.galaxyproject.org/singularity/hmftools-sage:4.0_beta--hdfd78af_4 |
-| Hartwig  | Docker      | [Dockerhub](https://hub.docker.com/r/hartwigmedicalfoundation) | **Pattern**: `docker.io/hartwigmedicalfoundation/{TOOL}:{TAG}` <br/> **Example**: `docker.io/hartwigmedicalfoundation/sage:4.0-rc.2`                                               |
+Notes:
+- [1] Docker images built by Hartwig's Google Cloud CI/CD infrastructure are intended as a channel for beta releases or release candidates. 
+They are not used by default in Oncoanalyser and URLs need to be provided in a [config file](#configuring-container-images).
 
 Bioconda recipes also have a consistent URL pattern:
 - **Pattern**: `https://github.com/bioconda/bioconda-recipes/tree/master/recipes/hmftools-{tool}`
@@ -759,12 +761,38 @@ docker pull quay.io/biocontainers/hmftools-sage:4.0_beta--hdfd78af_4
 singularity pull https://depot.galaxyproject.org/singularity/hmftools-sage:4.0_beta--hdfd78af_4
 ```
 
+### Configuring container images
+
+We can override the default container image used by Oncoanalyser like so:
+
+```
+process {
+   withName: 'SAGE.*' {
+      container = docker.io/hartwigmedicalfoundation/sage:4.0-rc.2
+   }
+   
+  withName: 'ESVEE.*' {
+     container = docker.io/hartwigmedicalfoundation/esvee:1.0-rc.4
+  }
+}
+```
+
+This is useful for example when you want to use updated container images that are not yet officially supported (e.g. betas or release candidates).
+
+In general, the process names for all hmftools are `{TOOL}` or `{TOOL}_{SUBPROCESS}`. For example, SAGE has the processes: `SAGE_SOMATIC`,
+`SAGE_GERMLINE`, `SAGE_APPEND`. Therefore, use regex suffix `.*` (e.g. `SAGE.*`) to capture the subprocesses for each tool.
+
+> [!NOTE]
+> Configuration of container images is fully detailed in the **[nf-core](https://nf-co.re/docs/usage/configuration#docker-registries)** and
+> **[Nextflow](https://www.nextflow.io/docs/edge/container.html#containers)** documentation
+
 ### Caching Singularity images
 
-Some compute environments, especially HPCs (high performance clusters), grant limited network access which prevents Oncoanalyser/Nextflow 
-from automatically pulling images at runtime. To get around this, we can manually download the Singularity images to a directory: 
+Some compute environments (especially HPCs) grant limited network access which prevents Oncoanalyser/Nextflow from automatically pulling 
+images at runtime. To get around this, we can manually download the Singularity images to a directory: 
 
 ```shell
+## This can be any directory
 cd /path/to/cache_dir/
 
 ## For the image name provided to the `--name` argument, remove 'https://' and replace '/' with '-'
@@ -780,8 +808,6 @@ and set the `NXF_SINGULARITY_CACHEDIR` environment variable ([Nextflow documenta
 to tell Oncoanalyser/Nextflow where to look for local images at runtime:
 
 ```shell
-export NXF_SINGULARITY_CACHEDIR='/path/to/cache_dir/'
-
 nextflow run nf-core/oncoanalyser 
 -profile singularity \
 # ...other arguments
@@ -807,27 +833,6 @@ nextflow run nf-core/oncoanalyser
 
 > [!NOTE]
 > All singularity options are detailed in the **[Singularity Nextflow documentation](https://www.nextflow.io/docs/latest/reference/config.html#config-singularity)**
-
-### Configuring container images
-
-We can override the default container image used by Oncoanalyser like so:
-
-```
-process {
-   withName: 'SAGE.*' {
-      container = docker.io/hartwigmedicalfoundation/sage:4.0-rc.2
-   }
-   
-  withName: 'ESVEE.*' {
-     container = docker.io/hartwigmedicalfoundation/esvee:1.0-rc.4
-  }
-}
-```
-
-This is useful for example when you want to use updated container images that are not yet officially supported (e.g. betas or release candidates). 
-
-In general, the process names for all hmftools are `{TOOL}` or `{TOOL}_{SUBPROCESS}`. For example, SAGE has the processes: `SAGE_SOMATIC`, 
-`SAGE_GERMLINE`, `SAGE_APPEND`. Therefore, use regex suffix `.*` (e.g. `SAGE.*`) to capture the subprocesses for each tool.
 
 ## Outputs
 

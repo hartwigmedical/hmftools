@@ -40,6 +40,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNPAIRED_READ_POSITIONS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNPAIRED_READ_POSITIONS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
@@ -198,6 +200,8 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(SEG_SCORE, 1, VCFHeaderLineType.Integer, SEG_SCORE_DESC));
         metaData.add(new VCFInfoHeaderLine(SEG_REPEAT_LENGTH, 1, VCFHeaderLineType.Integer, SEG_REPEAT_LENGTH_DESC));
 
+        metaData.add(new VCFInfoHeaderLine(UNPAIRED_READ_POSITIONS, 2, VCFHeaderLineType.Integer, UNPAIRED_READ_POSITIONS_DESC));
+
         for(FilterType filter : FilterType.values())
         {
             metaData.add(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
@@ -335,6 +339,11 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SEG_MAPQ, segments.stream().mapToInt(x -> x.Alignment.mapQual()).max().orElse(0));
         builder.attribute(SEG_SCORE, segments.stream().mapToInt(x -> x.Alignment.score()).max().orElse(0));
         builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
+
+        int[] unpairedReadPositions = breakend.unpairedReadPositions();
+
+        if(unpairedReadPositions != null)
+            builder.attribute(UNPAIRED_READ_POSITIONS, new int[] { unpairedReadPositions[0], unpairedReadPositions[1] });
 
         VariantContext variantContext = builder.make();
 

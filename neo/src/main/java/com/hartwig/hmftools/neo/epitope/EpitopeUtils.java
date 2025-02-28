@@ -25,7 +25,7 @@ import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.convertDnaCodonToAminoAcid;
@@ -215,7 +215,7 @@ public class EpitopeUtils
         int startPos;
         int endPos;
 
-        if(neOrientation == NEG_ORIENT)
+        if(neOrientation == ORIENT_REV)
         {
             startPos = 0;
             endPos = 0;
@@ -370,7 +370,7 @@ public class EpitopeUtils
         int startPos;
         int endPos;
 
-        if(neOrientation == NEG_ORIENT)
+        if(neOrientation == ORIENT_REV)
         {
             startPos = 0;
             endPos = 0;
@@ -540,7 +540,7 @@ public class EpitopeUtils
 
         int exonicBaseCount = 0;
 
-        if(neData.orientation(FS_DOWN) == NEG_ORIENT)
+        if(neData.orientation(FS_DOWN) == ORIENT_REV)
         {
             for (int i = 0; i < exonDataList.size(); ++i)
             {
@@ -591,7 +591,7 @@ public class EpitopeUtils
 
         int codingBaseCount = 0;
 
-        if(neData.orientation(FS_DOWN) == NEG_ORIENT)
+        if(neData.orientation(FS_DOWN) == ORIENT_REV)
         {
             int codingStop = transData.CodingEnd != null ? transData.CodingEnd : transData.TransEnd;
 
@@ -649,7 +649,7 @@ public class EpitopeUtils
 
         int codingBaseCount = 0;
 
-        if(neData.orientation(FS_UP) == NEG_ORIENT)
+        if(neData.orientation(FS_UP) == ORIENT_REV)
         {
             int codingPosition = transData.CodingEnd;
 

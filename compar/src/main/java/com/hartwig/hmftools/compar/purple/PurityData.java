@@ -38,6 +38,7 @@ public class PurityData implements ComparableItem
     protected static final String FLD_MS_STATUS = "MsStatus";
     protected static final String FLD_TMB_STATUS = "TmbStatus";
     protected static final String FLD_TML_STATUS = "TmlStatus";
+    protected static final String FLD_TINC_LEVEL = "TincLevel";
 
     public PurityData(final PurityContext purityContext)
     {
@@ -74,6 +75,7 @@ public class PurityData implements ComparableItem
         values.add(String.format("%s", Purity.microsatelliteStatus()));
         values.add(String.format("%s", Purity.tumorMutationalBurdenStatus()));
         values.add(String.format("%s", Purity.tumorMutationalLoadStatus()));
+        values.add(String.format("%s", Purity.qc().tincLevel()));
 
         return values;
     }
@@ -133,6 +135,8 @@ public class PurityData implements ComparableItem
         checkDiff(
                 diffs, FLD_TML_STATUS,
                 Purity.tumorMutationalLoadStatus().toString(), otherPurity.Purity.tumorMutationalLoadStatus().toString());
+
+        checkDiff(diffs, FLD_TINC_LEVEL, Purity.qc().tincLevel(), otherPurity.Purity.qc().tincLevel(), thresholds);
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

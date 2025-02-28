@@ -84,7 +84,7 @@ public class BqrThread extends Thread
 
                 int processed = mRegionCount - mRegions.size();
 
-                if((processed % 100) == 0)
+                if((processed % 1000) == 0)
                 {
                     SG_LOGGER.debug("base-qual regions processed({}) remaining({})", processed, mRegions.size());
                 }

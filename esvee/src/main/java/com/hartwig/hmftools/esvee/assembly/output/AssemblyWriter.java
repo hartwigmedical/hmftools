@@ -22,21 +22,17 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class AssemblyWriter
 {
     private final AssemblyConfig mConfig;
 
     private final BufferedWriter mWriter;
-    private final TruthsetAnnotation mTruthsetAnnotation;
 
     // write info about assemblies
-    public AssemblyWriter(final AssemblyConfig config, final TruthsetAnnotation truthsetAnnotation)
+    public AssemblyWriter(final AssemblyConfig config)
     {
         mConfig = config;
-        mTruthsetAnnotation = truthsetAnnotation;
-
         mWriter = initialiseWriter();
     }
 
@@ -66,8 +62,6 @@ public class AssemblyWriter
 
             sj.add("MismatchReads");
 
-            sj.add("RefBaseTrimmed");
-            sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
             sj.add("IsLINE");
@@ -82,6 +76,8 @@ public class AssemblyWriter
             // extra detailed fields
             sj.add("InitialReadId");
 
+            sj.add("RefBaseTrimmed");
+            sj.add("RefBaseTrimLength");
             sj.add("RepeatInfo");
             sj.add("RefSideSoftClips");
             sj.add("MergedAssemblies");
@@ -131,9 +127,6 @@ public class AssemblyWriter
 
             sj.add(String.valueOf(assembly.mismatchReadCount()));
 
-            sj.add(assembly.refBasesRepeatedTrimmed());
-            sj.add(String.valueOf(assembly.refBaseTrimLength()));
-
             if(AssemblyUtils.hasUnsetBases(assembly))
             {
                 sj.add("UNSET_BASES");
@@ -157,6 +150,8 @@ public class AssemblyWriter
             sj.add(assembly.assemblyAlignmentInfo());
 
             sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
+            sj.add(assembly.refBasesRepeatedTrimmed());
+            sj.add(String.valueOf(assembly.refBaseTrimLength()));
 
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 

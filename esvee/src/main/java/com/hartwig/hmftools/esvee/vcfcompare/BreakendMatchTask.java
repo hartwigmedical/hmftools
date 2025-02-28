@@ -33,7 +33,7 @@ public class BreakendMatchTask implements Runnable
     @Override
     public void run()
     {
-        SV_LOGGER.info("Running task: " + CompareTask.MATCH_BREAKENDS);
+        SV_LOGGER.info("running breakend comparison");
 
         Map<String,List<VariantBreakend>> oldChrBreakendMap = loadVariants(mConfig.OldVcf, OLD_VCF);
         Map<String,List<VariantBreakend>> newChrBreakendMap = loadVariants(mConfig.NewVcf, NEW_VCF);
@@ -57,14 +57,12 @@ public class BreakendMatchTask implements Runnable
         BreakendMatchWriter writer = new BreakendMatchWriter(mBreakendMatcher.getBreakendMatches(), mConfig);
         writer.writeBreakends();
 
-        SV_LOGGER.info("Completed task: " + CompareTask.MATCH_BREAKENDS);
+        SV_LOGGER.info("completed breakend comparison");
     }
 
-    private static Map<String, List<VariantBreakend>> loadVariants(String vcfFile, String label)
+    private static Map<String, List<VariantBreakend>> loadVariants(final String vcfFile, String label)
     {
-        return new SvVcfFile(vcfFile, label.toUpperCase())
-                .loadVariants()
-                .getVariantsAsMap();
+        return new SvVcfFile(vcfFile, label.toUpperCase()).loadVariants().getVariantsAsMap();
     }
 
     public static void main(@NotNull final String[] args)

@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.parseIntegerList;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -446,20 +447,6 @@ public class SageCompareVcfs
             compareField(origVar, newVar, format("%s:%s", origGenotype.getSampleName(), VariantReadSupport.REF), origQualCounts[5], newQualCounts[4]);
         }
     }
-
-    private static int[] parseIntegerList(final Genotype genotype, final String vcfTag)
-    {
-        final String[] stringValues = genotype.getExtendedAttribute(vcfTag, 0).toString().split(LIST_SEPARATOR, -1);
-        int[] values = new int[stringValues.length];
-
-        for(int i = 0; i < stringValues.length; ++i)
-        {
-            values[i] = Integer.parseInt(stringValues[i]);
-        }
-
-        return values;
-    }
-
 
     private void compareField(
             final VariantData origVar, final VariantData newVar, final String vcfTag, final String origValue, final String newValue)

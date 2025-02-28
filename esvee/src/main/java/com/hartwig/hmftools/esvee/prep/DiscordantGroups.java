@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantGroup.firstPrimaryRead;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantRemoteRegion.mergeRemoteRegions;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.SHORT_INV_LENGTH;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -233,7 +232,7 @@ public class DiscordantGroups
                 }
             }
 
-            junctionData.SupportingGroups.add(readGroup);
+            junctionData.addSupportingGroup(readGroup);
             readGroup.addJunctionPosition(junctionData);
 
             readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
@@ -241,6 +240,9 @@ public class DiscordantGroups
 
         // filter out remote regions outside the discordant range above
         discordantGroup.purgeReads(excludedReadIds);
+
+        // ensure all read groups are kept, even if the remote reads may not be
+        discordantGroup.readGroups().forEach(x -> x.markHasRemoteJunctionReads());
 
         List<DiscordantRemoteRegion> remoteRegions = discordantGroup.remoteRegions();
 
@@ -269,13 +271,13 @@ public class DiscordantGroups
 
             for(ReadGroup readGroup : remoteRegion.ReadGroups)
             {
-                remoteJunctionData.SupportingGroups.add(readGroup);
+                remoteJunctionData.addSupportingGroup(readGroup);
                 readGroup.addJunctionPosition(remoteJunctionData);
 
                 readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
             }
 
-            if(mTrackRemotes)
+            if(mTrackRemotes || remoteRegion == mainRemoteRegion)
             {
                 RemoteJunction remoteJunction = new RemoteJunction(
                         discordantGroup.Region.Chromosome, discordantGroup.innerPosition(), discordantGroup.Orient);

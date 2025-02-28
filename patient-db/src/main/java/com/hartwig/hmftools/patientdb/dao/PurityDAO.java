@@ -97,6 +97,7 @@ class PurityDAO
                 .addAllGermlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
                 .amberMeanDepth(0) // not persisted to database
                 .lohPercent(0)
+                .tincLevel(0)
                 .build();
 
         return ImmutablePurityContext.builder()

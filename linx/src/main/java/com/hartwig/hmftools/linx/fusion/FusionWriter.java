@@ -1,20 +1,25 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.String.valueOf;
+
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxFusion.context;
 import static com.hartwig.hmftools.common.linx.LinxFusion.fusionJcn;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.linx.CohortDataWriter.cohortDataFilename;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -114,9 +119,7 @@ public class FusionWriter implements CohortFileInterface
     public void writeSampleData(final String sampleId, final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
         if(mOutputDir == null)
-        {
             return;
-        }
 
         try
         {
@@ -147,45 +150,51 @@ public class FusionWriter implements CohortFileInterface
         // initialise the integrated, verbose fusion and breakend output file
         try
         {
-            BufferedWriter writer = createBufferedWriter(outputDir + "LNX_FUSIONS.csv", false);
+            String cohortFilename = cohortDataFilename(outputDir, "FUSIONS");
+            BufferedWriter writer = createBufferedWriter(cohortFilename, false);
 
-            writer.write("SampleId,Reportable,ReportableReason,KnownType,Phased,KnownExons,ClusterId,ClusterCount,ResolvedType");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add("SampleId").add("Reportable").add("ReportableReason").add("KnownType").add("Phased").add("KnownExons");
+            sj.add("ClusterId").add("ClusterCount").add("ResolvedType");
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 String upDown = se == SE_START ? "Up" : "Down";
 
-                String fieldsStr = ",SvId" + upDown;
-                fieldsStr += ",Chr" + upDown;
-                fieldsStr += ",Pos" + upDown;
-                fieldsStr += ",Orient" + upDown;
-                fieldsStr += ",Type" + upDown;
-                fieldsStr += ",Ploidy" + upDown;
-                fieldsStr += ",GeneId" + upDown;
-                fieldsStr += ",GeneName" + upDown;
-                fieldsStr += ",Transcript" + upDown;
-                fieldsStr += ",Strand" + upDown;
-                fieldsStr += ",RegionType" + upDown;
-                fieldsStr += ",CodingType" + upDown;
-                fieldsStr += ",BreakendExon" + upDown;
-                fieldsStr += ",FusedExon" + upDown;
-                fieldsStr += ",ExonsSkipped" + upDown;
-                fieldsStr += ",Phase" + upDown;
-                fieldsStr += ",ExonMax" + upDown;
-                fieldsStr += ",Disruptive" + upDown;
-                fieldsStr += ",CodingBases" + upDown;
-                fieldsStr += ",TotalCoding" + upDown;
-                fieldsStr += ",CodingStart" + upDown;
-                fieldsStr += ",CodingEnd" + upDown;
-                fieldsStr += ",TransStart" + upDown;
-                fieldsStr += ",TransEnd" + upDown;
-                fieldsStr += ",DistancePrev" + upDown;
-                fieldsStr += ",Canonical" + upDown;
-                fieldsStr += ",Biotype" + upDown;
-                writer.write(fieldsStr);
+                sj.add("SvId" + upDown);
+                sj.add("Chr" + upDown);
+                sj.add("Pos" + upDown);
+                sj.add("Orient" + upDown);
+                sj.add("Type" + upDown);
+                sj.add("Ploidy" + upDown);
+                sj.add("GeneId" + upDown);
+                sj.add("GeneName" + upDown);
+                sj.add("Transcript" + upDown);
+                sj.add("Strand" + upDown);
+                sj.add("RegionType" + upDown);
+                sj.add("CodingType" + upDown);
+                sj.add("BreakendExon" + upDown);
+                sj.add("FusedExon" + upDown);
+                sj.add("ExonsSkipped" + upDown);
+                sj.add("Phase" + upDown);
+                sj.add("ExonMax" + upDown);
+                sj.add("Disruptive" + upDown);
+                sj.add("CodingBases" + upDown);
+                sj.add("TotalCoding" + upDown);
+                sj.add("CodingStart" + upDown);
+                sj.add("CodingEnd" + upDown);
+                sj.add("TransStart" + upDown);
+                sj.add("TransEnd" + upDown);
+                sj.add("DistancePrev" + upDown);
+                sj.add("Canonical" + upDown);
+                sj.add("Biotype" + upDown);
             }
 
-            writer.write(",ProteinsKept,ProteinsLost,PriorityScore,FusionId,ChainTerminatedUp,ChainTerminatedDown,ChainInfo");
+            sj.add("ProteinsKept").add("ProteinsLost").add("PriorityScore").add("FusionId").add("ChainTerminatedUp");
+            sj.add("ChainTerminatedDown").add("ChainInfo");
+
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -206,14 +215,18 @@ public class FusionWriter implements CohortFileInterface
             return;
         }
 
-        StringBuilder sb = new StringBuilder();
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-        sb.append(String.format("%s,%s,%s,%s",
-                sampleId, fusion.reportable(), fusion.reportableReasonsStr(), fusion.knownTypeStr()));
+        sj.add(sampleId);
+        sj.add(valueOf(fusion.reportable()));
+        sj.add(fusion.reportableReasonsStr());
+        sj.add(fusion.knownTypeStr());
 
-        sb.append(String.format(",%s,%s,%d,%d,%s",
-                fusion.phaseType(), fusion.knownExons(),
-                annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
+        sj.add(valueOf(fusion.phaseType()));
+        sj.add(valueOf(fusion.knownExons()));
+        sj.add(valueOf(annotations.clusterId()));
+        sj.add(valueOf(annotations.clusterCount()));
+        sj.add(annotations.resolvedType());
 
         // write upstream SV, transcript and exon info
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
@@ -222,28 +235,42 @@ public class FusionWriter implements CohortFileInterface
             final BreakendTransData trans = fusion.transcripts()[fs];
             final BreakendGeneData gene = trans.gene();
 
-            sb.append(String.format(",%d,%s,%d,%d,%s,%.6f",
-                    gene.id(), gene.chromosome(), gene.position(), gene.orientation(),
-                    gene.type(), gene.jcn()));
+            sj.add(valueOf(gene.id()));
+            sj.add(gene.chromosome());
+            sj.add(valueOf(gene.position()));
+            sj.add(valueOf(gene.orientation()));
+            sj.add(valueOf(gene.type()));
+            sj.add(valueOf(gene.jcn()));
 
-            sb.append(String.format(",%s,%s,%s,%d,%s,%s",
-                    gene.geneId(), fusion.geneName(fs), trans.transName(),
-                    gene.strand(), trans.regionType(), trans.codingType()));
+            sj.add(gene.geneId());
+            sj.add(fusion.geneName(fs));
+            sj.add(trans.transName());
+            sj.add(valueOf(gene.strand()));
+            sj.add(valueOf(trans.regionType()));
+            sj.add(valueOf(trans.codingType()));
 
-            sb.append(String.format(",%d,%d,%d,%d,%d,%s",
-                    isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
-                    fusion.getFusedExon(isUpstream), fusion.getExonsSkipped()[fs],
-                    trans.Phase, trans.exonCount(), trans.isDisruptive()));
+            sj.add(valueOf(isUpstream ? trans.ExonUpstream : trans.ExonDownstream));
+            sj.add(valueOf(fusion.getFusedExon(isUpstream)));
+            sj.add(valueOf(fusion.getExonsSkipped()[fs]));
+            sj.add(valueOf(trans.Phase));
+            sj.add(valueOf(trans.exonCount()));
+            sj.add(valueOf(trans.isDisruptive()));
 
-            sb.append(String.format(",%d,%d,%d,%d,%d,%d,%d,%s,%s",
-                    trans.CodingBases, trans.TotalCodingBases,
-                    trans.codingStart(), trans.codingEnd(), trans.transStart(), trans.transEnd(),
-                    trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
+            sj.add(valueOf(trans.CodingBases));
+            sj.add(valueOf(trans.TotalCodingBases));
+            sj.add(valueOf(trans.codingStart()));
+            sj.add(valueOf(trans.codingEnd()));
+            sj.add(valueOf(trans.transStart()));
+            sj.add(valueOf(trans.transEnd()));
+            sj.add(valueOf(trans.prevSpliceAcceptorDistance()));
+            sj.add(valueOf(trans.isCanonical()));
+            sj.add(trans.bioType());
         }
 
-        sb.append(String.format(",%s,%s,%f,%d",
-                fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
-                fusion.priority(), fusion.id()));
+        sj.add(fusion.downstreamTrans().getProteinFeaturesKept());
+        sj.add(fusion.downstreamTrans().getProteinFeaturesLost());
+        sj.add(valueOf(fusion.priority()));
+        sj.add(valueOf(fusion.id()));
 
         String chainInfo = String.format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
 
@@ -258,8 +285,8 @@ public class FusionWriter implements CohortFileInterface
             chainInfo += ",-1;0;0;true;false";
         }
 
-        sb.append(String.format("%s", chainInfo));
+        sj.add(String.format("%s", chainInfo));
 
-        mCohortDataWriter.write(this, Lists.newArrayList(sb.toString()));
+        mCohortDataWriter.write(this, Lists.newArrayList(sj.toString()));
     }
 }

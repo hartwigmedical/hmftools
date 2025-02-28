@@ -61,7 +61,7 @@ import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.FragmentLengths;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;

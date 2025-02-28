@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
+import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.DNA_BASE_COUNT;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -140,8 +141,6 @@ public class RefBaseSeqBuilder
         mBases[currentIndex] = mAssembly.bases()[mAssembly.junctionIndex()];
         mBaseQuals[currentIndex] = mAssembly.baseQuals()[mAssembly.junctionIndex()];
 
-        int baseCount = Nucleotides.DNA_BASES.length;
-
         CigarOperator currentElementType = M;
         int currentElementLength = 0;
 
@@ -201,9 +200,9 @@ public class RefBaseSeqBuilder
                 byte base = read.currentBase();
                 int qual = read.currentQual();
 
-                if(base == DNA_N_BYTE)
+                if(Nucleotides.baseIndex(base) < 0)
                 {
-                    base = DNA_BASE_BYTES[0];
+                    base = DNA_N_BYTE;
                     qual = 0;
                 }
 
@@ -232,9 +231,9 @@ public class RefBaseSeqBuilder
                     }
 
                     // high-qual mismatch so start tracking frequencies for each base
-                    readCounts = new int[baseCount];
-                    totalQuals = new int[baseCount];
-                    maxQuals = new int[baseCount];
+                    readCounts = new int[DNA_BASE_COUNT];
+                    totalQuals = new int[DNA_BASE_COUNT];
+                    maxQuals = new int[DNA_BASE_COUNT];
 
                     // back port existing counts to the per-base arrays
                     int baseIndex = Nucleotides.baseIndex(consensusBase);
@@ -255,7 +254,7 @@ public class RefBaseSeqBuilder
                 // take the bases with the highest qual totals
                 int maxQual = 0;
                 int maxBaseIndex = 0;
-                for(int b = 0; b < baseCount; ++b)
+                for(int b = 0; b < readCounts.length; ++b)
                 {
                     if(totalQuals[b] > maxQual)
                     {

@@ -1,23 +1,26 @@
 package com.hartwig.hmftools.esvee.utils;
 
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.genome.region.Orientation.flipOrientation;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT_ID;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
@@ -69,7 +72,7 @@ public class PonLiftOver
             System.exit(1);
         }
 
-        SV_LOGGER.info("Gripss PON lift-over");
+        SV_LOGGER.info("SV PON lift-over");
 
         writeSvPonFile();
         writeSglPonFile();
@@ -77,7 +80,7 @@ public class PonLiftOver
         SV_LOGGER.info("converted {} entries, failed liftover({}) maxLengthDiff({})",
                 mConverted, mFailedLiftover, mFailedMaxLengthDiff);
 
-        SV_LOGGER.info("Gripss PON lift-over complete");
+        SV_LOGGER.info("SV PON lift-over complete");
     }
 
     private static final int LOG_COUNT = 1000000;
@@ -101,6 +104,8 @@ public class PonLiftOver
 
                 if(regions == null)
                     continue;
+
+                List<PonSvRegion> convertedRegions = Lists.newArrayListWithExpectedSize(regions.size());
 
                 for(PonSvRegion region : regions)
                 {
@@ -155,25 +160,25 @@ public class PonLiftOver
 
                     }
 
+                    PonSvRegion convertedRegion;
+
                     if(chrDestStart.equals(chrDestEnd) && posStartStart > posEndStart)
                     {
                         SV_LOGGER.trace("swapping start region({}:{}-{}) with end region({}:{}-{})",
                                 chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd);
 
-                        // swap coords if the start region is now after the end region
-                        writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                                chrDestStart, posEndStart, posEndEnd, chrDestEnd, posStartStart, posStartEnd, ".",
-                                region.PonCount, orientToId(orientEnd), orientToId(orientStart)));
+                        convertedRegion = new PonSvRegion(
+                            new ChrBaseRegion(chrDestEnd, posEndStart, posEndEnd), Orientation.fromByte(orientEnd),
+                            new ChrBaseRegion(chrDestStart, posStartStart, posStartEnd), Orientation.fromByte(orientStart), region.PonCount);
                     }
                     else
                     {
-                        // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                        writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                                chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd, ".",
-                                region.PonCount, orientToId(orientStart), orientToId(orientEnd)));
+                        convertedRegion = new PonSvRegion(
+                                new ChrBaseRegion(chrDestStart, posStartStart, posStartEnd), Orientation.fromByte(orientStart),
+                                new ChrBaseRegion(chrDestEnd, posEndStart, posEndEnd), Orientation.fromByte(orientEnd), region.PonCount);
                     }
 
-                    writer.newLine();
+                    convertedRegions.add(convertedRegion);
 
                     ++mConverted;
 
@@ -181,6 +186,14 @@ public class PonLiftOver
                     {
                         SV_LOGGER.debug("converted {} entries", mConverted);
                     }
+                }
+
+                Collections.sort(convertedRegions);
+
+                for(PonSvRegion ponRegion : convertedRegions)
+                {
+                    writer.write(ponRegion.toBedRecord());
+                    writer.newLine();
                 }
             }
 
@@ -212,6 +225,8 @@ public class PonLiftOver
 
                 if(regions == null)
                     continue;
+
+                List<PonSglRegion> convertedRegions = Lists.newArrayListWithExpectedSize(regions.size());
 
                 for(PonSglRegion region : regions)
                 {
@@ -247,11 +262,10 @@ public class PonLiftOver
                         continue;
                     }
 
-                    // fields: Chr,PosBegin,PosEnd,Unknown,PonCount,Orientation
-                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%s",
-                            chrDestStart, posStartStart, posStartEnd, ".", region.PonCount, orientToId(orientStart)));
+                    PonSglRegion convertedRegion = new PonSglRegion(
+                            new ChrBaseRegion(chrDestStart, posStartStart, posStartEnd), Orientation.fromByte(orientStart), region.PonCount);
 
-                    writer.newLine();
+                    convertedRegions.add(convertedRegion);
 
                     ++mConverted;
 
@@ -259,6 +273,14 @@ public class PonLiftOver
                     {
                         SV_LOGGER.debug("converted {} entries", mConverted);
                     }
+                }
+
+                Collections.sort(convertedRegions);
+
+                for(PonSglRegion ponRegion : convertedRegions)
+                {
+                    writer.write(ponRegion.toBedRecord());
+                    writer.newLine();
                 }
             }
 
@@ -271,11 +293,6 @@ public class PonLiftOver
         }
     }
 
-    private static String orientToId(final byte orientation)
-    {
-        return orientation == POS_ORIENT ? POS_ORIENT_ID : NEG_ORIENT_ID;
-    }
-
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
@@ -284,6 +301,7 @@ public class PonLiftOver
         configBuilder.addConfigItem(DEST_REF_GENOME_VERSION, true, "Destination ref genome version");
         configBuilder.addInteger(MAX_LENGTH_DIFF, "Permitted lifted region difference in length vs original", 5);
         PonCache.addConfig(configBuilder);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
         ConfigUtils.addLoggingOptions(configBuilder);
 

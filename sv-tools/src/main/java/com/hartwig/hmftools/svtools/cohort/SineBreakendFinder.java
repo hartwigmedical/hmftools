@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -197,7 +197,7 @@ public class SineBreakendFinder
                 final int[] positions =
                         new int[] { Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]) };
 
-                byte strand = items[strandIndex].equals("+") ? POS_ORIENT : NEG_ORIENT;
+                byte strand = items[strandIndex].equals("+") ? ORIENT_FWD : ORIENT_REV;
 
                 RepeatMaskerData rmData = new RepeatMaskerData(
                         rmId, new ChrBaseRegion(chromosome, positions), strand, items[classIndex], matchingRepeat);

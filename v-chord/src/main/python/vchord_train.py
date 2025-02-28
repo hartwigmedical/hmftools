@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 import logging
 
-import hrd_model
+import vchord_model
 
 logger = logging.getLogger(__name__)
 
@@ -369,14 +369,6 @@ def train_model(model, train_dataloader, test_dataloader, num_epochs, use_nester
 
     plt.savefig('epoch.png', bbox_inches='tight')
 
-    # make sure we have a good model
-    final_test_acc = epoch_df["testAccuracy"][-1]
-    final_test_tp = epoch_df["testTP"][-1]
-    final_test_tn = epoch_df["testTN"][-1]
-
-    if final_test_tp < final_test_tn:
-        logger.warn(f"final testTP[{final_test_tp:>6.2f}] < testTN[{final_test_tn:>6.2f}], please retrain")
-        return False
     return True
 
 
@@ -453,7 +445,7 @@ def append_dropout(model, rate):
 def init_model(dropout_rate):
     # load the model
     # 5
-    return hrd_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
+    return vchord_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
 
 def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sample_dup, test_fraction, use_nesterov, starting_model):
     df = pd.read_csv(sample_tsv, sep="\t")
@@ -504,11 +496,11 @@ def main():
     args = parser.parse_args()
 
     logger.info(f"using {device} device")
-    logger.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size} " +
-          f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}" +
+    logger.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, " +
+          f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}, " +
           f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
     train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, args.dropout_rate,
-               args.hrd_sample_duplication, args.test_fraction args.use_nesterov, args.starting_model)
+               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model)
 
 
 if __name__ == "__main__":

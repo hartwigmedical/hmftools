@@ -30,7 +30,7 @@ public class GenomeLiftoverCache
 
     public static final int UNMAPPED_POSITION = -1;
 
-    private static final String NEG_ORIENT = "-";
+    private static final String NEG_ORIENT_STR = "-";
 
     public GenomeLiftoverCache() { this(false); }
 
@@ -170,7 +170,7 @@ public class GenomeLiftoverCache
 
             // note +1 for start positions since source file is in BED style
             // Chr37	Start37	End37	Orient37	Chr38 	Start38	End38	Orient38
-            boolean isReverse = values[COL_ORIENT_38].equals(NEG_ORIENT);
+            boolean isReverse = values[COL_ORIENT_38].equals(NEG_ORIENT_STR);
 
             chrMappings.add(new CoordMapping(
                     values[COL_CHR_37],

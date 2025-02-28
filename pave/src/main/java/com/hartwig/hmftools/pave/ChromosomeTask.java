@@ -3,6 +3,8 @@ package com.hartwig.hmftools.pave;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.common.variant.pon.GnomadCache.PON_GNOMAD_FILTER;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTER;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_THRESHOLD;
@@ -10,8 +12,6 @@ import static com.hartwig.hmftools.pave.PaveConstants.PON_MEAN_READ_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_REPEAT_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_SAMPLE_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_VAF_THRESHOLD;
-import static com.hartwig.hmftools.pave.annotation.GnomadAnnotation.PON_GNOMAD_FILTER;
-import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_FILTER;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
@@ -30,12 +30,13 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.pon.GnomadChrCache;
+import com.hartwig.hmftools.common.variant.pon.PonChrCache;
+import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
-import com.hartwig.hmftools.pave.annotation.GnomadChrCache;
+import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.MappabilityChrCache;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
-import com.hartwig.hmftools.pave.annotation.PonChrCache;
-import com.hartwig.hmftools.pave.annotation.PonVariantData;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
 import com.hartwig.hmftools.pave.impact.ImpactClassifier;
 import com.hartwig.hmftools.pave.impact.VariantImpactBuilder;
@@ -215,9 +216,13 @@ public class ChromosomeTask implements Callable
 
         if(mGnomadCache != null)
             mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache);
+        else
+            GnomadAnnotation.annotateFromContext(variant);
 
         if(mStandardPon != null)
             mReferenceData.StandardPon.annotateVariant(variant, mStandardPon);
+        else
+            PonAnnotation.annotateFromContext(variant);
 
         applyFilters(variant);
     }
@@ -270,7 +275,7 @@ public class ChromosomeTask implements Callable
 
         if(artefactsPon != null)
         {
-            PonVariantData artefactPonData = artefactsPon.getPonData(variant);
+            PonVariantData artefactPonData = artefactsPon.getPonData(variant.Position, variant.Ref, variant.Alt);
 
             if(artefactPonData != null)
             {

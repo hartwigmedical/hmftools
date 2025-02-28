@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftCli
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -239,8 +240,8 @@ public class JunctionAssemblyTest
         assertEquals(sequence, consensusSequence);
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
-        assertEquals(6, supportReads.size());
-        assertEquals(6, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.size());
+        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
     }
 
     @Test
@@ -286,8 +287,103 @@ public class JunctionAssemblyTest
         assertEquals(sequence, consensusSequence);
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
-        assertEquals(5, supportReads.size());
-        assertEquals(5, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.size());
+        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+    }
+
+    @Test
+    public void tesRefBaseRepeatExpansionMismatchesExtensionSequence()
+    {
+        int junctionPosition = 50;
+        Junction junction = new Junction(CHR_1, junctionPosition, REVERSE);
+
+        String refBases = "CAGCAGCAGCAGCAGCAGCAGCAGCAGCAG" + REF_BASES_200.substring(0, 20); // has 10 repeats
+        String extraExtBases = "GATCGTAGGATCGTAGGATCGTAGGATC"; // other non-repeated bases
+
+        String extBases1 = extraExtBases + "CAGCAGCAGCAG"; // has 4 repeats
+        String readBases = extBases1 + refBases;
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases1.length(), 0));
+
+        Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        String extBases3 = extBases1 + "CAGCAG"; // 2 extra CAGs
+        readBases = extBases3 + refBases;
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases3.length(), 0));
+
+        String extBases4 = extraExtBases + "CAGCAG"; // 2 less CAGs
+        readBases = extBases4 + refBases;
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases4.length(), 0));
+
+        String extBases5 = "CAG"; // insufficient overlap bases
+        readBases = extBases5 + refBases;
+        Read read5 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases5.length(), 0));
+
+        List<Read> reads = List.of(read1, read1b, read3, read4, read5);
+
+        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+
+        assertTrue(extSeqBuilder.isValid());
+        assertNotNull(extSeqBuilder.maxRepeat());
+        assertEquals(4, extSeqBuilder.maxRepeat().Count);
+        assertEquals(10, extSeqBuilder.refBaseRepeatCount());
+
+        String consensusSequence = extSeqBuilder.junctionSequence();
+
+        String consensusExtBases = extBases1; // matches read 1
+
+        String sequence = consensusExtBases + refBases.substring(0, 1);
+        assertEquals(sequence, consensusSequence);
+
+        List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
+        assertEquals(4, supportReads.size());
+        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+
+        String buildInfo = extSeqBuilder.buildInformation();
+        assertEquals("5;5;0;true;28:CAG:4:10;2:2:1:0", buildInfo);
+
+        // test a forward orientation junction
+        junction = new Junction(CHR_1, junctionPosition, FORWARD);
+
+        refBases = REF_BASES_200.substring(0, 20) + "CACACACACACACACACACA"; // has 10 repeats
+
+        extBases1 = "CACACACA" + extraExtBases; // has 4 repeats
+        readBases = refBases + extBases1;
+        int readStartPos = junctionPosition - refBases.length() + 1;
+        read1 = createRead(READ_ID_GENERATOR.nextId(), readStartPos, readBases, makeCigarString(readBases, 0, extBases1.length()));
+
+        read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        extBases3 = "CACA" + extBases1; // 2 extra repeats
+        readBases = refBases + extBases3;
+        read3 = createRead(READ_ID_GENERATOR.nextId(), readStartPos, readBases, makeCigarString(readBases, 0, extBases3.length()));
+
+        extBases4 = "CACA" + extraExtBases; // 2 less CAs
+        readBases = refBases + extBases4;
+        read4 = createRead(READ_ID_GENERATOR.nextId(), readStartPos, readBases, makeCigarString(readBases, 0, extBases4.length()));
+
+        extBases5 = "CA"; // insufficient overlap bases
+        readBases = refBases + extBases5;
+        read5 = createRead(READ_ID_GENERATOR.nextId(), readStartPos, readBases, makeCigarString(readBases, 0, extBases5.length()));
+
+        reads = List.of(read1, read1b, read3, read4, read5);
+
+        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+
+        assertTrue(extSeqBuilder.isValid());
+        assertNotNull(extSeqBuilder.maxRepeat());
+        assertEquals(4, extSeqBuilder.maxRepeat().Count);
+        assertEquals(10, extSeqBuilder.refBaseRepeatCount());
+
+        consensusSequence = extSeqBuilder.junctionSequence();
+
+        consensusExtBases = extBases1; // matches read 1
+
+        sequence = refBases.substring(refBases.length() - 1) + consensusExtBases;
+        assertEquals(sequence, consensusSequence);
+
+        supportReads = extSeqBuilder.formAssemblySupport();
+        assertEquals(4, supportReads.size());
+        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
     }
 
     @Test

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -187,7 +188,7 @@ public class PonCache
         {
             PonSvRegion region = regions.get(mCurrentSvIndex);
 
-            if(region.RegionStart.overlaps(svStart))
+            if(region.overlapsStart(svStart))
             {
                 // test the PON entries around this position
                 ChrBaseRegion svEnd = new ChrBaseRegion(
@@ -282,7 +283,7 @@ public class PonCache
         {
             PonSglRegion region = regions.get(mCurrentSglIndex);
 
-            if(region.Region.overlaps(svStart))
+            if(region.overlaps(svStart))
             {
                 // test the PON entries around this position
                 return findSglPonMatch(regions, var, svStart, mCurrentSglIndex);
@@ -346,7 +347,7 @@ public class PonCache
         {
             PonSvRegion region = regions.get(i);
 
-            if(region.RegionStart.overlaps(svStart))
+            if(region.overlapsStart(svStart))
             {
                 // test the PON entries around this position
                 ChrBaseRegion svEnd = new ChrBaseRegion(
@@ -376,7 +377,7 @@ public class PonCache
         {
             PonSglRegion region = regions.get(i);
 
-            if(region.Region.overlaps(svStart))
+            if(region.overlaps(svStart))
             {
                 // test the PON entries around this position
                 return findSglPonMatch(regions, var, svStart, 0);
@@ -403,42 +404,29 @@ public class PonCache
             String line = null;
             String currentChr = "";
             List<PonSvRegion> svRegions = null;
-            BaseRegion lastRegion = null;
-
-            // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
+            ChrBaseRegion lastRegionStart = null;
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split(TSV_DELIM, -1);
+                PonSvRegion ponRegion = PonSvRegion.fromBedRecord(line);
 
-                String chrStart = items[0];
-                String chrEnd = items[3];
-
-                if(!chrStart.equals(currentChr))
+                if(!ponRegion.RegionStart.Chromosome.equals(currentChr))
                 {
-                    currentChr = chrStart;
+                    currentChr = ponRegion.RegionStart.Chromosome;
                     svRegions = Lists.newArrayList();
-                    mSvRegions.put(chrStart, svRegions);
-                    lastRegion = null;
+                    mSvRegions.put(ponRegion.RegionStart.Chromosome, svRegions);
+                    lastRegionStart = null;
                 }
 
-                // note BED start position adjustment
-                BaseRegion regionStart = new BaseRegion(Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
-                ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]) + 1, Integer.parseInt(items[5]));
-
-                Orientation orientStart = Orientation.fromChar(items[8].charAt(0));
-                Orientation orientEnd = Orientation.fromChar(items[9].charAt(0));
-                int ponCount = Integer.parseInt(items[7]);
-
-                svRegions.add(new PonSvRegion(regionStart, orientStart, regionEnd, orientEnd, ponCount));
+                svRegions.add(ponRegion);
                 ++itemCount;
 
-                if(!mAllowUnordered && lastRegion != null && lastRegion.start() > regionStart.start())
+                if(!mAllowUnordered && lastRegionStart != null && lastRegionStart.start() > ponRegion.RegionStart.start())
                 {
-                    SV_LOGGER.warn("SV PON not ordered: last({}) vs this({})", lastRegion, regionStart);
+                    SV_LOGGER.warn("SV PON not ordered: last({}) vs this({})", lastRegionStart, ponRegion.RegionStart);
                 }
 
-                lastRegion = regionStart;
+                lastRegionStart = ponRegion.RegionStart;
             }
 
             SV_LOGGER.info("loaded {} germline SV PON records from file({})", itemCount, filename);
@@ -464,38 +452,29 @@ public class PonCache
             String line = null;
             String currentChr = "";
             List<PonSglRegion> sglRegions = null;
-            BaseRegion lastRegion = null;
-
-            // fields: Chr,PosBegin,PosEnd,Unknown,PonCount,Orientation
+            ChrBaseRegion lastRegion = null;
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split(TSV_DELIM, -1);
+                PonSglRegion ponRegion = PonSglRegion.fromBedRecord(line);
 
-                String chr = items[0];
-
-                if(!chr.equals(currentChr))
+                if(!ponRegion.Region.Chromosome.equals(currentChr))
                 {
-                    currentChr = chr;
+                    currentChr = ponRegion.Region.Chromosome;
                     sglRegions = Lists.newArrayList();
-                    mSglRegions.put(chr, sglRegions);
+                    mSglRegions.put(ponRegion.Region.Chromosome, sglRegions);
                     lastRegion = null;
                 }
 
-                BaseRegion region = new BaseRegion(Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
-
-                Orientation orient = Orientation.fromChar(items[5].charAt(0));
-                int ponCount = Integer.parseInt(items[4]);
-
-                sglRegions.add(new PonSglRegion(region, orient, ponCount));
+                sglRegions.add(ponRegion);
                 ++itemCount;
                 
-                if(!mAllowUnordered && lastRegion != null && lastRegion.start() > region.start())
+                if(!mAllowUnordered && lastRegion != null && lastRegion.start() > ponRegion.Region.start())
                 {
-                    SV_LOGGER.warn("SGL PON not ordered: last({}) vs this({})", lastRegion, region);
+                    SV_LOGGER.warn("SGL PON not ordered: last({}) vs this({})", lastRegion, ponRegion.Region);
                 }
 
-                lastRegion = region;
+                lastRegion = ponRegion.Region;
             }
 
             SV_LOGGER.info("loaded {} germline SGL PON records from file({})", itemCount, filename);
@@ -504,36 +483,7 @@ public class PonCache
         {
             SV_LOGGER.error("failed to load germline SGL PON file({}): {}", filename, e.toString());
             mHasValidData = false;
-            return;
         }
-    }
-
-    public void addPonSvRegion(
-            final String chrStart, final BaseRegion regionStart, final Orientation orientStart,
-            final ChrBaseRegion regionEnd, final Orientation orientEnd, final int ponCount)
-    {
-        List<PonSvRegion> regions = mSvRegions.get(chrStart);
-
-        if(regions == null)
-        {
-            regions = Lists.newArrayList();
-            mSvRegions.put(chrStart, regions);
-        }
-
-        regions.add(new PonSvRegion(regionStart, orientStart, regionEnd, orientEnd, ponCount));
-    }
-
-    public void addPonSglRegion(final String chromosome, BaseRegion region, final Orientation orient, final int ponCount)
-    {
-        List<PonSglRegion> regions = mSglRegions.get(chromosome);
-
-        if(regions == null)
-        {
-            regions = Lists.newArrayList();
-            mSglRegions.put(chromosome, regions);
-        }
-
-        regions.add(new PonSglRegion(region, orient, ponCount));
     }
 
     public void clear()
@@ -551,4 +501,36 @@ public class PonCache
         configBuilder.addInteger(
                 GERMLINE_PON_MARGIN, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
     }
+
+    /*
+    @VisibleForTesting
+    public void addPonSvRegion(
+            final String chrStart, final BaseRegion regionStart, final Orientation orientStart,
+            final ChrBaseRegion regionEnd, final Orientation orientEnd, final int ponCount)
+    {
+        List<PonSvRegion> regions = mSvRegions.get(chrStart);
+
+        if(regions == null)
+        {
+            regions = Lists.newArrayList();
+            mSvRegions.put(chrStart, regions);
+        }
+
+        regions.add(new PonSvRegion(regionStart, orientStart, regionEnd, orientEnd, ponCount));
+    }
+
+    @VisibleForTesting
+    public void addPonSglRegion(final String chromosome, BaseRegion region, final Orientation orient, final int ponCount)
+    {
+        List<PonSglRegion> regions = mSglRegions.get(chromosome);
+
+        if(regions == null)
+        {
+            regions = Lists.newArrayList();
+            mSglRegions.put(chromosome, regions);
+        }
+
+        regions.add(new PonSglRegion(region, orient, ponCount));
+    }
+    */
 }

@@ -403,7 +403,6 @@ public class PurpleInterpreterTest
                 .insertSequence(Strings.EMPTY)
                 .type(StructuralVariantType.DEL)
                 .qualityScore(0D)
-                .recovered(false)
                 .hotspot(false)
                 .build();
     }

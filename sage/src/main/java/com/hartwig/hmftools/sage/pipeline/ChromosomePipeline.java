@@ -149,5 +149,4 @@ public class ChromosomePipeline implements AutoCloseable
     {
         mRefGenome.close();
     }
-
 }

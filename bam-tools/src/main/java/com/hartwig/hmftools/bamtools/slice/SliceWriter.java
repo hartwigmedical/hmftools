@@ -28,11 +28,11 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.StringUtil;
 
-public class SliceWriter
+public class SliceWriter implements AutoCloseable
 {
     private final SliceConfig mConfig;
 
-    private int mRecordWriteCount;
+    private long mRecordWriteCount;
     private final SAMFileWriter mBamWriter;
     private final BufferedWriter mReadWriter;
     private String mUnsortedOutputBam;
@@ -123,7 +123,7 @@ public class SliceWriter
             sj.add(record.getContig());
             sj.add(String.valueOf(record.getAlignmentStart()));
             sj.add(String.valueOf(record.getAlignmentEnd()));
-            sj.add(record.getCigar().toString());
+            sj.add(record.getCigarString());
 
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
@@ -137,7 +137,7 @@ public class SliceWriter
             sj.add(String.valueOf(record.getFirstOfPairFlag()));
             sj.add(String.valueOf(record.getReadNegativeStrandFlag()));
             sj.add(String.valueOf(record.getProperPairFlag()));
-            sj.add(String.valueOf(record.getProperPairFlag()));
+            sj.add(String.valueOf(record.getReadUnmappedFlag()));
             sj.add(String.valueOf(record.getMateUnmappedFlag()));
             sj.add(String.valueOf(record.getSupplementaryAlignmentFlag()));
             sj.add(String.valueOf(record.getDuplicateReadFlag()));
@@ -157,6 +157,7 @@ public class SliceWriter
         }
     }
 
+    @Override
     public void close()
     {
         if(mBamWriter != null)

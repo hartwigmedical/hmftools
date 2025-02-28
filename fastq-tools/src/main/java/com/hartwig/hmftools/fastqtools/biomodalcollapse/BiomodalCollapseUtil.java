@@ -3,9 +3,10 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_FIRST;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_SECOND;
-import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,9 +16,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -519,7 +520,7 @@ public class BiomodalCollapseUtil
     {
         List<SuffixClipper> suffixClippers = Lists.newArrayList();
         suffixClippers.add(new SuffixClipper(x -> x.Base != BiomodalConstants.MISSING_BASE
-                && x.Qual <= BiomodalConstants.LOW_QUAL_CUTOFF, BiomodalConstants.LOW_QUAL_TRIM_PROPORTION_THRESHOLD));
+                && x.Qual <= LOW_QUAL_CUTOFF, BiomodalConstants.LOW_QUAL_TRIM_PROPORTION_THRESHOLD));
         suffixClippers.add(new SuffixClipper(x -> x.Base == BiomodalConstants.MISSING_BASE, BiomodalConstants.MISSING_BASE_TRIM_PROPORTION_THRESHOLD));
 
         List<BaseQualPair> trimmedSeq = seq.subList(BiomodalConstants.PREFIX_TRIM_LENGTH, seq.size());
@@ -616,5 +617,46 @@ public class BiomodalCollapseUtil
         }
 
         return output.toString();
+    }
+
+    private static final int PAIRS_TO_CHECK_FOR_SWAP_DETECTION = 10_000;
+
+    public static boolean isSwappedR1R2(final BufferedReader fastq1Reader, final BufferedReader fastq2Reader)
+    {
+        int cSeq1Count = 0;
+        int gSeq1Count = 0;
+        int cSeq2Count = 0;
+        int gSeq2Count = 0;
+
+        SynchronizedPairedFastqReader fastqPairReader =
+                new SynchronizedPairedFastqReader(fastq1Reader, fastq2Reader, PAIRS_TO_CHECK_FOR_SWAP_DETECTION);
+
+        Pair<FastqRecord, FastqRecord> fastqPair;
+        while((fastqPair = fastqPairReader.getNext()) != null)
+        {
+            FastqRecord fastq1 = fastqPair.getLeft();
+            FastqRecord fastq2 = fastqPair.getRight();
+
+            int trimmedLength = min(fastq1.getReadLength(), fastq2.getReadLength());
+
+            List<BaseQualPair> seq1 = fastqToSeq(fastq1, 0, trimmedLength - 1);
+            List<BaseQualPair> seq2 = fastqToSeq(fastq2, 0, trimmedLength - 1);
+            for(int i = 0; i < trimmedLength; i++)
+            {
+                byte base1 = seq1.get(i).Base;
+                byte base2 = seq2.get(i).Base;
+                if(base1 == (byte) 'C')
+                    cSeq1Count++;
+                else if(base1 == (byte) 'G')
+                    gSeq1Count++;
+
+                if(base2 == (byte) 'C')
+                    cSeq2Count++;
+                else if(base2 == (byte) 'G')
+                    gSeq2Count++;
+            }
+        }
+
+        return cSeq1Count > gSeq1Count && gSeq2Count > cSeq2Count;
     }
 }

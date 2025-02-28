@@ -73,7 +73,7 @@ public class CnDataLoader
     public final Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mCnJcnCalcs.getSvJcnCalcMap(); }
     public final List<LohEvent> getLohData() { return mLohEventData; }
     public final List<HomLossEvent> getHomLossData() { return mHomLossData; }
-    public final Map<String, TelomereCentromereCnData> getChrTeleCentroData() { return mChrEndsCNMap; }
+    public final Map<String,TelomereCentromereCnData> getChrTeleCentroData() { return mChrEndsCNMap; }
     public final Map<String,List<SvCNData>> getChrCnDataMap() { return mChrCnDataMap; }
     public final Map<Integer,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
     public final PurityContext getPurityContext() { return mPurityContext; }

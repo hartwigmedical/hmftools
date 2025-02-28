@@ -46,7 +46,7 @@ import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -211,7 +211,7 @@ public class SyntheticVcfWriter
                 .build();
 
         VersionInfo version = fromAppName(APP_NAME);
-        VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
+        VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId));
 
         // CLEAN-UP: something needs to set the tri-nuc, MH and Repeat headers and values if necessary
         // mRefContextEnrichment.appendHeader(header);

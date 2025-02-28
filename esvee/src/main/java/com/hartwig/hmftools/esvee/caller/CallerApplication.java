@@ -17,12 +17,14 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRE
 import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.errorprone.annotations.Var;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -68,10 +70,17 @@ public class CallerApplication
         mPonCache = new PonCache(configBuilder);
         mHotspotCache = new HotspotCache(configBuilder);
 
-        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId());
+        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId(), mConfig.OutputId);
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId(), mConfig.OutputId);
+
+        if(!Files.exists(Paths.get(fragLengthFilename)) || !Files.exists(Paths.get(discStatsFilename)))
+        {
+            SV_LOGGER.error("missing input files: disc-stats and frag-lengths", discStatsFilename, fragLengthFilename);
+            System.exit(1);
+        }
+
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
-        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId());
         DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -122,7 +131,7 @@ public class CallerApplication
 
         SV_LOGGER.info("sample({}) processing VCF({})", mConfig.fileSampleId(), vcfFile);
 
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.TumorId);
 
         if((mConfig.hasTumor() && genotypeIds.TumorOrdinal < 0) || (mConfig.hasReference() && genotypeIds.ReferenceOrdinal < 0))
         {
@@ -279,7 +288,7 @@ public class CallerApplication
 
         if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
         {
-            SV_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
+            SV_LOGGER.debug("sample({}) processed {} variants", mConfig.TumorId, mProcessedVariants);
         }
 
         if(mConfig.ManualRefDepth > 0)

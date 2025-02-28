@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
@@ -74,6 +74,7 @@ public class GermlineDisruptions
     private final Set<SvVarData> mReportableSgls;
 
     private static final int MAX_DELETE_LENGTH = 3000000;
+    private static final int MAX_PON_COUNT = 3;
     private static final int MAX_SGL_MAPPED_LENGTH = 500000;
     private static final String FILTER_PSEUDOGENE = "PSEUDOGENE";
 
@@ -215,13 +216,13 @@ public class GermlineDisruptions
             {
                 posStart = mapping.Position;
                 posEnd = breakendStart.position();
-                impliedType = mapping.Orientation == POS_ORIENT ? DEL : DUP;
+                impliedType = mapping.Orientation == ORIENT_FWD ? DEL : DUP;
             }
             else
             {
                 posStart = breakendStart.position();
                 posEnd = mapping.Position;
-                impliedType = breakendStart.orientation() == POS_ORIENT ? DEL : DUP;
+                impliedType = breakendStart.orientation() == ORIENT_FWD ? DEL : DUP;
             }
 
             if(abs(mapping.Position - breakendStart.position()) > MAX_SGL_MAPPED_LENGTH)
@@ -377,7 +378,7 @@ public class GermlineDisruptions
             StructuralVariantData svData = var.getSvData();
             SvCluster cluster = var.getCluster();
 
-            int ponCount = getPonCount(var);
+            int ponCount = var.getSvData().ponCount();
 
             Set<String> allFilters = Sets.newHashSet(svData.filter());
             String geneName = "";
@@ -403,7 +404,7 @@ public class GermlineDisruptions
                     allFilters.add(FILTER_PSEUDOGENE);
                 }
 
-                boolean isUpstream = (var.orientation(disruptionData.IsStart) == POS_ORIENT) == (gene.forwardStrand());
+                boolean isUpstream = (var.orientation(disruptionData.IsStart) == ORIENT_FWD) == (gene.forwardStrand());
 
                 ImmutableLinxBreakend.Builder builder = ImmutableLinxBreakend.builder()
                         .id(breakendId++)
@@ -527,6 +528,9 @@ public class GermlineDisruptions
         if(!var.getSvData().filter().equals(PASS))
             return false;
 
+        if(var.getSvData().ponCount() > MAX_PON_COUNT)
+            return false;
+
         DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
 
         if(driverGene == null)
@@ -559,10 +563,5 @@ public class GermlineDisruptions
 
         // a clustered DEL or DUP is also reportable
         return var.type() == DEL || var.type() == DUP;
-    }
-
-    private int getPonCount(final SvVarData var)
-    {
-        return var.getSvData().filter().equals(PON_FILTER_PON) ? var.getSvData().ponCount() : 0;
     }
 }

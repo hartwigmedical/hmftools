@@ -93,7 +93,6 @@ public class UnmappedRegions
         catch(IOException e)
         {
             LOGGER.error("failed to read high-depth regions file {}: {}", filename, e.toString());
-            System.exit(1);
             return null;
         }
     }

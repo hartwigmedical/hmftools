@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_LEVEL;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.purple.PurpleConfig;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SomaticVariantCache
 {
@@ -25,6 +27,7 @@ public class SomaticVariantCache
 
     private VCFHeader mVcfHeader;
     private GenotypeIds mGenotypeIds;
+    private double mTincLevel;
 
     // counts for plot & chart down-sampling
     private int mIndelCount;
@@ -39,6 +42,7 @@ public class SomaticVariantCache
         mSnpCount = 0;
         mVcfHeader = null;
         mGenotypeIds = null;
+        mTincLevel = 0;
     }
 
     public boolean hasData() { return mVcfHeader != null; }
@@ -47,6 +51,7 @@ public class SomaticVariantCache
 
     public int snpCount() { return mSnpCount; }
     public int indelCount() { return mIndelCount; }
+    public double tincLevel() { return mTincLevel; }
 
     public void loadSomatics(final String somaticVcf, final ListMultimap<Chromosome,VariantHotspot> somaticHotspots)
     {
@@ -57,6 +62,9 @@ public class SomaticVariantCache
 
         VcfFileReader vcfReader = new VcfFileReader(somaticVcf);
         mVcfHeader = vcfReader.vcfHeader();
+
+        VCFHeaderLine tincHeader = mVcfHeader.getMetaDataLine(TINC_LEVEL);
+        mTincLevel = tincHeader != null ? Double.parseDouble(tincHeader.toString()) : 0;
 
         mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, mConfig.ReferenceId, mConfig.TumorId);
 

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.loadDriverGenes;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
@@ -26,6 +28,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.linx.WriteType.STANDARD_TYPES;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.util.Arrays;
@@ -95,7 +98,6 @@ public class LinxConfig
     // global Linx logger
     public static final Logger LNX_LOGGER = LogManager.getLogger(LinxConfig.class);
 
-    // TODO: set by config, try to only use from Linx Config or pass where required
     public static RefGenomeVersion REF_GENOME_VERSION = V37;
 
     public LinxConfig(final ConfigBuilder configBuilder)
@@ -148,7 +150,7 @@ public class LinxConfig
         Output = new LinxOutput(configBuilder, isSingleSample() && !IsGermline);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
-        REF_GENOME_VERSION = RefGenVersion; // see TODO above
+        REF_GENOME_VERSION = RefGenVersion;
 
         ProximityDistance = configBuilder.getInteger(CLUSTER_BASE_DISTANCE);
 
@@ -255,7 +257,8 @@ public class LinxConfig
         configBuilder.addConfigItem(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addConfigItem(RefGenomeVersion.REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
+        addRefGenomeVersion(configBuilder);
+
         configBuilder.addConfigItem(VCF_FILE, "Path to the PURPLE structural variant VCF file");
         configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, false, DRIVER_GENE_PANEL_OPTION_DESC);
         configBuilder.addPath(LINE_ELEMENT_FILE, false, "Line elements file");

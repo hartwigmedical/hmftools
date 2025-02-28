@@ -40,8 +40,6 @@ public class TargetRegionsData
 
     private boolean mIsValid;
 
-    private static final String CODING_REGION_ID = "CODING";
-
     public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A","HLA-B","HLA-C","PIM1","BCL2");
 
     // target-region TML, TMB and MSI-Indels

@@ -19,7 +19,7 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
     install("copynumber")
 ```
 
-AMBER requires Java 11+ to be installed.
+AMBER requires Java 17+ to be installed.
 
 ## Paired Normal/Tumor Mode
 This is the default and recommended mode.
@@ -130,11 +130,19 @@ When using paired reference/tumor bams, AMBER confirms these sites as heterozygo
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
 ### Contamination
-The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage.  It can only be run in Normal/Tumor mode as it works by analysing evidence in the tumor for heterozygosity at high confidence homozygous reference sites in the normal.  AMBER first detects presence of contamination and then estimates a contamination rate.
+The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage.  It can only be run in Normal/Tumor mode as it works by analysing evidence in the tumor for heterozygosity at corresponding high confidence homozygous reference sites in the normal.  AMBER first detects presence of contamination and then estimates a contamination rate.
 
 **Detect contamination**
 
-AMBER first gathers high confidence homozygous ref sites from the normal requiring at least depth 7, no read supporting the alt at that site.   The sample is considered contaminated if there are at least 2000 sites with 3 or more reads support, else contamination is set to 0.
+AMBER first gathers high confidence homozygous ref sites from the normal sample – each site requires at least 7 reads supporting the REF and 0 reads supporting the ALT. The tumor sample is considered contaminated if, within these corresponding sites, 
+
+- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads is greater than or equals to 3% of the total number of heterozygous sites
+  
+OR
+
+- The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT support reads with VAF below 5% is greater than or equals to 0.2% of the total number of heterozygous sites
+
+otherwise contamination is set to 0.
 
 **Determine contamination rate**
 

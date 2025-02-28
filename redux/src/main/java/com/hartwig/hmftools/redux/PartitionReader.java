@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.redux;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
+import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
@@ -24,20 +24,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.Statistics;
+import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -66,23 +69,26 @@ public class PartitionReader
     private int mNextLogReadCount;
     private int mProcessedReads;
 
-    // for SBX preprocessing
-    private final static int SBX_REF_BASE_BUFFER_START = 2_000;
-    private final static int SBX_REF_BASE_BUFFER_END = 10_000;
-    private byte[] mRefBases;
-    private int mRefBasesStart;
-
     public PartitionReader(final ReduxConfig config, final BamReader bamReader)
     {
         mConfig = config;
         mBamReader = bamReader;
         mReadUnmapper = mConfig.UnmapRegions;
 
-        mReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.Sequencing);
+        if(config.Sequencing == ILLUMINA)
+        {
+            mReadCache = new ReadCache(
+                    ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+        }
+        else
+        {
+            mReadCache = new ReadCache(3 * mConfig.readLength(),
+                    2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+        }
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
-        mConsensusReads = new ConsensusReads(config.RefGenome, config.Sequencing, mStats.ConsensusStats);
+        mConsensusReads = new ConsensusReads(config.RefGenome, mConfig.Sequencing, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mCurrentRegion = null;
@@ -94,9 +100,6 @@ public class PartitionReader
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
         mPcProcessDuplicates = new PerformanceCounter("ProcessDuplicates");
-
-        mRefBases = null;
-        mRefBasesStart = 0;
     }
 
     public List<PerformanceCounter> perfCounters()
@@ -136,26 +139,6 @@ public class PartitionReader
         setUnmappedRegions();
 
         mBamWriter.initialiseRegion(region.Chromosome, region.start());
-
-        if(mConfig.Sequencing == SBX)
-        {
-            mRefBases = null;
-            checkRefBases(region.start());
-        }
-    }
-
-    private void checkRefBases(int refPositionStart)
-    {
-        if(mConfig.Sequencing != SBX)
-            return;
-
-        if(mRefBases != null && refPositionStart < mRefBasesStart + SBX_REF_BASE_BUFFER_END)
-            return;
-
-        int chromosomeLength = mConfig.RefGenome.getChromosomeLength(mCurrentRegion.Chromosome);
-        mRefBasesStart = max(refPositionStart - SBX_REF_BASE_BUFFER_START, 1);
-        int refBaseEnd = min(mRefBasesStart + SBX_REF_BASE_BUFFER_END, chromosomeLength);
-        mRefBases = mConfig.RefGenome.getBases(mCurrentRegion.Chromosome, mRefBasesStart, refBaseEnd);
     }
 
     public void processRegion()
@@ -208,8 +191,26 @@ public class PartitionReader
     {
         if(mConfig.Sequencing == SBX)
         {
-            stripDuplexIndels(read, mRefBases, mRefBasesStart);
+            stripDuplexIndels(mConfig.RefGenome, read);
         }
+    }
+
+    private void postProcessSingleReads(final List<ReadInfo> singleReads)
+    {
+        if(mConfig.Sequencing == SBX)
+        {
+            for(ReadInfo readInfo : singleReads)
+                fillQualZeroMismatchesWithRef(mConfig.RefGenome, readInfo.read());
+        }
+    }
+
+    private void postProcessPrimaryRead(@Nullable SAMRecord primaryRead)
+    {
+        if(primaryRead == null)
+            return;
+
+        if(mConfig.Sequencing == SBX)
+            fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -282,8 +283,6 @@ public class PartitionReader
                 }
             }
         }
-
-        checkRefBases(readStart);
 
         preprocessSamRecord(read);
 
@@ -362,11 +361,17 @@ public class PartitionReader
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
             if(mConfig.FormConsensus)
+            {
+                duplicateGroup.setPCRClusterCount(mConfig.Sequencing);
                 duplicateGroup.formConsensusRead(mConsensusReads);
+                mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
+            }
 
+            postProcessPrimaryRead(duplicateGroup.primaryRead());
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 
+        postProcessSingleReads(fragmentCoordReads.SingleReads);
         mBamWriter.writeNonDuplicateReads(fragmentCoordReads.SingleReads);
 
         mStats.addNonDuplicateCounts(fragmentCoordReads.SingleReads.size());
@@ -416,7 +421,7 @@ public class PartitionReader
         mPcProcessDuplicates.stop();
     }
 
-    private boolean isAltContigRegion() { return PartitionInfo.isAltRegionContig(mCurrentRegion.Chromosome); }
+    private boolean isAltContigRegion() { return Chromosome.isAltRegionContig(mCurrentRegion.Chromosome); }
 
     @VisibleForTesting
     public void setBamWriter(final BamWriter writer) { mBamWriter = writer; }

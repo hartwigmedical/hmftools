@@ -31,7 +31,7 @@ public final class PurpleSummaryData
     public static PurpleQC createQC(
             double contamination, final BestFit bestFit, final Gender amberGender, final Gender cobaltGender,
             final List<PurpleCopyNumber> copyNumbers, final List<GeneCopyNumber> geneCopyNumbers,
-            final Set<GermlineAberration> aberrations, int amberMeanDepth, int maxDeletedGenes)
+            final Set<GermlineAberration> aberrations, int amberMeanDepth, int maxDeletedGenes, double tincLevel)
     {
         boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleCopyNumber::svSupport);
 
@@ -43,7 +43,7 @@ public final class PurpleSummaryData
 
         Set<PurpleQCStatus> statusSet = PurpleQCStatus.calcStatus(
                 PurpleQCStatus.genderPass(amberGender, cobaltGender, aberrations),
-                unsupportedCopyNumberSegments, deletedGenes, bestFit.Fit.purity(), bestFit.Method, contamination, maxDeletedGenes);
+                unsupportedCopyNumberSegments, deletedGenes, bestFit.Fit.purity(), bestFit.Method, contamination, maxDeletedGenes, tincLevel);
 
         LohCalcData lohCalcData = LohCalcs.calcLohData(copyNumbers);
 
@@ -60,6 +60,7 @@ public final class PurpleSummaryData
                 .germlineAberrations(aberrations)
                 .amberMeanDepth(amberMeanDepth)
                 .lohPercent(lohCalcData.lohPercent())
+                .tincLevel(tincLevel)
                 .build();
     }
 

@@ -1,17 +1,8 @@
 package com.hartwig.hmftools.linx.utils;
 
-import static java.util.stream.Collectors.toList;
-
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.util.List;
 
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
@@ -53,7 +44,6 @@ public class StructuralVariantFile
 
         builder.type(type)
                 .filter(filterStr)
-                .imprecise(Boolean.parseBoolean(values[index++]))
                 .qualityScore(Double.parseDouble(values[index++]))
                 .event(values[index++])
                 .startTumorVariantFragmentCount(Integer.parseInt(values[index++]))
@@ -72,11 +62,6 @@ public class StructuralVariantFile
                 .inexactHomologyOffsetEnd(getIntValue(values[index++]))
                 .startLinkedBy(values[index++])
                 .endLinkedBy(values[index++])
-                .startRefContext(values[index++])
-                .endRefContext(values[index++])
-                .recovered(Boolean.parseBoolean(values[index++]))
-                .recoveryMethod(values[index++])
-                .recoveryFilter(values[index++])
                 .insertSequenceAlignments(values[index++])
                 .insertSequenceRepeatClass(values[index++])
                 .insertSequenceRepeatType(values[index++])

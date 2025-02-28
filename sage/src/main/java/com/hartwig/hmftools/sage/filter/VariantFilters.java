@@ -6,6 +6,9 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
+import static com.hartwig.hmftools.common.variant.VariantTier.LOW_CONFIDENCE;
+import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
@@ -40,9 +43,6 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_M
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
-import static com.hartwig.hmftools.sage.common.VariantTier.HOTSPOT;
-import static com.hartwig.hmftools.sage.common.VariantTier.LOW_CONFIDENCE;
-import static com.hartwig.hmftools.sage.common.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 
 import java.util.EnumSet;
@@ -55,7 +55,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -147,12 +147,12 @@ public class VariantFilters
         if(!enabled())
             return;
 
-        final VariantTier tier = variant.tier();
-        final SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(tier, mConfig);
+        VariantTier tier = variant.tier();
+        SoftFilterConfig softFilterConfig = getTieredSoftFilterConfig(tier, mConfig);
 
-        final Set<SoftFilter> variantFilters = variant.filters();
+        Set<SoftFilter> variantFilters = variant.filters();
 
-        final List<ReadContextCounter> refReadCounters = variant.referenceReadCounters();
+        List<ReadContextCounter> refReadCounters = variant.referenceReadCounters();
 
         // setting ref sample count to zero disables the tumor-germline filters
         int maxReferenceSamples = min(refReadCounters.size(), mConfig.ReferenceSampleCount);
@@ -263,7 +263,7 @@ public class VariantFilters
 
     private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return (tier == HOTSPOT || tier == VariantTier.PANEL)
+        return (tier == HOTSPOT || tier == PANEL)
                 && primaryTumor.isIndel() && !primaryTumor.useMsiErrorRate()
                 && primaryTumor.jitter().lengthened() + primaryTumor.jitter().shortened() == 0
                 && (double)primaryTumor.nonAltNmCountTotal() / (primaryTumor.depth() - primaryTumor.altSupport()) < 0.75;
@@ -572,20 +572,28 @@ public class VariantFilters
 
         int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.simpleAltMatches();
 
-        double maxGermlineVaf = config.MaxGermlineVaf;
-
         if(refCounter.isLongIndel())
         {
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
 
-        if(tier == PANEL && !refCounter.isInLongRepeat())
+        return aboveMaxGermlineVaf(
+                tier, refCounter.isInLongRepeat(), tumorVaf, adjustedRefAltCount, refCounter.averageAltRecalibratedBaseQuality(),
+                refCounter.readCounts().Total, config.MaxGermlineVaf);
+    }
+
+    public static boolean aboveMaxGermlineVaf(
+            final VariantTier tier, boolean isInLongRepeat,
+            double tumorVaf, int adjustedRefAltCount, double baseQualAvg, int refTotalReads, double maxGermlineVaf)
+    {
+        if(tumorVaf == 0)
+            return false; // will be handled in tumor filters
+
+        if(tier == PANEL && !isInLongRepeat)
         {
             maxGermlineVaf += PANEL_MAX_GERMLINE_VAF_BOOST;
             if(adjustedRefAltCount == 1)
             {
-                double baseQualAvg = refCounter.averageAltRecalibratedBaseQuality();
-
                 if(baseQualAvg < DEFAULT_MIN_AVG_BASE_QUALITY)
                 {
                     double tumorLimit = tumorVaf / PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR;
@@ -594,39 +602,48 @@ public class VariantFilters
             }
         }
 
-        double adjustedRefVaf = adjustedRefAltCount / (double)refCounter.readCounts().Total;
+        double adjustedRefVaf = adjustedRefAltCount / (double)refTotalReads;
         return Doubles.greaterThan(adjustedRefVaf, maxGermlineVaf);
     }
 
     private static boolean aboveMaxGermlineRelativeQual(
             final SoftFilterConfig config, final ReadContextCounter refCounter, final ReadContextCounter primaryTumor)
     {
-        double tumorQual = primaryTumor.tumorQuality();
-        double refQual = refCounter.tumorQuality();
+        return aboveMaxGermlineRelativeQual(config, primaryTumor.tumorQuality(), refCounter.tumorQuality());
+    }
 
+    public static boolean aboveMaxGermlineRelativeQual(final SoftFilterConfig config, double tumorQual, double refQual)
+    {
         if(tumorQual == 0)
             return false; // will be handled in tumor filters
 
         double refTumorQualRatio = refQual / tumorQual;
+
         return Doubles.greaterThan(refTumorQualRatio, config.MaxGermlineRelativeQual);
     }
 
     private static boolean aboveMaxMnvIndelGermlineAltSupport(final VariantTier tier, final ReadContextCounter refCounter)
     {
+        return aboveMaxMnvIndelGermlineAltSupport(
+                tier, refCounter.variant().isMNV(), refCounter.isLongInsert(), refCounter.depth(), refCounter.altSupport());
+    }
+
+    public static boolean aboveMaxMnvIndelGermlineAltSupport(
+            final VariantTier tier, boolean isMnv, boolean isLongInsert, int refDepth, int refAltSupport)
+    {
         if(tier == HOTSPOT)
             return false;
 
-        if(refCounter.variant().isMNV() || refCounter.isLongInsert())
+        if(isMnv || isLongInsert)
         {
-            double depth = refCounter.depth();
-            double altSupportPerc = depth > 0 ? refCounter.altSupport() / depth : 0;
+            double altSupportPerc = refDepth > 0 ? refAltSupport / refDepth : 0;
             return altSupportPerc >= MAX_INDEL_GERMLINE_ALT_SUPPORT;
         }
 
         return false;
     }
 
-    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(HOTSPOT, VariantTier.PANEL);
+    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(HOTSPOT, PANEL);
 
     public static boolean checkFinalFilters(
             final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config, boolean panelOnly)

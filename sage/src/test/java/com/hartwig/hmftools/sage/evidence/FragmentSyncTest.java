@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadCounter;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
-import static com.hartwig.hmftools.sage.sync.CombinedSyncData.formFragmentRead;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -19,8 +18,6 @@ import static org.junit.Assert.assertNotNull;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.sync.CombinedSyncData;
 import com.hartwig.hmftools.sage.sync.FragmentData;
@@ -30,7 +27,6 @@ import com.hartwig.hmftools.sage.sync.FragmentSyncType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentSyncTest

@@ -48,36 +48,34 @@ public enum WriteType
         return false;
     }
 
-    private static final String ALL = "ALL";
+    private static final String ALL = "ASSEMBLY_ALL";
+    private static final String STANDARD_TYPES = "ASSEMBLY_STANDARD";
 
-    public static List<WriteType> fromConfig(final String configStr)
+    public static List<WriteType> parseConfigStr(final String configStr)
     {
+        if(configStr == null || configStr.isEmpty() || configStr.contains(STANDARD_TYPES))
+            return List.of(VCF, BREAKEND, JUNC_ASSEMBLY);
+
         List<WriteType> writeTypes = Lists.newArrayList();
 
-        if(configStr != null)
+        if(configStr.equals(ALL))
         {
-            if(configStr.equals(WriteType.ALL))
-            {
-                Arrays.stream(WriteType.values()).filter(x -> x != ASSEMBLY_READ).forEach(x -> writeTypes.add(x));
-            }
-            else
-            {
-                String[] writeTypeValues = configStr.split(ITEM_DELIM, -1);
-
-                for(String writeType : writeTypeValues)
-                {
-                    // backwards compatibility
-                    if(writeType.equals("ALIGNMENTS"))
-                        writeTypes.add(ALIGNMENT);
-                    else
-                        writeTypes.add(WriteType.valueOf(writeType));
-                }
-            }
+            Arrays.stream(WriteType.values()).forEach(x -> writeTypes.add(x));
         }
         else
         {
-            writeTypes.add(VCF);
-            // writeTypes.add(ASSEMBLY_BAM);
+            String[] writeTypesArray = configStr.split(ITEM_DELIM, -1);
+
+            for(String writeTypeStr : writeTypesArray)
+            {
+                try
+                {
+                    writeTypes.add(WriteType.valueOf(writeTypeStr));
+                }
+                catch(Exception e)
+                {
+                } // invalid or may be a prep write type
+            }
         }
 
         return writeTypes;

@@ -383,7 +383,7 @@ public class ChainLinkAllocator
 
             if(!proposedLinks.isValid())
             {
-                LNX_LOGGER.error("cluster({}) skipping invalid proposed links: {}", mClusterId, proposedLinks.toString());
+                LNX_LOGGER.debug("cluster({}) skipping invalid proposed links: {}", mClusterId, proposedLinks.toString());
                 continue;
             }
 

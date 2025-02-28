@@ -23,7 +23,10 @@ public class VcfWriter
     {
         mTumorIds = tumorIds;
         mReferenceIds = referenceIds;
-        mVcfFile = new VariantVCF(refGenome, config, tumorIds, referenceIds);
+
+        List<String> sampleIds = Lists.newArrayList(referenceIds);
+        sampleIds.addAll(tumorIds);
+        mVcfFile = new VariantVCF(refGenome, config.Version, sampleIds, config.OutputFile);
         mCompletedVariants = Lists.newArrayList();
         mLastWrittenIndex = -1;
     }

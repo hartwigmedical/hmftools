@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.basequal.jitter;
 
 import java.util.List;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // Simple class to select type of microsatellite based on the repeat unit

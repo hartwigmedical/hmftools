@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.types;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
 public class DbPair
 {
@@ -12,7 +12,7 @@ public class DbPair
     public DbPair(final SvBreakend breakend1, final SvBreakend breakend2)
     {
         if(breakend1.position() < breakend2.position()
-        || (breakend1.position() == breakend2.position() && breakend1.orientation() == POS_ORIENT))
+        || (breakend1.position() == breakend2.position() && breakend1.orientation() == ORIENT_FWD))
         {
             mLowerBreakend = breakend1;
             mUpperBreakend = breakend2;
@@ -26,7 +26,7 @@ public class DbPair
         // exact base is considered a 1 base overlap, 1 base apart a zero-length DB
         int length = mUpperBreakend.position() - mLowerBreakend.position() - 1;
 
-        if(mLowerBreakend.orientation() == POS_ORIENT)
+        if(mLowerBreakend.orientation() == ORIENT_FWD)
         {
             mLinkLength = length;
         }

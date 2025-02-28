@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.esvee.prep.types;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -122,7 +122,7 @@ public class PrepRead
             MatePosStart = 0;
         }
 
-        mFragmentInsertSize = abs(record.getInferredInsertSize());
+        mFragmentInsertSize = inferredInsertSizeAbs(record);
         mSupplementaryAlignment = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
         mCheckedIndelCoords = false;
@@ -161,6 +161,7 @@ public class PrepRead
 
     public boolean hasMate() { return MatePosStart > 0; }
     public boolean isMateUnmapped() { return (mRecord.getFlags() & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
+    public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !isMateUnmapped(); }
 
     public boolean hasFlag(final SAMFlag flag) { return (mRecord.getFlags() & flag.intValue()) != 0; }
 

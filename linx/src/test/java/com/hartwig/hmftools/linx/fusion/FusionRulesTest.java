@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
 import static com.hartwig.hmftools.linx.gene.BreakendTransData.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
@@ -63,13 +63,13 @@ public class FusionRulesTest
         String geneId = "ENSG0001";
 
         // SV breakend positions won't impact fusion determination since transcripts are created manually
-        BreakendGeneData gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, ORIENT_FWD);
 
         // one on the negative strand
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0003";
 
-        BreakendGeneData gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, ORIENT_FWD);
 
         int transId1 = 1;
 
@@ -136,7 +136,7 @@ public class FusionRulesTest
                 gene2, transId2, false, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_0, 10, getCodingBases(codingStart, codingEnd));
 
-        gene1.setPositionalData(CHR_1, 260, POS_ORIENT);
+        gene1.setPositionalData(CHR_1, 260, ORIENT_FWD);
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_NONE, getCodingBases(codingStart, codingEnd), getCodingBases(codingStart, codingEnd));
@@ -154,7 +154,7 @@ public class FusionRulesTest
         assertNull(checkFusionLogic(trans1, trans2, params));
 
         // down single exon
-        gene1.setPositionalData(CHR_1, 40, POS_ORIENT);
+        gene1.setPositionalData(CHR_1, 40, ORIENT_FWD);
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
@@ -192,7 +192,7 @@ public class FusionRulesTest
         assertNull(checkFusionLogic(trans1, trans2, params));
 
         // unmatched phasing intronic
-        gene1.setPositionalData(CHR_1, 110, POS_ORIENT);
+        gene1.setPositionalData(CHR_1, 110, ORIENT_FWD);
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_NONE, 10, getCodingBases(codingStart, codingEnd));
@@ -208,7 +208,7 @@ public class FusionRulesTest
         assertNull(checkFusionLogic(trans1, trans2, params));
 
         // pre-coding to pre-coding same gene
-        gene1.setPositionalData(CHR_1, 40, POS_ORIENT);
+        gene1.setPositionalData(CHR_1, 40, ORIENT_FWD);
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 450, codingStart, codingEnd, "",
                 1, 2, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
@@ -226,12 +226,12 @@ public class FusionRulesTest
         // upstream coding bases - 10, phase = 0, will need the downstream phase to be 1
 
         // unmatched phasing exon to exon
-        gene1.setPositionalData(CHR_1, 110, POS_ORIENT);
+        gene1.setPositionalData(CHR_1, 110, ORIENT_FWD);
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
                 2, 2, PHASE_1, PHASE_2, 10, getCodingBases(codingStart, codingEnd));
 
-        gene2.setPositionalData(CHR_1, 190, POS_ORIENT);
+        gene2.setPositionalData(CHR_1, 190, ORIENT_FWD);
         trans2 = createTranscript(
                 gene2, transId2, true, 50, 250, codingStart, codingEnd, "",
                 2, 2, PHASE_0, PHASE_2, 10, getCodingBases(codingStart, codingEnd));
@@ -255,12 +255,12 @@ public class FusionRulesTest
         assertNotNull(checkFusionLogic(trans1, trans2, params));
 
         // exon to exon but both pre-coding
-        gene1.setPositionalData(CHR_1, 90, POS_ORIENT);
+        gene1.setPositionalData(CHR_1, 90, ORIENT_FWD);
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
                 2, 2, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
 
-        gene2.setPositionalData(CHR_1, 210, POS_ORIENT);
+        gene2.setPositionalData(CHR_1, 210, ORIENT_FWD);
         trans2 = createTranscript(
                 gene2, transId2, true, 50, 250, codingStart, codingEnd, "",
                 2, 2, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
@@ -306,13 +306,13 @@ public class FusionRulesTest
         String geneId = "ENSG0001";
 
         // SV breakend positions won't impact fusion determination since transcripts are created manually
-        BreakendGeneData gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, ORIENT_FWD);
 
         // one on the negative strand
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0003";
 
-        BreakendGeneData gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, ORIENT_FWD);
 
         int transId1 = 1;
 
@@ -365,7 +365,7 @@ public class FusionRulesTest
         assertEquals(1, fusion.getExonsSkipped(false));
 
         // check 5' gene fusing from the 3'UTR region
-        gene1.setPositionalData(CHR_1, 210, POS_ORIENT);
+        gene1.setPositionalData(CHR_1, 210, ORIENT_FWD);
         transUp = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
                 6, 7, PHASE_NONE, 100, 100);
@@ -445,12 +445,12 @@ public class FusionRulesTest
 
         // upstream exonic to downstream intronic - will use the preceding exon and exon's end phase to fuse
         List<BreakendGeneData> upGenes = Lists.newArrayList();
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(CHR_1, 701, POS_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 701, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, 701, ORIENT_FWD);
 
         List<BreakendGeneData> downGenes = Lists.newArrayList();
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(CHR_1, 10650, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10650, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, 10650, ORIENT_REV);
 
         tester.FusionAnalyser.getFusionFinder().setFusionParams(false, true, false);
 
@@ -472,12 +472,12 @@ public class FusionRulesTest
 
         // now an exonic fusion
         upGenes.clear();
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(CHR_1, 701, POS_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 701, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, 701, ORIENT_FWD);
 
         downGenes.clear();
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10705, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(CHR_1, 10705, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10705, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, 10705, ORIENT_REV);
 
         fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 

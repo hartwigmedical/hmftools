@@ -8,7 +8,7 @@ If a tumor-normal pair is provided, TEAL will also call somatic telomeric rearra
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links).
 
-TEAL requires Java 11+ to be installed.
+TEAL requires Java 17+ to be installed.
 
 ## Using TEAL with HMF pipeline
 We can run TEAL using output files from HMF pipeline tools.

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple.plot;
 
 import static com.hartwig.hmftools.purple.region.ObservedRegionFactory.EXCLUDED_IMMUNE_REGIONS;
-import com.hartwig.hmftools.common.region.BaseRegion;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,13 +48,15 @@ public class CircosCharts
     private String mBaseCircosTumorSample;
     private String mBaseCircosReferenceSample;
 
-    List<AmberBAF> bafsForVis = Lists.newArrayList();
+    private final List<AmberBAF> mBafsForVis;
 
     public CircosCharts(final PurpleConfig configSupplier, final ExecutorService executorService, boolean isHg38)
     {
         mConfig = configSupplier.Charting;
         mExecutorService = executorService;
         mIsHg38 = isHg38;
+
+        mBafsForVis = Lists.newArrayList();
     }
 
     public void write(
@@ -92,7 +93,7 @@ public class CircosCharts
     }
 
     @Nullable
-    private Integer generateCircos(final String executable, final String type) throws IOException, InterruptedException
+    private Integer generateCircos(final String executable, final String type) throws Exception
     {
         CircosExecution execution = new CircosExecution(executable);
 
@@ -145,11 +146,11 @@ public class CircosCharts
         {
             if(!(EXCLUDED_IMMUNE_REGIONS.stream().anyMatch(x -> x.containsPosition(baf.Chromosome, baf.position()))))
             {
-                bafsForVis.add(baf);
+                mBafsForVis.add(baf);
             }
         }
         
-        CircosFileWriter.writePositions(mBaseCircosTumorSample + ".baf.circos", bafsForVis, x -> x.TumorBAF);
+        CircosFileWriter.writePositions(mBaseCircosTumorSample + ".baf.circos", mBafsForVis, x -> x.TumorBAF);
     }
 
     private void writeCopyNumbers(final List<PurpleCopyNumber> copyNumbers) throws IOException

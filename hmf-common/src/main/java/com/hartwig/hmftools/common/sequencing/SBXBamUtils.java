@@ -3,19 +3,31 @@ package com.hartwig.hmftools.common.sequencing;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
+import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.replaceXwithM;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -25,6 +37,9 @@ import htsjdk.samtools.SAMRecord;
 
 public class SBXBamUtils
 {
+    public static byte INVALID_BASE_QUAL = -1;
+    public static int INVALID_POSITION = -1;
+
     public static int DUPLEX_QUAL = 93;
     public static int SIMPLEX_QUAL = 18;
     public static int DUPLEX_ERROR_QUAL = 0;
@@ -50,12 +65,10 @@ public class SBXBamUtils
         return intString.toString();
     }
 
-    public static List<Boolean> getDuplexIndels(final SAMRecord record)
+    public static List<Boolean> getDuplexIndels(final String ycTagStr)
     {
         List<Boolean> duplexIndels = Lists.newArrayList();
-
-        String ycTagStr = record.getStringAttribute("YC");
-        String[] ycTagComponents = ycTagStr.split("[-]");
+        String[] ycTagComponents = ycTagStr.split("-");
 
         int simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
         String duplexRegion = ycTagComponents[1];
@@ -100,10 +113,143 @@ public class SBXBamUtils
         return duplexIndels;
     }
 
-    private static byte INVALID_BASE_QUAL = -1;
-    private static int INVALID_POSITION = -1;
+    public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
+    {
+        if(record.getReadUnmappedFlag())
+        {
+            return;
+        }
 
-    private static class AnnotatedBase
+        String chromosome = record.getReferenceName();
+        String ycTagStr = record.getStringAttribute("YC");
+        if(ycTagStr == null)
+        {
+            throw new IllegalArgumentException(format("Read must have YC tag: %s", record.getSAMString()));
+        }
+
+        boolean isForward = !record.getReadNegativeStrandFlag();
+
+        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
+        if(!isForward)
+        {
+            Collections.reverse(duplexIndels);
+        }
+
+        int readLeftHardClipLength = leftHardClipLength(record);
+        int readRightHardClipLength = rightHardClipLength(record);
+        duplexIndels = duplexIndels.subList(readLeftHardClipLength, duplexIndels.size() - readRightHardClipLength);
+
+        boolean hasDuplexIndels = false;
+        for(boolean duplexIndel : duplexIndels)
+        {
+            hasDuplexIndels |= duplexIndel;
+        }
+
+        if(!hasDuplexIndels)
+        {
+            return;
+        }
+
+        List<AnnotatedBase> annotatedBases = getAnnotatedBases(record, duplexIndels);
+        boolean readModified = processAnnotatedBases(refGenome, chromosome, annotatedBases, isForward);
+        if(!readModified)
+        {
+            return;
+        }
+
+        int newAlignmentStart = INVALID_POSITION;
+        StringBuilder newReadString = new StringBuilder();
+        StringBuilder newBaseQualString = new StringBuilder();
+        List<CigarOperator> newOps = Lists.newArrayList();
+        for(AnnotatedBase annotatedBase : annotatedBases)
+        {
+            if(annotatedBase.deleted())
+            {
+                continue;
+            }
+
+            newOps.add(annotatedBase.Op);
+
+            if(!annotatedBase.isReadBase())
+            {
+                continue;
+            }
+
+            if(newAlignmentStart == INVALID_POSITION && !annotatedBase.Op.isClipping())
+            {
+                newAlignmentStart = annotatedBase.RefPos;
+            }
+
+            newReadString.append((char) annotatedBase.ReadBase);
+            newBaseQualString.append(phredToFastq(annotatedBase.qual()));
+        }
+
+        if(newAlignmentStart == INVALID_POSITION)
+        {
+            return;
+        }
+
+        List<CigarElement> newCigarElements = Lists.newArrayList();
+        if(readLeftHardClipLength > 0)
+            newCigarElements.add(new CigarElement(readLeftHardClipLength, H));
+
+        newCigarElements.addAll(collapseCigarOps(newOps));
+
+        if(readRightHardClipLength > 0)
+            newCigarElements.add(new CigarElement(readRightHardClipLength, H));
+
+        int oldInsertGaps = 0;
+        int oldTotalInsertLength = 0;
+        for(CigarElement el : record.getCigar().getCigarElements())
+        {
+            if(el.getOperator() != I)
+            {
+                continue;
+            }
+
+            oldInsertGaps++;
+            oldTotalInsertLength += el.getLength();
+        }
+
+        int newInsertGaps = 0;
+        int newTotalInsertLength = 0;
+        for(CigarElement el : newCigarElements)
+        {
+            if(el.getOperator() != I)
+            {
+                continue;
+            }
+
+            newInsertGaps++;
+            newTotalInsertLength += el.getLength();
+        }
+
+        int nmDiff = newTotalInsertLength - oldTotalInsertLength;
+        Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        if(oldNumMutations != null && nmDiff != 0)
+        {
+            int newNumMutations = oldNumMutations + nmDiff;
+            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+        }
+
+        int oldInsertAlignmentScore = -BWA_GAP_OPEN_PENALTY * oldInsertGaps - BWA_GAP_EXTEND_PENALTY * oldTotalInsertLength;
+        int newInsertAlignmentScore = -BWA_GAP_OPEN_PENALTY * newInsertGaps - BWA_GAP_EXTEND_PENALTY * newTotalInsertLength;
+        int alignmentScoreDiff = newInsertAlignmentScore - oldInsertAlignmentScore;
+        Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+        if(oldAlignmentScore != null && alignmentScoreDiff != 0)
+        {
+            int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
+        }
+
+        record.setReadString(newReadString.toString());
+        record.setBaseQualityString(newBaseQualString.toString());
+        record.setCigar(new Cigar(newCigarElements));
+        record.setAlignmentStart(newAlignmentStart);
+    }
+
+    @VisibleForTesting
+    public static class AnnotatedBase
     {
         public final int ReadIndex;
         public final int RefPos;
@@ -140,31 +286,57 @@ public class SBXBamUtils
             mQual = qual;
             return true;
         }
+
+        @Override
+        public boolean equals(final Object o)
+        {
+            if(this == o)
+            {
+                return true;
+            }
+
+            if(!(o instanceof AnnotatedBase))
+            {
+                return false;
+            }
+
+            final AnnotatedBase that = (AnnotatedBase) o;
+            return ReadIndex == that.ReadIndex && RefPos == that.RefPos && ReadBase == that.ReadBase && IsDuplexIndel == that.IsDuplexIndel
+                    && mQual == that.mQual && mDeleted == that.mDeleted && Op == that.Op;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = ReadIndex;
+            hash = 31 * hash + RefPos;
+            hash = 31 * hash + Op.hashCode();
+            hash = 31 * hash + (int) ReadBase;
+            hash = 31 * hash + (IsDuplexIndel ? 1 : 0);
+            hash = 31 * hash + (int) mQual;
+            hash = 31 * hash + (mDeleted ? 1 : 0);
+
+            return hash;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "AnnotatedBase{" +
+                    "ReadIndex=" + ReadIndex +
+                    ", RefPos=" + RefPos +
+                    ", Op=" + Op +
+                    ", ReadBase=" + ReadBase +
+                    ", IsDuplexIndel=" + IsDuplexIndel +
+                    ", mQual=" + mQual +
+                    ", mDeleted=" + mDeleted +
+                    '}';
+        }
     }
 
-    public static void stripDuplexIndels(final SAMRecord record, final byte[] refBases, final int refStart)
+    @VisibleForTesting
+    public static List<AnnotatedBase> getAnnotatedBases(final SAMRecord record, final List<Boolean> duplexIndels)
     {
-        if(record.getReadUnmappedFlag())
-            return;
-
-        boolean isForward = !record.getReadNegativeStrandFlag();
-
-        List<Boolean> duplexIndels = getDuplexIndels(record);
-        if(!isForward)
-            Collections.reverse(duplexIndels);
-
-        int readLeftHardClipLength = leftHardClipLength(record);
-        int readRightHardClipLength = rightHardClipLength(record);
-        duplexIndels = duplexIndels.subList(readLeftHardClipLength, duplexIndels.size() - readRightHardClipLength);
-
-        boolean hasDuplexIndels = false;
-        for(boolean duplexIndel : duplexIndels)
-            hasDuplexIndels |= duplexIndel;
-
-        if(!hasDuplexIndels)
-            return;
-
-        // annotate bases
         byte[] quals = record.getBaseQualities();
         byte[] bases = record.getReadBases();
         int readIndex = 0;
@@ -216,7 +388,14 @@ public class SBXBamUtils
                     el.getOperator().name(), record.getReferenceName(), record.getCigarString()));
         }
 
+        return annotatedBases;
+    }
 
+    @VisibleForTesting
+    public static boolean processAnnotatedBases(final RefGenomeInterface refGenome, final String chromosome,
+            final List<AnnotatedBase> annotatedBases, boolean isForward)
+    {
+        int chromosomeLength = refGenome.getChromosomeLength(chromosome);
         if(!isForward)
             Collections.reverse(annotatedBases);
 
@@ -300,19 +479,20 @@ public class SBXBamUtils
                 continue;
             }
 
-            int refIndex = startRefRepeatPos - refStart;
+            int refPos = startRefRepeatPos;
             repeatStrIndex = duplexIndelBases.length() - 1;
             int refRepeatLength = 0;
-            while(refIndex >= 0 && refIndex < refBases.length)
+            while(refPos >= 1 && refPos <= chromosomeLength)
             {
-                if(refBases[refIndex] != (byte) duplexIndelBases.charAt(repeatStrIndex))
+                byte refBase = refGenome.getBase(chromosome, refPos);
+                if(refBase != (byte) duplexIndelBases.charAt(repeatStrIndex))
                     break;
 
                 refRepeatLength++;
                 if(readRepeatLength <= refRepeatLength)
                     break;
 
-                refIndex += isForward ? -1 : 1;
+                refPos += isForward ? -1 : 1;
 
                 repeatStrIndex--;
                 if(repeatStrIndex < 0)
@@ -327,17 +507,22 @@ public class SBXBamUtils
 
             // trim bases
             int trimLength = min(readRepeatLength - refRepeatLength, duplexIndelBases.length());
-            int lastInsertIndex = INVALID_POSITION;
-            for(int j = readRepeatStart; j <= duplexIndelEnd; j++)
+            int insertTrimStart = INVALID_POSITION;
+            final int jStart = isForward ? readRepeatStart : duplexIndelEnd;
+            final int jInc = isForward ? 1 : -1;
+            for(int j = jStart; j >= readRepeatStart && j <= duplexIndelEnd; j += jInc)
             {
                 if(annotatedBases.get(j).Op == I)
-                    lastInsertIndex = j;
+                {
+                    insertTrimStart = j;
+                    break;
+                }
             }
 
             int trimCount = 0;
-            if(lastInsertIndex != INVALID_POSITION)
+            if(insertTrimStart != INVALID_POSITION)
             {
-                for(int j = lastInsertIndex; j >= readRepeatStart && trimCount < trimLength; j--)
+                for(int j = insertTrimStart; j >= readRepeatStart && j <= duplexIndelEnd && trimCount < trimLength; j += jInc)
                 {
                     if(!annotatedBases.get(j).isReadBase())
                         continue;
@@ -351,9 +536,9 @@ public class SBXBamUtils
                 }
             }
 
-            // ensure last duplexIndelBases.length() untrimmed bases have qual 0
+            // ensure first duplexIndelBases.length() left-aligned untrimmed bases have qual 0
             basesSeen = 0;
-            for(int j = duplexIndelEnd; j >= readRepeatStart && basesSeen < duplexIndelBases.length(); j--)
+            for(int j = jStart; j >= readRepeatStart && j <= duplexIndelEnd && basesSeen < duplexIndelBases.length(); j += jInc)
             {
                 if(!annotatedBases.get(j).deleted() && annotatedBases.get(j).isReadBase())
                 {
@@ -365,71 +550,72 @@ public class SBXBamUtils
             i = duplexIndelEnd + 1;
         }
 
-        if(!readModified)
-            return;
-
-        if(!isForward)
-            Collections.reverse(annotatedBases);
-
-        int newAlignmentStart = INVALID_POSITION;
-        StringBuilder newReadString = new StringBuilder();
-        StringBuilder newBaseQualString = new StringBuilder();
-        List<CigarOperator> newOps = Lists.newArrayList();
-        for(AnnotatedBase annotatedBase : annotatedBases)
+        if(readModified)
         {
-            if(annotatedBase.deleted())
-                continue;
-
-            newOps.add(annotatedBase.Op);
-
-            if(!annotatedBase.isReadBase())
-                continue;
-
-            if(newAlignmentStart == INVALID_POSITION && !annotatedBase.Op.isClipping())
-                newAlignmentStart = annotatedBase.RefPos;
-
-            newReadString.append((char) annotatedBase.ReadBase);
-            newBaseQualString.append(phredToFastq(annotatedBase.qual()));
+            if(!isForward)
+                Collections.reverse(annotatedBases);
         }
 
-        if(newAlignmentStart == INVALID_POSITION)
+        return readModified;
+    }
+
+    public static void fillQualZeroMismatchesWithRef(final RefGenomeInterface refGenome, final SAMRecord record)
+    {
+        if(record.getReadUnmappedFlag())
             return;
 
-        List<CigarElement> newCigarElements = Lists.newArrayList();
-        if(readLeftHardClipLength > 0)
-            newCigarElements.add(new CigarElement(readLeftHardClipLength, H));
+        String chromosome = record.getReferenceName();
+        replaceXwithM(record);
 
-        CigarOperator currentOp = null;
-        int currentLength = 0;
-        for(CigarOperator op : newOps)
+        int refPos = record.getAlignmentStart();
+        int readIndex = 0;
+        byte[] readBases = record.getReadBases();
+        byte[] baseQuals = record.getBaseQualities();
+        int nmDiff = 0;
+        int alignmentScoreDiff = 0;
+        for(CigarElement el : record.getCigar().getCigarElements())
         {
-            if(currentOp == null)
+            if(el.getOperator() != M)
             {
-                currentOp = op;
-                currentLength = 1;
+                if(el.getOperator().consumesReadBases())
+                    readIndex += el.getLength();
+
+                if(el.getOperator().consumesReferenceBases())
+                    refPos += el.getLength();
+
                 continue;
             }
 
-            if(currentOp == op)
+            for(int i = 0; i < el.getLength(); i++, readIndex++, refPos++)
             {
-                currentLength++;
-                continue;
-            }
+                if(baseQuals[readIndex] > 0)
+                    continue;
 
-            newCigarElements.add(new CigarElement(currentLength, currentOp));
-            currentOp = op;
-            currentLength = 1;
+                baseQuals[readIndex] = 1;
+
+                byte refBase = refGenome.getBase(chromosome, refPos);
+                byte readBase = readBases[readIndex];
+                if(refBase == readBase)
+                    continue;
+
+                readBases[readIndex] = refBase;
+                nmDiff--;
+                alignmentScoreDiff += BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
+            }
         }
 
-        if(currentLength > 0)
-            newCigarElements.add(new CigarElement(currentLength, currentOp));
+        Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        if(oldNumMutations != null && nmDiff != 0)
+        {
+            int newNumMutations = oldNumMutations + nmDiff;
+            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+        }
 
-        if(readRightHardClipLength > 0)
-            newCigarElements.add(new CigarElement(readRightHardClipLength, H));
-
-        record.setReadString(newReadString.toString());
-        record.setBaseQualityString(newBaseQualString.toString());
-        record.setCigar(new Cigar(newCigarElements));
-        record.setAlignmentStart(newAlignmentStart);
+        Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+        if(oldAlignmentScore != null && alignmentScoreDiff != 0)
+        {
+            int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
+        }
     }
 }

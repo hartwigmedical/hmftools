@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
@@ -190,7 +191,7 @@ public class RefBaseExtender
         if(!read.chromosome().equals(read.mateChromosome()) || read.orientation() == read.mateOrientation())
             return false;
 
-        int fragmentSize = abs(read.bamRecord().getInferredInsertSize());
+        int fragmentSize = inferredInsertSizeAbs(read.bamRecord());
 
         if(fragmentSize > DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
             return false;

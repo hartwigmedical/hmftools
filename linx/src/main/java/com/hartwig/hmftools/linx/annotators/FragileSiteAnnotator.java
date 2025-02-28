@@ -70,7 +70,7 @@ public class FragileSiteAnnotator
         {
             if(fsRegion.containsPosition(svData.chromosome(useStart), svData.position(useStart)))
             {
-                LNX_LOGGER.debug("var({}) found in known fragile site({})", svData.posId(), fsRegion);
+                LNX_LOGGER.trace("var({}) found in known fragile site({})", svData.posId(), fsRegion);
                 return true;
             }
         }

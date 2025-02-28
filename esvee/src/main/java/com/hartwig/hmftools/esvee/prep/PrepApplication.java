@@ -114,7 +114,10 @@ public class PrepApplication
         }
 
         if(fragSizeDistribution.maxReadLength() > 0)
-            mConfig.ReadLength = fragSizeDistribution.maxReadLength();
+            mConfig.setReadLength(fragSizeDistribution.maxReadLength());
+
+        if(!fragSizeDistribution.hasPairedReads())
+            mConfig.setUnpairedReads(true);
     }
 
     public static void main(@NotNull final String[] args)

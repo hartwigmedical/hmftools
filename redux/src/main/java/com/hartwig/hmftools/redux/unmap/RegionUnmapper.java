@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPP
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsUnmapRegion;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 
 import java.io.File;
 import java.util.Collections;
@@ -116,7 +117,8 @@ public class RegionUnmapper extends Thread
             return Collections.emptyList();
 
         // add in an entry to extract fully unmapped reads
-        unmappingRegions.add(UNMAPPED_READS);
+        if(!config.SkipUnmapped)
+            unmappingRegions.add(UNMAPPED_READS);
 
         List<RegionUnmapper> regionUnmapperTasks = Lists.newArrayList();
 
