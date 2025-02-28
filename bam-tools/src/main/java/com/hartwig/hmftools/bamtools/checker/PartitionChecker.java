@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.checker;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 
@@ -26,6 +28,8 @@ public class PartitionChecker
 
     private final Map<String,Fragment> mFragmentMap;
 
+    private final FragmentStats mCurrentStats;
+    private final FragmentStats mStats;
     private long mReadCount;
     private long mNextLogReadCount;
     private long mCompleteFragments;
@@ -53,7 +57,12 @@ public class PartitionChecker
         mCompleteFragments = 0;
         mNextLogReadCount = LOG_READ_COUNT;
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
+
+        mCurrentStats = new FragmentStats();
+        mStats = new FragmentStats();
     }
+
+    public FragmentStats stats() { return mStats; }
 
     public void processPartition(final ChrBaseRegion region)
     {
@@ -66,9 +75,12 @@ public class PartitionChecker
         mNextLogReadCount = LOG_READ_COUNT;
         mFragmentMap.clear();
 
+        mCurrentStats.reset();
+
         mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
 
         handleIncompleteFragments();
+        mStats.merge(mCurrentStats);
 
         BT_LOGGER.debug("region({}) complete, reads({}) fragments(complete={} incomplete={})",
                 mRegion, mReadCount, mCompleteFragments, mFragmentMap.size());
@@ -113,6 +125,8 @@ public class PartitionChecker
         {
             fragment = new Fragment(read);
             mFragmentMap.put(read.getReadName(), fragment);
+
+            mCurrentStats.MaxFragmentCount = max(mCurrentStats.MaxFragmentCount, mFragmentMap.size());
         }
         else
         {
@@ -129,6 +143,11 @@ public class PartitionChecker
             {
                 mFragmentMap.remove(fragment.readId());
                 ++mCompleteFragments;
+
+                ++mCurrentStats.TotalFragments;
+
+                if(fragment.receivedSupplementaryCount() > 0)
+                    ++mCurrentStats.FragmentsWithSupplementaries;
             }
         }
     }
