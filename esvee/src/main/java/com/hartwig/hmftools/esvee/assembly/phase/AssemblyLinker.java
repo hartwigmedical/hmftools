@@ -5,6 +5,7 @@ import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
@@ -13,13 +14,16 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSE
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.tryLineSequenceLink;
+import static com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
@@ -187,12 +191,15 @@ public final class AssemblyLinker
         return new AssemblyLink(assembly1, assembly2, INDEL, insertedBases, "");
     }
 
+    @VisibleForTesting
     public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        return tryAssemblyOverlap(assembly1, assembly2, true);
+        boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
+        return tryAssemblyOverlap(assembly1, assembly2, true, isLocalLink);
     }
 
-    public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowMismatches)
+    public static AssemblyLink tryAssemblyOverlap(
+            final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowMismatches, boolean isLocalIndel)
     {
         JunctionAssembly first, second;
         JunctionSequence firstSeq, secondSeq;
@@ -222,8 +229,20 @@ public final class AssemblyLinker
         if(lineLink != null)
             return lineLink;
 
-        firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
-        secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
+        boolean requireRefBaseOverlap = isLocalIndel;
+
+        if(requireRefBaseOverlap)
+        {
+            // assembly pairs in a local INDEL configuration haven't been checked for shared fragments, so it's necessary that they check
+            // for an overlap in their ref bases, not just that they have a common insert sequence
+            firstSeq = JunctionSequence.formStraddlingMatchSequence(first);
+            secondSeq = JunctionSequence.formStraddlingMatchSequence(second);
+        }
+        else
+        {
+            firstSeq = JunctionSequence.formOuterExtensionMatchSequence(first, firstReversed);
+            secondSeq = JunctionSequence.formOuterExtensionMatchSequence(second, secondReversed);
+        }
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstMatchSequence = firstSeq.matchSequence();
@@ -273,14 +292,14 @@ public final class AssemblyLinker
             if(secondSubSeqIndex < 0)
                 continue;
 
-            // check if the first match sequence (ie including all extension bases) to fits/matches within the second
-            // and if not if there is sufficient overlap
-            int impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
-            int impliedSequenceMatchSeqEnd = impliedSequenceMatchSeqStart + firstMatchSeqLength - 1;
+            // check if the first match sequence (ie including all extension bases) fits/matches within the second
+            // and if not whether there is sufficient overlap
+            int impliedSecondSeqMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+            int impliedSecondSeqMatchSeqEnd = impliedSecondSeqMatchSeqStart + firstMatchSeqLength - 1;
 
-            if(impliedSequenceMatchSeqEnd >= secondSeq.BaseLength)
+            if(impliedSecondSeqMatchSeqEnd >= secondSeq.BaseLength)
             {
-                int secondMatchLength = secondSeq.BaseLength - impliedSequenceMatchSeqStart - 1;
+                int secondMatchLength = secondSeq.BaseLength - impliedSecondSeqMatchSeqStart - 1;
 
                 if(secondMatchLength < ASSEMBLY_LINK_OVERLAP_BASES)
                     continue; // still possible that a later subsequence will match earlier
@@ -292,8 +311,8 @@ public final class AssemblyLinker
 
             while(secondSubSeqIndex >= 0)
             {
-                impliedSequenceMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
-                if(impliedSequenceMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
+                impliedSecondSeqMatchSeqStart = secondSubSeqIndex - matchSeqStartIndex;
+                if(impliedSecondSeqMatchSeqStart + firstMatchSeqLength > secondSeq.BaseLength)
                     break;
 
                 alternativeIndexStarts.add(new int[] {matchSeqStartIndex, secondSubSeqIndex});
@@ -307,7 +326,11 @@ public final class AssemblyLinker
         // now perform a full junction sequence search in the second using the sequence matching logic
         int minOverlapLength = min(min(first.extensionLength(), second.extensionLength()), ASSEMBLY_LINK_OVERLAP_BASES);
 
-        int[] topMatchIndices = findBestSequenceMatch(firstSeq, secondSeq, minOverlapLength, alternativeIndexStarts);
+        if(first.discordantOnly() && second.discordantOnly())
+            minOverlapLength = min(minOverlapLength, ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES);
+
+        int[] topMatchIndices = findBestSequenceMatch(
+                firstSeq, secondSeq, minOverlapLength, requireRefBaseOverlap, alternativeIndexStarts);
 
         if(topMatchIndices != null)
         {
@@ -322,7 +345,8 @@ public final class AssemblyLinker
     }
 
     public static int[] findBestSequenceMatch(
-            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, final List<int[]> alternativeIndexStarts)
+            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, boolean requireRefBaseOverlap,
+            final List<int[]> alternativeIndexStarts)
     {
         if(alternativeIndexStarts.isEmpty())
             return null;
@@ -389,46 +413,70 @@ public final class AssemblyLinker
             if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
                 continue;
 
+            // try to extend the matched sequence in both directions
+            int[] matchExtensions = tryExtendMatchedSequence(
+                    firstSeq.bases(), firstIndexStart, firstIndexEnd, secondSeq.bases(), secondIndexStart, secondIndexEnd);
+
+            firstIndexStart -= matchExtensions[0];
+            secondIndexStart -= matchExtensions[0];
+            overlapLength += matchExtensions[0] + matchExtensions[1];
+
             if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
             {
+                if(requireRefBaseOverlap)
+                {
+                    int minRefOverlapLength = MIN_VARIANT_LENGTH; // minOverlapLength
+                    int firstRefBaseOverlap = firstSeq.junctionIndex() - firstIndexStart + 1;
+
+                    int restrictedSecondSeqEnd = secondIndexStart + overlapLength - 1;
+                    int secondRefBaseOverlap = restrictedSecondSeqEnd - secondSeq.junctionIndex() + 1;
+
+                    if(firstRefBaseOverlap < minRefOverlapLength && secondRefBaseOverlap < minRefOverlapLength)
+                        continue;
+                }
+
                 topMatchLength = overlapLength;
                 topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
                 topMatchMismatches = mismatchCount;
             }
         }
 
-        /* disabled until seen it is required
-        // if there were mismatches, check for a need to factor this into the distance between the first start index and its junction
-        if(topMatchMismatches > 0)
-        {
-            int firstIndexStart = topMatchIndices[0];
-            int firstIndexEnd = firstIndexStart + topMatchLength - 1;
-            int secondIndexStart = topMatchIndices[1];
-            int secondIndexEnd = secondIndexStart + topMatchLength - 1;
-
-            List<SequenceDiffInfo> mismatchDiffs = SequenceCompare.getSequenceMismatchInfo(
-                firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
-                secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo());
-
-            int firstJuncIndex = firstSeq.junctionIndex();
-            int firstJunctionRepeatDiff = 0;
-
-            for(SequenceDiffInfo diffInfo : mismatchDiffs)
-            {
-                if(diffInfo.Type == SequenceDiffType.BASE)
-                    continue;
-
-                if(diffInfo.Index > firstJuncIndex)
-                    break;
-
-                firstJunctionRepeatDiff += diffInfo.BaseCount;
-            }
-
-            topMatchIndices[2] = firstJunctionRepeatDiff;
-        }
-        */
-
         return topMatchIndices;
+    }
+
+    private static int[] tryExtendMatchedSequence(
+            final byte[] firstBases, int firstIndexStart, int firstIndexEnd, final byte[] secondBases, int secondIndexStart, int secondIndexEnd)
+    {
+        int earlierMatchedBases = 0;
+        int latterMatchedBases = 0;
+
+        int firstIndex = firstIndexStart - 1;
+        int secondIndex = secondIndexStart - 1;
+
+        while(firstIndex >= 0 && secondIndex >= 0)
+        {
+            if(firstBases[firstIndex] != secondBases[secondIndex])
+                break;
+
+            ++earlierMatchedBases;
+            --firstIndex;
+            --secondIndex;
+        }
+
+        firstIndex = firstIndexEnd + 1;
+        secondIndex = secondIndexEnd + 1;
+
+        while(firstIndex < firstBases.length && secondIndex < secondBases.length)
+        {
+            if(firstBases[firstIndex] != secondBases[secondIndex])
+                break;
+
+            ++latterMatchedBases;
+            ++firstIndex;
+            ++secondIndex;
+        }
+
+        return new int[] {earlierMatchedBases, latterMatchedBases};
     }
 
     protected static AssemblyLink formLink(

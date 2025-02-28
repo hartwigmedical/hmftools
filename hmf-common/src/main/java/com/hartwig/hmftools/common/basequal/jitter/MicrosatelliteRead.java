@@ -22,21 +22,51 @@ class MicrosatelliteRead
 {
     public static final Logger sLogger = LogManager.getLogger(MicrosatelliteRead.class);
 
-    private final RefGenomeMicrosatellite refGenomeMicrosatellite;
-    private final ConsensusType mConsensusType;
-
-    public boolean shouldDropRead = false;
-
-    private int numAligned = 0;
-    private int numInserted = 0;
-    private int numDeleted = 0;
-
-    private int numMatchedBefore = 0;
-    private int numMatchedAfter = 0;
-
-    private MicrosatelliteRead(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record,
-            @Nullable final ConsensusMarker consensusMarker)
+    private static final ThreadLocal<MicrosatelliteRead> THREAD_INSTANCE = new ThreadLocal<>()
     {
+        @Override
+        protected MicrosatelliteRead initialValue()
+        {
+            return new MicrosatelliteRead();
+        }
+    };
+
+    private RefGenomeMicrosatellite refGenomeMicrosatellite;
+    private ConsensusType mConsensusType;
+
+    public boolean shouldDropRead;
+
+    private int numAligned;
+    private int numInserted;
+    private int numDeleted;
+
+    private int numMatchedBefore;
+    private int numMatchedAfter;
+
+    private MicrosatelliteRead()
+    {
+        clear();
+    }
+
+    private void clear()
+    {
+        refGenomeMicrosatellite = null;
+        mConsensusType = null;
+
+        shouldDropRead = false;
+
+        numAligned = 0;
+        numInserted = 0;
+        numDeleted = 0;
+
+        numMatchedBefore = 0;
+        numMatchedAfter = 0;
+    }
+
+    private void analyse(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, @Nullable final ConsensusMarker consensusMarker)
+    {
+        clear();
+
         this.refGenomeMicrosatellite = refGenomeMicrosatellite;
 
         // this read needs to wholly contain the homopolymer to be counted
@@ -61,13 +91,9 @@ class MicrosatelliteRead
         if(!shouldDropRead)
         {
             if(consensusMarker == null)
-            {
                 mConsensusType = NONE;
-            }
             else
-            {
                 mConsensusType = consensusMarker.consensusType(refGenomeMicrosatellite, record);
-            }
         }
         else
         {
@@ -109,17 +135,18 @@ class MicrosatelliteRead
         return readRepeatLength() / refGenomeMicrosatellite.unit.length;
     }
 
+    public int jitter() { return numRepeatUnits() - refGenomeMicrosatellite.numRepeat; }
+
     @Nullable
     public static MicrosatelliteRead from(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record,
             @Nullable final ConsensusMarker consensusMarker)
     {
-        MicrosatelliteRead msRead = new MicrosatelliteRead(refGenomeMicrosatellite, record, consensusMarker);
-        if(msRead.mConsensusType == IGNORE)
-        {
+        MicrosatelliteRead instance = THREAD_INSTANCE.get();
+        instance.analyse(refGenomeMicrosatellite, record, consensusMarker);
+        if(instance.mConsensusType == IGNORE)
             return null;
-        }
 
-        return msRead;
+        return instance;
     }
 
     private void handleAlignment(final CigarElement e, final int startRefPos)
@@ -266,7 +293,7 @@ class MicrosatelliteRead
                     refBase += e.getLength();
                     break;
                 default:
-                    throw new IllegalStateException("Case statement didn't deal with op: " + e.getOperator() + "in CIGAR: " + cigar);
+                    throw new IllegalStateException("Case statement didn't deal with op: " + e.getOperator() + " in CIGAR: " + cigar);
             }
         }
     }

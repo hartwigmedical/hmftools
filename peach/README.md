@@ -36,7 +36,7 @@ An earlier Python version of this tool is available [here](https://github.com/ha
 ## Installation
 To install, download the latest compiled jar file from the [download links](#version-history--download-links).
 
-PEACH requires Java 11+.
+PEACH requires Java 17+.
 
 TODO: Add link to config files
 

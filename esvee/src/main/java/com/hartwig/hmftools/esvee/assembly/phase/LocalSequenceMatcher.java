@@ -47,8 +47,10 @@ public class LocalSequenceMatcher
 
         byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
 
-        JunctionSequence assemblySeq = JunctionSequence.formStraddlingMatchSequence(
-                assembly, false, PHASED_ASSEMBLY_MATCH_SEQ_LENGTH / 2, -1);
+        JunctionSequence assemblySeq = JunctionSequence.formStraddlingMatchSequence(assembly);
+
+        // consider switching the assembly sequence to purely extension bases since that is what is expected to match the local sequence
+        // JunctionSequence assemblySeq = JunctionSequence.formFullExtensionMatchSequence(assembly, false);
 
         Orientation localRefOrientation = assembly.junction().Orient.opposite();
         JunctionSequence localRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, localRefOrientation, false);
@@ -100,7 +102,8 @@ public class LocalSequenceMatcher
 
         int minOverlapLength = min(assembly.extensionLength(), ASSEMBLY_LINK_OVERLAP_BASES);
 
-        int[] topMatchIndices = findBestSequenceMatch(assemblySeq, localRefSeq, minOverlapLength, alternativeIndexStarts);
+        int[] topMatchIndices = findBestSequenceMatch(
+                assemblySeq, localRefSeq, minOverlapLength, false, alternativeIndexStarts);
 
         if(topMatchIndices != null)
         {

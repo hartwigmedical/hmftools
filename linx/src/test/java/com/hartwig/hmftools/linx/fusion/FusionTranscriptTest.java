@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.createBreakendTranscriptData;
 import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setAlternativeTranscriptPhasings;
 import static com.hartwig.hmftools.linx.gene.BreakendTransData.POST_CODING_PHASE;
@@ -55,7 +55,7 @@ public class FusionTranscriptTest
         geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
         GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        BreakendGeneData genePosStrand = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData genePosStrand = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, ORIENT_FWD);
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -70,7 +70,7 @@ public class FusionTranscriptTest
         GeneTestUtils.addTransExonData(geneTransCache, geneId, transDataList);
 
         int position = 250;
-        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         BreakendTransData trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         Assert.assertEquals(5, trans.exonCount());
@@ -79,11 +79,11 @@ public class FusionTranscriptTest
         Assert.assertEquals(PHASE_NONE, trans.Phase);
 
         // test caching of upstream phasings for exon-skipping fusion logic
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_FWD);
         Assert.assertEquals(0, trans.getAlternativePhasing().size());
 
         // and test as a downstream gene
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_REV);
         Assert.assertEquals(3, trans.getAlternativePhasing().size());
         Integer exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
@@ -93,19 +93,19 @@ public class FusionTranscriptTest
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
 
         position = 450;
-        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         Assert.assertEquals(2, trans.ExonUpstream);
         Assert.assertEquals(3, trans.ExonDownstream);
         Assert.assertEquals(PHASE_1, trans.Phase);
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_FWD);
         Assert.assertEquals(1, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(-1);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_REV);
         Assert.assertEquals(2, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
@@ -113,21 +113,21 @@ public class FusionTranscriptTest
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
 
         position = 650;
-        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         Assert.assertEquals(3, trans.ExonUpstream);
         Assert.assertEquals(4, trans.ExonDownstream);
         Assert.assertEquals(PHASE_0, trans.Phase);
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_FWD);
         Assert.assertEquals(2, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(-1);
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
         exonsSkipped = trans.getAlternativePhasing().get(1);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_REV);
         Assert.assertEquals(1, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
@@ -139,7 +139,7 @@ public class FusionTranscriptTest
         geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
         GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        BreakendGeneData geneNegStrand = createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData geneNegStrand = createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, ORIENT_FWD);
 
         transDataList = Lists.newArrayList();
 
@@ -153,7 +153,7 @@ public class FusionTranscriptTest
         GeneTestUtils.addTransExonData(geneTransCache, geneId, transDataList);
 
         position = 850;
-        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         Assert.assertEquals(5, trans.exonCount());
@@ -161,10 +161,10 @@ public class FusionTranscriptTest
         Assert.assertEquals(2, trans.ExonDownstream);
         Assert.assertEquals(PHASE_0, trans.Phase);
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_REV);
         Assert.assertEquals(0, trans.getAlternativePhasing().size());
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_FWD);
         Assert.assertEquals(3, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
@@ -174,14 +174,14 @@ public class FusionTranscriptTest
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
 
         position = 250;
-        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         Assert.assertEquals(4, trans.ExonUpstream);
         Assert.assertEquals(5, trans.ExonDownstream);
         Assert.assertEquals(POST_CODING_PHASE, trans.Phase);
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_REV);
         Assert.assertEquals(3, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
@@ -190,7 +190,7 @@ public class FusionTranscriptTest
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
 
-        setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
+        setAlternativeTranscriptPhasings(trans, transData.exons(), position, ORIENT_FWD);
         Assert.assertEquals(0, trans.getAlternativePhasing().size());
     }
 
@@ -198,7 +198,7 @@ public class FusionTranscriptTest
     public void testBreakendTranscriptCoding()
     {
         // first a gene on the forward strand
-        BreakendGeneData genePosStrand = createGeneAnnotation(0, true, GENE_NAME_1, GENE_ID_1, POS_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData genePosStrand = createGeneAnnotation(0, true, GENE_NAME_1, GENE_ID_1, POS_STRAND, CHR_1, 0, ORIENT_FWD);
 
         int transId = 1;
 
@@ -212,7 +212,7 @@ public class FusionTranscriptTest
                 GENE_ID_1, transId++, POS_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         int position = 150;
-        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         BreakendTransData trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         Assert.assertEquals(5, trans.exonCount());
@@ -232,7 +232,7 @@ public class FusionTranscriptTest
                 GENE_ID_1, transId++, POS_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 350;
-        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         Assert.assertEquals(3, trans.ExonUpstream);
@@ -243,7 +243,7 @@ public class FusionTranscriptTest
         Assert.assertEquals(31, trans.TotalCodingBases);
 
         // test the reverse strand
-        BreakendGeneData geneNegStrand = createGeneAnnotation(0, true, GENE_NAME_2, GENE_ID_2, NEG_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData geneNegStrand = createGeneAnnotation(0, true, GENE_NAME_2, GENE_ID_2, NEG_STRAND, CHR_1, 0, ORIENT_FWD);
 
         // coding taking up exactly the first exon
         codingStart = 500;
@@ -253,7 +253,7 @@ public class FusionTranscriptTest
                 GENE_ID_2, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 450;
-        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         Assert.assertEquals(5, trans.exonCount());
@@ -271,7 +271,7 @@ public class FusionTranscriptTest
                 GENE_ID_2, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 250;
-        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         Assert.assertEquals(3, trans.ExonUpstream);
@@ -289,7 +289,7 @@ public class FusionTranscriptTest
                 GENE_ID_1, transId++, POS_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 50;
-        genePosStrand.setPositionalData(CHR_1, position, NEG_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, ORIENT_REV);
         trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         Assert.assertEquals(0, trans.ExonUpstream);
@@ -319,7 +319,7 @@ public class FusionTranscriptTest
                 GENE_ID_2, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 350;
-        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         Assert.assertEquals(2, trans.ExonUpstream);
@@ -334,7 +334,7 @@ public class FusionTranscriptTest
                 GENE_ID_2, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 350;
-        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, ORIENT_FWD);
         trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         Assert.assertEquals(2, trans.ExonUpstream);

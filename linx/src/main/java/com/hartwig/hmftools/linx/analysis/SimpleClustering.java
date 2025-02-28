@@ -7,12 +7,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.linx.CohortDataWriter.cohortDataFilename;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
@@ -217,13 +218,13 @@ public class SimpleClustering implements CohortFileInterface
     {
         try
         {
-            String outputFileName = outputDir + "LNX_CLUSTERING_HISTORY.csv";
+            String outputFileName = cohortDataFilename(outputDir, "CLUSTERING");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             // definitional fields
-            writer.write("SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2");
-            writer.write(",Reason,MinDistance");
+            writer.write("SampleId\tMergeIndex\tClusterId1\tSvId1\tClusterCount1\tClusterId2\tSvId2\tClusterCount2");
+            writer.write("\tReason\tMinDistance");
             writer.newLine();
             return writer;
         }
@@ -236,18 +237,18 @@ public class SimpleClustering implements CohortFileInterface
 
     protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final ClusteringReason reason)
     {
-        if(!mConfig.Output.WriteClusterHistory)
+        if(!mConfig.Output.writeClusterHistory())
             return;
 
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%s,%d", mSampleId, mClusteringIndex));
+        sb.append(String.format("%s\t%d", mSampleId, mClusteringIndex));
 
-        sb.append(String.format(",%d,%d,%d,%d,%d,%d",
+        sb.append(String.format("\t%d\t%d\t%d\t%d\t%d\t%d",
                 var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
                 var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount()));
 
         int breakendDistance = getProximity(var1, var2);
-        sb.append(String.format(",%s,%d", reason, breakendDistance));
+        sb.append(String.format("\t%s\t%d", reason, breakendDistance));
 
         mCohortDataWriter.write(this, Lists.newArrayList(sb.toString()));
 
@@ -616,7 +617,7 @@ public class SimpleClustering implements CohortFileInterface
         if(longDDIClusters.size() <= 1)
             return false;
 
-        LNX_LOGGER.debug("checking long {}} overlaps for {} clusters",
+        LNX_LOGGER.debug("checking long {} overlaps for {} clusters",
                 !allowDelDupOverlaps ? "DEL_DUP-requiring-INV" : "multiple DDI overlaps", longDDIClusters.size());
 
         List<SvCluster> mergedClusters = Lists.newArrayList();
@@ -1062,7 +1063,7 @@ public class SimpleClustering implements CohortFileInterface
 
             for(final SvBreakend breakend : breakendList)
             {
-                if(breakend.orientation() == POS_ORIENT)
+                if(breakend.orientation() == ORIENT_FWD)
                     continue;
 
                 if(breakend.getCluster().getResolvedType() == LINE)
@@ -1081,7 +1082,7 @@ public class SimpleClustering implements CohortFileInterface
                 {
                     final SvBreakend nextBreakend = breakendList.get(index);
 
-                    if(nextBreakend.orientation() == NEG_ORIENT)
+                    if(nextBreakend.orientation() == ORIENT_REV)
                         continue;
 
                     double nextAdjacentMaJcn = nextBreakend.majorAlleleJcn(false);

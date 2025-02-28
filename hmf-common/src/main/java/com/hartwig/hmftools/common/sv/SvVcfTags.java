@@ -75,6 +75,9 @@ public final class SvVcfTags
     public static final String LINE_SITE = "LINE";
     public static final String LINE_SITE_DESC = "LINE insertion site";
 
+    public static final String UNPAIRED_READ_POSITIONS = "UPR_POS";
+    public static final String UNPAIRED_READ_POSITIONS_DESC = "Distinct unpaired read positinos";
+
     // per sample
     public static final String SPLIT_FRAGS = "SF";
     public static final String SPLIT_FRAGS_DESC = "Count of fragments supporting the breakend with a read overlapping the breakend";
@@ -111,25 +114,12 @@ public final class SvVcfTags
     public static final String REPEAT_MASK_REPEAT_TYPE = "INSRMRT";
     public static final String REPEAT_MASK_REPEAT_TYPE_DESC = "Inserted sequence repeatmasker repeat type";
     public static final String REPEAT_MASK_ORIENTATION = "INSRMRO";
-    public static final String REPEAT_MASK_ORIENTATION_DESC = "INSRMRO";
+    public static final String REPEAT_MASK_ORIENTATION_DESC = "Inserted sequence repeatmasker orientation";
     public static final String REPEAT_MASK_COVERAGE = "INSRMP";
     public static final String REPEAT_MASK_COVERAGE_DESC = "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat";
 
 
     // set by Purple
-    public static final String REF_CONTEXT_FLAG = "REFG";
-    public static final String REF_CONTEXT_DESC = "Reference genome surrounding break";
-
-    public static final String RECOVERED = "RECOVERED";
-    public static final String RECOVERED_DESC = "Entry has been recovered";
-
-    public static final String RECOVERY_METHOD = "RECOVERY_METHOD";
-    public static final String RECOVERY_METHOD_DESC =
-            "Method used to recover, one of [UNBALANCED_SV_START, UNBALANCED_SV_END, UNSUPPORTED_BREAKEND_START, UNSUPPORTED_BREAKEND_END]";
-
-    public static final String RECOVERY_FILTER = "RECOVERY_FILTER";
-    public static final String RECOVERY_FILTER_DESC = "Filter before recovery";
-
     public static final String INFERRED = "INFERRED";
     public static final String INFERRED_DESC = "Breakend inferred from copy number transition";
 

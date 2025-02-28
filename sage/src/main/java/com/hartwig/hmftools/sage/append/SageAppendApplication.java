@@ -34,6 +34,7 @@ import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.bqr.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -148,7 +149,8 @@ public class SageAppendApplication
         SG_LOGGER.info("loaded {} variants", existingVariants.size());
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
-        VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common, inputHeader);
+
+        VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common.ReferenceIds, inputHeader, mConfig.Common.OutputFile);
 
         if(existingVariants.isEmpty())
         {
@@ -172,9 +174,13 @@ public class SageAppendApplication
 
         final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
-        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
+        MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
+                mConfig.Common.ReferenceIds, !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterParamsDir : null,
+                mConfig.Common.Quality.HighDepthMode);
 
-        for(final SAMSequenceRecord samSequenceRecord : dictionary().getSequences())
+        ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
+
+        for(SAMSequenceRecord samSequenceRecord : dictionary().getSequences())
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
@@ -201,7 +207,8 @@ public class SageAppendApplication
                 if(regionVariants.isEmpty())
                     continue;
 
-                regionTasks.add(new RegionAppendTask(i, region, regionVariants, mConfig, mRefGenome, recalibrationMap, mFragmentLengths));
+                regionTasks.add(new RegionAppendTask(
+                        i, region, regionVariants, mConfig, mRefGenome, recalibrationMap, mFragmentLengths, msiJitterCalcs));
             }
 
             final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
@@ -283,7 +290,6 @@ public class SageAppendApplication
         tumorReader.close();
         return dictionary;
     }
-
 
     public static void main(String[] args)
     {

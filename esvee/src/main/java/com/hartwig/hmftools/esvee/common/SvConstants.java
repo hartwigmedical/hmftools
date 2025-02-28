@@ -4,14 +4,18 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 
+import com.hartwig.hmftools.common.sequencing.SequencingType;
+
 public final class SvConstants
 {
     public static final String BAM_HEADER_SAMPLE_INDEX_TAG = "sampleId";
 
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;
-    public static int LOW_BASE_QUAL_THRESHOLD = 26;
     public static final int MIN_MAP_QUALITY = 20;
+
+    public static final int DEFAULT_LOW_BASE_QUAL_THRESHOLD = 26;
+    public static int LOW_BASE_QUAL_THRESHOLD = DEFAULT_LOW_BASE_QUAL_THRESHOLD; // may be set in config
 
     public static final int DEFAULT_MAX_CONCORDANT_FRAG_LENGTH = 1000; // default, otherwise set from BAM fragment sampling
     public static final int MIN_UPPER_FRAGMENT_LENGTH = 800; // in place for panels to maintain a minimum
@@ -20,6 +24,9 @@ public final class SvConstants
     {
         return max(observedMaxFragmentLength, MIN_UPPER_FRAGMENT_LENGTH);
     }
+
+    // sequencing type
+    public static SequencingType Sequencing = SequencingType.ILLUMINA;
 
     // indels
     public static final int MIN_INDEL_SUPPORT_LENGTH = 3;

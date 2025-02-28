@@ -13,9 +13,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
@@ -28,8 +25,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.BREAKEND_REGEX;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAKEND_BYTE;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAKEND_STR;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
@@ -115,7 +112,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
     public static byte parseSingleOrientation(final VariantContext context)
     {
         final String alt = context.getAlternateAllele(0).getDisplayString();
-        return alt.startsWith(SINGLE_BREAKEND_STR) ? NEG_ORIENT : POS_ORIENT;
+        return alt.startsWith(SINGLE_BREAKEND_STR) ? ORIENT_REV : ORIENT_FWD;
     }
 
     public static byte parseSvOrientation(final VariantContext context)
@@ -126,7 +123,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
         if(!match.matches())
             return (byte)0;
 
-        return match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT;
+        return match.group(1).length() > 0 ? ORIENT_FWD : ORIENT_REV;
     }
 
     public void addVariantContext(final VariantContext context)
@@ -170,10 +167,10 @@ public class StructuralVariantFactory implements SvFactoryInterface
         }
 
         // Local orientation determined by the positionin of the anchoring bases
-        final byte startOrientation = (match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT);
+        final byte startOrientation = (match.group(1).length() > 0 ? ORIENT_FWD : ORIENT_REV);
 
         // Other orientation determined by the direction of the brackets
-        final byte endOrientation = (match.group(2).equals("]") ? POS_ORIENT : NEG_ORIENT);
+        final byte endOrientation = (match.group(2).equals("]") ? ORIENT_FWD : ORIENT_REV);
 
         // Grab the inserted sequence by removing 1 base from the reference anchoring bases
         String insertedSequence = match.group(1).length() > 0 ?
@@ -253,7 +250,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
         final String alt = context.getAlternateAllele(0).getDisplayString();
 
         // local orientation determined by the positioning of the anchoring bases
-        final byte orientation = alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
+        final byte orientation = alt.startsWith(".") ? ORIENT_REV : ORIENT_FWD;
         final int refLength = context.getReference().length();
 
         final String insertedSequence = orientation == -1 ?
@@ -282,12 +279,8 @@ public class StructuralVariantFactory implements SvFactoryInterface
         String insSequenceAlignments = trimStringListValue(context.getAttributeAsString(INSALN, ""));
 
         builder.id(context.getID())
-                .recovered(context.getAttributeAsBoolean(RECOVERED, false))
                 .hotspot(context.getAttributeAsBoolean(HOTSPOT, false))
-                .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
-                .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event("")
-                .imprecise(false)
                 .qualityScore(qualityScore)
                 .insertSequenceAlignments(insSequenceAlignments);
 

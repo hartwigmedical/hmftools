@@ -12,6 +12,30 @@ Esvee runs is run in 4 steps
 
 The full algorithm for each step is described in the algorithm section below.
 
+### Command
+
+Esvee can be run as a single command or by making the 4 steps described below in turn. 
+A single command example is:
+
+```
+java -jar esvee.jar  
+  -tumor TUMOR_SAMPLE_ID 
+  -reference REF_SAMPLE_ID
+  -tumor_bam /sample_data/TUMOR_SAMPLE_ID.bam
+  -reference_bam /sample_data/REF_SAMPLE_ID.bam
+  -ref_genome /path_to_ref_genome_fasta/
+  -ref_genome_version 38
+  -write_types 'PRE_STANDARD;ASSEMBLY_STANDARD' 
+  -known_hotspot_file /ref_data/known_fusions.38.bedpe
+  -pon_sgl_file /ref_data/sgl_pon.38.bed.gz
+  -pon_sv_file /ref_data/sv_pon.38.bedpe.gz
+  -repeat_mask_file /ref_data/repeat_mask_data.37.fa.gz
+  -bamtool /tools/sambamba/sambamba 
+  -output_dir /sample_data/output/ 
+  -threads 16
+```
+
+
 ## STEP 1: ESVEE Prep
 
 Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 
@@ -182,7 +206,7 @@ Much of the logic depends in ESVEE depends on assembling reads into contiguous s
 - **Minimum length**: We require 32 bases to call a variant. At the ESVEE-PREP and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support) 
 - **Low Quality SNV errors**: Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
 - **Minimum assembly overlap**: We require 50 bases of overlap to merge and extend assemblies OR 20 bases to merge and extend reference bases 
-- **Mismatch tolerance**: When comparing reads and assemblies with allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base mismatch or a longer mismatch in microsatellite counts as 1 mismatch
+- **Mismatch tolerance**: When comparing reads and assemblies we allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases.  Note that a 1 or 2 base indel or a longer indel in microsatellite counts as 1 mismatch
 
 ESVEE also employees concepts of a modified alignment scores and MAPQs to try to represent absolute versus relative likelihood of mismatch.  THese are defined as follows:
 
@@ -253,7 +277,7 @@ If more than one assembly shares the same breakend after deduplication then seco
 ### STEP 2B: Phasing 
 Phase groups are created by maximally linking any breakends which share at least 1 fragment. Since short DEL, DUP and INS will not share discordant reads on either side of the junction, if there are no supplementary reads that directly support the junction, they will not share any reads.  Hence, we also merge any 2 proximate breakends into the same phase group if: 
 - they form a DUP orientation <500b OR DEL orientation < 1kb AND 
-- both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail sequence with insertino site orientation.
+- both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail sequence with insertion site orientation.
 
 During phasing, all candidate remote linking sites are collected for each breakend. These are taken from discordant reads, breakend assembly read mates and breakend read supplementaries, and are established from the remote read or supplementaries coordinates (ie its chromosome and read start and end alignments). Remote reads with overlapping alignments are merged into sets of remote regions, and then cached against each assembly and are used later in phasing and assembly merging. 
 
@@ -300,7 +324,7 @@ Finally each assembly within the phase group are compared to each other.  If the
 ### STEP 2D: Alignment & variant calling 
 
 #### Alignment 
-ESVEE now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter whichhas the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100) 
+ESVEE now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter whic hhas the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100).  The mismatch penalty is also raised from 4 to 6 to 
 
 BWA may return one primary alignment as well as one or more supplementary alignments. Since BWA can assign an unreliable MAPQ to supplementary alignments, any supplementary alignments are realigned again using BWA with the primary alignment of the re-query kept and any further supplementaries dropped 
 
@@ -313,7 +337,7 @@ where:
 AdjustedAlignmentScore = Alignment score – IHOM length – repeatBases[repeatCount>2] 
 ```
  
-Note that if (alignmentScore + 15 < 0.85 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
+Note that if (alignmentScore + 15 < 0.77 * (length – inexact homology length)) the modMAPQ is set to 0. This helps to filter long but biologically implausible alignments. 
 
 The interpretation of the alignment depends on both the modified map quality and the XA tag which will display the alternative alignments if there are a small number of alternatives. Assemblies with no alignments or with all alignments with modMAPQ < 10 and NULL XA tags are ignored. 
 
@@ -369,13 +393,13 @@ minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50
 shortLowVafInv | All | min(AF[BE1],AF[BE2])  | 3<=IHOMLEN<6:  min(0.1,200 * shortINVRate); IHOMLEN>=6 min(0.2,400 * shortINVRate) <sup>5</sup> | NA | NA  | NA 
 sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
 
-<sup>1. The inserted sequence length must also meet these requirements </sup>
+<sup>1. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
 
 <sup>2. Same chromosome junctions only. </sup>
 
 <sup>3. implies the sampled average fragment length should be within 3 standard deviations of the sample median length (note the cutoff is also capped at 0.6*SD below median length).  Standard deviation is estimated as Lengthmedian-length16th percentile </sup>
 
-<sup>4. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
+<sup>4. The inserted sequence length must also meet these requirements </sup>
 
 <sup>5. Only applied to variants with type=INV and LEN<3kb. ShortINVRate = proportion of fragments genome wide that support a short INV </sup>
 
@@ -389,7 +413,7 @@ In targeted mode, SGL breakends are only retained if in a targeted region.
 If the same precise breakend is found to PASS multiple times in the VCF then retain the variant with the highest QUAL only 
 
 #### Germline or Somatic determination 
-A consolidated VCF is produced showing all soft filters. If a germline sample is present and the max(germline AF/TumorAF) > 0.1 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf only.  For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
+A consolidated VCF is produced showing all soft filters. If a germline sample is present and BOTH max(germline AF/TumorAF) > 0.1 AND germlineAD / tumorAD > 0.01 the variant is deemed to be germline, else somatic. Separate vcfs are written for PASS and PON somatic and germline variants only (in tumor only mode just a somatic vcf filter is written). A PON filter is also applied to the somatic variant vcf based on both a SGL BE PON (for SGL breakends) and a paired BE PON (for junctions). SGL breakends with candidate alignments that fall in the SSX2, SSX2B or DUX4 regions are never PON filtered. For pairs of breakends at LINE insertion sites, if one variant is marked as germline, then both should be considered as germline.  
 
 ## Summary of LINE insertion site behaviour
 
@@ -464,12 +488,13 @@ Know sources of errors
 Alignment
 - We should analyse additional supplemementary alignments arising from re-query of initial supplementary alignments (currently dropping)
 - We should requery long softclips to see if additional alignments can be found.
+- We don't take into account homology for pure INS (which may be duplications)
 
 ESVEE has some implicit and explicit assumptions on reads, qualities and alignments:
 - **AS field** - AS is currently required
 - **Low qual masking** -  assumes a high proportion of bases have qual > 30 
 - **Read lengths** - Soft clip & alignment score assumptions require read lengths > 80 bases
-- **Fragment lengts** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
+- **Fragment lengtsh** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
 - **Low Qual INDELS** - Technologies with many low quality indel errors (eg Ultima) may have assembly impacted.  These should be masked from assembly
 - **Hard clipping** - ESVEE prep may not retain reads with hard clipping at or near junctions
 

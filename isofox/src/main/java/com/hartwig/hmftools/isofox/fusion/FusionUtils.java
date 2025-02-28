@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -84,7 +84,7 @@ public class FusionUtils
 
         for(int[] coord : mappedCoords)
         {
-            if(junctOrientations[seIndex] == NEG_ORIENT)
+            if(junctOrientations[seIndex] == ORIENT_REV)
             {
                 if(coord[SE_END] < junctPositions[seIndex])
                     continue;

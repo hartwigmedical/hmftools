@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_2;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
@@ -33,7 +33,7 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeData;
 import com.hartwig.hmftools.isofox.neo.NeoFragmentSupport;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
@@ -114,7 +114,7 @@ public class NeoEpitopesTest
         int cbDownEnd = 280;
 
         NeoEpitopeData neData = createFusionNeoEpitope(
-                INFRAME_FUSION, CHR_1, cbUpEnd, POS_ORIENT, CHR_1, cbDownStart, NEG_ORIENT,
+                INFRAME_FUSION, CHR_1, cbUpEnd, ORIENT_FWD, CHR_1, cbDownStart, ORIENT_REV,
                 GENE_ID_1, GENE_ID_2, "", "",
                 cbUpStart, cbUpEnd, codingBases.substring(cbUpStart, cbUpEnd), createCigar(0, cbUpEnd - cbUpStart + 1, 0).toString(),
                 cbDownStart, cbDownEnd, codingBases.substring(cbDownStart, cbDownEnd), createCigar(0,
@@ -180,7 +180,7 @@ public class NeoEpitopesTest
         cbDownEnd = 50;
 
         neData = createFusionNeoEpitope(
-                INFRAME_FUSION, CHR_1, cbUpStart, NEG_ORIENT, CHR_2, cbDownStart, NEG_ORIENT,
+                INFRAME_FUSION, CHR_1, cbUpStart, ORIENT_REV, CHR_2, cbDownStart, ORIENT_REV,
                 GENE_ID_1, GENE_ID_2, "", "",
                 cbUpStart, cbUpEnd, codingBases.substring(250, 261) + codingBases.substring(280, 291),
                 createCigar(0, 11, 19, 11, 0).toString(),
@@ -260,7 +260,7 @@ public class NeoEpitopesTest
         cbDownEnd = 50;
 
         neData = createFusionNeoEpitope(
-                INFRAME_FUSION, CHR_1, cbUpStart, NEG_ORIENT, CHR_1, cbDownEnd, POS_ORIENT,
+                INFRAME_FUSION, CHR_1, cbUpStart, ORIENT_REV, CHR_1, cbDownEnd, ORIENT_FWD,
                 GENE_ID_1, GENE_ID_2, "", "",
                 cbUpStart, cbUpEnd, codingBases.substring(250, 261) + codingBases.substring(280, 291),
                 createCigar(0, 11, 19, 11, 0).toString(),

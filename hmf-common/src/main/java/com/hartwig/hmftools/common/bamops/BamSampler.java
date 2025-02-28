@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.bamops;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 
 import java.io.File;
@@ -25,6 +26,8 @@ public class BamSampler
 
     private int mReadCount;
     private int mMaxReadLength;
+    private boolean mReadsPaired;
+    private boolean mMateCigarSet;
 
     private static final int DEFAULT_MAX_READS = 1000;
 
@@ -39,11 +42,15 @@ public class BamSampler
         mMaxReadLength = 0;
         mMaxReadCount = maxReadCount;
         mRefGenome = loadRefGenome(referenceGenome);
+        mMateCigarSet = false;
+        mReadsPaired = false;
 
         mSlicer = new BamSlicer(0);
     }
 
     public int maxReadLength() { return mMaxReadLength; }
+    public boolean readsPaired() { return mReadsPaired; }
+    public boolean hasMateCigarSet() { return mMateCigarSet; }
 
     public ChrBaseRegion defaultRegion()
     {
@@ -63,6 +70,10 @@ public class BamSampler
                 .referenceSource(new ReferenceSource(mRefGenome.refGenomeFile()))
                 .open(new File(bamFile));
 
+        // reset
+        mReadCount = 0;
+        mMaxReadLength = 0;
+
         mSlicer.slice(samReader, sampleRegion, this::processRecord);
 
         return mReadCount > 0 && mMaxReadCount > 0;
@@ -73,6 +84,12 @@ public class BamSampler
         ++mReadCount;
 
         mMaxReadLength = max(mMaxReadLength, record.getReadBases().length);
+
+        if(record.getReadPairedFlag())
+        {
+            mReadsPaired = true;
+            mMateCigarSet |= record.hasAttribute(MATE_CIGAR_ATTRIBUTE);
+        }
 
         if(mReadCount >= mMaxReadCount)
         {

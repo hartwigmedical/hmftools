@@ -14,10 +14,12 @@ import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
+import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.permittedRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.getRepeatCount;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
@@ -58,6 +60,7 @@ public class ExtensionSeqBuilder
     private final int mLineExtensionLength;
 
     private RepeatInfo mMaxRepeat;
+    private int mMaxRepeatCount; // includes any counts back into ref bases
     private int[] mReadRepeatCounts; // difference in number of max repeat vs the consensus
     private List<RepeatInfo> mExtensionRepeats;
 
@@ -65,7 +68,6 @@ public class ExtensionSeqBuilder
     private boolean mIsValid;
     private boolean mRequiredRebuild;
 
-    private static final double MISMATCH_READ_REBUILD_PERC = 0.1;
     private static final int READ_REPEAT_COUNT_INVALID = -1;
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
@@ -107,6 +109,7 @@ public class ExtensionSeqBuilder
         mBaseQuals = new byte[baseLength];
         mExtensionRepeats = Lists.newArrayList();
         mMaxRepeat = null;
+        mMaxRepeatCount = 0;
         mReadRepeatCounts = null;
         mRequiredRebuild = false;
 
@@ -151,6 +154,8 @@ public class ExtensionSeqBuilder
     public byte[] baseQualities() { return mBaseQuals; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
     public boolean isValid() { return mIsValid; }
+    public RepeatInfo maxRepeat() { return mMaxRepeat; }
+    public int refBaseRepeatCount() { return mMaxRepeat != null ? mMaxRepeatCount - mMaxRepeat.Count : 0; }
 
     public List<SupportRead> formAssemblySupport()
     {
@@ -161,7 +166,7 @@ public class ExtensionSeqBuilder
             if(read.exceedsMaxMismatches())
                 continue;
 
-            if(read.highQualMatches() < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            if(!sufficientHighQualMatches(read))
                 continue;
 
             supportReads.add(new SupportRead(
@@ -171,6 +176,12 @@ public class ExtensionSeqBuilder
         return supportReads;
     }
 
+    public boolean sufficientHighQualMatches(final ExtReadParseState read)
+    {
+        int refBaseRepeatBuffer = refBaseRepeatCount() > 0 ? 2 : 0;
+        return read.highQualMatches() >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH + refBaseRepeatBuffer;
+    }
+
     public List<Read> mismatchReads()
     {
         return mReads.stream().filter(x -> x.exceedsMaxMismatches()).map(x -> x.read()).collect(Collectors.toList());
@@ -178,11 +189,11 @@ public class ExtensionSeqBuilder
 
     public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
 
+    protected static int DNA_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // allows for Ns
+
     private void buildSequence(boolean isInitial)
     {
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
-
-        int baseCount = Nucleotides.DNA_BASES.length;
 
         boolean lineBasesSet = false;
 
@@ -243,7 +254,7 @@ public class ExtensionSeqBuilder
                 if(read.exhausted())
                     continue;
 
-                if(read.exceedsMaxMismatches()) // be relevant when building the final consensus
+                if(read.exceedsMaxMismatches()) // relevant when building the final consensus
                     continue;
 
                 hasActiveReads = true;
@@ -252,7 +263,7 @@ public class ExtensionSeqBuilder
                 int qual = read.currentQual();
 
                 if(aboveMinQual(qual))
-                    currentReadBases[readIndex] = base;
+                    currentReadBases[readIndex] = base; // cached here since the read state then moves onto the next base
 
                 if(checkReadRepeats && readRepeatSkipCounts[readIndex] != 0)
                 {
@@ -276,9 +287,9 @@ public class ExtensionSeqBuilder
                     }
                 }
 
-                if(base == DNA_N_BYTE)
+                if(Nucleotides.baseIndex(base) < 0)
                 {
-                    base = DNA_BASE_BYTES[0];
+                    base = DNA_N_BYTE;
                     qual = 0;
                 }
 
@@ -310,8 +321,8 @@ public class ExtensionSeqBuilder
                         hasMismatch = true;
 
                         // high-qual mismatch so start tracking frequencies for each base
-                        totalQuals = new int[baseCount];
-                        maxQuals = new int[baseCount];
+                        totalQuals = new int[DNA_BASE_COUNT];
+                        maxQuals = new int[DNA_BASE_COUNT];
 
                         // back port existing counts to the per-base arrays
                         int baseIndex = Nucleotides.baseIndex(consensusBase);
@@ -337,7 +348,7 @@ public class ExtensionSeqBuilder
                 // take the bases with the highest qual totals
                 int maxQual = 0;
                 int maxBaseIndex = 0;
-                for(int b = 0; b < baseCount; ++b)
+                for(int b = 0; b < totalQuals.length; ++b)
                 {
                     if(totalQuals[b] > maxQual)
                     {
@@ -346,7 +357,7 @@ public class ExtensionSeqBuilder
                     }
                 }
 
-                consensusBase = DNA_BASE_BYTES[maxBaseIndex];
+                consensusBase = maxBaseIndex < DNA_BASE_BYTES.length ? DNA_BASE_BYTES[maxBaseIndex] : DNA_N_BYTE;
                 consensusMaxQual = (byte)maxQuals[maxBaseIndex];
 
                 if(!isInitial)
@@ -420,15 +431,49 @@ public class ExtensionSeqBuilder
             return;
 
         // check the existing sequence for a valid repeat
-        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases);
+        int startOffset = mIsForward ? 1 : 0;
+        int endOffset = !mIsForward ? 1 : 0;
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases, startOffset, endOffset);
 
         if(repeats.isEmpty())
             return;
 
         mReadRepeatCounts = new int[mReads.size()];
 
+        RepeatInfo maxRepeat = null;
+
         Collections.sort(repeats, Comparator.comparingInt(x -> -x.Count));
-        RepeatInfo maxRepeat = repeats.get(0);
+        maxRepeat = repeats.get(0);
+
+        // consider an extension of the repeat starting/ending at the first extension bases then going into the following ref bases
+        RepeatInfo startingRepeat = repeats.stream()
+                .filter(x -> (mIsForward && x.Index == 1) || (!mIsForward && x.lastIndex() == mBases.length - 2))
+                .findFirst().orElse(null);
+
+        int maxRefRepeatCount = 0;
+        if(startingRepeat != null)
+        {
+            byte[] repeatBytes = startingRepeat.Bases.getBytes();
+
+            for(ExtReadParseState read : mReads)
+            {
+                int readRefRepeat = read.countRefRepeat(repeatBytes);
+
+                if(readRefRepeat > maxRefRepeatCount)
+                {
+                    maxRefRepeatCount = readRefRepeat;
+
+                    // exit the search if the ref base repeat exceeds the threshold to impact required extension high-qual overlaps
+                    if(maxRefRepeatCount + startingRepeat.Count >= REPEAT_2_DIFF_COUNT)
+                        break;
+                }
+            }
+
+            if(maxRefRepeatCount + startingRepeat.Count > maxRepeat.Count)
+                maxRepeat = startingRepeat;
+            else
+                maxRefRepeatCount = 0;
+        }
 
         // look for a common repeat with variation from all reads, indexed from the junction
         int repeatIndexStart = mIsForward ? maxRepeat.Index : maxRepeat.postRepeatIndex() - 1;
@@ -441,8 +486,7 @@ public class ExtensionSeqBuilder
         {
             ExtReadParseState read = mReads.get(readIndex);
 
-            int readJunctionIndex = read.junctionIndex();
-            int readRepeatIndexStart = readJunctionIndex + (mIsForward ? repeatJunctionOffset : -repeatJunctionOffset);
+            int readRepeatIndexStart = read.junctionIndex() + (mIsForward ? repeatJunctionOffset : -repeatJunctionOffset);
 
             int readRepeatCount = getRepeatCount(read.read(), maxRepeat, readRepeatIndexStart, mIsForward);
 
@@ -468,8 +512,8 @@ public class ExtensionSeqBuilder
         if(medianRepeatCount == 0)
             return;
 
-        int consensusRepeatCount = 0;
         int consensusRepeatFreq = 0;
+        List<Integer> maxFreqCounts = Lists.newArrayList();
 
         for(Map.Entry<Integer,Integer> entry : skipFrequencies.entrySet())
         {
@@ -479,17 +523,60 @@ public class ExtensionSeqBuilder
             if(entry.getValue() > consensusRepeatFreq)
             {
                 consensusRepeatFreq = entry.getValue();
-                consensusRepeatCount = entry.getKey();
+                maxFreqCounts.clear();
+                maxFreqCounts.add(entry.getKey());
+            }
+            else if(entry.getValue() == consensusRepeatFreq)
+            {
+                maxFreqCounts.add(entry.getKey());
             }
         }
 
-        // recompute the median from the non-zero repeat counts
-        readRepeatCounts = readRepeatCounts.stream().filter(x -> x.intValue() > 0).collect(Collectors.toList());
-        medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
+        // if the top frequency has multiple entries then find the value which maximises the reads which are within range of this
+        int consensusRepeatCount;
 
-        // use median if there is no dominant repeat count
-        if(consensusRepeatFreq < readRepeatCounts.size() / 2)
-            consensusRepeatCount = medianRepeatCount;
+        if(maxFreqCounts.size() > 1)
+        {
+            Collections.sort(maxFreqCounts);
+
+            int optimalCount = 0;
+            int optimalReadCount = 0;
+
+            for(int i = 0; i < maxFreqCounts.size(); ++i)
+            {
+                int repeatCount = maxFreqCounts.get(i);
+                int permittedDiff = permittedRepeatCount(repeatCount + maxRefRepeatCount);
+                int closeRepeatCounts = 0;
+
+                for(int j = 0; j < maxFreqCounts.size(); ++j)
+                {
+                    int otherRepeatCount = maxFreqCounts.get(j);
+
+                    if(abs(otherRepeatCount - repeatCount) <= permittedDiff)
+                        ++closeRepeatCounts;
+                }
+
+                if(closeRepeatCounts > optimalReadCount)
+                {
+                    optimalReadCount = closeRepeatCounts;
+                    optimalCount = repeatCount;
+                }
+            }
+
+            consensusRepeatCount = optimalCount;
+        }
+        else
+        {
+            consensusRepeatCount = maxFreqCounts.get(0);
+
+            // recompute the median from the non-zero repeat counts
+            readRepeatCounts = readRepeatCounts.stream().filter(x -> x.intValue() > 0).collect(Collectors.toList());
+            medianRepeatCount = Doubles.medianInteger(readRepeatCounts);
+
+            // use median if there is no dominant repeat count
+            if(consensusRepeatFreq < readRepeatCounts.size() / 2)
+                consensusRepeatCount = medianRepeatCount;
+        }
 
         repeatIndexStart = maxRepeat.Index;
 
@@ -498,6 +585,7 @@ public class ExtensionSeqBuilder
             repeatIndexStart -= (consensusRepeatCount - maxRepeat.Count) * maxRepeat.baseLength();
 
         mMaxRepeat = new RepeatInfo(repeatIndexStart, maxRepeat.Bases, consensusRepeatCount);
+        mMaxRepeatCount = consensusRepeatCount + maxRefRepeatCount;
     }
 
     private void formConsensusSequence()
@@ -513,8 +601,7 @@ public class ExtensionSeqBuilder
             moveReadsPastLineExtension();
         }
 
-        int[] readMismatchExceededIndex = new int[mReads.size()];
-        initialise(readMismatchExceededIndex, -1);
+        int[] readMismatchExceededIndex = null;
 
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
@@ -535,9 +622,16 @@ public class ExtensionSeqBuilder
                         read.addMismatch();
 
                         // record the first base where the read exceeds its permitted mismatch count
-                        if(read.exceedsMaxMismatches() && readMismatchExceededIndex[readIndex] < 0)
+                        if(read.exceedsMaxMismatches())
                         {
-                            readMismatchExceededIndex[readIndex] = extensionIndex;
+                            if(readMismatchExceededIndex == null)
+                            {
+                                readMismatchExceededIndex = new int[mReads.size()];
+                                initialise(readMismatchExceededIndex, -1);
+                            }
+
+                            if(readMismatchExceededIndex[readIndex] < 0)
+                                readMismatchExceededIndex[readIndex] = extensionIndex;
                         }
                     }
                     else
@@ -566,6 +660,8 @@ public class ExtensionSeqBuilder
         // and if one is found, reset any read whose mismatches might be explained by the repeat
         if(mMaxRepeat != null)
         {
+            int permittedCountDiff = permittedRepeatCount(mMaxRepeatCount);
+
             for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
                 ExtReadParseState read = mReads.get(readIndex);
@@ -576,12 +672,15 @@ public class ExtensionSeqBuilder
                     continue;
                 }
 
-                // read must differ vs the consensus repeat
+                // within permitted repeat-count differences
                 if(mReadRepeatCounts[readIndex] == READ_REPEAT_COUNT_INVALID)
                     continue;
 
                 // the read must have any at least one repeat to be considered to differ from jitter
                 if(mReadRepeatCounts[readIndex] == 0 && mMaxRepeat.Count > 1)
+                    continue;
+
+                if(abs(mReadRepeatCounts[readIndex] - mMaxRepeat.Count) > permittedCountDiff)
                     continue;
 
                 // if a read has repeats and its mismatch occurs within the range of the first repeat, consider it mismatched from jittter
@@ -662,6 +761,8 @@ public class ExtensionSeqBuilder
             repeatLength = mMaxRepeat.baseLength();
         }
 
+        int permittedCountDiff = permittedRepeatCount(mMaxRepeatCount);
+
         for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
         {
             ExtReadParseState read = mReads.get(readIndex);
@@ -669,8 +770,13 @@ public class ExtensionSeqBuilder
             read.resetIndex();
             read.resetMatches();
 
-            int readRepeatSkipCount = mMaxRepeat != null && mReadRepeatCounts[readIndex] != READ_REPEAT_COUNT_INVALID ?
-                    (mReadRepeatCounts[readIndex] - mMaxRepeat.Count) * repeatLength : 0;
+            int readRepeatSkipCount = 0;
+
+            if(mMaxRepeat != null && mReadRepeatCounts[readIndex] != READ_REPEAT_COUNT_INVALID)
+            {
+                if(abs(mReadRepeatCounts[readIndex] - mMaxRepeat.Count) <= permittedCountDiff)
+                    readRepeatSkipCount = (mReadRepeatCounts[readIndex] - mMaxRepeat.Count) * repeatLength;
+            }
 
             checkReadMismatches(read, extensionIndex, repeatIndexStart, readRepeatSkipCount);
         }
@@ -700,13 +806,15 @@ public class ExtensionSeqBuilder
 
         if(mMaxRepeat != null)
         {
+            int permittedCountDiff = permittedRepeatCount(mMaxRepeatCount);
             repeatIndexStart = mIsForward ? mMaxRepeat.Index : mMaxRepeat.postRepeatIndex() - 1;
 
             int repeatJunctionOffset = mIsForward ? repeatIndexStart : mBases.length - 1 - repeatIndexStart;
             int readRepeatIndexStart = readJunctionIndex + (mIsForward ? repeatJunctionOffset : -repeatJunctionOffset);
             int readRepeatCount = getRepeatCount(read, mMaxRepeat, readRepeatIndexStart, mIsForward);
 
-            repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.baseLength();
+            if(readRepeatCount != READ_REPEAT_COUNT_INVALID && abs(readRepeatCount - mMaxRepeat.Count) <= permittedCountDiff)
+                repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.baseLength();
         }
 
         checkReadMismatches(readParseState, extensionIndex, repeatIndexStart, repeatSkipCount);
@@ -816,10 +924,11 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.extensionLength() + 1, maxValidExtensionLength);
         }
 
-        if(maxValidExtensionLength == 0 || validExtensionReadCount < ASSEMBLY_MIN_READ_SUPPORT || !hasMinLengthSoftClipRead)
+        int minRequiredReadCount = minReadThreshold(mJunction);
+
+        if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < minRequiredReadCount)
         {
             mIsValid = false;
-            return;
         }
     }
 
@@ -834,12 +943,20 @@ public class ExtensionSeqBuilder
 
     public String buildInformation()
     {
-        // ReadCount;MismatchReadCount;Rebuild;MaxRepeatInfo;ReadRepeatInfo;
+        // Statistics captured:
+        // ReadCount - candidate read count
+        // ExactMatchReads - read with no mismatches
+        // MismatchReads - excluded from final support
+        // Rebuild was required
+        // MaxRepeatInfo - index, repeated bases and repeat count, ref base repeat count (if applicable)
+        // ReadRepeatInfo - reads matching max repeat, close (<=2), not-close, no repeat
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 
         sj.add(String.valueOf(mReads.size()));
 
         int mismatchReads = (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count();
+        int exactMatchReads = (int)mReads.stream().filter(x -> x.mismatches() == 0).count();
+        sj.add(String.valueOf(exactMatchReads));
         sj.add(String.valueOf(mismatchReads));
         sj.add(String.valueOf(mRequiredRebuild));
 
@@ -850,7 +967,7 @@ public class ExtensionSeqBuilder
 
         if(mMaxRepeat != null)
         {
-            sj.add(format("%d:%s:%d", mMaxRepeat.Index, mMaxRepeat.Bases, mMaxRepeat.Count));
+            sj.add(format("%d:%s:%d:%d", mMaxRepeat.Index, mMaxRepeat.Bases, mMaxRepeat.Count, mMaxRepeatCount - mMaxRepeat.Count));
 
             for(int i = 0; i < mReadRepeatCounts.length; ++i)
             {
@@ -860,7 +977,7 @@ public class ExtensionSeqBuilder
                     ++matchedRepeat;
                 else if(abs(mReadRepeatCounts[i] - mMaxRepeat.Count) <= 2)
                     ++closeRepeat;
-                else if(mReadRepeatCounts[i] == mMaxRepeat.Count)
+                else
                     ++notCloseRepeat;
             }
 

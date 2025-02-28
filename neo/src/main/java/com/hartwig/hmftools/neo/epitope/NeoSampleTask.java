@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOTATION;
@@ -231,7 +231,7 @@ public class NeoSampleTask implements Callable
             // for same gene fusions, check that the SV isn't non-disruptive within the coding region of any other transcript(s)
 
             boolean isNonDisruptiveCoding = sameGene
-                    && fusion.Orientations[FS_UP] == POS_ORIENT && fusion.Orientations[FS_DOWN] == NEG_ORIENT
+                    && fusion.Orientations[FS_UP] == ORIENT_FWD && fusion.Orientations[FS_DOWN] == ORIENT_REV
                     && upTransDataList.stream().anyMatch(x -> svIsNonDisruptiveInCodingTranscript(fusion.Positions, x));
 
             if(isNonDisruptiveCoding)

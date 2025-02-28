@@ -325,11 +325,12 @@ There are 9 key steps in the SAGE algorithm described in detail below:
   1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
   2. [Candidate Variants](#2-candidate-variants)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
-  4. [Normal Counts and Quality](#4-normal-counts-and-quality)
-  5. [Soft Filter](#5-soft-filters)
-  6. [Phasing](#6-phasing)
-  7. [De-duplication](#7-de-duplication)
-  8. [Gene Panel Coverage](#8-gene-panel-coverage)
+  4. [Jitter Determinations](#4-jitter-determinations)
+  5. [Normal Counts and Quality](#5-normal-counts-and-quality)
+  6. [Soft Filter](#6-soft-filters)
+  7. [Phasing](#7-phasing)
+  8. [De-duplication](#8-de-duplication)
+  9. [Gene Panel Coverage](#9-gene-panel-coverage)
 
 ## 1. Alt Specific Base Quality Recalibration
 
@@ -526,7 +527,7 @@ jitter | 0.00025 | 0.00025 | 0.00025 | 0.00025 | p-score of `FULL`, `SHORTENED` 
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
-3. special filter (max_germline_alt_support) is applied for MNV and INS of > 10 bases such that it is filtered if 1% or more of the reads in the germline contains evidence of the variant.
+3. special filter (max_germline_alt_support) is applied for MNV and INS of > 10 bases such that it is filtered if 1% or more of the reads in the germline contains evidence of the variant. For PANEL variants with `RC_REPC < 10` we also increase this threshold to 5%, and if only 1 germline read with < 25 BQ, we tolerate up to min(10%, tumorAF/3) as well.
 
 4. Likelihood =  `binomial(min(SB,1-SB)*AD,AD,0.5,TRUE)`  If 0.15<SB<0.85 or if ref is sufficiently biased, we never filter.
 

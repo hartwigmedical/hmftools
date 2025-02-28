@@ -107,6 +107,8 @@ public class PurpleConstants
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
     public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 1000;
 
+    public static final int SV_MAX_INFERRED_COPY_NUMBER = 1000;
+
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
     public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;
@@ -147,4 +149,7 @@ public class PurpleConstants
     public static final double BIALLELIC_THRESHOLD_PARAMETER_II = 0.8;
     public static final double BIALLELIC_LOH_BASE_ERROR_RATE = 0.02;
     public static final double BIALLELIC_ASSUMED_FRACTION = 0.2;
+
+    // chimerism
+    public static final double CHIMERISM_SAMPLE_CUTOFF = 0.05;
 }

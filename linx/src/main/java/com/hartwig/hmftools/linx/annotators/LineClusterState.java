@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx.annotators;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
@@ -23,7 +23,7 @@ import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class LineClusterState
 {
@@ -198,9 +198,9 @@ public class LineClusterState
         if(insSeqLength < POLY_A_MOTIF.length())
             return false;
 
-        final String requiredSequence = (orientation == POS_ORIENT) == isSource ? POLY_A_MOTIF : POLY_T_MOTIF;
+        final String requiredSequence = (orientation == ORIENT_FWD) == isSource ? POLY_A_MOTIF : POLY_T_MOTIF;
 
-        if(orientation == POS_ORIENT || eitherEnd)
+        if(orientation == ORIENT_FWD || eitherEnd)
         {
             final String startSeq = insSequence.substring(0, min(insSeqLength, POLY_AT_BASES_SEARCH));
 
@@ -208,7 +208,7 @@ public class LineClusterState
                 return true;
         }
 
-        if(orientation == NEG_ORIENT || eitherEnd)
+        if(orientation == ORIENT_REV || eitherEnd)
         {
             final String endSeq = insSequence.substring(max(0, insSeqLength - POLY_AT_BASES_SEARCH), insSeqLength);
 

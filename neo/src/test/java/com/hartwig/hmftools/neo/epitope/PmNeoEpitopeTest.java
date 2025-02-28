@@ -15,8 +15,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
@@ -68,8 +68,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(42, neData.position(FS_UP));
         assertEquals(43, neData.position(FS_DOWN));
-        assertEquals(POS_ORIENT, neData.orientation(FS_UP));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_UP));
+        assertEquals(ORIENT_REV, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
@@ -101,8 +101,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(46, neData.position(FS_UP));
         assertEquals(47, neData.position(FS_DOWN));
-        assertEquals(POS_ORIENT, neData.orientation(FS_UP));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_UP));
+        assertEquals(ORIENT_REV, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
@@ -134,8 +134,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(30, neData.position(FS_UP));
         assertEquals(31, neData.position(FS_DOWN));
-        assertEquals(POS_ORIENT, neData.orientation(FS_UP));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_UP));
+        assertEquals(ORIENT_REV, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
@@ -173,8 +173,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(49, neData.position(FS_UP));
         assertEquals(48, neData.position(FS_DOWN));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_UP));
-        assertEquals(POS_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_REV, neData.orientation(FS_UP));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_DOWN));
 
         assertEquals(PHASE_2, neData.Phases[FS_UP]);
         assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
@@ -332,8 +332,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(49, neData.position(FS_UP));
         assertEquals(48, neData.position(FS_DOWN));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_UP));
-        assertEquals(POS_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_REV, neData.orientation(FS_UP));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
@@ -366,8 +366,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(40, neData.position(FS_UP));
         assertEquals(39, neData.position(FS_DOWN));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_UP));
-        assertEquals(POS_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_REV, neData.orientation(FS_UP));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
@@ -418,8 +418,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(41, neData.position(FS_UP));
         assertEquals(45, neData.position(FS_DOWN));
-        assertEquals(POS_ORIENT, neData.orientation(FS_UP));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_UP));
+        assertEquals(ORIENT_REV, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
@@ -720,8 +720,8 @@ public class PmNeoEpitopeTest
 
         assertEquals(28, neData.position(FS_UP));
         assertEquals(29, neData.position(FS_DOWN));
-        assertEquals(POS_ORIENT, neData.orientation(FS_UP));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_UP));
+        assertEquals(ORIENT_REV, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);

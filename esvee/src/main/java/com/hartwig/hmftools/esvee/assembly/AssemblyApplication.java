@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.floor;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -7,18 +8,27 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISC_RATE_DISC_ONLY_INCREMENT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISC_RATE_JUNC_INCREMENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.skipUnlinkedJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DECOY;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
-import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,6 +65,7 @@ import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.output.VcfWriter;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 public class AssemblyApplication
 {
@@ -138,7 +149,7 @@ public class AssemblyApplication
             // with the BAM they were read from (ie as used in tumor vs ref counts)
             writeAssemblyBam(finalAssemblies);
 
-            if(mConfig.PerfDebug || (!mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificJunctions.isEmpty()))
+            if(mConfig.PerfDebug)
             {
                 mPerfCounters.forEach(x -> x.logStats());
             }
@@ -172,9 +183,29 @@ public class AssemblyApplication
             return true;
         }
 
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
+        DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
+
+        int minJunctionFrags = MIN_JUNCTION_SUPPORT;
+        int minHotspotFrags = MIN_HOTSPOT_JUNCTION_SUPPORT;
+        int minDiscordantFrags = DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
+
+        double discordantRate = discordantStats.discordantRate();
+
+        if(discordantRate >= mConfig.DiscordantRateIncrement)
+        {
+            minJunctionFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
+            minHotspotFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
+            minDiscordantFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_DISC_ONLY_INCREMENT;
+
+            SV_LOGGER.info("raised min fragments(hotspot={} junction={} disc-only={}) for discordantRate({})",
+                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", discordantRate));
+        }
+
         for(String junctionFile : mConfig.JunctionFiles)
         {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
+                    junctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags);
 
             if(newJunctionsMap == null)
                 return false;
@@ -195,11 +226,15 @@ public class AssemblyApplication
 
     private void loadFragmentLengthBounds()
     {
-        if(mConfig.JunctionFiles.isEmpty())
-            return;
+        String fragmentLengthFile = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
 
-        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.sampleId());
-        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
+        if(!Files.exists(Paths.get(fragmentLengthFile)))
+        {
+            SV_LOGGER.error("missing fragment length file: {}", fragmentLengthFile);
+            System.exit(1);
+        }
+
+        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragmentLengthFile);
 
         if(fragmentLengthBounds.isValid())
         {

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
@@ -83,7 +83,7 @@ public class ChimericReadTest
         assertEquals(1, chimericRT.getReadMap().size());
         assertEquals(2, chimericRT.getReadMap().get(read1.Id).size());
         assertEquals(1, chimericRT.getJunctionRacGroups().junctionCount());
-        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(1100));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(1100));
 
         // single read in this gene
         chimericRT.clear();
@@ -104,7 +104,7 @@ public class ChimericReadTest
         assertEquals(1, chimericRT.getReadMap().size());
         assertEquals(1, chimericRT.getJunctionRacGroups().fragmentCount());
         assertEquals(1, chimericRT.getJunctionRacGroups().junctionCount());
-        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(1100));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(1100));
     }
 
     public static final String TEST_SUPP_DATA = "21;42870046;-;46S30M;255;0;";
@@ -164,8 +164,8 @@ public class ChimericReadTest
 
         assertEquals(1, chimericRT.getReadMap().size());
         assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
-        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(1100));
-        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(NEG_ORIENT).containsKey(10400));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(1100));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_REV).containsKey(10400));
 
         chimericRT.clear();
         chimericRT.getJunctionRacGroups().clear(); // force a clean-up
@@ -227,8 +227,8 @@ public class ChimericReadTest
 
         assertEquals(1, chimericRT.getReadMap().size());
         assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
-        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(10500));
-        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(NEG_ORIENT).containsKey(chimericJunc));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(10500));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_REV).containsKey(chimericJunc));
     }
 
     @Test
@@ -319,8 +319,8 @@ public class ChimericReadTest
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertTrue(chimericRT.getLocalChimericReads().get(0).contains(read5));
 
-        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(POS_ORIENT).containsKey(500));
-        assertFalse(chimericRT.getJunctionRacGroups().getJunctionGroups(NEG_ORIENT).containsKey(2000));
+        assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(500));
+        assertFalse(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_REV).containsKey(2000));
 
         chimericRT.clear();
         fragTracker.clear();

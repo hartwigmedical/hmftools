@@ -41,14 +41,11 @@ public class ChordApplicationTest
         {
             Configurator.setRootLevel(Level.DEBUG);
 
-            List<String> sampleIds = List.of(MINIMAL_SAMPLE);
-
             ChordConfig config = new ChordConfig.Builder()
-                    .sampleIds(sampleIds)
+                    .sampleIds(MINIMAL_SAMPLE)
                     .refGenomeFile(DUMMY_GENOME_FASTA)
                     .purpleDir(INPUT_VCF_DIR)
                     .outputDir(TMP_OUTPUT_DIR)
-                    .threads(sampleIds.size())
                     .build();
 
             ChordApplication chordApplication = new ChordApplication(config);

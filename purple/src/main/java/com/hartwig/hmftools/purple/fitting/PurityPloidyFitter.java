@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -42,6 +43,7 @@ public class PurityPloidyFitter
     private final SampleData mSampleData;
     private final RegionFitCalculator mRegionFitCalculator;
     private final List<ObservedRegion> mObservedRegions;
+    private final Gender mGender;
 
     private final ExecutorService mExecutorService;
     private final PurpleConfig mConfig;
@@ -66,7 +68,7 @@ public class PurityPloidyFitter
 
     public PurityPloidyFitter(
             final PurpleConfig config, final ReferenceData referenceData, final SampleData sampleData, final ExecutorService executorService,
-            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions)
+            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions, final Gender gender)
     {
         mSampleData = sampleData;
         mConfig = config;
@@ -74,6 +76,7 @@ public class PurityPloidyFitter
         mExecutorService = executorService;
         mRegionFitCalculator = regionFitCalculator;
         mObservedRegions = observedRegions;
+        mGender = gender;
 
         mCopyNumbers = Lists.newArrayList();
         mFittedRegions = Lists.newArrayList();
@@ -244,7 +247,7 @@ public class PurityPloidyFitter
             return;
         }
 
-        mSomaticPurityFit = mVariantPurityFitter.calcSomaticFit(diploidCandidates, mCopyNumbers);
+        mSomaticPurityFit = mVariantPurityFitter.calcSomaticFit(diploidCandidates, mCopyNumbers, mGender);
 
         if(mSomaticPurityFit == null)
         {

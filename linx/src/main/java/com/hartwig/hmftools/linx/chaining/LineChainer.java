@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.typeAsInt;
+import static com.hartwig.hmftools.linx.CohortDataWriter.cohortDataFilename;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
@@ -36,7 +37,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class LineChainer implements CohortFileInterface
 {
@@ -385,14 +386,14 @@ public class LineChainer implements CohortFileInterface
     {
         try
         {
-            String outputFileName = outputDir + "LNX_LINE_CHAINS.csv";
+            String outputFileName = cohortDataFilename(outputDir, "LINE_CHAINS");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             // definitional fields
-            writer.write("SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc,ChainComplete");
-            writer.write(",SourceChr,SourcePosStart,SourcePosEnd,SourceOrientStart,SourceOrientEnd");
-            writer.write(",InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd,SourceInvOrient");
+            writer.write("SampleId\tClusterId\tChainId\tChainSvCount\tAsmbLinks\tChainDesc\tChainComplete");
+            writer.write("\tSourceChr\tSourcePosStart\tSourcePosEnd\tSourceOrientStart\tSourceOrientEnd");
+            writer.write("\tInsertChr\tInsertPosStart\tInsertPosEnd\tSourceInvPosStart\tSourceInvPosEnd\tSourceInvOrient");
             writer.newLine();
             return writer;
         }
@@ -517,17 +518,17 @@ public class LineChainer implements CohortFileInterface
 
             StringBuilder sb = new StringBuilder();
 
-            sb.append(String.format("%s,%d,%d,%d,%d,%s,true",
+            sb.append(String.format("%s\t%d\t%d\t%d\t%d\t%s\ttrue",
                     mSampleId, mClusterId, chain.id(), chainSvCount, chain.getAssemblyLinkCount(), getSvTypesStr(typeCounts)));
 
-            sb.append(String.format(",%s,%d,%d,%d,%d",
+            sb.append(String.format("\t%s\t%d\t%d\t%d\t%d",
                     firstLink.chromosome(), sourcePositions[lowerSourceIndex], sourcePositions[switchIndex(lowerSourceIndex)],
                     sourceOrients[lowerSourceIndex], sourceOrients[switchIndex(lowerSourceIndex)]));
 
-            sb.append(String.format(",%s,%d,%d",
+            sb.append(String.format("\t%s\t%d\t%d",
                     insertChr, insertPositions[lowerInsertIndex], insertPositions[switchIndex(lowerInsertIndex)]));
 
-            sb.append(String.format(",%d,%d,%d",
+            sb.append(String.format("\t%d\t%d\t%d",
                     invPositions[SE_START], invPositions[SE_END], invOrient));
 
             outputLines.add(sb.toString());
@@ -643,19 +644,17 @@ public class LineChainer implements CohortFileInterface
             if(insertPositions[0] > 0 && insertPositions[1] > 0)
                 lowerInsertIndex = insertPositions[0] <= insertPositions[1] ? 0 : 1;
 
-            // SampleId,ClusterId,ChainId,ChainSvCount,AsmbLinks,ChainDesc,SourceChr,SourcePosStart,SourcePosEnd");
-            // InsertChr,InsertPosStart,InsertPosEnd,SourceInvPosStart,SourceInvPosEnd,SourceInvOrient,LoneBeOrient");
             StringBuilder sb = new StringBuilder();
 
-            sb.append(String.format("%s,%d,%d,%d,%d,%s,false",
+            sb.append(String.format("%s\t%d\t%d\t%d\t%d\t%s\tfalse",
                     mSampleId, mClusterId, nonChainId++, chainSvCount, 0, getSvTypesStr(typeCounts)));
 
-            sb.append(String.format(",%s,%d,%d,%d,%d,%s,%d,%d",
+            sb.append(String.format("\t%s\t%d\t%d\t%d\t%d\t%s\t%d\t%d",
                     sourceChr, sourcePositions[lowerSourceIndex], sourcePositions[switchIndex(lowerSourceIndex)],
                     sourceOrient[lowerSourceIndex], sourceOrient[switchIndex(lowerSourceIndex)],
                     insertChr, insertPositions[lowerInsertIndex], insertPositions[switchIndex(lowerInsertIndex)]));
 
-            sb.append(String.format(",%d,%d,%d",
+            sb.append(String.format("\t%d\t%d\t%d",
                     invPositions[SE_START], invPositions[SE_END], invOrient));
 
             outputLines.add(sb.toString());

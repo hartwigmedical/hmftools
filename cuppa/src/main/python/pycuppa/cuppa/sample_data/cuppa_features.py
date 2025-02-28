@@ -3,7 +3,6 @@ from __future__ import annotations
 import os.path
 import pandas as pd
 
-from cuppa.constants import PREDICT_NA_FILL_VALUE
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import check_required_columns
 
@@ -67,11 +66,9 @@ class CuppaFeaturesLoader(LoggerMixin):
         self,
         path: str,
         sample_id: str | None = None,
-        na_fill_value: int | float = PREDICT_NA_FILL_VALUE
     ):
         self.path = path
         self.sample_id = sample_id
-        self.na_fill_value = na_fill_value
 
         self.df: pd.DataFrame = None
 
@@ -197,4 +194,4 @@ class CuppaFeaturesLoader(LoggerMixin):
         self._assign_feature_names()
         self._print_stats()
 
-        return self.df.fillna(self.na_fill_value).transpose()
+        return self.df.transpose()

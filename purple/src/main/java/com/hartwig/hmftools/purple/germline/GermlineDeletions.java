@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC;
@@ -121,7 +121,7 @@ public class GermlineDeletions
         {
             int regionStart;
             int regionEnd;
-            byte requiredOrientation = (se == SE_START) ? POS_ORIENT : NEG_ORIENT;
+            byte requiredOrientation = (se == SE_START) ? ORIENT_FWD : ORIENT_REV;
 
             if(se == SE_START)
             {

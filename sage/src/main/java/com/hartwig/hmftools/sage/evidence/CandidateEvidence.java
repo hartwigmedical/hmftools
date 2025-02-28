@@ -58,7 +58,8 @@ public class CandidateEvidence
             catch(Exception e)
             {
                 SG_LOGGER.error("error processing read({} {}:{}-{}) error: {}",
-                        record.getReadName(), record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd());
+                        record.getReadName(), record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd(), e.toString());
+                e.printStackTrace();
                 System.exit(1);
             }
 

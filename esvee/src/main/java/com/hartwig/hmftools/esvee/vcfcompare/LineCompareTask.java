@@ -35,7 +35,7 @@ public class LineCompareTask implements Runnable
     @Override
     public void run()
     {
-        SV_LOGGER.info("Running task: " + CompareTask.LINE_COMPARE);
+        SV_LOGGER.info("running LINE comparison");
 
         Map<String,List<VariantBreakend>> oldChrBreakendMap = loadAndLinkVariants(mConfig.OldVcf, OLD_VCF);
         Map<String,List<VariantBreakend>> newChrBreakendMap = loadAndLinkVariants(mConfig.NewVcf, NEW_VCF);
@@ -62,7 +62,7 @@ public class LineCompareTask implements Runnable
         LineLinkWriter writer = new LineLinkWriter(mBreakendMatcher, mConfig);
         writer.writeBreakends();
 
-        SV_LOGGER.info("Completed task: " + CompareTask.LINE_COMPARE);
+        SV_LOGGER.info("completed LINE comparison");
     }
 
     private static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile, String label)

@@ -215,16 +215,13 @@ public class HomologyData
         }
 
         if(exactMatch == 0)
-            return new HomologyData("", 0, 0, 0, overlap);
+            return new HomologyData("", 0, 0, 0, 0);
 
         int halfRange = exactMatch / 2;
         int exactStart = max(halfRange, 1); // round up if an odd length
         int exactEnd = exactMatch - exactStart;
 
-        int inexactStart = halfRange;
-        int inexactEnd = overlap - inexactStart;
-
-        return new HomologyData(sb.toString(), -exactStart, exactEnd, -inexactStart, inexactEnd);
+        return new HomologyData(sb.toString(), -exactStart, exactEnd, -exactStart, exactEnd);
     }
 
     private static String getOverlapBases(

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import javax.annotation.Nullable;
 
@@ -23,6 +24,19 @@ public class ReadSupportCounts
         Realigned = 0;
         Ref = 0;
         Total = 0;
+    }
+
+    public ReadSupportCounts(final int[] counts)
+    {
+        if(counts.length == 6)
+        {
+            Full = counts[0];
+            PartialCore = counts[1];
+            Core = counts[2];
+            Realigned = counts[3];
+            Ref = counts[4];
+            Total = counts[5];
+        }
     }
 
     public void addSupport(@Nullable final VariantReadSupport support, final int count)
@@ -75,5 +89,10 @@ public class ReadSupportCounts
     public int[] toArray()
     {
         return new int[] { Full, PartialCore, Core, Realigned, Ref, Total };
+    }
+
+    public String toString()
+    {
+        return format("full(%d) partial(%d) core(%d) realigned(%d) ref(%d) total(%d)", Full, PartialCore, Core, Realigned, Ref, Total);
     }
 }

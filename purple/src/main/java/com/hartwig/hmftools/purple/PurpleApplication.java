@@ -57,6 +57,7 @@ import com.hartwig.hmftools.common.purple.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
+import com.hartwig.hmftools.purple.germline.ChimerismDetection;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -115,6 +116,12 @@ public class PurpleApplication
 
     public void run()
     {
+        if(!mConfig.Fitting.hasValidValues())
+        {
+            PPL_LOGGER.error("invalid configured fitting values");
+            System.exit(1);
+        }
+
         long startTimeMs = System.currentTimeMillis();
 
         try
@@ -162,7 +169,7 @@ public class PurpleApplication
         final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
 
         final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
-                new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData, mConfig)
+                new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mConfig)
                 : new SomaticSvCache();
 
         sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
@@ -195,10 +202,10 @@ public class PurpleApplication
             PPL_LOGGER.warn("Cobalt gender {} does not match Amber gender {}", cobaltGender, amberGender);
         }
 
-        final CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
-        final SomaticVariantCache somaticCache = mConfig.runTumor() ? sampleData.SomaticCache : null;
+        CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
+        SomaticVariantCache somaticCache = mConfig.runTumor() ? sampleData.SomaticCache : null;
 
-        PPL_LOGGER.info("purple output directory: {}", mConfig.OutputDir);
+        PPL_LOGGER.info("output directory: {}", mConfig.OutputDir);
         mPurpleVersion.write(mConfig.OutputDir);
 
         PPL_LOGGER.info("applying segmentation");
@@ -225,10 +232,13 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
+            ChimerismDetection chimerismDetection = new ChimerismDetection(amberData, cobaltData, mReferenceData.RefGenVersion);
+            chimerismDetection.run();
+
             PPL_LOGGER.info("fitting purity");
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions);
+                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender);
 
             purityPloidyFitter.run();
 
@@ -272,11 +282,13 @@ public class PurpleApplication
             fittedRegions.addAll(regionFitCalculator.fitRegion(bestFit.Fit.purity(), bestFit.Fit.normFactor(), observedRegions));
         }
 
-        PPL_LOGGER.info("generating QC Stats");
+        PPL_LOGGER.debug("generating QC stats");
+
         final PurpleQC qcChecks = PurpleSummaryData.createQC(
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
-                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES);
+                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES,
+                somaticCache != null ? somaticCache.tincLevel() : 0);
 
         final PurityContext purityContext = createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
@@ -295,7 +307,7 @@ public class PurpleApplication
             if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
             {
                 germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mReferenceData, mConfig,
+                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mConfig,
                         fittedRegions, copyNumbers, purityContext);
 
                 germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
@@ -313,6 +325,13 @@ public class PurpleApplication
             GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions.getDeletions());
         }
 
+        List<DriverSourceData> driverSourceData = Lists.newArrayList();
+
+        if(mConfig.RunDrivers)
+        {
+            findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions, driverSourceData);
+        }
+
         if(!mConfig.germlineMode() && !mConfig.Charting.Disabled)
         {
             PPL_LOGGER.info("generating charts");
@@ -327,7 +346,7 @@ public class PurpleApplication
                 charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.plottingVariants(), sampleData.SvCache.variants(),
-                        regionsForVis, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+                        regionsForVis, Lists.newArrayList(amberData.ChromosomeBafs.values()), driverSourceData);
                 
                 // clean up any temporary files
                 // RChartData.cleanupFiles(mConfig, tumorId);
@@ -339,27 +358,23 @@ public class PurpleApplication
                 System.exit(1);
             }
         }
-
-        if(mConfig.RunDrivers)
-        {
-            findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions);
-        }
     }
 
     private void findDrivers(
             final String tumorSample, final PurityContext purityContext,  final List<GeneCopyNumber> geneCopyNumbers,
-            @Nullable final SomaticStream somaticStream, @Nullable GermlineDeletions germlineDeletions) throws IOException
+            @Nullable final SomaticStream somaticStream, @Nullable GermlineDeletions germlineDeletions,
+            final List<DriverSourceData> driverSourceData) throws IOException
     {
-        final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
-        final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
+        List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
+        List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
 
         PPL_LOGGER.info("generating drivers");
 
-        final Map<String,List<GeneCopyNumber>> geneCopyNumberMap = listToMap(geneCopyNumbers);
+        Map<String,List<GeneCopyNumber>> geneCopyNumberMap = listToMap(geneCopyNumbers);
 
         if(mConfig.runTumor())
         {
-            List<DriverCatalog> somaticDrivers = somaticStream.buildDrivers(geneCopyNumberMap);
+            List<DriverCatalog> somaticDrivers = somaticStream.buildDrivers(geneCopyNumberMap, driverSourceData);
 
             somaticDriverCatalog.addAll(somaticDrivers);
 
@@ -367,11 +382,17 @@ public class PurpleApplication
                     purityContext.qc().status(), purityContext.qc().amberGender(), mReferenceData.DriverGenes,
                     purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode);
 
+            addGeneDriverSourceData(ampDrivers, geneCopyNumbers, driverSourceData);
+
             somaticDriverCatalog.addAll(ampDrivers);
 
-            final DeletionDrivers delDrivers = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+            DeletionDrivers delDriverFinder = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
-            somaticDriverCatalog.addAll(delDrivers.deletions(geneCopyNumbers, mConfig.TargetRegionsMode));
+            List<DriverCatalog> delDrivers = delDriverFinder.deletions(geneCopyNumbers, mConfig.TargetRegionsMode);
+
+            somaticDriverCatalog.addAll(delDrivers);
+
+            addGeneDriverSourceData(delDrivers, geneCopyNumbers, driverSourceData);
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, true), somaticDriverCatalog);
         }
@@ -385,6 +406,21 @@ public class PurpleApplication
                 germlineDriverCatalog.addAll(germlineDeletions.getDrivers());
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, false), germlineDriverCatalog);
+        }
+    }
+
+    private void addGeneDriverSourceData(
+            final List<DriverCatalog> geneDivers, final List<GeneCopyNumber> geneCopyNumbers, final List<DriverSourceData> driverSourceData)
+    {
+        for(DriverCatalog driverRecord : geneDivers)
+        {
+            GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream()
+                    .filter(x -> x.geneName().equals(driverRecord.gene())).findFirst().orElse(null);
+
+            if(geneCopyNumber != null)
+            {
+                driverSourceData.add(new DriverSourceData(driverRecord, geneCopyNumber));
+            }
         }
     }
 
@@ -414,7 +450,7 @@ public class PurpleApplication
             PurpleQC purpleQC = ImmutablePurpleQC.builder()
                     .method(FittedPurityMethod.NO_TUMOR).purity(0).contamination(0).cobaltGender(gender)
                     .unsupportedCopyNumberSegments(0).deletedGenes(0).amberGender(gender).lohPercent(0).copyNumberSegments(0)
-                    .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0).build();
+                    .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0).tincLevel(0).build();
 
             PurityContext purityContext =  ImmutablePurityContext.builder()
                     .bestFit(fittedPurity)
@@ -438,14 +474,18 @@ public class PurpleApplication
             PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
             SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
 
-            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorId, true), Collections.emptyList());
+            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(
+                    mConfig.OutputDir, tumorId, true), Collections.emptyList());
         }
 
         if(mConfig.runGermline())
         {
             if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
             {
-                GermlineSvCache germlineSvCache = new GermlineSvCache();
+                GermlineSvCache germlineSvCache = new GermlineSvCache(
+                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mConfig,
+                        Collections.emptyList(), Collections.emptyList(), null);
+
                 germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
             }
 

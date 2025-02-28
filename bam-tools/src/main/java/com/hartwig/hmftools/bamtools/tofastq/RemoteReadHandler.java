@@ -105,8 +105,7 @@ public class RemoteReadHandler
             throw new UncheckedIOException(e);
         }
 
-        // now process all remaining reads that are not paired. Log error if they are paired but mate
-        // cannot be found
+        // now process all remaining reads that are not paired. Log error if they are paired but mate cannot be found
         if(!unmatchedReads.isEmpty())
         {
             BT_LOGGER.info("writing {} unmapped & unpaired reads", unmatchedReads.size());
@@ -120,7 +119,7 @@ public class RemoteReadHandler
             }
         }
 
-        BT_LOGGER.printf(Level.DEBUG, "processed %,d remote reads in %s", numReads, hashBam.getName());
+        BT_LOGGER.debug("processed {} remote reads in {}}", numReads, hashBam.getName());
     }
 
     private void processSamRecord(final SAMRecord read, Map<String,SAMRecord> unmatchedReads, FastqWriterCache fastqWriterCache)
@@ -130,10 +129,7 @@ public class RemoteReadHandler
 
         // check for hard clip
         if(read.getCigar().containsOperator(CigarOperator.HARD_CLIP))
-        {
-            BT_LOGGER.error("read: {}, hard clip found, require extra logic to handle", read);
-            throw new RuntimeException("hard clip found on read");
-        }
+            return;
 
         if(!read.getReadPairedFlag())
         {
@@ -162,8 +158,10 @@ public class RemoteReadHandler
         try(SamReader samReader = ToFastqUtils.openSamReader(mConfig))
         {
             int readCount = 0;
-            try(final SAMRecordIterator iterator = samReader.queryUnmapped())
+            try
             {
+                SAMRecordIterator iterator = samReader.queryUnmapped();
+
                 while(iterator.hasNext())
                 {
                     final SAMRecord read = iterator.next();
@@ -180,6 +178,11 @@ public class RemoteReadHandler
                         mHashBamWriter.writeToHashBam(read);
                     }
                 }
+            }
+            catch(Exception e)
+            {
+                // can occur for reads assigned to contigs not in the reference genome used
+                BT_LOGGER.warn("unable to convert record: {}", e.toString());
             }
 
             BT_LOGGER.printf(Level.INFO, "finished writing %,d unmapped reads to %d hash bams (task %d of %d)",

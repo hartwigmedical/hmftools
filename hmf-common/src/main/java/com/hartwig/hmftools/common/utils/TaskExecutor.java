@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.utils;
 
-import static java.lang.String.format;
 import static java.lang.Thread.State.NEW;
 
 import java.util.ArrayList;
@@ -16,13 +15,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigItemType;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class TaskExecutor
 {
-    private static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
+    protected static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
 
     public static final String THREADS = "threads";
     public static final String THREADS_DESC = "Number of threads, 0 or 1 not multi-threaded";

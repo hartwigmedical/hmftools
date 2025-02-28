@@ -18,8 +18,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -28,24 +28,20 @@ import static com.hartwig.hmftools.purple.sv.SomaticSvCache.addEnrichedVariantCo
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.purple.PurpleConfig;
-import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
+import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.index.tabix.TabixFormat;
 import htsjdk.tribble.index.tabix.TabixIndexCreator;
 import htsjdk.variant.variantcontext.Genotype;
@@ -57,9 +53,8 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class GermlineSvCache
 {
-    private final Optional<VCFHeader> mVcfHeader;
+    private final VCFHeader mVcfHeader;
     private final VariantContextCollection mVariantCollection;
-    private final IndexedFastaSequenceFile mRefGenomeFile;
     private final GenotypeIds mGenotypeIds;
 
     private final PurityContext mPurityContext;
@@ -68,9 +63,8 @@ public class GermlineSvCache
 
     public GermlineSvCache()
     {
-        mVcfHeader = Optional.empty();
-        mVariantCollection = new VariantContextCollection(null, false);
-        mRefGenomeFile = null;
+        mVcfHeader = null;
+        mVariantCollection = new VariantContextCollection(null);
         mPurityContext = null;
         mFittedRegions = null;
         mCopyNumbers = null;
@@ -78,7 +72,7 @@ public class GermlineSvCache
     }
 
     public GermlineSvCache(
-            final String version, final String inputVcf, final ReferenceData referenceData, final PurpleConfig config,
+            final String version, final String inputVcf, final PurpleConfig config,
             final List<ObservedRegion> fittedRegions, final List<PurpleCopyNumber> copyNumbers, final PurityContext purityContext)
     {
         mPurityContext = purityContext;
@@ -86,12 +80,10 @@ public class GermlineSvCache
         mCopyNumbers = copyNumbers;
 
         VcfFileReader vcfReader = new VcfFileReader(inputVcf);
-        mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.vcfHeader()));
+        mVcfHeader = SomaticSvCache.generateOutputHeader(version, vcfReader.vcfHeader());
 
-        mGenotypeIds = mVcfHeader.isPresent() ? GenotypeIds.fromVcfHeader(mVcfHeader.get(), config.ReferenceId, config.TumorId) : null;
-
-        mVariantCollection = new VariantContextCollection(mVcfHeader.get(), config.UseGridssSVs);
-        mRefGenomeFile = referenceData.RefGenome;
+        mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, config.ReferenceId, config.TumorId);
+        mVariantCollection = new VariantContextCollection(mVcfHeader);
 
         for(VariantContext context : vcfReader.iterator())
         {
@@ -107,24 +99,20 @@ public class GermlineSvCache
 
     public void write(final String outputVcf)
     {
-        if(!mVcfHeader.isPresent() || outputVcf.isEmpty())
+        if(mVcfHeader == null || outputVcf.isEmpty())
             return;
 
         try
         {
-            final VariantContextWriter writer = new VariantContextWriterBuilder()
+            VariantContextWriter writer = new VariantContextWriterBuilder()
                     .setOutputFile(outputVcf)
-                    .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
-                    .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
+                    .setReferenceDictionary(mVcfHeader.getSequenceDictionary())
+                    .setIndexCreator(new TabixIndexCreator(mVcfHeader.getSequenceDictionary(), new TabixFormat()))
                     .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                     .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
 
-            final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
-
-            VCFHeader header = mVcfHeader.get();
-            refEnricher.enrichHeader(header);
-            writer.writeHeader(header);
+            writer.writeHeader(mVcfHeader);
 
             // may be no reason to use the enriched collection, unsure if it adds any value
             for(StructuralVariant variant : mVariantCollection.variants())
@@ -142,7 +130,7 @@ public class GermlineSvCache
                 if(variant.isFiltered())
                     continue;
 
-                refEnricher.accept(variant);
+                writer.add(variant);
             }
 
             writer.close();
@@ -360,7 +348,7 @@ public class GermlineSvCache
                     continue;
 
                 double refCnChange = region.refNormalisedCopyNumber() - prevRegion.refNormalisedCopyNumber();
-                byte impliedOrientation = refCnChange > 0 ? NEG_ORIENT : POS_ORIENT;
+                byte impliedOrientation = refCnChange > 0 ? ORIENT_REV : ORIENT_FWD;
 
                 if(impliedOrientation != leg.orientation())
                     continue;
@@ -442,10 +430,5 @@ public class GermlineSvCache
     private static boolean breakendMatchesCopyNumber(final StructuralVariantLeg leg, final PurpleCopyNumber copyNumber)
     {
         return copyNumber.chromosome().equals(leg.chromosome()) && positionWithin(leg.position(), copyNumber.start(), copyNumber.end());
-    }
-
-    private static VCFHeader generateOutputHeader(final String purpleVersion, final VCFHeader template)
-    {
-        return StructuralVariantHeader.generateHeader(purpleVersion, template);
     }
 }

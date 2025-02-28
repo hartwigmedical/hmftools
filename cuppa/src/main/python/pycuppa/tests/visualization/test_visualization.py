@@ -39,12 +39,38 @@ class TestCuppaVisData:
 class TestCuppaVisPlotter:
 
     def test_can_plot_one_sample(self):
-        plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.png")
+        plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.one_sample.png")
 
         plotter = CuppaVisPlotter(
             vis_data=MockVisData.vis_data,
             plot_path=plot_path,
         )
+        plotter.plot()
+
+        assert os.path.exists(plot_path)
+        os.remove(plot_path)
+
+    def test_can_plot_multiple_samples(self):
+        plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.multi_sample.pdf")
+
+        vis_data_copies = []
+        for i in range(0, 3):
+            vis_data_copy = MockVisData.vis_data.copy()
+            vis_data_copy["sample_id"] = vis_data_copy["sample_id"] + "_" + str(i)
+            vis_data_copy = vis_data_copy.drop_cv_performance_data()
+            vis_data_copies.append(vis_data_copy)
+
+        vis_data_copies = pd.concat(vis_data_copies)
+        vis_data_copies = pd.concat([
+            vis_data_copies,
+            MockVisData.vis_data.query("data_type=='cv_performance'")
+        ])
+
+        plotter = CuppaVisPlotter(
+            vis_data=vis_data_copies,
+            plot_path=plot_path,
+        )
+
         plotter.plot()
 
         assert os.path.exists(plot_path)

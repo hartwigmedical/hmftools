@@ -52,7 +52,7 @@ public class RepeatMaskAnnotator
             if(var.insertSequence().isEmpty())
                 continue;
 
-            final String alignments = var.breakendStart().Context.getAttributeAsString(INSALN, "");
+            String alignments = var.breakendStart().Context.getAttributeAsString(INSALN, "");
             if(alignments.isEmpty())
                 continue;
 

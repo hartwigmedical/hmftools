@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
+import static com.hartwig.hmftools.redux.write.PartitionInfo.partitionInfoStr;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,15 +20,13 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusMarker;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
-import com.hartwig.hmftools.redux.unmap.TaskQueue;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 import com.hartwig.hmftools.redux.unmap.UnmapStats;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.FinalBamWriter;
@@ -47,7 +46,10 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
+        if(!mConfig.JitterMsiOnly)
+        {
+            RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
+        }
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -55,15 +57,8 @@ public class ReduxApplication
 
         JitterAnalyser jitterAnalyser = null;
 
-        if(mConfig.JitterMsiFile != null)
-        {
-            JitterAnalyserConfig jitterConfig = new JitterAnalyserConfig(
-                    mConfig.SampleId, mConfig.RefGenVersion, mConfig.RefGenomeFile, mConfig.JitterMsiFile, mConfig.OutputDir,
-                    mConfig.JitterMsiMaxSitePercContribution);
-
-            ConsensusMarker consensusMarker = ConsensusMarker.fromSequencingType(mConfig.Sequencing);
-            jitterAnalyser = new JitterAnalyser(jitterConfig, RD_LOGGER, consensusMarker);
-        }
+        if(mConfig.JitterConfig != null)
+            jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig, RD_LOGGER);
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
         UnmapStats unmapStats = mConfig.UnmapRegions.stats();
@@ -73,16 +68,19 @@ public class ReduxApplication
             List<Thread> unmappingThreadTasks = Lists.newArrayList();
             List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
 
-            if(!runThreadTasks(unmappingThreadTasks))
-                System.exit(1);
+            if(!readUnmappers.isEmpty())
+            {
+                if(!runThreadTasks(unmappingThreadTasks))
+                    System.exit(1);
 
-            RD_LOGGER.debug("initial unmapping complete");
+                RD_LOGGER.debug("initial unmapping complete");
 
-            long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
-            RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
+                long readsProcessed = readUnmappers.stream().mapToLong(x -> x.processedReads()).sum();
+                RD_LOGGER.info("readsProcessed({}) unmapped stats: {}", readsProcessed, mConfig.UnmapRegions.stats());
 
-            // reset unmapped stats for a final comparison
-            mConfig.UnmapRegions.setStats(new UnmapStats());
+                // reset unmapped stats for a final comparison
+                mConfig.UnmapRegions.setStats(new UnmapStats());
+            }
 
             if(!fileWriterCache.prepareSortedUnmappingBam())
                 System.exit(1);
@@ -212,8 +210,8 @@ public class ReduxApplication
                 break;
 
             long regionsLength = regions.stream().mapToLong(x -> x.baseLength()).sum();
-            String regionsStr = regions.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
-            RD_LOGGER.debug("adding partition regions({}) totalLength({}): {}}", regions.size(), regionsLength, regionsStr);
+
+            RD_LOGGER.debug("adding partition regions({}) totalLength({}): {}", regions.size(), regionsLength, partitionInfoStr(regions));
 
             fileWriterCache.addPartition(regions);
         }
@@ -258,6 +256,12 @@ public class ReduxApplication
         else
         {
             RD_LOGGER.debug("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+        }
+
+        if(bamSampler.readsPaired() && !bamSampler.hasMateCigarSet())
+        {
+            RD_LOGGER.warn("required mate CIGAR not set, exiting");
+            System.exit(1);
         }
 
         mConfig.setReadLength(readLength);

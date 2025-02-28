@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.plot;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -14,6 +13,7 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.ChartConfig;
+import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
@@ -23,7 +23,7 @@ public class Charts
     private final PurpleConfig mConfig;
     private final CircosCharts mCircosCharts;
 
-    public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38) throws IOException
+    public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38)
     {
         mRCharts = new RCharts(config, executorService);
         mConfig = config;
@@ -34,7 +34,7 @@ public class Charts
             final String referenceId, final String sampleId, boolean plotSomatics,
             final Gender gender, final List<PurpleCopyNumber> copyNumbers,
             final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
-            final List<ObservedRegion> regions, final List<AmberBAF> bafs) throws Exception
+            final List<ObservedRegion> regions, final List<AmberBAF> bafs, final List<DriverSourceData> driverSourceData) throws Exception
     {
         final ChartConfig chartConfig = mConfig.Charting;
 
@@ -53,11 +53,9 @@ public class Charts
 
         for(final Future<Integer> future : chartFutures)
         {
-            // This (intentionally) has side effect of alerting users to any exceptions
             int result = future.get();
             if(result != 0)
             {
-                PPL_LOGGER.warn("error generating charts");
                 throw new Exception("charting failed");
             }
         }

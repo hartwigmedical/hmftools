@@ -87,7 +87,7 @@ public class KnownHotspot
             if(knownHotspot.RegionStart.containsPosition(junctionData.Position))
             {
                 // check for reads spanning to the other end
-                for(ReadGroup readGroup : junctionData.JunctionGroups)
+                for(ReadGroup readGroup : junctionData.junctionGroups())
                 {
                     if(readGroupMatchesRegion(readGroup, knownHotspot.RegionEnd))
                         return true;
@@ -96,7 +96,7 @@ public class KnownHotspot
             else if(knownHotspot.RegionEnd.containsPosition(junctionData.Position))
             {
                 // check for reads spanning to the other end
-                for(ReadGroup readGroup : junctionData.JunctionGroups)
+                for(ReadGroup readGroup : junctionData.junctionGroups())
                 {
                     if(readGroupMatchesRegion(readGroup, knownHotspot.RegionStart))
                         return true;

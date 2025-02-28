@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PRO
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
@@ -104,25 +104,25 @@ public class FusionTest
 
         // add upstream breakends
         List<BreakendGeneData> upGenes = Lists.newArrayList();
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 250, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 2, true, CHR_1, 650, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 3, true, CHR_1, 850, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(CHR_1, 250, POS_ORIENT);
-        upGenes.get(1).setPositionalData(CHR_1, 450, POS_ORIENT);
-        upGenes.get(2).setPositionalData(CHR_1, 650, POS_ORIENT);
-        upGenes.get(3).setPositionalData(CHR_1, 850, POS_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 250, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, 450, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 2, true, CHR_1, 650, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 3, true, CHR_1, 850, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, 250, ORIENT_FWD);
+        upGenes.get(1).setPositionalData(CHR_1, 450, ORIENT_FWD);
+        upGenes.get(2).setPositionalData(CHR_1, 650, ORIENT_FWD);
+        upGenes.get(3).setPositionalData(CHR_1, 850, ORIENT_FWD);
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10250, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, 10450, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 2, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 3, false, CHR_1, 10850, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(CHR_1, 10250, NEG_ORIENT);
-        downGenes.get(1).setPositionalData(CHR_1, 10450, NEG_ORIENT);
-        downGenes.get(2).setPositionalData(CHR_1, 10650, NEG_ORIENT);
-        downGenes.get(3).setPositionalData(CHR_1, 10850, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10250, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, 10450, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 2, false, CHR_1, 10650, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 3, false, CHR_1, 10850, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, 10250, ORIENT_REV);
+        downGenes.get(1).setPositionalData(CHR_1, 10450, ORIENT_REV);
+        downGenes.get(2).setPositionalData(CHR_1, 10650, ORIENT_REV);
+        downGenes.get(3).setPositionalData(CHR_1, 10850, ORIENT_REV);
 
         tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 

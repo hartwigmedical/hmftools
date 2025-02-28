@@ -2,10 +2,10 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
-import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_COUNT;
-import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_MAX;
 
 import java.io.File;
 import java.util.List;
@@ -20,11 +20,11 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+import com.hartwig.hmftools.common.variant.pon.GnomadCache;
+import com.hartwig.hmftools.common.variant.pon.PonCache;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
-import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.Mappability;
-import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
 import com.hartwig.hmftools.pave.annotation.Reportability;
 import com.hartwig.hmftools.pave.impact.VariantTransImpact;
@@ -80,15 +80,19 @@ public class VcfWriter
 
         if(referenceData.StandardPon.enabled() || referenceData.ArtefactsPon.enabled())
         {
-            PonAnnotation.addHeader(newHeader);
+            PonCache.addAnnotationHeader(newHeader);
         }
+
+        PonCache.addFilterHeader(newHeader);
 
         if(referenceData.Gnomad.enabled())
         {
-            GnomadAnnotation.addHeader(newHeader);
+            GnomadCache.addAnnotationHeader(newHeader);
         }
 
-        if(referenceData.VariantMappability.enabled()   )
+        GnomadCache.addFilterHeader(newHeader);
+
+        if(referenceData.VariantMappability.enabled())
         {
             Mappability.addHeader(newHeader);
         }

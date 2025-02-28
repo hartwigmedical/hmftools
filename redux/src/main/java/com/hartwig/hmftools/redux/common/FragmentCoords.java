@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -42,8 +41,9 @@ public class FragmentCoords implements Comparable<FragmentCoords>
     public final boolean UnmappedSourced;
     public final boolean Unpaired;
 
-    public final String Key;
-    public final String KeyOriented; // includes fragment orientation
+    public final String Key; // includes fragment orientation if applicable
+
+    private final String mKeyNonOriented; // only used for UMI collapsing, and set as required
 
     public FragmentCoords(
             final String chromsomeLower, final String chromsomeUpper, final int positionLower, final int positionUpper,
@@ -67,11 +67,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         {
             String coordinate = format("%s:%d_%d", ChromsomeLower, PositionLower, PositionUpper);
 
-            if(orientLower.isReverse())
+            if(ReadIsLower ? OrientLower.isReverse() : OrientUpper.isReverse())
                 coordinate = format("%s_R", coordinate);
 
             Key = suppReadInfo != null ? format("%s_S", coordinate) : coordinate;
-            KeyOriented = Key;
+            mKeyNonOriented = null;
             return;
         }
 
@@ -86,7 +86,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             else
                 Key = coordinateLower;
 
-            KeyOriented = Key;
+            mKeyNonOriented = null;
         }
         else
         {
@@ -96,12 +96,20 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             if(SuppReadInfo != null)
                 readInfo += "_S";
 
-            Key = format("%s_%s_%s", coordinateLower, coordinateUpper, readInfo);
-            KeyOriented = (keyByFragmentOrientation && FragmentOrient.isReverse()) ? format("%s_N", Key) : Key;
+            String keyNonOriented = format("%s_%s_%s", coordinateLower, coordinateUpper, readInfo);
+            if(keyByFragmentOrientation && FragmentOrient.isReverse())
+            {
+                Key = format("%s_N", keyNonOriented);
+                mKeyNonOriented = keyNonOriented;
+            }
+            else
+            {
+                Key = keyNonOriented;
+                mKeyNonOriented = null;
+            }
         }
     }
 
-    public boolean isSingleRead() { return PositionUpper == NO_POSITION; }
     public boolean forwardFragment() { return FragmentOrient.isForward(); }
 
     public int readPosition()
@@ -120,12 +128,14 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             return ReadIsLower || UnmappedSourced ? OrientLower : OrientUpper;
     }
 
+    public String keyNonOriented() { return mKeyNonOriented != null ? mKeyNonOriented : Key; }
+
     private static String formCoordinate(final String chromosome, final int position, final boolean isForward)
     {
         return isForward ? format("%s:%d", chromosome, position) : format("%s:%d:R", chromosome, position);
     }
 
-    public static FragmentCoords fromRead(final SAMRecord read, boolean useFragmentOrientation, final SequencingType sequencingType)
+    public static FragmentCoords fromRead(final SAMRecord read, boolean useFragmentOrientation)
     {
         Orientation readOrient;
         String readChromosome;
@@ -170,20 +180,22 @@ public class FragmentCoords implements Comparable<FragmentCoords>
                 readChromosome = suppData.Chromosome;
                 readOrient = Orientation.fromChar(suppData.Strand);
                 readPosition = getFivePrimeUnclippedPosition(suppData.Position, suppData.Cigar, readOrient.isForward());
-            }
 
-            if(!isPaired)
-            {
-                // depends on sequencing type
-                if(sequencingType == SequencingType.ILLUMINA || sequencingType == SequencingType.SBX)
+                if(!isPaired)
                 {
                     mateChromosome = readChromosome;
                     mateOrient = readOrient.opposite();
-
-                    matePosition = read.getCigar() != null ?
-                            getThreePrimeUnclippedPosition(read) :
-                            getThreePrimeUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readOrient.isForward());
+                    matePosition = getThreePrimeUnclippedPosition(suppData.Position, suppData.Cigar, readOrient.isForward());
                 }
+            }
+            else if(!isPaired)
+            {
+                mateChromosome = readChromosome;
+                mateOrient = readOrient.opposite();
+
+                matePosition = read.getCigar() != null ?
+                        getThreePrimeUnclippedPosition(read) :
+                        getThreePrimeUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readOrient.isForward());
             }
         }
         else
@@ -233,7 +245,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
     @Override
     public int compareTo(final FragmentCoords other)
     {
-        return KeyOriented.compareTo(other.KeyOriented);
+        return Key.compareTo(other.Key);
     }
 
     @Override
@@ -246,11 +258,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             return false;
 
         FragmentCoords fragCoords = (FragmentCoords)other;
-        return KeyOriented.compareTo(fragCoords.KeyOriented) == 0;
+        return Key.compareTo(fragCoords.Key) == 0;
     }
 
     @Override
-    public int hashCode() { return KeyOriented.hashCode(); }
+    public int hashCode() { return Key.hashCode(); }
 
-    public String toString() { return KeyOriented; }
+    public String toString() { return Key; }
 }

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.types;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
@@ -56,10 +56,10 @@ public class SglMapping
 
         final String cigar = items[2];
 
-        byte strandSequence = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
-        byte orientation = (strandSequence == breakendOrientation) ? NEG_ORIENT : POS_ORIENT;
+        byte strandSequence = items[1].equals("+") ? ORIENT_FWD : ORIENT_REV;
+        byte orientation = (strandSequence == breakendOrientation) ? ORIENT_REV : ORIENT_FWD;
 
-        if(orientation == POS_ORIENT)
+        if(orientation == ORIENT_FWD)
             position += calcCigarAlignedLength(cigar) - 1;
 
         int qualScore = !items[3].isEmpty() ? Integer.parseInt(items[3]) : 0;

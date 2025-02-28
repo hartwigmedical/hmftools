@@ -54,5 +54,7 @@ public enum Orientation
     public Orientation opposite() { return opposite(this); }
     public static Orientation opposite(final Orientation orientation) { return orientation == FORWARD ? REVERSE : FORWARD; }
 
+    public static byte flipOrientation(final byte orientation) { return orientation == ORIENT_FWD ? ORIENT_REV : ORIENT_FWD; }
+
     public String toString() { return String.valueOf(asByte()); }
 }

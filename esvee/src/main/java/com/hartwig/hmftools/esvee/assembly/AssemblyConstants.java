@@ -24,7 +24,7 @@ public final class AssemblyConstants
     public static final int UNMAPPED_TRIM_THRESHOLD = 40;
 
     // primary assembly
-    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;;
+    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
     public static final int DECOY_MAX_MISMATCHES = 3;
     public static final double DECOY_MIN_SCORE_FACTOR = 0.9;
     public static final int ASSEMBLY_MIN_READ_SUPPORT = 2;
@@ -37,6 +37,14 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_REF_READ_MIN_SOFT_CLIP = 10;
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
     public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
+    public static final int ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS = 3;
+
+    public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
+    public static final int DISC_RATE_JUNC_INCREMENT = 1;
+    public static final int DISC_RATE_DISC_ONLY_INCREMENT = 3;
+
+    // sequence comparison
+    public static final int REPEAT_2_DIFF_COUNT = 11;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
@@ -49,6 +57,7 @@ public final class AssemblyConstants
     // assembly extension
     public static final int ASSEMBLY_READ_OVERLAP_BASES = 20;
     public static final int ASSEMBLY_LINK_OVERLAP_BASES = 50;
+    public static final int ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES = ASSEMBLY_READ_OVERLAP_BASES;
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int ASSEMBLY_REF_BASE_MAX_GAP = 200;
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
@@ -71,11 +80,12 @@ public final class AssemblyConstants
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
 
     // alignment
+    public static final int BWA_PENALTY_ADJUST = 2;
     public static final int ALIGNMENT_MIN_SOFT_CLIP = MIN_VARIANT_LENGTH;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 10;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA = 5;
     public static final int ALIGNMENT_CALC_SCORE_FACTOR = 15;
-    public static final double ALIGNMENT_CALC_SCORE_THRESHOLD = 0.85;
+    public static final double ALIGNMENT_CALC_SCORE_THRESHOLD = 0.77;
     public static final int ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH = MIN_ANCHOR_LENGTH;
     public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 50000;
     public static final int ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST = 15;

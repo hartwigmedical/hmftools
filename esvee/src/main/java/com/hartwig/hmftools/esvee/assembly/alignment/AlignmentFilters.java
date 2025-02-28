@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_OR
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V38;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isSimpleIndelAssembly;
 import static com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder.segmentOrientation;
 
 import java.util.Collections;
@@ -82,6 +83,13 @@ public final class AlignmentFilters
             }
 
             alignment.setAdjustedAlignment(fullSequence, overlapStart, overlapEnd);
+        }
+
+        if(isSimpleIndelAssembly(assemblyAlignment) && candidateAlignments.size() == 2)
+        {
+            // no further testing of length or map qual if already identified as a cigar-based indel
+            validAlignments.addAll(candidateAlignments);
+            return;
         }
 
         // remove any alignments with short adjusted alignment lengths

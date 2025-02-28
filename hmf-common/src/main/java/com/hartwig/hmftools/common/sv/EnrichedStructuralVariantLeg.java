@@ -16,7 +16,4 @@ public interface EnrichedStructuralVariantLeg extends StructuralVariantLeg
 
     @Nullable
     Double adjustedCopyNumberChange();
-
-    @Nullable
-    String refGenomeContext();
 }

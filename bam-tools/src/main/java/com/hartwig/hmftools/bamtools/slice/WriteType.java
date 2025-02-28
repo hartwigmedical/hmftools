@@ -7,14 +7,11 @@ public enum WriteType
 
     public String extension()
     {
-        switch(this)
+        return switch(this)
         {
-            case BAM:
-                return ".bam";
-            case READS:
-                return ".reads.tsv";
-            default:
-                return "unknown";
-        }
+            case BAM -> ".bam";
+            case READS -> ".reads.tsv";
+            default -> "unknown";
+        };
     }
 }

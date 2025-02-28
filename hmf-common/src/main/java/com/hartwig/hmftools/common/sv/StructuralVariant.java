@@ -96,9 +96,6 @@ public interface StructuralVariant
     @Nullable
     String filter();
 
-    @Nullable
-    Boolean imprecise();
-
     double qualityScore();
 
     @Nullable
@@ -109,14 +106,6 @@ public interface StructuralVariant
 
     @Nullable
     String endLinkedBy();
-
-    boolean recovered();
-
-    @Nullable
-    String recoveryMethod();
-
-    @Nullable
-    String recoveryFilter();
 
     boolean hotspot();
 

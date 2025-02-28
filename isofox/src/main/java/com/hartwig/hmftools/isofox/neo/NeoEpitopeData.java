@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBas
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 import htsjdk.samtools.Cigar;
 
@@ -70,7 +70,7 @@ public class NeoEpitopeData
 
     public boolean singleGene() { return Source.GeneIds[FS_UP].equals(Source.GeneIds[FS_DOWN]); }
     public boolean singleChromosome() { return Chromosomes[FS_UP].equals(Chromosomes[FS_DOWN]); }
-    public boolean posStrand(int stream) { return (stream == FS_UP) == (Orientations[stream] == POS_ORIENT); }
+    public boolean posStrand(int stream) { return (stream == FS_UP) == (Orientations[stream] == ORIENT_FWD); }
 
     public NeoFragmentSupport getFragmentSupport() { return mFragmentSupport; }
 
@@ -78,13 +78,13 @@ public class NeoEpitopeData
     {
         if(geneStrand == POS_STRAND)
         {
-            Orientations[FS_UP] = POS_ORIENT;
-            Orientations[FS_DOWN] = NEG_ORIENT;
+            Orientations[FS_UP] = ORIENT_FWD;
+            Orientations[FS_DOWN] = ORIENT_REV;
         }
         else
         {
-            Orientations[FS_UP] = NEG_ORIENT;
-            Orientations[FS_DOWN] = POS_ORIENT;
+            Orientations[FS_UP] = ORIENT_REV;
+            Orientations[FS_DOWN] = ORIENT_FWD;
         }
     }
 
@@ -94,7 +94,7 @@ public class NeoEpitopeData
     {
         if(!isFusion() || (Orientations[FS_UP] != Orientations[FS_DOWN] && singleChromosome()))
         {
-            if(Orientations[FS_UP] == POS_ORIENT)
+            if(Orientations[FS_UP] == ORIENT_FWD)
                 return Source.CodingBases[FS_UP] + Source.CodingBases[FS_DOWN];
             else
                 return Source.CodingBases[FS_DOWN] + Source.CodingBases[FS_UP];
@@ -102,14 +102,14 @@ public class NeoEpitopeData
 
         if(streamPerspective == FS_UP)
         {
-            if(Orientations[FS_UP] == POS_ORIENT)
+            if(Orientations[FS_UP] == ORIENT_FWD)
                 return Source.CodingBases[FS_UP] + reverseComplementBases(Source.CodingBases[FS_DOWN]);
             else
                 return reverseComplementBases(Source.CodingBases[FS_DOWN]) + Source.CodingBases[FS_UP];
         }
         else
         {
-            if(Orientations[FS_DOWN] == POS_ORIENT)
+            if(Orientations[FS_DOWN] == ORIENT_FWD)
                 return Source.CodingBases[FS_DOWN] + reverseComplementBases(Source.CodingBases[FS_UP]);
             else
                 return reverseComplementBases(Source.CodingBases[FS_UP]) + Source.CodingBases[FS_DOWN];
@@ -126,11 +126,11 @@ public class NeoEpitopeData
 
         if(Positions[FS_UP] < Positions[FS_DOWN])
         {
-            return Orientations[FS_UP] == POS_ORIENT && Orientations[FS_DOWN] == NEG_ORIENT;
+            return Orientations[FS_UP] == ORIENT_FWD && Orientations[FS_DOWN] == ORIENT_REV;
         }
         else
         {
-            return Orientations[FS_UP] == NEG_ORIENT && Orientations[FS_DOWN] == POS_ORIENT;
+            return Orientations[FS_UP] == ORIENT_REV && Orientations[FS_DOWN] == ORIENT_FWD;
         }
     }
 

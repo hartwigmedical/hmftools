@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 
+import numpy as np
 import pytest
 
 from tests.mock_data import MockInputData
@@ -83,14 +84,18 @@ class TestFeatureLoader:
 
         loader = CuppaFeaturesLoader(MockInputData.cohort_dir)
         features = loader.load()
+
+        na_fill_value = -1e-8
+        features = features.fillna(na_fill_value)
+
         assert features.shape == (2, 6225)
 
         assert features["gen_pos.1_500000"].tolist() == [0, 1]
         assert features["snv96.C>T_TCC"].tolist() == [0, 2]
         assert features["event.tmb.snv_count"].tolist() == [0, 8]
         assert features["event.sv.SIMPLE_DEL_20KB_1MB"].tolist() == [0, 20]
-        assert features["event.fusion.TMPRSS2_ERG"].tolist() == [loader.na_fill_value, 1]
+        assert features["event.fusion.TMPRSS2_ERG"].tolist() == [na_fill_value, 1]
         assert features["event.trait.is_male"].tolist() == [0, 1]
         assert features["sig.UV (SBS7)"].tolist() == [0, 6.4]
-        assert features["gene_exp.BRAF"].tolist() == [loader.na_fill_value, 3.434]
-        assert features["alt_sj.7;140426316;140439612"].tolist() == [loader.na_fill_value, 2]
+        assert features["gene_exp.BRAF"].tolist() == [na_fill_value, 3.434]
+        assert features["alt_sj.7;140426316;140439612"].tolist() == [na_fill_value, 2]

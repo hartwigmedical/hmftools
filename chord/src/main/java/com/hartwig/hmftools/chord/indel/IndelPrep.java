@@ -56,10 +56,17 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
         List<IndelVariant> indels = new ArrayList<>();
         for(VariantContext variantContext : variants)
         {
-            SmallVariant smallVariant = new SmallVariant(variantContext);
+            if(!variantContext.isSNP() && !variantContext.isIndel())
+            {
+                // SNVs and indels are often included in the same VCF, so allow both to be present
+                throw new IllegalStateException(String.format("Unexpected non SNV/indel variant: variantType(%s) variant(%s)",
+                        variantContext.getType(), variantContext));
+            }
 
-            if(!smallVariant.isIndel())
+            if(!variantContext.isIndel())
                 continue;
+
+            SmallVariant smallVariant = new SmallVariant(variantContext);
 
             IndelVariant indel = new IndelVariant(smallVariant);
 

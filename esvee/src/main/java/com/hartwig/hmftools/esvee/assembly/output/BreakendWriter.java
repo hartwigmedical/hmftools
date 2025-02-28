@@ -18,19 +18,16 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
-import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class BreakendWriter
 {
     private final AssemblyConfig mConfig;
 
     private final BufferedWriter mWriter;
-    private final TruthsetAnnotation mTruthsetAnnotation;
 
-    public BreakendWriter(final AssemblyConfig config, final TruthsetAnnotation truthsetAnnotation)
+    public BreakendWriter(final AssemblyConfig config)
     {
         mConfig = config;
-        mTruthsetAnnotation = truthsetAnnotation;
 
         mWriter = initialiseWriter();
     }
@@ -83,9 +80,6 @@ public class BreakendWriter
             sj.add("FacingBreakendIds");
 
             sj.add("AltAlignments");
-
-            if(mTruthsetAnnotation.enabled())
-                sj.add(TruthsetAnnotation.tsvHeader());
 
             writer.write(sj.toString());
             writer.newLine();
@@ -202,9 +196,6 @@ public class BreakendWriter
                 sj.add(facingBreakendIds);
 
                 sj.add(AlternativeAlignment.toVcfTag(breakend.alternativeAlignments()));
-
-                if(mTruthsetAnnotation.enabled())
-                    sj.add(mTruthsetAnnotation.findTruthsetAnnotation(breakend));
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();

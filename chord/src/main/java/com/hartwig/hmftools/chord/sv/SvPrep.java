@@ -52,6 +52,12 @@ public class SvPrep implements VariantTypePrep<StructuralVariant>, LoggingOption
         List<StructuralVariant> variants = new ArrayList<>();
         for(VariantContext variantContext : variantContexts)
         {
+            if(!variantContext.isSymbolicOrSV())
+            {
+                throw new IllegalStateException(String.format("Unexpected non-structural variant: variantType(%s) variant(%s)",
+                        variantContext.getType(), variantContext));
+            }
+
             String id = variantContext.getID();
             String mateId = variantContext.getAttributeAsString(SvVcfTags.MATE_ID, id); // For SGLs, use id as mate id
 

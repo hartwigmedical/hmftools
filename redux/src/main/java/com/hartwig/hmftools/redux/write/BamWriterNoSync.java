@@ -79,6 +79,9 @@ public class BamWriterNoSync extends BamWriter
     @Override
     public void close()
     {
+        if(mSamFileWriter == null)
+            return;
+
         if(mSortedBamWriter != null)
         {
             mSortedBamWriter.flush();
@@ -88,7 +91,6 @@ public class BamWriterNoSync extends BamWriter
                     mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), filenamePart(mFilename));
         }
 
-        if(mSamFileWriter != null)
-            mSamFileWriter.close();
+        mSamFileWriter.close();
     }
 }

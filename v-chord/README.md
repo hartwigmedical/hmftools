@@ -6,7 +6,7 @@ instead. vCHORD employs a convolutional neural network model to predict HRD from
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links).
-vCHORD requires Java 11+ to be installed.
+vCHORD requires Java 17+ to be installed.
 
 ## Usage
 
@@ -97,6 +97,17 @@ After training, the script writes a file `model_scripted.pt`, that is the model 
 
 * The model training does not work as well if the HRD and non HRD samples are not balanced. Use `hrd_sample_duplication` parameter
 to ensure the HRD and non HRD sample numbers are similar.
+
+## Pretrained TSO500 model
+
+vCHORD model trained for TSO500 can be downloaded [here](https://storage.googleapis.com/hmf-public/HMFtools-Resources/v_chord/vchord_model.tso500.20241217.pt).
+
+This model was developed using Hartwig Medical Foundation’s whole-genome sequencing (WGS) database, based on approximately 1,300 samples
+classified as either HR proficient (HRP) or HR deficient (HRD) using the WGS CHORD classifier.
+
+To adapt WGS data for this approach, we extract only the reads that overlap the TSO500 panel regions from the WGS BAM files, effectively
+simulating targeted NGS panel data in silico. The resulting sliced BAM files are then processed through the Hartwig pipeline, and the
+purple outputs are used for model training.
 
 ## Version History and Download Links
 

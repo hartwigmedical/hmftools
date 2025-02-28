@@ -2,9 +2,7 @@ package com.hartwig.hmftools.redux.write;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
@@ -15,8 +13,10 @@ import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -30,6 +30,7 @@ public abstract class BamWriter
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
     private final JitterAnalyser mJitterAnalyser;
+    private final boolean mRecomputeFragCoords;
 
     protected final AtomicLong mNonConsensusReadCount;
     protected final AtomicLong mConsensusReadCount;
@@ -43,6 +44,7 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
+        mRecomputeFragCoords = mReadDataWriter.enabled() && DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse);
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -65,26 +67,34 @@ public abstract class BamWriter
 
     // the public write methods are all thread-safe, using atomic counters and then the key SAM-write methods are handled
     // in the derived sync and non-sync implementations
-    public void writeReads(final List<ReadInfo> readInfos, boolean excludeUmis)
+    public void writeNonDuplicateReads(final List<ReadInfo> readInfos)
     {
-        readInfos.forEach(x -> doWriteRead(x, excludeUmis));
+        for(ReadInfo readInfo : readInfos)
+        {
+            // UMIs are not captured nor written for non-duplicates
+            writeRead(readInfo.read(), FragmentStatus.NONE, readInfo.coordinates().Key, "");
+        }
     }
 
-    public void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
+    public void writeSecondaryRead(final SAMRecord read)
     {
-        writeRead(read, fragmentStatus, null);
+        writeRead(read, FragmentStatus.UNSET, "", "");
     }
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
+        String fragCoords = group.fragmentCoordinates().Key;
         if(group.consensusRead() != null)
         {
             SAMRecord read = group.consensusRead();
             processRecord(read);
             mConsensusReadCount.incrementAndGet();
 
+            if(mRecomputeFragCoords)
+                fragCoords = FragmentCoords.fromRead(read, false).Key;
+
             if(mReadDataWriter != null && mReadDataWriter.enabled())
-                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), group.umiId());
+                mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId());
         }
 
         for(SAMRecord read : group.reads())
@@ -93,7 +103,10 @@ public abstract class BamWriter
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
-            writeRead(read, fragmentStatus, group.coordinatesKey(), group.umiId());
+            if(mRecomputeFragCoords)
+                fragCoords = FragmentCoords.fromRead(read, false).Key;
+
+            writeRead(read, fragmentStatus, fragCoords, group.umiId());
         }
     }
 
@@ -115,29 +128,6 @@ public abstract class BamWriter
     }
 
     public abstract void close();
-
-    private void doWriteRead(final ReadInfo readInfo, boolean excludeDuplicates)
-    {
-        if(excludeDuplicates && readInfo.umi() != null) // reads in duplicate groups are only written as a complete group
-            return;
-
-        if(readInfo.readsWritten())
-        {
-            RD_LOGGER.error("fragment({}) reads already written", readInfo);
-            return;
-        }
-
-        readInfo.setReadWritten();
-        writeRead(readInfo.read(), readInfo.status(), readInfo);
-    }
-
-    private void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final ReadInfo readInfo)
-    {
-        writeRead(
-                read, fragmentStatus,
-                readInfo != null && readInfo.coordinates() != null ? readInfo.coordinates().Key : "",
-                readInfo != null ? readInfo.umi() : "");
-    }
 
     private void writeRead(
             final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates, String umiId)

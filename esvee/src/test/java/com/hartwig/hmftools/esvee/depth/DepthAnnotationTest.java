@@ -46,7 +46,7 @@ public class DepthAnnotationTest
         Map<String,Integer> sampleVcfGenotypeIds = Maps.newHashMap();
         sampleVcfGenotypeIds.put(TEST_SAMPLE_ID, 0);
         DepthConfig config = new DepthConfig(0.1, 1000);
-        config.Samples.add(TEST_SAMPLE_ID);
+        config.SampleIds.add(TEST_SAMPLE_ID);
         mDepthTask = new DepthTask(CHR_1, config, sampleVcfGenotypeIds);
     }
 

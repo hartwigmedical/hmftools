@@ -7,9 +7,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
@@ -30,8 +27,8 @@ import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
 import java.util.Collections;
@@ -177,10 +174,10 @@ public class GridssSvFactory implements SvFactoryInterface
         }
 
         // Local orientation determined by the positioning of the anchoring bases
-        final byte startOrientation = (byte) (match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT);
+        final byte startOrientation = (byte) (match.group(1).length() > 0 ? ORIENT_FWD : ORIENT_REV);
 
         // Other orientation determined by the direction of the brackets
-        final byte endOrientation = (byte) (match.group(2).equals("]") ? POS_ORIENT : NEG_ORIENT);
+        final byte endOrientation = (byte) (match.group(2).equals("]") ? ORIENT_FWD : ORIENT_REV);
 
         // Grab the inserted sequence by removing 1 base from the reference anchoring bases
         String insertedSequence = match.group(1).length() > 0 ?
@@ -248,7 +245,7 @@ public class GridssSvFactory implements SvFactoryInterface
         final String alt = context.getAlternateAllele(0).getDisplayString();
 
         // local orientation determined by the positioning of the anchoring bases
-        final byte orientation = alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
+        final byte orientation = alt.startsWith(".") ? ORIENT_REV : ORIENT_FWD;
         final int refLength = context.getReference().length();
 
         final String insertedSequence = orientation == -1 ?
@@ -276,10 +273,7 @@ public class GridssSvFactory implements SvFactoryInterface
         double qualityScore = context.getPhredScaledQual();
 
         builder.id(context.getID())
-                .recovered(context.getAttributeAsBoolean(RECOVERED, false))
                 .hotspot(context.getAttributeAsBoolean(HOTSPOT, false))
-                .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
-                .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event(context.getAttributeAsString(EVENT, null))
                 .startLinkedBy(context.getAttributeAsStringList(LOCAL_LINKED_BY, "")
                         .stream()
@@ -289,7 +283,6 @@ public class GridssSvFactory implements SvFactoryInterface
                         .stream()
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")))
-                .imprecise(imprecise(context))
                 .qualityScore(qualityScore)
                 .insertSequenceAlignments(context.getAttributeAsStringList(BEALN, "")
                         .stream()

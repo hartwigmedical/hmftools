@@ -2,13 +2,14 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
-import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.isSwappedR1R2;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.nextFastqRecord;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,10 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.fastq.FastqRecord;
 
@@ -78,6 +78,15 @@ public class BiomodalCollapse
         {
             fastq1Reader = createBufferedReader(mConfig.Fastq1Path);
             fastq2Reader = createBufferedReader(mConfig.Fastq2Path);
+            if(isSwappedR1R2(fastq1Reader, fastq2Reader))
+            {
+                FQ_LOGGER.info("Detected that R1/R2 are swapped");
+                closeBufferedReader(fastq1Reader);
+                closeBufferedReader(fastq2Reader);
+                fastq1Reader = createBufferedReader(mConfig.Fastq2Path);
+                fastq2Reader = createBufferedReader(mConfig.Fastq1Path);
+            }
+
             resolvedFastqWriter = createBufferedWriter(mConfig.CollapsedFastqOutputPath);
             debugStatsWriter = mConfig.DebugStatsOutputPath == null ? null : createBufferedWriter(mConfig.DebugStatsOutputPath);
 

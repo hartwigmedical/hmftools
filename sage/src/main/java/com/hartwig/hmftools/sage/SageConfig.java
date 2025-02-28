@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BA
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -187,9 +188,9 @@ public class SageConfig
             {
                 JitterParamsDir = SampleDataDir;
             }
-            else if(configBuilder.hasValue(TUMOR))
+            else if(configBuilder.hasValue(TUMOR_BAM))
             {
-                String tumorBam = configBuilder.getValue(TUMOR).split(SAMPLE_DELIM)[0];
+                String tumorBam = configBuilder.getValue(TUMOR_BAM).split(SAMPLE_DELIM)[0];
                 JitterParamsDir = pathFromFile(tumorBam);
             }
             else

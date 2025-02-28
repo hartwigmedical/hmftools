@@ -8,7 +8,7 @@ If a tumor-normal pair is provided, TEAL will also call somatic telomeric rearra
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links).
 
-TEAL requires Java 11+ to be installed.
+TEAL requires Java 17+ to be installed.
 
 ## Using TEAL with HMF pipeline
 We can run TEAL using output files from HMF pipeline tools.
@@ -301,7 +301,9 @@ details the estimated  telomeric length and content and finally a file which pre
 * TEAL could aslo count relative amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
-- [1.3.2](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.1)
+- [1.3.3](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.3)
+  - Fix division by 0
+- [1.3.2](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.2)
   - Use the new bam metrics format
 - [1.3.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.1)
   - Always use lenient BAM validation

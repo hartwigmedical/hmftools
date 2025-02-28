@@ -260,6 +260,7 @@ public class PurityEstimator
                         .method(FittedPurityMethod.NORMAL).amberMeanDepth(0).copyNumberSegments(1).unsupportedCopyNumberSegments(0)
                         .deletedGenes(0).purity(purity).contamination(0D).cobaltGender(Gender.FEMALE).amberGender(Gender.FEMALE)
                         .lohPercent(0)
+                        .tincLevel(0)
                         .build();
 
                 FittedPurityScore fittedPurityScore = ImmutableFittedPurityScore.builder()

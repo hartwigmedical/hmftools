@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class HlaComplexFile
@@ -139,7 +139,7 @@ public class HlaComplexFile
         // convert allele coverage output back into the 6 candidate alleles
         // example: A*01:01[199,131,68,0]   A*02:01[162,100,62,0]   B*18:01[182,112,70,0]   B*38:01[165,92,73,0]    C*12:03[356,320,36,0]
 
-        List<HlaAllele> rawAlleles = org.apache.commons.compress.utils.Lists.newArrayList();
+        List<HlaAllele> rawAlleles = new ArrayList<>();
 
         for(String alleleCoverageData : alleleDataList)
         {
@@ -147,7 +147,7 @@ public class HlaComplexFile
             rawAlleles.add(HlaAllele.fromString(alleleData));
         }
 
-        List<HlaAllele> allAlleles = Lists.newArrayList();
+        List<HlaAllele> allAlleles = new ArrayList<>();
 
         int aCount = 0;
         int bCount = 0;

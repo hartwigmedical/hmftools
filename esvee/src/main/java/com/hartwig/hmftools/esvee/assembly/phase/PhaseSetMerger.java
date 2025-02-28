@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
@@ -216,7 +217,11 @@ public final class PhaseSetMerger
 
     private static boolean matchSequenceOverlapsJunctions(final AssemblyAlignment assemblyAlignment, int overlapStart, int overlapEnd)
     {
-        return assemblyAlignment.linkIndices().stream().anyMatch(x -> positionWithin(x, overlapStart, overlapEnd));
+        // the overlap must cover a break junction by the standard overlap distance too
+        int juncBoundaryStart = overlapStart + ASSEMBLY_LINK_OVERLAP_BASES;
+        int juncBoundaryEnd = overlapEnd - ASSEMBLY_LINK_OVERLAP_BASES;
+
+        return assemblyAlignment.linkIndices().stream().anyMatch(x -> positionWithin(x, juncBoundaryStart, juncBoundaryEnd));
     }
 
     public static void mergeAssemblyAlignments(

@@ -38,10 +38,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantBreakend
 {
-    public final SvCaller mSvCaller;
-
     public final VariantContext Context;
-    private final VariantAltInsertCoords AltCoords;
+    public final VariantAltInsertCoords AltCoords;
 
     public final String Id;
 
@@ -66,9 +64,11 @@ public class VariantBreakend
     public LineLink LinkedLineBreakends;
     public LineLink InferredLinkedLineBreakends;
 
-    public VariantBreakend(final VariantContext context, SvCaller svCaller, VcfType sourceVcfType)
+    private final SvCallerType mSvCallerType;
+
+    public VariantBreakend(final VariantContext context, final SvCallerType svCallerType, final VcfType sourceVcfType)
     {
-        mSvCaller = svCaller;
+        mSvCallerType = svCallerType;
 
         Context = context;
 
@@ -90,7 +90,7 @@ public class VariantBreakend
         Homseq = context.getAttributeAsString(HOMSEQ, "");
         InsertSequence = AltCoords.InsertSequence;
 
-        SvType = mSvCaller == SvCaller.GRIDSS ?
+        SvType = mSvCallerType == SvCallerType.GRIDSS ?
                 context.getAttributeAsString(EVENT_TYPE, "") :
                 context.getAttributeAsString(SV_TYPE, "");
 
@@ -145,25 +145,13 @@ public class VariantBreakend
     {
         return Position + Cipos[0];
     }
-
     public int maxPosition()
     {
         return Position + Cipos[1];
     }
 
-    public int otherMinPosition()
-    {
-        return isInverted() ?
-                OtherPosition - Cipos[0] :
-                OtherPosition + Cipos[0];
-    }
-
-    public int otherMaxPosition()
-    {
-        return isInverted() ?
-                OtherPosition - Cipos[1] :
-                OtherPosition + Cipos[1];
-    }
+    public int otherMinPosition() { return isInverted() ? OtherPosition - Cipos[0] : OtherPosition + Cipos[0]; }
+    public int otherMaxPosition() { return isInverted() ? OtherPosition - Cipos[1] : OtherPosition + Cipos[1]; }
 
     public String getExtendedAttributeAsString(String id, String key)
     {
@@ -171,12 +159,12 @@ public class VariantBreakend
         return value != null ? value.toString() : "";
     }
 
-    public int getExtendedAttributeAsInt(String id, String key)
+    public int getExtendedAttributeAsInt(final String id, final String key)
     {
         return getGenotypeAttributeAsInt(Context.getGenotype(id), key, 0);
     }
 
-    public double getExtendedAttributeAsDouble(String id, String key)
+    public double getExtendedAttributeAsDouble(final String id, final String key)
     {
         return getGenotypeAttributeAsDouble(Context.getGenotype(id), key, 0);
     }
@@ -254,11 +242,11 @@ public class VariantBreakend
         return String.format("%.0f", qual());
     }
 
-    public String fragsStr(String sampleId)
+    public String fragsStr(final String sampleId)
     {
         String fragsInfoTag;
 
-        if(mSvCaller == SvCaller.GRIDSS)
+        if(mSvCallerType == SvCallerType.GRIDSS)
         {
             fragsInfoTag = isSingle() ? SGL_FRAG_COUNT : TOTAL_FRAGS;
         }
@@ -273,16 +261,10 @@ public class VariantBreakend
     public StructuralVariantType svType()
     {
         if(isSingle())
-        {
             return SGL;
-        }
 
         return formSvType(
-                Chromosome, OtherChromosome,
-                Position, OtherPosition,
-                AltCoords.Orient, AltCoords.OtherOrient,
-                InsertSequence.isEmpty()
-        );
+                Chromosome, OtherChromosome, Position, OtherPosition, AltCoords.Orient, AltCoords.OtherOrient, InsertSequence.isEmpty());
     }
 
     public boolean isPassVariant()
@@ -292,7 +274,7 @@ public class VariantBreakend
 
     public String mateId()
     {
-        return mSvCaller == SvCaller.GRIDSS ?
+        return mSvCallerType == SvCallerType.GRIDSS ?
                 Context.getAttributeAsString(PAR_ID, "") :
                 Context.getAttributeAsString(MATE_ID, "");
     }
@@ -301,15 +283,15 @@ public class VariantBreakend
     {
         // This id links 2 breakends together into 1 structural event
 
-        if(mSvCaller == SvCaller.GRIDSS)
+        if(mSvCallerType == SvCallerType.GRIDSS)
         {
             return Context.getAttributeAsString(EVENT, "");
         }
 
-        if(mSvCaller == SvCaller.TRUTH)
+        if(mSvCallerType == SvCallerType.TRUTH)
             return Context.getAttributeAsString("SVID", "");
 
-        if(mSvCaller == SvCaller.ESVEE)
+        if(mSvCallerType == SvCallerType.ESVEE)
         {
             if(isSingle())
                 return Id;
@@ -318,12 +300,13 @@ public class VariantBreakend
             return String.join(",",mateIds);
         }
 
-        throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCaller);
+        throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCallerType);
     }
 
+    /*
     public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
     {
-        SV_LOGGER.info("Loading VCF file: {}", vcfFile);
+        SV_LOGGER.info("loading VCF file: {}", vcfFile);
 
         Map<String,List<VariantBreakend>> chrBreakendMap = new HashMap<>();
 
@@ -332,7 +315,7 @@ public class VariantBreakend
         String currentChr = "";
         List<VariantBreakend> breakends = null;
 
-        SvCaller svCaller = SvCaller.fromVcfPath(vcfFile);
+        SvCallerType svCallerType = SvCallerType.fromVcfPath(vcfFile);
         VcfType sourceVcfType = VcfType.fromVcfPath(vcfFile);
 
         for(VariantContext variantContext : reader.iterator())
@@ -346,11 +329,12 @@ public class VariantBreakend
                 chrBreakendMap.put(chromosome, breakends);
             }
 
-            breakends.add(new VariantBreakend(variantContext, svCaller, sourceVcfType));
+            breakends.add(new VariantBreakend(variantContext, svCallerType, sourceVcfType));
         }
 
         SV_LOGGER.debug("Loaded {} structural variants", chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum());
 
         return chrBreakendMap;
     }
+    */
 }

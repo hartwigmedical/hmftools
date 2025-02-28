@@ -12,16 +12,20 @@ import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.registerConfig;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AD_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
+import com.google.common.annotations.VisibleForTesting;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -32,6 +36,7 @@ import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -65,12 +70,17 @@ public class CallerApplication
         mPonCache = new PonCache(configBuilder);
         mHotspotCache = new HotspotCache(configBuilder);
 
-        String inputDir = FileWriterUtils.pathFromFile(mConfig.VcfFile);
-        String fragLengthFilename = formFragmentLengthDistFilename(inputDir, mConfig.fileSampleId());
+        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId(), mConfig.OutputId);
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId(), mConfig.OutputId);
+
+        if(!Files.exists(Paths.get(fragLengthFilename)) || !Files.exists(Paths.get(discStatsFilename)))
+        {
+            SV_LOGGER.error("missing input files: disc-stats and frag-lengths", discStatsFilename, fragLengthFilename);
+            System.exit(1);
+        }
 
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
-        String discStatsFilename = formDiscordantStatsFilename(inputDir, mConfig.fileSampleId());
         DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -121,7 +131,7 @@ public class CallerApplication
 
         SV_LOGGER.info("sample({}) processing VCF({})", mConfig.fileSampleId(), vcfFile);
 
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.TumorId);
 
         if((mConfig.hasTumor() && genotypeIds.TumorOrdinal < 0) || (mConfig.hasReference() && genotypeIds.ReferenceOrdinal < 0))
         {
@@ -228,23 +238,46 @@ public class CallerApplication
             return;
         }
 
+        if(isGermline(var, mConfig.hasReference() ? mConfig.ReferenceId : null))
+            var.markGermline();
+    }
+
+    @VisibleForTesting
+    public static boolean isGermline(final Variant var, @Nullable final String referenceId)
+    {
         Breakend breakend = var.breakendStart();
 
         double maxGermlineAf = 0;
         double maxTumorAf = 0;
+        int germlineAd = 0;
+        int tumorAd = 0;
 
         for(Genotype genotype : breakend.Context.getGenotypes())
         {
             double af = breakend.calcAllelicFrequency(genotype);
 
-            if(mConfig.hasReference() && mConfig.ReferenceId.contains(genotype.getSampleName()))
+            if(referenceId != null && referenceId.equals(genotype.getSampleName()))
+            {
                 maxGermlineAf = max(maxGermlineAf, af);
+                germlineAd = breakend.fragmentCount(genotype);
+            }
             else
+            {
                 maxTumorAf = max(maxTumorAf, af);
+                tumorAd = breakend.fragmentCount(genotype);
+            }
         }
 
         if(maxGermlineAf >= GERMLINE_AF_THRESHOLD * maxTumorAf)
-            var.markGermline();
+        {
+            // also check the relative fragment counts
+            double adRatio = tumorAd > 0 ? germlineAd / (double)tumorAd : 1;
+
+            if(adRatio >= GERMLINE_AD_THRESHOLD)
+                return true;
+        }
+
+        return false;
     }
 
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
@@ -255,7 +288,7 @@ public class CallerApplication
 
         if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
         {
-            SV_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
+            SV_LOGGER.debug("sample({}) processed {} variants", mConfig.TumorId, mProcessedVariants);
         }
 
         if(mConfig.ManualRefDepth > 0)

@@ -47,6 +47,8 @@ public abstract class PurpleQC
 
     public abstract double lohPercent();
 
+    public abstract double tincLevel();
+
     @Override
     public String toString()
     {

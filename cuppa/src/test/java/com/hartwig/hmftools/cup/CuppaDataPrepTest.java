@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -22,11 +24,18 @@ import com.hartwig.hmftools.cup.prep.PrepConfig;
 
 import org.apache.commons.io.FileUtils;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class CuppaDataPrepTest
 {
     File TMP_DIR = new File(System.getProperty("java.io.tmpdir") + "/CuppaDataPrepTest/");
+
+    public CuppaDataPrepTest()
+    {
+        Configurator.setLevel(CUP_LOGGER.getName(), Level.DEBUG);
+    }
 
     @Test
     public void canRunSingleSamplePrep() throws IOException
@@ -51,10 +60,10 @@ public class CuppaDataPrepTest
         // Check values
         List<DataItem> dataItems = cuppaDataPrep.mDataItems;
 
-        assertEquals(6228,  dataItems.size());
+        assertEquals(6229,  dataItems.size());
 
         assertEquals(new DataItem(DataSource.DNA, ItemType.SNV96, "C>T_TCC", "2"), dataItems.get(45));
-        assertEquals(new DataItem(DataSource.RNA, ItemType.ALT_SJ, "13;32901736;32901958", "1"), dataItems.get(dataItems.size()-1));
+        assertEquals(new DataItem(DataSource.RNA, ItemType.ALT_SJ, "20;46474688;46476232", "1"), dataItems.get(dataItems.size()-1));
 
         // Check output file exists
         File outputPath = new File(cuppaDataPrep.getOutputPath(null));

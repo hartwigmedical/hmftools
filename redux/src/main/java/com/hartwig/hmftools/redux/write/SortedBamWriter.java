@@ -127,7 +127,7 @@ public class SortedBamWriter
         mUpperWritablePosition = startPosition;
     }
 
-    public void setUpperBoundPosition(int position) { mUpperBoundPosition = position; }
+    public void setUpperBoundPosition(int position) { mUpperBoundPosition = max(mUpperBoundPosition, position); }
 
     public void setUpperWritablePosition(int position)
     {
@@ -169,8 +169,6 @@ public class SortedBamWriter
 
         mMinCachedPosition = mRecords.isEmpty() ? mUpperWritablePosition + 1 : mRecords.first().Read.getAlignmentStart();
     }
-
-    public void writeReadUnchecked(final SAMRecord read) { mWriter.addAlignment(read); }
 
     private void writeRecords(final SortedSet<ReadOrAlignmentStart> records)
     {

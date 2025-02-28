@@ -83,10 +83,11 @@ public class FastqWriter
             // do not create the unpaired one until needed
             mWriterUnpaired = initialise(mFastqUnpaired);
         }
+
         if(read.getReadPairedFlag())
         {
             BT_LOGGER.error("mate not found for paired read: {}", read);
-            throw new RuntimeException("mate not found for paired read");
+            // throw new RuntimeException("mate not found for paired read");
         }
 
         // write to the unpaired fastq
