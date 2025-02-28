@@ -275,11 +275,6 @@ No differences found.
 No special treatment for deletion-insertion changes of length two, which could potentially be 
 due to small number of base changes.
 
-There are some bugs that cause the code to throw an exception for a small number of variants.
-
-There is some refactoring possible that would bring the handling of deletion-insertions in
-line with other changes.
-
 ## Discussion points
 Are there any algorithmic changes required?
 
