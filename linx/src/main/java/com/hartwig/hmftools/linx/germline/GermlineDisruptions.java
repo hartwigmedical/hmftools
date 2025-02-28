@@ -79,7 +79,7 @@ public class GermlineDisruptions
     private static final String FILTER_PSEUDOGENE = "PSEUDOGENE";
 
     private static final List<ResolvedType> REPORTED_RESOLVED_TYPES = Lists.newArrayList(
-            ResolvedType.DEL, ResolvedType.DUP, ResolvedType.INS, RECIP_INV, RECIP_TRANS);
+            ResolvedType.DEL, ResolvedType.DUP, ResolvedType.INS, RECIP_INV);
 
     public GermlineDisruptions(final LinxConfig config, final EnsemblDataCache geneTransCache)
     {
