@@ -426,7 +426,7 @@ public final class AssemblyLinker
                 if(requireRefBaseOverlap)
                 {
                     // check that the matching section covers each sequence's ref bases as well as the extension bases
-                    int minRefOverlapLength = MIN_VARIANT_LENGTH;
+                    int minRefOverlapLength = MIN_VARIANT_LENGTH / 2;
 
                     // note for INDELs, the first sequence is always positive orientation
                     int firstRefBaseOverlap = firstSeq.junctionIndex() - firstIndexStart + 1;
@@ -434,14 +434,14 @@ public final class AssemblyLinker
                     int restrictedFirstSeqEnd = firstIndexStart + overlapLength - 1;
                     int firstExtBaseOverlap = restrictedFirstSeqEnd - firstSeq.junctionIndex();
 
-                    if(firstRefBaseOverlap < minRefOverlapLength || firstExtBaseOverlap < minRefOverlapLength)
-                        continue;
-
                     int restrictedSecondSeqEnd = secondIndexStart + overlapLength - 1;
                     int secondRefBaseOverlap = restrictedSecondSeqEnd - secondSeq.junctionIndex() + 1;
                     int secondExtBaseOverlap = secondSeq.junctionIndex() - secondIndexStart;
 
-                    if(secondRefBaseOverlap < minRefOverlapLength || secondExtBaseOverlap < minRefOverlapLength)
+                    if(firstRefBaseOverlap < minRefOverlapLength && secondRefBaseOverlap < minRefOverlapLength)
+                        continue;
+
+                    if(firstExtBaseOverlap < minRefOverlapLength && secondExtBaseOverlap < minRefOverlapLength)
                         continue;
                 }
 
