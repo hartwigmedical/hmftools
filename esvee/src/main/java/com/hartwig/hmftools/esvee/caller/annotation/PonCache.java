@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -397,6 +398,19 @@ public class PonCache
         return 0;
     }
 
+    public void checkSorted()
+    {
+        for(List<PonSvRegion> regions : mSvRegions.values())
+        {
+            Collections.sort(regions);
+        }
+
+        for(List<PonSglRegion> regions : mSglRegions.values())
+        {
+            Collections.sort(regions);
+        }
+    }
+
     private void loadPonSvFile(final String filename)
     {
         if(filename == null)
@@ -425,6 +439,10 @@ public class PonCache
                         svRegions = Lists.newArrayList();
                         mSvRegions.put(ponRegion.RegionStart.Chromosome, svRegions);
                     }
+                    else
+                    {
+                        svRegions = mSvRegions.get(ponRegion.RegionStart.Chromosome);
+                    }
 
                     lastRegionStart = null;
                 }
@@ -435,6 +453,7 @@ public class PonCache
                 if(!mAllowUnordered && lastRegionStart != null && lastRegionStart.start() > ponRegion.RegionStart.start())
                 {
                     SV_LOGGER.warn("SV PON not ordered: last({}) vs this({})", lastRegionStart, ponRegion.RegionStart);
+                    mHasValidData = false;
                 }
 
                 lastRegionStart = ponRegion.RegionStart;
@@ -478,6 +497,10 @@ public class PonCache
                         sglRegions = Lists.newArrayList();
                         mSglRegions.put(ponRegion.Region.Chromosome, sglRegions);
                     }
+                    else
+                    {
+                        sglRegions = mSglRegions.get(ponRegion.Region.Chromosome);
+                    }
 
                     lastRegion = null;
                 }
@@ -488,6 +511,7 @@ public class PonCache
                 if(!mAllowUnordered && lastRegion != null && lastRegion.start() > ponRegion.Region.start())
                 {
                     SV_LOGGER.warn("SGL PON not ordered: last({}) vs this({})", lastRegion, ponRegion.Region);
+                    mHasValidData = false;
                 }
 
                 lastRegion = ponRegion.Region;

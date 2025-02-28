@@ -73,6 +73,12 @@ public class CallerApplication
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
 
+        if(!mPonCache.hasValidData())
+        {
+            SV_LOGGER.error("invalid PON, exiting");
+            System.exit(1);
+        }
+
         if(configBuilder.hasValue(ARTEFACT_PON_BED_SV_FILE) && configBuilder.hasValue(ARTEFACT_PON_BED_SGL_FILE))
         {
             mArtefactPonCache = new PonCache(
@@ -80,6 +86,12 @@ public class CallerApplication
                     configBuilder.getValue(ARTEFACT_PON_BED_SV_FILE),
                     configBuilder.getValue(ARTEFACT_PON_BED_SGL_FILE),
                     false);
+
+            if(!mArtefactPonCache.hasValidData())
+            {
+                SV_LOGGER.error("invalid artefact PON, exiting");
+                System.exit(1);
+            }
         }
         else
         {

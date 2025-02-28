@@ -133,10 +133,10 @@ public class PonCombiner
     @VisibleForTesting
     public static void mergeSvRegions(final String chromosomeStart, final List<PonSvRegion> combinedRegions)
     {
+        Collections.sort(combinedRegions);
+
         if(combinedRegions.size() < 2)
             return;
-
-        Collections.sort(combinedRegions);
 
         int mergeCount = 0;
         int initialCount = combinedRegions.size();
