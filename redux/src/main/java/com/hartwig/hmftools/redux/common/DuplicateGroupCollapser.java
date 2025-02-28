@@ -94,7 +94,7 @@ public interface DuplicateGroupCollapser
         return key;
     }
 
-    int ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE = 10;
+    int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
 
     class UltimaCollapser
     {
@@ -128,7 +128,7 @@ public interface DuplicateGroupCollapser
             for(OneDGridMap<DuplicateGroup> fivePrimeGroup : mFivePrimeGroups.values())
             {
                 List<DuplicateGroup> collapsedGroups = fivePrimeGroup.mergeValuesByDistance(
-                        ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, DUPLICATE_GROUP_MERGER);
+                        SINGLE_END_JITTER_COLLAPSE_DISTANCE, DUPLICATE_GROUP_MERGER);
 
                 if(finalCollapsedGroups == null)
                 {

@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -153,7 +153,7 @@ public class ReadCacheTest
 
         // no collapsing
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE + 1, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE + 1, false));
 
         FragmentCoordReads fragmentCoordsReads = readCache.evictAll();
 
@@ -177,7 +177,7 @@ public class ReadCacheTest
         readCache.clear();
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
         fragmentCoordsReads = readCache.evictAll();
 
@@ -201,8 +201,8 @@ public class ReadCacheTest
         readCache.clear();
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
         fragmentCoordsReads = readCache.evictAll();
 
@@ -215,22 +215,22 @@ public class ReadCacheTest
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
 
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 175 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 175 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 5 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 5 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
         fragmentCoordsReads = readCache.evictAll();
 

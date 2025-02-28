@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -413,22 +413,22 @@ public class PartitionReaderTest
 
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
 
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 175 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 175 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 5 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 5 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
         partitionReader.postProcessRegion();
 
