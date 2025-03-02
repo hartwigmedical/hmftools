@@ -83,6 +83,8 @@ public class PartitionReader
         }
         else
         {
+            // the sampled max read length is doubled, because it has been observed in non-ulimina bams that the max read length is usually
+            // larger than the sampled max read length, so we need extra room
             mReadCache = new ReadCache(3 * mConfig.readLength(),
                     2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
         }

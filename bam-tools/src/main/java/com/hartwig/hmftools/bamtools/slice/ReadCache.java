@@ -55,7 +55,7 @@ public class ReadCache
         }
     }
 
-    public List<ChrBaseRegion> getRemoteReadRegions()
+    public List<ChrBaseRegion> collateRemoteReadRegions()
     {
         List<BasePosition> remoteReadPositions = new ArrayList<>();
         for(FragmentReadTracker fragmentReadTracker : mFragmentReadTrackers.values())

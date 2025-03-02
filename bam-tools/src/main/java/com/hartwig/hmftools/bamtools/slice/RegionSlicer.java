@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.bamtools.slice;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.slice.SliceConfig.UNMAPPED_READS_DISABLED;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -32,13 +31,14 @@ import htsjdk.samtools.ValidationStringency;
 public class RegionSlicer
 {
     private final SliceConfig mConfig;
+    private final List<SamReader> mBamReaders = Collections.synchronizedList(new ArrayList<>());
 
     public RegionSlicer(final ConfigBuilder configBuilder)
     {
         mConfig = new SliceConfig(configBuilder);
     }
 
-    public void run() throws ExecutionException, InterruptedException
+    public void run() throws ExecutionException, InterruptedException, IOException
     {
         if(!mConfig.isValid())
             System.exit(1);
@@ -73,10 +73,11 @@ public class RegionSlicer
         // mate reads that we get from the remote slicing
         for(int i = 0; i < 2; ++i)
         {
-            List<ChrBaseRegion> remotePositions = readCache.getRemoteReadRegions();
+            List<ChrBaseRegion> remotePositions = readCache.collateRemoteReadRegions();
             for(ChrBaseRegion region : remotePositions)
             {
-                futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig, readCache, threadBamReader), executorService));
+                futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig, readCache, threadBamReader),
+                        executorService));
             }
             BT_LOGGER.info("splitting {} remote regions across {} threads", remotePositions.size(), mConfig.Threads);
 
@@ -90,13 +91,14 @@ public class RegionSlicer
         {
             BT_LOGGER.info("slicing unmapped reads");
 
-            sliceUnmappedReads(sliceWriter);
+            sliceUnmappedReads(sliceWriter, threadBamReader.get());
 
             BT_LOGGER.info("unmapped read slice complete");
         }
 
-        sliceWriter.close();
         executorService.shutdown();
+        sliceWriter.close();
+        closeBamReaders();
 
         if(mConfig.LogMissingReads)
         {
@@ -106,11 +108,8 @@ public class RegionSlicer
         BT_LOGGER.info("Regions slice complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private void sliceUnmappedReads(final SliceWriter sliceWriter)
+    private void sliceUnmappedReads(final SliceWriter sliceWriter, SamReader samReader)
     {
-        SamReader samReader = !mConfig.RefGenomeFile.isEmpty() ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
-
         long unmappedCount = 0;
 
         SAMRecordIterator iterator = samReader.queryUnmapped();
@@ -143,11 +142,21 @@ public class RegionSlicer
             {
                 samReaderFactory = samReaderFactory.referenceSequence(new File(mConfig.RefGenomeFile));
             }
-            return samReaderFactory.open(new File(mConfig.BamFile));
+            SamReader bamReader = samReaderFactory.open(new File(mConfig.BamFile));
+            mBamReaders.add(bamReader);
+            return bamReader;
         });
     }
 
-    public static void main(@NotNull final String[] args) throws ExecutionException, InterruptedException
+    private void closeBamReaders() throws IOException
+    {
+        for(SamReader bamReader : mBamReaders)
+        {
+            bamReader.close();
+        }
+    }
+
+    public static void main(@NotNull final String[] args) throws ExecutionException, InterruptedException, IOException
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         SliceConfig.addConfig(configBuilder);

@@ -54,6 +54,8 @@ public class JitterCountsTable
             jitterCounts.put(jitter, count);
         }
 
+        int getTotalReadCount() { return totalReadCount; }
+
         String getRepeatUnit() { return RepeatUnit; }
 
         ConsensusType getConsensusType() { return ConsensusType; }
@@ -189,4 +191,6 @@ public class JitterCountsTable
         }
         return null;
     }
+
+    public int totalReadCount() { return mRows.stream().mapToInt(Row::getTotalReadCount).sum(); }
 }
