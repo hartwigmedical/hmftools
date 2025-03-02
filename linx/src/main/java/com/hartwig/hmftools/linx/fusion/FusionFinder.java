@@ -63,6 +63,7 @@ public class FusionFinder
     public boolean hasValidConfigData() { return mKnownFusionCache.hasValidData(); }
 
     public final KnownFusionCache getKnownFusionCache() { return mKnownFusionCache; }
+    public final EnsemblDataCache getGeneTransCache() { return mGeneTransCache; }
 
     public void setFusionParams(boolean requirePhaseMatch, boolean allowExonSkipping, boolean requireUpstreamBiotypes)
     {
