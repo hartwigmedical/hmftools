@@ -55,6 +55,8 @@ Genome version prefixes:
 
 ### Driver config
 
+A list genes which are reportable drivers in WiGiTS, including gene specific configuration of reportable event types. More details [here](https://github.com/hartwigmedical/hmftools/blob/master/purple/DriverCatalog.md)
+
 ```shell
 DriverGenePanel.<genome_version>.tsv
 ```
@@ -73,7 +75,13 @@ ensembl_gene_data.csv
 
 ## Variants
 
-### SNV (single nucleotide variant) annotations
+### Small variant annotations
+
+Various resources are used to annotate SNV and INDEL with GNOMAD frequency, clinvar pathogenicity (excluding a small number of variants blacklisted from clinvar), mappability and frequency in the Hartwig Panel of Normals (PON).
+
+Variant calling sensitivity depends on specific variants and regions defined in vcfs and bed files, with the highest sensitivity for known HOTSPOT variants, followed by PANEL definitions and then HIGH_CONFIDENCE regions.  LOW_CONFIDENCE regions are called with the lowest sensitivity.
+
+SAGE also uses a specific coverage bed file to define regions to calculate coverage for. 
 
 ```shell
 # Anotations
@@ -95,6 +103,10 @@ CoverageCodingPanel.<genome_version>.bed.gz
 
 ### SV (structural variant) annotations
 
+A set of known pathogenic fusions is manually curated.  SVs affecting these regions are called with additional sensitivity. PON definitions based on Hartwig cohort frequencies are used to identify and filter likely germline variants or artefacts
+
+Repeat masker derived data is used to annotate the type of regions for unmappable insert sequence. 
+
 ```shell
 sgl_pon.<genome_version>.bed.gz
 sv_pon.<genome_version>.bedpe.gz
@@ -106,6 +118,7 @@ hg38_decoys.fa.img
 ```
 
 ### CNV (copy number variant) annotations
+
 
 ```shell
 cohort_germline_del_freq.<genome_version>.csv
