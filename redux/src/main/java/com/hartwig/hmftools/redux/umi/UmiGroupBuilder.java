@@ -54,8 +54,10 @@ public class UmiGroupBuilder
 
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
+            // TODO: So need to have duplicate groups collapsed here?
             List<DuplicateGroup> umiGroups = buildUmiGroups(duplicateGroup.fragmentCoordinates(), duplicateGroup.reads(), mUmiConfig);
 
+            // TODO: Based on `keyNonOriented` add to coordinateGroup which collects forward and reverse reads.
             if(formCoordGroups)
             {
                 CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, duplicateGroup.fragmentCoordinates().keyNonOriented());
@@ -119,12 +121,16 @@ public class UmiGroupBuilder
         return finalUmiGroups;
     }
 
+    /**
+     * Split out reads by UMI and collapse groups based on "close" UMIs.
+     */
     public static List<DuplicateGroup> buildUmiGroups(final FragmentCoords fragCoords, final List<SAMRecord> reads, final UmiConfig config)
     {
         Map<String,DuplicateGroup> groups = Maps.newHashMap();
         boolean checkDefinedUmis = config.hasDefinedUmis();
         boolean useDefinedUmis = checkDefinedUmis;
 
+        // TODO: go through reads in the duplicate group and sepearete reads by umi
         for(SAMRecord read : reads)
         {
             String umiId = config.extractUmiId(read.getReadName());
@@ -155,6 +161,7 @@ public class UmiGroupBuilder
             }
         }
 
+        // TODO: if using defined UMIs then we simply return the umi groups as if without further processing.
         if(useDefinedUmis)
         {
             return groups.values().stream().collect(Collectors.toList());
@@ -164,6 +171,8 @@ public class UmiGroupBuilder
         List<DuplicateGroup> orderedGroups = groups.values().stream().sorted(new UmiUtils.SizeComparator()).collect(Collectors.toList());
 
         // then apply the directional model, where smaller groups are merged into larger ones
+        // TODO: merge smaller UMI groups into larger ones based on, if a UMI group in the current cluster is larger then the current
+        //  candidate UMI group and the Hamminsg distance between the UMI groups is less than some threshhold
         int i = 0;
         while(i < orderedGroups.size() - 1)
         {
@@ -210,6 +219,7 @@ public class UmiGroupBuilder
         }
 
         // run a check allowing collapsing of UMIs with 2-base differences
+        // TODO: now do UMI group collapsing for Hamming distance below previous threshold + 1
         if(orderedGroups.size() > 1)
         {
             i = 0;
@@ -238,8 +248,11 @@ public class UmiGroupBuilder
         }
 
         // run a check allowing collapsing of UMIs with 4-base differences where significant imbalance exists
+        // TODO: Do we have a large UMI group?
         boolean hasLargeGroups = orderedGroups.stream().anyMatch(x -> x.readCount() >= MAX_IMBALANCED_UMI_COUNT);
 
+        // TODO: If we have a large UMI group, then merge groups where one is large and the other is not large and the HAMMING distance
+        // is <= MAX_IMBALANCED_UMI_BASE_DIFF. So this is balancing UMI groups.
         if(orderedGroups.size() > 1 && hasLargeGroups)
         {
             i = 0;
@@ -359,6 +372,7 @@ public class UmiGroupBuilder
     {
         // up until now fragments with the same coordinates but different orientation (ie F1R2 vs F2R1) have been kept separate,
         // but now merge these if they either don't use UMIs or have complementary duplex UMIs
+        // TODO: so if coordGroup doesn't have FORWARD and REVERSE reads or the UMIs are not DUPLEX then we simply extract the UMI groups.
         if(!coordGroup.hasOpposites() || !mUmiConfig.Duplex)
         {
             addUmiGroup(allUmiGroups, coordGroup.ForwardGroups);
@@ -366,6 +380,7 @@ public class UmiGroupBuilder
             return;
         }
 
+        // TODO: Goes through all FORWARD/REVERSE group pairs and collapses this pair if we have duplex UMIs and they match.
         for(Object first : coordGroup.ForwardGroups)
         {
             DuplicateGroup firstGroup = null;
@@ -405,6 +420,7 @@ public class UmiGroupBuilder
                     secondUmi = mUmiConfig.extractUmiId(secondSingleRead.read().getReadName());
                 }
 
+                // TODO: Individual UMI compoments are "cross" checked and if less than permitted base diff then collapse.
                 boolean canCollapse = mUmiConfig.Duplex ?
                         hasDuplexUmiMatch(firstUmi, secondUmi, mUmiConfig.DuplexDelim, mUmiConfig.PermittedBaseDiff) : false;
 

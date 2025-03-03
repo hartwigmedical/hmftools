@@ -170,6 +170,7 @@ public class UmiStatistics
         }
     }
 
+    // TODO:
     private void recordUmiBaseFrequencies(final String umiId)
     {
         if(UmiPositionBaseFrequencies == null)
@@ -198,9 +199,11 @@ public class UmiStatistics
         return -1;
     }
 
+    // TODO:
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup umiGroup)
     {
         UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.readCount());
+        // TODO: groupCount
         ++umiGroupStats.GroupCount;
 
         for(SAMRecord read : umiGroup.reads())
@@ -208,10 +211,12 @@ public class UmiStatistics
             int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId());
 
             if(diff <= MAX_EDIT_DISTANCE)
+                // TODO: EditDistanceFrequency if smaller than 10
                 ++umiGroupStats.EditDistanceFrequency[diff];
         }
     }
 
+    // TODO:
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup group1, final DuplicateGroup group2)
     {
         UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.readCount() + group2.readCount());
