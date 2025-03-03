@@ -14,9 +14,9 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMLineParser;
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentCache
@@ -24,23 +24,31 @@ public class FragmentCache
     private final Map<String,Fragment> mFragmentMap;
     private final SAMFileHeader mSamFileHeader;
 
+    private final PerformanceCounter mPerfCounter;
+
     private final FragmentStats mStats;
     private long mLastLogCount;
     private static final long LOG_READ_DIFF = 1_000_000;
 
     public FragmentCache(final SAMFileHeader fileHeader)
     {
-        mFragmentMap = Maps.newHashMap();
+        mFragmentMap = Maps.newConcurrentMap();
         mSamFileHeader = fileHeader;
 
         mLastLogCount = 0;
         mStats = new FragmentStats();
+
+        mPerfCounter = new PerformanceCounter("FragmentCache");
     }
 
     public FragmentStats stats() { return mStats; }
 
-    public synchronized List<SAMRecord> handleIncompleteFragments(final Collection<Fragment> fragments)
+    public List<SAMRecord> handleIncompleteFragments(final Collection<Fragment> fragments)
     {
+        // locks are required around the fragment map when adding or removing elements, and around the fragments themselves when adding
+        // or extracting reads
+        mPerfCounter.start();
+
         List<SAMRecord> completeReads = Lists.newArrayList();
 
         for(Fragment fragment : fragments)
@@ -49,7 +57,7 @@ public class FragmentCache
 
             if(existingFragment == null)
             {
-                serialiseFragmentReads(fragment);
+                fragment.serialiseReads();
                 mFragmentMap.put(fragment.readId(), fragment);
 
                 ++mStats.TotalFragments;
@@ -58,32 +66,14 @@ public class FragmentCache
                 continue;
             }
 
-            existingFragment.transfer(fragment);
+            boolean isComplete = existingFragment.mergeFragment(fragment, mSamFileHeader, completeReads);
 
-            // keep the fragment's reads if one or both primaries are missing
-            if(!existingFragment.hasPrimaryInfo())
-            {
-                serialiseFragmentReads(existingFragment);
-                continue;
-            }
-
-            deserialiseFragmentReads(existingFragment);
-
-            List<SAMRecord> fragCompleteReads = existingFragment.extractCompleteReads();
-
-            completeReads.addAll(fragCompleteReads);
-
-            // keep just its primary info if its is waiting on supplementaries only
-            if(existingFragment.isComplete())
+            if(isComplete)
             {
                 mFragmentMap.remove(existingFragment.readId());
 
                 if(existingFragment.expectedSupplementaryCount() > 0)
                     ++mStats.FragmentsWithSupplementaries;
-            }
-            else
-            {
-                existingFragment.serialiseReads();
             }
         }
 
@@ -97,6 +87,8 @@ public class FragmentCache
 
         mStats.MaxFragmentCount = max(mStats.MaxFragmentCount, mFragmentMap.size());
 
+        mPerfCounter.stop();
+
         return completeReads;
     }
 
@@ -109,7 +101,7 @@ public class FragmentCache
 
         for(Fragment fragment : mFragmentMap.values())
         {
-            deserialiseFragmentReads(fragment);
+            fragment.deserialiseReads(mSamFileHeader);
             reads.addAll(fragment.reads());
 
             if(fragment.expectedSupplementaryCount() > 0)
@@ -119,31 +111,20 @@ public class FragmentCache
         return reads;
     }
 
-    private void serialiseFragmentReads(final Fragment fragment)
-    {
-        if(mSamFileHeader == null)
-            return;
-
-        fragment.serialiseReads();
-    }
-
-    private void deserialiseFragmentReads(final Fragment fragment)
-    {
-        if(mSamFileHeader == null)
-            return;
-
-        fragment.deserialiseReads(mSamFileHeader);
-    }
-
     public void clear() { mFragmentMap.clear(); }
 
     public long readCount() { return mFragmentMap.values().stream().mapToInt(x -> x.readCount()).sum(); }
+
+    public void logFinalStats()
+    {
+        BT_LOGGER.debug("fragment cache stats: ", mStats.toString());
+        mPerfCounter.logStats();
+    }
 
     @VisibleForTesting
     public Map<String,Fragment> fragmentMap() { return mFragmentMap; }
 
     public long fragmentCount() { return mFragmentMap.size(); }
-
 
     public String toString()
     {

@@ -78,7 +78,7 @@ public class BamChecker
 
         BT_LOGGER.info("all partition tasks complete, mins({})", runTimeMinsStr(startTimeMs));
 
-        BT_LOGGER.debug("fragment cache stats: {}", fragmentCache.stats().toString());
+        fragmentCache.logFinalStats();
 
         FragmentStats combinedStats = new FragmentStats();
         combinedStats.merge(fragmentCache.stats());

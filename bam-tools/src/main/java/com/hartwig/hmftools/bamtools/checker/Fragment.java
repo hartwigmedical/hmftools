@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.checker;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.READ_GROUP_ATTRIBUTE;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +19,8 @@ public class Fragment
 {
     private final String mReadId;
     private List<SAMRecord> mReads;
+
+    private String mReadGroupIdId;
     private List<BamReadLite> mLiteReads;
 
     // counts of supplementary and secondary reads
@@ -85,6 +88,33 @@ public class Fragment
         return hasPrimaryInfo() && mExpectedSupplementaryCount == mReceivedSupplementaryCount;
     }
 
+    public synchronized boolean mergeFragment(final Fragment fragment, final SAMFileHeader samFileHeader, final List<SAMRecord> completeReads)
+    {
+        // copy reads or primary cigar info if the fragment has already written the primaries
+        transfer(fragment);
+
+        // keep the fragment's reads if one or both primaries are missing
+        if(!hasPrimaryInfo())
+        {
+            serialiseReads();
+            return false;
+        }
+
+        // primary cigar info is complete, so write any cached reads
+        deserialiseReads(samFileHeader);
+
+        List<SAMRecord> fragCompleteReads = extractCompleteReads();
+
+        completeReads.addAll(fragCompleteReads);
+
+        // keep just its primary info if its is waiting on supplementaries only
+        if(isComplete())
+            return true;
+
+        serialiseReads();
+        return false;
+    }
+
     public void transfer(final Fragment other)
     {
         other.reads().forEach(x -> addRead(x));
@@ -130,13 +160,16 @@ public class Fragment
                 mExpectedSupplementaryCount, mReceivedSupplementaryCount);
     }
 
-    public void serialiseReads()
+    public synchronized void serialiseReads()
     {
         if(mReads == null || mReads.isEmpty())
             return;
 
         if(mLiteReads == null)
             mLiteReads = Lists.newArrayListWithExpectedSize(mReads.size());
+
+        if(mReadGroupIdId == null)
+            mReadGroupIdId = mReads.get(0).getStringAttribute(READ_GROUP_ATTRIBUTE);
 
         for(SAMRecord read : mReads)
         {
@@ -157,7 +190,7 @@ public class Fragment
 
         for(BamReadLite readLite : mLiteReads)
         {
-            SAMRecord read = BamReadLite.from(readLite, samFileHeader, mReadId);
+            SAMRecord read = BamReadLite.from(readLite, samFileHeader, mReadId, mReadGroupIdId);
             mReads.add(read);
         }
 

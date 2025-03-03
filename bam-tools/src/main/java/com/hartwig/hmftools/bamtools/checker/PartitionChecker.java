@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.checker;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.bamtools.checker.CheckConfig.LOG_READ_COUNT;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 
@@ -34,8 +35,6 @@ public class PartitionChecker
     private long mNextLogReadCount;
     private long mCompleteFragments;
     private final boolean mLogReadIds;
-
-    private static final int LOG_READ_COUNT = 10_000_000;
 
     public PartitionChecker(
             final CheckConfig config, final FragmentCache fragmentCache, final SamReader samReader, final SAMFileWriter bamWriter)
@@ -104,7 +103,7 @@ public class PartitionChecker
         {
             mNextLogReadCount += LOG_READ_COUNT;
 
-            BT_LOGGER.info("region({}) processed reads({}), cached fragments({})", mRegion, mReadCount, mFragmentMap.size());
+            BT_LOGGER.info("region({}) processed reads({}) cached fragments({})", mRegion, mReadCount, mFragmentMap.size());
         }
 
         if(!read.getReadPairedFlag() || read.isSecondaryAlignment())
