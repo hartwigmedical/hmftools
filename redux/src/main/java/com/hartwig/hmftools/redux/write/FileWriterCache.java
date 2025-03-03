@@ -28,8 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMFileWriterImpl;
 
 public class FileWriterCache
 {

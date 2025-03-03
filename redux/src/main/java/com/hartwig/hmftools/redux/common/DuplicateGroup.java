@@ -31,10 +31,12 @@ import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroup
 {
-    private final String mUmiId; // the UMI if enabled
+    // TODO: rename
+    private final String mUmiId_; // the UMI if enabled
 
     // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
-    private final FragmentCoords mFragmentCoords;
+    // TODO: rename
+    private final FragmentCoords mFragmentCoords_;
     private final List<SAMRecord> mReads;
 
     private SAMRecord mConsensusRead;
@@ -55,8 +57,8 @@ public class DuplicateGroup
 
     public DuplicateGroup(final String id, final List<SAMRecord> reads, final FragmentCoords fragmentCoords)
     {
-        mUmiId = id;
-        mFragmentCoords = fragmentCoords;
+        mUmiId_ = id;
+        mFragmentCoords_ = fragmentCoords;
         mReads = reads;
 
         mConsensusRead = null;
@@ -72,7 +74,8 @@ public class DuplicateGroup
     public List<SAMRecord> reads() { return mReads; }
     public int readCount() { return mReads.size(); }
 
-    public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
+    // TODO: rename
+    public FragmentCoords fragmentCoordinates_() { return mFragmentCoords_; }
 
     public List<SAMRecord> duplicate() { return mReads; }
     public SAMRecord consensusRead() { return mConsensusRead; }
@@ -81,7 +84,8 @@ public class DuplicateGroup
     public void setPrimaryRead(final SAMRecord read) { mPrimaryRead = read; }
     public boolean isPrimaryRead(final SAMRecord read) { return mPrimaryRead == read; }
 
-    public String umiId() { return mUmiId; }
+    // TODO: rename
+    public String umiId_() { return mUmiId_; }
 
     public void registerDualStrand() { mDualStrand = true; }
     public boolean hasDualStrand() { return mDualStrand; }
@@ -90,7 +94,7 @@ public class DuplicateGroup
     {
         try
         {
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmiId);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords_, mUmiId_);
 
             // set consensus read attributes
             int firstInPairCount = (int)mReads.stream().filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag()).count();
@@ -189,6 +193,6 @@ public class DuplicateGroup
 
     public String toString()
     {
-        return format("id(%s) reads(%d) coords(%s)", mUmiId, mReads.size(), mFragmentCoords.Key);
+        return format("id(%s) reads(%d) coords(%s)", mUmiId_, mReads.size(), mFragmentCoords_.Key);
     }
 }

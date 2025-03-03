@@ -83,7 +83,7 @@ public abstract class BamWriter
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
-        String fragCoords = group.fragmentCoordinates().Key;
+        String fragCoords = group.fragmentCoordinates_().Key;
         if(group.consensusRead() != null)
         {
             SAMRecord read = group.consensusRead();
@@ -94,19 +94,19 @@ public abstract class BamWriter
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             if(mReadDataWriter != null && mReadDataWriter.enabled())
-                mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId());
+                mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId_());
         }
 
         for(SAMRecord read : group.reads())
         {
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
+                read.setAttribute(UMI_ATTRIBUTE, group.umiId_());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
             if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
-            writeRead(read, fragmentStatus, fragCoords, group.umiId());
+            writeRead(read, fragmentStatus, fragCoords, group.umiId_());
         }
     }
 

@@ -55,12 +55,14 @@ public class UmiGroupBuilder
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
             // TODO: So need to have duplicate groups collapsed here?
-            List<DuplicateGroup> umiGroups = buildUmiGroups(duplicateGroup.fragmentCoordinates(), duplicateGroup.reads(), mUmiConfig);
+            // TODO: fragmentCoords
+            List<DuplicateGroup> umiGroups = buildUmiGroups(duplicateGroup.fragmentCoordinates_(), duplicateGroup.reads(), mUmiConfig);
 
             // TODO: Based on `keyNonOriented` add to coordinateGroup which collects forward and reverse reads.
             if(formCoordGroups)
             {
-                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, duplicateGroup.fragmentCoordinates().keyNonOriented());
+                // TODO: fragmnetCoords
+                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, duplicateGroup.fragmentCoordinates_().keyNonOriented());
 
                 // add in order of descending by fragment count for non-duplex collapsing
                 Collections.sort(umiGroups, new UmiUtils.SizeComparator());
@@ -105,7 +107,8 @@ public class UmiGroupBuilder
             if(umiGroup.readCount() == 1)
             {
                 // drop any single fragments
-                singleFragments.add(new ReadInfo(umiGroup.reads().get(0), umiGroup.fragmentCoordinates()));
+                // TODO: need to compute framgnetCoords?
+                singleFragments.add(new ReadInfo(umiGroup.reads().get(0), umiGroup.fragmentCoordinates_()));
                 continue;
             }
 
@@ -189,7 +192,7 @@ public class UmiGroupBuilder
 
                 for(DuplicateGroup existing : cluster)
                 {
-                    if(existing.readCount() >= second.readCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
+                    if(existing.readCount() >= second.readCount() && !exceedsUmiIdDiff(existing.umiId_(), second.umiId_(), config.PermittedBaseDiff))
                     {
                         merged = true;
                         break;
@@ -232,7 +235,7 @@ public class UmiGroupBuilder
                 {
                     DuplicateGroup second = orderedGroups.get(j);
 
-                    if(!exceedsUmiIdDiff(first.umiId(), second.umiId(), config.PermittedBaseDiff + 1))
+                    if(!exceedsUmiIdDiff(first.umiId_(), second.umiId_(), config.PermittedBaseDiff + 1))
                     {
                         first.addReads(second.reads());
                         orderedGroups.remove(j);
@@ -268,7 +271,7 @@ public class UmiGroupBuilder
                     double maxCountRatio = first.readCount() >= second.readCount() ?
                             first.readCount() / (double)second.readCount() : second.readCount() / (double)first.readCount();
 
-                    if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umiId(), second.umiId(), MAX_IMBALANCED_UMI_BASE_DIFF))
+                    if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umiId_(), second.umiId_(), MAX_IMBALANCED_UMI_BASE_DIFF))
                     {
                         first.addReads(second.reads());
                         orderedGroups.remove(j);
@@ -326,7 +329,7 @@ public class UmiGroupBuilder
 
         public void addGroup(final DuplicateGroup group)
         {
-            addFragmentGroup(group, group.fragmentCoordinates().forwardFragment());
+            addFragmentGroup(group, group.fragmentCoordinates_().forwardFragment());
         }
 
         public void addSingleRead(final ReadInfo readInfo)
@@ -391,8 +394,9 @@ public class UmiGroupBuilder
             if(first instanceof DuplicateGroup)
             {
                 firstGroup = (DuplicateGroup) first;
-                firstUmi = firstGroup.umiId();
-                firstFragCoords = firstGroup.fragmentCoordinates();
+                firstUmi = firstGroup.umiId_();
+                // TODO: fragmentCoords
+                firstFragCoords = firstGroup.fragmentCoordinates_();
             }
             else
             {
@@ -412,7 +416,7 @@ public class UmiGroupBuilder
                 if(second instanceof DuplicateGroup)
                 {
                     secondGroup = (DuplicateGroup) second;
-                    secondUmi = secondGroup.umiId();
+                    secondUmi = secondGroup.umiId_();
                 }
                 else
                 {

@@ -132,7 +132,7 @@ public class UmiStatistics
             posFragData.MaxUmiReadsCount = duplicateGroup.readCount();
 
             posFragData.UmiGroupDetails = format("%s %s",
-                    duplicateGroup.fragmentCoordinates().keyNonOriented(), duplicateGroup.reads().get(0).getReadName());
+                    duplicateGroup.fragmentCoordinates_().keyNonOriented(), duplicateGroup.reads().get(0).getReadName());
         }
     }
 
@@ -157,7 +157,7 @@ public class UmiStatistics
 
     public void recordUmiBaseStats(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
-        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umiId()));
+        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umiId_()));
 
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
@@ -208,7 +208,7 @@ public class UmiStatistics
 
         for(SAMRecord read : umiGroup.reads())
         {
-            int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId());
+            int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId_());
 
             if(diff <= MAX_EDIT_DISTANCE)
                 // TODO: EditDistanceFrequency if smaller than 10
@@ -229,7 +229,7 @@ public class UmiStatistics
 
             for(SAMRecord read : readsGroup.reads())
             {
-                int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umiId());
+                int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umiId_());
 
                 if(diff <= MAX_EDIT_DISTANCE)
                     ++umiGroupStats.EditDistanceFrequency[diff];

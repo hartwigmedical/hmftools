@@ -209,9 +209,9 @@ public class ReduxConfig
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
         SkipUnmapped = configBuilder.hasFlag(SKIP_UNAMPPED);
 
-        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
-
         UMIs = UmiConfig.from(configBuilder);
+
+        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, UMIs.Enabled, configBuilder);
 
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
         JitterConfig = JitterAnalyserConfig.create(
@@ -382,7 +382,7 @@ public class ReduxConfig
         JitterMsiOnly = false;
         JitterConfig = null;
 
-        DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, sbxMaxDuplicateDistance);
+        DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, UMIs.Enabled, sbxMaxDuplicateDistance);
 
         WriteBam = false;
         MultiBam = false;
