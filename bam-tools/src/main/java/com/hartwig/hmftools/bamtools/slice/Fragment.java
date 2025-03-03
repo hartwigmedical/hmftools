@@ -79,6 +79,9 @@ public class Fragment
                 {
                     mPendingReads.add(suppReadInfo);
                 }
+
+                if(!readIsPrimary) // any further supplementaries are about other supplementaries, and so do not need to be recorded
+                    break;
             }
         }
 

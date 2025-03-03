@@ -101,15 +101,17 @@ public class SliceRegionTest
 
         assertEquals(2, fragment.pendingReads().size());
 
-        // supps from second primary
+        // supps from second primary - note that the supps also have each other's alignments
         suppData = new SupplementaryReadData(CHR_1, 1300, SUPP_POS_STRAND, READ_CIGAR, 60);
-        read = createSamRecord(read.getReadName(), CHR_1, 1500, CHR_1, 950,true, suppData);
+        read = createSamRecord(read.getReadName(), CHR_1, 1500, CHR_1, 950,true, null);
+        read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, format("%s%s%s", suppData.asSamTag(), ALIGNMENTS_DELIM, suppData2.asSamTag()));
         SamRecordTestUtils.flipFirstInPair(read);
 
         regionSlicer.processSamRecord(read);
         assertEquals(1, mReadCache.fragmentMap().size());
 
-        read = createSamRecord(read.getReadName(), CHR_1, 1800, CHR_1, 950,true, suppData);
+        read = createSamRecord(read.getReadName(), CHR_1, 1800, CHR_1, 950,true, null);
+        read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, format("%s%s%s", suppData.asSamTag(), ALIGNMENTS_DELIM, suppData1.asSamTag()));
         SamRecordTestUtils.flipFirstInPair(read);
 
         regionSlicer.processSamRecord(read);
