@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.slice;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.Collections;
@@ -27,7 +28,7 @@ public class RegionBamSlicer implements Runnable
 
     private final ChrBaseRegion mCurrentRegion;
     private List<ChrBaseRegion> mLowerRegions;
-    private int mReadsProcessed = 0;
+    private int mReadsProcessed;
 
     public RegionBamSlicer(final ChrBaseRegion region, final SliceConfig config, final ReadCache readCache, final ThreadLocal<SamReader> bamReader)
     {
@@ -41,6 +42,7 @@ public class RegionBamSlicer implements Runnable
 
         mCurrentRegion = region;
         mLowerRegions = Collections.emptyList();
+        mReadsProcessed = 0;
     }
 
     @Override
@@ -66,6 +68,11 @@ public class RegionBamSlicer implements Runnable
     @VisibleForTesting
     public void processSamRecord(final SAMRecord read)
     {
+        if(mConfig.LogReadIds.contains(read.getReadName()))
+        {
+            BT_LOGGER.debug("specific read({})", readToString(read));
+        }
+
         int readStart = read.getAlignmentStart();
         int readEnd = max(read.getAlignmentEnd(), readStart); // accounting for unmapped mates
 

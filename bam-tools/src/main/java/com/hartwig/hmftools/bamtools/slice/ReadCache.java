@@ -1,17 +1,19 @@
 package com.hartwig.hmftools.bamtools.slice;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-
-import org.apache.commons.lang3.Validate;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -19,13 +21,16 @@ public class ReadCache
 {
     private static final int REGION_CONSOLIDATION_DISTANCE = 10_000;
 
-    private final Map<String, FragmentReadTracker> mFragmentReadTrackers = new HashMap<>();
+    private final Map<String,Fragment> mFragmentMap;
     private final SliceWriter mSliceWriter;
-    private volatile boolean mProcessingRemoteRegions = false;
+    private volatile boolean mProcessingRemoteRegions;
 
     public ReadCache(final SliceWriter sliceWriter)
     {
         mSliceWriter = sliceWriter;
+
+        mFragmentMap = Maps.newHashMap();
+        mProcessingRemoteRegions = false;
     }
 
     public void setProcessingRemoteRegions(boolean processingMateRegions)
@@ -33,75 +38,161 @@ public class ReadCache
         mProcessingRemoteRegions = processingMateRegions;
     }
 
-    public synchronized void addReadRecord(SAMRecord read)
+    public synchronized boolean addReadRecord(SAMRecord read)
     {
-        FragmentReadTracker fragmentReadTracker = mFragmentReadTrackers.get(read.getReadName());
+        if(read.isSecondaryAlignment())
+        {
+            if(mProcessingRemoteRegions)
+                return false;
 
-        if(fragmentReadTracker == null)
+            mSliceWriter.writeRead(read); // write without tracking of fragment info
+            return false;
+        }
+
+        Fragment fragment = mFragmentMap.get(read.getReadName());
+
+        boolean isNewRead = false;
+
+        if(fragment == null)
         {
             if(mProcessingRemoteRegions)
             {
-                // we do not accept new fragments after initial slice
-                return;
+                // don't handle new fragments after initial slice
+                return false;
             }
 
-            fragmentReadTracker = new FragmentReadTracker(read.getReadName(), read.getReadPairedFlag());
-            mFragmentReadTrackers.put(read.getReadName(), fragmentReadTracker);
+            fragment = new Fragment(read);
+
+            if(!fragment.isComplete())
+                mFragmentMap.put(read.getReadName(), fragment);
+
+            isNewRead = true;
         }
-        if(fragmentReadTracker.processRead(read))
+        else
         {
-            // this read is new, write it out
+            isNewRead = fragment.processRead(read);
+
+            if(fragment.isComplete())
+                mFragmentMap.remove(read.getReadName());
+        }
+
+        if(isNewRead)
+        {
             mSliceWriter.writeRead(read);
         }
+
+        return mFragmentMap.isEmpty();
     }
+
+    public synchronized boolean allComplete() { return mFragmentMap.isEmpty(); }
 
     public List<ChrBaseRegion> collateRemoteReadRegions()
     {
-        List<BasePosition> remoteReadPositions = new ArrayList<>();
-        for(FragmentReadTracker fragmentReadTracker : mFragmentReadTrackers.values())
+        Map<String,List<BaseRegion>> chrBaseRegions = Maps.newHashMap();
+
+        for(Fragment fragment : mFragmentMap.values())
         {
-            assert fragmentReadTracker.invariant();
-            remoteReadPositions.addAll(fragmentReadTracker.findPendingReadPositions());
+            List<BasePosition> remotePositions = fragment.extractPendingRegions();
+
+            for(BasePosition region : remotePositions)
+            {
+                List<BaseRegion> baseRegions = chrBaseRegions.get(region.Chromosome);
+
+                if(baseRegions == null)
+                {
+                    baseRegions = Lists.newArrayList();
+                    chrBaseRegions.put(region.Chromosome, baseRegions);
+                }
+
+                baseRegions.add(new BaseRegion(region.Position, region.Position));
+            }
         }
 
-        // sort the mate regions
-        remoteReadPositions.sort(Comparator.comparing((BasePosition o) -> o.Chromosome).thenComparingInt(o -> o.Position));
-        List<ChrBaseRegion> remoteBaseRegions = new ArrayList<>();
+        List<ChrBaseRegion> remoteRegions = Lists.newArrayList();
 
-        // now we go through the remote positions and create a new condense list
-        ChrBaseRegion overlapRegion = null;
-        for(BasePosition br : remoteReadPositions)
+        // merge regions within proximity of each other
+        for(Map.Entry<String,List<BaseRegion>> entry : chrBaseRegions.entrySet())
         {
-            // see if still overlap
-            if(overlapRegion != null && br.Chromosome.equals(overlapRegion.chromosome()))
+            String chromosome = entry.getKey();
+
+            List<BaseRegion> baseRegions = entry.getValue();
+
+            Collections.sort(baseRegions);
+
+            int index = 0;
+            while(index < baseRegions.size() - 1)
             {
-                // we should be sorted this way
-                Validate.isTrue(br.Position >= overlapRegion.start());
-                if(overlapRegion.end() + REGION_CONSOLIDATION_DISTANCE >= br.Position)
+                BaseRegion region = baseRegions.get(index);
+
+                int nextIndex = index + 1;
+                while(nextIndex < baseRegions.size())
                 {
-                    // still overlapping, we can set end
-                    if(br.Position > overlapRegion.end())
+                    BaseRegion nextRegion = baseRegions.get(nextIndex);
+
+                    if(nextRegion.start() > region.end() + REGION_CONSOLIDATION_DISTANCE)
+                        break;
+
+                    if(nextRegion.start() <= region.end() + REGION_CONSOLIDATION_DISTANCE)
                     {
-                        overlapRegion.setEnd(br.Position);
+                        region.setEnd(nextRegion.end());
+                        baseRegions.remove(nextIndex);
                     }
-                    continue;
+                    else
+                    {
+                        ++nextIndex;
+                    }
+                }
+
+                ++index;
+            }
+
+            for(BaseRegion region : baseRegions)
+            {
+                remoteRegions.add(new ChrBaseRegion(chromosome, region.start(), region.end()));
+            }
+        }
+
+        return remoteRegions;
+    }
+
+    public void logMissingReads(List<ChrBaseRegion> excludedRegions)
+    {
+        for(Fragment fragment : mFragmentMap.values())
+        {
+            List<ReadInfo> pendingReads = fragment.pendingReads();
+
+            if(pendingReads.isEmpty())
+                continue;
+
+            boolean inExcluded = false;
+            for(ChrBaseRegion excludedRegion : excludedRegions)
+            {
+                if(pendingReads.stream().anyMatch(x -> excludedRegion.overlaps(x.Contig, x.AlignmentStart, x.AlignmentStart)))
+                {
+                    inExcluded = true;
+                    break;
                 }
             }
-            // no longer can reuse old one, make a new one
-            overlapRegion = new ChrBaseRegion(br.Chromosome, br.Position, br.Position);
-            remoteBaseRegions.add(overlapRegion);
-        }
-        return remoteBaseRegions;
-    }
 
-    public void logMissingReads()
-    {
-        for(FragmentReadTracker fragmentReadTracker : mFragmentReadTrackers.values())
-        {
-            for(FragmentReadTracker.ReadKey readKey : fragmentReadTracker.getPendingReads())
+            if(inExcluded)
+                continue;
+
+            BT_LOGGER.warn("read id({}) has {} missing reads:", fragment.readId(), pendingReads.size());
+
+            for(ReadInfo readInfo : fragment.pendingReads())
             {
-                BT_LOGGER.warn("read id({}) missing read({})", fragmentReadTracker.getName(), readKey);
+                BT_LOGGER.warn("missing read id({}) info({})", fragment.readId(), readInfo);
+            }
+
+            for(ReadInfo readInfo : fragment.receivedReads())
+            {
+                BT_LOGGER.debug("received read id({}) info({})", fragment.readId(), readInfo);
             }
         }
     }
+
+    public String toString() { return format("fragments(%d)", mFragmentMap.size()); }
+
+    @VisibleForTesting
+    public Map<String,Fragment> fragmentMap() { return mFragmentMap; }
 }
