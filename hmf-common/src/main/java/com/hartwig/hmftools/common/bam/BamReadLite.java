@@ -33,6 +33,8 @@ public class BamReadLite
     public final short NmCount;
     public final short XScore;
 
+    public final SAMRecord.SAMTagAndValue[] Attributes;
+
     // optimisations
     // read and read group ID may be stored by the caller to avoid duplication across fragments
     // CIGAR elements and alignment blocks are discarded
@@ -41,8 +43,6 @@ public class BamReadLite
     // further ideas:
     // - cigar could be null whenever read is fully aligned (most common scenario)
     // - quals could be stored as an array of value:count eg 10x25, 2x37 etc
-
-    public final SAMRecord.SAMTagAndValue[] Attributes;
 
     public BamReadLite(final SAMRecord record, boolean skipReadIds)
     {

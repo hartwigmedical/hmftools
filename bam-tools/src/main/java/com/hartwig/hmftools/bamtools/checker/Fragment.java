@@ -197,5 +197,4 @@ public class Fragment
         mLiteReads.clear();
         mLiteReads = null;
     }
-
 }

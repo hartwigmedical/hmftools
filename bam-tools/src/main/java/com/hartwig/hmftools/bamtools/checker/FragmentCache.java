@@ -57,13 +57,23 @@ public class FragmentCache
 
             if(existingFragment == null)
             {
-                fragment.serialiseReads();
-                mFragmentMap.put(fragment.readId(), fragment);
+                // a further check is made upon insertion that the fragment wasn't added concurrently
+                existingFragment = mFragmentMap.put(fragment.readId(), fragment);
 
-                ++mStats.TotalFragments;
-                ++mStats.InterPartitionFragments;
+                // store the new fragment
+                if(existingFragment == null)
+                {
+                    fragment.serialiseReads();
+                    ++mStats.TotalFragments;
+                    ++mStats.InterPartitionFragments;
+                    continue;
+                }
 
-                continue;
+                // handle insertions made while still processing this new fragment
+                BT_LOGGER.warn("fragment({}) concurrent access issue with existing({})", fragment, existingFragment);
+
+                // switch so the newly inserted fragment's info will be transferred to the existing one
+                mFragmentMap.put(fragment.readId(), existingFragment);
             }
 
             boolean isComplete = existingFragment.mergeFragment(fragment, mSamFileHeader, completeReads);
