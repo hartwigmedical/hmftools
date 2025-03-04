@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 class ReversePaveTestBase
 {
     public final File ensemblDataDir;
-    public final ReversePave baseSequenceVariantsCalculator;
+    public final ReversePave reversePave;
     public final RefGenomeInterface genome = new TinyGenome();
 
     public ReversePaveTestBase()
@@ -33,7 +33,7 @@ class ReversePaveTestBase
         {
             throw new RuntimeException(e);
         }
-        baseSequenceVariantsCalculator = new ReversePave(ensemblDataDir, genome);
+        reversePave = new ReversePave(ensemblDataDir, genome);
     }
 
     @NotNull
@@ -44,7 +44,7 @@ class ReversePaveTestBase
 
     public SingleAminoAcidVariant saav(String definition)
     {
-        return (SingleAminoAcidVariant) baseSequenceVariantsCalculator.variationParser().parse(definition);
+        return (SingleAminoAcidVariant) reversePave.variationParser().parse(definition);
     }
 
     protected SplitCodonSequence seq(String left, String right)
@@ -64,7 +64,7 @@ class ReversePaveTestBase
 
     protected TranscriptData transcript(String geneId, String transcriptId)
     {
-        return baseSequenceVariantsCalculator.mEnsemblCache.getTranscriptData(geneId, transcriptId);
+        return reversePave.mEnsemblCache.getTranscriptData(geneId, transcriptId);
     }
 
     protected AminoAcidSpecification aas(int position, String symbol)

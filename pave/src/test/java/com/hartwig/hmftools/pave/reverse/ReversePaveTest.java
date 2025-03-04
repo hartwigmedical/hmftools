@@ -11,9 +11,25 @@ import org.junit.Test;
 public final class ReversePaveTest extends ReversePaveTestBase
 {
     @Test
+    public void calculateVariantsForSuppliedTranscriptId()
+    {
+        String transcriptId = "ENST00000361445";
+        BaseSequenceVariants variant = reversePave.calculateVariant("MTOR", transcriptId, "L2230V");
+
+        assertEquals(transcriptId, variant.transcriptName());
+        assertEquals("1", variant.mChromosome);
+        checkChanges(variant,
+                basesChange("A", "C", "chr1", 11_122_101),
+                basesChange("TAA", "GAC", "chr1", 11_122_099),
+                basesChange("TAA", "CAC", "chr1", 11_122_099),
+                basesChange("TAA", "AAC", "chr1", 11_122_099)
+        );
+    }
+
+    @Test
     public void handleMultipleMatchingNonCanonicalTranscriptsThatReturnSameChanges()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("KIT", "N560_Y574del");
+        BaseSequenceVariants variant = reversePave.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("KIT", "N560_Y574del");
         checkChanges(variant,
                 basesChange("TAAATGGAAACAATTATGTTTACATAGACCCAACACAACTTCCTTA", "T", "chr4", 54727456),
                 basesChange("AAATGGAAACAATTATGTTTACATAGACCCAACACAACTTCCTTAT", "A", "chr4", 54727457)
@@ -24,7 +40,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
     public void handleVariantForWhichATranscriptIsIncomplete()
     {
         // One of the transcripts has a total length that is not a multiple of 3.
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("DYRK1A", "R437L");
+        BaseSequenceVariants variant = reversePave.calculateVariantAllowMultipleNonCanonicalTranscriptMatches("DYRK1A", "R437L");
         checkChanges(variant,
                 basesChange("GA", "TT", "chr21", 37505353),
                 basesChange("GA", "TG", "chr21", 37505353),
@@ -51,7 +67,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
 05:47:12 - [INFO ] -  Hotspot{ref=TAA, alt=CAC, chromosome=chr1, position=11122099}
 05:47:12 - [INFO ] -  Hotspot{ref=TAA, alt=AAC, chromosome=chr1, position=11122099}
          */
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("MTOR:p.L2230V");
+        BaseSequenceVariants variant = reversePave.calculateVariant("MTOR:p.L2230V");
 
         assertEquals("ENST00000361445", variant.transcriptName());
         assertEquals("1", variant.mChromosome);
@@ -66,20 +82,20 @@ public final class ReversePaveTest extends ReversePaveTestBase
     @Test
     public void brafSNV()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.V600E");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF:p.V600E");
         assertEquals("7", variant.mChromosome);
         checkChanges(variant,
                 basesChange("A", "T", "chr7", 140753336),
                 basesChange("CA", "TT", "chr7", 140753335)
         );
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.F583W");
+        variant = reversePave.calculateVariant("BRAF:p.F583W");
         checkSingleChange(variant, "AA", "CC", "chr7", 140_753_386);
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.I582W");
+        variant = reversePave.calculateVariant("BRAF:p.I582W");
         checkSingleChange(variant, "TAT", "CCA", "chr7", 140_753_389);
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.I582V");
+        variant = reversePave.calculateVariant("BRAF:p.I582V");
         checkChanges(variant,
                 basesChange("TAT", "GAC", "chr7", 140_753_389),
                 basesChange("TAT", "CAC", "chr7", 140_753_389),
@@ -87,7 +103,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
                 basesChange("T", "C", "chr7", 140_753_391)
         );
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.I582G");
+        variant = reversePave.calculateVariant("BRAF:p.I582G");
         checkChanges(variant,
                 basesChange("TAT", "ACC", "chr7", 140_753_389),
                 basesChange("TAT", "CCC", "chr7", 140_753_389),
@@ -107,7 +123,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
          */
         // exon1/exon2...SYRG/GH... AGG TAC CGA G/GT CAC  End of Exon1 is G, 10142187.
         // R is {CG*, AGG, AGA}. Need one of these from G**, *GT. Option is C -> G at 10142187
-        BaseSequenceVariants record = baseSequenceVariantsCalculator.calculateVariant("VHL:p.G114R");
+        BaseSequenceVariants record = reversePave.calculateVariant("VHL:p.G114R");
         assertEquals("ENST00000256474", record.transcriptName());
         assertEquals("3", record.mChromosome);
         checkSingleChange(record, "G", "C", "chr3", 10_142_187);
@@ -127,7 +143,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
         Hotspot{ref=TAC, alt=GCG, chromosome=chr4, position=105259695}
         Hotspot{ref=TAC, alt=GCT, chromosome=chr4, position=105259695}
          */
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("TET2:p.Y1294A");
+        BaseSequenceVariants variant = reversePave.calculateVariant("TET2:p.Y1294A");
         assertEquals("ENST00000380013", variant.transcriptName()); // TransvarConvertTest has ENST00000540549
         assertEquals("4", variant.mChromosome);
         //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
@@ -144,31 +160,31 @@ public final class ReversePaveTest extends ReversePaveTestBase
     public void snvAcrossExonPositiveStrand()
     {
         // ...N E E/E R T...  ...AAT GAA GA/G AGA ACT...  exon6/exon7, G at start of exon7 is at 105,259,619
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("TET2:p.E1268D");
+        BaseSequenceVariants variant = reversePave.calculateVariant("TET2:p.E1268D");
         checkChanges(variant,
                 basesChange("G", "T", "chr4", 105_259_619),
                 basesChange("G", "C", "chr4", 105_259_619)
         );
 
         // ... A at the end of exon6 is at 105,243,778
-        variant = baseSequenceVariantsCalculator.calculateVariant("TET2:p.E1268V");
+        variant = reversePave.calculateVariant("TET2:p.E1268V");
         checkChanges(variant,
                 basesChange("A", "T", "chr4", 105_243_778)
         );
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("TET2:p.E1268Q");
+        variant = reversePave.calculateVariant("TET2:p.E1268Q");
         checkChanges(variant,
                 basesChange("G", "C", "chr4", 105_243_777)
         );
 
         // ...C V E/E Q I I...   ...TGT GTA G/AG CAA ATT exon3/exon4, G at end of exon 3 is at
-        variant = baseSequenceVariantsCalculator.calculateVariant("TET2:p.E1137Q");
+        variant = reversePave.calculateVariant("TET2:p.E1137Q");
         checkChanges(variant,
                 basesChange("G", "C", "chr4", 105_237_351)
         );
 
         // ... A at start of exon 4 is at 105,241,339
-        variant = baseSequenceVariantsCalculator.calculateVariant("TET2:p.E1137D");
+        variant = reversePave.calculateVariant("TET2:p.E1137D");
         checkChanges(variant,
                 basesChange("G", "T", "chr4", 105_241_340),
                 basesChange("G", "C", "chr4", 105_241_340)
@@ -180,20 +196,20 @@ public final class ReversePaveTest extends ReversePaveTestBase
     {
         // exon15/exon14 == ...F I N/N N S... ==  ->...AAA TAT AT/T ATT ACT... == <-...TTT ATA TA/A TAA TGA...
         // end of exon15 is 140,753,393
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.N581L");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF:p.N581L");
         // For L want {TTA, TTG, CT*}. We have [A**] and [*AT] as possible within-exon variants
         assertTrue(variant.changes().isEmpty());
 
         // For K we have two options from changing the last base of the (reverse strand) codon.
         // Transvar only reports A->C. Not sure why.
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.N581K");
+        variant = reversePave.calculateVariant("BRAF:p.N581K");
         checkChanges(variant,
                 basesChange("A", "C", "chr7", 140_753_392),
                 basesChange("A", "T", "chr7", 140_753_392)
         );
 
         // For D we have a single option: changing the (reverse strand) T at the beginning of the codon to G.
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.N581D");
+        variant = reversePave.calculateVariant("BRAF:p.N581D");
         checkSingleChange(variant, "T", "C", "chr7", 140_754_187);
     }
 
@@ -207,7 +223,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
 05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAG, alt=C, chromosome=chr7, position=55174776}
 05:16:53 - [INFO ] -  Hotspot{ref=TTAAGAGAAGCA, alt=CCC, chromosome=chr7, position=55174776}
  */
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("EGFR:p.L747_A750delinsP");
+        BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.L747_A750delinsP");
         assertEquals("ENST00000275493", record.transcriptName());
         assertEquals("7", record.mChromosome);
         //        assertEquals(55_174_776, record.Position);
@@ -243,7 +259,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
         therefore A is at 55_174_722 + 63 = 55_174_785
         Changes keep the G of the codon for A, so begin at 55_174_785 + 1
          */
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("EGFR:p.A750_I759delinsG");
+        BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.A750_I759delinsG");
         assertEquals("ENST00000275493", record.transcriptName());
         assertEquals("7", record.mChromosome);
 
@@ -275,7 +291,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
 
         candidateAlternativeCodons={TCA, AGC, AGT, TCC, TCG, TCT}*{CCA, CCC, CCG, CCT}*{CAA, CAG} (48 possibilities)
          */
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("EGFR:p.L747_K754delinsSPQ");
+        BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.L747_K754delinsSPQ");
         assertEquals("ENST00000275493", record.transcriptName());
         assertEquals("7", record.mChromosome);
 
@@ -302,7 +318,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
         Printing hotspots for 'VHL:p.A5_W8delinsM' on transcript null
         Hotspot{ref=GCGGAGAACTG, alt=AT, chromosome=chr3, position=10141860}
          */
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("VHL:p.A5_W8delinsM");
+        BaseSequenceVariants record =  reversePave.calculateVariant("VHL:p.A5_W8delinsM");
         assertEquals("ENST00000256474", record.transcriptName());
         assertEquals("3", record.mChromosome);
 
@@ -322,7 +338,7 @@ Converted 'EGFR|null|p.I744_K745delinsKIPVAI' to 1 hotspot(s)
 Printing hotspots for 'EGFR:p.I744_K745delinsKIPVAI' on transcript null
 Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("EGFR:p.I744_K745delinsKIPVAI");
+        BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.I744_K745delinsKIPVAI");
         assertEquals("ENST00000275493", record.transcriptName());
         assertEquals("7", record.mChromosome);
 
@@ -349,7 +365,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Printing hotspots for 'ZYX:p.P67_D70delinsWKY' on transcript null
          */
 
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("ZYX:p.P67_D70delinsWKY");
+        BaseSequenceVariants record =  reversePave.calculateVariant("ZYX:p.P67_D70delinsWKY");
         assertEquals("ENST00000322764", record.transcriptName());
         assertEquals("7", record.mChromosome);
         //        assertEquals(143_381_770, record.Position);
@@ -387,7 +403,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
 03:00:58 - [INFO ] - Printing hotspots for 'ZYX:p.E382_G385delinsDP' on transcript null
          */
 
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("ZYX:p.E382_G385delinsDP");
+        BaseSequenceVariants record =  reversePave.calculateVariant("ZYX:p.E382_G385delinsDP");
         assertEquals("ENST00000322764", record.transcriptName());
         assertEquals("7", record.mChromosome);
         //        assertEquals(143_388_490, record.Position);
@@ -425,7 +441,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Hotspot{ref=GGAGG, alt=AA, chromosome=chr3, position=10141855}
         Hotspot{ref=CGGAG, alt=CA, chromosome=chr3, position=10141854}
         */
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("VHL:p.R3_R4delinsQ");
+        BaseSequenceVariants record =  reversePave.calculateVariant("VHL:p.R3_R4delinsQ");
         assertEquals("ENST00000256474", record.transcriptName());
         assertEquals("3", record.mChromosome);
 
@@ -458,7 +474,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Hotspot{ref=CAGCG, alt=CT, chromosome=chr7, position=140924692}
         Hotspot{ref=CAGCG, alt=TT, chromosome=chr7, position=140924692}
          */
-        BaseSequenceVariants record =  baseSequenceVariantsCalculator.calculateVariant("BRAF:p.A3_L4delinsE");
+        BaseSequenceVariants record =  reversePave.calculateVariant("BRAF:p.A3_L4delinsE");
         assertEquals("ENST00000646891", record.transcriptName()); // canonical
         assertEquals("7", record.mChromosome);
 
@@ -486,7 +502,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Need GAA TAT -> GAC or GAA TAT -> GAT
         ATAT -> C or AAT -> ""
          */
-        BaseSequenceVariants record = baseSequenceVariantsCalculator.calculateVariant("PIK3R1:p.E451_Y452delinsD");
+        BaseSequenceVariants record = reversePave.calculateVariant("PIK3R1:p.E451_Y452delinsD");
         assertEquals("ENST00000521381", record.transcriptName()); // canonical
         assertEquals("5", record.mChromosome);
 
@@ -499,7 +515,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void reverseStrandDelinsTest()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "N486_T491delinsK");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF", "N486_T491delinsK");
         checkChanges(variant,
                 basesChange("GTAGGTGCTGTCACA", "", "chr7", 140778036),
                 basesChange("TGTAGGTGCTGTCACA", "C", "chr7", 140778035)
@@ -510,7 +526,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     public void delinsReverseStrandAtExonEndTest()
     {
         // -> ...TGC CAC ATC AC|C (...<- ACG GTG TAG TG|G ...A V D G|G)
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "G478_V480delinsE");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF", "G478_V480delinsE");
         // so -> GTG TAG TG|G goes to {AA|G, GA|G}. So delete TG TAG TG
         checkChanges(variant,
                 basesChange("ACATCAC", "T", "chr7", 140778069),
@@ -524,20 +540,20 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         // -> ...C|CC AAT AGA GTC...CAA A|TC
         // <- ...G|GG TTA TCT CAG...GTT T|AG
         //       G    I   S   D...
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "D324_G327delinsQ");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF", "D324_G327delinsQ");
         checkChanges(variant, basesChange("CCAATAGAGTC", "TG", "chr7", 140800362));
     }
 
     @Test
     public void delSingleAminoAcidTest()
     {
-        BaseSequenceVariants record = baseSequenceVariantsCalculator.calculateVariant("PIK3R1:p.K459del");
+        BaseSequenceVariants record = reversePave.calculateVariant("PIK3R1:p.K459del");
         // EK: GAA AAA, G is at 68_293_781
         assertEquals("ENST00000521381", record.transcriptName()); // canonical
         assertEquals("5", record.mChromosome);
         checkSingleChange(record, "GAAA", "G", "chr5", 68_293_781);
 
-        record = baseSequenceVariantsCalculator.calculateVariant("PIK3R1:p.D464del");
+        record = reversePave.calculateVariant("PIK3R1:p.D464del");
         //YDR: TAT GAT AGA, G of the D is at 68_293_799
         checkChanges(record, basesChange("TATG", "T", "chr5", 68_293_796));
     }
@@ -545,7 +561,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void delTwoAminoAcidsTest()
     {
-        BaseSequenceVariants record = baseSequenceVariantsCalculator.calculateVariant("PIK3R1:p.D464_R465del");
+        BaseSequenceVariants record = reversePave.calculateVariant("PIK3R1:p.D464_R465del");
         //YDRL: TAT GAT AGA TTA, G of the D is at 68_293_799
         checkSingleChange(record, "TGATAGA", "T", "chr5", 68_293_798);
     }
@@ -553,7 +569,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void delRangeTest()
     {
-        BaseSequenceVariants record = baseSequenceVariantsCalculator.calculateVariant("PIK3R1:p.D464_Y467del");
+        BaseSequenceVariants record = reversePave.calculateVariant("PIK3R1:p.D464_Y467del");
         //E   Y   D   R   L   Y   E
         //GAA TAT GAT AGA TTA TAT GAA
 
@@ -564,7 +580,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void delInFirstExon()
     {
-        BaseSequenceVariants del = baseSequenceVariantsCalculator.calculateVariant("VHL:p.A5del");
+        BaseSequenceVariants del = reversePave.calculateVariant("VHL:p.A5del");
         //RAE: AGG GCG GAG, G of the A is at 10_141_860
         checkSingleChange(del, "GGGC", "G", "chr3", 10_141_858);
     }
@@ -589,14 +605,14 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         //        checkSingleHotspot(del, "ACCTTTGGCT", "A", "chr3", 10_146_517);
 
         // TG TAT ACT CTG   VYTL
-        var del = baseSequenceVariantsCalculator.calculateVariant("VHL:p.T157del");
+        var del = reversePave.calculateVariant("VHL:p.T157del");
         checkSingleChange(del, "ATAC", "A", "chr3", 10_149_790);
     }
 
     @Test
     public void delReverseStrand()
     {
-        BaseSequenceVariants record = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.V600_R603del");
+        BaseSequenceVariants record = reversePave.calculateVariant("BRAF:p.V600_R603del");
         checkSingleChange(record, "ATCGAGATTTCAC", "A", "chr7", 140753325);
     }
 
@@ -613,16 +629,16 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         5   4   3   2   1
         S   L   A   A   M
          */
-        BaseSequenceVariants a3del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.A3del");
+        BaseSequenceVariants a3del = reversePave.calculateVariant("BRAF:p.A3del");
         checkSingleChange(a3del, "GCGC", "G", "chr7", 140_924_694);
 
-        BaseSequenceVariants l4del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.L4del");
+        BaseSequenceVariants l4del = reversePave.calculateVariant("BRAF:p.L4del");
         checkSingleChange(l4del, "TCAG", "T", "chr7", 140_924_691);
 
-        BaseSequenceVariants a3l4del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.A3_L4del");
+        BaseSequenceVariants a3l4del = reversePave.calculateVariant("BRAF:p.A3_L4del");
         checkSingleChange(a3l4del, "TCAGCGC", "T", "chr7", 140_924_691);
 
-        BaseSequenceVariants a2l4del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.A2_L4del");
+        BaseSequenceVariants a2l4del = reversePave.calculateVariant("BRAF:p.A2_L4del");
         checkSingleChange(a2l4del, "TCAGCGCCGC", "T", "chr7", 140_924_691);
     }
 
@@ -638,13 +654,13 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         51  50  49  48  47
         K   I   N   W   V
          */
-        BaseSequenceVariants del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.V47del");
+        BaseSequenceVariants del = reversePave.calculateVariant("BRAF:p.V47del");
         checkSingleChange(del, "ACAC", "A", "chr7", 140_850_209);
 
-        del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.W48del");
+        del = reversePave.calculateVariant("BRAF:p.W48del");
         checkSingleChange(del, "TCCA", "T", "chr7", 140_850_206);
 
-        del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.W48_I50del");
+        del = reversePave.calculateVariant("BRAF:p.W48_I50del");
         checkSingleChange(del, "TGATATTCCA", "T", "chr7", 140_850_200);
     }
 
@@ -660,10 +676,10 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         208 207 206 205 204 203
         I   P   K   K   E   G
          */
-        BaseSequenceVariants del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.E204del");
+        BaseSequenceVariants del = reversePave.calculateVariant("BRAF:p.E204del");
         checkSingleChange(del, "TCTC", "T", "chr7", 140_808_058);
 
-        del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.E204_P207del");
+        del = reversePave.calculateVariant("BRAF:p.E204_P207del");
         checkSingleChange(del, "TTGGTTTCTTCTC", "T", "chr7", 140_808_049);
     }
 
@@ -679,13 +695,13 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         291             287
         V   F   L   L   D
          */
-        BaseSequenceVariants del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.F290del");
+        BaseSequenceVariants del = reversePave.calculateVariant("BRAF:p.F290del");
         checkSingleChange(del, "CAAA", "C", "chr7", 140_800_471);
 
-        del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.L289del");
+        del = reversePave.calculateVariant("BRAF:p.L289del");
         checkSingleChange(del, "ACAG", "A", "chr7", 140_800_474);
 
-        del = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.L288_F290del");
+        del = reversePave.calculateVariant("BRAF:p.L288_F290del");
         checkSingleChange(del, "CAAACAGCAA", "C", "chr7", 140_800_471);
     }
 
@@ -702,13 +718,13 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         E   E   P   I   A
         46              42
          */
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.A42del");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF:p.A42del");
         checkSingleChange(variant, "TGGC", "T", "chr7", 140_924_577);
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.P44del");
+        variant = reversePave.calculateVariant("BRAF:p.P44del");
         checkSingleChange(variant, "CCGG", "C", "chr7", 140_924_571);
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF:p.A42_P44del");
+        variant = reversePave.calculateVariant("BRAF:p.A42_P44del");
         checkSingleChange(variant, "TCCGGAATGG", "T", "chr7", 140_924_570);
         //
         //        TransvalVariant variant =  transval.calculateVariant("BRAF:p.E45del");
@@ -724,7 +740,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void deleteRangeInRegionOfRepeatingAminoAcids()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("ARID1A:p.A345_A349del");
+        BaseSequenceVariants variant = reversePave.calculateVariant("ARID1A:p.A345_A349del");
         checkChanges(variant,
                 basesChange("GGGCTGCGGCGGCGGC", "G", "chr1", 26697416),
                 basesChange("GGCTGCGGCGGCGGCA", "G", "chr1", 26697417),
@@ -736,21 +752,21 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void duplicationAtExonBoundary()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("ARID1A", "D641dup");
+        BaseSequenceVariants variant = reversePave.calculateVariant("ARID1A", "D641dup");
         checkSingleChange(variant, "G", "GGAT", "chr1", 26760855);
     }
 
     @Test
     public void duplicationAtExonBoundaryNegativeStrand()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "V238dup");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF", "V238dup");
         checkSingleChange(variant, "G", "GTAC", "chr7", 140_801_557);
     }
 
     @Test
     public void duplicationInRegionOfRepeatingAminoAcids()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("ARID1A", "P20_P21dup");
+        BaseSequenceVariants variant = reversePave.calculateVariant("ARID1A", "P20_P21dup");
         checkChanges(variant,
             basesChange("A", "ACCCGCC", "chr1", 26_696_447),
             basesChange("C", "CCCGCCG", "chr1", 26_696_448),
@@ -761,16 +777,16 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void duplicationOnReverseStrand()
     {
-        BaseSequenceVariants v600 = baseSequenceVariantsCalculator.calculateVariant("BRAF", "V600dup");
+        BaseSequenceVariants v600 = reversePave.calculateVariant("BRAF", "V600dup");
         checkSingleChange(v600, "T", "TCAC", "chr7", 140_753_334);
 
-        BaseSequenceVariants t599 = baseSequenceVariantsCalculator.calculateVariant("BRAF", "T599dup");
+        BaseSequenceVariants t599 = reversePave.calculateVariant("BRAF", "T599dup");
         // CAC TGT
         // CAC TGT TGT
         // CA CTG C TGT
         checkSingleChange(t599, "C", "CTGT", "chr7", 140_753_337);
 
-        BaseSequenceVariants interval = baseSequenceVariantsCalculator.calculateVariant("BRAF", "T599_V600dup");
+        BaseSequenceVariants interval = reversePave.calculateVariant("BRAF", "T599_V600dup");
         //     140_753_335
         //     |
         // K   V   T   A
@@ -783,20 +799,20 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void insertionAtStartOfExon()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("VHL", "A5_E6insW");
+        BaseSequenceVariants variant = reversePave.calculateVariant("VHL", "A5_E6insW");
 
         //RAE: AGG GCG GAG, 2nd G of the A is at 10_141_862
         checkSingleChange(variant, "G", "GTGG", "chr3", 10_141_862);
 
         // Same location but multiple codons for the inserted amino acid.
-        variant = baseSequenceVariantsCalculator.calculateVariant("VHL", "A5_E6insF");
+        variant = reversePave.calculateVariant("VHL", "A5_E6insF");
         checkChanges(variant,
                 basesChange("G", "GTTT", "chr3", 10_141_862),
                 basesChange("G", "GTTC", "chr3", 10_141_862)
         );
 
         // Same location but inserting multiple amino acid.
-        variant = baseSequenceVariantsCalculator.calculateVariant("VHL", "A5_E6insFARM");
+        variant = reversePave.calculateVariant("VHL", "A5_E6insFARM");
         Set<BaseSequenceChange> hotspots = variant.changes();
         assertEquals(1, hotspots.size());
         BaseSequenceChange hotspot = hotspots.iterator().next();
@@ -810,7 +826,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     public void insertionEGFRTest()
     {
         // Bug that was found by comparing with Transvar.
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("EGFR", "H773_V774insSH");
+        BaseSequenceVariants variant = reversePave.calculateVariant("EGFR", "H773_V774insSH");
         // ...P H C V... CCC CAC GTG TGC... the second C of the H is at 55,181,328
         Set<BaseSequenceChange> hotspots = variant.changes();
         assertEquals(1, hotspots.size());
@@ -824,7 +840,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void transvarInsertionTest()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("EGFR", "P772_H773insY");
+        BaseSequenceVariants variant = reversePave.calculateVariant("EGFR", "P772_H773insY");
         checkChanges(variant,
                 basesChange("C", "CTAC", "chr7", 55_181_325),
                 basesChange("C", "CTAT", "chr7", 55_181_325)
@@ -834,7 +850,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void insertLongSequence()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("VHL", "A5_E6insGLVQVTGSSDNEYFYVDFREYE");
+        BaseSequenceVariants variant = reversePave.calculateVariant("VHL", "A5_E6insGLVQVTGSSDNEYFYVDFREYE");
         Set<BaseSequenceChange> hotspots = variant.changes();
         assertEquals(1, hotspots.size());
         BaseSequenceChange hotspot = hotspots.iterator().next();
@@ -856,14 +872,14 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
 //        assertEquals("LLR", AminoAcidSequence.fromNucleotides(Nucleotides.reverseComplementBases(codons)).sequence());
 //        assertEquals(140_777_087, hotspot.mPosition);
 
-        var variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "H510_V511insW");
+        var variant = reversePave.calculateVariant("BRAF", "H510_V511insW");
         checkSingleChange(variant, "C", "CCCA", "chr7", 140_777_075);
     }
 
     @Test
     public void frameshiftForwardStrand()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("VHL", "Q132fs");
+        BaseSequenceVariants variant = reversePave.calculateVariant("VHL", "Q132fs");
         // chr3, Q starts at 10146567
         // ...V N Q T...     ...GTT AAC CAA ACT...
         // AC>A at 565 gives ...GTT AA C AA ACT... which is ...V N K ....
@@ -873,21 +889,21 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         // Similarly: VHL D9fs
         // ...N W D...     ...AAC TGG GAC G... the W starts at 10141869
         // TG>T @869 gives ...AAC TG GAC G...  which is ...N W T ....
-        variant = baseSequenceVariantsCalculator.calculateVariant("VHL", "D9fs");
+        variant = reversePave.calculateVariant("VHL", "D9fs");
         checkSingleChange(variant, "TG", "T", "chr3", 10_141_869);
     }
 
     @Test
     public void frameshiftReverseStrand()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "H585fs");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF", "H585fs");
         checkChanges(variant,
                 basesChange("CA", "C", "chr7", 140_753_379),
                 basesChange("AT", "A", "chr7", 140_753_380),
                 basesChange("TG", "T", "chr7", 140_753_381)
         );
 
-        variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "V600fs");
+        variant = reversePave.calculateVariant("BRAF", "V600fs");
         checkChanges(variant,
                 basesChange("CA", "C", "chr7", 140_753_335),
                 basesChange("AC", "A", "chr7", 140_753_336)
@@ -897,7 +913,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void stopGainedForwardStrand()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("VHL", "S65*");
+        BaseSequenceVariants variant = reversePave.calculateVariant("VHL", "S65*");
         checkChanges(variant,
                 basesChange("CG", "AA", "chr3", 10_142_041),
                 basesChange("CG", "GA", "chr3", 10_142_041),
@@ -908,7 +924,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void stopGainedReverseStrand()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRAF", "R603*");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRAF", "R603*");
         checkChanges(variant,
                 basesChange("CG", "TA", "chr7", 140_753_327),
                 basesChange("TCG", "CTA", "chr7", 140_753_326),
@@ -919,7 +935,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void startLostForwardStrand()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("KIT", "M1?");
+        BaseSequenceVariants variant = reversePave.calculateVariant("KIT", "M1?");
         checkChanges(variant,
                 basesChange("A", "G", "chr4", 54_658_015),
                 basesChange("A", "C", "chr4", 54_658_015),
@@ -936,7 +952,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void startLostReverseStrand()
     {
-        BaseSequenceVariants variant = baseSequenceVariantsCalculator.calculateVariant("BRCA1", "M1?");
+        BaseSequenceVariants variant = reversePave.calculateVariant("BRCA1", "M1?");
         checkChanges(variant,
                 basesChange("C", "T", "chr17", 43_124_094),
                 basesChange("C", "G", "chr17", 43_124_094),

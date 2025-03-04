@@ -53,6 +53,12 @@ public class ReversePave
         return variant.calculateVariant(mRefGenome);
     }
 
+    public BaseSequenceVariants calculateVariant(String gene, String transcriptId, String proteinVariant)
+    {
+        ProteinVariant variant = variationParser().parseGeneVariant(gene, transcriptId, proteinVariant);
+        return variant.calculateVariant(mRefGenome);
+    }
+
     public BaseSequenceVariants calculateVariantAllowMultipleNonCanonicalTranscriptMatches(String gene, String proteinVariant)
     {
         Set<ProteinVariant> allMatchingVariants = variationParser().parseGeneVariants(gene, proteinVariant);

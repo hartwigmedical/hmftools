@@ -20,7 +20,45 @@ public class VariantParserTest extends ReversePaveTestBase
     @Before
     public void setUp()
     {
-        variantParser = baseSequenceVariantsCalculator.variationParser();
+        variantParser = reversePave.variationParser();
+    }
+
+    @Test
+    public void returnVariantForSuppliedTranscriptId()
+    {
+        ProteinVariant variant = variantParser.parseGeneVariant("ZYX", "ENST00000436448","S2V");
+        assertEquals("ZYX", variant.mGene.GeneName);
+        assertEquals("ENST00000436448", variant.mTranscript.TransName);
+    }
+
+    @Test
+    public void reportErrorIfNoTranscriptFoundForId()
+    {
+        String receivedMessage = null;
+        try
+        {
+            variantParser.parseGeneVariant("ZYX", "Whatever", "F2V");
+        }
+        catch(final IllegalArgumentException e)
+        {
+            receivedMessage = e.getMessage();
+        }
+        assertEquals("No transcript found. Gene: ENSG00000159840, transcript id: Whatever", receivedMessage);
+    }
+
+    @Test
+    public void reportErrorIfIdentifiedTranscriptDoesNotMatchSpecification()
+    {
+        String receivedMessage = null;
+        try
+        {
+            variantParser.parseGeneVariant("ZYX", "ENST00000436448","W2V");
+        }
+        catch(final IllegalArgumentException e)
+        {
+            receivedMessage = e.getMessage();
+        }
+        assertEquals("Transcript does not match. Gene: ENSG00000159840, transcript: ENST00000436448, ref: [2,W]_[2,W]", receivedMessage);
     }
 
     @Test
