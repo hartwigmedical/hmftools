@@ -5,6 +5,9 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.bamtools.checker.CheckConfig.LOG_READ_COUNT;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.genome.chromosome.Chromosome.isAltRegionContig;
+
+import static org.apache.logging.log4j.Level.DEBUG;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +15,8 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import org.apache.logging.log4j.Level;
 
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
@@ -65,7 +70,8 @@ public class PartitionChecker
 
     public void processPartition(final ChrBaseRegion region)
     {
-        BT_LOGGER.debug("processing region({})", region);
+        Level loglevel = isAltRegionContig(region.Chromosome) ? Level.TRACE : DEBUG;
+        BT_LOGGER.log(loglevel, "processing region({})", region);
 
         mRegion = region;
 
@@ -81,7 +87,10 @@ public class PartitionChecker
         handleIncompleteFragments();
         mStats.merge(mCurrentStats);
 
-        BT_LOGGER.debug("region({}) complete, reads({}) fragments(complete={} incomplete={})",
+        if(loglevel == Level.TRACE && mReadCount > 0)
+            loglevel = DEBUG;
+
+        BT_LOGGER.log(loglevel, "region({}) complete, reads({}) fragments(complete={} incomplete={})",
                 mRegion, mReadCount, mCompleteFragments, mFragmentMap.size());
 
         mFragmentMap.clear();
