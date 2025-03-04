@@ -7,8 +7,6 @@ import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
 import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
 import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,22 +17,19 @@ import java.util.stream.Collectors;
 
 public class GeneHaplotypePanel
 {
-    @NotNull
     public final DefaultHaplotype defaultHaplotype;
-    @NotNull
     public final ImmutableList<NonDefaultHaplotype> nonDefaultHaplotypes;
-    @NotNull
     public final String wildTypeHaplotypeName;
 
-    public GeneHaplotypePanel(@NotNull DefaultHaplotype defaultHaplotype, @NotNull ImmutableList<NonDefaultHaplotype> nonDefaultHaplotypes,
-            @NotNull String wildTypeHaplotypeName)
+    public GeneHaplotypePanel(
+            final DefaultHaplotype defaultHaplotype, final ImmutableList<NonDefaultHaplotype> nonDefaultHaplotypes,
+            final String wildTypeHaplotypeName)
     {
         this.defaultHaplotype = defaultHaplotype;
         this.nonDefaultHaplotypes = nonDefaultHaplotypes;
         this.wildTypeHaplotypeName = wildTypeHaplotypeName;
     }
 
-    @NotNull
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
     {
         Map<Chromosome, Set<Integer>> chromosomeToRelevantVariantPositions = new HashMap<>();
@@ -54,7 +49,7 @@ public class GeneHaplotypePanel
         return chromosomeToRelevantVariantPositions;
     }
 
-    public boolean isRelevantFor(@NotNull HaplotypeEvent event)
+    public boolean isRelevantFor(final HaplotypeEvent event)
     {
         boolean isEventToIgnore = defaultHaplotype.eventsToIgnore.stream().map(HaplotypeEvent::id).anyMatch(e -> e.equals(event.id()));
         return !isEventToIgnore && nonDefaultHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));
@@ -65,7 +60,6 @@ public class GeneHaplotypePanel
         return nonDefaultHaplotypes.size() + 1;
     }
 
-    @NotNull
     private List<VariantHaplotypeEvent> getNonDefaultVariantHaplotypeEvents()
     {
         return nonDefaultHaplotypes.stream()

@@ -18,6 +18,9 @@ import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegion
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -27,6 +30,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -62,6 +66,7 @@ public class SliceConfig
 
     // debug
     public final SpecificRegions SliceRegions;
+    public final List<String> LogReadIds;
     public final boolean PerfDebug;
 
     private boolean mIsValid;
@@ -149,6 +154,7 @@ public class SliceConfig
 
         Threads = parseThreads(configBuilder);
 
+        LogReadIds = parseLogReadIds(configBuilder);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
     }
 
@@ -197,6 +203,7 @@ public class SliceConfig
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
     }
 
     @VisibleForTesting
@@ -223,5 +230,6 @@ public class SliceConfig
         Threads = 0;
         BamToolPath = null;
         PerfDebug = false;
+        LogReadIds = Collections.emptyList();
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.checker;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.SORTED_BAM_ID;
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.UNSORTED_BAM_ID;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -42,8 +44,10 @@ import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.TaskQueue;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReaderFactory;
 
 public class BamChecker
 {
@@ -60,7 +64,11 @@ public class BamChecker
 
         long startTimeMs = System.currentTimeMillis();
 
-        FragmentCache fragmentCache = new FragmentCache();
+        SAMFileHeader fileHeader = SamReaderFactory.makeDefault()
+                .referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.BamFile)).getFileHeader();
+
+        FragmentCache fragmentCache = new FragmentCache(fileHeader);
 
         List<PartitionThread> partitionThreads = createPartitionThreads(fragmentCache);
         List<Thread> allThreads = Lists.newArrayList(partitionThreads);
@@ -69,6 +77,14 @@ public class BamChecker
             System.exit(1);
 
         BT_LOGGER.info("all partition tasks complete, mins({})", runTimeMinsStr(startTimeMs));
+
+        fragmentCache.logFinalStats();
+
+        FragmentStats combinedStats = new FragmentStats();
+        combinedStats.merge(fragmentCache.stats());
+        partitionThreads.forEach(x -> combinedStats.merge(x.stats()));
+
+        BT_LOGGER.debug("total stats: {}", combinedStats.toString());
 
         List<SAMRecord> incompleteReads = fragmentCache.extractReads();
 

@@ -24,15 +24,13 @@ import com.hartwig.hmftools.peach.output.PeachGenotypeExtractor;
 import com.hartwig.hmftools.peach.output.QcStatusFile;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PeachApplication
 {
-    @NotNull
     private final PeachConfig config;
 
-    public PeachApplication(@NotNull ConfigBuilder configBuilder)
+    public PeachApplication(final ConfigBuilder configBuilder)
     {
         this.config = new PeachConfig(configBuilder);
     }
@@ -73,9 +71,9 @@ public class PeachApplication
         PCH_LOGGER.info("finished running PEACH");
     }
 
-    private void writeOutputFiles(@NotNull Map<String, Integer> eventIdToCount,
-            @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis, @Nullable DrugInfoStore drugInfoStore,
-            @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
+    private void writeOutputFiles(
+            final Map<String, Integer> eventIdToCount, final Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
+            @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         try
         {
@@ -136,7 +134,7 @@ public class PeachApplication
         }
     }
 
-    public static void main(@NotNull String[] args)
+    public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder("Peach");
 

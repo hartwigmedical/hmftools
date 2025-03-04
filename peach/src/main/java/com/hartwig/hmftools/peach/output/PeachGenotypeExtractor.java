@@ -18,13 +18,12 @@ import com.hartwig.hmftools.peach.effect.HaplotypeFunctionStore;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PeachGenotypeExtractor
 {
-    @NotNull
-    public static List<PeachGenotype> extract(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
+    public static List<PeachGenotype> extract(
+            final Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
             final @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         return geneToHaplotypeAnalysis.entrySet()
@@ -35,8 +34,8 @@ public class PeachGenotypeExtractor
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    private static List<PeachGenotype> extractPeachGenotypesForGene(@NotNull String gene, @NotNull HaplotypeAnalysis analysis,
+    private static List<PeachGenotype> extractPeachGenotypesForGene(
+            final String gene, final HaplotypeAnalysis analysis,
             @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         HaplotypeCombination bestHaplotypeCombination = analysis.getBestHaplotypeCombination();
@@ -56,8 +55,8 @@ public class PeachGenotypeExtractor
         }
     }
 
-    @NotNull
-    private static PeachGenotype convertToPeachGenotype(@NotNull String gene, @NotNull String haplotypeName, int count,
+    private static PeachGenotype convertToPeachGenotype(
+            final String gene, final String haplotypeName, int count,
             @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         String printableHaplotypeFunction = getPrintableHaplotypeFunction(gene, haplotypeName, haplotypeFunctionStore);
@@ -74,8 +73,8 @@ public class PeachGenotypeExtractor
                 .build();
     }
 
-    @NotNull
-    private static String getPrintableHaplotypeFunction(@NotNull String gene, @NotNull String haplotypeName,
+    private static String getPrintableHaplotypeFunction(
+            final String gene, final String haplotypeName,
             @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         if(haplotypeFunctionStore == null)
@@ -86,8 +85,7 @@ public class PeachGenotypeExtractor
         return Objects.requireNonNullElse(functionality, Strings.EMPTY);
     }
 
-    @NotNull
-    private static String getPrintableDrugNamesString(@NotNull String gene, @Nullable DrugInfoStore drugInfoStore)
+    private static String getPrintableDrugNamesString(final String gene, @Nullable DrugInfoStore drugInfoStore)
     {
         if(drugInfoStore == null)
         {
@@ -104,8 +102,7 @@ public class PeachGenotypeExtractor
         }
     }
 
-    @NotNull
-    private static String getPrintablePresciptionUrlsString(@NotNull String gene, @Nullable DrugInfoStore drugInfoStore)
+    private static String getPrintablePresciptionUrlsString(final String gene, @Nullable DrugInfoStore drugInfoStore)
     {
         if(drugInfoStore == null)
         {
@@ -124,8 +121,7 @@ public class PeachGenotypeExtractor
         }
     }
 
-    @NotNull
-    private static List<String> getSortedLinkedDrugNames(@NotNull String gene, @NotNull DrugInfoStore drugInfoStore)
+    private static List<String> getSortedLinkedDrugNames(final String gene, final DrugInfoStore drugInfoStore)
     {
         return drugInfoStore.getRelevantDrugNames(gene).stream().sorted().collect(Collectors.toList());
     }

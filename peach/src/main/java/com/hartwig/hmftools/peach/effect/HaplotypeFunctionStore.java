@@ -3,28 +3,26 @@ package com.hartwig.hmftools.peach.effect;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class HaplotypeFunctionStore
 {
-    @NotNull
     private final List<HaplotypeFunction> haplotypeFunctions;
 
-    public HaplotypeFunctionStore(@NotNull List<HaplotypeFunction> haplotypeFunctions)
+    public HaplotypeFunctionStore(final List<HaplotypeFunction> haplotypeFunctions)
     {
         this.haplotypeFunctions = haplotypeFunctions;
     }
 
     @Nullable
-    public String getFunction(@NotNull String geneName, @NotNull String haplotypeName)
+    public String getFunction(final String geneName, final String haplotypeName)
     {
         HaplotypeFunction matchingHaplotypeFunction = getMatchingHaplotypeFunctions(geneName, haplotypeName);
         return matchingHaplotypeFunction == null ? null : matchingHaplotypeFunction.function();
     }
 
     @Nullable
-    private HaplotypeFunction getMatchingHaplotypeFunctions(@NotNull String geneName, @NotNull String haplotypeName)
+    private HaplotypeFunction getMatchingHaplotypeFunctions(final String geneName, final String haplotypeName)
     {
         List<HaplotypeFunction> matchingFunctions = haplotypeFunctions.stream()
                 .filter(i -> i.geneName().equals(geneName) && i.haplotypeName().equals(haplotypeName))

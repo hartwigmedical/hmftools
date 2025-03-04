@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 public class JunctionSequence
 {
     public final boolean Reversed;
+    public final Orientation JuncOrient;
     public final String FullSequence;
 
     public final int ExtensionLength;
@@ -90,6 +91,7 @@ public class JunctionSequence
         mBaseQuals = null;
         mRepeatInfo = null;
 
+        JuncOrient = assembly.junction().Orient;
         Reversed = reverseCompliment;
         RefBaseLength = assembly.refBaseLength();
         ExtensionLength = assembly.extensionLength();
@@ -208,6 +210,7 @@ public class JunctionSequence
         mBaseQuals = null;
         mRepeatInfo = null;
 
+        JuncOrient = orientation;
         Reversed = reverseCompliment;
         RefBaseLength = 0;
         ExtensionLength = bases.length;

@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +52,10 @@ public class PonCache
 
     private static final String GERMLINE_PON_BED_SV_FILE = "pon_sv_file";
     private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
-    private static final String GERMLINE_PON_MARGIN = "pon_margin";
+    public static final String GERMLINE_PON_MARGIN = "pon_margin";
+
+    public static final String ARTEFACT_PON_BED_SV_FILE = "artefact_pon_sv_file";
+    public static final String ARTEFACT_PON_BED_SGL_FILE = "artefact_pon_sgl_file";
 
     private final List<ChrBaseRegion> mSpecificSglFusionRegions;
 
@@ -130,6 +134,9 @@ public class PonCache
                 lastPosStart = breakend.Position;
 
                 Variant var = breakend.sv();
+
+                if(var.ponCount() > 0) // ignore if already annotated
+                    continue;
 
                 int ponCount = 0;
                 int compareCount = 0;
@@ -391,6 +398,19 @@ public class PonCache
         return 0;
     }
 
+    public void checkSorted()
+    {
+        for(List<PonSvRegion> regions : mSvRegions.values())
+        {
+            Collections.sort(regions);
+        }
+
+        for(List<PonSglRegion> regions : mSglRegions.values())
+        {
+            Collections.sort(regions);
+        }
+    }
+
     private void loadPonSvFile(final String filename)
     {
         if(filename == null)
@@ -413,8 +433,17 @@ public class PonCache
                 if(!ponRegion.RegionStart.Chromosome.equals(currentChr))
                 {
                     currentChr = ponRegion.RegionStart.Chromosome;
-                    svRegions = Lists.newArrayList();
-                    mSvRegions.put(ponRegion.RegionStart.Chromosome, svRegions);
+
+                    if(!mSvRegions.containsKey(ponRegion.RegionStart.Chromosome))
+                    {
+                        svRegions = Lists.newArrayList();
+                        mSvRegions.put(ponRegion.RegionStart.Chromosome, svRegions);
+                    }
+                    else
+                    {
+                        svRegions = mSvRegions.get(ponRegion.RegionStart.Chromosome);
+                    }
+
                     lastRegionStart = null;
                 }
 
@@ -424,6 +453,7 @@ public class PonCache
                 if(!mAllowUnordered && lastRegionStart != null && lastRegionStart.start() > ponRegion.RegionStart.start())
                 {
                     SV_LOGGER.warn("SV PON not ordered: last({}) vs this({})", lastRegionStart, ponRegion.RegionStart);
+                    mHasValidData = false;
                 }
 
                 lastRegionStart = ponRegion.RegionStart;
@@ -461,8 +491,17 @@ public class PonCache
                 if(!ponRegion.Region.Chromosome.equals(currentChr))
                 {
                     currentChr = ponRegion.Region.Chromosome;
-                    sglRegions = Lists.newArrayList();
-                    mSglRegions.put(ponRegion.Region.Chromosome, sglRegions);
+
+                    if(!mSglRegions.containsKey(ponRegion.Region.Chromosome))
+                    {
+                        sglRegions = Lists.newArrayList();
+                        mSglRegions.put(ponRegion.Region.Chromosome, sglRegions);
+                    }
+                    else
+                    {
+                        sglRegions = mSglRegions.get(ponRegion.Region.Chromosome);
+                    }
+
                     lastRegion = null;
                 }
 
@@ -472,6 +511,7 @@ public class PonCache
                 if(!mAllowUnordered && lastRegion != null && lastRegion.start() > ponRegion.Region.start())
                 {
                     SV_LOGGER.warn("SGL PON not ordered: last({}) vs this({})", lastRegion, ponRegion.Region);
+                    mHasValidData = false;
                 }
 
                 lastRegion = ponRegion.Region;

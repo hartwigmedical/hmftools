@@ -8,12 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DrugInfo
 {
-    @NotNull
     public abstract String drugName();
-
-    @NotNull
     public abstract String geneName();
-
-    @NotNull
     public abstract String prescriptionInfoUrl();
 }

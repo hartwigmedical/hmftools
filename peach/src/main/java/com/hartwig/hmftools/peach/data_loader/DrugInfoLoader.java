@@ -13,12 +13,9 @@ import java.util.Map;
 import com.hartwig.hmftools.peach.effect.DrugInfo;
 import com.hartwig.hmftools.peach.effect.ImmutableDrugInfo;
 
-import org.jetbrains.annotations.NotNull;
-
 public class DrugInfoLoader
 {
-    @NotNull
-    public static List<DrugInfo> loadDrugInfos(@NotNull String filename)
+    public static List<DrugInfo> loadDrugInfos(final String filename)
     {
         try
         {
@@ -34,8 +31,7 @@ public class DrugInfoLoader
         }
     }
 
-    @NotNull
-    private static List<DrugInfo> fromLines(@NotNull List<String> lines)
+    private static List<DrugInfo> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
