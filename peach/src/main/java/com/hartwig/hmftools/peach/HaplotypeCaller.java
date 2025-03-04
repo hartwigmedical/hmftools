@@ -14,12 +14,11 @@ import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
 
-import org.jetbrains.annotations.NotNull;
-
 public class HaplotypeCaller
 {
-    public static @NotNull List<HaplotypeCombination> findPossibleHaplotypeCombinations(@NotNull Map<String, Integer> eventIdToCount,
-            @NotNull List<NonDefaultHaplotype> nonDefaultHaplotypes, @NotNull DefaultHaplotype defaultHaplotype)
+    public static List<HaplotypeCombination> findPossibleHaplotypeCombinations(
+            final Map<String, Integer> eventIdToCount, final List<NonDefaultHaplotype> nonDefaultHaplotypes,
+            final DefaultHaplotype defaultHaplotype)
     {
         List<List<NonDefaultHaplotype>> nonDefaultCombinations =
                 getPossibleNonDefaultHaplotypes(eventIdToCount, List.copyOf(nonDefaultHaplotypes));
@@ -28,9 +27,8 @@ public class HaplotypeCaller
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    private static List<List<NonDefaultHaplotype>> getPossibleNonDefaultHaplotypes(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
-            @NotNull List<NonDefaultHaplotype> candidateHaplotypes)
+    private static List<List<NonDefaultHaplotype>> getPossibleNonDefaultHaplotypes(
+            final Map<String, Integer> eventIdToUnexplainedCount, final List<NonDefaultHaplotype> candidateHaplotypes)
     {
         if(eventIdToUnexplainedCount.values().stream().anyMatch(Objects::isNull))
         {
@@ -72,8 +70,8 @@ public class HaplotypeCaller
         return possibleHaplotypeCombinations;
     }
 
-    private static void assertNoNegativeEventCounts(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
-            @NotNull List<NonDefaultHaplotype> candidateHaplotypes)
+    private static void assertNoNegativeEventCounts(
+            final Map<String, Integer> eventIdToUnexplainedCount, final List<NonDefaultHaplotype> candidateHaplotypes)
     {
         Optional<String> eventIdWithNegativeCount =
                 eventIdToUnexplainedCount.entrySet().stream().filter(e -> e.getValue() < 0).map(Map.Entry::getKey).findFirst();
@@ -87,17 +85,16 @@ public class HaplotypeCaller
         }
     }
 
-    private static boolean haplotypeIsPossible(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
-            @NotNull NonDefaultHaplotype haplotypeToTry)
+    private static boolean haplotypeIsPossible(
+            final Map<String, Integer> eventIdToUnexplainedCount, final NonDefaultHaplotype haplotypeToTry)
     {
         return haplotypeToTry.events.stream()
                 .map(HaplotypeEvent::id)
                 .allMatch(e -> eventIdToUnexplainedCount.getOrDefault(e, 0) >= haplotypeToTry.getMatchingCount(e));
     }
 
-    @NotNull
-    private static HaplotypeCombination constructHaplotypeCombination(@NotNull List<NonDefaultHaplotype> nonDefaultHaplotypes,
-            @NotNull DefaultHaplotype defaultHaplotype)
+    private static HaplotypeCombination constructHaplotypeCombination(
+            final List<NonDefaultHaplotype> nonDefaultHaplotypes, final DefaultHaplotype defaultHaplotype)
     {
         Map<String, Integer> haplotypeNameToCount =
                 nonDefaultHaplotypes.stream().collect(Collectors.groupingBy(NonDefaultHaplotype::getName, Collectors.summingInt(h -> 1)));

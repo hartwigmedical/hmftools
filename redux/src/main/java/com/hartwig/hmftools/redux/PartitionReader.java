@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
@@ -82,6 +83,8 @@ public class PartitionReader
         }
         else
         {
+            // the sampled max read length is doubled, because it has been observed in non-ulimina bams that the max read length is usually
+            // larger than the sampled max read length, so we need extra room
             mReadCache = new ReadCache(3 * mConfig.readLength(),
                     2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
         }
@@ -240,6 +243,15 @@ public class PartitionReader
 
         if(shouldFilterRead(read))
             return;
+
+        if(!read.isSecondaryAlignment() && read.getReadPairedFlag() && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        {
+            if(!read.getSupplementaryAlignmentFlag() || mConfig.FailOnMissingSuppMateCigar)
+            {
+                RD_LOGGER.error("read({}) missing mate CIGAR", readToString(read));
+                System.exit(1);
+            }
+        }
 
         ++mStats.TotalReads;
 

@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,13 +21,12 @@ public class AllHaplotypeCombinationsFile
 {
     public final static String COMBINATION_SEPARATOR = ";";
 
-    public static void write(@NotNull String filePath, @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis) throws IOException
+    public static void write(final String filePath, final Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis) throws IOException
     {
         Files.write(new File(filePath).toPath(), toLines(geneToHaplotypeAnalysis));
     }
 
-    @NotNull
-    public static List<String> toLines(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    public static List<String> toLines(final Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
@@ -42,14 +39,12 @@ public class AllHaplotypeCombinationsFile
         return lines;
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(TSV_DELIM).add("gene").add("combination").add("count").add("nonWildTypeCount").toString();
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull String gene, @NotNull HaplotypeAnalysis analysis)
+    private static List<String> toLines(final String gene, final HaplotypeAnalysis analysis)
     {
         String wildTypeName = analysis.getWildTypeHaplotypeName();
         Comparator<HaplotypeCombination> combinationComparator =
@@ -63,8 +58,7 @@ public class AllHaplotypeCombinationsFile
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String toLine(@NotNull String gene, @NotNull HaplotypeCombination combination, @NotNull String wildTypeHaplotypeName)
+    private static String toLine(final String gene, final HaplotypeCombination combination, final String wildTypeHaplotypeName)
     {
         return new StringJoiner(TSV_DELIM).add(gene)
                 .add(getHaplotypeCombinationString(combination))
@@ -73,8 +67,7 @@ public class AllHaplotypeCombinationsFile
                 .toString();
     }
 
-    @NotNull
-    private static String getHaplotypeCombinationString(@NotNull HaplotypeCombination combination)
+    private static String getHaplotypeCombinationString(final HaplotypeCombination combination)
     {
         return combination.getHaplotypeNameToCount()
                 .entrySet()

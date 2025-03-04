@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -49,10 +50,11 @@ public class RegionSlicer
 
         SliceWriter sliceWriter = new SliceWriter(mConfig);
         ReadCache readCache = new ReadCache(sliceWriter);
-        final ThreadLocal<SamReader> threadBamReader = createThreadLocalBamReader();
-        final ExecutorService executorService = createExecutorService();
 
-        final List<CompletableFuture<Void>> futures = new ArrayList<>();
+        ThreadLocal<SamReader> threadBamReader = createThreadLocalBamReader();
+        ExecutorService executorService = createExecutorService();
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         for(ChrBaseRegion region : mConfig.SliceRegions.Regions)
         {
@@ -65,26 +67,35 @@ public class RegionSlicer
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
         futures.clear();
 
-        BT_LOGGER.info("initial slice complete");
+        BT_LOGGER.info("initial slice complete, read written({}) cached fragments({})",
+                sliceWriter.writeCount(), readCache.fragmentMap().size());
 
         readCache.setProcessingRemoteRegions(true);
 
-        // we need to perform remote position slicing twice. The reason is that we might still be missing supplementary reads of
-        // mate reads that we get from the remote slicing
+        List<ChrBaseRegion> excludedRegions = mConfig.DropExcluded ?
+                ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion) : Collections.emptyList();
+
+        // perform the slice of remote positions twice if necessary to pick up remote mates which in turn have remote supplementaries
         for(int i = 0; i < 2; ++i)
         {
             List<ChrBaseRegion> remotePositions = readCache.collateRemoteReadRegions();
+
             for(ChrBaseRegion region : remotePositions)
             {
+                if(ChrBaseRegion.overlaps(excludedRegions, region))
+                    continue;
+
                 futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig, readCache, threadBamReader),
                         executorService));
             }
+
             BT_LOGGER.info("splitting {} remote regions across {} threads", remotePositions.size(), mConfig.Threads);
 
             // wait for completion
             CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
             futures.clear();
         }
+
         BT_LOGGER.info("remote slice complete");
 
         if(mConfig.MaxUnmappedReads != UNMAPPED_READS_DISABLED)
@@ -102,7 +113,7 @@ public class RegionSlicer
 
         if(mConfig.LogMissingReads)
         {
-            readCache.logMissingReads();
+            readCache.logMissingReads(excludedRegions);
         }
 
         BT_LOGGER.info("Regions slice complete, mins({})", runTimeMinsStr(startTimeMs));
@@ -124,7 +135,6 @@ public class RegionSlicer
         }
     }
 
-    @NotNull
     private ExecutorService createExecutorService()
     {
         int numDigits = Integer.toString(mConfig.Threads - 1).length();
@@ -132,12 +142,11 @@ public class RegionSlicer
         return Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
     }
 
-    @NotNull
     private ThreadLocal<SamReader> createThreadLocalBamReader()
     {
         return ThreadLocal.withInitial(() ->
         {
-            SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT);
+            SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
             if(mConfig.RefGenomeFile != null)
             {
                 samReaderFactory = samReaderFactory.referenceSequence(new File(mConfig.RefGenomeFile));

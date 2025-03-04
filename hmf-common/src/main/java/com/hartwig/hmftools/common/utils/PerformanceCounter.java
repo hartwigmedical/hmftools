@@ -36,7 +36,7 @@ public class PerformanceCounter
     private String mCurrentIntervalName;
 
     public static final double NANOS_IN_SECOND = 1000000000;
-    public static final double NANO_IN_MILLISECOND = 1000000;
+    public static final double NANOS_IN_MILLISECOND = 1000000;
     public static final double MS_IN_SECOND = 1000;
 
     public PerformanceCounter(final String name)

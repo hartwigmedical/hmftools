@@ -69,6 +69,8 @@ public class SliceWriter implements AutoCloseable
 
     public synchronized void writeRead(final SAMRecord read) { doWriteRecord(read); }
 
+    public synchronized long writeCount() { return mRecordWriteCount; }
+
     private void doWriteRecord(final SAMRecord read)
     {
         ++mRecordWriteCount;
@@ -174,7 +176,13 @@ public class SliceWriter implements AutoCloseable
 
                 boolean success = BamOperations.sortBam(toolName, mConfig.BamToolPath, mUnsortedOutputBam, mOutputBam, mConfig.Threads);
 
-                if(success && toolName == BamToolName.SAMTOOLS)
+                if(!success)
+                {
+                    BT_LOGGER.error("failed to sort BAM");
+                    System.exit(1);
+                }
+
+                if(toolName == BamToolName.SAMTOOLS)
                 {
                     success = BamOperations.indexBam(toolName, mConfig.BamToolPath, mOutputBam, mConfig.Threads);
                 }

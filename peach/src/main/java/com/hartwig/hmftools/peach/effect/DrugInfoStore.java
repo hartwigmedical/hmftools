@@ -4,34 +4,31 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DrugInfoStore
 {
-    @NotNull
     private final List<DrugInfo> drugInfos;
 
-    public DrugInfoStore(@NotNull List<DrugInfo> drugInfos)
+    public DrugInfoStore(final List<DrugInfo> drugInfos)
     {
         this.drugInfos = drugInfos;
     }
 
-    @NotNull
-    public Set<String> getRelevantDrugNames(@NotNull String geneName)
+    public Set<String> getRelevantDrugNames(final String geneName)
     {
         return drugInfos.stream().filter(i -> i.geneName().equals(geneName)).map(DrugInfo::drugName).collect(Collectors.toSet());
     }
 
     @Nullable
-    public String getPrescriptionInfoUrl(@NotNull String geneName, @NotNull String drugName)
+    public String getPrescriptionInfoUrl(final String geneName, final String drugName)
     {
         DrugInfo matchingDrugInfo = getMatchingDrugInfo(geneName, drugName);
         return matchingDrugInfo == null ? null : matchingDrugInfo.prescriptionInfoUrl();
     }
 
     @Nullable
-    private DrugInfo getMatchingDrugInfo(@NotNull String geneName, @NotNull String drugName)
+    private DrugInfo getMatchingDrugInfo(final String geneName, final String drugName)
     {
         List<DrugInfo> matchingDrugInfos =
                 drugInfos.stream().filter(i -> i.geneName().equals(geneName) && i.drugName().equals(drugName)).collect(Collectors.toList());

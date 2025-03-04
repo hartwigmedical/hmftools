@@ -189,16 +189,27 @@ public class SpecialFusions
         else
         {
             ChrBaseRegion geneRegion = knownFusionData.geneRegion();
-            GeneData geneData = new GeneData(
-                    "", knownFusionData.ThreeGene, geneRegion.chromosome(), geneStrand,
-                    geneRegion.start(), geneRegion.end(), "");
+
+            GeneData geneData = mFusionFinder.getGeneTransCache().getGeneDataByName(knownFusionData.ThreeGene);
+            TranscriptData transData = null;
+
+            if(geneData != null)
+            {
+                transData = mFusionFinder.getGeneTransCache().getCanonicalTranscriptData(geneData.GeneId);
+            }
+            else
+            {
+                geneData = new GeneData(
+                        "", knownFusionData.ThreeGene, geneRegion.chromosome(), geneStrand,
+                        geneRegion.start(), geneRegion.end(), "");
+
+                transData = new TranscriptData(
+                        0, "", knownFusionData.ThreeGene, false, geneStrand,
+                        geneRegion.start(), geneRegion.end(), null, null, "");
+            }
 
             BreakendGeneData gene = new BreakendGeneData(var.id(), seIndex == SE_START, geneData);
             gene.setSvData(var.getSvData(), var.jcn());
-
-            TranscriptData transData = new TranscriptData(
-                    0, "", knownFusionData.ThreeGene, false, geneStrand,
-                    geneRegion.start(), geneRegion.end(), null, null, "");
 
             BreakendTransData transcript = new BreakendTransData(
                     gene, transData,  1, 1, PHASE_NONE, PHASE_NONE, 0, 0);

@@ -65,7 +65,7 @@ public class PartitionThread extends Thread
         mPartitionChecker = new PartitionChecker(config, fragmentCache, mSamReader, mBamWriter);
     }
 
-    // public PartitionChecker partitionChecker() { return mPartitionChecker; }
+    public FragmentStats stats() { return mPartitionChecker.stats(); }
     public String bamFilename() { return mBamFilename; }
 
     public void run()

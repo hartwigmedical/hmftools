@@ -7,8 +7,6 @@ import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
 import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
 import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,15 +15,13 @@ import java.util.Set;
 
 public class HaplotypePanel
 {
-    @NotNull
     private final Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel;
 
-    public HaplotypePanel(@NotNull Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel)
+    public HaplotypePanel(final Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel)
     {
         this.geneToGeneHaplotypePanel = geneToGeneHaplotypePanel;
     }
 
-    @NotNull
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
     {
         Map<Chromosome, Set<Integer>> chromosomeToRelevantPositions = new HashMap<>();
@@ -48,35 +44,31 @@ public class HaplotypePanel
         return chromosomeToRelevantPositions;
     }
 
-    public boolean isRelevantFor(@NotNull String eventId, String gene)
+    public boolean isRelevantFor(final String eventId, String gene)
     {
         return isRelevantFor(HaplotypeEventFactory.fromId(eventId), gene);
     }
 
-    public boolean isRelevantFor(@NotNull HaplotypeEvent event, String gene)
+    public boolean isRelevantFor(final HaplotypeEvent event, String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).isRelevantFor(event);
     }
 
-    @NotNull
-    public List<NonDefaultHaplotype> getNonDefaultHaplotypes(@NotNull String gene)
+    public List<NonDefaultHaplotype> getNonDefaultHaplotypes(final String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).nonDefaultHaplotypes;
     }
 
-    @NotNull
-    public DefaultHaplotype getDefaultHaplotype(@NotNull String gene)
+    public DefaultHaplotype getDefaultHaplotype(final String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).defaultHaplotype;
     }
 
-    @NotNull
-    public String getWildTypeHaplotypeName(@NotNull String gene)
+    public String getWildTypeHaplotypeName(final String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).wildTypeHaplotypeName;
     }
 
-    @NotNull
     public Set<String> getGenes()
     {
         return Sets.newHashSet(geneToGeneHaplotypePanel.keySet());

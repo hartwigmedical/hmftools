@@ -3,8 +3,6 @@ package com.hartwig.hmftools.peach;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -19,22 +17,19 @@ import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
 public class PeachAlgo
 {
-    @NotNull
     private final HaplotypePanel haplotypePanel;
 
-    public PeachAlgo(@NotNull HaplotypePanel haplotypePanel)
+    public PeachAlgo(final HaplotypePanel haplotypePanel)
     {
         this.haplotypePanel = haplotypePanel;
     }
 
-    @NotNull
-    public Map<String, HaplotypeAnalysis> getGeneToHaplotypeAnalysis(@NotNull Map<String, Integer> eventIdToCount)
+    public Map<String, HaplotypeAnalysis> getGeneToHaplotypeAnalysis(final Map<String, Integer> eventIdToCount)
     {
         return haplotypePanel.getGenes().stream().collect(Collectors.toMap(g -> g, g -> getHaplotypeAnalysis(eventIdToCount, g)));
     }
 
-    @NotNull
-    private HaplotypeAnalysis getHaplotypeAnalysis(@NotNull Map<String, Integer> eventIdToCount, @NotNull String gene)
+    private HaplotypeAnalysis getHaplotypeAnalysis(final Map<String, Integer> eventIdToCount, final String gene)
     {
         PCH_LOGGER.info("handle gene: {}", gene);
         Map<String, Integer> relevantEventIdToCount = selectRelevantEvents(eventIdToCount, gene);
@@ -55,8 +50,7 @@ public class PeachAlgo
         );
     }
 
-    @NotNull
-    private Map<String, Integer> selectRelevantEvents(@NotNull Map<String, Integer> eventIdToCount, @NotNull String gene)
+    private Map<String, Integer> selectRelevantEvents(final Map<String, Integer> eventIdToCount, final String gene)
     {
         return eventIdToCount.entrySet()
                 .stream()
@@ -64,9 +58,8 @@ public class PeachAlgo
                 .collect(toMapWithNull(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    @NotNull
-    private static List<HaplotypeCombination> selectBestCombinations(@NotNull List<HaplotypeCombination> haplotypeCombinations,
-            @NotNull String wildTypeHaplotypeName)
+    private static List<HaplotypeCombination> selectBestCombinations(
+            final List<HaplotypeCombination> haplotypeCombinations, final String wildTypeHaplotypeName)
     {
         if(haplotypeCombinations.isEmpty())
         {
@@ -91,9 +84,8 @@ public class PeachAlgo
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    private static PeachQCStatus determineQcStatus(@NotNull Map<String, Integer> eventIdToCount,
-            @NotNull List<HaplotypeCombination> bestHaplotypeCombinations)
+    private static PeachQCStatus determineQcStatus(
+            final Map<String, Integer> eventIdToCount, final List<HaplotypeCombination> bestHaplotypeCombinations)
     {
         if(eventIdToCount.values().stream().anyMatch(Objects::isNull))
         {
@@ -117,7 +109,7 @@ public class PeachAlgo
         }
     }
 
-    public static boolean hasBestHaplotypeCombination(@NotNull PeachQCStatus status)
+    public static boolean hasBestHaplotypeCombination(final PeachQCStatus status)
     {
         switch(status)
         {
@@ -133,9 +125,8 @@ public class PeachAlgo
         }
     }
 
-    @NotNull
-    private static <T, K, U> Collector<T, ?, Map<K, U>> toMapWithNull(@NotNull Function<? super T, ? extends K> keyMapper,
-            @NotNull Function<? super T, ? extends U> valueMapper)
+    private static <T, K, U> Collector<T, ?, Map<K, U>> toMapWithNull(
+            final Function<? super T, ? extends K> keyMapper, final Function<? super T, ? extends U> valueMapper)
     {
         // builtin toMap Collector cannot handle null values
         // source for this code: https://stackoverflow.com/questions/24630963/nullpointerexception-in-collectors-tomap-with-null-entry-values/32648397#32648397

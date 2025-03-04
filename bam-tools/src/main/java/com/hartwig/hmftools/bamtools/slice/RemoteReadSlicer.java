@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 
 import java.util.List;
 
@@ -23,8 +24,8 @@ public class RemoteReadSlicer implements Runnable
     private final ChrBaseRegion mCurrentSlice;
     private int mReadsProcessed = 0;
 
-    public RemoteReadSlicer(final ChrBaseRegion slice, final SliceConfig config, final ReadCache readCache,
-            final ThreadLocal<SamReader> samReader)
+    public RemoteReadSlicer(
+            final ChrBaseRegion slice, final SliceConfig config, final ReadCache readCache, final ThreadLocal<SamReader> samReader)
     {
         mConfig = config;
         mReadCache = readCache;
@@ -51,6 +52,11 @@ public class RemoteReadSlicer implements Runnable
     {
         ++mReadsProcessed;
 
+        if(mConfig.LogReadIds.contains(read.getReadName()))
+        {
+            BT_LOGGER.debug("specific read({})", readToString(read));
+        }
+
         if(mConfig.MaxRemoteReads > 0 && mReadsProcessed >= mConfig.MaxRemoteReads)
         {
             BT_LOGGER.debug("region({}) halting reads of remote region, processed {} reads",
@@ -68,16 +74,9 @@ public class RemoteReadSlicer implements Runnable
         if(mConfig.OnlySupplementaries && !read.getSupplementaryAlignmentFlag())
             return;
 
-        if(mConfig.DropExcluded)
-        {
-            // likely unmapped now with MarkDups, so not so important
-            List<ChrBaseRegion> excludedRegions = ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion);
-            if(ChrBaseRegion.overlaps(excludedRegions, new ChrBaseRegion(read.getReferenceName(), read.getAlignmentStart(), read.getAlignmentEnd())))
-            {
-                return;
-            }
-        }
+        boolean allComplete = mReadCache.addReadRecord(read);
 
-        mReadCache.addReadRecord(read);
+        if(allComplete)
+            mBamSlicer.haltProcessing();
     }
 }

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.peach.output;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.peach.PeachUtils.convertCountToString;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -16,13 +15,12 @@ import java.util.StringJoiner;
 
 public class EventsFile
 {
-    public static void write(@NotNull String filePath, @NotNull Map<String, Integer> eventIdToCount) throws IOException
+    public static void write(final String filePath, final Map<String, Integer> eventIdToCount) throws IOException
     {
         Files.write(new File(filePath).toPath(), toLines(eventIdToCount));
     }
 
-    @NotNull
-    public static List<String> toLines(@NotNull Map<String, Integer> eventIdToCount)
+    public static List<String> toLines(final Map<String, Integer> eventIdToCount)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
@@ -30,14 +28,12 @@ public class EventsFile
         return lines;
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(TSV_DELIM).add("event").add("count").toString();
     }
 
-    @NotNull
-    private static String toLine(@NotNull String eventId, @Nullable Integer count)
+    private static String toLine(final String eventId, @Nullable Integer count)
     {
         return new StringJoiner(TSV_DELIM).add(eventId).add(convertCountToString(count)).toString();
     }

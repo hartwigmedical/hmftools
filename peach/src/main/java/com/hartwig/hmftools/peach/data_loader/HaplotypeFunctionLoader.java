@@ -13,12 +13,9 @@ import java.util.Map;
 import com.hartwig.hmftools.peach.effect.HaplotypeFunction;
 import com.hartwig.hmftools.peach.effect.ImmutableHaplotypeFunction;
 
-import org.jetbrains.annotations.NotNull;
-
 public class HaplotypeFunctionLoader
 {
-    @NotNull
-    public static List<HaplotypeFunction> loadFunctions(@NotNull String filename)
+    public static List<HaplotypeFunction> loadFunctions(final String filename)
     {
         try
         {
@@ -34,8 +31,7 @@ public class HaplotypeFunctionLoader
         }
     }
 
-    @NotNull
-    private static List<HaplotypeFunction> fromLines(@NotNull List<String> lines)
+    private static List<HaplotypeFunction> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);

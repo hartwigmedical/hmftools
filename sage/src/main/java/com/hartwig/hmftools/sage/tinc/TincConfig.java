@@ -70,7 +70,10 @@ public class TincConfig
         boolean overwriteVcf = !configBuilder.hasFlag(WRITE_TINC_VCF);
         boolean writeFitVariants = configBuilder.hasFlag(WRITE_FIT_VARIANTS);
 
-        if((!Files.exists(Paths.get(gnomadFile)) && !Files.exists(Paths.get(gnomadDirectory))) || !Files.exists(Paths.get(ponFilename)))
+        boolean validGnomad = (gnomadFile != null && Files.exists(Paths.get(gnomadFile)))
+                || (gnomadDirectory != null && Files.exists(Paths.get(gnomadDirectory)));
+
+        if(!validGnomad || !Files.exists(Paths.get(ponFilename)))
         {
             SG_LOGGER.error("missing PON files for TINC analyser");
             System.exit(1);
