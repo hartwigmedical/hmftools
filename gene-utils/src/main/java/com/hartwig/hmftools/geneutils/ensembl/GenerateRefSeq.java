@@ -32,7 +32,6 @@ public class GenerateRefSeq
 
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         EnsemblDAO.addCmdLineArgs(configBuilder);
-        addEnsemblDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
 
