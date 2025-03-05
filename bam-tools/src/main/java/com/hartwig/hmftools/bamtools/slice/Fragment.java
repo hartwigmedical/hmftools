@@ -34,8 +34,6 @@ public class Fragment
     public List<ReadInfo> receivedReads() { return mReceivedReads; }
     public List<ReadInfo> pendingReads() { return mPendingReads; }
 
-    // public int readCount() { return mReads != null ? mReads.size() : (mLiteReads != null ? mLiteReads.size() : 0); }
-
     public boolean processRead(final SAMRecord read)
     {
         // returns true if the read has not been seen before

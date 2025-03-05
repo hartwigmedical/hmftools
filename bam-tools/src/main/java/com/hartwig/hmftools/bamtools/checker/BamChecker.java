@@ -142,7 +142,7 @@ public class BamChecker
 
     private void finaliseBam(final List<PartitionThread> partitionThreads, final List<SAMRecord> incompleteReads)
     {
-        if(!incompleteReads.isEmpty())
+        if(!incompleteReads.isEmpty() && !mConfig.DropIncompleteFragments)
         {
             partitionThreads.get(0).writeIncompleteReads(incompleteReads);
         }

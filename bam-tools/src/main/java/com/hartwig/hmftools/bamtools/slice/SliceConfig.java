@@ -109,7 +109,7 @@ public class SliceConfig
         }
 
         WriteReads = configBuilder.hasFlag(WRITE_READS);
-        WriteBam = !WriteReads || configBuilder.hasFlag(WRITE_BAM);
+        WriteBam = !WriteReads || configBuilder.hasFlag(WRITE_BAM) || configBuilder.hasFlag(BAMTOOL_PATH);
         UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
         DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
         WriteReadBases = WriteReads && configBuilder.hasFlag(WRITE_READ_BASES);

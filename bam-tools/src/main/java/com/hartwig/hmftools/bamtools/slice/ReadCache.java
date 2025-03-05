@@ -84,8 +84,6 @@ public class ReadCache
         return mFragmentMap.isEmpty();
     }
 
-    public synchronized boolean allComplete() { return mFragmentMap.isEmpty(); }
-
     public List<ChrBaseRegion> collateRemoteReadRegions()
     {
         Map<String,List<BaseRegion>> chrBaseRegions = Maps.newHashMap();
@@ -155,7 +153,7 @@ public class ReadCache
         return remoteRegions;
     }
 
-    public void logMissingReads(List<ChrBaseRegion> excludedRegions)
+    public void logMissingReads(final List<ChrBaseRegion> excludedRegions)
     {
         for(Fragment fragment : mFragmentMap.values())
         {
