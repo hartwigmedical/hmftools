@@ -373,17 +373,22 @@ public class LilacApplication
             System.exit(1);
         }
 
-        ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
-
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
-            // recompute from all evidence but keep the scoring values unch
-            winningRefCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, winningRefCoverage.getAlleles());
-            winningRefCoverage.setScore(mRankedComplexes.get(0).getScore());
-            winningRefCoverage.setCohortFrequencyTotal(mRankedComplexes.get(0).cohortFrequencyTotal());
+            // For top solutions, recalculate from all evidence but keep the scoring values unchanged
+            for(int i = 0; i <  mRankedComplexes.size(); i++)
+            {
+                ComplexCoverage origComplexCoverage =  mRankedComplexes.get(i);
 
-            mRankedComplexes.set(0, winningRefCoverage);
+                ComplexCoverage recalcComplexCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, origComplexCoverage.getAlleles());
+                recalcComplexCoverage.setScore(origComplexCoverage.getScore());
+                recalcComplexCoverage.setCohortFrequencyTotal(origComplexCoverage.cohortFrequencyTotal());
+
+                mRankedComplexes.set(i, recalcComplexCoverage);
+            }
         }
+
+        ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
 
         if(!mConfig.ActualAlleles.isEmpty())
         {
