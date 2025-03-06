@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -46,7 +47,7 @@ public class ServeDataTest
     {
         final String genomePath = "/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
         RefGenomeInterface genome = new RefGenomeSource(new IndexedFastaSequenceFile(new File(genomePath)));
-        baseSequenceVariantsCalculator = new ReversePave(ensemblDataDir, genome);
+        baseSequenceVariantsCalculator = new ReversePave(ensemblDataDir, RefGenomeVersion.V38, genome);
     }
 
     private void loadServeItems() throws IOException

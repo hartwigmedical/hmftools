@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -24,16 +23,19 @@ public class ReversePave
     public final EnsemblDataCache mEnsemblCache;
     final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
 
-    public ReversePave(final File ensemblDataDir, final RefGenomeInterface refGenomeVersion)
+    public ReversePave(final EnsemblDataCache ensemblCache, final RefGenomeInterface refGenome)
     {
-        Preconditions.checkArgument(ensemblDataDir.isDirectory());
-        Preconditions.checkArgument(ensemblDataDir.exists());
-        this.mEnsemblCache = new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), RefGenomeVersion.V38);
-        this.mRefGenome = refGenomeVersion;
+        mEnsemblCache = ensemblCache;
+        mRefGenome = refGenome;
         mEnsemblCache.setRequiredData(true, true, true, false);
         mEnsemblCache.load(false);
         mEnsemblCache.createTranscriptIdMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTranscriptAminoAcidsMap, List.of(), false);
+        EnsemblDataLoader.loadTranscriptAminoAcidData(mEnsemblCache.dataPath(), mTranscriptAminoAcidsMap, List.of(), false);
+    }
+
+    public ReversePave(final File ensemblDataDir, final RefGenomeVersion genomeVersion, final RefGenomeInterface refGenome)
+    {
+        this(new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), genomeVersion), refGenome);
     }
 
     VariantParser variationParser()

@@ -224,18 +224,23 @@ class VariantParser
 
     ProteinVariant parseGeneVariant(@NotNull String gene, @NotNull String specificTranscript, @NotNull String variant)
     {
-        return parseGeneVariant(gene, variant, new GetSpecificTranscript(specificTranscript)).iterator().next();
+        return parseGeneVariant(gene, trimInitialPdot(variant), new GetSpecificTranscript(specificTranscript)).iterator().next();
     }
 
     ProteinVariant parse(@NotNull String expression)
     {
         String[] geneVar = extractGeneAndVariant(expression);
-        String variantDescription = geneVar[0];
-        if(geneVar[1].startsWith("p."))
-        {
-            variantDescription = geneVar[1].substring(2);
-        }
+        String variantDescription = trimInitialPdot(geneVar[1]);
         return parseGeneVariant(geneVar[0], variantDescription);
+    }
+
+    private static String trimInitialPdot(@NotNull String variant)
+    {
+        if(variant.startsWith("p."))
+        {
+            return variant.substring(2);
+        }
+        return variant;
     }
 
     private Set<ProteinVariant> parseGeneVariant(@NotNull String gene, @NotNull String variant, TranscriptRetriever transcriptRetriever)

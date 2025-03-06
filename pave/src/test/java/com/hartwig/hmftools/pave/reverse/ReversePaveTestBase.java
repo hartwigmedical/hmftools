@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +34,7 @@ class ReversePaveTestBase
         {
             throw new RuntimeException(e);
         }
-        reversePave = new ReversePave(ensemblDataDir, genome);
+        reversePave = new ReversePave(ensemblDataDir, RefGenomeVersion.V38, genome);
     }
 
     @NotNull

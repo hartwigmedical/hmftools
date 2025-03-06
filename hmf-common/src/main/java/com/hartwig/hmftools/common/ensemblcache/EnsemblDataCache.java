@@ -32,13 +32,13 @@ public class EnsemblDataCache
     private final String mDataPath;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    private final Map<String,List<TranscriptData>> mTranscriptByGeneIdMap; // transcripts keyed by geneId
-    private final Map<Integer,TranscriptData> mTranscriptsByTransIdMap; // transcripts keyed by transId
-    private final Map<String,List<GeneData>> mChrGeneDataMap; // genes keyed by chromosome
-    private final Map<Integer,List<TranscriptProteinData>> mEnsemblProteinDataMap;
-    private final Map<Integer,Integer> mTransSpliceAcceptorPosDataMap;
-    private final Map<String,GeneData> mGeneDataMap; // keyed by geneId
-    private final Map<String,GeneData> mGeneNameIdMap; // for faster look-up by name
+    private final Map<String, List<TranscriptData>> mTranscriptByGeneIdMap; // transcripts keyed by geneId
+    private final Map<Integer, TranscriptData> mTranscriptsByTransIdMap; // transcripts keyed by transId
+    private final Map<String, List<GeneData>> mChrGeneDataMap; // genes keyed by chromosome
+    private final Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
+    private final Map<Integer, Integer> mTransSpliceAcceptorPosDataMap;
+    private final Map<String, GeneData> mGeneDataMap; // keyed by geneId
+    private final Map<String, GeneData> mGeneNameIdMap; // for faster look-up by name
 
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireExons;
@@ -48,7 +48,7 @@ public class EnsemblDataCache
     private boolean mRequireGeneSynonyms;
     private boolean mRequireNonEnsemblTranscripts;
 
-    private final Map<GeneData,Integer> mDownstreamGeneAnnotations;
+    private final Map<GeneData, Integer> mDownstreamGeneAnnotations;
     private final List<GeneData> mAlternativeGeneData;
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
@@ -82,7 +82,10 @@ public class EnsemblDataCache
         mAlternativeGeneData = Lists.newArrayList();
     }
 
-    public RefGenomeVersion refGenomeVersion() { return mRefGenomeVersion; }
+    public RefGenomeVersion refGenomeVersion()
+    {
+        return mRefGenomeVersion;
+    }
 
     public static void addEnsemblDir(final ConfigBuilder configBuilder)
     {
@@ -92,6 +95,11 @@ public class EnsemblDataCache
     public static void addEnsemblDir(final ConfigBuilder configBuilder, boolean required)
     {
         configBuilder.addPath(ENSEMBL_DATA_DIR, required, ENSEMBL_DATA_DIR_CFG);
+    }
+
+    public String dataPath()
+    {
+        return mDataPath;
     }
 
     public void setRestrictedGeneIdList(final List<String> geneIds)
