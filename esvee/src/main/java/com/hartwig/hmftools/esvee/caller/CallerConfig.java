@@ -48,7 +48,10 @@ public class CallerConfig
     public final List<String> SpecificChromosomes;
 
     public final int ManualRefDepth;
+    public final boolean WriteBreakendTsv;
+
     public static final String MANUAL_REF_DEPTH = "manual_ref_depth";
+    public static final String WRITE_BREAKEND_TSV = "write_breakend_tsv";
 
     public CallerConfig(final ConfigBuilder configBuilder)
     {
@@ -75,6 +78,7 @@ public class CallerConfig
         SpecificChromosomes = loadSpecificChromsomes(configBuilder);
 
         ManualRefDepth = configBuilder.getInteger(MANUAL_REF_DEPTH);
+        WriteBreakendTsv = configBuilder.hasFlag(WRITE_BREAKEND_TSV);
     }
 
     public boolean hasTumor() { return TumorId != null; }
@@ -134,6 +138,8 @@ public class CallerConfig
 
         configBuilder.addPath(ARTEFACT_PON_BED_SV_FILE, false, "Additional artefact SV PON file");
         configBuilder.addPath(ARTEFACT_PON_BED_SGL_FILE, false, "Additional artefact SGL PON file");
+
+        configBuilder.addFlag(WRITE_BREAKEND_TSV, "Rewrite a breakend TSV for with additional caller annotations");
 
         HotspotCache.addConfig(configBuilder);
         FilterConstants.addConfig(configBuilder);

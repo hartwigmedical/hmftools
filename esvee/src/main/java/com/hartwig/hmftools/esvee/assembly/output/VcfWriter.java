@@ -40,8 +40,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNPAIRED_READ_POSITIONS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNPAIRED_READ_POSITIONS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
@@ -200,7 +200,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(SEG_SCORE, 1, VCFHeaderLineType.Integer, SEG_SCORE_DESC));
         metaData.add(new VCFInfoHeaderLine(SEG_REPEAT_LENGTH, 1, VCFHeaderLineType.Integer, SEG_REPEAT_LENGTH_DESC));
 
-        metaData.add(new VCFInfoHeaderLine(UNPAIRED_READ_POSITIONS, 2, VCFHeaderLineType.Integer, UNPAIRED_READ_POSITIONS_DESC));
+        metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 2, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
 
         for(FilterType filter : FilterType.values())
         {
@@ -246,7 +246,7 @@ public class VcfWriter implements AutoCloseable
         {
             int sampleSupportIndex = mSampleNameIndex.get(sampleId);
             BreakendSupport breakendSupport = breakend.sampleSupport().get(sampleSupportIndex);
-            genotypes.add(buildGenotype(breakend, sampleId, breakendSupport));
+            genotypes.add(buildGenotype(sampleId, breakendSupport));
 
             totalSplitFrags += breakendSupport.SplitFragments;
             totalDiscFrags += breakendSupport.DiscordantFragments;
@@ -340,17 +340,17 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SEG_SCORE, segments.stream().mapToInt(x -> x.Alignment.score()).max().orElse(0));
         builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
-        int[] unpairedReadPositions = breakend.unpairedReadPositions();
+        int[] uniqueFragmentPositions = breakend.uniqueFragmentPositionCounts();
 
-        if(unpairedReadPositions != null)
-            builder.attribute(UNPAIRED_READ_POSITIONS, new int[] { unpairedReadPositions[0], unpairedReadPositions[1] });
+        if(uniqueFragmentPositions != null)
+            builder.attribute(UNIQUE_FRAG_POSITIONS, new int[] { uniqueFragmentPositions[0], uniqueFragmentPositions[1] });
 
         VariantContext variantContext = builder.make();
 
         mVariants.add(variantContext);
     }
 
-    private Genotype buildGenotype(final Breakend breakend, final String sampleId, final BreakendSupport breakendSupport)
+    private Genotype buildGenotype(final String sampleId, final BreakendSupport breakendSupport)
     {
         GenotypeBuilder builder = new GenotypeBuilder(sampleId);
 

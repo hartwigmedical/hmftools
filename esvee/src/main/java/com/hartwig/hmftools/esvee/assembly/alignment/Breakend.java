@@ -89,7 +89,7 @@ public class Breakend implements Comparable<Breakend>
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
 
-    public void setUnpairedReadPositions(int posStart, int posEnd)
+    public void addFragmentPositions(int posStart, int posEnd)
     {
         if(mPositionsStart == null)
         {
@@ -101,8 +101,9 @@ public class Breakend implements Comparable<Breakend>
         mPositionsEnd.add(posEnd);
     }
 
-    public int[] unpairedReadPositions()
+    public int[] uniqueFragmentPositionCounts()
     {
+        // unclipped fragment positions as used for duplicate logic, or unclipped ends for an unpaired read
         return mPositionsStart != null ? new int[] { mPositionsStart.size(), mPositionsEnd.size() } : null;
     }
 
@@ -240,6 +241,22 @@ public class Breakend implements Comparable<Breakend>
     @Override
     public int compareTo(final Breakend other)
     {
-        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
+        int breakendCompare = compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
+
+        if(breakendCompare != 0)
+            return breakendCompare;
+
+        if(svType() == SGL || other.svType() == SGL)
+        {
+            if(svType() == other.svType())
+                return Integer.compare(InsertedBases.length(), other.InsertedBases.length());
+
+            return svType() == SGL ? -1 : 1;
+        }
+
+        return compareJunctions(
+                otherBreakend().Chromosome, otherBreakend().Chromosome,
+                otherBreakend().Position, other.otherBreakend().Position,
+                otherBreakend().Orient, other.otherBreakend().Orient);
     }
 }
