@@ -71,8 +71,11 @@ public abstract class BamWriter
     {
         for(ReadInfo readInfo : readInfos)
         {
+            SAMRecord read = readInfo.read();
+            String fragCoords = mRecomputeFragCoords ? FragmentCoords.fromRead(read, false).Key : readInfo.coordinates().Key;
+
             // UMIs are not captured nor written for non-duplicates
-            writeRead(readInfo.read(), FragmentStatus.NONE, readInfo.coordinates().Key, "");
+            writeRead(read, FragmentStatus.NONE, fragCoords, "");
         }
     }
 

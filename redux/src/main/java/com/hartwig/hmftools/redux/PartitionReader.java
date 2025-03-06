@@ -447,4 +447,10 @@ public class PartitionReader
     {
         processReadGroups(mReadCache.evictAll());
     }
+
+    @VisibleForTesting
+    public void clearDuplicateGroupCollapser() { mReadCache.clearDuplicateGroupCollapser(); }
+
+    @VisibleForTesting
+    public ReadCache readCache() { return mReadCache; }
 }
