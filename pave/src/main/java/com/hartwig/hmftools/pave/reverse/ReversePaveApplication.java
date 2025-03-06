@@ -34,13 +34,7 @@ public class ReversePaveApplication
         {
             VariantContext fullContext = context.fullyDecode(inputHeader, false);
             VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(fullContext);
-
-            //            if(variantImpact != null && variantImpact.CanonicalEffect.equals("missense_variant"))
-            final String proteinVariant = variantImpact.CanonicalHgvsProtein;
-            if(proteinVariant.contains("p.") && !proteinVariant.endsWith("="))
-            {
-                checker.compareActualChangesWithCalculated(fullContext, variantImpact);
-            }
+            checker.compareActualChangesWithCalculated(fullContext, variantImpact);
         }
         vcfFileReader.close();
     }
