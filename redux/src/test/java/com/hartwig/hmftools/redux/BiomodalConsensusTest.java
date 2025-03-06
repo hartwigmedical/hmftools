@@ -13,9 +13,9 @@ import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
@@ -33,7 +33,7 @@ import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.RefGenome;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.SAMRecord;
 

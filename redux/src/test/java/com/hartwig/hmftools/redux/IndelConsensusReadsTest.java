@@ -5,11 +5,11 @@ import static com.hartwig.hmftools.redux.ConsensusReadsTest.UMI_ID_1;
 import static com.hartwig.hmftools.redux.ConsensusReadsTest.nextUmiReadId;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_A;
-import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
+import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.SAMRecord;
 
