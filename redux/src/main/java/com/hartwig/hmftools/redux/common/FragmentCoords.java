@@ -247,6 +247,14 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         }
     }
 
+    public FragmentCoords withFragmentOrientation(final Orientation fragmentOrientation)
+    {
+        if(FragmentOrient == fragmentOrientation)
+            return this;
+
+        return new FragmentCoords(ChromsomeLower, ChromsomeUpper, PositionLower, PositionUpper, OrientLower, OrientUpper, fragmentOrientation, ReadIsLower, SuppReadInfo, UnmappedSourced, true, UnmappedSourced);
+    }
+
     @Override
     public int compareTo(final FragmentCoords other)
     {
