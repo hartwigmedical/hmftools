@@ -24,9 +24,9 @@ import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.ULTIMA_MAX_THREE_PRIME_COLLAPSE_DISTANCE;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +40,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.SAMRecord;
 

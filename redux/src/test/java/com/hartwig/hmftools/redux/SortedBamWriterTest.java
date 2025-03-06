@@ -5,15 +5,15 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_ID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.write.SortedBamConfig;
 import com.hartwig.hmftools.redux.write.SortedBamWriter;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.SAMRecord;
 
