@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
-class ReversePaveTestBase
+public class ReversePaveTestBase
 {
     public final File ensemblDataDir;
     public final ReversePave reversePave;

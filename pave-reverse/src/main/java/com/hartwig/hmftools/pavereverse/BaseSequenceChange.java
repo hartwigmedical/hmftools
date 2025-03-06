@@ -22,6 +22,12 @@ public final class BaseSequenceChange
         this.mPosition = position;
     }
 
+    @NotNull
+    public String toCsv()
+    {
+        return Ref + "," + Alt + "," + mPosition;
+    }
+
     @Override
     public String toString()
     {

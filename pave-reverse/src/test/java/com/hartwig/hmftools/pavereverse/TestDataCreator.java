@@ -123,7 +123,7 @@ public class TestDataCreator
         int end = start + 1_000_000;
         var chr = refGenomeSource.getBaseString("chr21", start, end);
 //        System.out.println(chr.substring(10000, 10100));
-        File chrFile = new File(outputDir, "chr21_part_37.txt");
+        File chrFile = new File(outputDir, "tinygenome/chr21_part_37.txt");
         Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
     }
 

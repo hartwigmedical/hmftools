@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pavereverse;
 
+import static com.hartwig.hmftools.pavereverse.ReversePaveConfig.ROUND_TRIP_MODE;
 import static com.hartwig.hmftools.pavereverse.ReversePaveConfig.RPV_LOGGER;
 import static com.hartwig.hmftools.pavereverse.ReversePaveConstants.APP_NAME;
 
@@ -7,6 +8,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.pavereverse.batch.BatchProcessor;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,6 +25,25 @@ public class ReversePaveApplication
     }
 
     public void run()
+    {
+        if (mConfig.mode.equals(ROUND_TRIP_MODE))
+        {
+            roundTrip();
+        }
+        else
+        {
+            processBatch();
+        }
+    }
+
+    public void processBatch()
+    {
+        ReversePave reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mRefGenome);
+        BatchProcessor batchProcessor = new BatchProcessor(reversePave);
+        batchProcessor.process(mConfig.mTsvInputFile, mConfig.mTsvOuputFile);
+    }
+
+    public void roundTrip()
     {
         ReversePave reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mRefGenome);
         RoundTripChecker checker = new RoundTripChecker(reversePave);

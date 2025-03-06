@@ -23,17 +23,28 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class ReversePaveConfig
 {
     public final String mVcfFile;
+    public final String mTsvInputFile;
+    public final String mTsvOuputFile;
+    public final String mode;
     public RefGenomeSource mRefGenome;
     public final RefGenomeVersion mRefGenVersion;
     public final EnsemblDataCache mEnsemblCache;
 
     public static final String VCF_FILE = "vcf_file";
+    public static final String TSV_INPUT_FILE = "tsv_input";
+    public static final String TSV_OUTPUT_FILE = "tsv_output";
+    private static final String MODE = "mode";
+    static String ROUND_TRIP_MODE = "round_trip";
+    static String BATCH_MODE = "batch";
 
     public static final Logger RPV_LOGGER = LogManager.getLogger(ReversePaveConfig.class);
 
     public ReversePaveConfig(final ConfigBuilder configBuilder)
     {
+        mode = configBuilder.getValue(MODE, BATCH_MODE);
         mVcfFile = configBuilder.getValue(VCF_FILE);
+        mTsvInputFile = configBuilder.getValue(TSV_INPUT_FILE);
+        mTsvOuputFile = configBuilder.getValue(TSV_OUTPUT_FILE);
         try
         {
             final String refGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -50,7 +61,9 @@ public class ReversePaveConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(VCF_FILE, true, "VCF input file");
+        configBuilder.addPath(VCF_FILE, false, "VCF input file");
+        configBuilder.addPath(TSV_INPUT_FILE, false, "TSV input file");
+        configBuilder.addPath(TSV_OUTPUT_FILE, false, "TSV output file");
 
         addRefGenomeConfig(configBuilder, true);
         addEnsemblDir(configBuilder, true);
