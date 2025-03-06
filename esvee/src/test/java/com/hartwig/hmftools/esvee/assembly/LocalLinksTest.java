@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_600;
@@ -14,12 +16,14 @@ import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.tryAssemblyOverlap;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.SPLIT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -288,5 +292,72 @@ public class LocalLinksTest
         assertEquals(SPLIT, link.type());
         assertEquals(assembly6, link.first());
         assertEquals(assembly7, link.second());
+    }
+
+    @Test
+    public void testLocalIndelRequiredOverlaps()
+    {
+        // test 1: there is sufficient overlap in ref and extension bases to form a link
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_600);
+
+        // modelled as a DEL 1:100:1 to 1:300:-1
+        Junction junction1 = new Junction(CHR_1, 100, FORWARD);
+
+        String refBases1 = refGenome.getBaseString(CHR_1, 1, 100);
+        String extBases1 = refGenome.getBaseString(CHR_1, 300, 349);
+        String assemblyBases1 = refBases1 + extBases1;
+
+        JunctionAssembly assembly1 = new JunctionAssembly(
+                junction1, assemblyBases1.getBytes(), buildDefaultBaseQuals(assemblyBases1.length()), refBases1.length() - 1);
+
+        Junction junction2 = new Junction(CHR_1, 300, REVERSE);
+
+        String refBases2 = refGenome.getBaseString(CHR_1, 300, 399);
+        String extBases2 = refGenome.getBaseString(CHR_1, 51, 100);
+        String assemblyBases2 = extBases2 + refBases2;
+
+        JunctionAssembly assembly2 = new JunctionAssembly(
+                junction2, assemblyBases2.getBytes(), buildDefaultBaseQuals(assemblyBases2.length()), extBases2.length());
+
+        AssemblyLink assemblyLink = tryAssemblyOverlap(assembly1, assembly2);
+        assertNotNull(assemblyLink);
+
+        // test 2: with a single mismatch, trigger the seed-search logic
+        String extBases2Mod = extBases2.substring(0, 20) + getNextBase(extBases2.substring(20, 21)) + extBases2.substring(21);
+        assemblyBases2 = extBases2Mod + refBases2;
+
+        assembly2 = new JunctionAssembly(
+                junction2, assemblyBases2.getBytes(), buildDefaultBaseQuals(assemblyBases2.length()), extBases2.length());
+
+        assemblyLink = tryAssemblyOverlap(assembly1, assembly2);
+        assertNotNull(assemblyLink);
+
+        // test 3: sufficient overlap in ref and extension bases but too many mis-matches
+        extBases2Mod = extBases2.substring(0, 20) + "TTTTT" + extBases2.substring(25);
+        assemblyBases2 = extBases2Mod + refBases2;
+
+        assembly2 = new JunctionAssembly(
+                junction2, assemblyBases2.getBytes(), buildDefaultBaseQuals(assemblyBases2.length()), extBases2.length());
+
+        assemblyLink = tryAssemblyOverlap(assembly1, assembly2);
+        assertNull(assemblyLink);
+
+        // test 4: insufficient overlap in ref and extension bases to form a link
+        extBases2Mod = extBases2.substring(35);
+        assemblyBases2 = extBases2Mod + refBases2;
+
+        assembly2 = new JunctionAssembly(
+                junction2, assemblyBases2.getBytes(), buildDefaultBaseQuals(assemblyBases2.length()), extBases2Mod.length());
+
+        String refBases1Mod = extBases2.substring(35, 50) + refBases2.substring(0, 20);
+        String extBases1Mod = refBases2.substring(20, 34) + getNextBase(refBases2.substring(34, 35));
+        assemblyBases1 = refBases1Mod + extBases1Mod;
+
+        assembly1 = new JunctionAssembly(
+                junction1, assemblyBases1.getBytes(), buildDefaultBaseQuals(assemblyBases1.length()), refBases1Mod.length() - 1);
+
+        assemblyLink = tryAssemblyOverlap(assembly1, assembly2);
+        assertNull(assemblyLink);
     }
 }
