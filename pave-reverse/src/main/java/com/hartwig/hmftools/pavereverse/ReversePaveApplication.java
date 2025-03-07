@@ -2,13 +2,18 @@ package com.hartwig.hmftools.pavereverse;
 
 import static com.hartwig.hmftools.pavereverse.ReversePaveConfig.ROUND_TRIP_MODE;
 import static com.hartwig.hmftools.pavereverse.ReversePaveConfig.RPV_LOGGER;
+import static com.hartwig.hmftools.pavereverse.ReversePaveConfig.SERVE_JSON_MODE;
 import static com.hartwig.hmftools.pavereverse.ReversePaveConstants.APP_NAME;
+
+import java.io.IOException;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.pavereverse.batch.BatchProcessor;
+import com.hartwig.hmftools.pavereverse.roundtrip.RoundTripChecker;
+import com.hartwig.hmftools.pavereverse.serve.ProcessServeData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,17 +23,23 @@ import htsjdk.variant.vcf.VCFHeader;
 public class ReversePaveApplication
 {
     private final ReversePaveConfig mConfig;
+    private final ReversePave reversePave;
 
     public ReversePaveApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new ReversePaveConfig(configBuilder);
+        reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mRefGenome);
     }
 
     public void run()
     {
-        if (mConfig.mode.equals(ROUND_TRIP_MODE))
+        if(mConfig.mode.equals(ROUND_TRIP_MODE))
         {
             roundTrip();
+        }
+        else if(mConfig.mode.equals(SERVE_JSON_MODE))
+        {
+            processServeJson();
         }
         else
         {
@@ -36,16 +47,27 @@ public class ReversePaveApplication
         }
     }
 
-    public void processBatch()
+    private void processServeJson()
     {
-        ReversePave reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mRefGenome);
+        ProcessServeData processServeData = new ProcessServeData(reversePave, mConfig.mRefGenVersion);
+        try
+        {
+            processServeData.checkServeData(mConfig.mServeJsonInputFile, mConfig.mTsvOuputFile);
+        }
+        catch(IOException e)
+        {
+            RPV_LOGGER.error("Failed to process serve json", e);
+        }
+    }
+
+    private void processBatch()
+    {
         BatchProcessor batchProcessor = new BatchProcessor(reversePave);
         batchProcessor.process(mConfig.mTsvInputFile, mConfig.mTsvOuputFile);
     }
 
-    public void roundTrip()
+    private void roundTrip()
     {
-        ReversePave reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mRefGenome);
         RoundTripChecker checker = new RoundTripChecker(reversePave);
 
         VcfFileReader vcfFileReader = new VcfFileReader(mConfig.mVcfFile, true);
@@ -72,68 +94,3 @@ public class ReversePaveApplication
     }
 }
 
-class RoundTripChecker
-{
-    @NotNull
-    private final ReversePave reversePave;
-
-    RoundTripChecker(@NotNull final ReversePave reversePave)
-    {
-        this.reversePave = reversePave;
-    }
-
-    void compareActualChangesWithCalculated(VariantContext context, VariantImpact impact)
-    {
-        if(shouldIgnoreVariant(impact))
-        {
-            return;
-        }
-        int start = context.getStart();
-        String ref = context.getReference().getBaseString();
-        String alt = context.getAltAlleleWithHighestAlleleCount().getBaseString();
-        BaseSequenceChange actualChange = new BaseSequenceChange(ref, alt, context.getContig(), start);
-
-        String gene = impact.GeneName;
-        String transcript = impact.CanonicalTranscript;
-        String variant = impact.CanonicalHgvsProtein;
-        BaseSequenceVariants calculatedVariants;
-        try
-        {
-            calculatedVariants = reversePave.calculateVariant(gene, transcript, variant);
-        }
-        catch(Exception e)
-        {
-            RPV_LOGGER.error("Failed to compute variants for " + gene + ", " + variant + " and " + transcript, e);
-            return;
-        }
-        boolean calculatedContainsActual = calculatedVariants.mChanges.contains(actualChange);
-        if(!calculatedContainsActual)
-        {
-            String msg =
-                    String.format("Calculated changes do not include actual change. Gene: %s, transcript: %s, variant: %s, actual: %s", gene, transcript, variant, actualChange);
-            RPV_LOGGER.warn(msg);
-        }
-        else
-        {
-            RPV_LOGGER.info("Ok: " + actualChange);
-        }
-    }
-
-    private boolean shouldIgnoreVariant(VariantImpact variantImpact)
-    {
-        final String proteinVariant = variantImpact.CanonicalHgvsProtein;
-        if(!proteinVariant.startsWith("p."))
-        {
-            return true;
-        }
-        if(proteinVariant.endsWith("="))
-        {
-            return true;
-        }
-        if(proteinVariant.equals("p.?"))
-        {
-            return true;
-        }
-        return false;
-    }
-}

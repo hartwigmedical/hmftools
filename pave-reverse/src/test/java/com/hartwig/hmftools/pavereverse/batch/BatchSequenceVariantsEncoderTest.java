@@ -17,8 +17,8 @@ public class BatchSequenceVariantsEncoderTest
     @Test
     public void columns()
     {
-        List<String> expected = Lists.newArrayList("CHROMOSOME", "TRANSCRIPT", "VARIANTS");
-        assertEquals(BaseSequenceVariantsEncoder.columns(), expected);
+        List<String> expected = Lists.newArrayList("GENE", "HGVS_PROTEIN", "CHROMOSOME", "TRANSCRIPT", "VARIANTS");
+        assertEquals(VariantsEncoder.columns(), expected);
     }
 
     @Test
@@ -29,7 +29,7 @@ public class BatchSequenceVariantsEncoderTest
         Set<BaseSequenceChange> changes = Sets.newHashSet();
         changes.add(change1);
         changes.add(change2);
-        String str = BaseSequenceVariantsEncoder.encodeChanges(changes);
+        String str = VariantsEncoder.encodeChanges(changes);
         assertEquals(changes, parseChanges(str, "chr2"));
     }
 

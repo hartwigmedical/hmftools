@@ -9,7 +9,7 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
-class DeletionInsertionChange
+public class DeletionInsertionChange
 {
     @NotNull
     private final String Ref;
@@ -56,13 +56,6 @@ class DeletionInsertionChange
         Deleted = refWithoutCommonSuffix.substring(commonPrefixLength);
         Inserted = altWithoutCommonSuffix.substring(commonPrefixLength);
         DeletionStart = commonPrefixLength;
-    }
-
-    @NotNull
-    BaseSequenceChange toHotspot(@NotNull final ChangeLocation changeLocation)
-    {
-        int localPosition = changeLocation.Location + DeletionStart;
-        return new BaseSequenceChange(Deleted, Inserted, changeLocation.mChromosome, localPosition);
     }
 
     @NotNull

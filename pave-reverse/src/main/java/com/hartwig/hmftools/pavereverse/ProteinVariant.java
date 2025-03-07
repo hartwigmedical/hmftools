@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-abstract class ProteinVariant
+public abstract class ProteinVariant
 {
     @NotNull
     final GeneData mGene;

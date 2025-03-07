@@ -38,7 +38,7 @@ public class ReversePave
         this(new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), genomeVersion), refGenome);
     }
 
-    VariantParser variationParser()
+    public VariantParser variationParser()
     {
         return new VariantParser(mEnsemblCache, mTranscriptAminoAcidsMap);
     }

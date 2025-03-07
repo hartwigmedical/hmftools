@@ -24,6 +24,7 @@ public class ReversePaveConfig
 {
     public final String mVcfFile;
     public final String mTsvInputFile;
+    public final String mServeJsonInputFile;
     public final String mTsvOuputFile;
     public final String mode;
     public RefGenomeSource mRefGenome;
@@ -32,10 +33,12 @@ public class ReversePaveConfig
 
     public static final String VCF_FILE = "vcf_file";
     public static final String TSV_INPUT_FILE = "tsv_input";
+    public static final String SERVE_JSON_INPUT_FILE = "serve_json_input";
     public static final String TSV_OUTPUT_FILE = "tsv_output";
     private static final String MODE = "mode";
     static String ROUND_TRIP_MODE = "round_trip";
     static String BATCH_MODE = "batch";
+    static String SERVE_JSON_MODE = "serve_json";
 
     public static final Logger RPV_LOGGER = LogManager.getLogger(ReversePaveConfig.class);
 
@@ -45,6 +48,7 @@ public class ReversePaveConfig
         mVcfFile = configBuilder.getValue(VCF_FILE);
         mTsvInputFile = configBuilder.getValue(TSV_INPUT_FILE);
         mTsvOuputFile = configBuilder.getValue(TSV_OUTPUT_FILE);
+        mServeJsonInputFile = configBuilder.getValue(SERVE_JSON_INPUT_FILE);
         try
         {
             final String refGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -61,9 +65,11 @@ public class ReversePaveConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(MODE, false, "Operation mode");
         configBuilder.addPath(VCF_FILE, false, "VCF input file");
         configBuilder.addPath(TSV_INPUT_FILE, false, "TSV input file");
-        configBuilder.addPath(TSV_OUTPUT_FILE, false, "TSV output file");
+        configBuilder.addPath(SERVE_JSON_INPUT_FILE, false, "Serve json input file");
+        configBuilder.addConfigItem(TSV_OUTPUT_FILE, false, "TSV output file");
 
         addRefGenomeConfig(configBuilder, true);
         addEnsemblDir(configBuilder, true);

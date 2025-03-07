@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pavereverse.batch;
 
-import static com.hartwig.hmftools.pavereverse.batch.BaseSequenceVariantsEncoder.columns;
+import static com.hartwig.hmftools.pavereverse.batch.VariantsEncoder.columns;
 
 import org.apache.logging.log4j.util.BiConsumer;
 
@@ -24,9 +24,9 @@ public class BatchProcessor
 
     public void process(String inputTsv, String outputTsv)
     {
-        BiConsumer<BaseSequenceVariants, DelimFileWriter.Row> encoder = new BaseSequenceVariantsEncoder();
+        BiConsumer<VariantRow, DelimFileWriter.Row> encoder = new VariantsEncoder();
         try(DelimFileReader reader = new DelimFileReader(inputTsv);
-                DelimFileWriter<BaseSequenceVariants> writer = new DelimFileWriter<>(outputTsv, columns(), encoder))
+                DelimFileWriter<VariantRow> writer = new DelimFileWriter<>(outputTsv, columns(), encoder))
         {
             for(DelimFileReader.Row row : reader)
             {
@@ -34,7 +34,7 @@ public class BatchProcessor
                 String transcript = row.get(1);
                 String proteinVariant = row.get(2);
                 BaseSequenceVariants variants = reversePave.calculateVariant(gene, transcript, proteinVariant);
-                writer.writeRow(variants);
+                writer.writeRow(new VariantRow(gene, proteinVariant, variants));
             }
         }
     }

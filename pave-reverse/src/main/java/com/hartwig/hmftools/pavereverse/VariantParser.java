@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
 
-class VariantParser
+public class VariantParser
 {
     private final EnsemblDataCache mEnsemblCache;
     private final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap;
@@ -210,7 +210,7 @@ class VariantParser
         mTranscriptAminoAcidsMap = transcriptAminoAcidsMap;
     }
 
-    Set<ProteinVariant> parseGeneVariants(@NotNull String gene, @NotNull String variant)
+    public Set<ProteinVariant> parseGeneVariants(@NotNull String gene, @NotNull String variant)
     {
         return parseGeneVariant(gene, variant, new FilterTranscripts(true));
     }
