@@ -10,6 +10,10 @@
     </parent>
 
     <artifactId>pave-reverse</artifactId>
+    <packaging>jar</packaging>
+    <version>${pave.version}</version>
+    <name>HMF Tools - Reverse Pave</name>
+
 
     <dependencies>
         <dependency>
@@ -52,7 +56,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.pave.PaveApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.pavereverse.ReversePaveApplication</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

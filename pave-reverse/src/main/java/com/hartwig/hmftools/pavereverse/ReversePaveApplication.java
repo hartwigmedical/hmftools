@@ -28,7 +28,7 @@ public class ReversePaveApplication
     public ReversePaveApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new ReversePaveConfig(configBuilder);
-        reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mRefGenome);
+        reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mEnsembleDataDir, mConfig.mRefGenome);
     }
 
     public void run()

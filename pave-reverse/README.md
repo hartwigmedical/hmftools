@@ -83,5 +83,11 @@ Note that there can be legitimate reasons for a match not being found:
 | tsv_output         | Optional                         | Output TSV file, for batch and serve_json mode |
 
 ```commandline
-
+java -jar .pave-reverse-jar.jar 
+-mode serve_json 
+-vcf_input /path-to-pave-output-vcf-file/ 
+-tsv_output /path-to-output-file/ 
+-ref_genome /path-to-fasta-file/ 
+-ref_genome_version V37 
+-ensembl_data_dir /path-to-ensembl-data-dir/
 ```

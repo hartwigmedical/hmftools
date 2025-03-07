@@ -23,19 +23,19 @@ public class ReversePave
     public final EnsemblDataCache mEnsemblCache;
     final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
 
-    public ReversePave(final EnsemblDataCache ensemblCache, final RefGenomeInterface refGenome)
+    public ReversePave(final EnsemblDataCache ensemblCache, final String ensemblDataPath, final RefGenomeInterface refGenome)
     {
         mEnsemblCache = ensemblCache;
         mRefGenome = refGenome;
         mEnsemblCache.setRequiredData(true, true, true, false);
         mEnsemblCache.load(false);
         mEnsemblCache.createTranscriptIdMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(mEnsemblCache.dataPath(), mTranscriptAminoAcidsMap, List.of(), false);
+        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataPath, mTranscriptAminoAcidsMap, List.of(), false);
     }
 
     public ReversePave(final File ensemblDataDir, final RefGenomeVersion genomeVersion, final RefGenomeInterface refGenome)
     {
-        this(new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), genomeVersion), refGenome);
+        this(new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), genomeVersion), ensemblDataDir.getAbsolutePath(), refGenome);
     }
 
     public VariantParser variationParser()

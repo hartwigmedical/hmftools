@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.pavereverse;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 
 import java.io.File;
@@ -27,6 +27,7 @@ public class ReversePaveConfig
     public final String mServeJsonInputFile;
     public final String mTsvOuputFile;
     public final String mode;
+    public final String mEnsembleDataDir;
     public RefGenomeSource mRefGenome;
     public final RefGenomeVersion mRefGenVersion;
     public final EnsemblDataCache mEnsemblCache;
@@ -49,6 +50,7 @@ public class ReversePaveConfig
         mTsvInputFile = configBuilder.getValue(TSV_INPUT_FILE);
         mTsvOuputFile = configBuilder.getValue(TSV_OUTPUT_FILE);
         mServeJsonInputFile = configBuilder.getValue(SERVE_JSON_INPUT_FILE);
+        mEnsembleDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
         try
         {
             final String refGenomeFile = configBuilder.getValue(REF_GENOME);

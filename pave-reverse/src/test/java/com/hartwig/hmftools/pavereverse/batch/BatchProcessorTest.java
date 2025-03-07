@@ -30,8 +30,8 @@ public class BatchProcessorTest extends ReversePaveTestBase
     {
         ClassLoader classLoader = getClass().getClassLoader();
         File input = new File(Objects.requireNonNull(classLoader.getResource("batch/test1.tsv")).getFile());
-        File outputDir = new File("target/test-output/batch/");
-        File output = new File(outputDir, "test1.tsv");
+        File tempDir = FileUtils.getTempDirectory();
+        File output = new File(tempDir, "test1.tsv");
         new BatchProcessor(reversePave).process(input.getAbsolutePath(), output.getAbsolutePath());
 
         try(DelimFileReader outputReader = new DelimFileReader(output.getAbsolutePath()))
