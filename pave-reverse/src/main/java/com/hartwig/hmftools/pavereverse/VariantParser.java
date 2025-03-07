@@ -17,6 +17,18 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
+import com.hartwig.hmftools.pavereverse.variants.Deletion;
+import com.hartwig.hmftools.pavereverse.variants.DeletionInsertion;
+import com.hartwig.hmftools.pavereverse.variants.Duplication;
+import com.hartwig.hmftools.pavereverse.variants.Frameshift;
+import com.hartwig.hmftools.pavereverse.variants.Insertion;
+import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
+import com.hartwig.hmftools.pavereverse.variants.SingleAminoAcidVariant;
+import com.hartwig.hmftools.pavereverse.variants.StartLost;
+import com.hartwig.hmftools.pavereverse.variants.StopGained;
 
 import org.jetbrains.annotations.NotNull;
 

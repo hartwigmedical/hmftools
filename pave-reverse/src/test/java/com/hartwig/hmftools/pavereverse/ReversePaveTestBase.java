@@ -16,6 +16,14 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.hartwig.hmftools.pavereverse.aa.AminoAcid;
+import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
+import com.hartwig.hmftools.pavereverse.base.BaseSequence;
+import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
+import com.hartwig.hmftools.pavereverse.base.SplitCodonSequence;
+import com.hartwig.hmftools.pavereverse.variants.SingleAminoAcidVariant;
+
 public class ReversePaveTestBase
 {
     public final File ensemblDataDir;
@@ -96,12 +104,12 @@ public class ReversePaveTestBase
         }
     }
 
-    CodonWithinExons sec(int position, String bases, boolean isForwardStrand)
+    protected CodonWithinExons sec(int position, String bases, boolean isForwardStrand)
     {
         return new CodonWithinExons(bs(position, bases, isForwardStrand));
     }
 
-    BaseSequence bs(int position, String bases, boolean isForwardStrand)
+    public BaseSequence bs(int position, String bases, boolean isForwardStrand)
     {
         return new BaseSequence(position, bases, isForwardStrand);
     }

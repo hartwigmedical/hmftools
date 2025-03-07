@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
 
 /**
  * Calculates the possible base sequence changes that give rise to a protein-level change.
@@ -21,7 +22,7 @@ public class ReversePave
 {
     public final RefGenomeInterface mRefGenome;
     public final EnsemblDataCache mEnsemblCache;
-    final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
+    public final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
 
     public ReversePave(final EnsemblDataCache ensemblCache, final String ensemblDataPath, final RefGenomeInterface refGenome)
     {

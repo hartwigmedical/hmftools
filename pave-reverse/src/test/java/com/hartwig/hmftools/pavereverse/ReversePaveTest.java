@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
+import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 

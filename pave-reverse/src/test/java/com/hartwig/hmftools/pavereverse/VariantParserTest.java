@@ -8,6 +8,16 @@ import static org.junit.Assert.assertTrue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.pavereverse.variants.Deletion;
+import com.hartwig.hmftools.pavereverse.variants.DeletionInsertion;
+import com.hartwig.hmftools.pavereverse.variants.Duplication;
+import com.hartwig.hmftools.pavereverse.variants.Frameshift;
+import com.hartwig.hmftools.pavereverse.variants.Insertion;
+import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
+import com.hartwig.hmftools.pavereverse.variants.SingleAminoAcidVariant;
+import com.hartwig.hmftools.pavereverse.variants.StartLost;
+import com.hartwig.hmftools.pavereverse.variants.StopGained;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -195,14 +205,6 @@ public class VariantParserTest extends ReversePaveTestBase
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("ENSG00000159840:p.Pro46Ala");
         assertEquals(46, variant.positionOfFirstAlteredCodon());
         assertEquals("ZYX", variant.mGene.GeneName);
-    }
-
-//    @Test TODO ask if we needd this flexibility
-    public void referenceAminoAcidIsNotRequired()
-    {
-        SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("BRAF:p.600E");
-        assertEquals(600, variant.positionOfFirstAlteredCodon());
-        assertEquals("E", variant.altValue());
     }
 
     @Test

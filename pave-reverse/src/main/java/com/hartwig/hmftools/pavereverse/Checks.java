@@ -9,7 +9,7 @@ public class Checks
 {
     static final String HGVS_FORMAT_REQUIRED = "Required format is GENE:p.XnY where X and Y are amino acids and n is an integer.";
 
-    static boolean isNucleotideSequence(@NotNull String s)
+    public static boolean isNucleotideSequence(@NotNull String s)
     {
         if(s.isEmpty())
         {
@@ -25,7 +25,7 @@ public class Checks
         return true;
     }
 
-    static boolean isCodon(@NotNull String s)
+    public static boolean isCodon(@NotNull String s)
     {
         if(s.length() != 3)
         {
@@ -40,7 +40,7 @@ public class Checks
     }
 
     @NotNull
-    static Matcher matchPattern(final Pattern variationPattern, final String description)
+    public static Matcher matchPattern(final Pattern variationPattern, final String description)
     {
         final Matcher matcher = variationPattern.matcher(description);
         boolean matches = matcher.find();

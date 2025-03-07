@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.pavereverse.serve;
 
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
-import com.hartwig.hmftools.pavereverse.ProteinVariant;
+import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
 import com.hartwig.hmftools.pavereverse.ReversePave;
 
 class DifferenceWithTransvar
