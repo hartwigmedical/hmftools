@@ -2,6 +2,9 @@ package com.hartwig.hmftools.pavereverse.batch;
 
 import static com.hartwig.hmftools.pavereverse.batch.VariantsEncoder.columns;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.logging.log4j.util.BiConsumer;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
@@ -22,9 +25,10 @@ public class BatchProcessor
         this.reversePave = reversePave;
     }
 
-    public void process(String inputTsv, String outputTsv)
+    public void process(String inputTsv, String outputTsv) throws IOException
     {
         BiConsumer<VariantRow, DelimFileWriter.Row> encoder = new VariantsEncoder();
+        new File(outputTsv).createNewFile();
         try(DelimFileReader reader = new DelimFileReader(inputTsv);
                 DelimFileWriter<VariantRow> writer = new DelimFileWriter<>(outputTsv, columns(), encoder))
         {

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.pavereverse.batch.BatchSequenceVariantsEncode
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -25,7 +26,7 @@ import org.junit.Test;
 public class BatchProcessorTest extends ReversePaveTestBase
 {
     @Test
-    public void processTest()
+    public void processTest() throws IOException
     {
         ClassLoader classLoader = getClass().getClassLoader();
         File input = new File(Objects.requireNonNull(classLoader.getResource("batch/test1.tsv")).getFile());

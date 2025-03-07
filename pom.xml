@@ -43,7 +43,6 @@
         <module>virus-interpreter</module>
         <module>v-chord</module>
         <module>wisp</module>
-        <module>pave-reverse</module>
     </modules>
 
     <properties>

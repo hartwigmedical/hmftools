@@ -31,7 +31,7 @@ public class ReversePaveConfig
     public final RefGenomeVersion mRefGenVersion;
     public final EnsemblDataCache mEnsemblCache;
 
-    public static final String VCF_FILE = "vcf_file";
+    public static final String VCF_INPUT_FILE = "vcf_input";
     public static final String TSV_INPUT_FILE = "tsv_input";
     public static final String SERVE_JSON_INPUT_FILE = "serve_json_input";
     public static final String TSV_OUTPUT_FILE = "tsv_output";
@@ -45,7 +45,7 @@ public class ReversePaveConfig
     public ReversePaveConfig(final ConfigBuilder configBuilder)
     {
         mode = configBuilder.getValue(MODE, BATCH_MODE);
-        mVcfFile = configBuilder.getValue(VCF_FILE);
+        mVcfFile = configBuilder.getValue(VCF_INPUT_FILE);
         mTsvInputFile = configBuilder.getValue(TSV_INPUT_FILE);
         mTsvOuputFile = configBuilder.getValue(TSV_OUTPUT_FILE);
         mServeJsonInputFile = configBuilder.getValue(SERVE_JSON_INPUT_FILE);
@@ -66,14 +66,13 @@ public class ReversePaveConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(MODE, false, "Operation mode");
-        configBuilder.addPath(VCF_FILE, false, "VCF input file");
+        configBuilder.addPath(VCF_INPUT_FILE, false, "VCF input file");
         configBuilder.addPath(TSV_INPUT_FILE, false, "TSV input file");
         configBuilder.addPath(SERVE_JSON_INPUT_FILE, false, "Serve json input file");
         configBuilder.addConfigItem(TSV_OUTPUT_FILE, false, "TSV output file");
 
         addRefGenomeConfig(configBuilder, true);
         addEnsemblDir(configBuilder, true);
-        addThreadOptions(configBuilder);
 
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

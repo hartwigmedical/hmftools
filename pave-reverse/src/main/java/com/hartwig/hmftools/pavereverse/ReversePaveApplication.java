@@ -63,7 +63,14 @@ public class ReversePaveApplication
     private void processBatch()
     {
         BatchProcessor batchProcessor = new BatchProcessor(reversePave);
-        batchProcessor.process(mConfig.mTsvInputFile, mConfig.mTsvOuputFile);
+        try
+        {
+            batchProcessor.process(mConfig.mTsvInputFile, mConfig.mTsvOuputFile);
+        }
+        catch(IOException e)
+        {
+            RPV_LOGGER.error("Failed to process batch", e);
+        }
     }
 
     private void roundTrip()
