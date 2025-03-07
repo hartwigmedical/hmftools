@@ -124,7 +124,7 @@ public class SampleData
         CopyNumbers = VisCopyNumbers.read(cnaFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
         ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
-                .filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
+                .filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
         if(Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty())
         {
