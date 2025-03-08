@@ -119,7 +119,6 @@ public class AssemblyConfig
 
     public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
-    public static boolean RunRemoteRefLinking = false;
     public static boolean DevDebug = false;
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
@@ -139,8 +138,6 @@ public class AssemblyConfig
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
     private static final String DISC_ONLY_DISABLED = "disc_only_disabled";
     private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
-
-    private static final String RUN_REMOTE_REF_LINKING = "run_remote_ref_linking";
 
     private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
 
@@ -272,7 +269,6 @@ public class AssemblyConfig
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
-        RunRemoteRefLinking = configBuilder.hasFlag(RUN_REMOTE_REF_LINKING);
         WriteCandidateReads = configBuilder.hasFlag(WRITE_CANDIDATE_READS);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
@@ -369,7 +365,6 @@ public class AssemblyConfig
         configBuilder.addFlag(WRITE_CANDIDATE_READS, "Write assembly candidate reads regardless of whether used");
 
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
-        configBuilder.addFlag(RUN_REMOTE_REF_LINKING, "Use unmapped & remote read extension instead of remote ref linking");
 
         configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
 
@@ -428,7 +423,6 @@ public class AssemblyConfig
 
         ApplyRemotePhasingReadCheckThreshold = false;
         AssemblyBuildDebug = false;
-        RunRemoteRefLinking = false;
         WriteCandidateReads = false;
 
         READ_ID_TRIMMER = new ReadIdTrimmer(false);

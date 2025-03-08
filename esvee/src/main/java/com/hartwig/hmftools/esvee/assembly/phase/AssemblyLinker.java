@@ -364,8 +364,6 @@ public final class AssemblyLinker
 
         Set<Integer> testedOffsets = Sets.newHashSet();
 
-        // int firstJunctionSeqLength = min(firstSeq.matchSequence().length(), PHASED_ASSEMBLY_MATCH_SEQ_LENGTH);
-
         // take each of the subsequence match locations, build out a longer sequence around it to include all extension bases for
         // each assembly, capped by the other's ref bases and then run the sequence-matching routine
         for(int[] indexStarts : alternativeIndexStarts)

@@ -4,16 +4,12 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_600;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.tryAssemblyOverlap;
@@ -30,18 +26,15 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.phase.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
-import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetTask;
-import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
-import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import org.junit.Test;
@@ -258,7 +251,7 @@ public class LocalLinksTest
         phaseGroup.addAssembly(assembly7);
 
         PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(
-                refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
+                refGenome, new RemoteReadExtractor(null), phaseGroup);
 
         phaseSetBuilder.buildPhaseSets();
 
