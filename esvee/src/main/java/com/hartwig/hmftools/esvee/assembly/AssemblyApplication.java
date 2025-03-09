@@ -354,11 +354,7 @@ public class AssemblyApplication
 
     private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
     {
-        if(!mConfig.RunAlignment)
-            return;
-
-        boolean useCache = mConfig.AlignmentFile != null;
-        Alignment alignment = new Alignment(mConfig, !useCache ? new BwaAligner(mConfig.RefGenomeImageFile) : null);
+        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile));
         alignment.run(assemblyAlignments, mPerfCounters);
         alignment.close();
     }
@@ -391,23 +387,20 @@ public class AssemblyApplication
         {
             allAssemblies.addAll(phaseGroup.derivedAssemblies());
 
-            if(mConfig.RunAlignment)
+            // add link assemblies into the same assembly alignment
+            for(PhaseSet phaseSet : phaseGroup.phaseSets())
             {
-                // add link assemblies into the same assembly alignment
-                for(PhaseSet phaseSet : phaseGroup.phaseSets())
-                {
-                    if(phaseSet.hasValidAssemblyAlignment())
-                        assemblyAlignments.add(phaseSet.assemblyAlignment());
-                }
+                if(phaseSet.hasValidAssemblyAlignment())
+                    assemblyAlignments.add(phaseSet.assemblyAlignment());
+            }
 
-                // and then add any assemblies not in a phase set into their own for alignment
-                for(JunctionAssembly assembly : phaseGroup.assemblies())
+            // and then add any assemblies not in a phase set into their own for alignment
+            for(JunctionAssembly assembly : phaseGroup.assemblies())
+            {
+                if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
                 {
-                    if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
-                    {
-                        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
-                        assemblyAlignments.add(assemblyAlignment);
-                    }
+                    AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
+                    assemblyAlignments.add(assemblyAlignment);
                 }
             }
         }

@@ -24,16 +24,8 @@ public class AlignmentWriter
 
     public AlignmentWriter(final AssemblyConfig config)
     {
-        if(config.AlignmentFile == null)
-        {
-            mWriter = initialiseWriter(config);
-            mDetailedWriter = initialiseAlignmentDataWriter(config);
-        }
-        else
-        {
-            mWriter = null;
-            mDetailedWriter = null;
-        }
+        mWriter = initialiseWriter(config);
+        mDetailedWriter = initialiseAlignmentDataWriter(config);
     }
 
     public BufferedWriter alignmentWriter() { return mWriter; }

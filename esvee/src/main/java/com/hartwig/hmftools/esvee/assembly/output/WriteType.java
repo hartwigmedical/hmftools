@@ -29,25 +29,6 @@ public enum WriteType
 
     public String fileId() { return mFileId; }
 
-    public static boolean requiresAlignment(final List<WriteType> writeTypes)
-    {
-        for(WriteType writeType : writeTypes)
-        {
-            switch(writeType)
-            {
-                case BREAKEND:
-                case ALIGNMENT:
-                case VCF:
-                    return true;
-
-                default:
-                    break;
-            }
-        }
-
-        return false;
-    }
-
     private static final String ALL = "ASSEMBLY_ALL";
     private static final String STANDARD_TYPES = "ASSEMBLY_STANDARD";
 

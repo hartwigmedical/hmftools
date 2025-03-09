@@ -63,7 +63,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
@@ -93,12 +92,19 @@ public class AssemblyConfig
 
     public final List<WriteType> WriteTypes;
 
-    public final boolean RunAlignment;
-
     public final String OutputDir;
     public final String OutputId;
     public final String BamToolPath;
 
+    public final int Threads;
+
+    // default value overrides
+    public final int PhaseProcessingLimit;
+    public final int AssemblyMapQualThreshold;
+    public final boolean DiscordantOnlyDisabled;
+    public final double DiscordantRateIncrement;
+
+    // debug options
     public final SpecificRegions SpecificChrRegions;
     public final List<Junction> SpecificJunctions;
 
@@ -108,14 +114,7 @@ public class AssemblyConfig
     private final boolean mCheckLogReadIds;
 
     public final int AssemblyRefBaseWriteMax;
-    public final int PhaseProcessingLimit;
-    public final int AssemblyMapQualThreshold;
-    public final boolean DiscordantOnlyDisabled;
-    public final double DiscordantRateIncrement;
-
-    public final int Threads;
-
-    public final String AlignmentFile;
+    public final boolean AssemblyDetailedTsv;
 
     public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
@@ -123,7 +122,6 @@ public class AssemblyConfig
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 
-    private static final String REF_GENOME_IMAGE = "ref_genome_image";
     private static final String DECOY_GENOME = "decoy_genome";
 
     private static final String WRITE_TYPES = "write_types";
@@ -138,6 +136,7 @@ public class AssemblyConfig
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
     private static final String DISC_ONLY_DISABLED = "disc_only_disabled";
     private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
+    private static final String ASSEMBLY_TSV_DETAILED = "assembly_detailed_tsv";
 
     private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
 
@@ -211,16 +210,13 @@ public class AssemblyConfig
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
-
-        RefGenomeImageFile = configBuilder.hasValue(REF_GENOME_IMAGE) ?
-                configBuilder.getValue(REF_GENOME_IMAGE) : RefGenomeFile + REF_GENOME_IMAGE_EXTENSION;
+        RefGenomeImageFile = RefGenomeFile + REF_GENOME_IMAGE_EXTENSION;
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
         WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
 
-        AlignmentFile = AlignmentCache.filename(configBuilder);
-        RunAlignment = AlignmentFile != null || WriteType.requiresAlignment(WriteTypes);
+        AssemblyDetailedTsv = configBuilder.hasFlag(ASSEMBLY_TSV_DETAILED);
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
@@ -331,7 +327,6 @@ public class AssemblyConfig
         registerCommonConfig(configBuilder);
 
         addRefGenomeConfig(configBuilder, true);
-        configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
@@ -365,10 +360,10 @@ public class AssemblyConfig
         configBuilder.addFlag(WRITE_CANDIDATE_READS, "Write assembly candidate reads regardless of whether used");
 
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
+        configBuilder.addFlag(ASSEMBLY_TSV_DETAILED, "Log extra assembly info to TSV");
 
         configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
 
-        AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
 
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
@@ -397,8 +392,6 @@ public class AssemblyConfig
         RefGenomeImageFile = null;
         DecoyGenome = null;
 
-        RunAlignment = true;
-
         WriteTypes = Collections.emptyList();
 
         OutputDir = null;
@@ -410,6 +403,7 @@ public class AssemblyConfig
 
         PerfDebug = false;
         PerfLogTime = 0;
+        AssemblyDetailedTsv = false;
         mLogReadIds = Collections.emptyList();
         mCheckLogReadIds = false;
 
@@ -418,7 +412,6 @@ public class AssemblyConfig
         PhaseProcessingLimit = 0;
         DiscordantOnlyDisabled = false;
         Threads = 0;
-        AlignmentFile = null;
         DiscordantRateIncrement = DEFAULT_DISC_RATE_INCREMENT;
 
         ApplyRemotePhasingReadCheckThreshold = false;
