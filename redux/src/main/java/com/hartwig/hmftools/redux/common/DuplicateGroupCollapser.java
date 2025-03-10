@@ -67,6 +67,7 @@ public interface DuplicateGroupCollapser
         return false;
     }
 
+    // TODO: HERE
     BinaryOperator<DuplicateGroup> DUPLICATE_GROUP_MERGER = (acc, group) ->
     {
         acc.addReads(group.reads());

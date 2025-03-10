@@ -33,7 +33,7 @@ public class DuplicateGroup
 {
     private final String mUmiId; // the UMI if enabled
 
-    // with duplicate group collapsing reads in mReads may not have mFragmentCoords FragmentCoords
+    // with duplicate group collapsing reads in mReads may not have mFragmentCoords FragmentCoords, see mPreCollapsedFragmentCoords
     private final FragmentCoords mFragmentCoords;
     private final List<SAMRecord> mReads;
 
@@ -41,6 +41,7 @@ public class DuplicateGroup
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
 
+    private Set<FragmentCoords> mPreCollapsedFragmentCoords;
     private int mPCRClusterCount;
 
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
@@ -63,6 +64,7 @@ public class DuplicateGroup
         mPrimaryRead = null;
         mDualStrand = false;
 
+        mPreCollapsedFragmentCoords = null;
         mPCRClusterCount = UNSET_COUNT;
     }
 
@@ -73,6 +75,7 @@ public class DuplicateGroup
     public int readCount() { return mReads.size(); }
 
     public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
+    public Set<FragmentCoords> preCollapsedFragmenttCoordinates() { return mPreCollapsedFragmentCoords; }
 
     public List<SAMRecord> duplicate() { return mReads; }
     public SAMRecord consensusRead() { return mConsensusRead; }
@@ -185,6 +188,20 @@ public class DuplicateGroup
 
             mPCRClusterCount += clusterCount(tileCoords, TileCoord::distance, OPTICAL_DUPLICATE_DISTANCE_THRESHOLD);
         }
+    }
+
+    public DuplicateGroup merge(final DuplicateGroup group)
+    {
+        if(mPreCollapsedFragmentCoords == null)
+        {
+            mPreCollapsedFragmentCoords = Sets.newHashSet();
+            mPreCollapsedFragmentCoords.add(mFragmentCoords);
+        }
+
+        mPreCollapsedFragmentCoords.add(group.mFragmentCoords);
+        mReads.addAll(group.reads());
+
+        return this;
     }
 
     public String toString()
