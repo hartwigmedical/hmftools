@@ -2,29 +2,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from cuppa.classifier.cuppa_prediction import CuppaPrediction
+from cuppa.constants import PREDICT_NA_FILL_VALUE, CLF_GROUPS
 from tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler, BypassedClassifierBuilder
 from cuppa.components.calibration import RollingAvgCalibration
 from cuppa.components.prob_overriders import SexProbFilter, FusionProbOverrider
 from cuppa.components.passthrough import PassthroughTransformer
-
-
-class TestCuppaClassifier:
-
-    def test_fit_transform_gives_expected_probabilities(self):
-        X = MockTrainingData.X
-        y = MockTrainingData.y
-
-        classifier = CuppaClassifier(fusion_overrides_path=None)
-        classifier.fit(X, y)
-
-        probs = classifier.transform(X).round(3)
-
-        probs_expected = MockCuppaClassifier.probs_per_clf["combined"].round(3)
-        probs_expected = probs_expected.loc[probs.index, probs.columns]
-
-        assert all(probs == probs_expected)
 
 
 class TestMissingFeaturesHandler:
@@ -45,7 +30,7 @@ class TestMissingFeaturesHandler:
         handler = MissingFeaturesHandler(X, required_features=required_features, fill_value=fill_value)
         X_filled = handler.fill_missing()
 
-        assert all(X_filled[missing_features].iloc[0] == -1e-8)
+        assert all(X_filled[missing_features].iloc[0] == fill_value)
 
     def test_missing_rna_features_are_filled_but_only_for_samples_with_rna(self):
         X = pd.DataFrame(
@@ -92,6 +77,49 @@ class TestMissingFeaturesHandler:
 
         X_filled = classifier.fill_missing_cols(X_incomplete, fill_value=0)
         assert X_filled.shape[1] > X_incomplete.shape[1]
+
+
+class TestCuppaClassifier:
+
+    classifier = CuppaClassifier(fusion_overrides_path=None)
+    classifier.fit(MockTrainingData.X, MockTrainingData.y)
+
+    def test_fit_transform_gives_expected_probabilities(self):
+        probs = self.classifier.transform(MockTrainingData.X).round(3)
+
+        probs_expected = MockCuppaClassifier.probs_per_clf["combined"].round(3)
+        probs_expected = probs_expected.loc[probs.index, probs.columns]
+
+        assert all(probs == probs_expected)
+
+    @staticmethod
+    def _get_feature_group_and_fill_missing(group: str):
+
+        rna_columns = MockTrainingData.X.columns.str.match("^(alt_sj|gene_exp)")
+
+        if group == CLF_GROUPS.DNA:
+            features = MockTrainingData.X.loc[:, ~rna_columns]
+        elif group == CLF_GROUPS.RNA:
+            features = MockTrainingData.X.loc[:, rna_columns]
+        else:
+            raise ValueError("group must be 'dna' or 'rna'")
+
+        features = TestCuppaClassifier.classifier.fill_missing_cols(features, PREDICT_NA_FILL_VALUE)
+
+        ## Put back sex whch was filtered out by feature selection
+        features['event.trait.is_male'] = PREDICT_NA_FILL_VALUE
+
+        return features
+
+    def test_can_predict_with_only_dna_features(self):
+        X_dna = self._get_feature_group_and_fill_missing(CLF_GROUPS.DNA)
+        prediction = self.classifier.predict(X_dna)
+        assert isinstance(prediction, CuppaPrediction)
+
+    def test_can_predict_with_only_rna_features(self):
+        X_rna = self._get_feature_group_and_fill_missing(CLF_GROUPS.DNA)
+        prediction = self.classifier.predict(X_rna)
+        assert isinstance(prediction, CuppaPrediction)
 
 
 class TestBypassedClassifierBuilder:

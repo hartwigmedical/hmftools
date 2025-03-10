@@ -244,7 +244,8 @@ public class PartitionReader
         if(shouldFilterRead(read))
             return;
 
-        if(!read.isSecondaryAlignment() && read.getReadPairedFlag() && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        if(!read.isSecondaryAlignment() && read.getReadPairedFlag() && !read.getMateUnmappedFlag()
+                && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             if(!read.getSupplementaryAlignmentFlag() || mConfig.FailOnMissingSuppMateCigar)
             {

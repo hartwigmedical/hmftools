@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from pandas.core.dtypes.common import is_integer_dtype
 from sklearn.compose import make_column_selector
 
-from cuppa.constants import CLF_GROUPS, SUB_CLF_NAMES
+from cuppa.constants import CLF_GROUPS, SUB_CLF_NAMES, PREDICT_NA_FILL_VALUE
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import get_top_cols, check_required_columns, as_categorical
 from cuppa.performance.performance_stats import PerformanceStatsBuilder, PerformanceStats
@@ -405,29 +405,31 @@ class CuppaPredSummaryBuilder(LoggerMixin):
             self.logger.debug("Getting top signatures")
 
         ## Get signature info
-        index = self.predictions \
+        sig_info = self.predictions \
             .get_data_types("sig_quantile") \
             .index.to_frame(index=False)
 
+        sig_info = sig_info[sig_info["feat_value"] != PREDICT_NA_FILL_VALUE]
+
         ## Get top signatures
-        index["rank"] = index.groupby("sample_id")["feat_value"] \
+        sig_info["rank"] = sig_info.groupby("sample_id")["feat_value"] \
             .rank(method="first", ascending=False) \
             .astype(int)
 
-        index["sample_id"] = as_categorical(index["sample_id"])
-        index = index.sort_values(["sample_id", "rank"])
+        sig_info["sample_id"] = as_categorical(sig_info["sample_id"])
+        sig_info = sig_info.sort_values(["sample_id", "rank"])
 
         ## Get relative contribution
-        index["tmb"] = self.tmb_snv_per_sample[index["sample_id"]].values
-        index["perc"] = (index["feat_value"] / index["tmb"]) * 100
+        sig_info["tmb"] = self.tmb_snv_per_sample[sig_info["sample_id"]].values
+        sig_info["perc"] = (sig_info["feat_value"] / sig_info["tmb"]) * 100
 
-        index["clf_name"] = "snv96"
-        index["clf_group"] = "snv96"
+        sig_info["clf_name"] = SUB_CLF_NAMES.SNV96
+        sig_info["clf_group"] = SUB_CLF_NAMES.SNV96
 
         ## Make strings
-        sig_names = index.pivot(index="sample_id", columns="rank", values="feat_name")
-        sig_values = index.pivot(index="sample_id", columns="rank", values="feat_value").round(1)
-        sig_percs = index.pivot(index="sample_id", columns="rank", values="perc").round(1)
+        sig_names = sig_info.pivot(index="sample_id", columns="rank", values="feat_name")
+        sig_values = sig_info.pivot(index="sample_id", columns="rank", values="feat_value").round(1)
+        sig_percs = sig_info.pivot(index="sample_id", columns="rank", values="perc").round(1)
 
         labels = sig_names + "=" + sig_values.astype(str) + "," + sig_percs.astype(str) + "%"
         labels[sig_values == 0] = ""
@@ -444,8 +446,8 @@ class CuppaPredSummaryBuilder(LoggerMixin):
 
         df.index = pd.MultiIndex.from_frame(pd.DataFrame(dict(
             sample_id=sig_names.index,
-            clf_group="dna",
-            clf_name="snv96"
+            clf_group = CLF_GROUPS.DNA,
+            clf_name = SUB_CLF_NAMES.SNV96
         )))
 
         return df
@@ -477,7 +479,7 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         top_classes_long = self.top_classes.stack()\
             .to_frame("pred_class")\
             .reset_index()\
-            .query("clf_name=='event'")
+            .query(f"clf_name=='{SUB_CLF_NAMES.EVENT}'")
 
         selected_indexes = pd.MultiIndex.from_frame(top_classes_long[["sample_id", "pred_class"]])
         contribs_T = contribs_T.loc[selected_indexes]
@@ -510,6 +512,7 @@ class CuppaPredSummaryBuilder(LoggerMixin):
 
     @cached_property
     def top_feat_values(self) -> pd.DataFrame:
+
         ## Extract feature values from index of predictions
         feat_values = self.predictions.index.to_frame(index=False)
 

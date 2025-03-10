@@ -9,7 +9,7 @@ import pandas as pd
 
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
-from cuppa.constants import PREDICT_NA_FILL_VALUE
+from cuppa.constants import PREDICT_NA_FILL_VALUE, CLF_GROUPS
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.logger import LoggerMixin, initialize_logging
 from cuppa.sample_data.cuppa_features import CuppaFeaturesLoader
@@ -42,7 +42,7 @@ class PredictionRunner(LoggerMixin):
 
         self.cv_predictions_path = cv_predictions_path
         self.cv_predictions = cv_predictions
-        self.clf_group = clf_group
+        self.clf_group = clf_group.lower()
 
         self.log_to_file = log_to_file
         self.log_path = log_path
@@ -83,45 +83,49 @@ class PredictionRunner(LoggerMixin):
 
     def get_predictions(self) -> None:
 
-        if self.cv_predictions_path is not None:
+        if self.cv_predictions_path is None:
+            self.logger.info("Computing predictions for %i samples" % self.n_samples)
+            predictions = self.cuppa_classifier.predict(self.X)
+
+        else:
             self.logger.info("Loading cross-validation predictions from: " + self.cv_predictions_path)
             self.cv_predictions = CuppaPrediction.from_tsv(self.cv_predictions_path)
 
-        if self.cv_predictions is None:
-            self.logger.info("Computing predictions for %i samples" % self.n_samples)
-            self.predictions = self.cuppa_classifier.predict(self.X)
-            return
+            is_cv_sample = self.X.index.isin(self.cv_predictions.sample_ids)
+            sample_ids_new = self.X.index[~is_cv_sample]
+            sample_ids_cv = self.X.index[is_cv_sample]
 
-        is_cv_sample = self.X.index.isin(self.cv_predictions.sample_ids)
-        sample_ids_new = self.X.index[~is_cv_sample]
-        sample_ids_cv = self.X.index[is_cv_sample]
+            predictions = []
 
-        predictions = []
+            if len(sample_ids_new) > 0:
+                self.logger.info("Computing predictions for %i / %i samples" % (len(sample_ids_new), self.n_samples))
+                X_new = self.X.loc[sample_ids_new]
+                predictions.append(self.cuppa_classifier.predict(X_new))
 
-        if len(sample_ids_new) > 0:
-            self.logger.info("Computing predictions for %i / %i samples" % (len(sample_ids_new), self.n_samples))
-            X_new = self.X.loc[sample_ids_new]
-            predictions.append(self.cuppa_classifier.predict(X_new))
+            if len(sample_ids_cv) > 0:
+                predictions.append(self.cv_predictions.loc[sample_ids_cv])
+                self.logger.info("Using pre-computed cross-validation predictions for %i / %i samples" % (len(sample_ids_cv), self.n_samples))
 
-        if len(sample_ids_cv) > 0:
-            predictions.append(self.cv_predictions.loc[sample_ids_cv])
-            self.logger.info("Using pre-computed cross-validation predictions for %i / %i samples" % (len(sample_ids_cv), self.n_samples))
+            predictions = CuppaPrediction.concat(predictions)
+            predictions = predictions.loc[self.X.index]
 
-        predictions = CuppaPrediction.concat(predictions)
-        predictions = predictions.loc[self.X.index]
-
-        if self.clf_group.lower() == "all":
+        if self.clf_group == CLF_GROUPS.ALL:
             pass
-        elif self.clf_group.lower() == "dna":
-            predictions = predictions.subset_probs_by_clf_groups("dna")
+        elif self.clf_group == CLF_GROUPS.DNA:
+            predictions = predictions.subset_probs_by_clf_groups(CLF_GROUPS.DNA)
+        elif self.clf_group == CLF_GROUPS.RNA:
+            predictions = predictions.subset_probs_by_clf_groups(CLF_GROUPS.RNA)
         else:
-            self.logger.error("`clf_group` must be 'all' or 'dna'")
+            self.logger.error(f"`clf_group` must be one of: '{CLF_GROUPS.ALL}', '{CLF_GROUPS.DNA}', '{CLF_GROUPS.RNA}'")
             raise ValueError
 
         self.predictions = predictions
 
     def get_pred_summ(self) -> None:
-        self.pred_summ = self.predictions.summarize(show_extra_info=True, verbose=True)
+        self.pred_summ = self.predictions.summarize(
+            show_extra_info = self.clf_group != CLF_GROUPS.RNA,
+            verbose=True
+        )
 
     def get_vis_data(self) -> None:
         builder = CuppaVisDataBuilder(
@@ -181,12 +185,16 @@ class PredictionRunner(LoggerMixin):
             self.logger.info("Created output dir: " + self.output_dir)
 
         self.pred_summ.to_tsv(self.pred_summ_path, verbose=True)
-        self.vis_data.to_tsv(self.vis_data_path, verbose=True)
 
-        plotter = CuppaVisPlotter.from_tsv(
-            path=self.vis_data_path,
-            plot_path=self.plot_path,
-            force_plot=self.force_plot,
-            verbose=True
-        )
-        plotter.plot()
+        if self.clf_group == CLF_GROUPS.RNA:
+            self.logger.warning("Skipping plotting predictions as it is unsupported in RNA-only mode")
+        else:
+            self.vis_data.to_tsv(self.vis_data_path, verbose=True)
+
+            plotter = CuppaVisPlotter.from_tsv(
+                path=self.vis_data_path,
+                plot_path=self.plot_path,
+                force_plot=self.force_plot,
+                verbose=True
+            )
+            plotter.plot()

@@ -15,9 +15,10 @@ Here is a schematic showing how the interactions between the core molecular comp
 
 ## Latest Pipeline Version
 
-The next planned release of the WiGiTs pipeline is v2.0.
+The next planned release of the WiGiTs pipeline is v2.0, expected to be available on nfCore during April.
+Release notes are [here](./pipeline/docs/v2_0/WiGiTs_v2.0_ReleaseNotes.pdf):
 
-The table below has links for the each tool used in this release.
+The table below has links for each tool used in this release.
 
 ### DNA Tools
 

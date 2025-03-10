@@ -247,16 +247,20 @@ public class AlignmentFragments
         firstRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
         secondRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
+        int[] fragCoords = firstRead.fragmentCoords();
+
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength, true);
+            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!breakend.isSingle())
             {
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(fragmentLength, true);
+                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
             }
         }
     }
@@ -333,25 +337,19 @@ public class AlignmentFragments
 
         read.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
+        int[] fragCoords = read.fragmentCoords();
+
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-
-            if(!read.isPairedRead())
-            {
-                breakend.setUnpairedReadPositions(read.unclippedStart(), read.unclippedEnd());
-            }
+            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!breakend.isSingle())
             {
                 breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-
-                if(!read.isPairedRead())
-                {
-                    breakend.otherBreakend().setUnpairedReadPositions(read.unclippedStart(), read.unclippedEnd());
-                }
+                breakend.otherBreakend().addFragmentPositions(fragCoords[0], fragCoords[1]);
             }
         }
     }

@@ -7,6 +7,8 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.utils.validation import check_is_fitted
+
+from cuppa.constants import PREDICT_NA_FILL_VALUE
 from cuppa.logger import LoggerMixin
 from cuppa.misc.unpickle import MissingAttrHandler
 
@@ -43,8 +45,8 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         handler.check_and_set_missing_attr(name="clip_lower", value=False)
 
     def _check_X(self, X: pd.DataFrame) -> None:
-        if np.any(X < 0):
-            self.logger.error("`X must not contain negative values`")
+        if np.any((X < 0) & (X != PREDICT_NA_FILL_VALUE)):
+            self.logger.error(f"`X` must only contain non-negative values or the NA fill value {PREDICT_NA_FILL_VALUE}")
             raise ValueError
 
         if not isinstance(X, pd.DataFrame):

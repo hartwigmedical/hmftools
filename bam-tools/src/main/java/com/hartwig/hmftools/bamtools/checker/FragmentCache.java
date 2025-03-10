@@ -127,7 +127,7 @@ public class FragmentCache
 
     public void logFinalStats()
     {
-        BT_LOGGER.debug("fragment cache stats: ", mStats.toString());
+        BT_LOGGER.debug("fragment cache stats: {}", mStats.toString());
         mPerfCounter.logStats();
     }
 
