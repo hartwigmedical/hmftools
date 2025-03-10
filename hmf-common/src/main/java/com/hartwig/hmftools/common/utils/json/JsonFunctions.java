@@ -80,12 +80,12 @@ public final class JsonFunctions
         return values;
     }
 
-    @NotNull
+    @Nullable
     public static List<String> optionalStringList(@NotNull JsonObject object, @NotNull String field)
     {
         if(!object.has(field))
         {
-            return Lists.newArrayList();
+            return null;
         }
 
         return stringList(object, field);
