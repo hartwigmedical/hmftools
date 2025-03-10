@@ -2,12 +2,14 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -33,9 +35,14 @@ public final class TemplateReads
             arePrimaries = primaryCount > reads.size() / 2;
         }
 
+        // use reads with mapped mate and ignore reads without mapped mate, this can occur due to PolyG UMI tail collapsing
+        Stream<SAMRecord> filteredReadsStream = reads.stream();
+        if(!fragmentCoords.Unpaired && fragmentCoords.PositionUpper != NO_POSITION)
+            filteredReadsStream = reads.stream().filter(x -> !x.getMateUnmappedFlag());
+
         boolean isLowerRead = fragmentCoords.ReadIsLower;
 
-        List<ReadCigarInfo> readCigarInfos = reads.stream()
+        List<ReadCigarInfo> readCigarInfos = filteredReadsStream
                 .map(x -> new ReadCigarInfo(x, isLowerRead, arePrimaries)).collect(Collectors.toList());
 
         String topReadCigar = findTopFrequencyCigar(readCigarInfos, false);
