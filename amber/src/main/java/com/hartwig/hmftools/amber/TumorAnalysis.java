@@ -35,9 +35,9 @@ public class TumorAnalysis
         tumorBAFAndContamination(readerFactory, germlineHetLoci, germlineHomLoci);
     }
 
-    // we process them together
     private void tumorBAFAndContamination(final SamReaderFactory readerFactory,
-            final ListMultimap<Chromosome, PositionEvidence> germlineHetLoci, final ListMultimap<Chromosome, PositionEvidence> germlineHomLoci) throws InterruptedException
+            final ListMultimap<Chromosome, PositionEvidence> germlineHetLoci,
+            final ListMultimap<Chromosome, PositionEvidence> germlineHomLoci) throws InterruptedException
     {
         AMB_LOGGER.info("processing tumor germline heterozygous({}) and homozygous({}) sites",
                 germlineHetLoci.values().size(), germlineHomLoci.size());

@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.parseStandardFo
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.targetregion.GenerateTargetRegionsBed.OUTPUT_FILE;
@@ -320,7 +320,7 @@ public class GeneratePanelDefinitionBed
             {
                 int promoterStart, promoterEnd;
 
-                if(transData.Strand == POS_ORIENT)
+                if(transData.Strand == ORIENT_FWD)
                 {
                     promoterStart = transData.TransStart - PROMOTER_PROBE_BUFFER;
                     promoterEnd = transData.TransStart;
@@ -350,7 +350,7 @@ public class GeneratePanelDefinitionBed
                 {
                     TranscriptCodingType utrType;
 
-                    if(transData.Strand == POS_ORIENT)
+                    if(transData.Strand == ORIENT_FWD)
                         utrType = exon.Start < transData.CodingStart ? UTR_5P : UTR_3P;
                     else
                         utrType = exon.End > transData.CodingEnd ? UTR_5P : UTR_3P;

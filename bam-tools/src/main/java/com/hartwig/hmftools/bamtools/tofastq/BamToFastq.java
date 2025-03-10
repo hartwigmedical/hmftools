@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.mergeFastqs;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.setDefaultThreadExceptionHandler;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -108,8 +109,7 @@ public class BamToFastq
             combinedPerfCounter.logStats();
         }
 
-        BT_LOGGER.printf(Level.INFO, "BamToFastq complete, total reads(%,d), time taken(%s mins)",
-                totalReads, runTimeMinsStr(startTimeMs));
+        BT_LOGGER.info("BamToFastq complete, total reads({}) mins({})", totalReads, runTimeMinsStr(startTimeMs));
     }
 
     private List<ChrBaseRegion> createPartitions()
@@ -150,9 +150,8 @@ public class BamToFastq
     private void addCacheUnmappedReadFutures(final List<CompletableFuture<Void>> futures, final RemoteReadHandler remoteReadHandler,
             final ExecutorService executorService)
     {
-        if(mConfig.SpecificChrRegions == null ||
-                !mConfig.SpecificChrRegions.hasFilters() ||
-                mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
+        if(mConfig.SpecificChrRegions == null || !mConfig.SpecificChrRegions.hasFilters()
+        || mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
         {
             // write all unmapped reads to hash bams
             int numTasks = Math.max(mConfig.Threads / 10, 1);
@@ -239,12 +238,7 @@ public class BamToFastq
 
         // set all thread exception handler
         // we must do this otherwise unhandled exception in other threads might not be reported
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
-        {
-            BT_LOGGER.fatal("[{}]: uncaught exception: {}", t, e);
-            e.printStackTrace(System.err);
-            System.exit(1);
-        });
+        setDefaultThreadExceptionHandler();
 
         BamToFastq bamToFastq = new BamToFastq(configBuilder);
         bamToFastq.run();

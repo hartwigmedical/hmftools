@@ -38,9 +38,4 @@ public class PartitionInfo
 
         return format("%s;%s;multiple", regions.get(0), regions.get(1));
     }
-
-    public static boolean isAltRegionContig(final String regionContig)
-    {
-        return !HumanChromosome.contains(regionContig) && !MitochondrialChromosome.contains(regionContig);
-    }
 }

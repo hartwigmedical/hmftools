@@ -15,8 +15,8 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
@@ -72,14 +72,14 @@ public class SpecialFusionsTest
 
         List<BreakendGeneData> upGenes = Lists.newArrayList();
         int upPos = 1950;
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, upPos, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, upPos, ORIENT_FWD);
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
         int downPos = 1350;
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, downPos, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, downPos, ORIENT_REV);
 
         tester.FusionAnalyser.getFusionFinder().setFusionParams(true, true, false);
 
@@ -120,15 +120,15 @@ public class SpecialFusionsTest
         // first DEL doesn't delete a known region even though it's phased
         List<BreakendGeneData> upGenes = Lists.newArrayList();
         int upPos = 1550;
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, upPos, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, upPos, ORIENT_FWD);
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
 
         int downPos = 2150;
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, downPos, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, downPos, ORIENT_REV);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
@@ -136,12 +136,12 @@ public class SpecialFusionsTest
         upGenes.clear();
         downGenes.clear();
         upPos = 1350;
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, upPos, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, upPos, ORIENT_FWD);
 
         downPos = 1950;
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, downPos, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, downPos, ORIENT_REV);
 
         fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes));
 
@@ -182,12 +182,12 @@ public class SpecialFusionsTest
         upGenes.clear();
         downGenes.clear();
         upPos = geneStart + 350;
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, upPos, ORIENT_FWD, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, upPos, ORIENT_FWD);
 
         downPos = geneStart + 1950;
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, downPos, ORIENT_REV, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, downPos, ORIENT_REV);
 
         fusions.clear();
         fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes));
@@ -274,24 +274,24 @@ public class SpecialFusionsTest
 
         // a DEL linking the 2 regions
         List<BreakendGeneData> upGenes = Lists.newArrayList();
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, chromosome, 200, NEG_ORIENT, 1000));
-        upGenes.get(0).setPositionalData(chromosome, 200, NEG_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, chromosome, 200, ORIENT_REV, 1000));
+        upGenes.get(0).setPositionalData(chromosome, 200, ORIENT_REV);
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
 
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, chromosome, 9500, NEG_ORIENT, 1000));
-        downGenes.get(0).setPositionalData(chromosome, 9500, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, chromosome, 9500, ORIENT_REV, 1000));
+        downGenes.get(0).setPositionalData(chromosome, 9500, ORIENT_REV);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes);
 
         upGenes.clear();
-        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, chromosome, 200, NEG_ORIENT, 1000));
-        upGenes.get(0).setPositionalData(chromosome, 500, NEG_ORIENT);
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, chromosome, 200, ORIENT_REV, 1000));
+        upGenes.get(0).setPositionalData(chromosome, 500, ORIENT_REV);
 
         downGenes.clear();
-        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, chromosome, 19500, NEG_ORIENT, 1000));
-        downGenes.get(0).setPositionalData(chromosome, 20100, NEG_ORIENT);
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, chromosome, 19500, ORIENT_REV, 1000));
+        downGenes.get(0).setPositionalData(chromosome, 20100, ORIENT_REV);
 
         fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes));
 
@@ -337,10 +337,10 @@ public class SpecialFusionsTest
         // test 1: a SGL by itself
         int varId = 1;
 
-        SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
+        SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, ORIENT_FWD);
 
         final String altMapping = CHR_1 + ":" + String.valueOf(10150) + "|" + "+" + "|" + "10M" + "|19";
-        sgl1.getSglMappings().add(SglMapping.from(altMapping, POS_ORIENT));
+        sgl1.getSglMappings().add(SglMapping.from(altMapping, ORIENT_FWD));
 
         tester.AllVariants.add(sgl1);
 
@@ -362,9 +362,9 @@ public class SpecialFusionsTest
         tester.clearClustersAndSVs();
 
         // test 2: test a chain with a SGL at the start
-        sgl1 = createSgl(varId++, CHR_1, 10150, NEG_ORIENT);
+        sgl1 = createSgl(varId++, CHR_1, 10150, ORIENT_REV);
 
-        sgl1.getSglMappings().add(new SglMapping(CHR_1, 1150, POS_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping(CHR_1, 1150, ORIENT_FWD, "", 1));
 
         SvVarData var1 = createDel(varId++, CHR_1, 14000,15000);
 
@@ -393,12 +393,12 @@ public class SpecialFusionsTest
         // test 3: a chain with the SGL breaking going outside the gene into a shard
         tester.clearClustersAndSVs();
 
-        sgl1 = createSgl(varId++, CHR_2, 100, NEG_ORIENT);
+        sgl1 = createSgl(varId++, CHR_2, 100, ORIENT_REV);
 
-        sgl1.getSglMappings().add(new SglMapping(CHR_1, 1150, POS_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping(CHR_1, 1150, ORIENT_FWD, "", 1));
 
-        var1 = createBnd(varId++, CHR_1, 10150, NEG_ORIENT, CHR_2, 200, POS_ORIENT);
-        SvVarData var2 = createBnd(varId++, CHR_1, 500, POS_ORIENT, CHR_2, 500, NEG_ORIENT); // to assist clustering only
+        var1 = createBnd(varId++, CHR_1, 10150, ORIENT_REV, CHR_2, 200, ORIENT_FWD);
+        SvVarData var2 = createBnd(varId++, CHR_1, 500, ORIENT_FWD, CHR_2, 500, ORIENT_REV); // to assist clustering only
 
         tester.AllVariants.add(sgl1);
         tester.AllVariants.add(var1);
@@ -426,13 +426,13 @@ public class SpecialFusionsTest
         // test 4: 2 SGLs at the start and end of a fusion
         tester.clearClustersAndSVs();
 
-        sgl1 = createSgl(varId++, CHR_2, 100, NEG_ORIENT);
-        sgl1.getSglMappings().add(new SglMapping(CHR_1, 1150, POS_ORIENT, "", 1));
+        sgl1 = createSgl(varId++, CHR_2, 100, ORIENT_REV);
+        sgl1.getSglMappings().add(new SglMapping(CHR_1, 1150, ORIENT_FWD, "", 1));
 
-        var1 = createBnd(varId++, CHR_2, 200, POS_ORIENT, "3", 200, POS_ORIENT);
+        var1 = createBnd(varId++, CHR_2, 200, ORIENT_FWD, "3", 200, ORIENT_FWD);
 
-        SvVarData sgl2 = createSgl(varId++, "3", 100, NEG_ORIENT);
-        sgl2.getSglMappings().add(new SglMapping(CHR_1, 10150, NEG_ORIENT, "", 1));
+        SvVarData sgl2 = createSgl(varId++, "3", 100, ORIENT_REV);
+        sgl2.getSglMappings().add(new SglMapping(CHR_1, 10150, ORIENT_REV, "", 1));
 
         tester.AllVariants.add(sgl1);
         tester.AllVariants.add(sgl2);
@@ -476,13 +476,13 @@ public class SpecialFusionsTest
 
         int varId = 1;
 
-        SvVarData sgl = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
-        SvVarData inf = createInf(varId++, CHR_2, 100050, NEG_ORIENT);
+        SvVarData sgl = createSgl(varId++, CHR_1, 1150, ORIENT_FWD);
+        SvVarData inf = createInf(varId++, CHR_2, 100050, ORIENT_REV);
 
         final String altMapping = CHR_2 + ":" + String.valueOf(100000) + "|" + "+" + "|" + "10M" + "|19";
-        sgl.getSglMappings().add(SglMapping.from(altMapping, POS_ORIENT));
+        sgl.getSglMappings().add(SglMapping.from(altMapping, ORIENT_FWD));
 
-        SvVarData bnd = createBnd(varId++, CHR_1, 10020, NEG_ORIENT, CHR_2, 100200, POS_ORIENT);
+        SvVarData bnd = createBnd(varId++, CHR_1, 10020, ORIENT_REV, CHR_2, 100200, ORIENT_FWD);
 
         tester.AllVariants.add(sgl);
         tester.AllVariants.add(inf);
@@ -564,8 +564,8 @@ public class SpecialFusionsTest
 
         // first test a fusion which uses the expanded 3' alt mapping to gene 3
         int varId = 1;
-        SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
-        sgl1.getSglMappings().add(new SglMapping(CHR_1, 24000, POS_ORIENT, "", 1));
+        SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, ORIENT_FWD);
+        sgl1.getSglMappings().add(new SglMapping(CHR_1, 24000, ORIENT_FWD, "", 1));
 
         tester.AllVariants.add(sgl1);
 
@@ -589,8 +589,8 @@ public class SpecialFusionsTest
 
         // try again but to an alternate mapping location
         tester.clearClustersAndSVs();
-        sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
-        sgl1.getSglMappings().add(new SglMapping("GS", 55000, POS_ORIENT, "", 1));
+        sgl1 = createSgl(varId++, CHR_1, 1150, ORIENT_FWD);
+        sgl1.getSglMappings().add(new SglMapping("GS", 55000, ORIENT_FWD, "", 1));
 
         tester.AllVariants.add(sgl1);
 
@@ -613,8 +613,8 @@ public class SpecialFusionsTest
 
         // test again but using an IG region for the 5' gene
         tester.clearClustersAndSVs();
-        sgl1 = createSgl(varId++, CHR_4, 1000, POS_ORIENT);
-        sgl1.getSglMappings().add(new SglMapping("GS", 55000, POS_ORIENT, "", 1));
+        sgl1 = createSgl(varId++, CHR_4, 1000, ORIENT_FWD);
+        sgl1.getSglMappings().add(new SglMapping("GS", 55000, ORIENT_FWD, "", 1));
 
         tester.AllVariants.add(sgl1);
 

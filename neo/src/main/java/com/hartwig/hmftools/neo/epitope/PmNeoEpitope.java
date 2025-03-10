@@ -20,8 +20,8 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeType.MISSENSE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.STOP_LOST;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 
 import java.util.List;
@@ -71,7 +71,7 @@ public class PmNeoEpitope extends NeoEpitope
 
     public byte orientation(int fs)
     {
-        return (fs == FS_UP) == (TransData[fs].Strand == POS_STRAND) ? POS_ORIENT : NEG_ORIENT;
+        return (fs == FS_UP) == (TransData[fs].Strand == POS_STRAND) ? ORIENT_FWD : ORIENT_REV;
     }
 
     public int position(int stream)
@@ -374,10 +374,10 @@ public class PmNeoEpitope extends NeoEpitope
 
         int upRequiredBases = requiredAminoAcids * 3 + upOpenCodonBases;
 
-        byte upOrient = posStrand ? POS_ORIENT : NEG_ORIENT;
+        byte upOrient = posStrand ? ORIENT_FWD : ORIENT_REV;
         String upBases = EpitopeUtils.getUpstreamCodingBases(refGenome, transData, chromosome(FS_UP), mPointMutation.Position, upOrient, upRequiredBases);
 
-        byte downOrient = posStrand ? NEG_ORIENT : POS_ORIENT;
+        byte downOrient = posStrand ? ORIENT_REV : ORIENT_FWD;
         int downPosition = posStrand ? mPointMutation.Position + 1 : mPointMutation.Position - 1;
         int downRequiredBases = requiredAminoAcids * 3 - upOpenCodonBases;
 

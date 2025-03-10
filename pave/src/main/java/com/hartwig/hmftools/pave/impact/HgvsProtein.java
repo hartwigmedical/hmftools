@@ -83,7 +83,7 @@ public final class HgvsProtein
             {
                 hgvs += HGVS_STOP_GAINED;
             }
-            else if(hgvs.endsWith(HGVS_FRAMESHIFT))
+            else if(hgvs.endsWith(HGVS_FRAMESHIFT) && proteinContext.NetAltAminoAcids.charAt(0) == STOP_AMINO_ACID)
             {
                 hgvs = hgvs.substring(0, hgvs.length() - HGVS_FRAMESHIFT.length()) + HGVS_STOP_GAINED;
             }

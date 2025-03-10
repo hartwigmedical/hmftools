@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DE
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConfig.registerCommonConfig;
 
 import java.io.File;
 import java.util.Arrays;
@@ -16,6 +15,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.sage.tinc.TincConfig;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -30,6 +30,7 @@ public class SageCallConfig
     public final String PanelBed;
     public final String Hotspots;
     public final boolean PanelOnly;
+    public final boolean RunTinc;
 
     private final String mResourceDir;
 
@@ -39,6 +40,8 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
+
+    public static final String RUN_TINC = "run_tinc";
 
     public SageCallConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -65,6 +68,7 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
+        RunTinc = configBuilder.hasFlag(RUN_TINC);
     }
 
     public boolean isValid()
@@ -111,6 +115,7 @@ public class SageCallConfig
     {
         configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
+        SageConfig.registerCommonConfig(configBuilder);
 
         configBuilder.addPath(RESOURCE_DIR, false, "Path to Sage resource files");
         configBuilder.addPrefixedPath(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file", RESOURCE_DIR);
@@ -119,7 +124,9 @@ public class SageCallConfig
         configBuilder.addPrefixedPath(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed", RESOURCE_DIR);
         configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
 
-        registerCommonConfig(configBuilder);
+        configBuilder.addFlag(RUN_TINC, "Run TINC routine");
+        TincConfig.registerCommonConfig(configBuilder);
+
         addEnsemblDir(configBuilder);
     }
 
@@ -133,6 +140,7 @@ public class SageCallConfig
         PanelBed = "panel";
         Hotspots = "hotspots";
         PanelOnly = false;
+        RunTinc = false;
         mResourceDir = "";
     }
 }

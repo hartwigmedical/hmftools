@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
@@ -23,14 +24,18 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.junit.Test;
+
+import htsjdk.samtools.SAMRecord;
 
 public class JunctionsTest
 {
@@ -334,5 +339,59 @@ public class JunctionsTest
         junctionTracker.assignJunctionFragmentsAndSupport();
 
         assertTrue(junctionTracker.junctions().isEmpty());
+    }
+
+    @Test
+    public void testPrimarySupplementaryDuplicates()
+    {
+        // primary and supplementary with matching coords and mates
+
+        String readBases = REF_BASES.substring(0, 50);
+
+        String lowerCigar = "20S30M";
+        String upperCigar = "20M30S";
+        String mateCigar = "50M";
+
+        SupplementaryReadData suppDataUpper = new SupplementaryReadData(
+                CHR_3, 1000, SupplementaryReadData.SUPP_POS_STRAND, upperCigar, DEFAULT_MAP_QUAL);
+
+        PrepRead primary1 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1000, readBases, lowerCigar, CHR_2, 1000, false,
+                false, suppDataUpper, true, mateCigar));
+        primary1.setReadType(JUNCTION);
+
+        SupplementaryReadData suppDataLower = new SupplementaryReadData(
+                CHR_1, 1000, SupplementaryReadData.SUPP_POS_STRAND, lowerCigar, DEFAULT_MAP_QUAL);
+
+        PrepRead supp1 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                primary1.id(), CHR_3, 1000, readBases, upperCigar, CHR_2, 1000, false,
+                true, suppDataLower, true, mateCigar));
+        supp1.setReadType(JUNCTION);
+
+        PrepRead supp2 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1000, readBases, lowerCigar, CHR_2, 1000, false,
+                true, suppDataUpper, true, mateCigar));
+        supp2.setReadType(JUNCTION);
+
+        PrepRead primary2 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                supp2.id(), CHR_3, 1000, readBases, upperCigar, CHR_2, 1000, false,
+                false, suppDataLower, true, mateCigar));
+        primary2.setReadType(JUNCTION);
+
+        JunctionData junctionDataLower = new JunctionData(1000, REVERSE, primary1);
+        junctionDataLower.addJunctionReadGroup(new ReadGroup(primary1));
+        junctionDataLower.addJunctionReadGroup(new ReadGroup(supp2));
+
+        JunctionUtils.purgeSupplementaryDuplicates(junctionDataLower);
+        assertEquals(1, junctionDataLower.junctionFragmentCount());
+        assertEquals(primary1.id(), junctionDataLower.junctionGroups().get(0).id());
+
+        JunctionData junctionDataUpper = new JunctionData(1019, FORWARD, primary2);
+        junctionDataUpper.addJunctionReadGroup(new ReadGroup(primary2));
+        junctionDataUpper.addJunctionReadGroup(new ReadGroup(supp1));
+
+        JunctionUtils.purgeSupplementaryDuplicates(junctionDataUpper);
+        assertEquals(1, junctionDataUpper.junctionFragmentCount());
+        assertEquals(supp1.id(), junctionDataLower.junctionGroups().get(0).id());
     }
 }

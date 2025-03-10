@@ -5,8 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
@@ -175,7 +175,7 @@ public class ClusterMetrics
             final SvBreakend upperBreakend = breakendList.get(startIndex + 1);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-            && lowerBreakend.orientation() == NEG_ORIENT && upperBreakend.orientation() == POS_ORIENT
+            && lowerBreakend.orientation() == ORIENT_REV && upperBreakend.orientation() == ORIENT_FWD
             && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 startIndex += 2;
@@ -198,7 +198,7 @@ public class ClusterMetrics
             final SvBreakend upperBreakend = breakendList.get(endIndex);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-                    && lowerBreakend.orientation() == NEG_ORIENT && upperBreakend.orientation() == POS_ORIENT
+                    && lowerBreakend.orientation() == ORIENT_REV && upperBreakend.orientation() == ORIENT_FWD
                     && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 endIndex -= 2;

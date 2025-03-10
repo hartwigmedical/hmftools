@@ -57,6 +57,7 @@ import com.hartwig.hmftools.common.purple.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
+import com.hartwig.hmftools.purple.germline.ChimerismDetection;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -201,8 +202,8 @@ public class PurpleApplication
             PPL_LOGGER.warn("Cobalt gender {} does not match Amber gender {}", cobaltGender, amberGender);
         }
 
-        final CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
-        final SomaticVariantCache somaticCache = mConfig.runTumor() ? sampleData.SomaticCache : null;
+        CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
+        SomaticVariantCache somaticCache = mConfig.runTumor() ? sampleData.SomaticCache : null;
 
         PPL_LOGGER.info("output directory: {}", mConfig.OutputDir);
         mPurpleVersion.write(mConfig.OutputDir);
@@ -231,6 +232,9 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
+            ChimerismDetection chimerismDetection = new ChimerismDetection(amberData, cobaltData, mReferenceData.RefGenVersion);
+            chimerismDetection.run();
+
             PPL_LOGGER.info("fitting purity");
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
@@ -278,11 +282,13 @@ public class PurpleApplication
             fittedRegions.addAll(regionFitCalculator.fitRegion(bestFit.Fit.purity(), bestFit.Fit.normFactor(), observedRegions));
         }
 
-        PPL_LOGGER.info("generating QC Stats");
+        PPL_LOGGER.debug("generating QC stats");
+
         final PurpleQC qcChecks = PurpleSummaryData.createQC(
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
-                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES);
+                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES,
+                somaticCache != null ? somaticCache.tincLevel() : 0);
 
         final PurityContext purityContext = createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
@@ -444,7 +450,7 @@ public class PurpleApplication
             PurpleQC purpleQC = ImmutablePurpleQC.builder()
                     .method(FittedPurityMethod.NO_TUMOR).purity(0).contamination(0).cobaltGender(gender)
                     .unsupportedCopyNumberSegments(0).deletedGenes(0).amberGender(gender).lohPercent(0).copyNumberSegments(0)
-                    .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0).build();
+                    .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0).tincLevel(0).build();
 
             PurityContext purityContext =  ImmutablePurityContext.builder()
                     .bestFit(fittedPurity)

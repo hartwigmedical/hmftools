@@ -64,8 +64,6 @@ public class SampleDataLoader
             var.setJcnRecalcData(ploidyMin, ploidyMax);
         }
 
-        // List<StructuralVariantData> svData = inputData.stream().map(StructuralVariantFile::fromString).collect(toList());
-        // return createSVs(svData, inputData);
         return svList;
     }
 

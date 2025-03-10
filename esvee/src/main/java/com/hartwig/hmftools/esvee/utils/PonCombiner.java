@@ -75,12 +75,12 @@ public class PonCombiner
             System.exit(1);
         }
 
-        SV_LOGGER.info("Gripss PON file merge");
+        SV_LOGGER.info("SV PON file merge");
 
         mergeSvPonFiles();
         mergeSglPonFiles();
 
-        SV_LOGGER.info("Gripss PON merge complete");
+        SV_LOGGER.info("SV PON merge complete");
     }
 
     private static final int LOG_COUNT = 1000000;
@@ -116,12 +116,7 @@ public class PonCombiner
 
                 for(PonSvRegion region : combinedRegions)
                 {
-                    // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                            chrStr, region.RegionStart.start(), region.RegionStart.end(),
-                            region.RegionEnd.chromosome(), region.RegionEnd.start(), region.RegionEnd.end(), ".",
-                            region.PonCount, region.OrientStart.asChar(), region.OrientEnd.asChar()));
-
+                    writer.write(region.toBedRecord());
                     writer.newLine();
                 }
             }
@@ -138,10 +133,10 @@ public class PonCombiner
     @VisibleForTesting
     public static void mergeSvRegions(final String chromosomeStart, final List<PonSvRegion> combinedRegions)
     {
+        Collections.sort(combinedRegions);
+
         if(combinedRegions.size() < 2)
             return;
-
-        Collections.sort(combinedRegions);
 
         int mergeCount = 0;
         int initialCount = combinedRegions.size();
@@ -179,9 +174,8 @@ public class PonCombiner
                     }
 
                     // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                    SV_LOGGER.trace("merging region({}:{} -> {}) with next({}:{} -> {})",
-                            chromosomeStart, currentRegion.RegionStart, currentRegion.RegionEnd,
-                            chromosomeStart, nextRegion.RegionStart, nextRegion.RegionEnd);
+                    SV_LOGGER.trace("merging region({} -> {}) with next({} -> {})",
+                            currentRegion.RegionStart, currentRegion.RegionEnd, nextRegion.RegionStart, nextRegion.RegionEnd);
 
                     currentRegion.RegionStart.setStart(Math.min(currentRegion.RegionStart.start(), nextRegion.RegionStart.start()));
                     currentRegion.RegionStart.setEnd(Math.max(currentRegion.RegionStart.end(), nextRegion.RegionStart.end()));
@@ -234,12 +228,9 @@ public class PonCombiner
 
                 SV_LOGGER.debug("chr({}) writing {} SGL regions", chrStr, combinedRegions.size());
 
-                for(PonSglRegion region : combinedRegions)
+                for(PonSglRegion ponRegion : combinedRegions)
                 {
-                    // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%s",
-                            chrStr, region.Region.start(), region.Region.end(), ".", region.PonCount, region.Orient.asChar()));
-
+                    writer.write(ponRegion.toBedRecord());
                     writer.newLine();
                 }
             }
@@ -286,8 +277,7 @@ public class PonCombiner
                 }
 
                 // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                SV_LOGGER.trace("merging region({}:{}) with next({}:{})",
-                        chromosomeStart, currentRegion.Region, chromosomeStart, nextRegion.Region);
+                SV_LOGGER.trace("merging region({}) with next({})", currentRegion.Region, nextRegion.Region);
 
                 currentRegion.Region.setEnd(Math.max(currentRegion.Region.end(), nextRegion.Region.end()));
                 combinedRegions.remove(nextIndex);

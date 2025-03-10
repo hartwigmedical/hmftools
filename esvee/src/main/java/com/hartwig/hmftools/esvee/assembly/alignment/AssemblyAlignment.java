@@ -7,6 +7,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.extractInsertSequence;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.hasUnsetBases;
+import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 
 import static htsjdk.samtools.CigarOperator.I;
@@ -526,5 +529,16 @@ public class AssemblyAlignment
     public String toString()
     {
         return format("%s length(%d) breakends(%d)", info(), mFullSequenceLength, mBreakends.size());
+    }
+
+    public static boolean isSimpleIndelAssembly(final AssemblyAlignment assemblyAlignment)
+    {
+        return assemblyAlignment.assemblies().size() == 2 && assemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LINKED)
+                && isAssemblyIndelLink(assemblyAlignment.assemblies().get(0), assemblyAlignment.assemblies().get(1));
+    }
+
+    public static boolean isLocalIndelAssembly(final AssemblyAlignment assemblyAlignment)
+    {
+        return assemblyAlignment.assemblies().size() == 2 && assemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL);
     }
 }

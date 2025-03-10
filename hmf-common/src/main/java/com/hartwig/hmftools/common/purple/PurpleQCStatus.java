@@ -18,15 +18,19 @@ public enum PurpleQCStatus
     WARN_HIGH_COPY_NUMBER_NOISE,
     WARN_GENDER_MISMATCH,
     WARN_LOW_PURITY,
+    WARN_TINC,
 
     FAIL_CONTAMINATION,
-    FAIL_NO_TUMOR;
+    FAIL_NO_TUMOR,
+    FAIL_TINC;
 
     // default QC status determination
     public static final int MAX_UNSUPPORTED_SEGMENTS = 220;
     public static final int MAX_DELETED_GENES = 280;
     public static final double MAX_CONTAMINATION = 0.1;
     public static final double MIN_PURITY = 0.2;
+
+    public static final double TINC_FAIL_LEVEL = 0.25;
 
     public static final String STATUS_DELIM = ",";
 
@@ -37,7 +41,7 @@ public enum PurpleQCStatus
 
     public static Set<PurpleQCStatus> calcStatus(
             boolean genderPass, int unsupportedCopyNumberSegments, int deletedGenes, double purity, final FittedPurityMethod method,
-            double contamination, final int maxDeletedGenes)
+            double contamination, final int maxDeletedGenes, double tincLevel)
     {
         Set<PurpleQCStatus> result = Sets.newHashSet();
 
@@ -69,6 +73,15 @@ public enum PurpleQCStatus
         if(method.equals(FittedPurityMethod.NO_TUMOR))
         {
             result.add(PurpleQCStatus.FAIL_NO_TUMOR);
+        }
+
+        if(tincLevel >= TINC_FAIL_LEVEL)
+        {
+            result.add(PurpleQCStatus.FAIL_TINC);
+        }
+        else if(tincLevel > 0)
+        {
+            result.add(PurpleQCStatus.WARN_TINC);
         }
 
         if(result.isEmpty())

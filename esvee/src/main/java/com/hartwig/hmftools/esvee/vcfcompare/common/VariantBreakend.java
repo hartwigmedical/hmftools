@@ -38,10 +38,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantBreakend
 {
-    public final SvCallerType mSvCallerType;
-
     public final VariantContext Context;
-    private final VariantAltInsertCoords AltCoords;
+    public final VariantAltInsertCoords AltCoords;
 
     public final String Id;
 
@@ -66,7 +64,9 @@ public class VariantBreakend
     public LineLink LinkedLineBreakends;
     public LineLink InferredLinkedLineBreakends;
 
-    public VariantBreakend(final VariantContext context, SvCallerType svCallerType, VcfType sourceVcfType)
+    private final SvCallerType mSvCallerType;
+
+    public VariantBreakend(final VariantContext context, final SvCallerType svCallerType, final VcfType sourceVcfType)
     {
         mSvCallerType = svCallerType;
 
@@ -145,25 +145,13 @@ public class VariantBreakend
     {
         return Position + Cipos[0];
     }
-
     public int maxPosition()
     {
         return Position + Cipos[1];
     }
 
-    public int otherMinPosition()
-    {
-        return isInverted() ?
-                OtherPosition - Cipos[0] :
-                OtherPosition + Cipos[0];
-    }
-
-    public int otherMaxPosition()
-    {
-        return isInverted() ?
-                OtherPosition - Cipos[1] :
-                OtherPosition + Cipos[1];
-    }
+    public int otherMinPosition() { return isInverted() ? OtherPosition - Cipos[0] : OtherPosition + Cipos[0]; }
+    public int otherMaxPosition() { return isInverted() ? OtherPosition - Cipos[1] : OtherPosition + Cipos[1]; }
 
     public String getExtendedAttributeAsString(String id, String key)
     {
@@ -171,12 +159,12 @@ public class VariantBreakend
         return value != null ? value.toString() : "";
     }
 
-    public int getExtendedAttributeAsInt(String id, String key)
+    public int getExtendedAttributeAsInt(final String id, final String key)
     {
         return getGenotypeAttributeAsInt(Context.getGenotype(id), key, 0);
     }
 
-    public double getExtendedAttributeAsDouble(String id, String key)
+    public double getExtendedAttributeAsDouble(final String id, final String key)
     {
         return getGenotypeAttributeAsDouble(Context.getGenotype(id), key, 0);
     }
@@ -254,7 +242,7 @@ public class VariantBreakend
         return String.format("%.0f", qual());
     }
 
-    public String fragsStr(String sampleId)
+    public String fragsStr(final String sampleId)
     {
         String fragsInfoTag;
 
@@ -273,16 +261,10 @@ public class VariantBreakend
     public StructuralVariantType svType()
     {
         if(isSingle())
-        {
             return SGL;
-        }
 
         return formSvType(
-                Chromosome, OtherChromosome,
-                Position, OtherPosition,
-                AltCoords.Orient, AltCoords.OtherOrient,
-                InsertSequence.isEmpty()
-        );
+                Chromosome, OtherChromosome, Position, OtherPosition, AltCoords.Orient, AltCoords.OtherOrient, InsertSequence.isEmpty());
     }
 
     public boolean isPassVariant()
@@ -321,9 +303,10 @@ public class VariantBreakend
         throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCallerType);
     }
 
+    /*
     public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
     {
-        SV_LOGGER.info("Loading VCF file: {}", vcfFile);
+        SV_LOGGER.info("loading VCF file: {}", vcfFile);
 
         Map<String,List<VariantBreakend>> chrBreakendMap = new HashMap<>();
 
@@ -353,4 +336,5 @@ public class VariantBreakend
 
         return chrBreakendMap;
     }
+    */
 }

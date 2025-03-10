@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -18,24 +23,29 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
-import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 public class BreakendWriter
 {
     private final AssemblyConfig mConfig;
 
     private final BufferedWriter mWriter;
-    private final TruthsetAnnotation mTruthsetAnnotation;
 
-    public BreakendWriter(final AssemblyConfig config, final TruthsetAnnotation truthsetAnnotation)
+    public BreakendWriter(final AssemblyConfig config)
     {
         mConfig = config;
-        mTruthsetAnnotation = truthsetAnnotation;
 
         mWriter = initialiseWriter();
     }
 
     public void close() { closeBufferedWriter(mWriter);}
+
+    public static String FLD_BREAKEND_INS_SEQ = "InsertedBases";
+    public static String FLD_BREAKEND_MATE_CHR = "MateChr";
+    public static String FLD_BREAKEND_MATE_POSITION = "MatePos";
+    public static String FLD_BREAKEND_MATE_ORIENT = "MateOrient";
+    public static String FLD_SV_TYPE = "Type";
 
     private BufferedWriter initialiseWriter()
     {
@@ -55,10 +65,10 @@ public class BreakendWriter
             sj.add("MateId");
             sj.add("AssemblyInfo");
 
-            sj.add("Type").add("Chromosome").add("Position").add("Orientation");
+            sj.add(FLD_SV_TYPE).add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
 
-            sj.add("MateChr").add("MatePos").add("MateOrient").add("Length");
-            sj.add("InsertedBases").add("Homology").add("ConfidenceInterval").add("InexactOffset");
+            sj.add(FLD_BREAKEND_MATE_CHR).add(FLD_BREAKEND_MATE_POSITION).add(FLD_BREAKEND_MATE_ORIENT).add("Length");
+            sj.add(FLD_BREAKEND_INS_SEQ).add("Homology").add("ConfidenceInterval").add("InexactOffset");
 
             sj.add("Qual");
             sj.add("SplitFragments");
@@ -83,9 +93,9 @@ public class BreakendWriter
             sj.add("FacingBreakendIds");
 
             sj.add("AltAlignments");
-
-            if(mTruthsetAnnotation.enabled())
-                sj.add(TruthsetAnnotation.tsvHeader());
+            sj.add("InsertionType");
+            sj.add("UniqueFragPos");
+            sj.add("ClosestAssembly");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -203,8 +213,37 @@ public class BreakendWriter
 
                 sj.add(AlternativeAlignment.toVcfTag(breakend.alternativeAlignments()));
 
-                if(mTruthsetAnnotation.enabled())
-                    sj.add(mTruthsetAnnotation.findTruthsetAnnotation(breakend));
+                if(assemblyAlignment.assemblies().stream().anyMatch(x -> x.hasLineSequence())
+                && isMobileLineElement(breakend.Orient, breakend.InsertedBases))
+                {
+                    sj.add("LINE"); // in time other types
+                }
+                else
+                {
+                    sj.add("NONE");
+                }
+
+                int[] uniqueFragPositions = breakend.uniqueFragmentPositionCounts();
+
+                if(uniqueFragPositions != null)
+                    sj.add(format("%d:%d", uniqueFragPositions[0], uniqueFragPositions[1]));
+                else
+                    sj.add("-1:-1");
+
+                String assemblyMatchStr = "";
+
+                for(JunctionAssembly assembly : assemblyAlignment.assemblies())
+                {
+                    Junction junction = assembly.junction();
+
+                    if(junction.Chromosome.equals(breakend.Chromosome) && junction.Orient == breakend.Orient
+                    && abs(junction.Position - breakend.Position) < 100)
+                    {
+                        assemblyMatchStr = junction.coordsTyped();
+                    }
+                }
+
+                sj.add(assemblyMatchStr);
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();

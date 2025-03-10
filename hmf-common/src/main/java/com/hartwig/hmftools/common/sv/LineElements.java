@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.sv;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
@@ -33,14 +33,14 @@ public final class LineElements
         if(insSeqLength < LINE_POLY_AT_REQ)
             return false;
 
-        final char polyATChar = orientation == POS_ORIENT ? LINE_CHAR_T : LINE_CHAR_A;
+        final char polyATChar = orientation == ORIENT_FWD ? LINE_CHAR_T : LINE_CHAR_A;
 
         int testLength = min(LINE_POLY_AT_TEST_LEN, insSeqLength);
         int allowedNonRequiredChars = testLength - LINE_POLY_AT_REQ;
 
         for(int i = 0; i < testLength; ++i)
         {
-            if(orientation == POS_ORIENT)
+            if(orientation == ORIENT_FWD)
             {
                 if(insertSequence.charAt(i) != polyATChar)
                     --allowedNonRequiredChars;

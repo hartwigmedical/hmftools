@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
@@ -84,42 +84,42 @@ public class LineTest
 
         insSequence = shortBases + POLY_A_MOTIF + randomBases;
 
-        assertFalse(hasLinePolyAorTMotif(shortBases, POS_ORIENT, true, false));
-        assertFalse(hasLinePolyAorTMotif(randomBases, POS_ORIENT, true, false));
+        assertFalse(hasLinePolyAorTMotif(shortBases, ORIENT_FWD, true, false));
+        assertFalse(hasLinePolyAorTMotif(randomBases, ORIENT_FWD, true, false));
 
-        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_REV, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_REV, false, false));
 
         insSequence = shortBases + POLY_T_MOTIF + randomBases;
 
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
-        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_REV, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_REV, false, false));
 
         insSequence = randomBases + POLY_T_MOTIF + shortBases;
 
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
-        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, false, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, ORIENT_REV, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_REV, false, false));
 
         insSequence = randomBases + POLY_A_MOTIF + shortBases;
 
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, false, false));
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
-        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, true, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, false, false));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_REV, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, ORIENT_REV, false, false));
 
         // test allowing the sequence at either end
-        assertFalse(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, false));
-        assertTrue(hasLinePolyAorTMotif(insSequence, POS_ORIENT, true, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, ORIENT_FWD, true, true));
 
         insSequence = shortBases + POLY_T_MOTIF + randomBases;
-        assertFalse(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, false));
-        assertTrue(hasLinePolyAorTMotif(insSequence, NEG_ORIENT, true, true));
+        assertFalse(hasLinePolyAorTMotif(insSequence, ORIENT_REV, true, false));
+        assertTrue(hasLinePolyAorTMotif(insSequence, ORIENT_REV, true, true));
     }
 
     @Test
@@ -406,14 +406,14 @@ public class LineTest
         String insertPolyTMotif = shortBases + POLY_T_MOTIF + randomBases;
 
         // scenario 1: 2 SGLs with mappings to the same location
-        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0, POS_ORIENT, 0, SGL, insertPolyTMotif);
-        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0, NEG_ORIENT, 0, SGL, "");
+        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0, ORIENT_FWD, 0, SGL, insertPolyTMotif);
+        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0, ORIENT_REV, 0, SGL, "");
 
         // both have additional mappings which are ignored
-        sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, NEG_ORIENT, "", 1));
-        sgl1.getSglMappings().add(new SglMapping("5", 10000, NEG_ORIENT, "", 1));
-        sgl2.getSglMappings().add(new SglMapping(CHR_2, 1100, POS_ORIENT, "", 1));
-        sgl2.getSglMappings().add(new SglMapping("3", 2000, NEG_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, ORIENT_REV, "", 1));
+        sgl1.getSglMappings().add(new SglMapping("5", 10000, ORIENT_REV, "", 1));
+        sgl2.getSglMappings().add(new SglMapping(CHR_2, 1100, ORIENT_FWD, "", 1));
+        sgl2.getSglMappings().add(new SglMapping("3", 2000, ORIENT_REV, "", 1));
 
         tester.AllVariants.addAll(Lists.newArrayList(sgl1, sgl2));
 
@@ -433,8 +433,8 @@ public class LineTest
         bnd.addLineElement(KNOWN, false);
 
         // both have additional mappings which are ignored
-        sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, NEG_ORIENT, "", 1));
-        sgl1.getSglMappings().add(new SglMapping("5", 10000, NEG_ORIENT, "", 1));
+        sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, ORIENT_REV, "", 1));
+        sgl1.getSglMappings().add(new SglMapping("5", 10000, ORIENT_REV, "", 1));
 
         tester.AllVariants.addAll(Lists.newArrayList(sgl1, bnd));
 

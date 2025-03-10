@@ -4,9 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig.JITTER_MSI_SITES_FILE_DESC;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -39,6 +36,7 @@ import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.redux.write.ReadOutput.NONE;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,6 +46,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -58,6 +58,7 @@ import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.unmap.ReadChecker;
@@ -77,8 +78,11 @@ public class ReduxConfig
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
     public final SequencingType Sequencing;
+    public final JitterAnalyserConfig JitterConfig;
 
     public final ValidationStringency BamStringency;
+
+    public final DuplicateGroupCollapseConfig DuplicateGroupCollapse;
 
     // UMI group config
     public final UmiConfig UMIs;
@@ -86,6 +90,7 @@ public class ReduxConfig
     public final boolean JitterMsiOnly;
 
     public final ReadUnmapper UnmapRegions;
+    public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
 
     public final String OutputBam;
     public final String OutputDir;
@@ -107,12 +112,11 @@ public class ReduxConfig
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final double PerfDebugTime;
+    public final boolean FailOnMissingSuppMateCigar;
     public final boolean RunChecks;
     public final boolean DropDuplicates;
+    public final boolean SkipFullyUnmappedReads;
     public final int WriteReadBaseLength;
-
-    public final String JitterMsiFile;
-    public final double JitterMsiMaxSitePercContribution;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -134,8 +138,9 @@ public class ReduxConfig
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
-
-    private static final String JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION = "jitter_max_site_alt_contribution";
+    private static final String SKIP_FULL_UNAMPPED_READS = "skip_fully_unmapped";
+    private static final String SKIP_UNAMPPING = "skip_unmapping";
+    private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -159,7 +164,7 @@ public class ReduxConfig
         }
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        RefGenome = loadRefGenome(RefGenomeFile);
+        RefGenome = new CachedRefGenome(loadRefGenome(RefGenomeFile));
 
         Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
@@ -206,10 +211,21 @@ public class ReduxConfig
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
+        SkipFullyUnmappedReads = configBuilder.hasFlag(SKIP_FULL_UNAMPPED_READS);
+        FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
+
+        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
 
         UMIs = UmiConfig.from(configBuilder);
 
+
+        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
+        JitterConfig = JitterAnalyserConfig.create(
+                SampleId, RefGenomeFile, RefGenVersion, Sequencing, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
+
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
+
+        SkipUnmapping = configBuilder.hasFlag(SKIP_UNAMPPING);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
@@ -218,12 +234,20 @@ public class ReduxConfig
         }
         else
         {
-            Map<String, List<UnmappingRegion>> unmappedMap = Maps.newHashMap();
+            Map<String,List<UnmappingRegion>> unmapRegionsMap;
 
-            ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
-            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
+            if(JitterMsiOnly || SkipUnmapping)
+            {
+                unmapRegionsMap = Collections.emptyMap();
+            }
+            else
+            {
+                unmapRegionsMap = Maps.newHashMap();
+                ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
+                unmapRegionsMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
+            }
 
-            UnmapRegions = new ReadUnmapper(unmappedMap);
+            UnmapRegions = new ReadUnmapper(unmapRegionsMap);
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
@@ -242,10 +266,6 @@ public class ReduxConfig
         PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
-
-        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
-        JitterMsiFile = configBuilder.getValue(JITTER_MSI_SITES_FILE);
-        JitterMsiMaxSitePercContribution = configBuilder.getDecimal(JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically
@@ -319,15 +339,14 @@ public class ReduxConfig
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
-        configBuilder.addPath(JITTER_MSI_SITES_FILE, false, JITTER_MSI_SITES_FILE_DESC);
-
-        configBuilder.addDecimal(
-                JITTER_MSI_MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Jitter MIS max single alt site perc contribute",
-                DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
+        JitterAnalyserConfig.addConfig(configBuilder);
+        DuplicateGroupCollapseConfig.addConfig(configBuilder);
 
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
+        configBuilder.addFlag(SKIP_FULL_UNAMPPED_READS, "Skip processing existing fully unmapped reads");
+        configBuilder.addFlag(SKIP_UNAMPPING, "Skip unmapping routine, including excluded regions");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -336,14 +355,15 @@ public class ReduxConfig
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
+        configBuilder.addFlag(FAIL_SUPP_NO_MATE_CIGAR, "Fail if supplementary is missing mate CIGAR ");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
     }
 
     @VisibleForTesting
-    public ReduxConfig(
-            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus, final ReadUnmapper readUnmapper)
+    public ReduxConfig(final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
+            final ReadUnmapper readUnmapper, final SequencingType sequencingType, int sbxMaxDuplicateDistance)
     {
         mIsValid = true;
         SampleId = "";
@@ -353,8 +373,8 @@ public class ReduxConfig
         OutputDir = null;
         OutputId = "";
         RefGenVersion = V37;
-        RefGenome = refGenome;
-        Sequencing = ILLUMINA;
+        RefGenome = new CachedRefGenome(refGenome);
+        Sequencing = sequencingType;
 
         BamStringency = ValidationStringency.STRICT;
         mReadLength = DEFAULT_READ_LENGTH;
@@ -370,14 +390,18 @@ public class ReduxConfig
 
         UnmapRegions = readUnmapper;
 
-        JitterMsiFile = null;
-        JitterMsiMaxSitePercContribution = DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
         JitterMsiOnly = false;
+        JitterConfig = null;
+
+        DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, sbxMaxDuplicateDistance);
 
         WriteBam = false;
         MultiBam = false;
         KeepInterimBams = false;
+        SkipFullyUnmappedReads = false;
+        SkipUnmapping = false;
         LogReadType = NONE;
+        FailOnMissingSuppMateCigar = false;
 
         LogReadIds = Lists.newArrayList();
         Threads = 0;
@@ -389,5 +413,20 @@ public class ReduxConfig
         WriteReadBaseLength = 0;
 
         mReadChecker = new ReadChecker(false);
+    }
+
+    @VisibleForTesting
+    public ReduxConfig(final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
+            final ReadUnmapper readUnmapper, final SequencingType sequencingType)
+    {
+        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, sequencingType, 0);
+    }
+
+    @VisibleForTesting
+    public ReduxConfig(
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
+            final ReadUnmapper readUnmapper)
+    {
+        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, ILLUMINA);
     }
 }

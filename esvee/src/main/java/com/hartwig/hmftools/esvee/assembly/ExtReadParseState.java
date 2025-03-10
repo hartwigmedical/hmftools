@@ -5,15 +5,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
-import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineExtensionEndIndex;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-
-import java.util.List;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 public class ExtReadParseState
 {
@@ -94,6 +91,30 @@ public class ExtReadParseState
         mExhausted = mCurrentIndex < 0 || mCurrentIndex >= mRead.basesLength();
     }
 
+    public void movePastLowQualBases()
+    {
+        moveNext();
+
+        while(!exhausted() && belowMinQual(currentQual()))
+        {
+            moveNext();
+        }
+    }
+
+    public byte nextHighQualBase()
+    {
+        int index = mCurrentIndex;
+        while(!exhausted() && belowMinQual(mRead.getBaseQuality()[index]))
+        {
+            ++index;
+        }
+
+        if(exhausted())
+            return -1;
+        else
+            return mRead.getBases()[index];
+    }
+
     public void resetIndex()
     {
         mCurrentIndex = mJunctionIndex;
@@ -164,6 +185,70 @@ public class ExtReadParseState
 
         // move 1 more base
         moveNext();
+    }
+
+    public int countRefRepeat(final byte[] repeatBytes)
+    {
+        int juncIndex = mJunctionIndex;
+        int repeatLength = repeatBytes.length;
+        int repeatCount = 0;
+
+        if(mIsForwardJunction)
+        {
+            while(true)
+            {
+                boolean matched = true;
+                int index = juncIndex - repeatLength + 1;
+                for(int i = 0; i < repeatLength; ++i)
+                {
+                    if(index + i < 0)
+                    {
+                        matched = false;
+                        break;
+                    }
+                    else if(mRead.getBases()[index + i] != repeatBytes[i])
+                    {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    break;
+
+                ++repeatCount;
+                juncIndex -= repeatLength;
+            }
+        }
+        else
+        {
+            while(true)
+            {
+                boolean matched = true;
+                int index = juncIndex;
+                for(int i = 0; i < repeatLength; ++i)
+                {
+                    if(index + i >= mRead.getBases().length)
+                    {
+                        matched = false;
+                        break;
+                    }
+                    else if(mRead.getBases()[index + i] != repeatBytes[i])
+                    {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    break;
+
+                ++repeatCount;
+                juncIndex += repeatLength;
+            }
+        }
+
+        return repeatCount;
     }
 
     public String toString()

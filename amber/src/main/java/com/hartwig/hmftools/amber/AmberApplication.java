@@ -167,7 +167,8 @@ public class AmberApplication implements AutoCloseable
 
         Collections.sort(amberBAFList);
 
-        mPersistence.persistQC(Collections.emptyList(), germline.getConsanguinityProportion(), germline.getUniparentalDisomy());
+        mPersistence.persistQC(germline.getConsanguinityProportion(), 0, germline.getUniparentalDisomy());
+
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistSnpCheck(germline.getSnpCheckedLoci());
         mPersistence.persistBAF(amberBAFList);
@@ -176,22 +177,26 @@ public class AmberApplication implements AutoCloseable
 
     private void runNormalMode() throws InterruptedException, IOException
     {
-        final SamReaderFactory readerFactory = readerFactory(mConfig);
+        SamReaderFactory readerFactory = readerFactory(mConfig);
 
         GermlineAnalysis germline = new GermlineAnalysis(mConfig, readerFactory, mChromosomeSites);
 
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory,
                 germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
-        final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
+        List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .sorted().collect(toList());
 
-        final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(x -> fromTumorBaf(x)).filter(AmberUtils::isValid).collect(toList());
+        List<AmberBAF> amberBAFList = tumorBAFList.stream().map(x -> fromTumorBaf(x)).filter(AmberUtils::isValid).collect(toList());
 
-        final List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
+        List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
 
-        mPersistence.persistQC(contaminationList, germline.getConsanguinityProportion(), germline.getUniparentalDisomy());
+        long sampleHetCount = amberBAFList.size();
+
+        double contamination = new TumorContaminationModel().calcContamination(contaminationList, sampleHetCount);
+
+        mPersistence.persistQC(germline.getConsanguinityProportion(), contamination, germline.getUniparentalDisomy());
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistContamination(contaminationList);
         mPersistence.persistSnpCheck(germline.getSnpCheckedLoci());
@@ -201,14 +206,14 @@ public class AmberApplication implements AutoCloseable
 
     private void runTumorOnly() throws InterruptedException, IOException
     {
-        final SamReaderFactory readerFactory = readerFactory(mConfig);
+        SamReaderFactory readerFactory = readerFactory(mConfig);
 
-        final ListMultimap<Chromosome, PositionEvidence> allNormal = hetLociTumorOnly();
+        ListMultimap<Chromosome, PositionEvidence> allNormal = hetLociTumorOnly();
 
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        final List<TumorBAF> tumorBAFList = tumor.getBafs().values()
+        List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
@@ -218,10 +223,10 @@ public class AmberApplication implements AutoCloseable
                 .sorted()
                 .collect(toList());
 
-        final List<AmberBAF> amberBAFList = tumorBAFList.stream()
+        List<AmberBAF> amberBAFList = tumorBAFList.stream()
                 .map(x -> fromTumorBaf(x)).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
-        mPersistence.persistQC(Collections.emptyList(), 0.0, null);
+        mPersistence.persistQC(0, 0.0, null);
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistBAF(amberBAFList);
     }
@@ -233,7 +238,7 @@ public class AmberApplication implements AutoCloseable
     private ListMultimap<Chromosome,PositionEvidence> hetLociTumorOnly() throws IOException
     {
         List<GenomeRegion> excludedRegions = loadTumorOnlyExcludedSnp();
-        final ListMultimap<Chromosome, PositionEvidence> result = ArrayListMultimap.create();
+        ListMultimap<Chromosome, PositionEvidence> result = ArrayListMultimap.create();
         int numBlackListed = 0;
 
         // filter out everything in loaded genome positions that are in these regions
@@ -265,7 +270,7 @@ public class AmberApplication implements AutoCloseable
 
     private static SamReaderFactory readerFactory(final AmberConfig config)
     {
-        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.BamStringency);
+        SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.BamStringency);
         if(config.RefGenomeFile != null)
         {
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomeFile)));

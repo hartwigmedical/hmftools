@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -37,7 +38,7 @@ public class LinxApplication
             return;
         }
 
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         List<String> samplesList = config.getSampleIds();
 
@@ -183,10 +184,7 @@ public class LinxApplication
         }
         else
         {
-            double runTime = (System.currentTimeMillis() - startTime) / 1000.0;
-
-            LNX_LOGGER.info("SV analysis complete for {} samples, run time({})s",
-                    samplesList.size(), String.format("%.3f", runTime));
+            LNX_LOGGER.info("Linx complete for {} samples, mins({})", samplesList.size(), runTimeMinsStr(startTimeMs));
         }
     }
 

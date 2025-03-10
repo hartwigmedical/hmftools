@@ -18,13 +18,10 @@ import java.util.Set;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
-import org.jetbrains.annotations.NotNull;
-
 public class HaplotypeEventLoader
 {
-    @NotNull
-    public static Map<String, Integer> loadRelevantVariantHaplotypeEvents(@NotNull String vcf, @NotNull String sampleName,
-            @NotNull Map<Chromosome, Set<Integer>> relevantVariantPositions)
+    public static Map<String, Integer> loadRelevantVariantHaplotypeEvents(
+            final String vcf, final String sampleName, final Map<Chromosome, Set<Integer>> relevantVariantPositions)
     {
         try(AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcf, new VCFCodec(), false))
         {
@@ -41,8 +38,9 @@ public class HaplotypeEventLoader
         }
     }
 
-    private static void handleVariantContext(@NotNull VariantContext variantContext, @NotNull String sampleName,
-            @NotNull Map<Chromosome, Set<Integer>> relevantVariantPositions, @NotNull Map<String, Integer> eventIdToCount)
+    private static void handleVariantContext(
+            final VariantContext variantContext, final String sampleName,
+            final Map<Chromosome, Set<Integer>> relevantVariantPositions, final Map<String, Integer> eventIdToCount)
     {
         Set<Integer> relevantPositionsInChromosome =
                 relevantVariantPositions.getOrDefault(HumanChromosome.fromString(variantContext.getContig()), Collections.emptySet());
@@ -63,7 +61,7 @@ public class HaplotypeEventLoader
         }
     }
 
-    private static Integer getEventCount(@NotNull GenotypeType genotypeType, @NotNull String eventId)
+    private static Integer getEventCount(final GenotypeType genotypeType, final String eventId)
     {
         switch(genotypeType)
         {

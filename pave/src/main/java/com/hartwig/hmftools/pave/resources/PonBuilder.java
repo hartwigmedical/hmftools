@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
-import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 

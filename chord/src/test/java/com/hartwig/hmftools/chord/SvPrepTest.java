@@ -3,14 +3,18 @@ package com.hartwig.hmftools.chord;
 import static com.hartwig.hmftools.chord.ChordTestUtils.EMPTY_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE_SNV_INDEL_VCF;
+import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE_SV_VCF;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
 
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 
+import com.hartwig.hmftools.chord.indel.IndelPrep;
 import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.sv.SvPrep;
 
@@ -79,7 +83,7 @@ public class SvPrepTest
     public void canPrepStructuralVariantsFromEmptyVcf()
     {
         ChordConfig config = new ChordConfig.Builder()
-                .sampleIds(List.of(EMPTY_SAMPLE))
+                .sampleIds(EMPTY_SAMPLE)
                 .purpleDir(INPUT_VCF_DIR)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
@@ -95,5 +99,16 @@ public class SvPrepTest
         }
 
         assertEquals(0, contextCountTotal);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void providingWrongVcfTypeThrowsError() throws NoSuchFileException
+    {
+        ChordConfig config = new ChordConfig.Builder()
+                .sampleIds(MINIMAL_SAMPLE)
+                .svVcfFile(MINIMAL_SAMPLE_SNV_INDEL_VCF)
+                .build();
+
+        new SvPrep(config).loadVariants(MINIMAL_SAMPLE);
     }
 }

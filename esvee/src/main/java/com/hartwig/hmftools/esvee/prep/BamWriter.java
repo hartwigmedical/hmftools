@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.writeSortedBam;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_BAM;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.UNSORTED_BAM;
 
 import java.io.File;
@@ -43,7 +43,7 @@ public class BamWriter
 
     private void initialiseWriters()
     {
-        if(!mConfig.WriteTypes.contains(BAM))
+        if(!mConfig.WriteTypes.contains(PREP_BAM))
             return;
 
         for(int i = 0; i < mConfig.SampleIds.size(); ++i)
@@ -93,7 +93,7 @@ public class BamWriter
             mWriters.get(sampleId).close();
 
             String unsortedBam = mUnsortedBamFiles.get(i);
-            String sortedBam = mConfig.formFilename(BAM, sampleId);
+            String sortedBam = mConfig.formFilename(PREP_BAM, sampleId);
 
             writeSortedBam(unsortedBam, sortedBam, mConfig.BamToolPath, mConfig.Threads);
         }

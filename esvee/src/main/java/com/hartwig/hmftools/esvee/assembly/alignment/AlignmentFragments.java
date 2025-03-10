@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isLocalIndelAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isIndel;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
@@ -246,16 +247,20 @@ public class AlignmentFragments
         firstRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
         secondRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
+        int[] fragCoords = firstRead.fragmentCoords();
+
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength, true);
+            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!breakend.isSingle())
             {
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(fragmentLength, true);
+                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
             }
         }
     }
@@ -293,11 +298,11 @@ public class AlignmentFragments
         int inferredFragmentLength = -1;
 
         // since these reads are missing a mate, manually calculate their fragment length factoring in the simple SV type if they are local
-
         boolean isShortIndel = breakends.stream().allMatch(x -> x.isShortLocalDelDupIns());
         boolean setValidFragmentLength = false;
-        int indelLength = 0;
         StructuralVariantType svType = null;
+
+        int indelLength = 0;
 
         if(isLocalIndel())
         {
@@ -310,21 +315,20 @@ public class AlignmentFragments
             svType = breakends.iterator().next().svType();
         }
 
-        if(svType != null && isIndel(svType) && indelLength != 0)
+        if(svType != null && isIndel(svType) && indelLength != 0 && read.insertSize() > 0)
         {
-            if(svType == DEL)
-                indelLength = -abs(indelLength);
+            inferredFragmentLength = calcIndelSoloReadFragmentLength(read, svType, indelLength);
+            setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 
-            if(read.insertSize() > 0)
-            {
-                inferredFragmentLength = abs(read.insertSize()) + indelLength;
-
-                setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
-
-                if(setValidFragmentLength)
-                    read.setInferredFragmentLength(inferredFragmentLength);
-            }
         }
+        else if(!read.isPairedRead())
+        {
+            inferredFragmentLength = abs(read.insertSize());
+            setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
+        }
+
+        if(setValidFragmentLength)
+            read.setInferredFragmentLength(inferredFragmentLength);
 
         boolean isSplitSupport = readBreakendMatches.stream().anyMatch(x -> x.IsSplit);
 
@@ -333,17 +337,69 @@ public class AlignmentFragments
 
         read.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
+        int[] fragCoords = read.fragmentCoords();
+
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
+            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!breakend.isSingle())
             {
                 breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
+                breakend.otherBreakend().addFragmentPositions(fragCoords[0], fragCoords[1]);
             }
         }
+    }
+
+    private int calcIndelSoloReadFragmentLength(final SupportRead read, final StructuralVariantType svType, int indelLength)
+    {
+        int fragmentLength = abs(read.insertSize());
+
+        if(isLocalIndelAssembly(mAssemblyAlignment))
+        {
+            if(read.isPairedRead() && svType == DEL)
+            {
+                JunctionAssembly refAssembly = mAssemblyAlignment.assemblies().stream().filter(x -> x.supportCount() == 0).findFirst().orElse(null);
+
+                if(refAssembly == null)
+                    return 0;
+
+                if((refAssembly.isForwardJunction() && read.orientation().isReverse())
+                || (refAssembly.isReverseJunction() && read.orientation().isForward()))
+                {
+                    // the delete falls within the two reads, so subtract its length as usual
+                    fragmentLength -= indelLength;
+                    return fragmentLength;
+                }
+            }
+
+            // soft-clip bases which were realigned locally extend the fragment length beyond the other junction if the mate is not across
+            // from the junction
+            JunctionAssembly juncAssembly = mAssemblyAlignment.assemblies().stream().filter(x -> x.supportCount() > 0).findFirst().orElse(null);
+
+            if(juncAssembly.isForwardJunction())
+                fragmentLength += read.rightClipLength();
+            else
+                fragmentLength += read.leftClipLength();
+        }
+        else if(read.isPairedRead())
+        {
+            if(svType == DEL)
+            {
+                // remove the deleted length from the aligned fragment length
+                fragmentLength -= indelLength;
+            }
+            else
+            {
+                // add any inserted bases
+                fragmentLength += indelLength;
+            }
+        }
+
+        return fragmentLength;
     }
 
     private boolean isLocalIndel()

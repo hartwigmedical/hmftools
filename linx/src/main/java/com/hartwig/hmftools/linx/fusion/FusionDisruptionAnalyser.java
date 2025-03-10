@@ -970,7 +970,7 @@ public class FusionDisruptionAnalyser
 
     private void addVisualisationData(final List<GeneFusion> fusionList)
     {
-        if(mVisSampleData == null || !mConfig.Output.WriteVisualisationData)
+        if(mVisSampleData == null || !mConfig.Output.writeVisualisationData())
             return;
 
         final List<VisFusion> visFusions = Lists.newArrayList();

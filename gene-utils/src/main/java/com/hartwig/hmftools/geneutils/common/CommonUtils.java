@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.geneutils.common;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -72,7 +73,7 @@ public final class CommonUtils
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            final CSVFormat format = new CSVFormat().header(true).delimiter('\t').nullString("").quoteString("");
+            final CSVFormat format = new CSVFormat().header(true).delimiter(TSV_DELIM).nullString("").quoteString("");
             writer.write(records.formatCSV(format));
             writer.close();
         }

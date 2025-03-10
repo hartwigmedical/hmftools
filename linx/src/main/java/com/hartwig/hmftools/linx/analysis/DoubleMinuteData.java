@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -422,7 +422,7 @@ public class DoubleMinuteData
                 if(!SVs.contains(breakend.getSV()))
                     continue;
 
-                if(breakend.orientation() == NEG_ORIENT)
+                if(breakend.orientation() == ORIENT_REV)
                 {
                     if(currentRegion != null)
                         continue;
@@ -557,7 +557,7 @@ public class DoubleMinuteData
 
     protected static double getMajorAlleleJcnRatio(final SvBreakend breakend)
     {
-        return breakend.jcn() / max(breakend.majorAlleleJcn(breakend.orientation() == NEG_ORIENT), 0.01);
+        return breakend.jcn() / max(breakend.majorAlleleJcn(breakend.orientation() == ORIENT_REV), 0.01);
     }
 
     private boolean setValidChains()

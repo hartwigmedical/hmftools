@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -24,7 +23,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
-import com.hartwig.hmftools.esvee.common.TaskQueue;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 
 public class PhaseGroupBuilder
 {

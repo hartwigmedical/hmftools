@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.svtools.pon;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.svtools.pon.LocationCounter.isValid;
 
 import static junit.framework.TestCase.assertEquals;
@@ -46,43 +46,43 @@ public class PonLocationsTest
         String chr1 = "1";
         String chr2 = "2";
 
-        ponStore.addLocation(chr1, chr1, POS_ORIENT, NEG_ORIENT, 100, 200); // DEL
-        ponStore.addLocation(chr1, chr1, POS_ORIENT, NEG_ORIENT, 100, 200); // DEL
-        ponStore.addLocation(chr1, chr1, POS_ORIENT, NEG_ORIENT, 100, 300); // another DEL
+        ponStore.addLocation(chr1, chr1, ORIENT_FWD, ORIENT_REV, 100, 200); // DEL
+        ponStore.addLocation(chr1, chr1, ORIENT_FWD, ORIENT_REV, 100, 200); // DEL
+        ponStore.addLocation(chr1, chr1, ORIENT_FWD, ORIENT_REV, 100, 300); // another DEL
 
-        ponStore.addLocation(chr1, chr2, POS_ORIENT, POS_ORIENT, 100, 200); // BND
+        ponStore.addLocation(chr1, chr2, ORIENT_FWD, ORIENT_FWD, 100, 200); // BND
 
-        ponStore.addLocation(chr2, chr2, POS_ORIENT, POS_ORIENT, 100, 200); // INV
+        ponStore.addLocation(chr2, chr2, ORIENT_FWD, ORIENT_FWD, 100, 200); // INV
 
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 100, 200); // another INV
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 100, 200);
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 100, 400); // another INV
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 100, 400);
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 100, 400);
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 50, 200); // another INV
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 50, 200);
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 50, 200);
-        ponStore.addLocation(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 50, 200);
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 100, 200); // another INV
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 100, 200);
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 100, 400); // another INV
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 100, 400);
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 100, 400);
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 50, 200); // another INV
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 50, 200);
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 50, 200);
+        ponStore.addLocation(chr2, chr2, ORIENT_REV, ORIENT_REV, 50, 200);
 
         assertEquals(4, ponStore.svLocationCount());
 
-        LocationCounter locCounter = ponStore.getLocationCounter(chr1, chr1, POS_ORIENT, NEG_ORIENT, 100, 200);
+        LocationCounter locCounter = ponStore.getLocationCounter(chr1, chr1, ORIENT_FWD, ORIENT_REV, 100, 200);
         assertTrue(locCounter != null);
         assertEquals(2, locCounter.getCount());
 
-        locCounter = ponStore.getLocationCounter(chr1, chr1, POS_ORIENT, NEG_ORIENT, 100, 300);
+        locCounter = ponStore.getLocationCounter(chr1, chr1, ORIENT_FWD, ORIENT_REV, 100, 300);
         assertTrue(locCounter != null);
         assertEquals(1, locCounter.getCount());
 
-        locCounter = ponStore.getLocationCounter(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 100, 200);
+        locCounter = ponStore.getLocationCounter(chr2, chr2, ORIENT_REV, ORIENT_REV, 100, 200);
         assertTrue(locCounter != null);
         assertEquals(2, locCounter.getCount());
 
-        locCounter = ponStore.getLocationCounter(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 100, 400);
+        locCounter = ponStore.getLocationCounter(chr2, chr2, ORIENT_REV, ORIENT_REV, 100, 400);
         assertTrue(locCounter != null);
         assertEquals(3, locCounter.getCount());
 
-        locCounter = ponStore.getLocationCounter(chr2, chr2, NEG_ORIENT, NEG_ORIENT, 50, 200);
+        locCounter = ponStore.getLocationCounter(chr2, chr2, ORIENT_REV, ORIENT_REV, 50, 200);
         assertTrue(locCounter != null);
         assertEquals(4, locCounter.getCount());
     }
@@ -95,39 +95,39 @@ public class PonLocationsTest
         String chr1 = "1";
         String chr2 = "2";
 
-        ponStore.addLocation(chr1, POS_ORIENT, 100);
-        ponStore.addLocation(chr1, POS_ORIENT, 100);
+        ponStore.addLocation(chr1, ORIENT_FWD, 100);
+        ponStore.addLocation(chr1, ORIENT_FWD, 100);
 
-        ponStore.addLocation(chr1, NEG_ORIENT, 100);
-        ponStore.addLocation(chr1, NEG_ORIENT, 100);
-        ponStore.addLocation(chr1, NEG_ORIENT, 100);
+        ponStore.addLocation(chr1, ORIENT_REV, 100);
+        ponStore.addLocation(chr1, ORIENT_REV, 100);
+        ponStore.addLocation(chr1, ORIENT_REV, 100);
 
-        ponStore.addLocation(chr1, POS_ORIENT, 200);
-        ponStore.addLocation(chr1, POS_ORIENT, 200);
-        ponStore.addLocation(chr1, POS_ORIENT, 200);
-        ponStore.addLocation(chr1, POS_ORIENT, 200);
+        ponStore.addLocation(chr1, ORIENT_FWD, 200);
+        ponStore.addLocation(chr1, ORIENT_FWD, 200);
+        ponStore.addLocation(chr1, ORIENT_FWD, 200);
+        ponStore.addLocation(chr1, ORIENT_FWD, 200);
 
-        ponStore.addLocation(chr2, POS_ORIENT, 100);
-        ponStore.addLocation(chr2, POS_ORIENT, 100);
-        ponStore.addLocation(chr2, POS_ORIENT, 100);
-        ponStore.addLocation(chr2, POS_ORIENT, 100);
-        ponStore.addLocation(chr2, POS_ORIENT, 100);
+        ponStore.addLocation(chr2, ORIENT_FWD, 100);
+        ponStore.addLocation(chr2, ORIENT_FWD, 100);
+        ponStore.addLocation(chr2, ORIENT_FWD, 100);
+        ponStore.addLocation(chr2, ORIENT_FWD, 100);
+        ponStore.addLocation(chr2, ORIENT_FWD, 100);
 
         assertEquals(3, ponStore.sglLocationCount());
 
-        LocationCounter locCounter = ponStore.getLocationCounter(chr1, POS_ORIENT, 100);
+        LocationCounter locCounter = ponStore.getLocationCounter(chr1, ORIENT_FWD, 100);
         assertTrue(locCounter != null);
         assertEquals(2, locCounter.getCount());
 
-        locCounter = ponStore.getLocationCounter(chr1, NEG_ORIENT, 100);
+        locCounter = ponStore.getLocationCounter(chr1, ORIENT_REV, 100);
         assertTrue(locCounter != null);
         assertEquals(3, locCounter.getCount());
 
-        locCounter = ponStore.getLocationCounter(chr1, POS_ORIENT, 200);
+        locCounter = ponStore.getLocationCounter(chr1, ORIENT_FWD, 200);
         assertTrue(locCounter != null);
         assertEquals(4, locCounter.getCount());
 
-        locCounter = ponStore.getLocationCounter(chr2, POS_ORIENT, 100);
+        locCounter = ponStore.getLocationCounter(chr2, ORIENT_FWD, 100);
         assertTrue(locCounter != null);
         assertEquals(5, locCounter.getCount());
     }

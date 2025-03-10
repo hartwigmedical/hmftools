@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -68,7 +67,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         {
             String coordinate = format("%s:%d_%d", ChromsomeLower, PositionLower, PositionUpper);
 
-            if(orientLower.isReverse())
+            if(ReadIsLower ? OrientLower.isReverse() : OrientUpper.isReverse())
                 coordinate = format("%s_R", coordinate);
 
             Key = suppReadInfo != null ? format("%s_S", coordinate) : coordinate;
@@ -136,7 +135,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         return isForward ? format("%s:%d", chromosome, position) : format("%s:%d:R", chromosome, position);
     }
 
-    public static FragmentCoords fromRead(final SAMRecord read, boolean useFragmentOrientation, final SequencingType sequencingType)
+    public static FragmentCoords fromRead(final SAMRecord read, boolean useFragmentOrientation)
     {
         Orientation readOrient;
         String readChromosome;
@@ -157,6 +156,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             mateOrient = read.getMateNegativeStrandFlag() ? REVERSE : FORWARD;
 
             String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+
+            // if mate CIGAR isn't present, continue assuming a fully-aligned mate read - only supplementaries conditionally use this logic
+            if(mateCigar == null)
+                mateCigar = format("%dM", read.getReadBases().length);
+
             matePosition = getFivePrimeUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateOrient.isForward());
         }
 
@@ -181,20 +185,22 @@ public class FragmentCoords implements Comparable<FragmentCoords>
                 readChromosome = suppData.Chromosome;
                 readOrient = Orientation.fromChar(suppData.Strand);
                 readPosition = getFivePrimeUnclippedPosition(suppData.Position, suppData.Cigar, readOrient.isForward());
-            }
 
-            if(!isPaired)
-            {
-                // depends on sequencing type
-                if(sequencingType == SequencingType.ILLUMINA || sequencingType == SequencingType.SBX)
+                if(!isPaired)
                 {
                     mateChromosome = readChromosome;
                     mateOrient = readOrient.opposite();
-
-                    matePosition = read.getCigar() != null ?
-                            getThreePrimeUnclippedPosition(read) :
-                            getThreePrimeUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readOrient.isForward());
+                    matePosition = getThreePrimeUnclippedPosition(suppData.Position, suppData.Cigar, readOrient.isForward());
                 }
+            }
+            else if(!isPaired)
+            {
+                mateChromosome = readChromosome;
+                mateOrient = readOrient.opposite();
+
+                matePosition = read.getCigar() != null ?
+                        getThreePrimeUnclippedPosition(read) :
+                        getThreePrimeUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readOrient.isForward());
             }
         }
         else

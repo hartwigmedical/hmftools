@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 public class JunctionSequence
 {
     public final boolean Reversed;
+    public final Orientation JuncOrient;
     public final String FullSequence;
 
     public final int ExtensionLength;
@@ -35,10 +36,10 @@ public class JunctionSequence
 
     private enum MatchSequenceMode
     {
-        STRADDLE,
-        FULL_EXTENSION,
-        OUTER_EXTENSION,
-        INNER_EXTENSION;
+        STRADDLE, // form a sub-sequence taking (ideally) an equal number of ref and extension bases spanning the junction
+        FULL_EXTENSION, // uses all extension bases
+        OUTER_EXTENSION, // where the extension bases are long, take the outer-most 100 (or configured) bases
+        INNER_EXTENSION; // where the extension bases are long, take the bases starting from the junction
     }
 
     public static final int PHASED_ASSEMBLY_MATCH_SEQ_LENGTH = 100;
@@ -48,6 +49,13 @@ public class JunctionSequence
         return new JunctionSequence(
                 assembly, reverseCompliment, 0, PHASED_ASSEMBLY_MATCH_SEQ_LENGTH,
                 MatchSequenceMode.OUTER_EXTENSION);
+    }
+
+    public static JunctionSequence formStraddlingMatchSequence(final JunctionAssembly assembly)
+    {
+        return new JunctionSequence(
+                assembly, false, PHASED_ASSEMBLY_MATCH_SEQ_LENGTH / 2,
+                -1, MatchSequenceMode.STRADDLE);
     }
 
     public static JunctionSequence formStraddlingMatchSequence(
@@ -83,6 +91,7 @@ public class JunctionSequence
         mBaseQuals = null;
         mRepeatInfo = null;
 
+        JuncOrient = assembly.junction().Orient;
         Reversed = reverseCompliment;
         RefBaseLength = assembly.refBaseLength();
         ExtensionLength = assembly.extensionLength();
@@ -201,6 +210,7 @@ public class JunctionSequence
         mBaseQuals = null;
         mRepeatInfo = null;
 
+        JuncOrient = orientation;
         Reversed = reverseCompliment;
         RefBaseLength = 0;
         ExtensionLength = bases.length;

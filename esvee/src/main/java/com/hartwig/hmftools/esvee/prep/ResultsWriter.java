@@ -18,12 +18,10 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantGroup.firstPrimaryRead;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.JUNCTIONS;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_JUNCTION;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_READ;
 
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
-import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
@@ -42,6 +40,7 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
+import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
 public class ResultsWriter
 {
@@ -84,19 +83,22 @@ public class ResultsWriter
             if(filterReadGroup(readGroup))
                 continue;
 
-            writeBamRecords(readGroup);
-
-            String junctionPosStr = readGroup.junctionPositionsStr();
-
-            for(PrepRead read : readGroup.reads())
+            if(mReadWriter != null)
             {
-                if(read.written())
-                    continue;
+                String junctionPosStr = readGroup.junctionPositionsStr();
 
-                writeReadData(
-                        read, readGroup.size(), readGroup.expectedReadCount(), readGroup.groupStatus(), readGroup.spansPartitions(),
-                        junctionPosStr);
+                for(PrepRead read : readGroup.reads())
+                {
+                    if(read.written())
+                        continue;
+
+                    writeReadData(
+                            read, readGroup.size(), readGroup.expectedReadCount(), readGroup.groupStatus(), readGroup.spansPartitions(),
+                            junctionPosStr);
+                }
             }
+
+            writeBamRecords(readGroup);
 
             readGroup.reads().forEach(x -> x.setWritten());
         }
@@ -112,22 +114,33 @@ public class ResultsWriter
 
     private BufferedWriter initialiseJunctionWriter()
     {
-        if(!mConfig.WriteTypes.contains(JUNCTIONS))
+        if(!mConfig.WriteTypes.contains(PREP_JUNCTION))
             return null;
 
         try
         {
-            String filename = mConfig.formFilename(JUNCTIONS);
+            String filename = mConfig.formFilename(PREP_JUNCTION);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
-            sj.add(FLD_JUNCTION_FRAGS).add(FLD_EXACT_SUPPORT_FRAGS).add(FLD_OTHER_SUPPORT_FRAGS).add("LowMapQualFrags");
-            sj.add("MaxQual").add(FLD_EXTRA_INFO);
-            sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("InitialReadId");
+            sj.add(FLD_CHROMOSOME);
+            sj.add(FLD_POSITION);
+            sj.add(FLD_ORIENTATION);
+            sj.add(FLD_JUNCTION_FRAGS);
+            sj.add(FLD_EXACT_SUPPORT_FRAGS);
+            sj.add(FLD_OTHER_SUPPORT_FRAGS);
+            sj.add("LowMapQualFrags");
+            sj.add("MaxQual");
+            sj.add(FLD_EXTRA_INFO);
+            sj.add(FLD_INDEL_JUNCTION);
+            sj.add(FLD_HOTSPOT_JUNCTION);
+            sj.add("InitialReadId");
 
             if(mConfig.TrackRemotes)
-                sj.add("RemoteJunctionCount").add("RemoteJunctions");
+            {
+                sj.add("RemoteJunctionCount");
+                sj.add("RemoteJunctions");
+            }
 
             writer.write(sj.toString());
             writer.newLine();
@@ -156,14 +169,14 @@ public class ResultsWriter
                 int extraInfoValues = 0;
 
                 int junctionFrags = junctionData.junctionFragmentCount();
-                int exactSupportFrags = junctionData.ExactSupportGroups.size();
-                int otherSupportFrags = junctionData.SupportingGroups.size();
+                int exactSupportFrags = junctionData.exactSupportFragmentCount();
+                int otherSupportFrags = junctionData.supportingFragmentCount();
 
                 if(!junctionData.discordantGroup())
                 {
                     boolean expectLeftClipped = junctionData.Orient.isReverse();
 
-                    for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+                    for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
                     {
                         // check the read supports this junction (it can also support another junction)
                         boolean supportsJunction =
@@ -189,7 +202,7 @@ public class ResultsWriter
                         }
                     }
 
-                    for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
+                    for(PrepRead read : junctionData.readTypeReads().get(ReadType.EXACT_SUPPORT))
                     {
                         maxMapQual = max(maxMapQual, read.mapQuality());
 
@@ -200,24 +213,7 @@ public class ResultsWriter
                 else
                 {
                     // replace soft-clip length with max remote location reads
-                    extraInfoValues = !junctionData.RemoteJunctions.isEmpty() ? junctionData.RemoteJunctions.get(0).Fragments : 0;
-
-                    /* was read span distance before
-                    int minReadPosition = -1;
-                    int maxReadPosition = 0;
-
-                    for(ReadGroup readGroup : junctionData.SupportingGroups)
-                    {
-                        PrepRead read = firstPrimaryRead(readGroup);
-
-                        maxMapQual = max(maxMapQual, read.mapQuality());
-
-                        minReadPosition = minReadPosition < 0 ? read.start() : min(read.start(), minReadPosition);
-                        maxReadPosition = max(read.end(), maxReadPosition);
-                    }
-
-                    extraInfoValues = maxReadPosition - minReadPosition + 1;
-                    */
+                    extraInfoValues = !junctionData.remoteJunctions().isEmpty() ? junctionData.remoteJunctions().get(0).Fragments : 0;
                 }
 
                 mJunctionWriter.write(String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
@@ -233,22 +229,24 @@ public class ResultsWriter
                     // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
                     String remoteJunctionsStr = "";
 
-                    if(!junctionData.RemoteJunctions.isEmpty())
+                    List<RemoteJunction> remoteJunctions = junctionData.remoteJunctions();
+
+                    if(!junctionData.remoteJunctions().isEmpty())
                     {
-                        Collections.sort(junctionData.RemoteJunctions, Comparator.comparingInt(x -> -x.Fragments));
+                        Collections.sort(remoteJunctions, Comparator.comparingInt(x -> -x.Fragments));
 
                         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 
-                        for(int i = 0; i < min(junctionData.RemoteJunctions.size(), 5); ++i)
+                        for(int i = 0; i < min(remoteJunctions.size(), 5); ++i)
                         {
-                            RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
+                            RemoteJunction remoteJunction = remoteJunctions.get(i);
                             sj.add(String.format("%s:%d:%d:%d",
                                     remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orient.asByte(), remoteJunction.Fragments));
                         }
                         remoteJunctionsStr = sj.toString();
                     }
 
-                    mJunctionWriter.write(String.format("\t%d\t%s", junctionData.RemoteJunctions.size(), remoteJunctionsStr));
+                    mJunctionWriter.write(String.format("\t%d\t%s", remoteJunctions.size(), remoteJunctionsStr));
                 }
 
                 mJunctionWriter.newLine();
@@ -258,26 +256,6 @@ public class ResultsWriter
         {
             SV_LOGGER.error(" failed to write junction data: {}", e.toString());
         }
-    }
-
-    private static String getSoftClippedBases(final PrepRead read, final boolean isClippedLeft)
-    {
-        int scLength = isClippedLeft ? read.leftClipLength() : read.rightClipLength();
-
-        if(scLength <= 0)
-            return "";
-
-        int readLength = read.record().getReadBases().length;
-        int scStart = isClippedLeft ? 0 : readLength - scLength;
-        int scEnd = isClippedLeft ? scLength : readLength;
-
-        StringBuilder scStr = new StringBuilder();
-        for(int i = scStart; i < scEnd; ++i)
-        {
-            scStr.append((char)read.record().getReadBases()[i]);
-        }
-
-        return scStr.toString();
     }
 
     private void writeBamRecords(final ReadGroup readGroup)
@@ -311,12 +289,12 @@ public class ResultsWriter
 
     private BufferedWriter initialiseReadWriter()
     {
-        if(!mConfig.WriteTypes.contains(READS))
+        if(!mConfig.WriteTypes.contains(PREP_READ))
             return null;
 
         try
         {
-            String filename = mConfig.formFilename(READS);
+            String filename = mConfig.formFilename(PREP_READ);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);

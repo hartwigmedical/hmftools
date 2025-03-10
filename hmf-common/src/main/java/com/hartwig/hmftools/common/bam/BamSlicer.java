@@ -249,7 +249,7 @@ public class BamSlicer
 
             if(sequenceIndex < 0)
             {
-                SAM_LOGGER.error("cannot find sequence index for chromosome {} in bam header", region.Chromosome);
+                SAM_LOGGER.warn("cannot find sequence index for chromosome {} in bam header", region.Chromosome);
                 return null;
             }
 

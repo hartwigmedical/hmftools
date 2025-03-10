@@ -149,4 +149,7 @@ public class PurpleConstants
     public static final double BIALLELIC_THRESHOLD_PARAMETER_II = 0.8;
     public static final double BIALLELIC_LOH_BASE_ERROR_RATE = 0.02;
     public static final double BIALLELIC_ASSUMED_FRACTION = 0.2;
+
+    // chimerism
+    public static final double CHIMERISM_SAMPLE_CUTOFF = 0.05;
 }

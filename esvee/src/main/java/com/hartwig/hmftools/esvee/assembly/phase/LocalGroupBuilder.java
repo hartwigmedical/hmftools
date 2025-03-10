@@ -23,7 +23,7 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
-import com.hartwig.hmftools.esvee.common.TaskQueue;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 
 public class LocalGroupBuilder extends ThreadTask
 {

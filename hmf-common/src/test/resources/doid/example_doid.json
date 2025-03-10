@@ -10,7 +10,8 @@
         "synonyms" : [ {
           "pred" : "hasExactSynonym",
           "val" : "carcinoma in situ of respiratory tract (disorder)",
-          "xrefs" : [ ]
+          "xrefs" : [ ],
+          "synonymType" : "type"
         } ],
         "basicPropertyValues" : [ {
           "pred" : "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId",
@@ -27,8 +28,7 @@
       "id" : "http://purl.obolibrary.org/obo/DOID_8717",
       "meta" : {
         "definition" : {
-          "val" : "Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of tissue deprived of adequate blood supply by prolonged pressure.",
-          "xrefs" : [ "url:http://www2.merriam-webster.com/cgi-bin/mwmednlm?book=Medical&va=bedsore" ]
+          "val" : "Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of tissue deprived of adequate blood supply by prolonged pressure."
         },
         "comments" : [ "Xref MGI.\nOMIM mapping confirmed by DO. [SN]." ],
         "subsets" : [ "http://purl.obolibrary.org/obo/doid#NCIthesaurus" ],
@@ -128,13 +128,9 @@
     ],
     "id": "http://purl.obolibrary.org/obo/doid.owl",
     "meta": {
-      "subsets": [],
-      "xrefs": [],
-      "basicPropertyValues": []
+      "basicPropertyValues": [],
+      "version": ""
     },
-    "equivalentNodesSets": [],
-    "logicalDefinitionAxioms": [],
-    "domainRangeAxioms": [],
-    "propertyChainAxioms": []
+    "logicalDefinitionAxioms": []
   } ]
 }

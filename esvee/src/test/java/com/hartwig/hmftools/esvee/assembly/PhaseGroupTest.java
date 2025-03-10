@@ -43,7 +43,7 @@ import com.hartwig.hmftools.esvee.assembly.phase.LocalGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
-import com.hartwig.hmftools.esvee.common.TaskQueue;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 
 import org.junit.Test;
 

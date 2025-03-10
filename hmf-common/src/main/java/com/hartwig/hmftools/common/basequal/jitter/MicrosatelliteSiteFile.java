@@ -3,12 +3,13 @@ package com.hartwig.hmftools.common.basequal.jitter;
 import java.io.File;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +58,7 @@ public class MicrosatelliteSiteFile
     }
 
     public static void write(final String filename, @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers,
-            final List<ConsensusType> consensusTypes)
+            final EnumSet<ConsensusType> consensusTypes)
     {
         Comparator<MicrosatelliteSiteAnalyser> comparator =
                 Comparator.comparing((MicrosatelliteSiteAnalyser o) -> o.refGenomeMicrosatellite().chromosome())

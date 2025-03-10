@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.swapDnaToRna;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.swapRnaToDna;
@@ -64,7 +64,7 @@ public class NeoEpitopeUtilsTest
 
         // upstream: intronic
         int nePosition = 32; // intronic
-        byte neOrientation = NEG_ORIENT;
+        byte neOrientation = ORIENT_REV;
 
         String codingBases = EpitopeUtils.getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 9);
 
@@ -106,7 +106,7 @@ public class NeoEpitopeUtilsTest
         Assert.assertEquals(actCodingBases, codingBases);
 
         // test again with reverse orientation
-        neOrientation = POS_ORIENT;
+        neOrientation = ORIENT_FWD;
         nePosition = 55; // intronic
 
         codingBases = EpitopeUtils.getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 9);
@@ -176,7 +176,7 @@ public class NeoEpitopeUtilsTest
 
         // intronic
         int nePosition = 132;
-        byte neOrientation = NEG_ORIENT;
+        byte neOrientation = ORIENT_REV;
 
         String codingBases = EpitopeUtils.getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 9, true, true, false);
 
@@ -227,7 +227,7 @@ public class NeoEpitopeUtilsTest
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
         nePosition = 155;
-        neOrientation = POS_ORIENT;
+        neOrientation = ORIENT_FWD;
 
         codingBases = EpitopeUtils.getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 11, false, true, false);
 

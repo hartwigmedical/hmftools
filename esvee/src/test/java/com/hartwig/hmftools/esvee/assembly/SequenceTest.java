@@ -237,7 +237,7 @@ public class SequenceTest
         //                    012345     6789012345 678 90 12345678   9012
         String firstBases =  "ATTTTT     AACTCTCTCT AAA GG CTGACGTA   TTCC";
 
-        String secondBases = "ATTTTTTTTT AACTCTCT   AAA    CTGACGTA G TTCC";
+        String secondBases = "ATTTTTTT   AACTCTCT   AAA    CTGACGTA G TTCC";
         //                    0123456789 01234567   890    12345678 9 0123
         //                               10           20              30
 

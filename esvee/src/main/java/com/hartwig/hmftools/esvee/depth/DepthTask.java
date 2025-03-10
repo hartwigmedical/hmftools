@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -97,7 +98,7 @@ public class DepthTask implements Callable
     public void addVariants(final List<VariantContext> variants)
     {
         List<Integer> genotypeIds = Lists.newArrayList();
-        mConfig.Samples.forEach(x -> genotypeIds.add(mSampleVcfGenotypeIds.get(x)));
+        mConfig.SampleIds.forEach(x -> genotypeIds.add(mSampleVcfGenotypeIds.get(x)));
 
         for(VariantContext variant : variants)
         {
@@ -169,9 +170,9 @@ public class DepthTask implements Callable
             VariantContext variant = mVariantsList.get(i);
             VariantInfo variantInfo = mVariantInfoList.get(i);
 
-            for(int s = 0; s < mConfig.Samples.size(); ++s)
+            for(int s = 0; s < mConfig.SampleIds.size(); ++s)
             {
-                String sampleId = mConfig.Samples.get(s);
+                String sampleId = mConfig.SampleIds.get(s);
                 RefSupportCounts sampleCounts = variantInfo.SampleSupportCounts[s];
                 int genotypeIndex = mSampleVcfGenotypeIds.get(sampleId);
 
@@ -238,7 +239,7 @@ public class DepthTask implements Callable
             startTime = System.nanoTime();
             readCount = mTotalReadCount;
 
-            SV_LOGGER.trace("sample({}) slice for {} variants", mConfig.Samples.get(i), mSliceRegionState.variantCount());
+            SV_LOGGER.trace("sample({}) slice for {} variants", mConfig.SampleIds.get(i), mSliceRegionState.variantCount());
             mBamSlicer.slice(samReader, region, this::processRead);
 
             times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);
@@ -481,15 +482,16 @@ public class DepthTask implements Callable
             if(!isSupplementary && readGroup.Reads.size() > 1)
             {
                 Orientation orientation = !read.getReadNegativeStrandFlag() ? FORWARD : REVERSE;
+                int fragmentSize = inferredInsertSizeAbs(read);
 
                 if(orientation.isForward() && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
-                && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
+                && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
                 }
                 else if(orientation.isReverse() && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
-                && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
+                && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;

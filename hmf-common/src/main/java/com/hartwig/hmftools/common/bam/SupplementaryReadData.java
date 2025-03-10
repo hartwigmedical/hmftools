@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.bam;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,8 +25,8 @@ public class SupplementaryReadData
     public final int NM;
 
     public static final String ALIGNMENTS_DELIM = ";";
-
     private static final String SUPP_DELIM = ",";
+
     private static final int SUPP_FIELD_COUNT = 6;
 
     public static final char SUPP_POS_STRAND = '+';
@@ -48,7 +48,7 @@ public class SupplementaryReadData
         this(chromosome, position, strand, cigar, mapQuality, 0);
     }
 
-    public byte orientation() { return Strand == SUPP_POS_STRAND ? POS_ORIENT : NEG_ORIENT; }
+    public byte orientation() { return Strand == SUPP_POS_STRAND ? ORIENT_FWD : ORIENT_REV; }
 
     @Nullable
     @VisibleForTesting

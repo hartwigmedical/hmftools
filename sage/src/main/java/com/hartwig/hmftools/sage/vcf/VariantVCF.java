@@ -29,6 +29,8 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_DE
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
@@ -50,8 +52,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_AF_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS_DESC;
@@ -76,9 +76,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
-import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.common.variant.pon.GnomadCache;
+import com.hartwig.hmftools.common.variant.pon.PonCache;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -103,22 +103,17 @@ public class VariantVCF implements AutoCloseable
     private final VariantContextWriter mWriter;
 
     public VariantVCF(
-            final IndexedFastaSequenceFile reference, final SageConfig config,
-            final List<String> tumorIds, final List<String> referenceIds)
+            final IndexedFastaSequenceFile reference, final String sageVersion, final List<String> sampleIds, final String outputVcf)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
-        mWriter = new VariantContextWriterBuilder().setOutputFile(config.OutputFile)
+        mWriter = new VariantContextWriterBuilder().setOutputFile(outputVcf)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        final List<String> samples = Lists.newArrayList();
-        samples.addAll(referenceIds);
-        samples.addAll(tumorIds);
-
-        VCFHeader vcfHeader = createHeader(config.Version, samples, config.Sequencing.Type == SequencingType.ULTIMA);
+        VCFHeader vcfHeader = createHeader(sageVersion, sampleIds);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -133,15 +128,17 @@ public class VariantVCF implements AutoCloseable
         mWriter.writeHeader(vcfHeader);
     }
 
-    public VariantVCF(final IndexedFastaSequenceFile reference, final SageConfig config, final VCFHeader existingHeader)
+    public VariantVCF(
+            final IndexedFastaSequenceFile reference, final List<String> additionalSampleIds, final VCFHeader existingHeader,
+            final String outputVcf)
     {
         Set<VCFHeaderLine> headerLines = existingHeader.getMetaDataInInputOrder();
         List<String> samples = Lists.newArrayList(existingHeader.getGenotypeSamples());
-        samples.addAll(config.ReferenceIds);
+        samples.addAll(additionalSampleIds);
 
-        final VCFHeader newHeader = new VCFHeader(headerLines, samples);
+        VCFHeader newHeader = new VCFHeader(headerLines, samples);
 
-        mWriter = new VariantContextWriterBuilder().setOutputFile(config.OutputFile)
+        mWriter = new VariantContextWriterBuilder().setOutputFile(outputVcf)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
@@ -154,7 +151,7 @@ public class VariantVCF implements AutoCloseable
         mWriter.add(context);
     }
 
-    public static VCFHeader createHeader(final String version, final List<String> allSamples, final boolean includeModelData)
+    public static VCFHeader createHeader(final String version, final List<String> allSamples)
     {
         VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
 
@@ -196,14 +193,10 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(AVG_READ_EDGE_DISTANCE, 2, VCFHeaderLineType.Integer, AVG_READ_EDGE_DISTANCE_DESC));
 
-        if(includeModelData)
-        {
-            header.addMetaDataLine(new VCFInfoHeaderLine(QUAL_MODEL_TYPE, 1, VCFHeaderLineType.String, QUAL_MODEL_TYPE_DESC));
-        }
-
         header.addMetaDataLine(new VCFInfoHeaderLine(NEARBY_INDEL_FLAG, 0, VCFHeaderLineType.Flag, NEARBY_INDEL_FLAG_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(MAP_QUAL_FACTOR, 1, VCFHeaderLineType.Float, MAP_QUAL_FACTOR_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(TINC_RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, TINC_RECOVERED_DESC));
 
         // genotype fields
         header.addMetaDataLine(new VCFFormatHeaderLine(
@@ -239,6 +232,9 @@ public class VariantVCF implements AutoCloseable
         }
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+
+        GnomadCache.addAnnotationHeader(header);
+        PonCache.addAnnotationHeader(header);
 
         return header;
     }

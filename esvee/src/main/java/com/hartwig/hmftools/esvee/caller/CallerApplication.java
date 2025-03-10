@@ -16,13 +16,18 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AD_THRE
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.LineChecker.adjustLineSites;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SGL_FILE;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SV_FILE;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.GERMLINE_PON_MARGIN;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.loadDiscordantStats;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.errorprone.annotations.Var;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -48,6 +53,7 @@ public class CallerApplication
     public final FilterConstants mFilterConstants;
 
     private final PonCache mPonCache;
+    private final PonCache mArtefactPonCache;
     private final HotspotCache mHotspotCache;
     private final VariantFilters mVariantFilters;
     private final RepeatMaskAnnotator mRepeatMaskAnnotator;
@@ -66,12 +72,45 @@ public class CallerApplication
 
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
+
+        if(!mPonCache.hasValidData())
+        {
+            SV_LOGGER.error("invalid PON, exiting");
+            System.exit(1);
+        }
+
+        if(configBuilder.hasValue(ARTEFACT_PON_BED_SV_FILE) && configBuilder.hasValue(ARTEFACT_PON_BED_SGL_FILE))
+        {
+            mArtefactPonCache = new PonCache(
+                    configBuilder.getInteger(GERMLINE_PON_MARGIN),
+                    configBuilder.getValue(ARTEFACT_PON_BED_SV_FILE),
+                    configBuilder.getValue(ARTEFACT_PON_BED_SGL_FILE),
+                    false);
+
+            if(!mArtefactPonCache.hasValidData())
+            {
+                SV_LOGGER.error("invalid artefact PON, exiting");
+                System.exit(1);
+            }
+        }
+        else
+        {
+            mArtefactPonCache = null;
+        }
+
         mHotspotCache = new HotspotCache(configBuilder);
 
-        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId());
+        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.PrepDir, mConfig.fileSampleId(), mConfig.OutputId);
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId(), mConfig.OutputId);
+
+        if(!Files.exists(Paths.get(fragLengthFilename)) || !Files.exists(Paths.get(discStatsFilename)))
+        {
+            SV_LOGGER.error("missing input files: disc-stats and frag-lengths", discStatsFilename, fragLengthFilename);
+            System.exit(1);
+        }
+
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
-        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.fileSampleId());
         DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
@@ -122,7 +161,7 @@ public class CallerApplication
 
         SV_LOGGER.info("sample({}) processing VCF({})", mConfig.fileSampleId(), vcfFile);
 
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.TumorId);
 
         if((mConfig.hasTumor() && genotypeIds.TumorOrdinal < 0) || (mConfig.hasReference() && genotypeIds.ReferenceOrdinal < 0))
         {
@@ -163,12 +202,12 @@ public class CallerApplication
 
         final VersionInfo version = fromAppName(APP_NAME);
 
-        VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache);
+        VcfWriter vcfWriter = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache);
 
         if(mSvDataCache.getSvList().isEmpty())
         {
             SV_LOGGER.info("writing empty VCF");
-            writer.close();
+            vcfWriter.close();
             return;
         }
 
@@ -205,14 +244,26 @@ public class CallerApplication
             mPonCache.annotateVariants(mSvDataCache.getBreakendMap());
         }
 
+        if(mArtefactPonCache != null && mArtefactPonCache.hasValidData())
+        {
+            SV_LOGGER.info("applying artefacts PON filters");
+            mArtefactPonCache.annotateVariants(mSvDataCache.getBreakendMap());
+        }
+
         if(mRepeatMaskAnnotator.hasData())
         {
             SV_LOGGER.info("annotating with repeat-mask information");
             mRepeatMaskAnnotator.annotateVariants(mSvDataCache.getSvList());
         }
 
-        writer.writeBreakends();
-        writer.close();
+        vcfWriter.writeBreakends();
+        vcfWriter.close();
+
+        if(mConfig.WriteBreakendTsv)
+        {
+            BreakendWriter breakendWriter = new BreakendWriter(mConfig);
+            breakendWriter.writeBreakends(mSvDataCache);
+        }
 
         // summary logging
         if(SV_LOGGER.isDebugEnabled())
@@ -279,7 +330,7 @@ public class CallerApplication
 
         if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
         {
-            SV_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
+            SV_LOGGER.debug("sample({}) processed {} variants", mConfig.TumorId, mProcessedVariants);
         }
 
         if(mConfig.ManualRefDepth > 0)

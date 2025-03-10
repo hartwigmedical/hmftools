@@ -19,7 +19,6 @@ public class PurpleQCTest
     public void testDefault()
     {
         ImmutablePurpleQC.Builder template = builder();
-        // assertTrue(template.build().pass());
         assertStatus(template, PASS);
     }
 
@@ -97,23 +96,12 @@ public class PurpleQCTest
 
         Set<PurpleQCStatus> statusSet = PurpleQCStatus.calcStatus(
                 PurpleQCStatus.genderPass(qc.amberGender(), qc.cobaltGender(), qc.germlineAberrations()),
-                qc.unsupportedCopyNumberSegments(), qc.deletedGenes(), qc.purity(), qc.method(), qc.contamination(), MAX_DELETED_GENES);
+                qc.unsupportedCopyNumberSegments(), qc.deletedGenes(), qc.purity(), qc.method(), qc.contamination(), MAX_DELETED_GENES, 0);
 
         assertTrue(statusSet.size() == requiredStatusSet.size());
 
         assertTrue(requiredStatusSet.stream().allMatch(x -> statusSet.contains(x)));
     }
-
-    /*
-    private static void assertStatus(@NotNull PurpleQC victim, @NotNull PurpleQCStatus... status)
-    {
-        assertEquals(victim.status().size(), status.length);
-        for(PurpleQCStatus purpleQCStatus : status)
-        {
-            assertTrue(victim.status().contains(purpleQCStatus));
-        }
-    }
-    */
 
     @NotNull
     private static ImmutablePurpleQC.Builder builder()
@@ -128,6 +116,7 @@ public class PurpleQCTest
                 .deletedGenes(0)
                 .method(FittedPurityMethod.NORMAL)
                 .amberMeanDepth(91)
-                .lohPercent(0);
+                .lohPercent(0)
+                .tincLevel(0);
     }
 }

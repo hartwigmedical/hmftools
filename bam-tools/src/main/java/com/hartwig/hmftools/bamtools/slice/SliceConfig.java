@@ -18,6 +18,9 @@ import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegion
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -27,6 +30,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -53,6 +57,7 @@ public class SliceConfig
     public final boolean DropExcluded;
     public final boolean OnlySupplementaries;
     public final boolean WriteReadBases;
+    public final boolean LogMissingReads;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
     public final int MaxUnmappedReads;
@@ -61,6 +66,7 @@ public class SliceConfig
 
     // debug
     public final SpecificRegions SliceRegions;
+    public final List<String> LogReadIds;
     public final boolean PerfDebug;
 
     private boolean mIsValid;
@@ -75,6 +81,7 @@ public class SliceConfig
     private static final String MAX_REMOTE_READS = "max_remote_reads";
     private static final String WRITE_READ_BASES = "write_read_bases";
     private static final String MAX_UNMAPPED_READS = "max_unmapped_reads";
+    private static final String LOG_MISSING_READS = "log_missing_reads";
 
     public static final int UNMAPPED_READS_DISABLED = -1;
     public static final int UNMAPPED_READS_ALL = 0;
@@ -102,11 +109,12 @@ public class SliceConfig
         }
 
         WriteReads = configBuilder.hasFlag(WRITE_READS);
-        WriteBam = !WriteReads || configBuilder.hasFlag(WRITE_BAM);
+        WriteBam = !WriteReads || configBuilder.hasFlag(WRITE_BAM) || configBuilder.hasFlag(BAMTOOL_PATH);
         UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
         DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
         WriteReadBases = WriteReads && configBuilder.hasFlag(WRITE_READ_BASES);
         OnlySupplementaries = configBuilder.hasFlag(ONLY_SUPPS);
+        LogMissingReads = configBuilder.hasFlag(LOG_MISSING_READS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
         MaxUnmappedReads = configBuilder.getInteger(MAX_UNMAPPED_READS);
@@ -146,6 +154,7 @@ public class SliceConfig
 
         Threads = parseThreads(configBuilder);
 
+        LogReadIds = parseLogReadIds(configBuilder);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
     }
 
@@ -187,12 +196,14 @@ public class SliceConfig
         configBuilder.addFlag(WRITE_READ_BASES, "Write read bases to TSV file");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
         configBuilder.addFlag(ONLY_SUPPS, "Only capture supplementary reads");
+        configBuilder.addFlag(LOG_MISSING_READS, "Log missing reads");
         configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
         BamToolName.addConfig(configBuilder);
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
     }
 
     @VisibleForTesting
@@ -210,6 +221,7 @@ public class SliceConfig
         UnsortedBam = false;
         DropExcluded = false;
         OnlySupplementaries = false;
+        LogMissingReads = false;
         MaxRemoteReads = 0;
         MaxPartitionReads = 0;
         MaxUnmappedReads = UNMAPPED_READS_DISABLED;
@@ -218,5 +230,6 @@ public class SliceConfig
         Threads = 0;
         BamToolPath = null;
         PerfDebug = false;
+        LogReadIds = Collections.emptyList();
     }
 }

@@ -2,12 +2,19 @@ package com.hartwig.hmftools.common.bam;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_CLIPPING_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
+import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
+import static htsjdk.samtools.CigarOperator.X;
 
 import java.util.Collections;
 import java.util.List;
@@ -335,5 +342,116 @@ public final class CigarUtils
         }
 
         return NO_POSITION_INFO;
+    }
+
+    @Nullable
+    public static List<CigarElement> replaceXwithM(final List<CigarElement> cigarElements)
+    {
+        boolean includesMismatchCigarOp = cigarElements.stream().anyMatch(el -> el.getOperator() == X);
+        if(!includesMismatchCigarOp)
+        {
+            return null;
+        }
+
+        List<CigarElement> newCigarElements = Lists.newArrayList();
+        CigarElement lastEl = null;
+        for(CigarElement el : cigarElements)
+        {
+            if(el.getOperator() == M && lastEl != null && lastEl.getOperator() == M)
+            {
+                lastEl = new CigarElement(lastEl.getLength() + el.getLength(), M);
+                newCigarElements.set(newCigarElements.size() - 1, lastEl);
+                continue;
+            }
+
+            if(el.getOperator() != X)
+            {
+                lastEl = el;
+                newCigarElements.add(el);
+                continue;
+            }
+
+            if(lastEl == null || lastEl.getOperator() != M)
+            {
+                lastEl = new CigarElement(el.getLength(), M);
+                newCigarElements.add(lastEl);
+                continue;
+            }
+
+            lastEl = new CigarElement(lastEl.getLength() + el.getLength(), M);
+            newCigarElements.set(newCigarElements.size() - 1, lastEl);
+        }
+
+        return newCigarElements;
+    }
+
+    public static void replaceXwithM(final SAMRecord record)
+    {
+        List<CigarElement> newCigarElements = replaceXwithM(record.getCigar().getCigarElements());
+        if(newCigarElements == null)
+        {
+            return;
+        }
+
+        record.setCigar(new Cigar(newCigarElements));
+    }
+
+    public static List<CigarElement> collapseCigarOps(final List<CigarOperator> ops)
+    {
+        List<CigarElement> elems = Lists.newArrayList();
+        CigarOperator currentOp = null;
+        int currentLength = 0;
+        for(CigarOperator op : ops)
+        {
+            if(currentOp == null)
+            {
+                currentOp = op;
+                currentLength = 1;
+                continue;
+            }
+
+            if(currentOp == op)
+            {
+                currentLength++;
+                continue;
+            }
+
+            elems.add(new CigarElement(currentLength, currentOp));
+            currentOp = op;
+            currentLength = 1;
+        }
+
+        if(currentLength > 0)
+            elems.add(new CigarElement(currentLength, currentOp));
+
+        return elems;
+    }
+
+    public static int alignmentScore(final List<CigarElement> cigarElements, final int numMutations)
+    {
+        int mismatchCount = numMutations;
+        int alignmentScore = 0;
+        for(CigarElement el : cigarElements)
+        {
+            if(el.getOperator().isClipping())
+            {
+                alignmentScore -= BWA_CLIPPING_PENALTY;
+                continue;
+            }
+
+            boolean isRef = el.getOperator().consumesReferenceBases();
+            boolean isRead = el.getOperator().consumesReadBases();
+            if(isRead ^ isRef)
+            {
+                alignmentScore -= BWA_GAP_OPEN_PENALTY + el.getLength() * BWA_GAP_EXTEND_PENALTY;
+                mismatchCount -= el.getLength();
+                continue;
+            }
+
+            alignmentScore += el.getLength() * BWA_MATCH_SCORE;
+        }
+
+        alignmentScore -= mismatchCount * (BWA_MATCH_SCORE + BWA_MISMATCH_PENALTY);
+        return alignmentScore;
     }
 }

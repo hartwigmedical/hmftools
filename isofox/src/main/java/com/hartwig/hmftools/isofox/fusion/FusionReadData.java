@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.utils.Strings.reverseString;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -213,7 +213,7 @@ public class FusionReadData
             {
                 int junctionBase = mJunctionPositions[se];
 
-                if (junctionOrientations()[se] == POS_ORIENT)
+                if (junctionOrientations()[se] == ORIENT_FWD)
                 {
                     String junctionBases = refGenome.getBaseString(
                             mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH + 1, junctionBase + JUNCTION_BASE_LENGTH);
@@ -246,7 +246,7 @@ public class FusionReadData
         // test moving the junction point back and forth from the current positions
 
         // in the int-pair array the first element is the number of bases the junction could move
-        boolean startHasPosOrient = mJunctionOrientations[SE_START] == POS_ORIENT;
+        boolean startHasPosOrient = mJunctionOrientations[SE_START] == ORIENT_FWD;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -261,11 +261,11 @@ public class FusionReadData
                 if(mJunctionBases[se].length() < i || mAdjacentJunctionBases[psIndex].length() < i)
                     break;
 
-                String junctionStr = mJunctionOrientations[se] == POS_ORIENT ?
+                String junctionStr = mJunctionOrientations[se] == ORIENT_FWD ?
                         mJunctionBases[se].substring(mJunctionBases[se].length() - i) :
                         mJunctionBases[se].substring(0, i);
 
-                String adjacentStr = mJunctionOrientations[psIndex] == POS_ORIENT ?
+                String adjacentStr = mJunctionOrientations[psIndex] == ORIENT_FWD ?
                         mAdjacentJunctionBases[psIndex].substring(0, i) :
                         mAdjacentJunctionBases[psIndex].substring(mAdjacentJunctionBases[psIndex].length() - i);
 
@@ -500,7 +500,7 @@ public class FusionReadData
     {
         // compare a minimum number of soft-clipped bases to the other side of the exon junction
         // if the read extends past break junction, include these bases in what is compared against the next junction to account for homology
-        if(junctionOrientation == POS_ORIENT)
+        if(junctionOrientation == ORIENT_FWD)
         {
             if(!read.isSoftClipped(SE_END))
                 return false;

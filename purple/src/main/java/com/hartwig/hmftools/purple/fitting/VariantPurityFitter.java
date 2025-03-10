@@ -30,6 +30,7 @@ public class VariantPurityFitter
     private final ReferenceData mReferenceData;
     private final SampleData mSampleData;
     private final SomaticPurityFitter mSomaticPurityFitter;
+    private final PurpleConfig mConfig;
 
     // interim state
     private List<SomaticVariant> mFittingSomatics;
@@ -46,6 +47,7 @@ public class VariantPurityFitter
     {
         mReferenceData = referenceData;
         mSampleData = sampleData;
+        mConfig = config;
 
         mSvHotspotCount = 0;
         mSvFragmentReadCount = 0;
@@ -67,7 +69,7 @@ public class VariantPurityFitter
 
     public void setState(final List<ObservedRegion> observedRegions)
     {
-        mFittingSomatics.addAll(SomaticPurityFitter.findFittingVariants(mSampleData.SomaticCache.variants(), observedRegions));
+        mFittingSomatics.addAll(SomaticPurityFitter.findFittingVariants(mConfig.tumorOnlyMode(), mSampleData.SomaticCache.variants(), observedRegions));
 
         if(!mFittingSomatics.isEmpty())
         {
@@ -112,12 +114,12 @@ public class VariantPurityFitter
     public FittedPurity calcSomaticFit(
             final List<FittedPurity> diploidCandidates, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
-        return mSomaticPurityFitter.fromSomatics(mFittingSomatics, mHotspotSVs, diploidCandidates, copyNumbers, gender);
+        return mSomaticPurityFitter.fitfromSomatics(mFittingSomatics, mHotspotSVs, diploidCandidates, copyNumbers, gender);
     }
 
     public FittedPurity calcSomaticOnlyFit(final List<FittedPurity> allCandidates)
     {
-        return mSomaticPurityFitter.fitFromSomatics(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
+        return mSomaticPurityFitter.fitFromSomaticsOnly(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
     }
 
     public static boolean somaticFitIsWorse(final FittedPurity lowestScore, final FittedPurity somaticFit, final SomaticFitConfig config)

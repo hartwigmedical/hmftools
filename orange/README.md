@@ -270,6 +270,7 @@ investigate potential causes for QC failure.
     - Add potentially interesting chromosomal rearrangements (1q trisomy and 1p19q co-deletion) to report
     - Derive breakend fields type, chromosome, chromosomeBand, orientation and junctionCopyNumber from root sources
     - Make PurpleGeneCopyNumber transcript-aware in orange-datamodel
+    - Upgraded DOID datamodel to version of Dec 2024 release  
 - [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
     - Add unreported reason to fusions in ORANGE
     - Add etiology information to signatures and sort by allocation

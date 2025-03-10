@@ -17,12 +17,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.phase.AppendVariantPhaser;
 import com.hartwig.hmftools.sage.phase.LpsReadCounts;
 import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;

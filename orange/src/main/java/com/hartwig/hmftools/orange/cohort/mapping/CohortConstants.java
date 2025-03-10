@@ -15,10 +15,12 @@ public final class CohortConstants
     public static final String COHORT_UNKNOWN = "Unknown";
     public static final String COHORT_ESOPHAGUS = "Esophagus";
     public static final String COHORT_STOMACH = "Stomach";
+    public static final String COHORT_NERVOUS_SYSTEM = "Nervous system";
 
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_OTHER = Lists.newArrayList();
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS = Lists.newArrayList();
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_STOMACH = Lists.newArrayList();
+    public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_NERVOUS_SYSTEM = Lists.newArrayList();
     public static final Map<Set<String>, String> DOID_COMBINATION_MAP = new HashMap<>();
 
     static
@@ -31,6 +33,7 @@ public final class CohortConstants
 
         // Combination of urethra cancer and renal cell cancer cannot easily be mapped.
         DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("734", "2671", "4450"));
+        DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("263", "11819"));
 
         // Combination of esophagus or stomach cancer & gastroesophageal system cancer should resolve to esophagus or stomach.
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080374", "5041"));
@@ -55,6 +58,8 @@ public final class CohortConstants
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("4944", "5517"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("4944", "3717"));
 
+        DOID_COMBINATIONS_TO_MAP_TO_NERVOUS_SYSTEM.add(Sets.newHashSet("3181"));
+
         for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_OTHER)
         {
             DOID_COMBINATION_MAP.put(combination, COHORT_OTHER);
@@ -68,6 +73,11 @@ public final class CohortConstants
         for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_STOMACH)
         {
             DOID_COMBINATION_MAP.put(combination, COHORT_STOMACH);
+        }
+
+        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_NERVOUS_SYSTEM)
+        {
+            DOID_COMBINATION_MAP.put(combination, COHORT_NERVOUS_SYSTEM);
         }
     }
 }

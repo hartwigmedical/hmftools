@@ -24,7 +24,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
@@ -114,11 +113,6 @@ public final class VariantContextFactory
 
         builder.attribute(TUMOR_QUALITY_PROB, primaryRcCounter.tumorQualProbability());
         builder.attribute(MAP_QUAL_FACTOR, primaryRcCounter.mapQualFactor());
-
-        if(primaryRcCounter.ultimaQualModel() != null)
-        {
-            builder.attribute(QUAL_MODEL_TYPE, primaryRcCounter.ultimaQualModel().type().toString());
-        }
 
         if(variant.nearIndel())
             builder.attribute(NEARBY_INDEL_FLAG, true);

@@ -15,8 +15,10 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPO
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
@@ -43,6 +45,9 @@ public class Breakend implements Comparable<Breakend>
     private int mFragmentLengthTotal;
     private int mFragmentLengthCount;
     private int mIncompleteFragmentCount;
+
+    private Set<Integer> mPositionsStart;
+    private Set<Integer> mPositionsEnd;
 
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
@@ -83,6 +88,24 @@ public class Breakend implements Comparable<Breakend>
 
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
+
+    public void addFragmentPositions(int posStart, int posEnd)
+    {
+        if(mPositionsStart == null)
+        {
+            mPositionsStart = Sets.newHashSet();
+            mPositionsEnd = Sets.newHashSet();
+        }
+
+        mPositionsStart.add(posStart);
+        mPositionsEnd.add(posEnd);
+    }
+
+    public int[] uniqueFragmentPositionCounts()
+    {
+        // unclipped fragment positions as used for duplicate logic, or unclipped ends for an unpaired read
+        return mPositionsStart != null ? new int[] { mPositionsStart.size(), mPositionsEnd.size() } : null;
+    }
 
     public List<AlternativeAlignment> alternativeAlignments()
     {
@@ -218,6 +241,22 @@ public class Breakend implements Comparable<Breakend>
     @Override
     public int compareTo(final Breakend other)
     {
-        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
+        int breakendCompare = compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
+
+        if(breakendCompare != 0)
+            return breakendCompare;
+
+        if(svType() == SGL || other.svType() == SGL)
+        {
+            if(svType() == other.svType())
+                return Integer.compare(InsertedBases.length(), other.InsertedBases.length());
+
+            return svType() == SGL ? -1 : 1;
+        }
+
+        return compareJunctions(
+                otherBreakend().Chromosome, otherBreakend().Chromosome,
+                otherBreakend().Position, other.otherBreakend().Position,
+                otherBreakend().Orient, other.otherBreakend().Orient);
     }
 }

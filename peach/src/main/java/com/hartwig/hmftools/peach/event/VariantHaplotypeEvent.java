@@ -6,8 +6,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -19,16 +17,12 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     public static final String EVENT_TYPE_STRING = "VAR";
     public static final int ID_FIELD_COUNT = 5;
 
-    @NotNull
     public final Chromosome chromosome;
     public final int position;
-    @NotNull
     public final String ref;
-    @NotNull
     public final String alt;
 
-    public VariantHaplotypeEvent(@NotNull Chromosome chromosome, int position, @NotNull String ref,
-            @NotNull String alt)
+    public VariantHaplotypeEvent(final Chromosome chromosome, int position, final String ref, final String alt)
     {
         this.chromosome = chromosome;
         this.position = position;
@@ -36,8 +30,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         this.alt = alt;
     }
 
-    @NotNull
-    public static VariantHaplotypeEvent fromId(@NotNull String eventId)
+    public static VariantHaplotypeEvent fromId(final String eventId)
     {
         if(!eventId.startsWith(EVENT_TYPE_STRING))
         {
@@ -68,8 +61,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         return event;
     }
 
-    @NotNull
-    public static VariantHaplotypeEvent fromVariantContext(@NotNull VariantContext variantContext)
+    public static VariantHaplotypeEvent fromVariantContext(final VariantContext variantContext)
     {
         Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
         int position = variantContext.getStart();
@@ -84,13 +76,11 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         return new VariantHaplotypeEvent(chromosome, position, ref, alt);
     }
 
-    @NotNull
     public String toString()
     {
         return id();
     }
 
-    @NotNull
     public String id()
     {
         return new StringJoiner(HaplotypeEvent.EVENT_ID_DELIMITER).add(EVENT_TYPE_STRING)
@@ -101,13 +91,12 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
                 .toString();
     }
 
-    @NotNull
     public Set<Integer> getCoveredPositions()
     {
         return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toSet());
     }
 
-    public boolean isRelevantFor(@NotNull HaplotypeEvent event)
+    public boolean isRelevantFor(final HaplotypeEvent event)
     {
         if(!(event instanceof VariantHaplotypeEvent))
         {

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.linx.CohortDataWriter.cohortDataFilename;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
@@ -915,14 +916,14 @@ public class DisruptionFinder implements CohortFileInterface
 
         try
         {
-            String outputFilename = outputDir + "LNX_DISRUPTIONS.csv";
+            String outputFilename = cohortDataFilename(outputDir, "DISRUPTIONS");
 
             BufferedWriter writer = createBufferedWriter(outputFilename, false);
 
-            writer.write("SampleId,Reportable,SvId,IsStart,Type,Chromosome,Position,Orientation");
-            writer.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
-            writer.write(",ClusterId,ResolvedType,ClusterCount");
-            writer.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
+            writer.write("SampleId\tReportable\tSvId\tIsStart\tType\tChromosome\tPosition\tOrientation");
+            writer.write("\tGeneId\tGeneName\tStrand\tTransId\tExonUp\tExonDown\tCodingType\tRegionType");
+            writer.write("\tClusterId\tResolvedType\tClusterCount");
+            writer.write("\tUndisruptedCN\tExcludedReason\tExtraInfo");
 
             writer.newLine();
             return writer;
@@ -945,9 +946,9 @@ public class DisruptionFinder implements CohortFileInterface
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.append(String.format("%s,%s", sampleId, disruptionData.asCsv()));
+            sb.append(String.format("%s\t%s", sampleId, disruptionData.asCsv()));
 
-            sb.append(String.format(",%.2f,,",disruptionData.UndisruptedCopyNumber));
+            sb.append(String.format("\t%.2f\t\t",disruptionData.UndisruptedCopyNumber));
 
             outputLines.add(sb.toString());
         }
@@ -970,7 +971,7 @@ public class DisruptionFinder implements CohortFileInterface
 
             StringBuilder sb = new StringBuilder();
 
-            sb.append(String.format("%s,%s,%d,%s,%s,%s,%d,%d",
+            sb.append(String.format("%s\t%s\t%d\t%s\t%s\t%s\t%d\t%d",
                     sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
                     var.type(), gene.chromosome(), gene.position(), gene.orientation()));
 
@@ -985,12 +986,12 @@ public class DisruptionFinder implements CohortFileInterface
                 extraInfo = contextInfo[1];
             }
 
-            sb.append(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%d,%s,%d",
+            sb.append(String.format("\t%s\t%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%s\t%d",
                     gene.geneId(), gene.geneName(), gene.strand(), transcript.transName(),
                     transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType(),
                     cluster.id(), cluster.getResolvedType(), cluster.getSvCount()));
 
-            sb.append(String.format(",%.2f,%s,%s", transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
+            sb.append(String.format("\t%.2f\t%s\t%s", transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
 
             outputLines.add(sb.toString());
         }

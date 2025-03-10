@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.tinc.TincAnalyser.generateTincVcfFilename;
+import static com.hartwig.hmftools.sage.tinc.TincConfig.callerTincConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +22,8 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.bqr.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
+import com.hartwig.hmftools.sage.tinc.TincAnalyser;
+import com.hartwig.hmftools.sage.tinc.TincConfig;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -36,6 +40,7 @@ public class SageApplication implements AutoCloseable
     private final PhaseSetCounter mPhaseSetCounter;
     private final VcfWriter mVcfWriter;
     private final FragmentLengthWriter mFragmentLengths;
+    private final TincConfig mTincConfig;
 
     private SageApplication(final ConfigBuilder configBuilder)
     {
@@ -63,6 +68,15 @@ public class SageApplication implements AutoCloseable
         mFragmentLengths = new FragmentLengthWriter(mConfig.Common);
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
+
+        if(mConfig.RunTinc && !mConfig.Common.ReferenceIds.isEmpty())
+        {
+            mTincConfig = callerTincConfig(configBuilder, mConfig);
+        }
+        else
+        {
+            mTincConfig = null;
+        }
     }
 
     private void run() throws IOException
@@ -111,6 +125,16 @@ public class SageApplication implements AutoCloseable
 
         coverage.writeFiles(mConfig.Common.OutputFile);
         mFragmentLengths.close();
+        mVcfWriter.close();
+
+        if(mTincConfig != null && !mConfig.Common.ReferenceIds.isEmpty())
+        {
+            TincAnalyser tincAnalyser = new TincAnalyser(mTincConfig);
+            tincAnalyser.run(mConfig.Common.Filter);
+
+            String outputVcf = mTincConfig.RewriteVcf ? mConfig.Common.OutputFile : generateTincVcfFilename(mConfig.Common.OutputFile);
+            tincAnalyser.writeVcf(mRefData.RefGenome, mConfig.Common.OutputFile, outputVcf);
+        }
 
         SG_LOGGER.info("Sage complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -135,7 +159,6 @@ public class SageApplication implements AutoCloseable
     public void close() throws IOException
     {
         mRefData.RefGenome.close();
-        mVcfWriter.close();
     }
 
     public static void main(final String... args) throws IOException

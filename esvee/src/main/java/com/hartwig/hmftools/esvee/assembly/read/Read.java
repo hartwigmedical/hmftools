@@ -6,8 +6,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignment;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
@@ -229,6 +231,19 @@ public class Read
             mMateAlignmentEnd = mateAlignmentStart() + basesLength() - 1;
 
         return mMateAlignmentEnd;
+    }
+
+    public int mateFragmentEnd()
+    {
+        if(mMateRead != null)
+            return mMateRead.orientation().isForward() ? mMateRead.unclippedStart() : mMateRead.unclippedEnd();
+
+        String mateCigarStr = mRecord.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+
+        if(mateCigarStr == null)
+            return NO_POSITION;
+
+        return getFivePrimeUnclippedPosition(mateAlignmentStart(), mateCigarStr, !mRecord.getMateNegativeStrandFlag());
     }
 
     public boolean isMateMapped()

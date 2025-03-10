@@ -68,13 +68,13 @@ public class DepthAnnotator
             System.exit(1);
         }
 
-        if(mConfig.BamFiles.size() != mConfig.Samples.size())
+        if(mConfig.BamFiles.size() != mConfig.SampleIds.size())
         {
             SV_LOGGER.error("inconsistent samples and BAM files");
             System.exit(1);
         }
 
-        SV_LOGGER.info("running depth annotation for samples: {}", mConfig.Samples);
+        SV_LOGGER.info("running depth annotation for samples: {}", mConfig.SampleIds);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -161,7 +161,7 @@ public class DepthAnnotator
         if(mConfig.UnmapRegionsFile != null)
         {
             UnmappedRegionDepth unmappedRegionDepth = new UnmappedRegionDepth(mConfig.UnmapRegionsFile);
-            unmappedRegionDepth.setUnmappedRegionsDepth(mConfig.Samples.size(), depthTasks);
+            unmappedRegionDepth.setUnmappedRegionsDepth(mConfig.SampleIds.size(), depthTasks);
         }
 
         // write output VCF
@@ -169,13 +169,16 @@ public class DepthAnnotator
 
         SV_LOGGER.info("Esvee depth annotation complete, mins({})", runTimeMinsStr(startTimeMs));
 
-        PerformanceCounter perfCounter = depthTasks.get(0).getPerfCounter();
-        for(int i = 1; i < depthTasks.size(); ++i)
+        if(mConfig.PerfLogTime > 0)
         {
-            perfCounter.merge(depthTasks.get(i).getPerfCounter());
-        }
+            PerformanceCounter perfCounter = depthTasks.get(0).getPerfCounter();
+            for(int i = 1; i < depthTasks.size(); ++i)
+            {
+                perfCounter.merge(depthTasks.get(i).getPerfCounter());
+            }
 
-        perfCounter.logStats();
+            perfCounter.logStats();
+        }
     }
 
     private void writeVcf(final VCFHeader header, final List<DepthTask> depthTasks)
@@ -240,9 +243,9 @@ public class DepthAnnotator
     {
         List<String> vcfSampleNames = header.getGenotypeSamples();
 
-        for(int s = 0; s < mConfig.Samples.size(); ++s)
+        for(int s = 0; s < mConfig.SampleIds.size(); ++s)
         {
-            String sampleId = mConfig.Samples.get(s);
+            String sampleId = mConfig.SampleIds.get(s);
             boolean found = false;
 
             for(int i = 0; i < vcfSampleNames.size(); ++i)

@@ -18,8 +18,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.util.List;
@@ -86,9 +86,9 @@ public class SvNeoEpitope extends NeoEpitope
 
     public int unsplicedDistance()
     {
-        int upEndCodingBase = mSvFusion.Orientations[FS_UP] == POS_ORIENT ? ExtPositions[FS_UP][SE_END] : ExtPositions[FS_UP][SE_START];
+        int upEndCodingBase = mSvFusion.Orientations[FS_UP] == ORIENT_FWD ? ExtPositions[FS_UP][SE_END] : ExtPositions[FS_UP][SE_START];
         int upUnspliced = abs(position(FS_UP) - upEndCodingBase);
-        int downEndCodingBase = mSvFusion.Orientations[FS_DOWN] == POS_ORIENT ? ExtPositions[FS_DOWN][SE_END] : ExtPositions[FS_DOWN][SE_START];
+        int downEndCodingBase = mSvFusion.Orientations[FS_DOWN] == ORIENT_FWD ? ExtPositions[FS_DOWN][SE_END] : ExtPositions[FS_DOWN][SE_START];
         int downUnspliced = abs(position(FS_DOWN) - downEndCodingBase);
         return upUnspliced + downUnspliced + mSvFusion.ChainLength;
     }
@@ -248,11 +248,11 @@ public class SvNeoEpitope extends NeoEpitope
         // between the fusion position and the nearest coding
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            boolean findExonStart = mSvFusion.Orientations[fs] == NEG_ORIENT;
+            boolean findExonStart = mSvFusion.Orientations[fs] == ORIENT_REV;
 
             final int[] positionBoundaries = { 0, 0 };
 
-            if(mSvFusion.Orientations[fs] == POS_ORIENT)
+            if(mSvFusion.Orientations[fs] == ORIENT_FWD)
             {
                 positionBoundaries[SE_START] = ExtPositions[fs][SE_END];
                 positionBoundaries[SE_END] = position(fs);

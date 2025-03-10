@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.MISMATCH;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
@@ -32,7 +32,7 @@ public class NeoFragmentMatcher
         NeoFragmentSupport support = new NeoFragmentSupport();
 
         // expect the read to either fully fall within one of the up or down stream ranges, or be soft-clipped
-        int junctionSide = neData.Orientations[stream] == POS_ORIENT ? SE_END : SE_START;
+        int junctionSide = neData.Orientations[stream] == ORIENT_FWD ? SE_END : SE_START;
 
         // reads always go up in position (+ve to -ve orientation)
         final int[] codingBaseRange = neData.getCodingBaseRange(stream);
@@ -104,7 +104,7 @@ public class NeoFragmentMatcher
             final List<int[]> codingBaseCoords = Lists.newArrayList();
             final int[] fusionJunction = new int[SE_PAIR];
 
-            if(neData.Orientations[FS_UP] == POS_ORIENT)
+            if(neData.Orientations[FS_UP] == ORIENT_FWD)
             {
                 fusionJunction[SE_START] = neData.Source.CodingBasePositions[FS_UP][SE_END];
                 fusionJunction[SE_END] = neData.Source.CodingBasePositions[FS_DOWN][SE_START];
@@ -394,7 +394,7 @@ public class NeoFragmentMatcher
             if(neData.isPointMutation())
                 refBase = neData.Positions[fs];
             else
-                refBase = neData.getCodingBaseRange(fs)[neData.Orientations[fs] == POS_ORIENT ? SE_END : SE_START];
+                refBase = neData.getCodingBaseRange(fs)[neData.Orientations[fs] == ORIENT_FWD ? SE_END : SE_START];
 
             for(ReadRecord read : readGroup.reads())
             {

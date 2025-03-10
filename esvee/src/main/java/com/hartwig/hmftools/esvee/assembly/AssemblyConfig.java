@@ -25,16 +25,16 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_DISC_RATE_INCREMENT;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
@@ -42,15 +42,18 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepBamFilenames;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
+import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
+import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
+import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -64,7 +67,6 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
-import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -113,7 +115,6 @@ public class AssemblyConfig
 
     public final int Threads;
 
-    public final String TruthsetFile;
     public final String AlignmentFile;
 
     public static boolean WriteCandidateReads;
@@ -149,13 +150,26 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
-        TumorIds = Arrays.stream(configBuilder.getValue(TUMOR).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-        TumorBams = Arrays.stream(configBuilder.getValue(TUMOR_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(configBuilder.hasValue(REFERENCE) && configBuilder.hasValue(REFERENCE_BAM))
+        PrepDir = configBuilder.hasValue(PREP_DIR) ? checkAddDirSeparator(configBuilder.getValue(PREP_DIR)) : OutputDir;
+
+        TumorIds = parseSampleBamLists(configBuilder, TUMOR);
+
+        if(configBuilder.hasValue(TUMOR_BAM))
+            TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
+        else
+            TumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+
+        if(configBuilder.hasValue(REFERENCE))
         {
-            ReferenceIds = Arrays.stream(configBuilder.getValue(REFERENCE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-            ReferenceBams = Arrays.stream(configBuilder.getValue(REFERENCE_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+            ReferenceIds = parseSampleBamLists(configBuilder, REFERENCE);
+
+            if(configBuilder.hasValue(REFERENCE_BAM))
+                ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
+            else
+                ReferenceBams = formPrepBamFilenames(PrepDir, ReferenceIds);
         }
         else
         {
@@ -169,10 +183,15 @@ public class AssemblyConfig
             System.exit(1);
         }
 
-        OutputDir = parseOutputDir(configBuilder);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
+        // in germline mode, transfer to reference values to the tumor ones
+        if(TumorIds.isEmpty() && !ReferenceIds.isEmpty())
+        {
+            TumorIds.addAll(ReferenceIds);
+            ReferenceIds.clear();
 
-        PrepDir = configBuilder.hasValue(PREP_DIR) ? configBuilder.getValue(PREP_DIR) : OutputDir;
+            TumorBams.addAll(ReferenceBams);
+            ReferenceBams.clear();
+        }
 
         JunctionFiles = Lists.newArrayList();
 
@@ -201,12 +220,15 @@ public class AssemblyConfig
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
-        WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
+        WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
 
         AlignmentFile = AlignmentCache.filename(configBuilder);
         RunAlignment = AlignmentFile != null || WriteType.requiresAlignment(WriteTypes);
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
+
+        setSequencingType(configBuilder);
+        setLowBaseQualThreshold(configBuilder);
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -260,8 +282,6 @@ public class AssemblyConfig
 
         Threads = parseThreads(configBuilder);
 
-        TruthsetFile = TruthsetAnnotation.filename(configBuilder);
-
         ApplyRemotePhasingReadCheckThreshold = configBuilder.hasFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD);
 
         READ_ID_TRIMMER = new ReadIdTrimmer(!hasFilters);
@@ -304,7 +324,7 @@ public class AssemblyConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
-        configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
+        configBuilder.addConfigItem(TUMOR_BAM, false, TUMOR_BAMS_DESC);
 
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);
@@ -312,14 +332,16 @@ public class AssemblyConfig
         configBuilder.addPaths(JUNCTION_FILE, false, JUNCTION_FILE_DESC);
         configBuilder.addPaths(PREP_DIR, false, PREP_DIR_DESC);
 
+        registerCommonConfig(configBuilder);
+
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
-        String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
-        configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
+        if(!configBuilder.isRegistered(WRITE_TYPES))
+            configBuilder.addConfigItem(WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"));
 
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addConfigItem(
@@ -337,7 +359,7 @@ public class AssemblyConfig
         configBuilder.addInteger(
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
-        configBuilder.addFlag(DISC_ONLY_DISABLED, "Disable discordant only junctions");
+        configBuilder.addFlag(DISC_ONLY_DISABLED, "Disable discordant-only junctions");
 
         configBuilder.addInteger(
                 ASSEMBLY_MAP_QUAL_THRESHOLD, "Realign and test assemblies with average map-qual below this threshold",
@@ -351,7 +373,6 @@ public class AssemblyConfig
 
         configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
 
-        TruthsetAnnotation.registerConfig(configBuilder);
         AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
 
@@ -402,7 +423,6 @@ public class AssemblyConfig
         PhaseProcessingLimit = 0;
         DiscordantOnlyDisabled = false;
         Threads = 0;
-        TruthsetFile = null;
         AlignmentFile = null;
         DiscordantRateIncrement = DEFAULT_DISC_RATE_INCREMENT;
 

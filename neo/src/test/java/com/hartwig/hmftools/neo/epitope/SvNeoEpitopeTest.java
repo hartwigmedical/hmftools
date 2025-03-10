@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.neo.epitope.SvNeoEpitope.svIsNonDisruptiveInCodingTranscript;
 
 import static org.junit.Assert.assertEquals;
@@ -54,7 +54,7 @@ public class SvNeoEpitopeTest
 
         // intronic
         NeoEpitopeFusion svData = new NeoEpitopeFusion(
-                GENE_ID_1, GENE_ID_1, CHR_1, 35, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 55, NEG_ORIENT,
+                GENE_ID_1, GENE_ID_1, CHR_1, 35, ORIENT_FWD, 1, GENE_ID_1, GENE_ID_1, CHR_1, 55, ORIENT_REV,
                 1, 1, 1, "", 0, validTrans);
 
         NeoEpitope neData = new SvNeoEpitope(svData);
@@ -63,8 +63,8 @@ public class SvNeoEpitopeTest
 
         assertEquals(35, neData.position(FS_UP));
         assertEquals(55, neData.position(FS_DOWN));
-        assertEquals(POS_ORIENT, neData.orientation(FS_UP));
-        assertEquals(NEG_ORIENT, neData.orientation(FS_DOWN));
+        assertEquals(ORIENT_FWD, neData.orientation(FS_UP));
+        assertEquals(ORIENT_REV, neData.orientation(FS_DOWN));
 
         assertEquals(CODING, neData.CodingType[FS_UP]);
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
@@ -94,7 +94,7 @@ public class SvNeoEpitopeTest
 
         // intronic to exonic - skips to next exon
         svData = new NeoEpitopeFusion(
-                GENE_ID_1, GENE_ID_1, CHR_1, 35, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 45, NEG_ORIENT,
+                GENE_ID_1, GENE_ID_1, CHR_1, 35, ORIENT_FWD, 1, GENE_ID_1, GENE_ID_1, CHR_1, 45, ORIENT_REV,
                 1, 1, 1, "", 0, validTrans);
 
         neData = new SvNeoEpitope(svData);
@@ -123,7 +123,7 @@ public class SvNeoEpitopeTest
 
         // exonic to exonic, in phase
         svData = new NeoEpitopeFusion(
-                GENE_ID_1, GENE_ID_1, CHR_1, 44, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, NEG_ORIENT,
+                GENE_ID_1, GENE_ID_1, CHR_1, 44, ORIENT_FWD, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, ORIENT_REV,
                 1, 1, 1, "", 0, validTrans);
 
         neData = new SvNeoEpitope(svData);
@@ -155,7 +155,7 @@ public class SvNeoEpitopeTest
         String insSequence = "AA";
 
         svData = new NeoEpitopeFusion(
-                GENE_ID_1, GENE_ID_1, CHR_1, 44, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, NEG_ORIENT,
+                GENE_ID_1, GENE_ID_1, CHR_1, 44, ORIENT_FWD, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, ORIENT_REV,
                 1, 1,1, insSequence, 0, validTrans);
 
         neData = new SvNeoEpitope(svData);

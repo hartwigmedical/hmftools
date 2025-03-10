@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.peach.haplotype;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,10 +7,9 @@ import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
 
 public class HaplotypeCombination
 {
-    @NotNull
     private final Map<String, Integer> haplotypeNameToCount;
 
-    public HaplotypeCombination(@NotNull Map<String, Integer> haplotypeNameToCount)
+    public HaplotypeCombination(final Map<String, Integer> haplotypeNameToCount)
     {
         if(haplotypeNameToCount.values().stream().anyMatch(c -> c <= 0))
         {
@@ -30,7 +27,7 @@ public class HaplotypeCombination
         this.haplotypeNameToCount = haplotypeNameToCount;
     }
 
-    public boolean equals(@NotNull Object other)
+    public boolean equals(final Object other)
     {
         if(this == other)
         {
@@ -45,13 +42,11 @@ public class HaplotypeCombination
         return haplotypeNameToCount.equals(((HaplotypeCombination) other).haplotypeNameToCount);
     }
 
-    @NotNull
     public String toString()
     {
         return String.format("HaplotypeCombination(%s)", haplotypeNameToCount);
     }
 
-    @NotNull
     public Map<String, Integer> getHaplotypeNameToCount()
     {
         return new HashMap<>(haplotypeNameToCount);
@@ -62,7 +57,7 @@ public class HaplotypeCombination
         return haplotypeNameToCount.values().stream().mapToInt(c -> c).sum();
     }
 
-    public int getHaplotypeCountWithout(@NotNull String ignoredHaplotypeName)
+    public int getHaplotypeCountWithout(final String ignoredHaplotypeName)
     {
         return haplotypeNameToCount.entrySet()
                 .stream()
