@@ -20,7 +20,7 @@ public class DuplicateGroupBuilder
         mFormConsensus = config.FormConsensus;
         mUmiConfig = config.UMIs;
         mStats = new Statistics();
-        mUmiGroupBuilder = new UmiGroupBuilder(config.UMIs, mStats.UmiStats);
+        mUmiGroupBuilder = new UmiGroupBuilder(config.Sequencing, config.UMIs, mStats.UmiStats);
     }
 
     public Statistics statistics() { return mStats; }
