@@ -1,25 +1,24 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
+import static com.hartwig.hmftools.bamtools.remapper.RemapperConstants.MAX_LENGTH_FOR_PROPER_PAIR;
+import static com.hartwig.hmftools.bamtools.remapper.RemapperConstants.MIN_LENGTH_FOR_PROPER_PAIR;
+
 import java.util.Objects;
 import java.util.Set;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFlag;
 
 public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
 {
-    @NotNull
     public final HlaAlignment Left;
-    @NotNull
     public final HlaAlignment Right;
     private final int InterPairDistance;
 
-    public HlaAlignmentPair(@NotNull final HlaAlignment left, @NotNull final HlaAlignment right)
+    public HlaAlignmentPair(final HlaAlignment left, final HlaAlignment right)
     {
-        this.Left = left;
-        this.Right = right;
-        InterPairDistance = Math.abs(Math.abs(left.Position_1Based) - Math.abs(right.Position_1Based));
+        Left = left;
+        Right = right;
+        InterPairDistance = Math.abs(Math.abs(left.Position) - Math.abs(right.Position));
     }
 
     public boolean oneOfPairIsUnmapped()
@@ -32,7 +31,7 @@ public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
         final Set<SAMFlag> leftFlags = SAMFlag.getFlags(Left.getSamFlag());
         final Set<SAMFlag> rightFlags = SAMFlag.getFlags(Right.getSamFlag());
         boolean orientationOk = leftFlags.contains(SAMFlag.READ_REVERSE_STRAND) != rightFlags.contains(SAMFlag.READ_REVERSE_STRAND);
-        if (!orientationOk)
+        if(!orientationOk)
         {
             return false;
         }
@@ -41,7 +40,7 @@ public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
         {
             return false;
         }
-        return InterPairDistance > 50 && InterPairDistance < 1000;
+        return InterPairDistance > MIN_LENGTH_FOR_PROPER_PAIR && InterPairDistance < MAX_LENGTH_FOR_PROPER_PAIR;
     }
 
     public int interPairDistance()
@@ -50,7 +49,7 @@ public class HlaAlignmentPair implements Comparable<HlaAlignmentPair>
     }
 
     @Override
-    public int compareTo(@NotNull final HlaAlignmentPair o)
+    public int compareTo(final HlaAlignmentPair o)
     {
         return interPairDistance() - o.interPairDistance();
     }

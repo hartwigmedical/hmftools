@@ -47,10 +47,11 @@ public class BwaPairAligner implements PairAligner
             mAligner = null;
         }
     }
+
     @Override
-    public ImmutablePair<List<BwaMemAlignment>,List<BwaMemAlignment>> alignSequences(final byte[] bases1, final byte[] bases2)
+    public ImmutablePair<List<BwaMemAlignment>, List<BwaMemAlignment>> alignSequences(final byte[] bases1, final byte[] bases2)
     {
-        List<List<BwaMemAlignment>> rawResults =  mAligner.alignSeqs(List.of(bases1, bases2));
+        List<List<BwaMemAlignment>> rawResults = mAligner.alignSeqs(List.of(bases1, bases2));
         return ImmutablePair.of(rawResults.get(0), rawResults.get(1));
     }
 }

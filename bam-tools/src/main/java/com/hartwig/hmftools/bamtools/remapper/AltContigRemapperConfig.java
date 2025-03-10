@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.bam.BamUtils;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.LIBBWA_PATH;
@@ -15,37 +10,42 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 public class AltContigRemapperConfig
 {
-    public final String mOutputFile;
-    public final String mOrigBamFile;
-    public final String mRefGenomeFile;
-    public final RefGenomeVersion mRefGenVersion;
-    public final String mBamToolPath;
-    public final int mThreads;
+    public final String OutputFile;
+    public final String OrigBamFile;
+    public final String RefGenomeFile;
+    public final RefGenomeVersion RefGenVersion;
+    public final String BamToolPath;
+    public final int Threads;
 
     private static final String OUTPUT_FILE = "output_file";
     private static final String ORIG_BAM_FILE = "orig_bam_file";
 
     public AltContigRemapperConfig(final ConfigBuilder configBuilder)
     {
-        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
-        mOrigBamFile = configBuilder.getValue(ORIG_BAM_FILE);
-        mRefGenomeFile = configBuilder.getValue(REF_GENOME);
-        mBamToolPath = configBuilder.getValue(BAMTOOL_PATH);
-        mThreads = configBuilder.getInteger(THREADS);
+        OutputFile = configBuilder.getValue(OUTPUT_FILE);
+        OrigBamFile = configBuilder.getValue(ORIG_BAM_FILE);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
+        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+        Threads = configBuilder.getInteger(THREADS);
 
-        if(mOrigBamFile == null || mOutputFile == null)
+        if(OrigBamFile == null || OutputFile == null)
         {
             BT_LOGGER.error("missing config: bam(orig={} new={})",
-                    mOrigBamFile != null, mOutputFile != null);
+                    OrigBamFile != null, OutputFile != null);
             System.exit(1);
         }
         loadAlignerLibrary(null);
 
-        mRefGenVersion = BamUtils.deriveRefGenomeVersion(mOrigBamFile);
+        RefGenVersion = BamUtils.deriveRefGenomeVersion(OrigBamFile);
 
-        BT_LOGGER.info("origBam({}) outputFile({})", mOrigBamFile, mOutputFile);
+        BT_LOGGER.info("origBam({}) outputFile({})", OrigBamFile, OutputFile);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -63,17 +63,17 @@ public class AltContigRemapperConfig
 
     public PairAligner aligner()
     {
-        return new BwaPairAligner(mRefGenomeFile);
+        return new BwaPairAligner(RefGenomeFile);
     }
 
     @VisibleForTesting
     public AltContigRemapperConfig(String origBamFile, String outputFile, String bamToolPath)
     {
-        mOrigBamFile = origBamFile;
-        mOutputFile = outputFile;
-        mBamToolPath = bamToolPath;
-        mRefGenomeFile = null;
-        mRefGenVersion = RefGenomeVersion.V38;
-        mThreads = 1;
+        OrigBamFile = origBamFile;
+        OutputFile = outputFile;
+        BamToolPath = bamToolPath;
+        RefGenomeFile = null;
+        RefGenVersion = RefGenomeVersion.V38;
+        Threads = 1;
     }
 }

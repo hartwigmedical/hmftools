@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -16,25 +15,21 @@ import htsjdk.samtools.SAMRecord;
 public class BwaHlaRecordAligner implements HlaRecordAligner
 {
 
-    private @NotNull
-    final PairAligner mAligner;
-    private @NotNull
-    final SAMFileHeader mHeader;
-    private @NotNull
-    final RefGenomeVersion mRefGenomeVersion;
+    private final PairAligner mAligner;
+    private final SAMFileHeader mHeader;
+    private final RefGenomeVersion mRefGenomeVersion;
 
-    public BwaHlaRecordAligner(@NotNull final PairAligner aligner,
-            @NotNull final SAMFileHeader newHeader,
-            @NotNull final RefGenomeVersion refGenomeVersion)
+    public BwaHlaRecordAligner(final PairAligner aligner,
+            final SAMFileHeader newHeader,
+            final RefGenomeVersion refGenomeVersion)
     {
-        this.mAligner = aligner;
+        mAligner = aligner;
         mHeader = newHeader;
-        this.mRefGenomeVersion = refGenomeVersion;
+        mRefGenomeVersion = refGenomeVersion;
     }
 
-    @NotNull
     @Override
-    public List<SAMRecord> alignPair(@NotNull final RecordPair pair)
+    public List<SAMRecord> alignPair(final RecordPair pair)
     {
         ImmutablePair<List<BwaMemAlignment>, List<BwaMemAlignment>> alignments =
                 mAligner.alignSequences(pair.leftBasesForRealignment(), pair.rightBasesForRealignment());
@@ -54,7 +49,6 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
         fixProperPairFlag(principalLeftRemapped);
         fixProperPairFlag(principalRightRemapped);
 
-        // Create a result list and add the pair.
         List<SAMRecord> result = new ArrayList<>();
         result.add(principalLeftRemapped);
         result.add(principalRightRemapped);
@@ -71,7 +65,7 @@ public class BwaHlaRecordAligner implements HlaRecordAligner
     private static void fixProperPairFlag(SAMRecord record)
     {
         int insertLength = Math.abs(record.getInferredInsertSize());
-        final boolean insertLengthOK = insertLength < 1000 && insertLength > 50;
+        final boolean insertLengthOK = insertLength < RemapperConstants.MAX_LENGTH_FOR_PROPER_PAIR && insertLength > RemapperConstants.MIN_LENGTH_FOR_PROPER_PAIR;
         final boolean sameStrand = Objects.equals(record.getReferenceIndex(), record.getMateReferenceIndex());
         if(insertLengthOK && sameStrand)
         {

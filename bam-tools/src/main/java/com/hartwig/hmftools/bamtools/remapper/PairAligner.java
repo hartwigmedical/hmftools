@@ -7,5 +7,5 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 public interface PairAligner
 {
-    ImmutablePair<List<BwaMemAlignment>,List<BwaMemAlignment>> alignSequences(final byte[] bases1, final byte[] bases2);
+    ImmutablePair<List<BwaMemAlignment>, List<BwaMemAlignment>> alignSequences(final byte[] bases1, final byte[] bases2);
 }

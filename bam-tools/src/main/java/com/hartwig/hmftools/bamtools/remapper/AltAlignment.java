@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class AltAlignment
 {
+    private static final String LOCATIONS_DELIM = ";";
+    private static final String ITEM_DELIM = ",";
     // consider moving into common and using in Linx instead of its SglMapping class
     public final String Chromosome;
     public final int Position;
@@ -18,7 +20,9 @@ public class AltAlignment
     public final String Cigar;
     public final int EditDistance;
 
-    public AltAlignment(final String chromosome, final int position, final Orientation orientation, final String cigar, final int editDistance)
+
+    public AltAlignment(final String chromosome, final int position, final Orientation orientation, final String cigar,
+            final int editDistance)
     {
         Chromosome = chromosome;
         Position = position;
@@ -27,14 +31,14 @@ public class AltAlignment
         EditDistance = editDistance;
     }
 
-    private static final String ITEM_DELIM = ",";
-
     public static List<AltAlignment> fromLocationTag(final String locationTag)
     {
         if(locationTag.isEmpty())
+        {
             return Collections.emptyList();
+        }
 
-        final String[] mappingStrings = locationTag.split(";", -1);
+        final String[] mappingStrings = locationTag.split(LOCATIONS_DELIM, -1);
 
         List<AltAlignment> alignments = Lists.newArrayList();
 
@@ -43,7 +47,9 @@ public class AltAlignment
             AltAlignment mapping = fromBwaString(mappingData);
 
             if(mapping != null)
+            {
                 alignments.add(mapping);
+            }
         }
 
         return alignments;
@@ -55,12 +61,16 @@ public class AltAlignment
         final String[] items = mappingStr.split(ITEM_DELIM, 4);
 
         if(items.length != 4)
+        {
             return null;
+        }
 
         String chromosome = items[0];
 
         if(!HumanChromosome.contains(chromosome))
+        {
             return null;
+        }
 
         String orientPos = items[1];
         Orientation orientation = Orientation.fromChar(orientPos.charAt(0));

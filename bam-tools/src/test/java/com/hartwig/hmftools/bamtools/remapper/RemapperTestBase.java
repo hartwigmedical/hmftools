@@ -65,6 +65,7 @@ public class RemapperTestBase
                 parseInt(parts[15])
         );
     }
+
     List<SAMRecord> records = readTestFile();
 
     SAMFileHeader samFileHeader()

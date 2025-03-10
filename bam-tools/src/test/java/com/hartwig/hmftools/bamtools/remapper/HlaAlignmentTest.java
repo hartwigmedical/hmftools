@@ -28,9 +28,11 @@ public class HlaAlignmentTest extends RemapperTestBase
     public void createSAMRecord()
     {
         String readName = "A00624:8:HHKYHDSXX:1:1446:18213:29684";
-        String nukes = "GGCCAGGGTCTCACACCCTCCAGAGCATGTACGGCTGCGACGTGGGGCCGGACGGGCGCCTCCTCCGCGGGCATAACCAGTACGCCTACGACGGCAAGGATTACATCGCCCTGAACGAGGACCTGCGCTCCTGGACCGCCGCGGACACGGC";
-        String qualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-        RawFastaData data = new RawFastaData(readName, nukes.getBytes(), qualities.getBytes());
+        String nukes =
+                "GGCCAGGGTCTCACACCCTCCAGAGCATGTACGGCTGCGACGTGGGGCCGGACGGGCGCCTCCTCCGCGGGCATAACCAGTACGCCTACGACGGCAAGGATTACATCGCCCTGAACGAGGACCTGCGCTCCTGGACCGCCGCGGACACGGC";
+        String qualities =
+                "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        BamReadData data = new BamReadData(readName, nukes.getBytes(), qualities.getBytes());
         BwaMemAlignment bwa = bwa("97,5,31355729,31355880,0,151,60,0,151,19,151M,151,null,5,31356297,719");
         HlaAlignment alignment = new HlaAlignment(bwa);
 
@@ -45,7 +47,7 @@ public class HlaAlignmentTest extends RemapperTestBase
         Assert.assertArrayEquals(qualities.getBytes(), sam.getBaseQualities());
         Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
         Assert.assertEquals(31355730, sam.getAlignmentStart());
-        Assert.assertEquals(mate.Position_1Based, sam.getMateAlignmentStart());
+        Assert.assertEquals(mate.Position, sam.getMateAlignmentStart());
         Assert.assertEquals(97, sam.getFlags());
         Assert.assertEquals(60, sam.getMappingQuality());
         Assert.assertEquals("151M", sam.getCigarString());
@@ -55,9 +57,11 @@ public class HlaAlignmentTest extends RemapperTestBase
     public void createSAMRecordReverseStrand()
     {
         String readName = "A00624:8:HHKYHDSXX:1:1446:18213:29684";
-        String nukes = "TTGTTCTCTGCCTCACACTCAGTGTGTTTGGGGCTCTGATTCCAGCACTTCTGAGTCACTTTACCTCCACTCAGATCAGGAGCAGAAGTCCCTGTTCCCCGCTCAGAGACTCGAACTTTCCAATGAATAGGAGATTATCCCAGGTGCCTGC";
-        String qualities = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFF";
-        RawFastaData data = new RawFastaData(readName, nukes.getBytes(), qualities.getBytes());
+        String nukes =
+                "TTGTTCTCTGCCTCACACTCAGTGTGTTTGGGGCTCTGATTCCAGCACTTCTGAGTCACTTTACCTCCACTCAGATCAGGAGCAGAAGTCCCTGTTCCCCGCTCAGAGACTCGAACTTTCCAATGAATAGGAGATTATCCCAGGTGCCTGC";
+        String qualities =
+                "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFF";
+        BamReadData data = new BamReadData(readName, nukes.getBytes(), qualities.getBytes());
         BwaMemAlignment bwa = bwa("145,5,31356297,31356448,0,151,60,1,146,108,151M,76C74,null,5,31355729,-719");
         HlaAlignment alignment = new HlaAlignment(bwa);
 
@@ -72,7 +76,7 @@ public class HlaAlignmentTest extends RemapperTestBase
         Assert.assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
         Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
         Assert.assertEquals(31356298, sam.getAlignmentStart());
-        Assert.assertEquals(mate.Position_1Based, sam.getMateAlignmentStart());
+        Assert.assertEquals(mate.Position, sam.getMateAlignmentStart());
         Assert.assertEquals(145, sam.getFlags());
         Assert.assertEquals(60, sam.getMappingQuality());
         Assert.assertEquals("151M", sam.getCigarString());
@@ -82,9 +86,11 @@ public class HlaAlignmentTest extends RemapperTestBase
     public void createSAMRecordUnmapped()
     {
         String readName = "A00624:8:HHKYHDSXX:4:2543:5737:19288";
-        String nukes = "TTTTTTTTTTTACTTTTTTTGTTTATGTTTGGTGGGTGTAACCTATGTTTCATTTTTTGTTTATGTTTTTTTAAACCATGGTGTTTTCCTCGCCTTCTGGACCTGTGGTTGGTTTTTTTTTTTTTGTTGTTCCATTTTTTCCCCCCTCGGT";
-        String qualities = ":FFF,FFFFF:,,FFF,F,,,,,F,F,F,::::FFF,F:F,:,F,F,F,F,F,F,FFF,FF,,F:FFF,F,,FF:,,,F,F,,,FF::,,,,F,,:,,FF,,,F,,:,,F,,:FF,F:FF,FF,,,F,F,,F,,,FF,,F,,FF,:,:,:F";
-        RawFastaData data = new RawFastaData(readName, nukes.getBytes(), qualities.getBytes());
+        String nukes =
+                "TTTTTTTTTTTACTTTTTTTGTTTATGTTTGGTGGGTGTAACCTATGTTTCATTTTTTGTTTATGTTTTTTTAAACCATGGTGTTTTCCTCGCCTTCTGGACCTGTGGTTGGTTTTTTTTTTTTTGTTGTTCCATTTTTTCCCCCCTCGGT";
+        String qualities =
+                ":FFF,FFFFF:,,FFF,F,,,,,F,F,F,::::FFF,F:F,:,F,F,F,F,F,F,FFF,FF,,F:FFF,F,,FF:,,,F,F,,,FF::,,,,F,,:,,FF,,,F,,:,,F,,:FF,F:FF,FF,,,F,F,,F,,,FF,,F,,FF,:,:,:F";
+        BamReadData data = new BamReadData(readName, nukes.getBytes(), qualities.getBytes());
         BwaMemAlignment bwa = bwa("181,-1,-1,-1,-1,-1,0,0,0,0,,null,null,5,29943927,0");
         HlaAlignment alignment = new HlaAlignment(bwa);
         BwaMemAlignment bwa2 = bwa("121,5,29943927,29944078,0,151,60,0,151,73,151M,151,null,-1,-1,0");
@@ -96,8 +102,8 @@ public class HlaAlignmentTest extends RemapperTestBase
         Assert.assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
         Assert.assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
         Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
-        Assert.assertEquals(mate.Position_1Based, sam.getAlignmentStart());
-        Assert.assertEquals(mate.Position_1Based, sam.getMateAlignmentStart());
+        Assert.assertEquals(mate.Position, sam.getAlignmentStart());
+        Assert.assertEquals(mate.Position, sam.getMateAlignmentStart());
         Assert.assertEquals(181, sam.getFlags());
         Assert.assertEquals(0, sam.getMappingQuality());
         Assert.assertEquals("*", sam.getCigarString());
@@ -109,9 +115,11 @@ public class HlaAlignmentTest extends RemapperTestBase
     {
         String readName = "A00624:8:HHKYHDSXX:4:2543:5737:19288";
         // A00624:8:HHKYHDSXX:4:2543:5737:19288	121	chr6	29943928	60	151M	=	29943928	FFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFF,FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF	NM:i:0	MD:Z:151	MQ:i:0	AS:i:151	XS:i:73
-        String nukes = "GGACCAGAAGTCGCTGTTCCCTTCTCAGGGAATAGAAGATTATCCCAGGTGCCTGTGTCCAGGCTGGTGTCTGGGTTCTGTGCTCTCTTCCCCATCCCGGGTGTCCTGTCCATTCTCAAGATGGCCACATGCGTGCTGGTGGAGTGTCCCA";
-        String qualities = "FFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFF,FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-        RawFastaData data = new RawFastaData(readName, nukes.getBytes(), qualities.getBytes());
+        String nukes =
+                "GGACCAGAAGTCGCTGTTCCCTTCTCAGGGAATAGAAGATTATCCCAGGTGCCTGTGTCCAGGCTGGTGTCTGGGTTCTGTGCTCTCTTCCCCATCCCGGGTGTCCTGTCCATTCTCAAGATGGCCACATGCGTGCTGGTGGAGTGTCCCA";
+        String qualities =
+                "FFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFF,FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        BamReadData data = new BamReadData(readName, nukes.getBytes(), qualities.getBytes());
         BwaMemAlignment bwa = bwa("121,5,29943927,29944078,0,151,60,0,151,73,151M,151,null,-1,-1,0");
         HlaAlignment alignment = new HlaAlignment(bwa);
 

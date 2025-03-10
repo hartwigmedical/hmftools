@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Arrays;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFlag;
@@ -24,14 +23,12 @@ public class HlaAlignment
 {
 
     private final BwaMemAlignment BaseAlignment;
-    public final int Position_1Based;
-    private final int MapQuality;
-    @NotNull
-    private final String Cigar;
-    @NotNull
+    public final int Position;
     final Set<SAMFlag> Flags;
+    private final int mMapQuality;
+    private final String mCigar;
 
-    public static @NotNull Set<HlaAlignment> hlaAlignments(BwaMemAlignment alignment, RefGenomeVersion refGenomeVersion)
+    public static Set<HlaAlignment> hlaAlignments(BwaMemAlignment alignment, RefGenomeVersion refGenomeVersion)
     {
         Set<HlaAlignment> result = new HashSet<>();
         result.add(new HlaAlignment(alignment));
@@ -55,23 +52,23 @@ public class HlaAlignment
 
     public HlaAlignment(final BwaMemAlignment baseAlignment, AltAlignment alignment)
     {
-        this.BaseAlignment = baseAlignment;
-        Position_1Based = alignment.Position;
-        MapQuality = 0; // Only the edit distance is available in the alts in the xa tag.
-        Cigar = alignment.Cigar;
+        BaseAlignment = baseAlignment;
+        Position = alignment.Position;
+        mMapQuality = 0; // Only the edit distance is available in the alts in the xa tag.
+        mCigar = alignment.Cigar;
         Flags = SAMFlag.getFlags(getSamFlag());
     }
 
     public HlaAlignment(final BwaMemAlignment baseAlignment)
     {
         this.BaseAlignment = baseAlignment;
-        Position_1Based = baseAlignment.getRefStart() + 1;
-        MapQuality = baseAlignment.getMapQual();
-        Cigar = baseAlignment.getCigar();
+        Position = baseAlignment.getRefStart() + 1;
+        mMapQuality = baseAlignment.getMapQual();
+        mCigar = baseAlignment.getCigar();
         Flags = SAMFlag.getFlags(getSamFlag());
     }
 
-    public SAMRecord createSamRecord(SAMFileHeader header, RawFastaData raw, HlaAlignment mate)
+    public SAMRecord createSamRecord(SAMFileHeader header, BamReadData raw, HlaAlignment mate)
     {
         SAMRecord remappedRecord = new SAMRecord(header);
         remappedRecord.setReadName(raw.ReadName);
@@ -80,16 +77,16 @@ public class HlaAlignment
         if(isUnmapped())
         {
             remappedRecord.setReferenceIndex(mate.getRefId());
-            remappedRecord.setAlignmentStart(mate.Position_1Based);
+            remappedRecord.setAlignmentStart(mate.Position);
             remappedRecord.setCigarString("*");
             remappedRecord.setMappingQuality(0);
         }
         else
         {
             remappedRecord.setReferenceIndex(getRefId());
-            remappedRecord.setAlignmentStart(Position_1Based);
-            remappedRecord.setCigarString(Cigar);
-            remappedRecord.setMappingQuality(MapQuality);
+            remappedRecord.setAlignmentStart(Position);
+            remappedRecord.setCigarString(mCigar);
+            remappedRecord.setMappingQuality(mMapQuality);
         }
         if(remappedRecord.getReadNegativeStrandFlag())
         {
@@ -104,27 +101,27 @@ public class HlaAlignment
         remappedRecord.setAttribute(SamRecordUtils.NUM_MUTATONS_ATTRIBUTE, BaseAlignment.getNMismatches());
         remappedRecord.setAttribute(SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE, BaseAlignment.getMDTag());
         remappedRecord.setAttribute(SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE, BaseAlignment.getAlignerScore());
-        remappedRecord.setAttribute(SamRecordUtils.SUBOPTIMAL_SCORE_ATTRIBUTE, BaseAlignment.getSuboptimalScore());
+        remappedRecord.setAttribute(SamRecordUtils.XS_ATTRIBUTE, BaseAlignment.getSuboptimalScore());
 
-        if (mate.isUnmapped())
+        if(mate.isUnmapped())
         {
-            remappedRecord.setMateAlignmentStart(Position_1Based);
+            remappedRecord.setMateAlignmentStart(Position);
             remappedRecord.setMateReferenceIndex(getRefId());
             remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, "*");
         }
         else
         {
-            remappedRecord.setMateAlignmentStart(mate.Position_1Based);
+            remappedRecord.setMateAlignmentStart(mate.Position);
             remappedRecord.setMateReferenceIndex(mate.getRefId());
-            remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, mate.Cigar);
+            remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, mate.mCigar);
         }
         remappedRecord.setInferredInsertSize(calculateInsertSize(remappedRecord, mate));
-        remappedRecord.setAttribute(SamRecordUtils.MATE_QUALITY_ATTRIBUTE, mate.MapQuality);
+        remappedRecord.setAttribute(SamRecordUtils.MATE_QUALITY_ATTRIBUTE, mate.mMapQuality);
 
         return remappedRecord;
     }
 
-    private static int calculateInsertSize(@NotNull final SAMRecord record, @NotNull final HlaAlignment mate)
+    private static int calculateInsertSize(final SAMRecord record, final HlaAlignment mate)
     {
         if(record.isSecondaryOrSupplementary())
         {
@@ -148,7 +145,7 @@ public class HlaAlignment
 
     private int getAlignmentEnd()
     {
-        return Position_1Based + TextCigarCodec.decode(Cigar).getReferenceLength() - 1;
+        return Position + TextCigarCodec.decode(mCigar).getReferenceLength() - 1;
     }
 
     @Override
@@ -159,22 +156,22 @@ public class HlaAlignment
             return false;
         }
         final HlaAlignment that = (HlaAlignment) o;
-        return Position_1Based == that.Position_1Based && Objects.equals(BaseAlignment, that.BaseAlignment);
+        return Position == that.Position && Objects.equals(BaseAlignment, that.BaseAlignment);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(BaseAlignment, Position_1Based);
+        return Objects.hash(BaseAlignment, Position);
     }
 
     @Override
     public String toString()
     {
         return "HlaAlignment{" +
-                ", Position=" + Position_1Based +
-                ", MapQuality=" + MapQuality +
-                ", Cigar='" + Cigar + '\'' +
+                ", Position=" + Position +
+                ", MapQuality=" + mMapQuality +
+                ", Cigar='" + mCigar + '\'' +
                 '}';
     }
 

@@ -4,29 +4,21 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFlag;
 
 public class AlignmentsList
 {
-    @NotNull private final List<BwaMemAlignment> Alignments;
+    private final List<BwaMemAlignment> mAlignments;
 
-    public AlignmentsList(@NotNull final List<BwaMemAlignment> alignments)
+    public AlignmentsList(final List<BwaMemAlignment> alignments)
     {
-        if (alignments.isEmpty()) {
-            throw new IllegalArgumentException("alignments must not be empty");
-        }
-        if (isSupplementary(alignments.get(0)))
-        {
-            throw new IllegalArgumentException("first alignment must not be supplementary");
-        }
         long numberOfNonSupplementaries = alignments.stream().filter(AlignmentsList::isNotSupplementary).count();
-        if (numberOfNonSupplementaries != 1)
+        if(numberOfNonSupplementaries != 1)
         {
             throw new IllegalArgumentException("only one non-supplementary alignment is allowed");
         }
-        this.Alignments = alignments;
+        mAlignments = alignments;
     }
 
     private static boolean isSupplementary(final BwaMemAlignment alignment)
@@ -41,11 +33,11 @@ public class AlignmentsList
 
     public BwaMemAlignment principalAlignment()
     {
-        return Alignments.get(0);
+        return mAlignments.get(0);
     }
 
     public Stream<HlaAlignment> supplementaryAlignments()
     {
-        return Alignments.subList(1, Alignments.size()).stream().map(HlaAlignment::new);
+        return mAlignments.subList(1, mAlignments.size()).stream().map(HlaAlignment::new);
     }
 }

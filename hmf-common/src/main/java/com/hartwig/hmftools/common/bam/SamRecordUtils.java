@@ -39,6 +39,7 @@ public final class SamRecordUtils
 
     public static final String XS_ATTRIBUTE = "XS";
 
+
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
     public static final String UMI_TYPE_ATTRIBUTE = "UT"; // UMI type - single, dual/duplex or no duplicates

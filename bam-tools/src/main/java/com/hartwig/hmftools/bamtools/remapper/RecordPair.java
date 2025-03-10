@@ -2,53 +2,26 @@ package com.hartwig.hmftools.bamtools.remapper;
 
 import java.util.Objects;
 
-import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
 public class RecordPair
 {
-    public final @NotNull SAMRecord First;
-    public final @NotNull SAMRecord Second;
+    public final SAMRecord First;
+    public final SAMRecord Second;
 
-    public RecordPair(@NotNull final SAMRecord aRecord, @NotNull final SAMRecord anotherRecord)
+    public RecordPair(final SAMRecord aRecord, final SAMRecord anotherRecord)
     {
-        if(!aRecord.getReadName().equals(anotherRecord.getReadName()))
-        {
-            throw new IllegalArgumentException("Left read name does not match right read name.");
-        }
-        if(!SamRecordUtils.firstInPair(aRecord))
-        {
-            throw new IllegalArgumentException("Left read is not first in pair.");
-        }
-        if(!SamRecordUtils.secondInPair(anotherRecord))
-        {
-            throw new IllegalArgumentException("Right read is not second in pair.");
-        }
-        if(aRecord.getProperPairFlag() != anotherRecord.getProperPairFlag())
-        {
-            throw new IllegalArgumentException("Proper pair values not equal.");
-        }
         if(aRecord.getFirstOfPairFlag())
         {
-            if(!anotherRecord.getSecondOfPairFlag())
-            {
-                throw new IllegalArgumentException("Records do not form a proper pair.");
-            }
-            this.First = aRecord;
-            this.Second = anotherRecord;
+            First = aRecord;
+            Second = anotherRecord;
         }
         else if(aRecord.getSecondOfPairFlag())
         {
-            if(!anotherRecord.getFirstOfPairFlag())
-            {
-                throw new IllegalArgumentException("Records do not form a proper pair.");
-            }
-            this.Second = aRecord;
-            this.First = anotherRecord;
+            Second = aRecord;
+            First = anotherRecord;
         }
         else
         {
@@ -56,14 +29,14 @@ public class RecordPair
         }
     }
 
-    public RawFastaData leftData()
+    public BamReadData leftData()
     {
-        return RawFastaData.fromRecord(First);
+        return BamReadData.fromRecord(First);
     }
 
-    public RawFastaData rightData()
+    public BamReadData rightData()
     {
-        return RawFastaData.fromRecord(Second);
+        return BamReadData.fromRecord(Second);
     }
 
     public byte[] leftBasesForRealignment()
