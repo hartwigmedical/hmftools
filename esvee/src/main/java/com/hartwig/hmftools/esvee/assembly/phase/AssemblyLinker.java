@@ -61,85 +61,97 @@ public final class AssemblyLinker
         if(linkDistance < PHASED_ASSEMBLY_MIN_TI || linkDistance > PHASED_ASSEMBLY_MAX_TI)
             return null;
 
+        boolean requireSharedRead = true;
+
         if(!first.refSideSoftClips().isEmpty() && !second.refSideSoftClips().isEmpty())
         {
             // cannot have ref aligned bases run past the other junction
-            if(!refSideSoftClipMatchesJunction(lower, upper.junction().Position))
-                return null;
-
-            if(!refSideSoftClipMatchesJunction(upper, lower.junction().Position))
-                return null;
-        }
-        else if(first.indel() || second.indel())
-        {
-            // if they share a read and the read contains the indel coords, then consider this a facing link
-            IndelCoords firstIndelCoords = first.indelCoords();
-            IndelCoords secondIndelCoords = second.indelCoords();
-
-            // must share a junction read and/or mate in each with one matching the indel coordinates
-            boolean matched = false;
-
-            for(SupportRead support : first.support())
+            if(refSideSoftClipMatchesJunction(lower, upper.junction().Position)
+            && refSideSoftClipMatchesJunction(upper, lower.junction().Position))
             {
-                if(!support.type().isSplitSupport())
-                    continue;
+                requireSharedRead = false;
+            }
+        }
 
-                for(SupportRead secondSupport : second.support())
+        if(requireSharedRead)
+        {
+            if(first.indel() || second.indel())
+            {
+                // if they share a read and the read contains the indel coords, then consider this a facing link
+                IndelCoords firstIndelCoords = first.indelCoords();
+                IndelCoords secondIndelCoords = second.indelCoords();
+
+                // must share a junction read and/or mate in each with one matching the indel coordinates
+                boolean matched = false;
+
+                for(SupportRead support : first.support())
                 {
-                    if(!secondSupport.type().isSplitSupport())
+                    if(!support.type().isSplitSupport())
                         continue;
 
-                    if(!secondSupport.matchesFragment(support, true))
-                        continue;
-
-                    if(firstIndelCoords != null)
+                    for(SupportRead secondSupport : second.support())
                     {
-                        if(support.indelCoords() != null && support.indelCoords().matches(firstIndelCoords))
-                            matched = true;
-                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(firstIndelCoords))
-                            matched = true;
-                    }
-                    else
-                    {
-                        if(support.indelCoords() != null && support.indelCoords().matches(secondIndelCoords))
-                            matched = true;
-                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(secondIndelCoords))
-                            matched = true;
-                    }
+                        if(!secondSupport.type().isSplitSupport())
+                            continue;
 
-                    if(matched)
-                        break;
+                        if(!secondSupport.matchesFragment(support, true))
+                            continue;
+
+                        if(firstIndelCoords != null)
+                        {
+                            if(support.indelCoords() != null && support.indelCoords().matches(firstIndelCoords))
+                                matched = true;
+                            else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(firstIndelCoords))
+                                matched = true;
+                        }
+                        else
+                        {
+                            if(support.indelCoords() != null && support.indelCoords().matches(secondIndelCoords))
+                                matched = true;
+                            else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(secondIndelCoords))
+                                matched = true;
+                        }
+
+                        if(matched)
+                            break;
+                    }
                 }
+
+                if(!matched)
+                    return null;
             }
-
-            if(!matched)
-                return null;
-        }
-        else
-        {
-            // cannot have ref bases extending past each other's junctions
-            if(lower.refBaseLength() > linkDistance || upper.refBaseLength() > linkDistance)
-                return null;
-
-            boolean matched = false;
-
-            // require a shared split read
-            for(SupportRead support : first.support())
+            else
             {
-                if(!support.type().isSplitSupport())
-                    continue;
+                // cannot have ref bases extending past each other's junctions
+                if(lower.refBaseLength() > linkDistance || upper.refBaseLength() > linkDistance)
+                    return null;
 
-                if(second.support()
-                        .stream().filter(x -> x.type() == SupportType.JUNCTION)
-                        .anyMatch(x -> x.matchesFragment(support, true)))
+                boolean matched = false;
+
+                // require a shared split read in either of the assemblies
+                for(int i = 0; i <= 0; ++i)
                 {
-                    matched = true;
-                    break;
-                }
-            }
+                    List<SupportRead> splitSupport = (i == 0) ? first.support() : second.support();
+                    List<SupportRead> otherSupport = (i == 0) ? second.support() : first.support();
 
-            if(!matched)
-                return null;
+                    for(SupportRead support : splitSupport)
+                    {
+                        if(!support.type().isSplitSupport())
+                            continue;
+
+                        if(otherSupport
+                                .stream().filter(x -> x.type() == SupportType.JUNCTION || x.type() == SupportType.DISCORDANT)
+                                .anyMatch(x -> x.matchesFragment(support, true)))
+                        {
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(!matched)
+                    return null;
+            }
         }
 
         // ensure the ref base positions of each assembly now match

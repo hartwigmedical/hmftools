@@ -216,8 +216,6 @@ public class AssemblyConfig
 
         WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
 
-        AssemblyDetailedTsv = configBuilder.hasFlag(ASSEMBLY_TSV_DETAILED);
-
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
         setSequencingType(configBuilder);
@@ -254,6 +252,8 @@ public class AssemblyConfig
         {
             SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
         }
+
+        AssemblyDetailedTsv = configBuilder.hasFlag(ASSEMBLY_TSV_DETAILED) || hasFilters;
 
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
