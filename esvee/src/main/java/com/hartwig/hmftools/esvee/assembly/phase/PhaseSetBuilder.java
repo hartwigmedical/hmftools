@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.SPLIT_LINK;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.UNMAPPED;
 import static com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor.collectCandidateRemoteRegions;
+import static com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor.purgeSupplementaryReads;
 import static com.hartwig.hmftools.esvee.assembly.read.Read.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyLink.swapAssemblies;
@@ -434,7 +435,10 @@ public class PhaseSetBuilder
             List<Read> unmappedReads = Lists.newArrayList(assembly.unmappedReads());
 
             List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
-            mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, unmappedReads, hasHighAssemblyCount);
+            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, hasHighAssemblyCount);
+
+            purgeSupplementaryReads(assembly, remoteReads);
+            unmappedReads.addAll(remoteReads);
 
             if(unmappedReads.isEmpty())
                 continue;
@@ -494,8 +498,10 @@ public class PhaseSetBuilder
                         .forEach(x -> combinedRemoteRegions.add(x));
             }
 
-            mRemoteReadExtractor.extractRemoteRegionReads(
-                    mPhaseGroup.id(), combinedRemoteRegions, sharedUnmappedReads, hasHighAssemblyCount());
+            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, hasHighAssemblyCount());
+            purgeSupplementaryReads(assembly, remoteReads);
+
+            sharedUnmappedReads.addAll(remoteReads);
 
             if(sharedUnmappedReads.isEmpty())
                 continue;

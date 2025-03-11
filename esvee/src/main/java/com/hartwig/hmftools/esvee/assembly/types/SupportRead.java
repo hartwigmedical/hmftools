@@ -70,7 +70,7 @@ public class SupportRead
     private final boolean mHasLineTail;
 
     // the distance from the read's start (ie index not position) to the assembly junction index
-    // if the read start is before the junction index then the value is negative
+    // if the read start is before the junction index then the value is positive
     private final int mJunctionReadStartDistance;
 
     private int mFullAssemblyIndex; // index within this read's full linked assembly sequence (if exists) if the read's start position

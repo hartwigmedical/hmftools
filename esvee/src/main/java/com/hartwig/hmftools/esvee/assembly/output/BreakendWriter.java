@@ -27,6 +27,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
+import com.hartwig.hmftools.esvee.assembly.alignment.HomologyData;
 import com.hartwig.hmftools.esvee.assembly.types.InsertionType;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -155,7 +156,7 @@ public class BreakendWriter
 
                 sj.add(breakend.InsertedBases);
 
-                if(breakend.Homology != null)
+                if(breakend.Homology.exists())
                 {
                     sj.add(breakend.Homology.Homology);
                     sj.add(format("%d,%d", breakend.Homology.ExactStart, breakend.Homology.ExactEnd));

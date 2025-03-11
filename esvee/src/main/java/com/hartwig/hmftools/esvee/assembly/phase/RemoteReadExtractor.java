@@ -19,6 +19,7 @@ import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -121,8 +122,7 @@ public class RemoteReadExtractor
     private static final int HIGH_REMOTE_REGION_READ_COUNT = 200;
     private static final int MAX_MATCHED_READ_CHECK = 100;
 
-    public void extractRemoteRegionReads(
-            final int phaseGroupId, final List<RemoteRegion> remoteRegions, final List<Read> remoteRegionReads, boolean applyThresholds)
+    public List<Read> extractRemoteRegionReads(final int phaseGroupId, final List<RemoteRegion> remoteRegions, boolean applyThresholds)
     {
         // slices the BAM at the specified locations for mates of reads in one or more assemblies
         // first merges overlapping reads to avoid repeated reads
@@ -155,6 +155,8 @@ public class RemoteReadExtractor
             }
         }
 
+        List<Read> remoteRegionReads = Lists.newArrayList();
+
         for(RemoteRegion remoteRegion : remoteRegions)
         {
             if(minRemoteRegionReadCount > 1 && remoteRegion.readCount() < minRemoteRegionReadCount)
@@ -162,14 +164,16 @@ public class RemoteReadExtractor
 
             List<Read> remoteReads = extractRemoteReads(phaseGroupId, remoteRegion);
 
+            // finally as a way of down-sample, restrict a single region's read contribution
             if(maxRemoteRegionReadCount > 0 && remoteReads.size() > maxRemoteRegionReadCount)
             {
                 remoteReads = remoteReads.subList(0, maxRemoteRegionReadCount);
             }
 
-            // finally as a way of down-sample, restrict a single region's read contribution
             remoteRegionReads.addAll(remoteReads);
         }
+
+        return remoteRegionReads;
     }
 
     private List<Read> extractRemoteReads(final int phaseGroupId, final RemoteRegion remoteRegion)
@@ -224,5 +228,30 @@ public class RemoteReadExtractor
             remoteRead.markReference();
 
         mMatchedRemoteReads.add(remoteRead);
+    }
+
+    public static void purgeSupplementaryReads(final JunctionAssembly assembly, final List<Read> remoteReads)
+    {
+        // purge any read which is a supplementary of an existing junction read
+        List<SupportRead> junctionSupplementaries = assembly.support()
+                .stream().filter(x -> x.isSupplementary()).collect(Collectors.toList());
+
+        if(junctionSupplementaries.isEmpty())
+            return;
+
+        int index = 0;
+        while(index < remoteReads.size())
+        {
+            Read read = remoteReads.get(index);
+
+            SupportRead matchedJunctionRead = junctionSupplementaries
+                    .stream().filter(x -> x.matchesFragment(read, false) && x.firstInPair() == read.firstInPair())
+                    .findFirst().orElse(null);
+
+            if(matchedJunctionRead != null)
+                remoteReads.remove(index);
+            else
+                ++index;
+        }
     }
 }
