@@ -518,27 +518,16 @@ public class RefBaseExtender
                 continue;
 
             // favour junction mates with ref base support first
-            SupportRead juncMate = null;
-
             if(read.hasJunctionMate())
             {
-                // mate of a junction read with a permitted number of ref mismatches
-                juncMate = assembly.support().stream()
-                        .filter(x -> x.type() == JUNCTION)
-                        .filter(x -> x.hasReferenceMismatches() && x.referenceMismatches() <= permittedMismatches)
-                        .filter(x-> x.matchesFragment(read, false)).findFirst().orElse(null);
-            }
-            else
-            {
-                // otherwise any mate matching an extension read (which is why the extension was tested in the first place)
-                juncMate = assembly.support().stream()
-                        .filter(x -> x.type() == EXTENSION && x.matchesFragment(read, false)).findFirst().orElse(null);
-            }
+                SupportRead juncMate = assembly.support().stream()
+                        .filter(x -> x.type() == JUNCTION && x.matchesFragment(read, false)).findFirst().orElse(null);
 
-            if(juncMate != null)
-            {
-                checkAddRefBaseRead(assembly, read, JUNCTION_MATE, 0);
-                continue;
+                if(juncMate != null && juncMate.hasReferenceMismatches() && juncMate.referenceMismatches() <= permittedMismatches)
+                {
+                    checkAddRefBaseRead(assembly, read, JUNCTION_MATE, 0);
+                    continue;
+                }
             }
 
             secondarySupportReads.add(read);
