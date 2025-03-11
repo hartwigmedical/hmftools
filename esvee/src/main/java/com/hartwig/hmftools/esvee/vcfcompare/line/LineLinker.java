@@ -57,7 +57,7 @@ public class LineLinker
 
     public static Map<String, List<VariantBreakend>> dedupBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
     {
-        SV_LOGGER.info("Selecting unique variants by coords");
+        SV_LOGGER.debug("selecting unique variants by coords");
 
         Map<String, List<VariantBreakend>> chrBreakendMapDeduped = new LinkedHashMap<>();
         int selectedCount = 0;
@@ -106,14 +106,14 @@ public class LineLinker
             chrBreakendMapDeduped.put(chromosome, chrBreakendsDeduped);
         }
 
-        SV_LOGGER.debug("Found unique {} variants preferring poly A, then highest qual", selectedCount);
+        SV_LOGGER.trace("found unique {} variants preferring poly A, then highest qual", selectedCount);
 
         return chrBreakendMapDeduped;
     }
 
     public static void linkBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
     {
-        SV_LOGGER.info("Linking breakends with LINE characteristics");
+        SV_LOGGER.info("linking breakends with LINE characteristics");
 
         int linkCount = 0;
 
@@ -146,16 +146,15 @@ public class LineLinker
 
         if(linkCount > 0)
         {
-            SV_LOGGER.debug("Formed {} LINE links", linkCount);
+            SV_LOGGER.trace("formed {} LINE links", linkCount);
         }
     }
 
     public static void inferLinksBetweenBreakendSets(
-            Map<String, List<VariantBreakend>> chrMaybePolyASitesMap,
-            Map<String, List<VariantBreakend>> chrMaybeOtherSitesMap,
-            LineLinkType linkType
-    ){
-        SV_LOGGER.info("Inferring LINE links between sets of breakends: {}", linkType);
+            final Map<String,List<VariantBreakend>> chrMaybePolyASitesMap, final Map<String,List<VariantBreakend>> chrMaybeOtherSitesMap,
+            final LineLinkType linkType)
+    {
+        SV_LOGGER.debug("inferring LINE links between sets of breakends: {}", linkType);
 
         int linkCount = 0;
 
@@ -193,7 +192,7 @@ public class LineLinker
 
         if(linkCount > 0)
         {
-            SV_LOGGER.debug("Inferred {} LINE links", linkCount);
+            SV_LOGGER.trace("inferred {} LINE links", linkCount);
         }
     }
 }

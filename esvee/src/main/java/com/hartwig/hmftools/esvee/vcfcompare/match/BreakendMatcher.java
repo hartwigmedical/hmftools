@@ -68,7 +68,7 @@ public class BreakendMatcher
 
         if(matchedCount > 0)
         {
-            SV_LOGGER.debug("Found {} variants with match type: {}", matchedCount, matchType);
+            SV_LOGGER.trace("found {} variants with match type: {}", matchedCount, matchType);
         }
     }
 
