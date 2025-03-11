@@ -25,6 +25,7 @@ public final class GeneTestUtils
     public static final String CHR_2 = "2";
     public static final String CHR_3 = "3";
     public static final String CHR_4 = "4";
+    public static final String CHR_6 = "6";
 
     public static final String GENE_ID_1 = "ENSG001";
     public static final String GENE_ID_2 = "ENSG002";

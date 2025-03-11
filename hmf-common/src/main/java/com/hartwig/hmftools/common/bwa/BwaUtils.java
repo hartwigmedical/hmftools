@@ -9,11 +9,11 @@ import org.jetbrains.annotations.Nullable;
 public final class BwaUtils
 {
     public static final String LIBBWA_PATH = "LIBBWA_PATH"; // as expected by the BWA library
-    public static final String LIBBWA_PREFIX = "libbwa.";
+    public static final String LIBBWA_PREFIX = "libbwwwa.";
 
     public static final String MAC_OS = "Mac";
     public static final String MAC_ARCH = "aarch64";
-    public static final String MAC_BWA_LIB = "libbwa.Darwin.dylib";
+    public static final String MAC_BWA_LIB = "libbwwwa.Darwin.dylib";
 
     public static final String BWA_LIB_PATH = "bwa_lib";
     public static final String BWA_LIB_PATH_DESC = "Path to BWA library";

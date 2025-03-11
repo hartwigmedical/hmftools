@@ -30,12 +30,15 @@ public final class SamRecordUtils
 {
     public static final String SUPPLEMENTARY_ATTRIBUTE = SAMTag.SA.name();
     public static final String MATE_CIGAR_ATTRIBUTE = SAMTag.MC.name();
+    public static final String MATE_QUALITY_ATTRIBUTE = SAMTag.MQ.name();
     public static final String NUM_MUTATONS_ATTRIBUTE = SAMTag.NM.name();
+    public static final String MISMATCHES_AND_DELETIONS_ATTRIBUTE = SAMTag.MD.name();
     public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
     public static final String ALIGNMENT_SCORE_ATTRIBUTE = SAMTag.AS.name();
     public static final String READ_GROUP_ATTRIBUTE = SAMTag.RG.name();
 
     public static final String XS_ATTRIBUTE = "XS";
+
 
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
