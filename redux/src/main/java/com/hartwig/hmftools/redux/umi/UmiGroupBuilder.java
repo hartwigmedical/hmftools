@@ -7,7 +7,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
+import static com.hartwig.hmftools.redux.common.Constants.MIN_POLYG_UMI_TAIL_LENGTH;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.redux.umi.UmiUtils.polyGTailLength;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.trimPolyGTail;
 
 import java.util.Collection;
@@ -511,7 +513,7 @@ public class UmiGroupBuilder
                 continue;
 
             String umiId = duplicateGroup.umiId();
-            if(umiId.charAt(umiId.length() - 1) != 'G')
+            if(polyGTailLength(umiId) < MIN_POLYG_UMI_TAIL_LENGTH)
                 continue;
 
             for(FragmentCoords preCollapsedCoords : duplicateGroup.preCollapsedFragmentCoordinates())
