@@ -65,15 +65,18 @@ public class NucleotideFragmentFactory
         int samCodingStartLoci = !reverseStrand ? codingPositionStartLoci : codingPositionEndLoci;
         int samCodingEndLoci = !reverseStrand ? codingPositionEndLoci : codingPositionStartLoci;
 
-        final char[] codingRegionRead = record.codingRegionRead(reverseStrand);
-        final int[] codingRegionQuality = record.codingRegionQuality(reverseStrand);
+        int readLength = record.ReadEnd - record.ReadStart + 1;
+        final char[] codingRegionReadBases = new char[readLength];
+        final byte[] codingRegionQualities = new byte[readLength];
+
+        record.populateCodingRegion(codingRegionReadBases, codingRegionQualities, reverseStrand);
 
         if(record.containsIndel() || record.containsSoftClip())
         {
             List<Integer> aminoAcidIndices = calcAminoAcidIndices(samCodingStartLoci, samCodingEndLoci);
             int firstAAIndex = aminoAcidIndices.get(0);
             int nucleotideStartLoci = firstAAIndex * 3;
-            String sequence = String.valueOf(codingRegionRead);
+            String sequence = String.valueOf(codingRegionReadBases);
             int startLoci = nucleotideStartLoci - samCodingStartLoci;
 
             if(startLoci < 0 || startLoci >= sequence.length())
@@ -109,9 +112,17 @@ public class NucleotideFragmentFactory
         if(samCodingStartLoci < 0 || samCodingEndLoci < 0)
             return null;
 
-        List<Integer> lociRange = formRange(samCodingStartLoci, samCodingEndLoci);
-        List<String> nucleotides = arrayToList(codingRegionRead);
-        List<Integer> qualities = arrayToList(codingRegionQuality);
+        int rangeLength = samCodingEndLoci - samCodingStartLoci + 1;
+        List<Integer> lociRange = Lists.newArrayListWithCapacity(rangeLength);
+        List<String> nucleotides = Lists.newArrayListWithCapacity(rangeLength);
+        List<Integer> qualities = Lists.newArrayListWithCapacity(rangeLength);
+
+        for(int i = 0; i < rangeLength; ++i)
+        {
+            lociRange.add(samCodingStartLoci + i);
+            nucleotides.add(String.valueOf(codingRegionReadBases[i]));
+            qualities.add(Integer.valueOf(codingRegionQualities[i]));
+        }
 
         return new Fragment(record, geneName, Sets.newHashSet(geneName), lociRange, qualities, nucleotides);
     }
@@ -153,8 +164,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment createIndelFragment(
-            final ReadRecord record, final String geneName, final int startLoci,
-            final String bamSequence, final HlaSequenceLoci hlaSequence)
+            final ReadRecord record, final String geneName, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
         List<Integer> aminoAcidLoci = formRange(startLoci, endLoci);

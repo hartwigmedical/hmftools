@@ -20,14 +20,17 @@ public class Fragment
     private final String mReadGene; // mapped gene
     private final Set<String> mGenes; // other potentially applicable genes
 
+    // initial values
+    private final List<Integer> mRawNucleotideLoci;
+    private final List<Integer> mRawNucleotideQuality;
+    private final List<String> mRawNucleotides;
+
+    // values which may be filtered
     private final List<Integer> mNucleotideLoci;
     private final List<Integer> mNucleotideQuality;
     private final List<String> mNucleotides;
 
     private boolean mIsQualFiltered;
-    private final List<Integer> mRawNucleotideLoci;
-    private final List<Integer> mRawNucleotideQuality;
-    private final List<String> mRawNucleotides;
 
     private int mAminoAcidConversionCount;
     private final List<Integer> mAminoAcidLoci;
@@ -36,22 +39,22 @@ public class Fragment
     private FragmentScope mScope;
 
     public Fragment(
-            final ReadRecord readRecord, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
+            final ReadRecord read, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> qualities, final List<String> nucleotides)
     {
-        mReads = Lists.newArrayList(readRecord);
+        mReads = Lists.newArrayListWithCapacity(2);
+        mReads.add(read);
 
         mGenes = genes;
         mReadGene = readGene;
 
-        mNucleotideLoci = nucleotideLoci.stream().collect(Collectors.toList());
-        mNucleotideQuality = qualities.stream().collect(Collectors.toList());
-        mNucleotides = nucleotides.stream().collect(Collectors.toList());
+        mNucleotideLoci = Lists.newArrayList(nucleotideLoci);
+        mNucleotideQuality = Lists.newArrayList(qualities);
+        mNucleotides = Lists.newArrayList(nucleotides);
 
-        // independent copies
-        mRawNucleotideLoci = nucleotideLoci.stream().collect(Collectors.toList());
-        mRawNucleotideQuality = qualities.stream().collect(Collectors.toList());
-        mRawNucleotides = nucleotides.stream().collect(Collectors.toList());
+        mRawNucleotideLoci = Lists.newArrayList(nucleotideLoci);
+        mRawNucleotideQuality = Lists.newArrayList(qualities);
+        mRawNucleotides = Lists.newArrayList(nucleotides);
 
         mIsQualFiltered = false;
 
@@ -133,17 +136,12 @@ public class Fragment
 
     public void addNucleotide(int index, int locus, String bases, int quality)
     {
-        mNucleotideLoci.add(index, locus);
-        mNucleotides.add(index, bases);
-        mNucleotideQuality.add(index, quality);
-
-        if(mRawNucleotideLoci.size() == mNucleotideLoci.size())
+        if(!mIsQualFiltered && mRawNucleotideLoci.size() == mNucleotideLoci.size())
         {
+            // sets remain the same
             mRawNucleotideLoci.add(index, locus);
             mRawNucleotides.add(index, bases);
             mRawNucleotideQuality.add(index, quality);
-
-            LL_LOGGER.debug("{} add raw nuc info for matched loci counts", toString());
         }
         else
         {
@@ -160,13 +158,11 @@ public class Fragment
             mRawNucleotideLoci.add(rawIndex, locus);
             mRawNucleotides.add(rawIndex, bases);
             mRawNucleotideQuality.add(rawIndex, quality);
-
-            if(rawIndex != index)
-            {
-                LL_LOGGER.warn("{} has adds new nuc at differing indices: raw nuc({}) vs nuc({})",
-                        toString(), index, rawIndex);
-            }
         }
+
+        mNucleotideLoci.add(index, locus);
+        mNucleotides.add(index, bases);
+        mNucleotideQuality.add(index, quality);
 
         if(mRawNucleotideLoci.size() != mNucleotideLoci.size())
         {

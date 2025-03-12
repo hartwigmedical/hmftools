@@ -44,6 +44,16 @@ public class LilacUtils
         return list;
     }
 
+    public static List<Integer> arrayToList(final byte[] array)
+    {
+        List<Integer> list = Lists.newArrayListWithExpectedSize(array.length);
+
+        for(int i = 0; i < array.length; ++i)
+            list.add(Integer.valueOf(array[i]));
+
+        return list;
+    }
+
     public static List<String> arrayToList(final char[] array)
     {
         List<String> list = Lists.newArrayListWithExpectedSize(array.length);
