@@ -63,7 +63,7 @@ public final class UmiUtils
         }
     }
 
-    public static String trimPolyGTail(String umiId)
+    public static String trimPolyGTail(final String umiId)
     {
         int tailLength;
         for(tailLength = 0; tailLength < umiId.length(); tailLength++)
@@ -73,5 +73,17 @@ public final class UmiUtils
         }
 
         return umiId.substring(0, umiId.length() - tailLength);
+    }
+
+    public static int polyGTailLength(final String umiId)
+    {
+        int tailLength;
+        for(tailLength = 0; tailLength < umiId.length(); tailLength++)
+        {
+            if(umiId.charAt(umiId.length() - 1 - tailLength) != 'G')
+                break;
+        }
+
+        return tailLength;
     }
 }
