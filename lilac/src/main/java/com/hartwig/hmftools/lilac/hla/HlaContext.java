@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.hla;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 
 import java.util.List;

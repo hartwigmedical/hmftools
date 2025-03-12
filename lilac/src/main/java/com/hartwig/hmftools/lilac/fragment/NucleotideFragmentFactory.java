@@ -215,7 +215,8 @@ public class NucleotideFragmentFactory
 
     public int calculatePercentileBaseQuality(final List<Fragment> fragments, double percentile)
     {
-        int maxBaseQual = mMinBaseQuality * 2; // for purpose of data capture only
+        // calculates the nth percentile base quality for each fragment's nucleotides
+        int maxBaseQual = mMinBaseQuality * 2;
         int[] baseQualFrequeny = new int[maxBaseQual + 1];
         long totalBases = 0;
 
@@ -228,8 +229,7 @@ public class NucleotideFragmentFactory
             }
         }
 
-        // calculate median
-        long percentileEntry = (long)round(totalBases * percentile);
+        long percentileEntry = round(totalBases * percentile);
         long cumulativeTotal = 0;
 
         for(int i = 0; i < baseQualFrequeny.length; ++i)

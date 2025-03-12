@@ -51,7 +51,6 @@ public class BamRecordReader implements BamReader
     private final Set<String> mDiscardIndelReadIds;
     private int mFilteredRecordCount;
 
-    public static final int MIN_MAPPING_QUALITY = 0;
     public static final int MAX_DISTANCE = 1000;
 
     public BamRecordReader(
@@ -64,7 +63,7 @@ public class BamRecordReader implements BamReader
                 .referenceSequence(new File(config.RefGenome));
 
         mSamReader = samReaderFactory.open(new File(mBamFile));
-        mBamSlicer = new BamSlicer(MIN_MAPPING_QUALITY);
+        mBamSlicer = new BamSlicer(0, false, false, false);
 
         mGeneCodingRegions = Maps.newHashMap();
 
@@ -361,13 +360,6 @@ public class BamRecordReader implements BamReader
         {
             return codingRegion.containsPosition(variant.Position);
         }
-    }
-
-    public static List<Fragment> filterVariantFragments(final SomaticVariant variant, final List<Fragment> fragments)
-    {
-        return fragments.stream()
-                .filter(x -> x.reads().stream().anyMatch(y -> recordContainsVariant(variant, y)))
-                .collect(Collectors.toList());
     }
 
     private static boolean recordContainsVariant(final SomaticVariant variant, final ReadRecord record)

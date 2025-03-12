@@ -3,7 +3,6 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildSamRecord;
@@ -99,7 +98,7 @@ public class FragmentsTest
 
         Fragment mergedFrag = mergeFragments(frag1, frag2);
         assertTrue(frag1.validate());
-        assertEquals(2, mergedFrag.getGenes().size());
+        assertEquals(2, mergedFrag.genes().size());
         assertEquals(1, mergedFrag.getNucleotideLoci().size());
         assertEquals(Integer.valueOf(1), mergedFrag.getNucleotideLoci().get(0));
         assertEquals(1, mergedFrag.getNucleotideQuality().size());
@@ -113,7 +112,7 @@ public class FragmentsTest
 
         mergedFrag = mergeFragments(frag1, frag2);
         assertTrue(frag1.validate());
-        assertEquals(2, mergedFrag.getGenes().size());
+        assertEquals(2, mergedFrag.genes().size());
         assertEquals(4, mergedFrag.getNucleotideLoci().size());
         assertEquals(Integer.valueOf(0), mergedFrag.getNucleotideLoci().get(0));
         assertEquals(Integer.valueOf(1), mergedFrag.getNucleotideLoci().get(1));
@@ -128,7 +127,7 @@ public class FragmentsTest
 
         mergedFrag = mergeFragments(frag1, frag2);
         assertTrue(frag1.validate());
-        assertEquals(3, mergedFrag.getGenes().size());
+        assertEquals(3, mergedFrag.genes().size());
         assertEquals(6, mergedFrag.getNucleotideLoci().size());
         assertEquals(Integer.valueOf(0), mergedFrag.getNucleotideLoci().get(0));
         assertEquals(Integer.valueOf(3), mergedFrag.getNucleotideLoci().get(3));

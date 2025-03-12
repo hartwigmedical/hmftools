@@ -98,7 +98,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         if(this == other)
             return true;
 
-        if (!(other instanceof HlaAllele))
+        if(!(other instanceof HlaAllele))
             return false;
 
         return hashCode() == other.hashCode();

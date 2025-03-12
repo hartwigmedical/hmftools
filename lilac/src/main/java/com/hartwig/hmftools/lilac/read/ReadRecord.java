@@ -28,12 +28,16 @@ public class ReadRecord
     public final String Id;
     public final int SoftClippedStart; // soft-clipped bases at start and end
     public final int SoftClippedEnd;
+
+    // coords which cover the coding region of the applicable gene
     public final int PositionStart; // adjusted by soft-clipped bases
     public final int PositionEnd;
+
+    // corresponding read base indices
     public final int ReadStart;
     public final int ReadEnd;
 
-    private final List<Indel> mIndels;
+    private final List<Indel> mIndels; // indels within the coding region
     private final SAMRecord mSamRecord;
 
     public ReadRecord(
@@ -111,6 +115,7 @@ public class ReadRecord
 
     private char[] forwardRead()
     {
+        // extract read bases within the coding region
         int readLength = ReadEnd - ReadStart + 1;
         final char[] readBases = new char[readLength];
 
@@ -125,6 +130,7 @@ public class ReadRecord
 
     private int[] forwardQuality()
     {
+        // simlarly extract read qualities within the coding region
         int readLength = ReadEnd - ReadStart + 1;
         final int[] readQuals = new int[readLength];
 

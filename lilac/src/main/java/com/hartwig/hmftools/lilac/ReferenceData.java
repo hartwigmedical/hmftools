@@ -5,7 +5,10 @@ import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V37;
 import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V38;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
+import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_H;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
@@ -30,8 +33,10 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
+import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
+import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -55,7 +60,12 @@ public class ReferenceData
 
     public final Map<String,TranscriptData> HlaTranscriptData;
 
-    public final LociPosition LociPositionFinder;
+    public static final HlaContextFactory HLA_CONTEXT_FACTORY = new HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
+
+    public static final NucleotideGeneEnrichment NUC_GENE_FRAG_ENRICHMENT = new NucleotideGeneEnrichment(
+            A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
+
+    public final LociPosition LOCI_POSITION_FINDER;
 
     private final HlaAlleleCache mAlleleCache;
 
@@ -98,7 +108,7 @@ public class ReferenceData
 
         // load gene definitions and other constants
         populateHlaTranscripts(HlaTranscriptData, config.RefGenVersion);
-        LociPositionFinder = new LociPosition(HlaTranscriptData.values().stream().collect(Collectors.toList()));
+        LOCI_POSITION_FINDER = new LociPosition(HlaTranscriptData.values().stream().collect(Collectors.toList()));
 
         populateNucleotideExonBoundaries();
 

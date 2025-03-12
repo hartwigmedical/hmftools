@@ -32,27 +32,4 @@ public class LociPosition
         }
         return -1;
     }
-
-    public static List<NamedBed> codingRegions(final String geneName, final String chromosome, final TranscriptData transcript)
-    {
-        final List<NamedBed> result = Lists.newArrayList();
-
-        int codingStart = transcript.CodingStart;
-        int codingEnd = transcript.CodingEnd;
-
-        for(ExonData exon : transcript.exons())
-        {
-            if(codingStart <= exon.End && codingEnd >= exon.Start)
-            {
-                result.add(ImmutableNamedBed.builder()
-                        .chromosome(chromosome)
-                        .start(Math.max(codingStart, exon.Start))
-                        .end(Math.min(codingEnd, exon.End))
-                        .name(geneName)
-                        .build());
-            }
-        }
-
-        return result;
-    }
 }

@@ -54,8 +54,8 @@ public class NucleotideTest
             Set<String> expectedGenes, String alignedGene, List<Integer> aminoAcideIndices)
     {
         Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
-        Fragment result = enricher.enrich(fragment);
-        assertTrue(namesMatch(result.getGenes(), expectedGenes));
+        Fragment result = enricher.checkAddAdditionalGenes(fragment);
+        assertTrue(namesMatch(result.genes(), expectedGenes));
     }
 
     private Fragment create(final String gene, final List<Integer> indices)

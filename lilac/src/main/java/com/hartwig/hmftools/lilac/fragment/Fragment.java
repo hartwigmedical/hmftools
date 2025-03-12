@@ -18,7 +18,8 @@ public class Fragment
 {
     private final List<ReadRecord> mReads;
     private final String mReadGene; // mapped gene
-    private final Set<String> mGenes;
+    private final Set<String> mGenes; // other potentially applicable genes
+
     private final List<Integer> mNucleotideLoci;
     private final List<Integer> mNucleotideQuality;
     private final List<String> mNucleotides;
@@ -59,6 +60,12 @@ public class Fragment
         mAminoAcids = Lists.newArrayList();
 
         mScope = UNSET;
+
+        if(mNucleotides.size() != mNucleotideLoci.size() || mNucleotides.size() != mNucleotideQuality.size())
+        {
+            LL_LOGGER.warn("{} has differing loci counts(loci={} nuc={} quals={})",
+                    toString(), mNucleotideLoci.size(), mNucleotides.size(), mNucleotideQuality.size());
+        }
     }
 
     public void setAminoAcids(final List<Integer> aminoAcidLoci, final List<String> aminoAcids)
@@ -85,7 +92,8 @@ public class Fragment
     }
 
     public String readInfo() { return mReads.get(0).readInfo(); }
-    public Set<String> getGenes() { return mGenes; }
+    public Set<String> genes() { return mGenes; }
+    public void addGene(final String gene) { mGenes.add(gene); }
     public String readGene() { return mReadGene; }
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
 
@@ -134,6 +142,8 @@ public class Fragment
             mRawNucleotideLoci.add(index, locus);
             mRawNucleotides.add(index, bases);
             mRawNucleotideQuality.add(index, quality);
+
+            LL_LOGGER.debug("{} add raw nuc info for matched loci counts", toString());
         }
         else
         {
@@ -150,6 +160,18 @@ public class Fragment
             mRawNucleotideLoci.add(rawIndex, locus);
             mRawNucleotides.add(rawIndex, bases);
             mRawNucleotideQuality.add(rawIndex, quality);
+
+            if(rawIndex != index)
+            {
+                LL_LOGGER.warn("{} has adds new nuc at differing indices: raw nuc({}) vs nuc({})",
+                        toString(), index, rawIndex);
+            }
+        }
+
+        if(mRawNucleotideLoci.size() != mNucleotideLoci.size())
+        {
+            LL_LOGGER.warn("{} has unequal raw nuc({}) vs nuc({}) loci counts",
+                    toString(), mRawNucleotideLoci.size(), mNucleotideLoci.size());
         }
     }
 
@@ -189,7 +211,6 @@ public class Fragment
 
     public int minNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(0) : -1; }
     public int maxNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1; }
-    public int maxLoci() { return maxNucleotideLocus(); }
 
     public List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
     public List<String> getAminoAcids() { return mAminoAcids; }
@@ -205,8 +226,6 @@ public class Fragment
         mIsQualFiltered = true;
 
         // cull any low-qual bases (they are retained in the raw bases)
-        final List<Integer> filteredIndices = Lists.newArrayList();
-
         int index = 0;
         while(index < mNucleotideQuality.size())
         {

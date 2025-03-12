@@ -59,7 +59,7 @@ public final class NucleotideFragmentQualEnrichment
         }
 
         Fragment newFragment = new Fragment(
-                fragment.reads().get(0), fragment.readGene(), fragment.getGenes(), filteredLoci, filteredQuality, filteredNucleotides);
+                fragment.reads().get(0), fragment.readGene(), fragment.genes(), filteredLoci, filteredQuality, filteredNucleotides);
 
         newFragment.addReads(fragment);
 

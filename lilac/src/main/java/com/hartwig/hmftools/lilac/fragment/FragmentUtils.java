@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -76,7 +72,7 @@ public class FragmentUtils
     public static Fragment mergeFragments(final Fragment frag1, final Fragment frag2)
     {
         // merge frag 2 into 1 and ensure no repetition of loci
-        frag2.getGenes().forEach(x -> frag1.getGenes().add(x));
+        frag2.genes().forEach(x -> frag1.genes().add(x));
 
         for(int index2 = 0; index2 < frag2.getNucleotideLoci().size(); ++index2)
         {
@@ -117,7 +113,7 @@ public class FragmentUtils
     public static Fragment copyNucleotideFragment(final Fragment fragment)
     {
         // ignores all state, just starts with original information
-        Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.getGenes(),
+        Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(),
                 fragment.getRawNucleotideLoci(), fragment.getRawNucleotideQuality(), fragment.getRawNucleotides());
 
         for(int i = 1; i < fragment.reads().size(); ++i)

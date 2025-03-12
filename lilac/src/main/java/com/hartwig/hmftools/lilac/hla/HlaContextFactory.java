@@ -31,22 +31,25 @@ public class HlaContextFactory
 
     public final HlaContext hlaA()
     {
-        ExpectedAlleles expectedAlleles =
-                ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getAFilterB(), NucleotideGeneEnrichment.getAFilterC());
+        ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
+                NucleotideGeneEnrichment.getAFilterB(), NucleotideGeneEnrichment.getAFilterC());
+
         return new HlaContext(GENE_A, ABoundaries, expectedAlleles);
     }
 
     public final HlaContext hlaB()
     {
-        ExpectedAlleles expectedAlleles =
-                ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getBFilterA(), NucleotideGeneEnrichment.getBFilterC());
+        ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
+                NucleotideGeneEnrichment.getBFilterA(), NucleotideGeneEnrichment.getBFilterC());
+
         return new HlaContext(GENE_B, BBoundaries, expectedAlleles);
     }
 
     public final HlaContext hlaC()
     {
-        ExpectedAlleles expectedAlleles =
-                ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getCFilterA(), NucleotideGeneEnrichment.getCFilterB());
+        ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
+                NucleotideGeneEnrichment.getCFilterA(), NucleotideGeneEnrichment.getCFilterB());
+
         return new HlaContext(GENE_C, CBoundaries, expectedAlleles);
     }
 
@@ -68,5 +71,4 @@ public class HlaContextFactory
             LilacConstants.NUCLEOTIDE_EXON_BOUNDARIES.put(gene, nucleotideExonBoundaries);
         }
     }
-
 }

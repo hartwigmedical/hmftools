@@ -118,7 +118,7 @@ public class FragmentAlleleMapper
 
             for(Map.Entry<String,Map<Integer,Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
             {
-                if(!fragment.getGenes().contains(longGeneName(geneEntry.getKey())))
+                if(!fragment.genes().contains(longGeneName(geneEntry.getKey())))
                     continue;
 
                 if(fragment.getAminoAcidLoci().stream().anyMatch(x -> geneEntry.getValue().containsKey(x)))
@@ -262,7 +262,7 @@ public class FragmentAlleleMapper
             if(existingMatch != null && existingMatch == FULL)
                 continue;
 
-            if(!fragment.getGenes().contains(allele.geneName()))
+            if(!fragment.genes().contains(allele.geneName()))
                 continue;
 
             List<Integer> fragNucleotideLoci = fragGeneLociMap.get(allele.Gene);
@@ -379,7 +379,7 @@ public class FragmentAlleleMapper
         {
             HlaAllele allele = sequence.Allele;
 
-            if(!fragment.getGenes().contains(allele.geneName()))
+            if(!fragment.genes().contains(allele.geneName()))
             {
                 alleleMatches.put(allele, NO_LOCI);
                 continue;
