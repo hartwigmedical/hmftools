@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
+import static org.junit.Assert.assertFalse;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -60,9 +62,16 @@ public class NucleotideTest
 
     private Fragment create(final String gene, final List<Integer> indices)
     {
-        List<Integer> qualities = Lists.newArrayList();
-        qualities.add(0);
-        return new Fragment(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
+        List<Integer> qualities = Lists.newArrayListWithCapacity(indices.size());
+        List<String> nucleotides = Lists.newArrayListWithCapacity(indices.size());
+
+        for(int i = 0; i < indices.size(); ++i)
+        {
+            qualities.add(0);
+            nucleotides.add("G");
+        }
+
+        return new Fragment(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, nucleotides);
     }
 
 }

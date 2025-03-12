@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_AMINO_ACID_BOUNDARY;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
@@ -11,6 +13,7 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,32 +25,34 @@ public class AminoAcidFragmentPipeline
     private final double mMinEvidence;
     private final double mMinHighQualEvidence;
 
-    private final List<Fragment> mHighQualRefAminoAcidFragments;
+    private final List<Fragment> mHighQualRefAminoAcidFragments; // generated from input ref fragments, filtered and amino acids built
 
     // per-gene counts of bases and amino-acids with sufficient support
     private final Map<String,SequenceCount> mRefNucleotideCounts;
     private final Map<String,SequenceCount> mRefAminoAcidCounts;
 
-    private final List<Fragment> mRefNucPhasingFragments; // copied and used for phasing only
+    private final List<Fragment> mOriginalRefFragments; // copied and used for phasing only, will remain unchanged
 
     public AminoAcidFragmentPipeline(final LilacConfig config, final List<Fragment> referenceFragments)
     {
         mMinBaseQuality = config.MinBaseQual;
 
-        mRefNucPhasingFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
+        mOriginalRefFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
 
         int fragmentCount = mHighQualRefAminoAcidFragments.size();
 
-        mMinEvidence = config.calcMinEvidence(fragmentCount);
-        mMinHighQualEvidence = config.calcMinHighQualEvidence(fragmentCount);
+        mMinEvidence = max(config.MinEvidence, fragmentCount * config.MinEvidenceFactor);
+        mMinHighQualEvidence = fragmentCount * config.MinHighQualEvidenceFactor;
 
         mRefNucleotideCounts = Maps.newHashMap();
         mRefAminoAcidCounts = Maps.newHashMap();
     }
 
-    public List<Fragment> getReferenceFragments() { return mHighQualRefAminoAcidFragments; }
+    public List<Fragment> highQualRefFragments() { return mHighQualRefAminoAcidFragments; }
+    public double minEvidence() { return mMinEvidence; }
+    public double minHighQualEvidence() { return mMinHighQualEvidence; }
 
     public Map<String,SequenceCount> getReferenceAminoAcidCounts() { return mRefAminoAcidCounts; }
 
@@ -112,12 +117,12 @@ public class AminoAcidFragmentPipeline
         String gene = context.geneName();
 
         // start with the unfiltered fragments again
-        List<Fragment> geneRefNucFrags = mRefNucPhasingFragments.stream()
+        List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream()
                 .filter(x -> x.containsGene(gene))
                 .collect(Collectors.toList());
 
         if(geneRefNucFrags.isEmpty())
-            return Lists.newArrayList();
+            return Collections.emptyList();
 
         List<Fragment> highQualFrags = geneRefNucFrags.stream()
                 .map(x -> copyNucleotideFragment(x))
@@ -126,17 +131,16 @@ public class AminoAcidFragmentPipeline
         highQualFrags.forEach(x -> x.qualityFilter(mMinBaseQuality));
         highQualFrags = highQualFrags.stream().filter(x -> x.hasNucleotides()).collect(Collectors.toList());
 
-        List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.enrich(
+        List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
                 mMinEvidence, mMinHighQualEvidence, geneRefNucFrags, highQualFrags);
 
         Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
                 .filter(x -> x <= MAX_AMINO_ACID_BOUNDARY).collect(Collectors.toSet());
 
         NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(mMinBaseQuality, mMinEvidence, aminoAcidBoundaries);
-        List<Fragment> spliceEnrichedNucFrags = spliceEnricher.enrich(qualEnrichedNucFrags, highQualFrags);
+        List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
-        AminoAcidQualEnrichment aminoAcidEnricher = new AminoAcidQualEnrichment(mMinEvidence);
-        List<Fragment> enrichedAminoAcidFrags = aminoAcidEnricher.enrich(spliceEnrichedNucFrags);
+        List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(spliceEnrichedNucFrags, mMinEvidence);
 
         // cache support at each base and amino acid for later writing and recovery of low-qual support
         SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, enrichedAminoAcidFrags);
@@ -208,5 +212,4 @@ public class AminoAcidFragmentPipeline
             entry.getValue().writeVertically(config.formFileId(gene + ".nucleotides.txt"));
         }
     }
-
 }

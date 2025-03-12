@@ -97,7 +97,6 @@ public class LilacAppendRna
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, Collections.emptyList());
 
         int totalFragmentCount = solutionAlleles.stream().mapToInt(x -> x.refFragments()).sum();
-        double minEvidence = mConfig.calcMinEvidence(totalFragmentCount);
 
         // recoveredSequences
         // Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =

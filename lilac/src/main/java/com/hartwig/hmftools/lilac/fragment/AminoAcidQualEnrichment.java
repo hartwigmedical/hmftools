@@ -7,24 +7,17 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
-public class AminoAcidQualEnrichment
+public final class AminoAcidQualEnrichment
 {
-    private final double mMinEvidence;
-
-    public AminoAcidQualEnrichment(double minEvidence)
+    public static List<Fragment> qualityFilterAminoAcidFragments(final List<Fragment> fragments, double minEvidence)
     {
-        mMinEvidence = minEvidence;
-    }
-
-    // Only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
-    public List<Fragment> enrich(final List<Fragment> fragments)
-    {
+        // only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
         List<Fragment> qualityFilteredAminoAcidFragments = fragments.stream()
                 .map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
         qualityFilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
 
-        SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, qualityFilteredAminoAcidFragments);
+        SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, qualityFilteredAminoAcidFragments);
 
         List<Fragment> unfilteredAminoAcidFragments = fragments.stream()
                 .filter(x -> x.hasNucleotides())
@@ -32,14 +25,14 @@ public class AminoAcidQualEnrichment
 
         unfilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
 
-        unfilteredAminoAcidFragments.forEach(x -> enrich(x, highQualityAminoAcidCounts));
+        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(x, highQualityAminoAcidCounts));
 
         return unfilteredAminoAcidFragments;
     }
 
-    private void enrich(final Fragment fragment, final SequenceCount count)
+    private static void applyQualFilter(final Fragment fragment, final SequenceCount count)
     {
-        List<Integer> initialIntersect = fragment.getAminoAcidLoci();
+        List<Integer> initialIntersect = fragment.aminoAcidLoci();
 
         List<Integer> filteredIntersect = initialIntersect.stream()
                 .filter(x -> filter(fragment, count, x))

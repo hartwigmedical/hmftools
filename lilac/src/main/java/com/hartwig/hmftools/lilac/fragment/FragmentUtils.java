@@ -74,15 +74,17 @@ public class FragmentUtils
         // merge frag 2 into 1 and ensure no repetition of loci
         frag2.genes().forEach(x -> frag1.genes().add(x));
 
-        for(int index2 = 0; index2 < frag2.getNucleotideLoci().size(); ++index2)
-        {
-            int locus2 = frag2.getNucleotideLoci().get(index2);
+        int index1 = 0;
 
-            int index1 = 0;
+        for(int index2 = 0; index2 < frag2.nucleotideLoci().size(); ++index2)
+        {
+            int locus2 = frag2.nucleotideLoci().get(index2);
+
             boolean add = true;
-            for(; index1 < frag1.getNucleotideLoci().size(); ++index1)
+
+            for(; index1 < frag1.nucleotideLoci().size(); ++index1)
             {
-                int locus1 = frag1.getNucleotideLoci().get(index1);
+                int locus1 = frag1.nucleotideLoci().get(index1);
 
                 if(locus1 < locus2)
                     continue;
@@ -97,8 +99,9 @@ public class FragmentUtils
             {
                 try
                 {
-                    frag1.addNucleotide(index1, locus2, frag2.getNucleotides().get(index2), frag2.getNucleotideQuality().get(index2));
+                    frag1.addNucleotideInfo(index1, locus2, frag2.nucleotides().get(index2), frag2.nucleotideQuality().get(index2));
                     frag1.addReads(frag2);
+                    ++index1; // move past insertion point
                 }
                 catch(Exception e)
                 {
@@ -114,7 +117,7 @@ public class FragmentUtils
     {
         // ignores all state, just starts with original information
         Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(),
-                fragment.getRawNucleotideLoci(), fragment.getRawNucleotideQuality(), fragment.getRawNucleotides());
+                fragment.rawNucleotideLoci(), fragment.rawNucleotideQuality(), fragment.rawNucleotides());
 
         for(int i = 1; i < fragment.reads().size(); ++i)
         {
@@ -152,6 +155,60 @@ public class FragmentUtils
 
         return formRange(start, end);
     }
+
+    public static boolean validateFragment(final Fragment fragment)
+    {
+        if(fragment.genes().isEmpty())
+        {
+            LL_LOGGER.warn("{} {} has no genes", fragment.id(), fragment.readInfo());
+            return false;
+        }
+
+        // check loci are ordered and consistent with qualities and bases
+        if(fragment.nucleotides().isEmpty() || fragment.rawNucleotides().isEmpty())
+        {
+            LL_LOGGER.warn("{} {} has no bases", fragment.id(), fragment.readInfo());
+            return false;
+        }
+
+        if(fragment.nucleotides().size() != fragment.nucleotideQuality().size())
+        {
+            LL_LOGGER.warn("{} {} inconsistent bases loci({}) quals({})",
+                    fragment.id(), fragment.readInfo(), fragment.nucleotides().size(), fragment.nucleotideQuality().size());
+            return false;
+        }
+
+        if(!validateLociBases(fragment.id(), fragment.nucleotideLoci(), fragment.nucleotides()))
+            return false;
+
+        if(!validateLociBases(fragment.id(), fragment.rawNucleotideLoci(), fragment.rawNucleotides()))
+            return false;
+
+        if(fragment.aminoAcidConversionCount() > 0)
+        {
+            if(!validateLociBases(fragment.id(), fragment.aminoAcidLoci(), fragment.aminoAcids()))
+                return false;
+
+            for(int i = 0; i < fragment.aminoAcidLoci().size(); ++i)
+            {
+                if(fragment.aminoAcids().get(i).isEmpty())
+                {
+                    LL_LOGGER.warn("{} {} empty amino-acid, index({})", fragment.id(), fragment.readInfo(), i);
+                    return false;
+                }
+            }
+
+            if(fragment.aminoAcidConversionCount() > 1)
+            {
+                LL_LOGGER.warn("{} {} amino-acid conversion repeated({})",
+                        fragment.id(), fragment.readInfo(), fragment.aminoAcidConversionCount());
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
     public static boolean validateLociBases(final String id, final List<Integer> loci, final List<String> sequences)
     {

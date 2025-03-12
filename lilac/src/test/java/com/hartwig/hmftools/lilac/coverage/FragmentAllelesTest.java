@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.misc.LilacTestUtils;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.junit.Test;
@@ -149,8 +148,8 @@ public class FragmentAllelesTest
 
         frag1.qualityFilter(30);
         frag1.buildAminoAcids();
-        assertEquals(9, frag1.getNucleotideLoci().size());
-        assertEquals(1, frag1.getAminoAcidLoci().size());
+        assertEquals(9, frag1.nucleotideLoci().size());
+        assertEquals(1, frag1.aminoAcidLoci().size());
 
         List<Fragment> fragments = Lists.newArrayList(frag1);
 
@@ -161,7 +160,7 @@ public class FragmentAllelesTest
         assertTrue(fragAlleles.get(0).getFull().contains(allele1));
 
         // again but with the low-qual bases not forming the correct amino acid, but still accepted as a match
-        frag1.getRawNucleotides().set(1, "A");
+        frag1.rawNucleotides().set(1, "A");
 
         fragAlleles = mapper.createFragmentAlleles(fragments, sequences, candidateNucSequences);
 

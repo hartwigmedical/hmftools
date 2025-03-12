@@ -8,7 +8,8 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public final class NucleotideFragmentQualEnrichment
 {
-    public static List<Fragment> enrich(double minEvidence, double minHighQualEvidence, final List<Fragment> fragments, final List<Fragment> highQualFrags)
+    public static List<Fragment> qualityFilterFragments(
+            double minEvidence, double minHighQualEvidence, final List<Fragment> fragments, final List<Fragment> highQualFrags)
     {
         // fragments are all in nucleotide-space
 
@@ -17,18 +18,20 @@ public final class NucleotideFragmentQualEnrichment
         SequenceCount highQualCounts = SequenceCount.nucleotides(minHighQualEvidence, highQualFrags);
         SequenceCount rawCounts = SequenceCount.nucleotides(minEvidence, fragments);
 
-        return fragments.stream().map(x -> enrich(x, highQualCounts, rawCounts)).collect(Collectors.toList());
+        return fragments.stream().map(x -> applyQualityFilter(x, highQualCounts, rawCounts)).collect(Collectors.toList());
     }
 
-    private static Fragment enrich(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
+    private static Fragment applyQualityFilter(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
     {
+        // checks whether all nucleotides have qual above the required level - if so return this fragment unch, otherwise build a
+        // new fragment just with these filtered loci
         final List<Integer> filteredIndices = Lists.newArrayList();
         boolean allPresent = true;
 
-        for(int i = 0; i < fragment.getNucleotideLoci().size(); ++i)
+        for(int i = 0; i < fragment.nucleotideLoci().size(); ++i)
         {
-            int lociIndex = fragment.getNucleotideLoci().get(i);
-            String fragmentNucleotide = fragment.getNucleotides().get(i);
+            int lociIndex = fragment.nucleotideLoci().get(i);
+            String fragmentNucleotide = fragment.nucleotides().get(i);
             List<String> highQualitySequences = highQualityCount.getMinCountSequences(lociIndex);
             List<String> rawSequences = rawCount.getMinCountSequences(lociIndex);
             List<String> allowedSequences = highQualitySequences.stream().filter(x -> rawSequences.contains(x)).collect(Collectors.toList());
@@ -53,9 +56,9 @@ public final class NucleotideFragmentQualEnrichment
 
         for(Integer index : filteredIndices)
         {
-            filteredLoci.add(fragment.getNucleotideLoci().get(index));
-            filteredQuality.add(fragment.getNucleotideQuality().get(index));
-            filteredNucleotides.add(fragment.getNucleotides().get(index));
+            filteredLoci.add(fragment.nucleotideLoci().get(index));
+            filteredQuality.add(fragment.nucleotideQuality().get(index));
+            filteredNucleotides.add(fragment.nucleotides().get(index));
         }
 
         Fragment newFragment = new Fragment(

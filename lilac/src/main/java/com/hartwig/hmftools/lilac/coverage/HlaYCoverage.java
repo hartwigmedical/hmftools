@@ -111,13 +111,13 @@ public class HlaYCoverage
         // only test heterozygous locations in A since HLA-Y matches its exon boundaries
         for(Fragment fragment : fragments)
         {
-            List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
                     .filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
 
             if(fragAminoAcidLoci.isEmpty())
                 continue;
 
-            List<Integer> fragNucleotideLoci = fragment.getNucleotideLoci();
+            List<Integer> fragNucleotideLoci = fragment.nucleotideLoci();
 
             boolean matchesY = false;
             FragmentAlleles matchedFrag = null;
@@ -197,13 +197,13 @@ public class HlaYCoverage
 
         for(Fragment fragment : fragments)
         {
-            List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
                     .filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
 
             if(fragAminoAcidLoci.isEmpty())
                 continue;
 
-            List<Integer> fragNucleotideLoci = fragment.getNucleotideLoci();
+            List<Integer> fragNucleotideLoci = fragment.nucleotideLoci();
 
             List<HlaAllele> matchedAlleles = Lists.newArrayList();
 
@@ -277,13 +277,13 @@ public class HlaYCoverage
 
     private void updateMiscCounts(final Fragment fragment, final int[] miscCounts)
     {
-        if(fragment.getAminoAcidLoci().contains(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
+        if(fragment.aminoAcidLoci().contains(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
             ++miscCounts[Y0101_X];
 
         int exon3Start = A_EXON_BOUNDARIES.get(1) + 1;
         int exon3End = A_EXON_BOUNDARIES.get(2);
 
-        if(fragment.getAminoAcidLoci().get(0) >= exon3Start && fragment.getAminoAcidLoci().get(fragment.getAminoAcidLoci().size() - 1) <= exon3End)
+        if(fragment.aminoAcidLoci().get(0) >= exon3Start && fragment.aminoAcidLoci().get(fragment.aminoAcidLoci().size() - 1) <= exon3End)
             ++miscCounts[EXON_3];
     }
 

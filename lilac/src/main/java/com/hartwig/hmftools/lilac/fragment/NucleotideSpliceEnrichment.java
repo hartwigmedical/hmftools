@@ -20,7 +20,7 @@ public class NucleotideSpliceEnrichment
         mAminoAcidBoundary = aminoAcidBoundary;
     }
 
-    public List<Fragment> enrich(final List<Fragment> fragments, final List<Fragment> highQualFrags)
+    public List<Fragment> applySpliceInfo(final List<Fragment> fragments, final List<Fragment> highQualFrags)
     {
         // fragments are all in nucleotide-space
 
@@ -69,12 +69,12 @@ public class NucleotideSpliceEnrichment
 
     private void addStart(final Fragment fragment, int index, SequenceCount nucleotideCounts)
     {
-        fragment.enrich(index, nucleotideCounts.getMinCountSequences(index).get(0), mMinBaseQuality);
+        fragment.addNucleotideInfo(index, nucleotideCounts.getMinCountSequences(index).get(0), mMinBaseQuality);
     }
 
     private void addEnd(final Fragment fragment, int index, SequenceCount nucleotideCounts)
     {
-        fragment.enrich(index + 1, nucleotideCounts.getMinCountSequences(index + 1).get(0), mMinBaseQuality);
-        fragment.enrich(index + 2, nucleotideCounts.getMinCountSequences(index + 2).get(0), mMinBaseQuality);
+        fragment.addNucleotideInfo(index + 1, nucleotideCounts.getMinCountSequences(index + 1).get(0), mMinBaseQuality);
+        fragment.addNucleotideInfo(index + 2, nucleotideCounts.getMinCountSequences(index + 2).get(0), mMinBaseQuality);
     }
 }

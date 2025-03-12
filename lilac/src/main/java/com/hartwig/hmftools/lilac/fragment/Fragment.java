@@ -4,15 +4,15 @@ import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
-import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.validateLociBases;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.read.ReadRecord;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 public class Fragment
 {
@@ -20,8 +20,8 @@ public class Fragment
     private final String mReadGene; // mapped gene
     private final Set<String> mGenes; // other potentially applicable genes
 
-    // initial values
-    private final List<Integer> mRawNucleotideLoci;
+    // initial nucleotide values
+    private final List<Integer> mRawNucleotideLoci; // always in ascending order
     private final List<Integer> mRawNucleotideQuality;
     private final List<String> mRawNucleotides;
 
@@ -32,7 +32,7 @@ public class Fragment
 
     private boolean mIsQualFiltered;
 
-    private int mAminoAcidConversionCount;
+    private int mAminoAcidConversionCount; // set true once nucleotides are converted into amino acids
     private final List<Integer> mAminoAcidLoci;
     private final List<String> mAminoAcids;
 
@@ -64,10 +64,12 @@ public class Fragment
 
         mScope = UNSET;
 
-        if(mNucleotides.size() != mNucleotideLoci.size() || mNucleotides.size() != mNucleotideQuality.size())
+        if(mRawNucleotideLoci.size() != mRawNucleotides.size() || mRawNucleotideLoci.size() != mRawNucleotideQuality.size()
+        || mNucleotides.size() != mNucleotideLoci.size() || mNucleotides.size() != mNucleotideQuality.size())
         {
-            LL_LOGGER.warn("{} has differing loci counts(loci={} nuc={} quals={})",
-                    toString(), mNucleotideLoci.size(), mNucleotides.size(), mNucleotideQuality.size());
+            LL_LOGGER.warn("{} has differing raw loci counts(loci={} nuc={} quals={}) or nuc counts(loci={} nuc={} quals={})",
+                    toString(), mNucleotideLoci.size(), mNucleotides.size(), mNucleotideQuality.size(),
+                    mNucleotideLoci.size(), mNucleotides.size(), mNucleotideQuality.size());
         }
     }
 
@@ -100,76 +102,99 @@ public class Fragment
     public String readGene() { return mReadGene; }
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
 
-    public FragmentScope scope() { return mScope; }
-    public void clearScope() { mScope = UNSET; }
-    public boolean isScopeSet() { return mScope != UNSET; }
+    public List<Integer> nucleotideLoci() { return mNucleotideLoci; }
+    public List<Integer> nucleotideQuality() { return mNucleotideQuality; }
+    public List<String> nucleotides() { return mNucleotides; }
 
-    public void setScope(FragmentScope scope) { setScope(scope, false); }
+    public List<Integer> rawNucleotideLoci() { return mRawNucleotideLoci; }
+    public List<Integer> rawNucleotideQuality() { return mRawNucleotideQuality; }
+    public List<String> rawNucleotides() { return mRawNucleotides; }
 
-    public void setScope(FragmentScope scope, boolean override)
+    public void addNucleotideInfo(int nucIndex, int locus, final String nucleotide, int quality)
     {
-        if(mScope != UNSET)
-        {
-            if(override)
-            {
-                if(scope != HLA_Y)
-                {
-                    LL_LOGGER.debug("frag({}: {}) overriding existing scope: {} -> {}", id(), readInfo(), mScope, scope);
-                }
+        if(nucIndex < 0 || nucIndex > mNucleotideLoci.size())
+            return;
 
-                mScope = scope;
-            }
-        }
-        else
+        // adds an extra base, quality and locus
+        if(nucIndex == mNucleotideLoci.size() || mNucleotideLoci.get(nucIndex) != locus)
         {
-            mScope = scope;
+            mNucleotideLoci.add(nucIndex, locus);
+            mNucleotides.add(nucIndex, nucleotide);
+            mNucleotideQuality.add(nucIndex, quality);
+        }
+
+        if(!mIsQualFiltered)
+        {
+            // sets remain the same
+            mRawNucleotideLoci.add(nucIndex, locus);
+            mRawNucleotides.add(nucIndex, nucleotide);
+            mRawNucleotideQuality.add(nucIndex, quality);
+            return;
+        }
+
+        // filtered indices have changed and are unlikely to match, so find the insertion point for this loci
+        int rawIndex = findLociIndex(mRawNucleotideLoci, locus);
+
+        if(rawIndex == mRawNucleotideLoci.size() || mRawNucleotideLoci.get(rawIndex) != locus)
+        {
+            mRawNucleotideLoci.add(rawIndex, locus);
+            mRawNucleotides.add(rawIndex, nucleotide);
+            mRawNucleotideQuality.add(rawIndex, quality);
         }
     }
 
-    public List<Integer> getNucleotideLoci() { return mNucleotideLoci; }
-    public List<Integer> getNucleotideQuality() { return mNucleotideQuality; }
-    public List<String> getNucleotides() { return mNucleotides; }
+    public void addNucleotideInfo(int locus, final String nucleotide, int quality)
+    {
+        int nucIndex = findLociIndex(mNucleotideLoci, locus);
+        addNucleotideInfo(nucIndex, locus, nucleotide, quality);
+    }
 
-    public List<Integer> getRawNucleotideLoci() { return mRawNucleotideLoci; }
-    public List<Integer> getRawNucleotideQuality() { return mRawNucleotideQuality; }
-    public List<String> getRawNucleotides() { return mRawNucleotides; }
+    private static int findLociIndex(final List<Integer> lociValues, final int locus)
+    {
+        int index = Collections.binarySearch(lociValues, locus);
 
+        if(index >= 0 && index < lociValues.size())
+            return index;
+
+        return -(index + 1); // as per insertion point conventions
+    }
+
+    /*
     public void addNucleotide(int index, int locus, String bases, int quality)
     {
-        if(!mIsQualFiltered && mRawNucleotideLoci.size() == mNucleotideLoci.size())
+        mNucleotideLoci.add(index, locus);
+        mNucleotides.add(index, bases);
+        mNucleotideQuality.add(index, quality);
+
+        if(!mIsQualFiltered)
         {
             // sets remain the same
             mRawNucleotideLoci.add(index, locus);
             mRawNucleotides.add(index, bases);
             mRawNucleotideQuality.add(index, quality);
+            return;
         }
-        else
+
+        // filtered indices have changed and are unlikely to match, so find the insertion point for this loci
+        int rawIndex = Collections.binarySearch(mRawNucleotideLoci, locus);
+        rawIndex = -(rawIndex + 1); // as per insertion point conventions
+
+        int testIndex = 0;
+
+        while(testIndex < mRawNucleotideLoci.size())
         {
-            int rawIndex = 0;
+            if(mRawNucleotideLoci.get(testIndex) > locus)
+                break;
 
-            while(rawIndex < mRawNucleotideLoci.size())
-            {
-                if(mRawNucleotideLoci.get(rawIndex) > locus)
-                    break;
-
-                ++rawIndex;
-            }
-
-            mRawNucleotideLoci.add(rawIndex, locus);
-            mRawNucleotides.add(rawIndex, bases);
-            mRawNucleotideQuality.add(rawIndex, quality);
+            ++testIndex;
         }
 
-        mNucleotideLoci.add(index, locus);
-        mNucleotides.add(index, bases);
-        mNucleotideQuality.add(index, quality);
 
-        if(mRawNucleotideLoci.size() != mNucleotideLoci.size())
-        {
-            LL_LOGGER.warn("{} has unequal raw nuc({}) vs nuc({}) loci counts",
-                    toString(), mRawNucleotideLoci.size(), mNucleotideLoci.size());
-        }
+        mRawNucleotideLoci.add(rawIndex, locus);
+        mRawNucleotides.add(rawIndex, bases);
+        mRawNucleotideQuality.add(rawIndex, quality);
     }
+    */
 
     public boolean hasNucleotides() { return !mNucleotideLoci.isEmpty(); }
 
@@ -178,14 +203,14 @@ public class Fragment
         return mNucleotides.stream().anyMatch(x -> x.equals(".") || x.length() > 1);
     }
 
-    public boolean containsNucleotide(int index)
+    public boolean containsNucleotide(int locus)
     {
-        return mNucleotideLoci.contains(index);
+        return mNucleotideLoci.contains(locus);
     }
 
-    public boolean containsAllNucleotides(final List<Integer> indices)
+    public boolean containsAllNucleotides(final List<Integer> loci)
     {
-        return !indices.stream().anyMatch(x -> !containsNucleotide(x));
+        return !loci.stream().anyMatch(x -> !containsNucleotide(x));
     }
 
     public String nucleotides(final List<Integer> indices)
@@ -197,6 +222,7 @@ public class Fragment
 
     public String nucleotide(int locus)
     {
+        // consider using a binary search here too, depends on how indexOf is implemented and size of list for a fragment
         int index = mNucleotideLoci.indexOf(locus);
 
         if(index < 0)
@@ -208,8 +234,8 @@ public class Fragment
     public int minNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(0) : -1; }
     public int maxNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1; }
 
-    public List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
-    public List<String> getAminoAcids() { return mAminoAcids; }
+    public List<Integer> aminoAcidLoci() { return mAminoAcidLoci; }
+    public List<String> aminoAcids() { return mAminoAcids; }
 
     public int minAminoAcidLocus() { return !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(0) : -1; }
     public int maxAminoAcidLocus() { return !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1; }
@@ -268,22 +294,6 @@ public class Fragment
     public String formCodonAminoAcid(int locus)
     {
         return FragmentUtils.formCodonAminoAcid(locus, mNucleotideLoci, mNucleotides);
-    }
-
-    public void enrich(int locus, final String nucleotide, int quality)
-    {
-        // adds an extra base, quality and locus
-        for(int i = 0; i < mNucleotideLoci.size(); ++i)
-        {
-            if(locus > mNucleotideLoci.get(i))
-                continue;
-
-            if(locus == mNucleotideLoci.get(i))
-                break;
-
-            addNucleotide(i, locus, nucleotide, quality);
-            break;
-        }
     }
 
     public boolean containsAminoAcids(final List<Integer> loci)
@@ -352,6 +362,35 @@ public class Fragment
         return FragmentUtils.formCodonAminoAcid(locus, mRawNucleotideLoci, mRawNucleotides);
     }
 
+    public FragmentScope scope() { return mScope; }
+    public void clearScope() { mScope = UNSET; }
+    public boolean isScopeSet() { return mScope != UNSET; }
+
+    public void setScope(FragmentScope scope) { setScope(scope, false); }
+
+    public void setScope(FragmentScope scope, boolean override)
+    {
+        if(mScope != UNSET)
+        {
+            if(override)
+            {
+                if(scope != HLA_Y)
+                {
+                    LL_LOGGER.debug("frag({}: {}) overriding existing scope: {} -> {}", id(), readInfo(), mScope, scope);
+                }
+
+                mScope = scope;
+            }
+        }
+        else
+        {
+            mScope = scope;
+        }
+    }
+
+    @VisibleForTesting
+    public int aminoAcidConversionCount() { return mAminoAcidConversionCount; }
+
     public String toString()
     {
         if(mAminoAcidConversionCount == 0)
@@ -365,56 +404,5 @@ public class Fragment
                 minAminoAcidLocus(), maxAminoAcidLocus());
     }
 
-    public boolean validate()
-    {
-        if(mGenes.isEmpty() || mGenes.size() > 3)
-        {
-            LL_LOGGER.warn("{} {} has no genes", id(), readInfo());
-            return false;
-        }
-
-        // check loci are ordered and consistent with qualities and bases
-        if(mNucleotides.isEmpty() || mRawNucleotides.isEmpty())
-        {
-            LL_LOGGER.warn("{} {} has no bases", id(), readInfo());
-            return false;
-        }
-
-        if(mNucleotides.size() != mNucleotideQuality.size())
-        {
-            LL_LOGGER.warn("{} {} inconsistent bases loci({}) quals({})",
-                    id(), readInfo(), mNucleotides.size(), mNucleotideQuality.size());
-            return false;
-        }
-
-        if(!validateLociBases(id(), mNucleotideLoci, mNucleotides))
-            return false;
-
-        if(!validateLociBases(id(), mRawNucleotideLoci, mRawNucleotides))
-            return false;
-
-        if(mAminoAcidConversionCount > 0)
-        {
-            if(!validateLociBases(id(), mAminoAcidLoci, mAminoAcids))
-                return false;
-
-            for(int i = 0; i < mAminoAcidLoci.size(); ++i)
-            {
-                if(mAminoAcids.get(i).isEmpty())
-                {
-                    LL_LOGGER.warn("{} {} empty amino-acid, index({})", id(), readInfo(), i);
-                    return false;
-                }
-            }
-
-            if(mAminoAcidConversionCount > 1)
-            {
-                LL_LOGGER.warn("{} {} amino-acid conversion repeated({})", id(), readInfo(), mAminoAcidConversionCount);
-                return false;
-            }
-        }
-
-        return true;
-    }
-
+    public boolean validate() { return FragmentUtils.validateFragment(this); }
 }

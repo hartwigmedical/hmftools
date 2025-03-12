@@ -204,20 +204,20 @@ public class LilacApplication
 
         mAminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, mRefNucleotideFrags);
 
-        List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.getReferenceFragments();
+        List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
 
-        double minEvidence = mConfig.calcMinEvidence(totalFragmentCount);
+        double minEvidence = mAminoAcidPipeline.minEvidence();
 
         LL_LOGGER.info(format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
-                totalFragmentCount, minEvidence, mConfig.calcMinHighQualEvidence(totalFragmentCount)));
+                totalFragmentCount, minEvidence, mAminoAcidPipeline.minHighQualEvidence()));
 
         Candidates candidateFactory = new Candidates(minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
-        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, minEvidence, HLA_CONTEXT_FACTORY.hlaA()));
-        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, minEvidence, HLA_CONTEXT_FACTORY.hlaB()));
-        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, minEvidence, HLA_CONTEXT_FACTORY.hlaC()));
+        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaA()));
+        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaB()));
+        geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaC()));
 
         List<Callable> callableList = geneTasks.stream().collect(Collectors.toList());
 

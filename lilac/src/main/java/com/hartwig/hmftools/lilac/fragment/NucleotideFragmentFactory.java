@@ -156,7 +156,7 @@ public class NucleotideFragmentFactory
             HlaSequenceLoci seqLoci = matchedSeqLoci.get(i);
             List<Integer> filteredAaIndices = matchedIndicesList.get(i);
             Fragment fragment = createIndelFragment(record, geneName, filteredAaIndices.get(0), aminoAcids, seqLoci);
-            if(!fragment.getNucleotideLoci().isEmpty())
+            if(!fragment.nucleotideLoci().isEmpty())
                 return fragment;
         }
 
@@ -233,7 +233,7 @@ public class NucleotideFragmentFactory
 
         for(Fragment fragment : fragments)
         {
-            for(Integer baseQual : fragment.getRawNucleotideQuality())
+            for(Integer baseQual : fragment.rawNucleotideQuality())
             {
                 ++totalBases;
                 ++baseQualFrequeny[min(baseQual, maxBaseQual)];
@@ -266,7 +266,7 @@ public class NucleotideFragmentFactory
         {
             int[] baseDepth = geneBaseDepth.get(fragment.readGene());
 
-            for(int locus : fragment.getRawNucleotideLoci())
+            for(int locus : fragment.rawNucleotideLoci())
             {
                 if(locus < baseDepth.length)
                     ++baseDepth[locus];

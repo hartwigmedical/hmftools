@@ -36,12 +36,12 @@ public final class SequenceCount
         mSeqCountsList = seqCounts;
     }
 
-    public final int getLength()
+    public int getLength()
     {
         return mSeqCountsList.length;
     }
 
-    public final Map<String,Integer> get(int locus)
+    public Map<String,Integer> get(int locus)
     {
         if (locus >= mSeqCountsList.length || mSeqCountsList[locus] == null)
         {
@@ -64,10 +64,10 @@ public final class SequenceCount
 
         for(Fragment fragment : fragments)
         {
-            for(int index = 0; index < fragment.getNucleotideLoci().size(); ++index)
+            for(int index = 0; index < fragment.nucleotideLoci().size(); ++index)
             {
-                int locus = fragment.getNucleotideLoci().get(index);
-                String nucleotide = fragment.getNucleotides().get(index);
+                int locus = fragment.nucleotideLoci().get(index);
+                String nucleotide = fragment.nucleotides().get(index);
                 increment(seqCountsList, locus, nucleotide);
             }
         }
@@ -87,10 +87,10 @@ public final class SequenceCount
 
         for(Fragment fragment : fragments)
         {
-            for(int index = 0; index < fragment.getAminoAcidLoci().size(); ++index)
+            for(int index = 0; index < fragment.aminoAcidLoci().size(); ++index)
             {
-                int locus = fragment.getAminoAcidLoci().get(index);
-                String aminoAcid = fragment.getAminoAcids().get(index);
+                int locus = fragment.aminoAcidLoci().get(index);
+                String aminoAcid = fragment.aminoAcids().get(index);
                 increment(seqCountsList, locus, aminoAcid);
             }
         }
@@ -272,7 +272,7 @@ public final class SequenceCount
         return lociSeqMap;
     }
 
-    public final void writeVertically(final String fileName)
+    public void writeVertically(final String fileName)
     {
         try
         {
@@ -317,7 +317,6 @@ public final class SequenceCount
         catch(IOException e)
         {
             LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
         }
     }
 }

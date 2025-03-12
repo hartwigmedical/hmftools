@@ -112,12 +112,12 @@ public class SomaticVariantAnnotation
                     if(variantLoci.contains(locus))
                         continue;
 
-                    int index = fragment.getAminoAcidLoci().indexOf(locus);
+                    int index = fragment.aminoAcidLoci().indexOf(locus);
                     String fragmentAA = "";
 
                     if(index >= 0)
                     {
-                        fragmentAA = fragment.getAminoAcids().get(index);
+                        fragmentAA = fragment.aminoAcids().get(index);
                     }
                     else
                     {

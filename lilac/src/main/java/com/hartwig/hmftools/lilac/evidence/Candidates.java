@@ -29,7 +29,7 @@ public final class Candidates
         mAminoAcidSequences = aminoAcidSequences;
     }
 
-    public final List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final List<HlaAllele> commonAllles)
+    public List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final List<HlaAllele> commonAllles)
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 

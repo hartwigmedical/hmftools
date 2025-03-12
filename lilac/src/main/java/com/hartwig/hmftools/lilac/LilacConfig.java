@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -71,9 +70,9 @@ public class LilacConfig
     public final String OutputDir;
 
     public int MinBaseQual;
-    private final int MinEvidence;
-    private final double MinEvidenceFactor;
-    private final double MinHighQualEvidenceFactor;
+    public final int MinEvidence;
+    public final double MinEvidenceFactor;
+    public final double MinHighQualEvidenceFactor;
     public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
@@ -223,9 +222,6 @@ public class LilacConfig
     }
 
     public String formFileId(final String fileId) { return OutputDir + Sample + LILAC_FILE_ID + fileId; }
-
-    public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MinEvidenceFactor); }
-    public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MinHighQualEvidenceFactor; }
 
     public void logParams()
     {
