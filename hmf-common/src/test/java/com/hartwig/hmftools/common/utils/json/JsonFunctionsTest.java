@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.utils.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -21,7 +20,7 @@ public class JsonFunctionsTest
         assertNull(JsonFunctions.optionalJsonArray(object, "any"));
         assertNull(JsonFunctions.optionalNullableString(object, "any"));
         assertNull(JsonFunctions.optionalString(object, "any"));
-        assertTrue(JsonFunctions.optionalStringList(object, "any").isEmpty());
+        assertNull(JsonFunctions.optionalStringList(object, "any"));
 
         object.add("emptyArray", new JsonArray());
         assertNotNull(JsonFunctions.optionalJsonArray(object, "emptyArray"));
