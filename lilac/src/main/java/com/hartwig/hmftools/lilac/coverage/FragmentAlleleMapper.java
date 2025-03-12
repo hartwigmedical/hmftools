@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_WILDCARD_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
-import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNMATCHED_AMINO_ACID;

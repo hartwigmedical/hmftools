@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.hla;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 
 import java.util.List;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;

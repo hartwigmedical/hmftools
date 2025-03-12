@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.lilac.app;
 
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
-import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.disableLogging;
@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.PASS;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.io.BufferedReader;

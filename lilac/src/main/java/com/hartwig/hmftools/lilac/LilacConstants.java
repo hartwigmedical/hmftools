@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
+
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +46,7 @@ public class LilacConstants
     public static final double WARN_LOW_COVERAGE_DEPTH = 10;
     public static final int DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD = 300;
 
+    // MHC class 1 constants
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";
     public static final String GENE_C = "C";
@@ -92,16 +95,6 @@ public class LilacConstants
     public static List<Integer> getNucleotideExonBoundaries(final String gene)
     {
         return NUCLEOTIDE_EXON_BOUNDARIES.get(gene);
-    }
-
-    public static String shortGeneName(final String gene)
-    {
-        return gene.startsWith(HLA_PREFIX) ? gene.substring(gene.length() - 1) : gene;
-    }
-
-    public static String longGeneName(final String gene)
-    {
-        return gene.length() == 1 ? HLA_PREFIX + gene : gene;
     }
 
     // output file IDs

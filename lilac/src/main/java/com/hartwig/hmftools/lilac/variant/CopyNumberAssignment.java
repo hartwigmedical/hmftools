@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.lilac.variant;
 
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
-import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
