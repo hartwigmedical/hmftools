@@ -4,14 +4,14 @@ class DummyConfig extends AltContigRemapperConfig
 {
     private final PairAligner mAligner;
 
-    DummyConfig(PairAligner aligner, String inputBam, String outputBam)
+    DummyConfig(PairAligner aligner, String inputBam, String outputBam, boolean overrideSliceHlaOnly)
     {
-        super(inputBam, outputBam, null);
+        super(inputBam, outputBam, null, overrideSliceHlaOnly);
         mAligner = aligner;
     }
 
     @Override
-    public PairAligner aligner()
+    public PairAligner pairAligner()
     {
         return mAligner;
     }

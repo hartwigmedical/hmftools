@@ -12,14 +12,14 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 
-public class BwaHlaRecordAligner implements HlaRecordAligner
+public class BwaHlaRecordPairAligner implements HlaRecordPairAligner
 {
 
     private final PairAligner mAligner;
     private final SAMFileHeader mHeader;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    public BwaHlaRecordAligner(final PairAligner aligner,
+    public BwaHlaRecordPairAligner(final PairAligner aligner,
             final SAMFileHeader newHeader,
             final RefGenomeVersion refGenomeVersion)
     {

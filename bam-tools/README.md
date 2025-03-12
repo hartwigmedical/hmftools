@@ -201,3 +201,32 @@ bamtool | As above
 write_incompletes | Write information about incomplete or invalid fragments to TSV file
 
 
+
+## AltContigRemapper
+
+Remaps HLA alt contig alignments using a supplied reference genome.
+
+Supplementary or secondary HLA alignments are skipped.
+
+### Usage
+
+```
+java -cp bam-tools.jar com.hartwig.hmftools.bamtools.remapper.AltContigRemapper \
+   -orig_bam_file sample_with_hla_alt_contigs.bam \
+   -ref_genome ref_genome.fasta \
+   -output_file remapped.bam \
+   -bamtool /opt/tools/samtools/1.20/samtools \
+   -threads 6
+```
+
+
+### Configuration
+
+| Filter        | Required? | Description                                                          |
+|---------------|-----------|----------------------------------------------------------------------|
+| orig_bam_file | Yes       | input BAM / CRAM file                                                |
+| ref_genome    | Yes       | Reference genome file, used to remap alt contigs.                    |
+| output_file   | Yes       | File into which the records (remapped and unaltered) are written.    |
+| bamtool       | No        | Path to samtools executable. If supplied, the output will be sorted. |
+| threads       | No        | Multi-thread count, default 1                                        |
+

@@ -34,11 +34,11 @@ public class HlaTransformer
         return referenceName.toLowerCase().startsWith(HLA_PREFIX);
     }
 
-    private final HlaRecordAligner mAligner;
+    private final HlaRecordPairAligner mAligner;
     private final Map<String, SAMRecord> mRecordsByName = new HashMap<>();
     private int mNumberProcessed = 0;
 
-    public HlaTransformer(final HlaRecordAligner aligner)
+    public HlaTransformer(final HlaRecordPairAligner aligner)
     {
         mAligner = aligner;
     }

@@ -15,17 +15,17 @@ import org.mockito.Mockito;
 
 import htsjdk.samtools.SAMRecord;
 
-public class BwaHlaRecordAlignerTest extends RemapperTestBase
+public class BwaHlaRecordPairAlignerTest extends RemapperTestBase
 {
 
     private PairAligner mAligner;
-    private BwaHlaRecordAligner mBwaAligner;
+    private BwaHlaRecordPairAligner mBwaAligner;
 
     @Before
     public void before()
     {
         mAligner = Mockito.mock(PairAligner.class);
-        mBwaAligner = new BwaHlaRecordAligner(mAligner, samFileHeader(), RefGenomeVersion.V38);
+        mBwaAligner = new BwaHlaRecordPairAligner(mAligner, samFileHeader(), RefGenomeVersion.V38);
     }
 
     @Test

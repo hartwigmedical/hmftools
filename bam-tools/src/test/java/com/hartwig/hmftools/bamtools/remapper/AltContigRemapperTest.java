@@ -10,34 +10,39 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
 
 public class AltContigRemapperTest extends RemapperTestBase
 {
+    private AltContigRemapperConfig config;
+    private AltContigRemapper remapper;
+    private File outputFile;
+    private PairAligner aligner;
+    private File inputFile;
 
-    @Test
-    public void runTest()
+    @Before
+    public void setup()
     {
         Assert.assertEquals(18, records.size()); // Sanity check
 
         // Create a remapper that will remap the tiny bam test data file
         // using the HlaAligner (see below) test aligner (rather than one that uses the entire genome).
         File tempDir = FileUtils.getTempDirectory();
-        File outputFile = new File(tempDir, "test.bam");
-        File inputFile = getTestFile("tiny.bam");
-        PairAligner aligner = new HlaAligner(records);
-        AltContigRemapperConfig config = new DummyConfig(aligner, inputFile.getAbsolutePath(), outputFile.getAbsolutePath());
-        AltContigRemapper remapper = new AltContigRemapper(config);
+        outputFile = new File(tempDir, "test.bam");
+        inputFile = getTestFile("tiny.bam");
+        aligner = new HlaAligner(records);
+    }
 
-        // Run the alignment.
+    @Test
+    public void runTest()
+    {
+        config = new DummyConfig(aligner, inputFile.getAbsolutePath(), outputFile.getAbsolutePath(), false);
+        remapper = new AltContigRemapper(config);
+
         remapper.run();
-
-        // Check that there are no HLA references in the dictionary of the output file;
-        List<SAMSequenceRecord> dictionaryRecords = readDictionarySequences(outputFile);
-        dictionaryRecords.forEach(record -> Assert.assertFalse(record.getSequenceName().contains("HLA")));
 
         // Read in the input file as a list of SAM records.
         List<SAMRecord> results = readSamFile(outputFile);

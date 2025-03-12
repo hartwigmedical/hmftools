@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -15,37 +11,12 @@ public class BwaPairAligner implements PairAligner
 {
     private final BwaMemAligner mAligner;
 
-    public BwaPairAligner(final String refGenomeImageFile)
+    public BwaPairAligner(BwaMemIndex index)
     {
-        if(!refGenomeImageFile.isEmpty() && Files.exists(Paths.get(refGenomeImageFile)))
-        {
-            BwaMemIndex index = null;
-
-            try
-            {
-                index = new BwaMemIndex(refGenomeImageFile);
-            }
-            catch(Exception e)
-            {
-                BT_LOGGER.error("failed to initialise BWA aligner: {}", e.toString());
-            }
-
-            if(index != null)
-            {
-                mAligner = new BwaMemAligner(index);
-                mAligner.alignPairs();
-                mAligner.dontInferPairEndStats();
-                mAligner.setBandwidthOption(31);
-            }
-            else
-            {
-                mAligner = null;
-            }
-        }
-        else
-        {
-            mAligner = null;
-        }
+        mAligner = new BwaMemAligner(index);
+        mAligner.alignPairs();
+        mAligner.dontInferPairEndStats();
+        mAligner.setBandwidthOption(31);
     }
 
     @Override

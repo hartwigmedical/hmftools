@@ -16,13 +16,13 @@ import htsjdk.samtools.SAMRecord;
 
 public class HlaTransformerTest extends RemapperTestBase
 {
-    private HlaRecordAligner mAligner;
+    private HlaRecordPairAligner mAligner;
     private HlaTransformer mTransformer;
 
     @Before
     public void setup()
     {
-        mAligner = Mockito.mock(HlaRecordAligner.class);
+        mAligner = Mockito.mock(HlaRecordPairAligner.class);
         mTransformer = new HlaTransformer(mAligner);
     }
 

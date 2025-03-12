@@ -4,7 +4,7 @@ import java.util.List;
 
 import htsjdk.samtools.SAMRecord;
 
-public interface HlaRecordAligner
+public interface HlaRecordPairAligner
 {
     List<SAMRecord> alignPair(RecordPair pair);
 }
