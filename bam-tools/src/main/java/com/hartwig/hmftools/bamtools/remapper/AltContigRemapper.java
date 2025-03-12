@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.remapper;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
+import static com.hartwig.hmftools.common.immune.ImmuneRegions.getHlaRegions;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.File;
@@ -10,18 +11,19 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.FastBamWriter;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -34,11 +36,6 @@ public class AltContigRemapper
         mConfig = config;
     }
 
-    static boolean isRelevantDictionaryItem(SAMSequenceRecord samSequenceRecord)
-    {
-        return !samSequenceRecord.getSequenceName().toLowerCase().startsWith("hla");
-    }
-
     public void run()
     {
         long startTimeMs = System.currentTimeMillis();
@@ -46,17 +43,8 @@ public class AltContigRemapper
         try(SamReader samReader = SamReaderFactory.makeDefault().open(new File(mConfig.OrigBamFile)))
         {
 
-            // The header in the rewritten file needs to be the same
-            // as the header in the original file but with the hla dictionary items removed.
             SAMFileHeader fileHeader = samReader.getFileHeader();
             SAMFileHeader newHeader = fileHeader.clone();
-            SAMSequenceDictionary dictionaryWithHlaAltsRemoved = new SAMSequenceDictionary();
-            fileHeader.getSequenceDictionary()
-                    .getSequences()
-                    .stream()
-                    .filter(AltContigRemapper::isRelevantDictionaryItem)
-                    .forEach(dictionaryWithHlaAltsRemoved::addSequence);
-            newHeader.setSequenceDictionary(dictionaryWithHlaAltsRemoved);
 
             String interimOutputFileName = mConfig.OutputFile + ".unsorted";
             File interimOutputFile = new File(interimOutputFileName);
@@ -64,18 +52,37 @@ public class AltContigRemapper
             {
                 BT_LOGGER.info("New BAM writer created.");
 
-                final BwaHlaRecordAligner aligner = new BwaHlaRecordAligner(mConfig.aligner(), newHeader, mConfig.RefGenVersion);
+                final BwaHlaRecordPairAligner aligner = new BwaHlaRecordPairAligner(mConfig.pairAligner(), newHeader, mConfig.RefGenVersion);
                 HlaTransformer transformer = new HlaTransformer(aligner);
-                samReader.forEach(record -> transformer.process(record).forEach(bamWriter::addAlignment));
+                if(mConfig.SliceHlaRegionsOnly)
+                {
+                    List<ChrBaseRegion> hlaRegions = new ArrayList<>();
+                    fileHeader.getSequenceDictionary().getSequences().forEach(record ->
+                    {
+                        if(record.getSequenceName().toLowerCase().startsWith("hla"))
+                        {
+                            ChrBaseRegion baseRegion =  new ChrBaseRegion(record.getSequenceName(), record.getStart(), record.getEnd());
+                            hlaRegions.add(baseRegion);
+                        }
+                    });
+                    hlaRegions.addAll(getHlaRegions(mConfig.RefGenVersion));
+                    BamSlicer bamSlicer = new BamSlicer(0, false, false, false);
+                    hlaRegions.forEach(region ->
+                            bamSlicer.slice(samReader, region, record -> transformer.process(record).forEach(bamWriter::addAlignment)));
+                }
+                else
+                {
+                    samReader.forEach(record -> transformer.process(record).forEach(bamWriter::addAlignment));
+                }
 
                 BT_LOGGER.info("Input file processed. Number of HLA records: " + transformer.numberOfHlaRecordsProcessed());
                 // Deal with any unmatched reads.
-                // Don't map these - log an error and write them out as they are
                 List<SAMRecord> unmatched = transformer.unmatchedRecords();
                 if(!unmatched.isEmpty())
                 {
                     BT_LOGGER.warn("Some HLA contig records were unmatched. " + unmatched);
-                    unmatched.forEach(bamWriter::addAlignment);
+                    SingleRecordAligner unmatchedRecordsAligner = mConfig.singleRecordAligner(newHeader);
+                    unmatched.forEach(samRecord -> unmatchedRecordsAligner.alignSequence(samRecord).forEach(bamWriter::addAlignment));
                 }
                 else
                 {
