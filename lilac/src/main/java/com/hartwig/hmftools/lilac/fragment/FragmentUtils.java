@@ -209,7 +209,6 @@ public class FragmentUtils
         return true;
     }
 
-
     public static boolean validateLociBases(final String id, final List<Integer> loci, final List<String> sequences)
     {
         if(sequences.size() != sequences.size())

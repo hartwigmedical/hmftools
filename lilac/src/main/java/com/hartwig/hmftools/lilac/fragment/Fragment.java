@@ -121,19 +121,19 @@ public class Fragment
             mNucleotideLoci.add(nucIndex, locus);
             mNucleotides.add(nucIndex, nucleotide);
             mNucleotideQuality.add(nucIndex, quality);
-        }
 
-        if(!mIsQualFiltered)
-        {
-            // sets remain the same
-            mRawNucleotideLoci.add(nucIndex, locus);
-            mRawNucleotides.add(nucIndex, nucleotide);
-            mRawNucleotideQuality.add(nucIndex, quality);
-            return;
+            if(!mIsQualFiltered)
+            {
+                // sets remain the same
+                mRawNucleotideLoci.add(nucIndex, locus);
+                mRawNucleotides.add(nucIndex, nucleotide);
+                mRawNucleotideQuality.add(nucIndex, quality);
+                return;
+            }
         }
 
         // filtered indices have changed and are unlikely to match, so find the insertion point for this loci
-        int rawIndex = findLociIndex(mRawNucleotideLoci, locus);
+        int rawIndex = findLociInsertionIndex(mRawNucleotideLoci, locus);
 
         if(rawIndex == mRawNucleotideLoci.size() || mRawNucleotideLoci.get(rawIndex) != locus)
         {
@@ -145,56 +145,29 @@ public class Fragment
 
     public void addNucleotideInfo(int locus, final String nucleotide, int quality)
     {
-        int nucIndex = findLociIndex(mNucleotideLoci, locus);
+        int nucIndex = findLociInsertionIndex(mNucleotideLoci, locus);
         addNucleotideInfo(nucIndex, locus, nucleotide, quality);
     }
 
-    private static int findLociIndex(final List<Integer> lociValues, final int locus)
+    public static int findLociInsertionIndex(final List<Integer> lociValues, final int locus)
     {
         int index = Collections.binarySearch(lociValues, locus);
 
-        if(index >= 0 && index < lociValues.size())
+        if(index >= 0 && index < lociValues.size()) // check if matches
             return index;
 
         return -(index + 1); // as per insertion point conventions
     }
 
-    /*
-    public void addNucleotide(int index, int locus, String bases, int quality)
+    public static int findLociIndex(final List<Integer> lociValues, final int locus)
     {
-        mNucleotideLoci.add(index, locus);
-        mNucleotides.add(index, bases);
-        mNucleotideQuality.add(index, quality);
+        int index = findLociInsertionIndex(lociValues, locus);
 
-        if(!mIsQualFiltered)
-        {
-            // sets remain the same
-            mRawNucleotideLoci.add(index, locus);
-            mRawNucleotides.add(index, bases);
-            mRawNucleotideQuality.add(index, quality);
-            return;
-        }
+        if(index < 0 || index >= lociValues.size() || lociValues.get(index) != locus)
+            return -1;
 
-        // filtered indices have changed and are unlikely to match, so find the insertion point for this loci
-        int rawIndex = Collections.binarySearch(mRawNucleotideLoci, locus);
-        rawIndex = -(rawIndex + 1); // as per insertion point conventions
-
-        int testIndex = 0;
-
-        while(testIndex < mRawNucleotideLoci.size())
-        {
-            if(mRawNucleotideLoci.get(testIndex) > locus)
-                break;
-
-            ++testIndex;
-        }
-
-
-        mRawNucleotideLoci.add(rawIndex, locus);
-        mRawNucleotides.add(rawIndex, bases);
-        mRawNucleotideQuality.add(rawIndex, quality);
+        return index;
     }
-    */
 
     public boolean hasNucleotides() { return !mNucleotideLoci.isEmpty(); }
 
@@ -222,8 +195,7 @@ public class Fragment
 
     public String nucleotide(int locus)
     {
-        // consider using a binary search here too, depends on how indexOf is implemented and size of list for a fragment
-        int index = mNucleotideLoci.indexOf(locus);
+        int index = findLociIndex(mNucleotideLoci, locus);
 
         if(index < 0)
             return "";
@@ -405,4 +377,23 @@ public class Fragment
     }
 
     public boolean validate() { return FragmentUtils.validateFragment(this); }
+
+    @VisibleForTesting
+    public static int findLociIndexManual(final List<Integer> lociValues, final int locus)
+    {
+        int index = 0;
+
+        while(index < lociValues.size())
+        {
+            if(locus < lociValues.get(index) || locus == lociValues.get(index))
+                return index;
+
+            if(lociValues.get(index) > locus)
+                break;
+
+            ++index;
+        }
+
+        return index;
+    }
 }

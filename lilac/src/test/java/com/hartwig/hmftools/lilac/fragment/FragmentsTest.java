@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_MILLISECOND;
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
@@ -24,6 +28,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.lilac.read.ReadRecord;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -170,5 +175,73 @@ public class FragmentsTest
     {
         assertEquals(expectedStart, victim.get(0).intValue());
         assertEquals(expectedEnd, victim.get(victim.size() - 1).intValue());
+    }
+
+    @Ignore
+    @Test
+    public void testLociLookup()
+    {
+        // test locus look-up for a fragment with typical number of nucleotides (~150 being a read within an exon, high value = 250)
+        // relative search times: manual = 5, binary = 2, indexOf = 3
+        int iterations = 1_000_000;
+
+        int lociCount = 150;
+
+        List<Integer> lociValues = Lists.newArrayListWithCapacity(lociCount);
+
+        for(int i = 0; i < lociCount; ++i)
+        {
+            lociValues.add(i);
+        }
+
+        int[] searchLoci = {0, 10, 25, 50, 100, lociCount - 1};
+        int searchValueIndex = 0;
+
+        long startTime = System.nanoTime();
+
+        for(int i = 0; i < iterations; ++i)
+        {
+            Fragment.findLociIndexManual(lociValues, searchLoci[searchValueIndex++]);
+
+            if(searchValueIndex >= searchLoci.length)
+                searchValueIndex = 0;
+        }
+
+        long sampleTime = System.nanoTime() - startTime;
+        double sampleTimeMillis = sampleTime / NANOS_IN_MILLISECOND;
+
+        LL_LOGGER.info(format("manual search time: %.6fms", sampleTimeMillis));
+
+        searchValueIndex = 0;
+        startTime = System.nanoTime();
+
+        for(int i = 0; i < iterations; ++i)
+        {
+            Fragment.findLociInsertionIndex(lociValues, searchLoci[searchValueIndex++]);
+
+            if(searchValueIndex >= searchLoci.length)
+                searchValueIndex = 0;
+        }
+
+        sampleTime = System.nanoTime() - startTime;
+        sampleTimeMillis = sampleTime / NANOS_IN_MILLISECOND;
+
+        LL_LOGGER.info(format("binary search time: %.6fms", sampleTimeMillis));
+
+        searchValueIndex = 0;
+        startTime = System.nanoTime();
+
+        for(int i = 0; i < iterations; ++i)
+        {
+            lociValues.indexOf(searchLoci[searchValueIndex++]);
+
+            if(searchValueIndex >= searchLoci.length)
+                searchValueIndex = 0;
+        }
+
+        sampleTime = System.nanoTime() - startTime;
+        sampleTimeMillis = sampleTime / NANOS_IN_MILLISECOND;
+
+        LL_LOGGER.info(format("indexOf search time: %.6fms", sampleTimeMillis));
     }
 }
