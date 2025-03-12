@@ -105,6 +105,8 @@ public class LilacConstants
     }
 
     // output file IDs
+    public static String LILAC_FILE_ID = ".lilac.";
+
     public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
     public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
     public static String LILAC_FILE_FRAGMENTS = "fragments.tsv";

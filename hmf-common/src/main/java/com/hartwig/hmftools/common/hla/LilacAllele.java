@@ -129,25 +129,25 @@ public abstract class LilacAllele
         return lines;
     }
 
-    private static final String FLD_ALLELE = "Allele";
-    private static final String FLD_REF_TOTAL = "RefTotal";
-    private static final String FLD_REF_UNIQUE = "RefUnique";
-    private static final String FLD_REF_SHARED = "RefShared";
-    private static final String FLD_REF_WILD = "RefWild";
-    private static final String FLD_TUMOR_TOTAL = "TumorTotal";
-    private static final String FLD_TUMOR_UNIQUE = "TumorUnique";
-    private static final String FLD_TUMOR_SHARED = "TumorShared";
-    private static final String FLD_TUMOR_WILD = "TumorWild";
-    private static final String FLD_TUMOR_CN = "TumorCopyNumber";
-    private static final String FLD_RNA_TOTAL = "RnaTotal";
-    private static final String FLD_RNA_UNIQUE = "RnaUnique";
-    private static final String FLD_RNA_SHARED = "RnaShared";
-    private static final String FLD_RNA_WILD = "RnaWild";
-    private static final String FLD_MISSENSE = "SomaticMissense";
-    private static final String FLD_NFS = "SomaticNonsenseOrFrameshift";
-    private static final String FLD_SPLICE = "SomaticSplice";
-    private static final String FLD_SYNON = "SomaticSynonymous";
-    private static final String FLD_INDEL = "SomaticInframeIndel";
+    public static final String FLD_ALLELE = "Allele";
+    public static final String FLD_REF_TOTAL = "RefTotal";
+    public static final String FLD_REF_UNIQUE = "RefUnique";
+    public static final String FLD_REF_SHARED = "RefShared";
+    public static final String FLD_REF_WILD = "RefWild";
+    public static final String FLD_TUMOR_TOTAL = "TumorTotal";
+    public static final String FLD_TUMOR_UNIQUE = "TumorUnique";
+    public static final String FLD_TUMOR_SHARED = "TumorShared";
+    public static final String FLD_TUMOR_WILD = "TumorWild";
+    public static final String FLD_TUMOR_CN = "TumorCopyNumber";
+    public static final String FLD_RNA_TOTAL = "RnaTotal";
+    public static final String FLD_RNA_UNIQUE = "RnaUnique";
+    public static final String FLD_RNA_SHARED = "RnaShared";
+    public static final String FLD_RNA_WILD = "RnaWild";
+    public static final String FLD_MISSENSE = "SomaticMissense";
+    public static final String FLD_NFS = "SomaticNonsenseOrFrameshift";
+    public static final String FLD_SPLICE = "SomaticSplice";
+    public static final String FLD_SYNON = "SomaticSynonymous";
+    public static final String FLD_INDEL = "SomaticInframeIndel";
 
     public static String header()
     {

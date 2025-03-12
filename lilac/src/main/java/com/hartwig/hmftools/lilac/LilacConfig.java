@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EV
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_ID;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamUtils;
@@ -221,7 +222,7 @@ public class LilacConfig
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String formFileId(final String fileId) { return OutputDir + Sample + ".lilac." + fileId; }
+    public String formFileId(final String fileId) { return OutputDir + Sample + LILAC_FILE_ID + fileId; }
 
     public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MinEvidenceFactor); }
     public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MinHighQualEvidenceFactor; }
