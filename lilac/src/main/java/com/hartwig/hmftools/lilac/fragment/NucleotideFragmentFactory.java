@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
+import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
@@ -22,9 +23,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.utils.SuffixTree;
+import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.read.ReadRecord;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.LociPosition;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,22 +34,22 @@ import java.util.stream.Collectors;
 
 public class NucleotideFragmentFactory
 {
+    private final ReferenceData mReferenceData;
     private final LinkedHashMap<HlaSequenceLoci,SuffixTree> mInsertSuffixTrees;
     private final LinkedHashMap<HlaSequenceLoci,SuffixTree> mDeleteSuffixTrees;
     private final int mMinBaseQuality;
-    private final LociPosition mLociPosition;
 
     public NucleotideFragmentFactory(
-            int minBaseQuality, final List<HlaSequenceLoci> inserts, final List<HlaSequenceLoci> deletes, final LociPosition lociPosition)
+            int minBaseQuality, final ReferenceData referenceData)
     {
         mMinBaseQuality = minBaseQuality;
-        mLociPosition = lociPosition;
+        mReferenceData = referenceData;
 
         mInsertSuffixTrees = Maps.newLinkedHashMap();
         mDeleteSuffixTrees = Maps.newLinkedHashMap();
 
-        inserts.stream().forEach(x -> mInsertSuffixTrees.put(x, new SuffixTree(x.sequence())));
-        deletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
+        mReferenceData.AminoAcidSequencesWithInserts.stream().forEach(x -> mInsertSuffixTrees.put(x, new SuffixTree(x.sequence())));
+        mReferenceData.AminoAcidSequencesWithDeletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
     public final Fragment createFragment(final ReadRecord record, final String geneName, final byte geneStrand)
@@ -58,11 +59,11 @@ public class NucleotideFragmentFactory
 
         boolean reverseStrand = geneStrand == NEG_STRAND;
 
-        int samCodingStartLoci = reverseStrand
-                ? mLociPosition.calcNucelotideLocus(record.PositionEnd) : mLociPosition.calcNucelotideLocus(record.PositionStart);
+        int codingPositionStartLoci = calcNucelotideLocus(mReferenceData.HlaTranscripts, record.PositionStart);
+        int codingPositionEndLoci = calcNucelotideLocus(mReferenceData.HlaTranscripts, record.PositionEnd);
 
-        int samCodingEndLoci = reverseStrand
-                ? mLociPosition.calcNucelotideLocus(record.PositionStart) : mLociPosition.calcNucelotideLocus(record.PositionEnd);
+        int samCodingStartLoci = !reverseStrand ? codingPositionStartLoci : codingPositionEndLoci;
+        int samCodingEndLoci = !reverseStrand ? codingPositionEndLoci : codingPositionStartLoci;
 
         final char[] codingRegionRead = record.codingRegionRead(reverseStrand);
         final int[] codingRegionQuality = record.codingRegionQuality(reverseStrand);

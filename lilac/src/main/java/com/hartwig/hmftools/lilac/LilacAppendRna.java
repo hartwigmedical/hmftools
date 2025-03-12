@@ -3,9 +3,6 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
-import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT;
 
 import java.io.IOException;
@@ -95,9 +92,7 @@ public class LilacAppendRna
 
         List<HlaAllele> winningAlleles = aminoAcidSequences.stream().map(x -> x.Allele).collect(Collectors.toList());
 
-        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(
-                mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes,
-                mRefData.LOCI_POSITION_FINDER);
+        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mConfig.MinBaseQual, mRefData);
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, Collections.emptyList());
 
@@ -143,7 +138,7 @@ public class LilacAppendRna
             return ComplexCoverage.create(Lists.newArrayList());
         }
 
-        BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config, referenceData.HlaTranscriptData, nucleotideFragFactory);
+        BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config, referenceData.HlaTranscriptMap, nucleotideFragFactory);
 
         List<Fragment> rnaNucleotideFrags = nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaBamReader.findGeneFragments());
 

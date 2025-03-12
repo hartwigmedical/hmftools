@@ -12,11 +12,11 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LilacConstants;
-import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
+import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -37,17 +37,14 @@ public class SomaticVariantAnnotation
 
     private final Map<String,TranscriptData> mHlaTranscriptData;
 
-    private final LociPosition mLociPositionFinder;
-
-    public SomaticVariantAnnotation(
-            final LilacConfig config, final Map<String,TranscriptData> transcriptData, final LociPosition lociPositionFinder)
+    public SomaticVariantAnnotation(final LilacConfig config, final Map<String,TranscriptData> transcriptData)
     {
         mConfig = config;
         mHlaTranscriptData = transcriptData;
 
         mGeneVariantLoci = Maps.newHashMap();
 
-        mLociPositionFinder = lociPositionFinder;
+        List<TranscriptData> transcripts = transcriptData.values().stream().toList();
 
         mSomaticVariants = Lists.newArrayList();
 
@@ -55,7 +52,7 @@ public class SomaticVariantAnnotation
 
         for(SomaticVariant variant : variants)
         {
-            int variantNucleotideLoci = mLociPositionFinder.calcNucelotideLocus(variant.Position);
+            int variantNucleotideLoci = calcNucelotideLocus(transcripts, variant.Position);
 
             if(variantNucleotideLoci < 0)
                 continue;

@@ -166,19 +166,17 @@ public class LilacApplication
 
         LL_LOGGER.info("finding read support in {} bam {}", mConfig.tumorOnly() ? "tumor" : "reference", referenceBam);
 
-        mNucleotideFragFactory = new NucleotideFragmentFactory(
-                mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes,
-                mRefData.LOCI_POSITION_FINDER);
+        mNucleotideFragFactory = new NucleotideFragmentFactory(mConfig.MinBaseQual, mRefData);
 
         if(mRefBamReader == null)
-            mRefBamReader = new BamRecordReader(referenceBam, mConfig, mRefData.HlaTranscriptData, mNucleotideFragFactory);
+            mRefBamReader = new BamRecordReader(referenceBam, mConfig, mRefData.HlaTranscriptMap, mNucleotideFragFactory);
 
         if(mTumorBamReader == null)
         {
             if(mConfig.tumorOnly())
                 mTumorBamReader = mRefBamReader;
             else if(!mConfig.TumorBam.isEmpty())
-                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, mRefData.HlaTranscriptData, mNucleotideFragFactory);
+                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, mRefData.HlaTranscriptMap, mNucleotideFragFactory);
         }
 
         List<Fragment> refFragments = mRefBamReader.findGeneFragments();
@@ -585,8 +583,7 @@ public class LilacApplication
         }
 
         // SOMATIC VARIANTS
-        SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(
-                mConfig, mRefData.HlaTranscriptData, mRefData.LOCI_POSITION_FINDER);
+        SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(mConfig, mRefData.HlaTranscriptMap);
 
         if(variantAnnotation.getSomaticVariants().isEmpty())
             return;

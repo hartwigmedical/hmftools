@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.compare;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
@@ -15,7 +16,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -47,9 +47,12 @@ public class LilacCompare
     private final double mPermittedDifferencePerc;
 
     private BufferedWriter mWriter;
+    private int mMismatchCount;
 
     private static final String ORIGINAL_DIR = "original_dir";
     private static final String NEW_DIR = "new_dir";
+    private static final String PERMITTED_DIFF = "diff_abs";
+    private static final String PERMITTED_DIFF_PERC = "diff_perc";
 
     public LilacCompare(final ConfigBuilder configBuilder)
     {
@@ -59,10 +62,11 @@ public class LilacCompare
         mOutputId = configBuilder.getValue(OUTPUT_ID);
         mSampleId = configBuilder.getValue(SAMPLE);
 
-        mPermittedDifference = 0.5;
-        mPermittedDifferencePerc = 0.1;
+        mPermittedDifference = configBuilder.getDecimal(PERMITTED_DIFF);
+        mPermittedDifferencePerc = configBuilder.getDecimal(PERMITTED_DIFF_PERC);
 
         mWriter = null;
+        mMismatchCount = 0;
     }
 
     public void run()
@@ -99,7 +103,7 @@ public class LilacCompare
             System.exit(1);
         }
 
-        LL_LOGGER.info("Lilac comparison complete", mOriginalDir, mNewDir);
+        LL_LOGGER.info("Lilac comparison complete, mismatches({})", mMismatchCount);
     }
 
     private void compareCandidateCoverage() throws IOException
@@ -214,6 +218,7 @@ public class LilacCompare
 
     private void writeMismatch(final String field, final String origValue, final String newValue) throws IOException
     {
+        ++mMismatchCount;
         mWriter.write(format("%s\t%s\t%s", field, origValue, newValue));
         mWriter.newLine();
     }
@@ -225,6 +230,8 @@ public class LilacCompare
         configBuilder.addPath(ORIGINAL_DIR, true, "Path to original Lilac output");
         configBuilder.addPath(NEW_DIR, true, "Path to new Lilac output");
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addDecimal(PERMITTED_DIFF, "Permitted numeric difference", 0.5);
+        configBuilder.addDecimal(PERMITTED_DIFF_PERC, "Permitted numeric difference", 0.02);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

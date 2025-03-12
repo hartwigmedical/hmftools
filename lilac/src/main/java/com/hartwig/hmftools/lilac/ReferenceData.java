@@ -58,14 +58,13 @@ public class ReferenceData
 
     private final CohortFrequency mAlleleFrequencies;
 
-    public final Map<String,TranscriptData> HlaTranscriptData;
+    public final Map<String,TranscriptData> HlaTranscriptMap;
+    public final List<TranscriptData> HlaTranscripts;
 
     public static final HlaContextFactory HLA_CONTEXT_FACTORY = new HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
 
     public static final NucleotideGeneEnrichment NUC_GENE_FRAG_ENRICHMENT = new NucleotideGeneEnrichment(
             A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
-
-    public final LociPosition LOCI_POSITION_FINDER;
 
     private final HlaAlleleCache mAlleleCache;
 
@@ -104,11 +103,11 @@ public class ReferenceData
         setKnownStopLossIndels(config.RefGenVersion);
         setPonIndels(config.RefGenVersion);
 
-        HlaTranscriptData = Maps.newHashMap();
+        HlaTranscriptMap = Maps.newHashMap();
 
         // load gene definitions and other constants
-        populateHlaTranscripts(HlaTranscriptData, config.RefGenVersion);
-        LOCI_POSITION_FINDER = new LociPosition(HlaTranscriptData.values().stream().collect(Collectors.toList()));
+        populateHlaTranscripts(HlaTranscriptMap, config.RefGenVersion);
+        HlaTranscripts = HlaTranscriptMap.values().stream().toList();
 
         populateNucleotideExonBoundaries();
 
