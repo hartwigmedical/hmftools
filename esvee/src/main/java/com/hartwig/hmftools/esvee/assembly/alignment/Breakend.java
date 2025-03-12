@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
+import static com.hartwig.hmftools.esvee.assembly.alignment.HomologyData.NO_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
@@ -57,7 +58,8 @@ public class Breakend implements Comparable<Breakend>
         Position = position;
         Orient = orientation;
         InsertedBases = insertedBases;
-        Homology = homology;
+
+        Homology = homology != null ? homology : NO_HOMOLOGY;
 
         mId = -1;
         mAssembly = assembly;
@@ -89,7 +91,7 @@ public class Breakend implements Comparable<Breakend>
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
 
-    public void setUnpairedReadPositions(int posStart, int posEnd)
+    public void addFragmentPositions(int posStart, int posEnd)
     {
         if(mPositionsStart == null)
         {
@@ -101,8 +103,9 @@ public class Breakend implements Comparable<Breakend>
         mPositionsEnd.add(posEnd);
     }
 
-    public int[] unpairedReadPositions()
+    public int[] uniqueFragmentPositionCounts()
     {
+        // unclipped fragment positions as used for duplicate logic, or unclipped ends for an unpaired read
         return mPositionsStart != null ? new int[] { mPositionsStart.size(), mPositionsEnd.size() } : null;
     }
 
@@ -183,8 +186,8 @@ public class Breakend implements Comparable<Breakend>
 
     public boolean isShortLocalDelDupIns() { return CommonUtils.isShortLocalDelDupIns(svType(), svLength()); }
 
-    public int minPosition() { return Position + (Homology != null ? Homology.ExactStart : 0); }
-    public int maxPosition() { return Position + (Homology != null ? Homology.ExactEnd : 0); }
+    public int minPosition() { return Position + Homology.ExactStart; }
+    public int maxPosition() { return Position + Homology.ExactEnd; }
 
     public int calcSvQual()
     {
@@ -223,7 +226,7 @@ public class Breakend implements Comparable<Breakend>
         if(!Chromosome.equals(chromosome) || Orient != orientation)
             return false;
 
-        if(Homology != null)
+        if(Homology != NO_HOMOLOGY)
             return positionWithin(position, Position + Homology.ExactStart, Position + Homology.ExactEnd);
         else
             return Position == position;
@@ -232,7 +235,7 @@ public class Breakend implements Comparable<Breakend>
     public String toString()
     {
         return format("%d: %s:%d:%d %s hom(%s) otherId(%d) segs(%d) alts(%d)",
-                mId, Chromosome, Position, Orient.asByte(), svType(), Homology != null ? Homology : "",
+                mId, Chromosome, Position, Orient.asByte(), svType(), Homology != NO_HOMOLOGY ? Homology : "",
                 mOtherBreakend != null ? mOtherBreakend.id() : -1,
                 mSegments.size(), mAlternativeAlignments != null ? mAlternativeAlignments.size() : 0);
     }
@@ -240,6 +243,22 @@ public class Breakend implements Comparable<Breakend>
     @Override
     public int compareTo(final Breakend other)
     {
-        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
+        int breakendCompare = compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
+
+        if(breakendCompare != 0)
+            return breakendCompare;
+
+        if(svType() == SGL || other.svType() == SGL)
+        {
+            if(svType() == other.svType())
+                return Integer.compare(InsertedBases.length(), other.InsertedBases.length());
+
+            return svType() == SGL ? -1 : 1;
+        }
+
+        return compareJunctions(
+                otherBreakend().Chromosome, otherBreakend().Chromosome,
+                otherBreakend().Position, other.otherBreakend().Position,
+                otherBreakend().Orient, other.otherBreakend().Orient);
     }
 }

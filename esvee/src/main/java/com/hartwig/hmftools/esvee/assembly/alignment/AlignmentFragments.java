@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
@@ -186,6 +187,19 @@ public class AlignmentFragments
         List<ReadBreakendMatch> firstBreakendMatches = firstRead != null ? findReadBreakendMatch(firstRead) : Collections.emptyList();
         List<ReadBreakendMatch> secondBreakendMatches = secondRead != null ? findReadBreakendMatch(secondRead) : Collections.emptyList();
 
+        if(firstRead != null && secondRead != null)
+        {
+            // attempt to used the breakends from the matching read for the other if it is local concordant pair but outside the segment range
+            if(!firstBreakendMatches.isEmpty() && secondBreakendMatches.isEmpty() && canUseOtherReadBreakendMatches(firstRead, secondRead))
+            {
+                secondBreakendMatches = firstBreakendMatches;
+            }
+            else if(firstBreakendMatches.isEmpty() && !secondBreakendMatches.isEmpty() && canUseOtherReadBreakendMatches(secondRead, firstRead))
+            {
+                firstBreakendMatches = secondBreakendMatches;
+            }
+        }
+
         if(!firstBreakendMatches.isEmpty() && !secondBreakendMatches.isEmpty())
         {
             processCompleteFragment(firstRead, secondRead, firstBreakendMatches, secondBreakendMatches);
@@ -198,6 +212,18 @@ public class AlignmentFragments
         {
             processSoloRead(secondRead, secondBreakendMatches);
         }
+    }
+
+    private static boolean canUseOtherReadBreakendMatches(final SupportRead firstRead, final SupportRead secondRead)
+    {
+        // returns true if the pair of reads are local to the same junction
+        if(!firstRead.isDiscordant() && firstRead.type() == SupportType.JUNCTION && secondRead.type() == SupportType.JUNCTION_MATE)
+            return true;
+
+        if(!secondRead.isDiscordant() && secondRead.type() == SupportType.JUNCTION && firstRead.type() == SupportType.JUNCTION_MATE)
+            return true;
+
+        return firstRead.type() == SupportType.EXTENSION || secondRead.type() == SupportType.EXTENSION;
     }
 
     private void processCompleteFragment(
@@ -247,16 +273,20 @@ public class AlignmentFragments
         firstRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
         secondRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
+        int[] fragCoords = firstRead.fragmentCoords();
+
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength, true);
+            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!breakend.isSingle())
             {
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(fragmentLength, true);
+                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
             }
         }
     }
@@ -314,14 +344,20 @@ public class AlignmentFragments
         if(svType != null && isIndel(svType) && indelLength != 0 && read.insertSize() > 0)
         {
             inferredFragmentLength = calcIndelSoloReadFragmentLength(read, svType, indelLength);
-            setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 
         }
         else if(!read.isPairedRead())
         {
             inferredFragmentLength = abs(read.insertSize());
-            setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
         }
+
+        if(!setValidFragmentLength && mAssemblyAlignment.breakends().size() == 2 && mAssemblyAlignment.assemblies().size() == 1)
+        {
+            // likely explanation is that mate reads were never required nor retrieved for the single assembly
+            inferredFragmentLength = calcDiscordantSoloReadFragmentLength(read, mAssemblyAlignment.breakends());
+        }
+
+        setValidFragmentLength = inferredFragmentLength <= MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 
         if(setValidFragmentLength)
             read.setInferredFragmentLength(inferredFragmentLength);
@@ -333,25 +369,19 @@ public class AlignmentFragments
 
         read.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
+        int[] fragCoords = read.fragmentCoords();
+
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-
-            if(!read.isPairedRead())
-            {
-                breakend.setUnpairedReadPositions(read.unclippedStart(), read.unclippedEnd());
-            }
+            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!breakend.isSingle())
             {
                 breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-
-                if(!read.isPairedRead())
-                {
-                    breakend.otherBreakend().setUnpairedReadPositions(read.unclippedStart(), read.unclippedEnd());
-                }
+                breakend.otherBreakend().addFragmentPositions(fragCoords[0], fragCoords[1]);
             }
         }
     }
@@ -423,6 +453,54 @@ public class AlignmentFragments
         int svLength = mAssemblyAlignment.phaseSet().assemblyLinks().get(0).length();
 
         return isShortLocalDelDupIns(svType, svLength);
+    }
+
+    private int calcDiscordantSoloReadFragmentLength(final SupportRead read, final List<Breakend> breakends)
+    {
+        // calculate the distance from the remote breakend to the mate read if they are local
+        JunctionAssembly originalAssembly = mAssemblyAlignment.assemblies().get(0);
+
+        Breakend localBreakend = null;
+        Breakend remoteBreakend = null;
+        int remoteFragmentLengthPart = -1;
+
+        for(Breakend breakend : breakends)
+        {
+            if(breakend.Orient == originalAssembly.junction().Orient && breakend.Chromosome.equals(read.chromosome())
+            && positionWithin(breakend.Position, read.unclippedStart(), read.unclippedEnd()))
+            {
+                localBreakend = breakend;
+                continue;
+            }
+
+            if(breakend.Chromosome.equals(read.mateChromosome()) && breakend.Orient == read.mateOrientation())
+            {
+                if(breakend.Orient.isForward() && read.mateAlignmentEnd() <= breakend.Position)
+                {
+                    remoteBreakend = breakend;
+                    remoteFragmentLengthPart = breakend.Position - read.mateAlignmentStart();
+                }
+                else if(breakend.Orient.isReverse() && read.mateAlignmentStart() >= breakend.Position)
+                {
+                    remoteBreakend = breakend;
+                    remoteFragmentLengthPart = read.mateAlignmentEnd() - breakend.Position;
+                }
+            }
+        }
+
+        if(remoteBreakend != null && localBreakend != null)
+        {
+            int adjustment = localBreakend.InsertedBases.length() - localBreakend.Homology.length();
+            return read.junctionReadStartDistance() + remoteFragmentLengthPart + adjustment;
+        }
+
+        if(!read.isDiscordant() && read.type() == SupportType.JUNCTION)
+        {
+            // junction mate is local but could not be added to the ref bases
+            return read.insertSize() + max(read.leftClipLength(), read.rightClipLength());
+        }
+
+        return -1;
     }
 
     private class ReadBreakendMatch
@@ -526,6 +604,8 @@ public class AlignmentFragments
 
     private static int readDiscordantBreakendDistance(final Breakend breakend, final SupportRead read)
     {
+        // determine the distance from a discordant read to the breakend junction, using either its coords if local otherwise its assembly coords
+
         // first check for an aligned discordant read
         if(breakend.Chromosome.equals(read.chromosome()) && read.orientation() == breakend.Orient)
         {
@@ -550,9 +630,12 @@ public class AlignmentFragments
 
         for(BreakendSegment segment : breakend.segments())
         {
-            // read must lie within the segment for it be applicable
-            if(!positionsWithin(readSeqIndexStart, readSeqIndexEnd, segment.Alignment.sequenceStart(), segment.Alignment.sequenceEnd()))
-                continue;
+            if(read.type() != SupportType.EXTENSION)
+            {
+                // read must lie within the segment for it be applicable, whereas extension reads may lie beyond the aligned junction
+                if(!positionsWithin(readSeqIndexStart, readSeqIndexEnd, segment.Alignment.sequenceStart(), segment.Alignment.sequenceEnd()))
+                    continue;
+            }
 
             int discordantDistance;
 
@@ -566,32 +649,12 @@ public class AlignmentFragments
                 discordantDistance = readSeqIndexStart - segment.Alignment.sequenceStart();
             }
 
+            if(read.type() == SupportType.EXTENSION)
+                discordantDistance = abs(discordantDistance);
+
             if(discordantDistance > 0 && discordantDistance < DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
                 return discordantDistance;
         }
-
-        /*
-        for(BreakendSegment segment : breakend.segments())
-        {
-            if(read.fullAssemblyOrientation() != segment.SegmentOrient)
-                continue;
-
-            if(segment.SegmentOrient.isForward())
-            {
-                int segmentBreakendIndex = segment.Alignment.sequenceEnd();
-
-                if(readSeqIndexEnd <= segmentBreakendIndex && readSeqIndexEnd >= segmentBreakendIndex - DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
-                    return segmentBreakendIndex - readSeqIndexEnd;
-            }
-            else
-            {
-                int segmentBreakendIndex = segment.Alignment.sequenceStart();
-
-                if(readSeqIndexStart >= segmentBreakendIndex && readSeqIndexStart <= segmentBreakendIndex + DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
-                    return readSeqIndexStart - segmentBreakendIndex;
-            }
-        }
-        */
 
         return INVALID_DISCORANT_DISTANCE;
     }

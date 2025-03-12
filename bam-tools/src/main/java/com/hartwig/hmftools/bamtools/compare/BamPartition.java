@@ -53,6 +53,34 @@ public interface BamPartition
         @Override
         public SAMRecordIterator iterator(SamReader samReader)
         {
+if (samReader.getFileHeader().getSequenceIndex(mBaseRegion.Chromosome) < 0) {
+    return new SAMRecordIterator()
+    {
+        @Override
+        public SAMRecordIterator assertSorted(final SAMFileHeader.SortOrder sortOrder)
+        {
+            return null;
+        }
+
+        @Override
+        public void close()
+        {
+
+        }
+
+        @Override
+        public boolean hasNext()
+        {
+            return false;
+        }
+
+        @Override
+        public SAMRecord next()
+        {
+            return null;
+        }
+    };
+}
             SAMRecordIterator overlappingItr = samReader.query(mBaseRegion.chromosome(),
                     mBaseRegion.start(), mBaseRegion.end(), false);
 

@@ -177,7 +177,6 @@ public class BreakendBuilder
             {
                 // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted forward
                 // by the same amount, being the exact homology at the start
-                // shift breakend positions forward by exact homology
                 indelPosStart += abs(homology.ExactStart);
                 indelPosEnd += abs(homology.ExactStart);
             }

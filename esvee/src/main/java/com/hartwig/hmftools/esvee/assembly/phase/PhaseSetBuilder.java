@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -12,17 +10,15 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_DUP_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_REF_MIN_READS;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_REF_MIN_READ_PERCENT;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkAddRefBaseRead;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isFacingAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.LOCAL_DEL_DUP;
-import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.REMOTE_REF;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.SPLIT_LINK;
 import static com.hartwig.hmftools.esvee.assembly.phase.ExtensionType.UNMAPPED;
-import static com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler.collectCandidateRemoteRegions;
+import static com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor.collectCandidateRemoteRegions;
+import static com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor.purgeSupplementaryReads;
 import static com.hartwig.hmftools.esvee.assembly.read.Read.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyLink.swapAssemblies;
@@ -31,8 +27,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_LINK;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentOtherRead;
@@ -41,7 +35,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -67,7 +60,7 @@ public class PhaseSetBuilder
 {
     private final PhaseGroup mPhaseGroup;
     private final RefGenomeInterface mRefGenome;
-    private final RemoteRegionAssembler mRemoteRegionAssembler;
+    private final RemoteReadExtractor mRemoteReadExtractor;
     private final LocalSequenceMatcher mLocalSequenceMatcher;
 
     // references from phase group
@@ -89,11 +82,11 @@ public class PhaseSetBuilder
     private long mStartTimeMs;
 
     public PhaseSetBuilder(
-            final RefGenomeInterface refGenome, final RemoteRegionAssembler remoteRegionAssembler, final PhaseGroup phaseGroup)
+            final RefGenomeInterface refGenome, final RemoteReadExtractor remoteReadExtractor, final PhaseGroup phaseGroup)
     {
         mRefGenome = refGenome;
         mPhaseGroup = phaseGroup;
-        mRemoteRegionAssembler = remoteRegionAssembler;
+        mRemoteReadExtractor = remoteReadExtractor;
         mLocalSequenceMatcher = new LocalSequenceMatcher(refGenome, LOCAL_ASSEMBLY_MATCH_DISTANCE);
 
         mPhaseSets = mPhaseGroup.phaseSets();
@@ -379,8 +372,6 @@ public class PhaseSetBuilder
 
         findSplitLinkCandidates(false); // since local candidate links have already been found and applied
 
-        findRemoteRefCandidates();
-
         // prioritise and select from all remaining candidates
         List<ExtensionCandidate> remainingCandidates = mExtensionCandidates.stream()
                 .filter(x -> !x.selected()) // skip those already registered
@@ -417,21 +408,6 @@ public class PhaseSetBuilder
                     primaryLinkedAssemblies.add(extensionCandidate.SecondAssembly);
                 }
             }
-            else if(extensionCandidate.Type == REMOTE_REF)
-            {
-                AssemblyLink assemblyLink = extensionCandidate.Link;
-
-                JunctionAssembly initialAssembly = mAssemblies.stream()
-                        .filter(x -> x == assemblyLink.first() || x == assemblyLink.second()).findFirst().orElse(null);
-
-                boolean inPrimary = primaryLinkedAssemblies.contains(initialAssembly);
-
-                extensionCandidate.markSelected();
-                applyRemoteRefLink(extensionCandidate.Link, initialAssembly, !inPrimary);
-
-                if(!inPrimary)
-                    primaryLinkedAssemblies.add(initialAssembly);
-            }
             else if(extensionCandidate.Type == UNMAPPED)
             {
                 // extend the assembly if not already linked in any way - this facilitates further links and/or a better SGL for alignment
@@ -458,11 +434,11 @@ public class PhaseSetBuilder
 
             List<Read> unmappedReads = Lists.newArrayList(assembly.unmappedReads());
 
-            if(!AssemblyConfig.RunRemoteRefLinking)
-            {
-                List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
-                mRemoteRegionAssembler.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, unmappedReads, hasHighAssemblyCount);
-            }
+            List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
+            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, hasHighAssemblyCount);
+
+            purgeSupplementaryReads(assembly, remoteReads);
+            unmappedReads.addAll(remoteReads);
 
             if(unmappedReads.isEmpty())
                 continue;
@@ -522,8 +498,10 @@ public class PhaseSetBuilder
                         .forEach(x -> combinedRemoteRegions.add(x));
             }
 
-            mRemoteRegionAssembler.extractRemoteRegionReads(
-                    mPhaseGroup.id(), combinedRemoteRegions, sharedUnmappedReads, hasHighAssemblyCount());
+            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, hasHighAssemblyCount());
+            purgeSupplementaryReads(assembly, remoteReads);
+
+            sharedUnmappedReads.addAll(remoteReads);
 
             if(sharedUnmappedReads.isEmpty())
                 continue;
@@ -613,7 +591,7 @@ public class PhaseSetBuilder
         // any assembly which did not form a link or only an unmapped extension will now extend its ref bases from junction & extension mates
         List<JunctionAssembly> assemblies = Lists.newArrayList(mAssemblies);
 
-        boolean allowRefSideSoftClipBranching = !AssemblyConfig.RunRemoteRefLinking;
+        boolean allowRefSideSoftClipBranching = true;
 
         for(JunctionAssembly assembly : assemblies)
         {
@@ -1190,117 +1168,9 @@ public class PhaseSetBuilder
 
             SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) stage(%s) time(%.3fs) details(links=%d candidates=%d line=%d) remoteRef(slices=%d reads=%d)",
                     mPhaseGroup.id(), mAssemblies.size(), sj, stage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
-                    mLineRelatedAssemblies.size(), mRemoteRegionAssembler.remoteReadSlices(), mRemoteRegionAssembler.remoteReadsSearch()));
+                    mLineRelatedAssemblies.size(), mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch()));
         }
 
         mStartTimeMs = System.currentTimeMillis();
-    }
-
-    // currently unused
-    private void findRemoteRefCandidates()
-    {
-        if(!AssemblyConfig.RunRemoteRefLinking)
-            return;
-
-        boolean applyThresholds = mAssemblies.size() > 50;
-
-        for(JunctionAssembly assembly : mAssemblies)
-        {
-            if(!RemoteRegionAssembler.isExtensionCandidateAssembly(assembly))
-                continue;
-
-            // collect remote regions which aren't only supplementaries
-            // the check for overlaps with other assemblies in the phase group has been removed since was hiding valid links
-            List<RemoteRegion> remoteRegions = assembly.remoteRegions().stream()
-                    .filter(x -> !x.isSuppOnlyRegion())
-                    .filter(x -> !applyThresholds || x.readIds().size() >= REMOTE_REGION_REF_MIN_READS)
-                    .collect(Collectors.toList());
-
-            if(remoteRegions.isEmpty())
-                continue;
-
-            // evaluate by remote regions with most linked reads
-            Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.nonSuppReadCount()));
-
-            int minReadCount = applyThresholds ? REMOTE_REGION_REF_MIN_READS : 1;
-
-            if(remoteRegions.size() > 10)
-            {
-                int maxRemoteReads = remoteRegions.get(0).readCount();
-                minReadCount = max(REMOTE_REGION_REF_MIN_READS, (int)ceil(REMOTE_REGION_REF_MIN_READ_PERCENT * maxRemoteReads));
-            }
-
-            for(RemoteRegion remoteRegion : remoteRegions)
-            {
-                if(remoteRegion.readCount() < minReadCount)
-                    continue;
-
-                Set<String> localReadIds = assembly.support().stream()
-                        .filter(x -> remoteRegion.readIds().contains(x.id()))
-                        .map(x -> x.id())
-                        .collect(Collectors.toSet());
-
-                int supportCount = localReadIds.size();
-
-                assembly.candidateSupport().stream()
-                        .filter(x -> !x.hasJunctionMate())
-                        .filter(x -> remoteRegion.hasReadId(x.id()))
-                        .forEach(x -> localReadIds.add(x.id()));
-
-                int candidateCount = localReadIds.size() - supportCount;
-
-                if(localReadIds.size() < minReadCount)
-                    continue;
-
-                AssemblyLink assemblyLink = mRemoteRegionAssembler.tryRemoteAssemblyLink(assembly, remoteRegion, localReadIds);
-
-                if(assemblyLink == null)
-                    continue;
-
-                JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(assembly);
-
-                ExtensionCandidate extensionCandidate = new ExtensionCandidate(REMOTE_REF, assemblyLink);
-                extensionCandidate.SupportCount = supportCount + candidateCount;
-                extensionCandidate.ExtraInfo = format("readSpan(%d)", remoteAssembly.refBaseLength());
-
-                mExtensionCandidates.add(extensionCandidate);
-            }
-        }
-    }
-
-    private void applyRemoteRefLink(final AssemblyLink assemblyLink, final JunctionAssembly initialAssembly, boolean isPrimaryLink)
-    {
-        JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(initialAssembly);
-
-        // check for an exact match with an existing assembly, either standard or remote
-        JunctionAssembly matchedAssembly = findMatchingAssembly(remoteAssembly, false);
-
-        AssemblyLink remoteLink;
-
-        if(matchedAssembly != null)
-        {
-            remoteLink = AssemblyLink.swapAssemblies(assemblyLink, remoteAssembly, matchedAssembly);
-            remoteAssembly = matchedAssembly;
-            isPrimaryLink = false;
-        }
-        else
-        {
-            remoteLink = assemblyLink;
-            remoteAssembly.setOutcome(REMOTE_REGION);
-            mPhaseGroup.addDerivedAssembly(remoteAssembly);
-        }
-
-        if(isPrimaryLink)
-        {
-            // only form one remote link for each assembly
-            applySplitLinkSupport(initialAssembly, remoteAssembly, true, true);
-            initialAssembly.setOutcome(REMOTE_LINK);
-            mSplitLinks.add(remoteLink);
-        }
-        else
-        {
-            applySplitLinkSupport(initialAssembly, remoteAssembly, false, true);
-            mSecondarySplitLinks.add(remoteLink);
-        }
     }
 }

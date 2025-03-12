@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FILE_NAME_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -64,12 +66,7 @@ public class BreakendMatchWriter
     {
         try
         {
-            String fileName = mConfig.OutputDir + mConfig.SampleId + ".sv_compare.breakends";
-
-            if(mConfig.OutputId != null)
-                fileName += "." + mConfig.OutputId;
-
-            fileName += TSV_EXTENSION;
+            String fileName = mConfig.formFilename("breakend");
 
             SV_LOGGER.debug("writing comparison file: {}", fileName);
 
@@ -77,22 +74,10 @@ public class BreakendMatchWriter
 
             String header = String.join(
                     TSV_DELIM, "SampleId",
-                    "OldId",         "NewId",
-                    "MatchType",
-                    "Diffs",
-                    "OldSvCoords",   "NewSvCoords",
-                    "OldCoords",     "NewCoords",
-                    "OldCipos",      "NewCipos",
-                    "OldIhompos",    "NewIhompos",
-                    "OldHomSeq",     "NewHomSeq",
-                    "OldInsSeq",     "NewInsSeq",
-                    "OldSvType",     "NewSvType",
-                    "OldFilter",     "NewFilter",
-                    "OldVcfType",    "NewVcfType",
-                    "OldQual",       "NewQual",
-                    "OldTumorFrags", "NewTumorFrags",
-                    "OldNormalFrags","NewNormalFrags",
-                    "OldIsLine",     "NewIsLine"
+                    "OldId", "NewId", "MatchType", "Diffs", "OldSvCoords", "NewSvCoords", "OldCoords", "NewCoords",
+                    "OldCipos", "NewCipos", "OldIhompos",    "NewIhompos", "OldHomSeq", "NewHomSeq",
+                    "OldInsSeq", "NewInsSeq", "OldSvType", "NewSvType", "OldFilter", "NewFilter", "OldVcfType", "NewVcfType",
+                    "OldQual", "NewQual", "OldTumorFrags", "NewTumorFrags", "OldNormalFrags","NewNormalFrags", "OldIsLine", "NewIsLine"
             );
 
             writer.write(header);
@@ -113,27 +98,33 @@ public class BreakendMatchWriter
         BufferedWriter writer = initialiseWriter();
 
         for(BreakendMatch breakendMatch : mBreakendMatches)
+        {
+            if(!mConfig.WriteMatches && breakendMatch.Type == MatchType.EXACT_MATCH)
+                continue;
+
             writeBreakend(writer, breakendMatch.OldBreakend, breakendMatch.NewBreakend, breakendMatch.Type);
+        }
 
         FileWriterUtils.closeBufferedWriter(writer);
     }
 
-    private void writeBreakend(BufferedWriter writer, VariantBreakend oldBreakend, VariantBreakend newBreakend, MatchType matchType)
+    private void writeBreakend(
+            final BufferedWriter writer, final VariantBreakend oldBreakend, final VariantBreakend newBreakend, final MatchType matchType)
     {
-        String oldId          = "";
-        String oldSvCoords    = "";
-        String oldCoords      = "";
-        String oldCipos       = "";
-        String oldIhompos     = "";
-        String oldHomSeq      = "";
-        String oldInsSeq      = "";
-        String oldSvtype      = "";
-        String oldFilter      = "";
-        String oldVcfType     = "";
-        String oldQual        = "";
+        String oldId = "";
+        String oldSvCoords = "";
+        String oldCoords = "";
+        String oldCipos = "";
+        String oldIhompos = "";
+        String oldHomSeq = "";
+        String oldInsSeq = "";
+        String oldSvtype = "";
+        String oldFilter = "";
+        String oldVcfType = "";
+        String oldQual = "";
         String oldTumorFrags  = "";
         String oldNormalFrags = "";
-        String oldIsLine      = "";
+        String oldIsLine = "";
         if(oldBreakend != null)
         {
             oldId = oldBreakend.Context.getID();
@@ -152,20 +143,21 @@ public class BreakendMatchWriter
             oldIsLine = String.valueOf(oldBreakend.hasLineInfoFlag());
         }
 
-        String newId          = "";
-        String newSvCoords    = "";
-        String newCoords      = "";
-        String newCipos       = "";
-        String newIhompos     = "";
-        String newHomSeq      = "";
-        String newInsSeq      = "";
-        String newSvtype      = "";
-        String newFilter      = "";
-        String newVcfType     = "";
-        String newQual        = "";
-        String newTumorFrags  = "";
+        String newId = "";
+        String newSvCoords = "";
+        String newCoords = "";
+        String newCipos = "";
+        String newIhompos = "";
+        String newHomSeq = "";
+        String newInsSeq = "";
+        String newSvtype = "";
+        String newFilter = "";
+        String newVcfType = "";
+        String newQual = "";
+        String newTumorFrags = "";
         String newNormalFrags = "";
-        String newIsLine      = "";
+        String newIsLine = "";
+
         if(newBreakend != null)
         {
             newId = newBreakend.Context.getID();
@@ -195,22 +187,12 @@ public class BreakendMatchWriter
             String line = String.join(
                     TSV_DELIM,
                     mConfig.SampleId,
-                    oldId,          newId,
+                    oldId, newId,
                     matchType.toString(),
-                    diffs,
-                    oldSvCoords,    newSvCoords,
-                    oldCoords,      newCoords,
-                    oldCipos,       newCipos,
-                    oldIhompos,     newIhompos,
-                    oldHomSeq,      newHomSeq,
-                    oldInsSeq,      newInsSeq,
-                    oldSvtype,      newSvtype,
-                    oldFilter,      newFilter,
-                    oldVcfType,     newVcfType,
-                    oldQual,        newQual,
-                    oldTumorFrags,  newTumorFrags,
-                    oldNormalFrags, newNormalFrags,
-                    oldIsLine,      newIsLine
+                    diffs, oldSvCoords, newSvCoords, oldCoords, newCoords,
+                    oldCipos, newCipos, oldIhompos, newIhompos, oldHomSeq, newHomSeq, oldInsSeq, newInsSeq,
+                    oldSvtype, newSvtype, oldFilter, newFilter, oldVcfType, newVcfType, oldQual, newQual,
+                    oldTumorFrags, newTumorFrags, oldNormalFrags, newNormalFrags, oldIsLine, newIsLine
             );
 
             writer.write(line);

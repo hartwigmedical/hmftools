@@ -18,6 +18,8 @@ public class HomologyData
     public final int InexactStart;
     public final int InexactEnd;
 
+    public static final HomologyData NO_HOMOLOGY = new HomologyData("", 0, 0, 0, 0);
+
     public HomologyData(final String homology, final int exactStart, final int exactEnd, final int inexactStart, final int inexactEnd)
     {
         Homology = homology;
@@ -26,6 +28,9 @@ public class HomologyData
         InexactStart = inexactStart;
         InexactEnd = inexactEnd;
     }
+
+    public int length() { return abs(InexactEnd) + abs(InexactStart); }
+    public boolean exists() { return InexactEnd != 0 || InexactStart != 0; }
 
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)",
             Homology.isEmpty() ? "none" : Homology, ExactStart, ExactEnd, InexactStart, InexactEnd); }

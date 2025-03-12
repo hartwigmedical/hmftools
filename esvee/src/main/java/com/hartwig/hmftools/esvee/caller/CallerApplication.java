@@ -202,12 +202,12 @@ public class CallerApplication
 
         final VersionInfo version = fromAppName(APP_NAME);
 
-        VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache);
+        VcfWriter vcfWriter = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache);
 
         if(mSvDataCache.getSvList().isEmpty())
         {
             SV_LOGGER.info("writing empty VCF");
-            writer.close();
+            vcfWriter.close();
             return;
         }
 
@@ -256,8 +256,14 @@ public class CallerApplication
             mRepeatMaskAnnotator.annotateVariants(mSvDataCache.getSvList());
         }
 
-        writer.writeBreakends();
-        writer.close();
+        vcfWriter.writeBreakends();
+        vcfWriter.close();
+
+        if(mConfig.WriteBreakendTsv)
+        {
+            BreakendWriter breakendWriter = new BreakendWriter(mConfig);
+            breakendWriter.writeBreakends(mSvDataCache);
+        }
 
         // summary logging
         if(SV_LOGGER.isDebugEnabled())

@@ -104,7 +104,7 @@ public class Junction implements Comparable<Junction>
     public String coordsTyped(boolean useRawDiscordant)
     {
         if(DiscordantOnly)
-            return format("%s:%d:%d;D", Chromosome, useRawDiscordant ? mRawDiscordantPosition : Position, Orient.asByte());
+            return format("%s:%d:%d:D", Chromosome, useRawDiscordant ? mRawDiscordantPosition : Position, Orient.asByte());
         else if(indelBased())
             return format("%s:I", coords());
         else

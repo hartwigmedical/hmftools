@@ -1,23 +1,36 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.withinLineProximity;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
+import com.hartwig.hmftools.esvee.assembly.alignment.HomologyData;
+import com.hartwig.hmftools.esvee.assembly.types.InsertionType;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 public class BreakendWriter
 {
@@ -33,6 +46,12 @@ public class BreakendWriter
     }
 
     public void close() { closeBufferedWriter(mWriter);}
+
+    public static String FLD_BREAKEND_INS_SEQ = "InsertedBases";
+    public static String FLD_BREAKEND_MATE_CHR = "MateChr";
+    public static String FLD_BREAKEND_MATE_POSITION = "MatePos";
+    public static String FLD_BREAKEND_MATE_ORIENT = "MateOrient";
+    public static String FLD_SV_TYPE = "Type";
 
     private BufferedWriter initialiseWriter()
     {
@@ -52,10 +71,10 @@ public class BreakendWriter
             sj.add("MateId");
             sj.add("AssemblyInfo");
 
-            sj.add("Type").add("Chromosome").add("Position").add("Orientation");
+            sj.add(FLD_SV_TYPE).add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
 
-            sj.add("MateChr").add("MatePos").add("MateOrient").add("Length");
-            sj.add("InsertedBases").add("Homology").add("ConfidenceInterval").add("InexactOffset");
+            sj.add(FLD_BREAKEND_MATE_CHR).add(FLD_BREAKEND_MATE_POSITION).add(FLD_BREAKEND_MATE_ORIENT).add("Length");
+            sj.add(FLD_BREAKEND_INS_SEQ).add("Homology").add("ConfidenceInterval").add("InexactOffset");
 
             sj.add("Qual");
             sj.add("SplitFragments");
@@ -80,6 +99,9 @@ public class BreakendWriter
             sj.add("FacingBreakendIds");
 
             sj.add("AltAlignments");
+            sj.add("InsertionType");
+            sj.add("UniqueFragPos");
+            sj.add("ClosestAssembly");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -101,6 +123,8 @@ public class BreakendWriter
         try
         {
             String assemblyInfo = assemblyAlignment.info();
+
+            Map<Breakend,String> closestAssemblyMap = Maps.newHashMap();
 
             for(Breakend breakend : assemblyAlignment.breakends())
             {
@@ -132,7 +156,7 @@ public class BreakendWriter
 
                 sj.add(breakend.InsertedBases);
 
-                if(breakend.Homology != null)
+                if(breakend.Homology.exists())
                 {
                     sj.add(breakend.Homology.Homology);
                     sj.add(format("%d,%d", breakend.Homology.ExactStart, breakend.Homology.ExactEnd));
@@ -197,6 +221,19 @@ public class BreakendWriter
 
                 sj.add(AlternativeAlignment.toVcfTag(breakend.alternativeAlignments()));
 
+                InsertionType insertionType = getInsertionType(breakend, assemblyAlignment.assemblies(), assemblyAlignment.breakends());
+                sj.add(insertionType.toString());
+
+                int[] uniqueFragPositions = breakend.uniqueFragmentPositionCounts();
+
+                if(uniqueFragPositions != null)
+                    sj.add(format("%d:%d", uniqueFragPositions[0], uniqueFragPositions[1]));
+                else
+                    sj.add("-1:-1");
+
+                String assemblyMatchStr = getClosestAssembly(breakend, assemblyAlignment.assemblies(), closestAssemblyMap, true);
+                sj.add(assemblyMatchStr);
+
                 mWriter.write(sj.toString());
                 mWriter.newLine();
             }
@@ -206,4 +243,75 @@ public class BreakendWriter
             SV_LOGGER.error("failed to write breakends: {}", e.toString());
         }
     }
+
+    private static InsertionType getInsertionType(
+            final Breakend breakend, final List<JunctionAssembly> assemblies, final List<Breakend> breakends)
+    {
+        boolean phasedWithLine = assemblies.stream().anyMatch(x -> x.hasLineSequence());
+
+        if(!phasedWithLine)
+            return InsertionType.NONE;
+
+        if(isMobileLineElement(breakend.Orient, breakend.InsertedBases))
+            return InsertionType.LINE;
+
+        for(Breakend otherBreakend : breakends)
+        {
+            if(otherBreakend == breakend)
+                continue;
+
+            if(withinLineProximity(breakend.Position, otherBreakend.Position, breakend.Orient, otherBreakend.Orient)
+            && isMobileLineElement(otherBreakend.Orient, otherBreakend.InsertedBases))
+            {
+                return InsertionType.NEAR;
+            }
+        }
+
+        return InsertionType.NONE;
+    }
+
+    private static String getClosestAssembly(
+            final Breakend breakend, final List<JunctionAssembly> assemblies, final Map<Breakend,String> closestAssemblyMap, boolean checkMate)
+    {
+        // find an assembly with close to matching coords, otherwise use the coords from a mate breakend, and cache the results
+        if(closestAssemblyMap.containsKey(breakend))
+            return closestAssemblyMap.get(breakend);
+
+        for(JunctionAssembly assembly : assemblies)
+        {
+            Junction junction = assembly.junction();
+
+            if(junction.Chromosome.equals(breakend.Chromosome) && junction.Orient == breakend.Orient
+            && abs(junction.Position - breakend.Position) < 100)
+            {
+                String junctionCoords = junction.coordsTyped();
+
+                if(!breakend.isSingle())
+                    closestAssemblyMap.put(breakend, junctionCoords);
+
+                return junctionCoords;
+            }
+        }
+
+        if(breakend.isSingle())
+            return "";
+
+        closestAssemblyMap.put(breakend, "");
+
+        if(!checkMate)
+            return "";
+
+        Breakend otherBreakend = breakend.otherBreakend();
+        String otherBreakendCoords = closestAssemblyMap.get(otherBreakend);
+
+        if(otherBreakendCoords == null)
+        {
+            otherBreakendCoords = getClosestAssembly(otherBreakend, assemblies, closestAssemblyMap, false);
+            closestAssemblyMap.put(otherBreakend, otherBreakendCoords);
+        }
+
+        return !otherBreakendCoords.isEmpty() ? otherBreakendCoords + OTHER_BREAKEND_COORDS : "";
+    }
+
+    private static final String OTHER_BREAKEND_COORDS = "_OTHER";
 }

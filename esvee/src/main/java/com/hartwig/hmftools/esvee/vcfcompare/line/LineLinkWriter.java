@@ -21,33 +21,13 @@ import org.jetbrains.annotations.Nullable;
 
 public class LineLinkWriter
 {
-    public final String mSampleId;
-    public final String mOutputDir;
-    public final String mOutputId;
-
-    private final boolean mIncludeNonPass;
+    public final CompareConfig mConfig;
 
     private final BreakendMatcher mBreakendMatcher;
 
-    public LineLinkWriter(BreakendMatcher breakendMatcher, String sampleId, String outputDir, String outputId, boolean includeNonPass)
+    public LineLinkWriter(final BreakendMatcher breakendMatcher, final CompareConfig config)
     {
-        mSampleId = sampleId;
-        mOutputDir = outputDir;
-        mOutputId = outputId;
-
-        mIncludeNonPass = includeNonPass;
-
-        mBreakendMatcher = breakendMatcher;
-    }
-
-    public LineLinkWriter(BreakendMatcher breakendMatcher, CompareConfig config)
-    {
-        mSampleId = config.SampleId;
-        mOutputDir = config.OutputDir;
-        mOutputId = config.OutputId;
-
-        mIncludeNonPass = config.IncludeNonPass;
-
+        mConfig = config;
         mBreakendMatcher = breakendMatcher;
     }
 
@@ -105,12 +85,7 @@ public class LineLinkWriter
     {
         try
         {
-            String fileName = mOutputDir + mSampleId + ".sv_compare.line";
-
-            if(mOutputId != null)
-                fileName += "." + mOutputId;
-
-            fileName += TSV_EXTENSION;
+            String fileName = mConfig.formFilename("line");
 
             SV_LOGGER.info("Writing LINE comparison file: {}", fileName);
 
@@ -193,7 +168,7 @@ public class LineLinkWriter
             }
         }
 
-        private void setPolyASiteValues(@NotNull VariantBreakend polyASite, @Nullable LineLink lineLink)
+        private void setPolyASiteValues(final VariantBreakend polyASite, @Nullable LineLink lineLink)
         {
             VcfType = polyASite.SourceVcfType.toString();
 
@@ -203,7 +178,7 @@ public class LineLinkWriter
             PolyASvType = polyASite.SvType;
             PolyAFilter = polyASite.filtersStr();
             PolyAQual = polyASite.qualStr();
-            PolyAFrags = polyASite.fragsStr(mSampleId);
+            PolyAFrags = polyASite.fragsStr(mConfig.SampleId);
 
             if(!polyASite.isSingle() && (lineLink == null || lineLink.polyAHasRemote()))
             {
@@ -212,7 +187,7 @@ public class LineLinkWriter
             }
         }
 
-        private void setOtherSiteValues(@NotNull VariantBreakend otherSite, @Nullable LineLink lineLink)
+        private void setOtherSiteValues(final VariantBreakend otherSite, @Nullable LineLink lineLink)
         {
             OtherId = otherSite.Id;
             OtherCoords = otherSite.coordStr();
@@ -220,7 +195,7 @@ public class LineLinkWriter
             OtherSvType = otherSite.SvType;
             OtherFilter = otherSite.filtersStr();
             OtherQual = otherSite.qualStr();
-            OtherFrags = otherSite.fragsStr(mSampleId);
+            OtherFrags = otherSite.fragsStr(mConfig.SampleId);
 
             if(!otherSite.isSingle() && (lineLink == null || lineLink.otherHasRemote()))
             {
@@ -229,7 +204,7 @@ public class LineLinkWriter
             }
         }
 
-        private void setInferredOtherSiteValues(@NotNull VariantBreakend otherBreakend)
+        private void setInferredOtherSiteValues(final VariantBreakend otherBreakend)
         {
             LineLink inferredLink = otherBreakend.InferredLinkedLineBreakends;
 
@@ -309,7 +284,7 @@ public class LineLinkWriter
     private boolean isLineInsertSiteOfInterest(@Nullable VariantBreakend breakend)
     {
         return breakend != null &&
-                (mIncludeNonPass || breakend.isPassVariant()) &&
+                (mConfig.IncludeNonPass || breakend.isPassVariant()) &&
                 breakend.hasPolyATail();
     }
 
@@ -392,7 +367,7 @@ public class LineLinkWriter
                 if(!isLineInsertSiteOfInterest(oldBreakend) && !isLineInsertSiteOfInterest(newBreakend))
                     continue;
 
-                rowStrings.add(mSampleId);
+                rowStrings.add(mConfig.SampleId);
 
                 String unifiedPolyACoords = getUnifiedPolyACoords(oldBreakend, newBreakend);
                 rowStrings.add(unifiedPolyACoords);

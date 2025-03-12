@@ -60,29 +60,32 @@ public class AssemblyWriter
 
             addPhasingHeader(sj);
 
-            sj.add("MismatchReads");
-
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
-            sj.add("IsLINE");
+            sj.add("InsertType");
 
             sj.add("RefBaseCandidates");
             sj.add("UnmappedCandidates");
-            AssemblyStats.addReadTypeHeader(sj);
-            addRemoteRegionHeader(sj);
 
             sj.add("AssemblyInfo");
 
             // extra detailed fields
-            sj.add("InitialReadId");
+            if(mConfig.AssemblyDetailedTsv)
+            {
+                sj.add("InitialReadId");
+                sj.add("ExtBaseBuildInfo");
+                sj.add("MismatchReads");
 
-            sj.add("RefBaseTrimmed");
-            sj.add("RefBaseTrimLength");
-            sj.add("RepeatInfo");
-            sj.add("RefSideSoftClips");
-            sj.add("MergedAssemblies");
-            AssemblyStats.addReadStatsHeader(sj);
-            sj.add("ExtBaseBuildInfo");
+                sj.add("RefSideSoftClips");
+                sj.add("RefBaseTrimmed");
+                sj.add("RefBaseTrimLength");
+                sj.add("RepeatInfo");
+                AssemblyStats.addReadStatsHeader(sj);
+
+                AssemblyStats.addReadTypeHeader(sj);
+                addRemoteRegionHeader(sj);
+                sj.add("MergedAssemblies");
+            }
 
             writer.write(sj.toString());
             writer.newLine();
@@ -125,8 +128,6 @@ public class AssemblyWriter
 
             addPhasingInfo(assembly, sj);
 
-            sj.add(String.valueOf(assembly.mismatchReadCount()));
-
             if(AssemblyUtils.hasUnsetBases(assembly))
             {
                 sj.add("UNSET_BASES");
@@ -140,25 +141,33 @@ public class AssemblyWriter
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
 
-            sj.add(String.valueOf(assembly.hasLineSequence()));
+            String insertionType =  assembly.hasLineSequence() ? "LINE" : "NONE";
+            sj.add(insertionType);
+
             sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
             sj.add(String.valueOf(assembly.stats().UnmappedReadCount));
-            assembly.stats().addReadTypeCounts(sj);
-
-            addRemoteRegionInfo(assembly, sj);
 
             sj.add(assembly.assemblyAlignmentInfo());
 
-            sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
-            sj.add(assembly.refBasesRepeatedTrimmed());
-            sj.add(String.valueOf(assembly.refBaseTrimLength()));
+            if(mConfig.AssemblyDetailedTsv)
+            {
+                sj.add(READ_ID_TRIMMER.restore(assembly.initialReadId()));
+                sj.add(assembly.extBaseBuildInfo());
+                sj.add(String.valueOf(assembly.mismatchReadCount()));
 
-            sj.add(repeatsInfoStr(assembly.repeatInfo()));
+                sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
 
-            sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
-            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
-            assembly.stats().addReadStats(sj);
-            sj.add(assembly.extBaseBuildInfo());
+                sj.add(assembly.refBasesRepeatedTrimmed());
+                sj.add(String.valueOf(assembly.refBaseTrimLength()));
+
+                sj.add(repeatsInfoStr(assembly.repeatInfo()));
+
+                assembly.stats().addReadStats(sj);
+                assembly.stats().addReadTypeCounts(sj);
+
+                addRemoteRegionInfo(assembly, sj);
+                sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+            }
 
             mWriter.write(sj.toString());
             mWriter.newLine();

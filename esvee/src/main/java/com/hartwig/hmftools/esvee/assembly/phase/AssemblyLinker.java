@@ -61,85 +61,97 @@ public final class AssemblyLinker
         if(linkDistance < PHASED_ASSEMBLY_MIN_TI || linkDistance > PHASED_ASSEMBLY_MAX_TI)
             return null;
 
+        boolean requireSharedRead = true;
+
         if(!first.refSideSoftClips().isEmpty() && !second.refSideSoftClips().isEmpty())
         {
             // cannot have ref aligned bases run past the other junction
-            if(!refSideSoftClipMatchesJunction(lower, upper.junction().Position))
-                return null;
-
-            if(!refSideSoftClipMatchesJunction(upper, lower.junction().Position))
-                return null;
-        }
-        else if(first.indel() || second.indel())
-        {
-            // if they share a read and the read contains the indel coords, then consider this a facing link
-            IndelCoords firstIndelCoords = first.indelCoords();
-            IndelCoords secondIndelCoords = second.indelCoords();
-
-            // must share a junction read and/or mate in each with one matching the indel coordinates
-            boolean matched = false;
-
-            for(SupportRead support : first.support())
+            if(refSideSoftClipMatchesJunction(lower, upper.junction().Position)
+            && refSideSoftClipMatchesJunction(upper, lower.junction().Position))
             {
-                if(!support.type().isSplitSupport())
-                    continue;
+                requireSharedRead = false;
+            }
+        }
 
-                for(SupportRead secondSupport : second.support())
+        if(requireSharedRead)
+        {
+            if(first.indel() || second.indel())
+            {
+                // if they share a read and the read contains the indel coords, then consider this a facing link
+                IndelCoords firstIndelCoords = first.indelCoords();
+                IndelCoords secondIndelCoords = second.indelCoords();
+
+                // must share a junction read and/or mate in each with one matching the indel coordinates
+                boolean matched = false;
+
+                for(SupportRead support : first.support())
                 {
-                    if(!secondSupport.type().isSplitSupport())
+                    if(!support.type().isSplitSupport())
                         continue;
 
-                    if(!secondSupport.matchesFragment(support, true))
-                        continue;
-
-                    if(firstIndelCoords != null)
+                    for(SupportRead secondSupport : second.support())
                     {
-                        if(support.indelCoords() != null && support.indelCoords().matches(firstIndelCoords))
-                            matched = true;
-                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(firstIndelCoords))
-                            matched = true;
-                    }
-                    else
-                    {
-                        if(support.indelCoords() != null && support.indelCoords().matches(secondIndelCoords))
-                            matched = true;
-                        else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(secondIndelCoords))
-                            matched = true;
-                    }
+                        if(!secondSupport.type().isSplitSupport())
+                            continue;
 
-                    if(matched)
-                        break;
+                        if(!secondSupport.matchesFragment(support, true))
+                            continue;
+
+                        if(firstIndelCoords != null)
+                        {
+                            if(support.indelCoords() != null && support.indelCoords().matches(firstIndelCoords))
+                                matched = true;
+                            else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(firstIndelCoords))
+                                matched = true;
+                        }
+                        else
+                        {
+                            if(support.indelCoords() != null && support.indelCoords().matches(secondIndelCoords))
+                                matched = true;
+                            else if(secondSupport.indelCoords() != null && secondSupport.indelCoords().matches(secondIndelCoords))
+                                matched = true;
+                        }
+
+                        if(matched)
+                            break;
+                    }
                 }
+
+                if(!matched)
+                    return null;
             }
-
-            if(!matched)
-                return null;
-        }
-        else
-        {
-            // cannot have ref bases extending past each other's junctions
-            if(lower.refBaseLength() > linkDistance || upper.refBaseLength() > linkDistance)
-                return null;
-
-            boolean matched = false;
-
-            // require a shared split read
-            for(SupportRead support : first.support())
+            else
             {
-                if(!support.type().isSplitSupport())
-                    continue;
+                // cannot have ref bases extending past each other's junctions
+                if(lower.refBaseLength() > linkDistance || upper.refBaseLength() > linkDistance)
+                    return null;
 
-                if(second.support()
-                        .stream().filter(x -> x.type() == SupportType.JUNCTION)
-                        .anyMatch(x -> x.matchesFragment(support, true)))
+                boolean matched = false;
+
+                // require a shared split read in either of the assemblies
+                for(int i = 0; i <= 0; ++i)
                 {
-                    matched = true;
-                    break;
-                }
-            }
+                    List<SupportRead> splitSupport = (i == 0) ? first.support() : second.support();
+                    List<SupportRead> otherSupport = (i == 0) ? second.support() : first.support();
 
-            if(!matched)
-                return null;
+                    for(SupportRead support : splitSupport)
+                    {
+                        if(!support.type().isSplitSupport())
+                            continue;
+
+                        if(otherSupport
+                                .stream().filter(x -> x.type() == SupportType.JUNCTION || x.type() == SupportType.DISCORDANT)
+                                .anyMatch(x -> x.matchesFragment(support, true)))
+                        {
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(!matched)
+                    return null;
+            }
         }
 
         // ensure the ref base positions of each assembly now match
@@ -329,8 +341,16 @@ public final class AssemblyLinker
         if(first.discordantOnly() && second.discordantOnly())
             minOverlapLength = min(minOverlapLength, ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES);
 
-        int[] topMatchIndices = findBestSequenceMatch(
-                firstSeq, secondSeq, minOverlapLength, requireRefBaseOverlap, alternativeIndexStarts);
+        int[] topMatchIndices;
+
+        if(requireRefBaseOverlap)
+        {
+            topMatchIndices = findLocalSequenceMatch(firstSeq, secondSeq, minOverlapLength, alternativeIndexStarts);
+        }
+        else
+        {
+            topMatchIndices = findBestSequenceMatch(firstSeq, secondSeq, minOverlapLength, alternativeIndexStarts);
+        }
 
         if(topMatchIndices != null)
         {
@@ -344,9 +364,88 @@ public final class AssemblyLinker
         return null;
     }
 
+    public static int[] findLocalSequenceMatch(
+            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, final List<int[]> alternativeIndexStarts)
+    {
+        if(alternativeIndexStarts.isEmpty())
+            return null;
+
+        int topMatchLength = 0;
+        int topMatchMismatches = 0;
+        int[] topMatchIndices = null;
+
+        Set<Integer> testedOffsets = Sets.newHashSet();
+
+        // take each of the subsequence match locations, build out a longer sequence around it to include all extension bases for
+        // each assembly, capped by the other's ref bases and then run the sequence-matching routine
+        for(int[] indexStarts : alternativeIndexStarts)
+        {
+            int firstMatchSeqMatchIndex = indexStarts[0];
+
+            int secondMatchIndex = indexStarts[1];
+
+            int matchOffset = secondMatchIndex - firstMatchSeqMatchIndex;
+
+            // skip testing a comparison anchored around the same offsets between the 2 sequences
+            if(testedOffsets.contains(matchOffset))
+                continue;
+
+            testedOffsets.add(matchOffset);
+
+            int firstMatchIndex = firstMatchSeqMatchIndex + firstSeq.matchSeqStartIndex();
+
+            // extend in each direction to the end of the applicable extension bases
+            int minLowerExtension = min(secondMatchIndex, firstMatchIndex);
+            int maxLowerExtension = min(firstSeq.BaseLength - firstMatchIndex - 1, secondSeq.BaseLength - secondMatchIndex - 1);
+
+            int firstIndexStart = firstMatchIndex - minLowerExtension;
+            int firstIndexEnd = firstMatchIndex + maxLowerExtension;
+
+            int secondIndexStart = secondMatchIndex - minLowerExtension;
+            int secondIndexEnd = secondMatchIndex + maxLowerExtension;
+
+            int overlapLength = firstIndexEnd - firstIndexStart + 1;
+
+            if(overlapLength < minOverlapLength)
+                continue;
+
+            int mismatchCount = SequenceCompare.compareSequences(
+                    firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
+                    secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo(),
+                    PRIMARY_ASSEMBLY_MERGE_MISMATCH);
+
+            if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+                continue;
+
+            if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
+            {
+                // check that the matching section covers each sequence's ref bases as well as the extension bases
+                int minRefOverlapLength = MIN_VARIANT_LENGTH / 2;
+
+                // note for INDELs, the first sequence is always positive orientation
+                int firstRefBaseOverlap = firstSeq.junctionIndex() - firstIndexStart + 1;
+                int firstExtBaseOverlap = firstIndexEnd - firstSeq.junctionIndex();
+
+                int secondRefBaseOverlap = secondIndexEnd - secondSeq.junctionIndex() + 1;
+                int secondExtBaseOverlap = secondSeq.junctionIndex() - secondIndexStart;
+
+                if(firstRefBaseOverlap < minRefOverlapLength && secondRefBaseOverlap < minRefOverlapLength)
+                    continue;
+
+                if(firstExtBaseOverlap < minRefOverlapLength && secondExtBaseOverlap < minRefOverlapLength)
+                    continue;
+            }
+
+            topMatchLength = overlapLength;
+            topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
+            topMatchMismatches = mismatchCount;
+        }
+
+        return topMatchIndices;
+    }
+
     public static int[] findBestSequenceMatch(
-            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, boolean requireRefBaseOverlap,
-            final List<int[]> alternativeIndexStarts)
+            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, final List<int[]> alternativeIndexStarts)
     {
         if(alternativeIndexStarts.isEmpty())
             return null;
@@ -423,28 +522,6 @@ public final class AssemblyLinker
 
             if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
             {
-                if(requireRefBaseOverlap)
-                {
-                    // check that the matching section covers each sequence's ref bases as well as the extension bases
-                    int minRefOverlapLength = MIN_VARIANT_LENGTH / 2;
-
-                    // note for INDELs, the first sequence is always positive orientation
-                    int firstRefBaseOverlap = firstSeq.junctionIndex() - firstIndexStart + 1;
-
-                    int restrictedFirstSeqEnd = firstIndexStart + overlapLength - 1;
-                    int firstExtBaseOverlap = restrictedFirstSeqEnd - firstSeq.junctionIndex();
-
-                    int restrictedSecondSeqEnd = secondIndexStart + overlapLength - 1;
-                    int secondRefBaseOverlap = restrictedSecondSeqEnd - secondSeq.junctionIndex() + 1;
-                    int secondExtBaseOverlap = secondSeq.junctionIndex() - secondIndexStart;
-
-                    if(firstRefBaseOverlap < minRefOverlapLength && secondRefBaseOverlap < minRefOverlapLength)
-                        continue;
-
-                    if(firstExtBaseOverlap < minRefOverlapLength && secondExtBaseOverlap < minRefOverlapLength)
-                        continue;
-                }
-
                 topMatchLength = overlapLength;
                 topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
                 topMatchMismatches = mismatchCount;

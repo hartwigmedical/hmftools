@@ -49,6 +49,8 @@ class CLF_GROUPS:
     DNA = "dna"
     RNA = "rna"
 
+    ALL = "all"
+
     @classmethod
     def get_all(cls) -> list[str]:
         return [cls.COMBINED, cls.DNA, cls.RNA]

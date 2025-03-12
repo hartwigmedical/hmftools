@@ -39,7 +39,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
-import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
@@ -151,7 +151,7 @@ public class SpecificAlignmentsTest
 
         PhaseGroup phaseGroup = new PhaseGroup(assembly2, assembly1);
 
-        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, new RemoteReadExtractor(null), phaseGroup);
         phaseSetBuilder.buildPhaseSets();
 
         // first check unmapped extensions
@@ -500,7 +500,7 @@ public class SpecificAlignmentsTest
         phaseGroup.addAssembly(assembly5);
         phaseGroup.addAssembly(assembly6);
 
-        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, new RemoteReadExtractor(null), phaseGroup);
         phaseSetBuilder.buildPhaseSets();
 
         assertEquals(1, phaseGroup.phaseSets().size());
@@ -754,8 +754,8 @@ public class SpecificAlignmentsTest
         refBaseExtender.findAssemblyCandidateExtensions(assembly2, candidates2);
         refBaseExtender.findAssemblyCandidateExtensions(assembly3, candidates3);
 
-        // set up the details for the remote ref assembly on chr 2
-        RemoteRegionAssembler remoteRegionAssembler = new RemoteRegionAssembler(refGenome, null);
+        // set up the details for the remote reads on chr 2
+        RemoteReadExtractor remoteReadExtractor = new RemoteReadExtractor(null);
 
         Read remoteRead1 = createRead(
                 juncRead1.id(), CHR_2, 150, refGenome.getBaseString(CHR_2, 150, 250), "100M",
@@ -772,7 +772,7 @@ public class SpecificAlignmentsTest
         PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
         phaseGroup.addAssembly(assembly3);
 
-        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, remoteRegionAssembler, phaseGroup);
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, remoteReadExtractor, phaseGroup);
         phaseSetBuilder.buildPhaseSets();
 
         assertEquals(1, phaseGroup.phaseSets().size());

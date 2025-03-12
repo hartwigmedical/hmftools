@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -22,6 +24,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
@@ -48,6 +51,7 @@ public class SupportRead
     private final String mMateChromosome;
     private final int mMateAlignmentStart;
     private final int mMateAlignmentEnd;
+    private final int mMateFragmentEnd; // 5' unclipped position of mate
     private final int mFlags;
     private final int mBaseLength;
 
@@ -66,7 +70,7 @@ public class SupportRead
     private final boolean mHasLineTail;
 
     // the distance from the read's start (ie index not position) to the assembly junction index
-    // if the read start is before the junction index then the value is negative
+    // if the read start is before the junction index then the value is positive
     private final int mJunctionReadStartDistance;
 
     private int mFullAssemblyIndex; // index within this read's full linked assembly sequence (if exists) if the read's start position
@@ -96,9 +100,21 @@ public class SupportRead
         mUnclippedStart = read.unclippedStart();
         mUnclippedEnd = read.unclippedEnd();
 
-        mMateChromosome = read.mateChromosome();
-        mMateAlignmentStart = read.mateAlignmentStart();
-        mMateAlignmentEnd = read.mateAlignmentEnd();
+        if(read.isPairedRead())
+        {
+            mMateChromosome = read.mateChromosome();
+            mMateAlignmentStart = read.mateAlignmentStart();
+            mMateAlignmentEnd = read.mateAlignmentEnd();
+            mMateFragmentEnd = read.mateFragmentEnd();
+        }
+        else
+        {
+            mMateChromosome = NO_CHROMOSOME_NAME;
+            mMateAlignmentStart = NO_POSITION;
+            mMateAlignmentEnd = NO_POSITION;
+            mMateFragmentEnd = NO_POSITION;
+        }
+
         mIsReference = read.isReference();
         mSampleIndex = read.sampleIndex();
         mIsDiscordant = isDiscordantFragment(read);
@@ -163,6 +179,31 @@ public class SupportRead
     public boolean isUnmapped() { return isFlagSet(READ_UNMAPPED); }
     public boolean isMateUnmapped() { return isFlagSet(MATE_UNMAPPED); }
     public boolean isMateMapped() { return isFlagSet(READ_PAIRED) && !isFlagSet(MATE_UNMAPPED); }
+
+    public int[] fragmentCoords()
+    {
+        if(isPairedRead() && isMateMapped())
+        {
+            int fragmentEnd = orientation().isForward() ? unclippedStart() : unclippedEnd();
+            int mateFragmentEnd = mMateFragmentEnd;
+
+            boolean readIsLower;
+            if(mChromosome.equals(mMateChromosome))
+            {
+                readIsLower = fragmentEnd <= mateFragmentEnd;
+            }
+            else
+            {
+                readIsLower = HumanChromosome.lowerChromosome(mChromosome, mMateChromosome);
+            }
+
+            return readIsLower ? new int[] { fragmentEnd, mateFragmentEnd } : new int[] { mateFragmentEnd, fragmentEnd };
+        }
+        else
+        {
+            return new int[] { unclippedStart(), unclippedEnd() };
+        }
+    }
 
     public boolean isDiscordant() { return mIsDiscordant; }
 

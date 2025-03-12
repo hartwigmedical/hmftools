@@ -22,7 +22,7 @@ public class PhaseSetTask extends ThreadTask
     private final AssemblyConfig mConfig;
     private final TaskQueue mPhaseGroups;
 
-    private final RemoteRegionAssembler mRemoteRegionAssembler;
+    private final RemoteReadExtractor mRemoteReadExtractor;
 
     public PhaseSetTask(final AssemblyConfig config, final BamReader bamReader, TaskQueue phaseGroups)
     {
@@ -31,7 +31,7 @@ public class PhaseSetTask extends ThreadTask
         mConfig = config;
         mPhaseGroups = phaseGroups;
 
-        mRemoteRegionAssembler = new RemoteRegionAssembler(config.RefGenome, bamReader);
+        mRemoteReadExtractor = new RemoteReadExtractor(bamReader);
     }
 
     public static List<PhaseSetTask> createThreadTasks(
@@ -75,7 +75,7 @@ public class PhaseSetTask extends ThreadTask
                 mPerfCounter.start();
 
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
-                PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, mRemoteRegionAssembler, phaseGroup);
+                PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, mRemoteReadExtractor, phaseGroup);
                 phaseSetBuilder.setPerfLogTime(mConfig.PerfLogTime);
 
                 try
@@ -111,5 +111,5 @@ public class PhaseSetTask extends ThreadTask
         }
     }
 
-    public int totalRemoteReadsMatched() { return mRemoteRegionAssembler.remoteReadsMatched(); }
+    public int totalRemoteReadsMatched() { return mRemoteReadExtractor.remoteReadsMatched(); }
 }

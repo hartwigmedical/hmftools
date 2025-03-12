@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
-import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -415,7 +415,7 @@ public class AssemblyLinksTest
         PhaseGroup phaseGroup = new PhaseGroup(firstAssembly, secondAssembly);
 
         PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(
-                refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
+                refGenome, new RemoteReadExtractor(null), phaseGroup);
 
         phaseSetBuilder.buildPhaseSets();
 

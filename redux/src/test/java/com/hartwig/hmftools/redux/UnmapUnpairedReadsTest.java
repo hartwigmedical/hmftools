@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STR
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
-import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
 import static com.hartwig.hmftools.redux.UnmapReadsTest.READ_BASES;
 import static com.hartwig.hmftools.redux.UnmapReadsTest.SOFT_CLIPPED_READ_CIGAR;

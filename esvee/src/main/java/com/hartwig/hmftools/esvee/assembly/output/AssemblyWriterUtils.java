@@ -94,7 +94,6 @@ public final class AssemblyWriterUtils
         sj.add("SvLength");
         sj.add("InsertedBases");
         sj.add("OverlapBases");
-        sj.add("RefLinkedFrags");
         sj.add("SecondaryLinks");
     }
 
@@ -114,7 +113,6 @@ public final class AssemblyWriterUtils
         int svLinkLength = 0;
         String insertedBases = "";
         String overlapBases = "";
-        String linkFragmentInfo = "";
         String secondaryLinkInfo = "";
 
         if(phaseGroup != null)
@@ -149,7 +147,6 @@ public final class AssemblyWriterUtils
                     svLinkLength = svLink.length();
                     insertedBases = svLink.insertedBases();
                     overlapBases = svLink.overlapBases();
-                    linkFragmentInfo = assemblyLinkFragmentStr(svLink);
                 }
 
                 List<AssemblyLink> secondarySplitLinks = phaseGroup.findSecondarySplitLinks(assembly);
@@ -167,7 +164,7 @@ public final class AssemblyWriterUtils
         sj.add(String.valueOf(svLinkLength));
         sj.add(insertedBases);
         sj.add(overlapBases);
-        sj.add(linkFragmentInfo);
+        // sj.add(linkFragmentInfo);
         sj.add(secondaryLinkInfo);
     }
 
@@ -184,62 +181,6 @@ public final class AssemblyWriterUtils
             sj.add(otherAssembly.junction().coords());
         }
         return sj.toString();
-    }
-
-    private static String assemblyLinkFragmentStr(final AssemblyLink assemblyLink)
-    {
-        int uniqueFrags = 0;
-        int uniqueRefFrags = 0;
-        int matchedFrags = 0;
-        int matchedRefFrags = 0;
-
-        JunctionAssembly first = assemblyLink.first();
-        JunctionAssembly second = assemblyLink.second();
-
-        Set<String> uniqueReadIds = Sets.newHashSet();
-
-        for(SupportRead firstSupport : first.support())
-        {
-            if(uniqueReadIds.contains(firstSupport.id()))
-                continue;
-
-            uniqueReadIds.add(firstSupport.id());
-
-            boolean isReference = firstSupport.isReference();
-
-            if(second.support().stream().anyMatch(x -> x.matchesFragment(firstSupport, false)))
-            {
-                ++matchedFrags;
-
-                if(isReference)
-                    ++matchedRefFrags;
-            }
-            else
-            {
-                ++uniqueFrags;
-
-                if(isReference)
-                    ++uniqueRefFrags;
-            }
-        }
-
-        for(SupportRead secondSupport : second.support())
-        {
-            if(uniqueReadIds.contains(secondSupport.id()))
-                continue;
-
-            uniqueReadIds.add(secondSupport.id());
-
-            if(first.support().stream().noneMatch(x -> x.matchesFragment(secondSupport, true)))
-            {
-                ++uniqueFrags;
-
-                if(secondSupport.isReference())
-                    ++uniqueRefFrags;
-            }
-        }
-
-        return format("Match=%d;MatchRef=%d;Unique=%d;UniqueRef=%d", matchedFrags, matchedRefFrags, uniqueFrags, uniqueRefFrags);
     }
 
     protected static String repeatsInfoStr(final List<RepeatInfo> repeats)

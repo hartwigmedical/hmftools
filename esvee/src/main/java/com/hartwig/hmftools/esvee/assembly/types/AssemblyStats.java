@@ -104,8 +104,6 @@ public class AssemblyStats
                     }
                     else
                     {
-                        // check if the mate
-
                         if((junction.isForward() && supportRead.mateAlignmentStart() > junction.Position)
                         || (!junction.isForward() && supportRead.mateAlignmentEnd() < junction.Position))
                         {

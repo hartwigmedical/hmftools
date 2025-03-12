@@ -109,29 +109,6 @@ public class BamReader
         }
     }
 
-    public void queryUnmappedReads(final Consumer<SAMRecord> consumer)
-    {
-        for(BamFileReader reader : mBamReaders)
-        {
-            reader.queryUnmapped(consumer);
-        }
-    }
-
-    public void queryNonHumanContigs(final Consumer<SAMRecord> consumer)
-    {
-        BamSlicer bamSlicer = new BamSlicer(0, true, true, true);
-        bamSlicer.setKeepUnmapped();
-
-        for(BamFileReader reader : mBamReaders)
-        {
-            List<ChrBaseRegion> nonHumanContigs = reader.nonHumanContigs();
-            for(ChrBaseRegion region : nonHumanContigs)
-            {
-                bamSlicer.slice(reader.mSamReader, region, consumer);
-            }
-        }
-    }
-
     private void addBamReaderInPosition(final BamFileReader bamReader)
     {
         int index = 0;
@@ -166,6 +143,13 @@ public class BamReader
 
         public void sliceRegion(final ChrBaseRegion region)
         {
+            // check that the region exists in the BAM to avoid logging an error
+            if(mSamReader.getFileHeader().getSequenceDictionary().getSequences().stream()
+                    .noneMatch(x -> x.getSequenceName().equals(region.Chromosome)))
+            {
+                return;
+            }
+
             final QueryInterval[] queryIntervals = BamSlicer.createIntervals(List.of(region), mSamReader.getFileHeader());
 
             if(queryIntervals == null)
@@ -203,17 +187,6 @@ public class BamReader
             }
         }
 
-        public void queryUnmapped(final Consumer<SAMRecord> consumer)
-        {
-            try(final SAMRecordIterator iterator = mSamReader.queryUnmapped())
-            {
-                while(iterator.hasNext())
-                {
-                    consumer.accept(iterator.next());
-                }
-            }
-        }
-
         public String filename() { return mFilename; }
 
         public SAMRecord current() { return mCurrentRecord; }
@@ -228,14 +201,6 @@ public class BamReader
                 return false;
 
             return currentPosition() > other.currentPosition();
-        }
-
-        public List<ChrBaseRegion> nonHumanContigs()
-        {
-            return mSamReader.getFileHeader().getSequenceDictionary().getSequences().stream()
-                    .filter(x -> !HumanChromosome.contains(x.getContig()))
-                    .map(x -> new ChrBaseRegion(x.getContig(), 1, x.getEnd()))
-                    .collect(Collectors.toList());
         }
 
         public String toString()

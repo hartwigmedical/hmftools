@@ -33,14 +33,12 @@ public class Alignment
 
     private final Aligner mAligner;
     private final AlignmentWriter mWriter;
-    private final AlignmentCache mAlignmentCache;
 
     public Alignment(final AssemblyConfig config, final Aligner aligner)
     {
         mConfig = config;
         mAligner = aligner;
         mWriter = new AlignmentWriter(mConfig);
-        mAlignmentCache = new AlignmentCache(config.AlignmentFile);
     }
 
     public void close() { mWriter.close(); }
@@ -62,7 +60,7 @@ public class Alignment
 
     public void run(final List<AssemblyAlignment> assemblyAlignments, final List<PerformanceCounter> perfCounters)
     {
-        if(mAligner == null && !mAlignmentCache.enabled())
+        if(mAligner == null)
             return;
 
         int singleAssemblies = (int) assemblyAlignments.stream().filter(x -> x.assemblies().size() == 1).count();
@@ -161,25 +159,14 @@ public class Alignment
                 return;
             }
 
-            List<AlignData> alignments;
-            List<AlignData> requeriedAlignments;
+            List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(assemblyAlignment.fullSequence().getBytes());
 
-            if(mAlignmentCache.enabled())
-            {
-                alignments = mAlignmentCache.findAssemblyAlignments(assemblyAlignment.info());
-                requeriedAlignments = Collections.emptyList();
-            }
-            else
-            {
-                List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(assemblyAlignment.fullSequence().getBytes());
+            List<AlignData> alignments = bwaAlignments.stream()
+                    .map(x -> AlignData.from(x, mConfig.RefGenVersion))
+                    .filter(x -> x != null).collect(Collectors.toList());
 
-                alignments = bwaAlignments.stream()
-                        .map(x -> AlignData.from(x, mConfig.RefGenVersion))
-                        .filter(x -> x != null).collect(Collectors.toList());
-
-                requeriedAlignments = Lists.newArrayList();
-                alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
-            }
+            List<AlignData> requeriedAlignments = Lists.newArrayList();
+            alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
 
             processAlignmentResults(assemblyAlignment, alignments);
 

@@ -219,7 +219,7 @@ public class AlignmentTest
         assertEquals(BND, first.svType());
         assertEquals(200, first.Position);
         assertEquals(FORWARD, first.Orient);
-        assertNull(first.Homology);
+        assertFalse(first.Homology.exists());
 
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(250, second.Position);
@@ -259,8 +259,7 @@ public class AlignmentTest
         assertEquals(DUP, first.svType());
         assertEquals(100, first.Position);
         assertEquals(REVERSE, first.Orient);
-        // assertEquals(5, first.alternativeAlignments().size());
-        assertNull(first.Homology);
+        assertFalse(first.Homology.exists());
 
         second = assemblyAlignment.breakends().get(1);
         assertEquals(350, second.Position);
@@ -306,7 +305,7 @@ public class AlignmentTest
         assertEquals(DEL, breakend.svType());
         assertEquals(200, breakend.Position);
         assertEquals(FORWARD, breakend.Orient);
-        assertNull(breakend.Homology);
+        assertFalse(first.Homology.exists());
 
         breakend = assemblyAlignment.breakends().get(2);
         assertEquals(DEL, breakend.svType());
@@ -342,7 +341,7 @@ public class AlignmentTest
         assertEquals(DEL, first.svType());
         assertEquals(200, first.Position);
         assertEquals(FORWARD, first.Orient);
-        assertNull(first.Homology);
+        assertFalse(first.Homology.exists());
 
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(251, second.Position);

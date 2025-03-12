@@ -175,7 +175,6 @@ public class VcfWriter
 
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
-        // Qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
         double qual = breakend.Context.getPhredScaledQual();
         builder.log10PError(qual / -10);
 
