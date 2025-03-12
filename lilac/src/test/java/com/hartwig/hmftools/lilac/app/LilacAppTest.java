@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.lilac.app;
 
 import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
-import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.disableLogging;
@@ -108,7 +108,7 @@ public class LilacAppTest
 
         SolutionSummary solutionSummary = lilac.getSolutionSummary();
 
-        assertEquals(EXPECTED_ALLELE_COUNT, solutionSummary.ReferenceCoverage.getAlleles().size());
+        assertEquals(GENE_CACHE.ExpectAlleleCount, solutionSummary.ReferenceCoverage.getAlleles().size());
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(a1.asFourDigit()));
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(a2.asFourDigit()));
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(b1.asFourDigit()));
@@ -122,8 +122,8 @@ public class LilacAppTest
         assertTrue(qcMetrics.HlaYAllele == null);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertTrue(qcMetrics.HaplotypeQC.UnmatchedHaplotypes.isEmpty());
-        assertEquals(fragCount * EXPECTED_ALLELE_COUNT - 150, qcMetrics.CoverageQC.TotalFragments);
-        assertEquals(fragCount * EXPECTED_ALLELE_COUNT - 150, qcMetrics.CoverageQC.FittedFragments);
+        assertEquals(fragCount * GENE_CACHE.ExpectAlleleCount - 150, qcMetrics.CoverageQC.TotalFragments);
+        assertEquals(fragCount * GENE_CACHE.ExpectAlleleCount - 150, qcMetrics.CoverageQC.FittedFragments);
     }
 
     @Test
@@ -183,7 +183,7 @@ public class LilacAppTest
 
         SolutionSummary solutionSummary = lilac.getSolutionSummary();
 
-        assertEquals(EXPECTED_ALLELE_COUNT, solutionSummary.ReferenceCoverage.getAlleles().size());
+        assertEquals(GENE_CACHE.ExpectAlleleCount, solutionSummary.ReferenceCoverage.getAlleles().size());
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(a1.asFourDigit()));
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(a2.asFourDigit()));
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(b1.asFourDigit()));
@@ -260,7 +260,7 @@ public class LilacAppTest
 
         SolutionSummary solutionSummary = lilac.getSolutionSummary();
 
-        assertEquals(EXPECTED_ALLELE_COUNT, solutionSummary.ReferenceCoverage.getAlleles().size());
+        assertEquals(GENE_CACHE.ExpectAlleleCount, solutionSummary.ReferenceCoverage.getAlleles().size());
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(a2.asFourDigit()));
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(a3.asFourDigit()));
         assertTrue(solutionSummary.ReferenceCoverage.getAlleles().contains(b2.asFourDigit()));

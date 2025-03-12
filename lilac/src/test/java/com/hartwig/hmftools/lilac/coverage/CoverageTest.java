@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -41,11 +41,11 @@ public class CoverageTest
 
         complexCoverage = ComplexCoverage.create(coverageList);
         complexCoverage.expandToSixAlleles();
-        assertEquals(EXPECTED_ALLELE_COUNT, complexCoverage.getAlleleCoverage().size());
+        assertEquals(GENE_CACHE.ExpectAlleleCount, complexCoverage.getAlleleCoverage().size());
         assertEquals(30, complexCoverage.UniqueCoverage);
         assertEquals(90, complexCoverage.TotalCoverage);
 
-        for(int i = 0; i < EXPECTED_ALLELE_COUNT; ++i)
+        for(int i = 0; i < GENE_CACHE.ExpectAlleleCount; ++i)
         {
             assertEquals(15.0, complexCoverage.getAlleleCoverage().get(i).TotalCoverage, 0.01);
         }
@@ -57,7 +57,7 @@ public class CoverageTest
 
         complexCoverage = ComplexCoverage.create(coverageList);
         complexCoverage.populateMissingCoverage(alleleList);
-        assertEquals(EXPECTED_ALLELE_COUNT, complexCoverage.getAlleleCoverage().size());
+        assertEquals(GENE_CACHE.ExpectAlleleCount, complexCoverage.getAlleleCoverage().size());
         assertEquals(90, complexCoverage.TotalCoverage);
 
         assertEquals(30.0, complexCoverage.getAlleleCoverage().get(0).TotalCoverage, 0.01);

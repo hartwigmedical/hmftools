@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -69,6 +70,8 @@ public class LilacConfig
     public final String SampleDataDir;
     public final String OutputDir;
 
+    public final MhcClass ClassType;
+
     public int MinBaseQual;
     public final int MinEvidence;
     public final double MinEvidenceFactor;
@@ -103,6 +106,8 @@ public class LilacConfig
 
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
+
+    public static final String MHC_CLASS = "mhc_class";
 
     // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";
@@ -183,6 +188,8 @@ public class LilacConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
+        ClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
+
         MinBaseQual = configBuilder.getInteger(MIN_BASE_QUAL);
         MinEvidence = configBuilder.getInteger(MIN_EVIDENCE);
         MaxRefFragments = configBuilder.getInteger(MAX_REF_FRAGMENTS);
@@ -262,6 +269,8 @@ public class LilacConfig
         RefGenome = "";
         RefGenVersion = V37;
 
+        ClassType = MhcClass.CLASS_1;
+
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
         MinEvidenceFactor = DEFAULT_MIN_EVIDENCE_FACTOR;
@@ -297,7 +306,7 @@ public class LilacConfig
         configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC);
         configBuilder.addPath(RNA_BAM, false, RNA_BAM_DESC);
 
-        configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
+        registerCommonConfig(configBuilder);
 
         configBuilder.addInteger(MIN_BASE_QUAL,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
         configBuilder.addInteger(MIN_EVIDENCE, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
@@ -334,7 +343,15 @@ public class LilacConfig
         addLoggingOptions(configBuilder);
     }
 
-    private final List<HlaAllele> parseAlleleList(final String allelesStr)
+    public static void registerCommonConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addPath(RESOURCE_DIR, true, "Path to resource files");
+
+        configBuilder.addConfigItem(
+                MHC_CLASS, false, enumValueSelectionAsStr(MhcClass.values(), "MHC Class Type"), MhcClass.CLASS_1.toString());
+    }
+
+    private List<HlaAllele> parseAlleleList(final String allelesStr)
     {
         if(allelesStr == null || allelesStr.isEmpty())
             return Lists.newArrayList();

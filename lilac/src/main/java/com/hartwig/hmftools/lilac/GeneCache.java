@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.lilac;
 
-import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
 
 import java.util.List;
@@ -18,7 +16,10 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 
 public class GeneCache
 {
+    public final MhcClass ClassType;
     public final Map<String,TranscriptData> GeneTranscriptMap;
+    public final List<TranscriptData> Transcripts;
+
     public final List<String> GeneIds; // strips off 'HLA-' prefix, used for logging and look-ups
     public final List<String> GeneNames; // long names matching Ensembl
 
@@ -30,13 +31,17 @@ public class GeneCache
     public final Map<String,List<Integer>> NucleotideExonBoundaries;
     public final Map<String,Integer> NucleotideLengths;
 
-    public GeneCache(final Map<String,TranscriptData> hlaTranscriptMap)
+    public GeneCache(final MhcClass mhcClass, final Map<String,TranscriptData> hlaTranscriptMap)
     {
+        ClassType = mhcClass;
         GeneTranscriptMap = hlaTranscriptMap;
 
         // establish other properties and commonly used constants
-        GeneNames = GeneTranscriptMap.keySet().stream().toList(); // long names matching Ensembl
+        GeneNames = GeneTranscriptMap.keySet().stream().sorted().toList(); // long names matching Ensembl
         GeneIds = GeneNames.stream().map(x -> shortGeneName(x)).collect(Collectors.toList());
+
+        Transcripts = Lists.newArrayListWithExpectedSize(hlaTranscriptMap.size());
+        GeneNames.forEach(x -> Transcripts.add(GeneTranscriptMap.get(x)));
 
         ExpectAlleleCount = GeneIds.size() * 2;
 

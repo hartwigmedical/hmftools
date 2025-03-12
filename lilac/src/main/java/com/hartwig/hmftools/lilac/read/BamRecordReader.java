@@ -5,8 +5,8 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
@@ -67,7 +67,7 @@ public class BamRecordReader implements BamReader
 
         mGeneCodingRegions = Maps.newHashMap();
 
-        for(String geneName : HLA_GENES)
+        for(String geneName : GENE_CACHE.GeneNames)
         {
             TranscriptData transcriptData = transcripts.get(geneName);
             mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, HLA_CHR, transcriptData));
@@ -107,7 +107,7 @@ public class BamRecordReader implements BamReader
     {
         final List<Fragment> fragments = Lists.newArrayList();
 
-        for(String geneName : HLA_GENES)
+        for(String geneName : GENE_CACHE.GeneNames)
         {
             GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
 
@@ -257,7 +257,7 @@ public class BamRecordReader implements BamReader
         // slice the BAM for the variant, get the mates if they are within the same gene's coding region,
         // then create and filter fragments
 
-        for(String geneName : HLA_GENES)
+        for(String geneName : GENE_CACHE.GeneNames)
         {
             GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
 

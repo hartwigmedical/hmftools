@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
@@ -169,14 +170,14 @@ public class LilacApplication
         mNucleotideFragFactory = new NucleotideFragmentFactory(mConfig.MinBaseQual, mRefData);
 
         if(mRefBamReader == null)
-            mRefBamReader = new BamRecordReader(referenceBam, mConfig, mRefData.HlaTranscriptMap, mNucleotideFragFactory);
+            mRefBamReader = new BamRecordReader(referenceBam, mConfig, GENE_CACHE.GeneTranscriptMap, mNucleotideFragFactory);
 
         if(mTumorBamReader == null)
         {
             if(mConfig.tumorOnly())
                 mTumorBamReader = mRefBamReader;
             else if(!mConfig.TumorBam.isEmpty())
-                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, mRefData.HlaTranscriptMap, mNucleotideFragFactory);
+                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, GENE_CACHE.GeneTranscriptMap, mNucleotideFragFactory);
         }
 
         List<Fragment> refFragments = mRefBamReader.findGeneFragments();
@@ -583,7 +584,7 @@ public class LilacApplication
         }
 
         // SOMATIC VARIANTS
-        SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(mConfig, mRefData.HlaTranscriptMap);
+        SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(mConfig, GENE_CACHE.GeneTranscriptMap);
 
         if(variantAnnotation.getSomaticVariants().isEmpty())
             return;

@@ -2,8 +2,7 @@ package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -36,7 +35,7 @@ public class CopyNumberAssignment
         try
         {
             List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
-                    .filter(x -> HLA_GENES.contains(x.geneName())).collect(Collectors.toList());
+                    .filter(x -> GENE_CACHE.GeneNames.contains(x.geneName())).collect(Collectors.toList());
 
             List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
                     .map(x -> new CopyNumberData(x.geneName(), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
@@ -63,8 +62,11 @@ public class CopyNumberAssignment
     {
         LL_LOGGER.info("calculating tumor copy number of winning alleles");
 
-        if(refCoverage.getAlleleCoverage().size() != EXPECTED_ALLELE_COUNT || tumorCoverage.getAlleleCoverage().size() != EXPECTED_ALLELE_COUNT)
+        if(refCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount
+        || tumorCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount)
+        {
             return;
+        }
 
         List<CopyNumberData> cnDataList = mSampleCopyNumberData.get(sampleId);
 
@@ -73,7 +75,7 @@ public class CopyNumberAssignment
 
         copyNumbers.clear();
 
-        for(int index = 0; index < EXPECTED_ALLELE_COUNT; index = index + 2)
+        for(int index = 0; index < GENE_CACHE.ExpectAlleleCount; index = index + 2)
         {
             AlleleCoverage refCoverage1 = refCoverage.getAlleleCoverage().get(index);
             AlleleCoverage refCoverage2 = refCoverage.getAlleleCoverage().get(index + 1);

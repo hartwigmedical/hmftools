@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.lilac.MhcClass;
 
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ public class LociPositionTest
     public void testNucleotideLocus()
     {
         Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
-        populateHlaTranscripts(hlaTranscriptMap, V37);
+        populateHlaTranscripts(hlaTranscriptMap, V37, MhcClass.CLASS_1);
 
         List<TranscriptData> transcripts = hlaTranscriptMap.values().stream().toList();
 
@@ -54,7 +55,7 @@ public class LociPositionTest
         assertEquals(1100, locus);
 
         hlaTranscriptMap.clear();
-        populateHlaTranscripts(hlaTranscriptMap, V38);
+        populateHlaTranscripts(hlaTranscriptMap, V38, MhcClass.CLASS_1);
 
         transcripts = hlaTranscriptMap.values().stream().toList();
 

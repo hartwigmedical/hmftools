@@ -2,8 +2,7 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,7 +63,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     private int calcHomozygousCount()
     {
-        return EXPECTED_ALLELE_COUNT - getAlleles().size();
+        return GENE_CACHE.ExpectAlleleCount - getAlleles().size();
     }
 
     public boolean isHomozygous(final HlaAllele allele)
@@ -77,7 +76,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     public void expandToSixAlleles()
     {
-        if(mAlleleCoverage.size() == EXPECTED_ALLELE_COUNT)
+        if(mAlleleCoverage.size() == GENE_CACHE.ExpectAlleleCount)
             return;
 
         // split homozygous allele coverage, and fill any missing allele if there was zero support
@@ -85,7 +84,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().collect(Collectors.toList());
         mAlleleCoverage.clear();
 
-        for(String gene : GENE_IDS)
+        for(String gene : GENE_CACHE.GeneIds)
         {
             List<AlleleCoverage> geneCoverage = existingCoverage.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
 
@@ -123,7 +122,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     public void populateMissingCoverage(final List<HlaAllele> alleles)
     {
-        if(mAlleleCoverage.size() == EXPECTED_ALLELE_COUNT)
+        if(mAlleleCoverage.size() == GENE_CACHE.ExpectAlleleCount)
             return;
 
         // fill any missing allele if there was zero support

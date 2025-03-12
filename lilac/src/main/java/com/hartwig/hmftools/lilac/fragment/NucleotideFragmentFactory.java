@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
@@ -59,8 +60,8 @@ public class NucleotideFragmentFactory
 
         boolean reverseStrand = geneStrand == NEG_STRAND;
 
-        int codingPositionStartLoci = calcNucelotideLocus(mReferenceData.HlaTranscripts, record.PositionStart);
-        int codingPositionEndLoci = calcNucelotideLocus(mReferenceData.HlaTranscripts, record.PositionEnd);
+        int codingPositionStartLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, record.PositionStart);
+        int codingPositionEndLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, record.PositionEnd);
 
         int samCodingStartLoci = !reverseStrand ? codingPositionStartLoci : codingPositionEndLoci;
         int samCodingEndLoci = !reverseStrand ? codingPositionEndLoci : codingPositionStartLoci;

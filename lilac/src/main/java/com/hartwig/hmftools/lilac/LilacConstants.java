@@ -46,6 +46,9 @@ public class LilacConstants
     public static final double WARN_LOW_COVERAGE_DEPTH = 10;
     public static final int DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD = 300;
 
+    public static final String HLA_PREFIX = "HLA-";
+    public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
+
     // MHC class 1 constants
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";
@@ -53,23 +56,11 @@ public class LilacConstants
     public static final String GENE_Y = "Y";
     public static final String GENE_H = "H";
 
-    public static final String HLA_PREFIX = "HLA-";
     public static final String HLA_A = longGeneName(GENE_A);
     public static final String HLA_B = longGeneName(GENE_B);
     public static final String HLA_C = longGeneName(GENE_C);
 
-    public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
-    public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
-
-    public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
-
-    public static final int EXPECTED_ALLELE_COUNT = 6;
-
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191", "A*02:783", "B*07:282");
-
-    // common INDEL associated with allele C*04:09N
-    public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
-
+    // all of these are to be replaced by the GeneCache
     public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
     public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);
     public static final List<Integer> C_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 338, 349, 365);
@@ -82,10 +73,6 @@ public class LilacConstants
 
     public static final Map<String,List<Integer>> NUCLEOTIDE_EXON_BOUNDARIES = Maps.newHashMap();
 
-    public static final int SPLICE_VARIANT_BUFFER = 5;
-
-    public static final int COMPLEX_PERMS_THRESHOLD = 100000;
-
     // common routines using constants
     public static List<Integer> getAminoAcidExonBoundaries(final String gene)
     {
@@ -96,6 +83,17 @@ public class LilacConstants
     {
         return NUCLEOTIDE_EXON_BOUNDARIES.get(gene);
     }
+
+
+    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191", "A*02:783", "B*07:282");
+
+    // common INDEL associated with allele C*04:09N
+    public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
+
+
+    public static final int SPLICE_VARIANT_BUFFER = 5;
+
+    public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
     // output file IDs
     public static String LILAC_FILE_ID = ".lilac.";

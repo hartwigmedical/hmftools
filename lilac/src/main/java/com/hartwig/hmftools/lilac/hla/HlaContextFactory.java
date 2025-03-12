@@ -3,8 +3,8 @@ package com.hartwig.hmftools.lilac.hla;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import java.util.List;
 
@@ -55,7 +55,7 @@ public class HlaContextFactory
 
     public static void populateNucleotideExonBoundaries()
     {
-        for(String gene : GENE_IDS)
+        for(String gene : GENE_CACHE.GeneIds)
         {
             List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
 

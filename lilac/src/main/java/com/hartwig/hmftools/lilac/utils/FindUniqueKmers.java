@@ -1,38 +1,45 @@
 package com.hartwig.hmftools.lilac.utils;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConfig.MHC_CLASS;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
-import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR_DESC;
+import static com.hartwig.hmftools.lilac.LilacConfig.registerCommonConfig;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
+import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.lilac.GeneCache;
+import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class FindUniqueKmers
 {
     private final String mResourceDir;
+    private final MhcClass mClassType;
+
+    private final GeneCache mGeneCache;
 
     private final List<HlaSequence> mAminoAcidSequences;
     private final List<HlaSequence> mHlaYAminoAcidSequences;
@@ -49,6 +56,12 @@ public class FindUniqueKmers
     {
         mAlleleCache = new HlaAlleleCache();
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
+
+        mClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
+
+        Map<String, TranscriptData> hlaTranscriptMap = Maps.newHashMap();
+        populateHlaTranscripts(hlaTranscriptMap, RefGenomeVersion.V37, mClassType);
+        mGeneCache = new GeneCache(mClassType, hlaTranscriptMap);
 
         mAminoAcidSequences = Lists.newArrayList();
         mHlaYAminoAcidSequences = Lists.newArrayList();
@@ -193,7 +206,7 @@ public class FindUniqueKmers
 
                 HlaAllele allele = mAlleleCache.requestFourDigit(alleleStr);
 
-                if(!GENE_IDS.contains(allele.Gene) && !allele.Gene.equals(GENE_Y))
+                if(!mGeneCache.GeneIds.contains(allele.Gene) && !allele.Gene.equals(GENE_Y))
                     continue;
 
                 String sequenceStr = items[1];
@@ -238,7 +251,7 @@ public class FindUniqueKmers
 
                 HlaAllele allele = mAlleleCache.request(alleleStr);
 
-                if(!GENE_IDS.contains(allele.Gene) && !allele.Gene.equals(GENE_Y))
+                if(!mGeneCache.GeneIds.contains(allele.Gene) && !allele.Gene.equals(GENE_Y))
                     continue;
 
                 String sequenceStr = items[1];
@@ -264,7 +277,8 @@ public class FindUniqueKmers
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
+        registerCommonConfig(configBuilder);
+
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

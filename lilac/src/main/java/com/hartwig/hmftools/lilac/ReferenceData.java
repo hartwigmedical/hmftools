@@ -46,6 +46,8 @@ public class ReferenceData
     private final String mResourceDir;
     private final LilacConfig mConfig;
 
+    public static GeneCache GENE_CACHE = null;
+
     public final List<HlaSequenceLoci> NucleotideSequences;
     public final List<HlaSequenceLoci> AminoAcidSequences;
     public final List<HlaSequenceLoci> AminoAcidSequencesWithInserts;
@@ -58,9 +60,6 @@ public class ReferenceData
 
     private final CohortFrequency mAlleleFrequencies;
 
-    public final Map<String,TranscriptData> HlaTranscriptMap;
-    public final List<TranscriptData> HlaTranscripts;
-
     public static final HlaContextFactory HLA_CONTEXT_FACTORY = new HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
 
     public static final NucleotideGeneEnrichment NUC_GENE_FRAG_ENRICHMENT = new NucleotideGeneEnrichment(
@@ -70,9 +69,9 @@ public class ReferenceData
 
     private HlaSequenceLoci mDeflatedSequenceTemplate;
 
+    // external reference files
     public static final String NUC_REF_FILE = "hla_ref_nucleotide_sequences.csv";
     public static final String AA_REF_FILE = "hla_ref_aminoacid_sequences.csv";
-
     private static final String COHORT_ALLELE_FREQ_FILE = "lilac_allele_frequencies.csv";
 
     // sequence used to printing amino acid sequences to file
@@ -86,6 +85,13 @@ public class ReferenceData
     {
         mResourceDir = resourceDir;
         mConfig = config;
+
+        Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
+
+        // load gene definitions and other constants
+        populateHlaTranscripts(hlaTranscriptMap, config.RefGenVersion, config.ClassType);
+
+        GENE_CACHE = new GeneCache(mConfig.ClassType, hlaTranscriptMap);
 
         mAlleleCache = new HlaAlleleCache();
 
@@ -102,12 +108,6 @@ public class ReferenceData
 
         setKnownStopLossIndels(config.RefGenVersion);
         setPonIndels(config.RefGenVersion);
-
-        HlaTranscriptMap = Maps.newHashMap();
-
-        // load gene definitions and other constants
-        populateHlaTranscripts(HlaTranscriptMap, config.RefGenVersion);
-        HlaTranscripts = HlaTranscriptMap.values().stream().toList();
 
         populateNucleotideExonBoundaries();
 
@@ -275,7 +275,8 @@ public class ReferenceData
         return false;
     }
 
-    public static void populateHlaTranscripts(final Map<String,TranscriptData> hlaTranscriptMap, final RefGenomeVersion version)
+    public static void populateHlaTranscripts(
+            final Map<String,TranscriptData> hlaTranscriptMap, final RefGenomeVersion version, final MhcClass mhcClass)
     {
         String transcriptsFile = version.is37() ? "/alleles/hla_transcripts_v37.csv" : "/alleles/hla_transcripts_v38.csv";
 
