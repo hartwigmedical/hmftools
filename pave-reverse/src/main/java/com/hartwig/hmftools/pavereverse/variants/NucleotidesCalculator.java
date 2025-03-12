@@ -4,52 +4,46 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 
-import org.jetbrains.annotations.NotNull;
-
 public class NucleotidesCalculator
 {
-    @NotNull
     private final AminoAcidSequence mAminoAcids;
+    private final String mPrefix;
+    private final String mSuffix;
 
-    @NotNull
-    private final String prefix;
-
-    @NotNull
-    private final String suffix;
-
-    public NucleotidesCalculator(@NotNull final AminoAcidSequence aminoAcids, @NotNull final String prefix, @NotNull final String suffix)
+    public NucleotidesCalculator(AminoAcidSequence aminoAcids, String prefix, String suffix)
     {
         Preconditions.checkArgument(prefix.length() < 3);
         Preconditions.checkArgument(suffix.length() < 3);
         Preconditions.checkArgument((prefix.length() + suffix.length()) <= (3 * aminoAcids.sequence().length()));
         mAminoAcids = aminoAcids;
-        this.prefix = prefix;
-        this.suffix = suffix;
+        mPrefix = prefix;
+        mSuffix = suffix;
     }
 
-    @NotNull
     public String anyBaseSequence()
     {
         // We only need this for situations where there is neither prefix nor suffix,
         // and we can only guarantee a non-null result with these preconditions.
-        Preconditions.checkArgument(prefix.isEmpty());
-        Preconditions.checkArgument(suffix.isEmpty());
+        Preconditions.checkArgument(mPrefix.isEmpty());
+        Preconditions.checkArgument(mSuffix.isEmpty());
 
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < mAminoAcids.length(); i++)
         {
-            Set<String> allCodons = mAminoAcids.get(i).matchingTruncatedCodons("","");
-            builder.append(allCodons.iterator().next());
+            Set<String> allCodons = mAminoAcids.get(i).matchingTruncatedCodons("", "");
+            // We want this to be deterministic, even if it's arbitrary
+            String first = new TreeSet<>(allCodons).first();
+            builder.append(first);
         }
         return builder.toString();
     }
 
-    @NotNull
     public Set<String> allPossibleBaseSequences()
     {
         List<Set<String>> candidateCodons = candidateAlternativeTruncatedCodons();
@@ -94,7 +88,7 @@ public class NucleotidesCalculator
     {
         if(i == 0)
         {
-            return prefix;
+            return mPrefix;
         }
         return "";
     }
@@ -103,7 +97,7 @@ public class NucleotidesCalculator
     {
         if(i == mAminoAcids.length() - 1)
         {
-            return suffix;
+            return mSuffix;
         }
         return "";
     }

@@ -73,7 +73,7 @@ public class ReversePaveTestBase
 
     protected TranscriptData transcript(String geneId, String transcriptId)
     {
-        return reversePave.mEnsemblCache.getTranscriptData(geneId, transcriptId);
+        return reversePave.EnsemblCache.getTranscriptData(geneId, transcriptId);
     }
 
     protected AminoAcidSpecification aas(int position, String symbol)

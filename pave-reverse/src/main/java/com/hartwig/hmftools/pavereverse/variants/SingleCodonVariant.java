@@ -11,14 +11,13 @@ import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 
 abstract class SingleCodonVariant extends ProteinVariant
 {
     SingleCodonVariant(
-            @NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
+            GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
             final int positionOfFirstAlteredCodon)
     {
         super(gene, transcript, aminoAcidSequence, positionOfFirstAlteredCodon, 1);
@@ -30,10 +29,8 @@ abstract class SingleCodonVariant extends ProteinVariant
         return 0;
     }
 
-    @NotNull
-    abstract Set<CodonChange> possibleVariants(final @NotNull CodonWithinExons codon);
+    abstract Set<CodonChange> possibleVariants(CodonWithinExons codon);
 
-    @NotNull
     @Override
     public Set<ChangeResult> applyChange(ChangeContext context)
     {

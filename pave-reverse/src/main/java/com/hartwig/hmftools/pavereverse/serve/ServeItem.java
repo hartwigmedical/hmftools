@@ -4,29 +4,16 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
-import org.jetbrains.annotations.NotNull;
-
 class ServeItem
 {
-    @NotNull
     public final String Gene;
-
-    @NotNull
     public final String Annotation;
-
-    @NotNull
     public final String Chromosome;
-
-    @NotNull
     public final String Ref;
-
-    @NotNull
     public final String Alt;
-
     public final int Position;
 
-    ServeItem(@NotNull final String gene, @NotNull final String annotation, @NotNull final String chromosome, @NotNull final String ref,
-            @NotNull final String alt, final int position)
+    ServeItem(String gene, String annotation, String chromosome, String ref, String alt, final int position)
     {
         Preconditions.checkArgument(!gene.isEmpty());
         Preconditions.checkArgument(!annotation.isEmpty());

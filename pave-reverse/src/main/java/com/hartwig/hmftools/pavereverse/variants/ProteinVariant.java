@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pavereverse.variants;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,53 +26,46 @@ import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 import com.hartwig.hmftools.pavereverse.base.ChangeContextBuilder;
 
-import org.jetbrains.annotations.NotNull;
-
 public abstract class ProteinVariant
 {
-    @NotNull
-    public final GeneData mGene;
-    @NotNull
-    public final TranscriptData mTranscript;
-    @NotNull
-    final TranscriptAminoAcids mAminoAcidSequence;
+    public final GeneData Gene;
+    public final TranscriptData Transcript;
+    final TranscriptAminoAcids AminoAcidsTranscript;
     private final int mPositionOfFirstAlteredCodon;
-    @NotNull
-    final List<ChrBaseRegion> mCodingRegions;
-    public final int mRefLength;
-    @NotNull
+    final List<ChrBaseRegion> CodingRegions;
+    public final int RefLength;
     private final AminoAcidSequence mCompleteReferenceSequence;
 
     ProteinVariant(
-            @NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
+            GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
             final int positionOfFirstAlteredCodon,
             final int refSequenceLength)
     {
         Preconditions.checkArgument(Objects.equals(transcript.GeneId, gene.GeneId));
         Preconditions.checkArgument(positionOfFirstAlteredCodon >= 0);
         Preconditions.checkArgument(positionOfFirstAlteredCodon < transcript.length());
-        this.mGene = gene;
-        this.mTranscript = transcript;
-        this.mAminoAcidSequence = aminoAcidSequence;
-        this.mPositionOfFirstAlteredCodon = positionOfFirstAlteredCodon;
-        this.mRefLength = refSequenceLength;
+        Gene = gene;
+        Transcript = transcript;
+        AminoAcidsTranscript = aminoAcidSequence;
+        mPositionOfFirstAlteredCodon = positionOfFirstAlteredCodon;
+        RefLength = refSequenceLength;
         List<ChrBaseRegion> codingRegions = transcript.exons().stream()
                 .filter(exonData -> exonData.End >= transcript.CodingStart && exonData.Start <= transcript.CodingEnd)
                 .map(exonData -> new ChrBaseRegion(gene.Chromosome, Math.max(exonData.Start, transcript.CodingStart), Math.min(exonData.End, transcript.CodingEnd)))
                 .collect(Collectors.toList());
-        if(mTranscript.negStrand())
+        if(Transcript.negStrand())
         {
             List<ChrBaseRegion> reversed = new ArrayList<>(codingRegions);
             Collections.reverse(reversed);
-            mCodingRegions = Collections.unmodifiableList(reversed);
+            CodingRegions = Collections.unmodifiableList(reversed);
         }
         else
         {
-            mCodingRegions = codingRegions;
+            CodingRegions = codingRegions;
         }
-        mCompleteReferenceSequence = AminoAcidSequence.parse(mAminoAcidSequence.AminoAcids);
+        mCompleteReferenceSequence = AminoAcidSequence.parse(AminoAcidsTranscript.AminoAcids);
     }
 
     AminoAcidSequence completeReferenceAminoAcidSequence()
@@ -86,25 +81,23 @@ public abstract class ProteinVariant
     @VisibleForTesting
     List<Integer> codingRegionLengths()
     {
-        return mCodingRegions.stream().map(ChrBaseRegion::baseLength).collect(Collectors.toList());
+        return CodingRegions.stream().map(ChrBaseRegion::baseLength).collect(Collectors.toList());
     }
 
     ChangeContext getChangeContext(RefGenomeInterface genome)
     {
-        CodonWindow window = new CodonWindow(positionOfFirstAlteredCodon(), mRefLength);
+        CodonWindow window = new CodonWindow(positionOfFirstAlteredCodon(), RefLength);
         List<Integer> regionLengths = codingRegionLengths();
         ChangeContextBuilder changeContextBuilder = window.seekExonLocation(regionLengths);
-        return changeContextBuilder.build(mGene.Chromosome, genome, mCodingRegions, mTranscript.posStrand());
+        return changeContextBuilder.build(Gene.Chromosome, genome, CodingRegions, Transcript.posStrand());
     }
 
-    @NotNull
     abstract Set<ChangeResult> applyChange(ChangeContext changeContext);
 
     abstract AminoAcidSequence variantSequence();
 
     @VisibleForTesting
-    @NotNull
-    public final AminoAcidSequence replaceExonAminoAcids(int exon, @NotNull AminoAcidSequence replacement)
+    public final AminoAcidSequence replaceExonAminoAcids(int exon, AminoAcidSequence replacement)
     {
         if(exon == 0 && (replacement.length() == 0))
         {
@@ -131,9 +124,9 @@ public abstract class ProteinVariant
     int numberOfLeftShiftsToTry(ChangeContext changeContext)
     {
         int result = changeContext.StartPositionInExon;
-        if(mTranscript.negStrand())
+        if(Transcript.negStrand())
         {
-            result = changeContext.mExon.inExonLength() - changeContext.FinishPositionInExon - 1;
+            result = changeContext.Exon.inExonLength() - changeContext.FinishPositionInExon - 1;
         }
         return Math.min(result, 32);
     }
@@ -177,10 +170,10 @@ public abstract class ProteinVariant
             Set<ChangeResult> changesAtThisPosition = applyChange(change);
             for(ChangeResult changeAtThisPosition : changesAtThisPosition)
             {
-                AminoAcidSequence changedAminoAcidSequence = replaceExonAminoAcids(changeContext.mExon.mIndex, changeAtThisPosition.mAminoAcids);
+                AminoAcidSequence changedAminoAcidSequence = replaceExonAminoAcids(changeContext.Exon.Index, changeAtThisPosition.Acids);
                 if(isConsistentWithThisVariant(changedAminoAcidSequence))
                 {
-                    results.put(changeAtThisPosition.mBases, changeAtThisPosition);
+                    results.put(changeAtThisPosition.ExonBases, changeAtThisPosition);
                 }
             }
         }
@@ -190,9 +183,14 @@ public abstract class ProteinVariant
     public BaseSequenceVariants calculateVariant(RefGenomeInterface refGenome)
     {
         Collection<ChangeResult> changes = findLeftmostApplicableChanges(refGenome);
-        Set<BaseSequenceChange> hotspots = new HashSet<>();
-        changes.forEach(change -> hotspots.add(change.asChange(mGene.Chromosome)));
-        return new BaseSequenceVariants(mTranscript, mGene.Chromosome, hotspots);
+        Collection<ChangeResult> changesToReport = selectChangesToReport(changes);
+        Set<BaseSequenceChange> hotspots = changesToReport.stream().map(cr -> cr.asChange(Gene.Chromosome)).collect(toSet());
+        return new BaseSequenceVariants(Transcript, Gene.Chromosome, hotspots);
+    }
+
+    Collection<ChangeResult> selectChangesToReport(Collection<ChangeResult> changes)
+    {
+        return changes;
     }
 
     boolean doesNotMatchVariantUpToLastAminoAcid(AminoAcidSequence candidate)
@@ -202,7 +200,7 @@ public abstract class ProteinVariant
         {
             return true;
         }
-        for (int i = 0; i < variant.length(); i++)
+        for(int i = 0; i < variant.length(); i++)
         {
             if(!candidate.get(i).equals(variant.get(i)))
             {

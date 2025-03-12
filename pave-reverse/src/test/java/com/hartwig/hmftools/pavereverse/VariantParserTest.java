@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pavereverse;
 
-import static com.hartwig.hmftools.pavereverse.Checks.HGVS_FORMAT_REQUIRED;
+import static com.hartwig.hmftools.pavereverse.util.Checks.HGVS_FORMAT_REQUIRED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,8 +37,8 @@ public class VariantParserTest extends ReversePaveTestBase
     public void returnVariantForSuppliedTranscriptId()
     {
         ProteinVariant variant = variantParser.parseGeneVariant("ZYX", "ENST00000436448","S2V");
-        assertEquals("ZYX", variant.mGene.GeneName);
-        assertEquals("ENST00000436448", variant.mTranscript.TransName);
+        assertEquals("ZYX", variant.Gene.GeneName);
+        assertEquals("ENST00000436448", variant.Transcript.TransName);
     }
 
     @Test
@@ -77,7 +77,7 @@ public class VariantParserTest extends ReversePaveTestBase
         Set<ProteinVariant> variants = variantParser.parseGeneVariants("ZYX", "S2V");
         // See ensembl_trans_amino_acids.csv
         assertEquals(3, variants.size());
-        Set<String> transcriptNames = variants.stream().map(variant -> variant.mTranscript.TransName).collect(Collectors.toSet());
+        Set<String> transcriptNames = variants.stream().map(variant -> variant.Transcript.TransName).collect(Collectors.toSet());
         assertTrue(transcriptNames.contains("ENST00000436448"));
         assertTrue(transcriptNames.contains("ENST00000446634"));
         assertTrue(transcriptNames.contains("ENST00000449630"));
@@ -90,7 +90,7 @@ public class VariantParserTest extends ReversePaveTestBase
         // See ensembl_trans_amino_acids.csv
         assertEquals(1, variants.size());
         ProteinVariant variant = variants.iterator().next();
-        assertEquals("ENST00000322764", variant.mTranscript.TransName);
+        assertEquals("ENST00000322764", variant.Transcript.TransName);
     }
 
     @Test
@@ -148,36 +148,36 @@ public class VariantParserTest extends ReversePaveTestBase
     public void parseDeletionWithGene()
     {
         Deletion di = (Deletion) variantParser.parseGeneVariant("EGFR", "N73_Y74del");
-        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals("EGFR", di.Gene.GeneName);
         assertEquals(73, di.positionOfFirstAlteredCodon());
-        assertEquals(2, di.mRefLength);
+        assertEquals(2, di.RefLength);
     }
 
     @Test
     public void parseFrameshiftWithGene()
     {
         Frameshift frameshift = (Frameshift) variantParser.parseGeneVariant("EGFR", "N73fs");
-        assertEquals("EGFR", frameshift.mGene.GeneName);
+        assertEquals("EGFR", frameshift.Gene.GeneName);
         assertEquals(73, frameshift.positionOfFirstAlteredCodon());
-        assertEquals("N", frameshift.mFirstChangedAminoAcid.mSymbol);
-        assertEquals(1, frameshift.mRefLength);
+        assertEquals("N", frameshift.FirstChangedAminoAcid.Symbol);
+        assertEquals(1, frameshift.RefLength);
     }
 
     @Test
     public void parseStopGainedWithGene()
     {
         StopGained variant = (StopGained) variantParser.parseGeneVariant("EGFR", "N73*");
-        assertEquals("EGFR", variant.mGene.GeneName);
+        assertEquals("EGFR", variant.Gene.GeneName);
         assertEquals(73, variant.positionOfFirstAlteredCodon());
-        assertEquals("N", variant.mFirstChangedAminoAcid.mSymbol);
-        assertEquals(1, variant.mRefLength);
+        assertEquals("N", variant.FirstChangedAminoAcid.Symbol);
+        assertEquals(1, variant.RefLength);
     }
 
     @Test
     public void parseStartLostWithGene()
     {
         StartLost variant = (StartLost) variantParser.parseGeneVariant("KIT", "M1?");
-        assertEquals("KIT", variant.mGene.GeneName);
+        assertEquals("KIT", variant.Gene.GeneName);
         assertEquals(1, variant.positionOfFirstAlteredCodon());
     }
 
@@ -185,10 +185,10 @@ public class VariantParserTest extends ReversePaveTestBase
     public void parseInsertionWithGene()
     {
         Insertion di = (Insertion) variantParser.parseGeneVariant("EGFR", "N73_Y74insSPQR");
-        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals("EGFR", di.Gene.GeneName);
         assertEquals(74, di.positionOfFirstAlteredCodon());
-        assertEquals(2, di.mRefLength);
-        assertEquals("SPQR", di.mInsertedSequence.sequence());
+        assertEquals(2, di.RefLength);
+        assertEquals("SPQR", di.InsertedSequence.sequence());
     }
 
     @Test
@@ -196,7 +196,7 @@ public class VariantParserTest extends ReversePaveTestBase
     {
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("ZYX:p.Pro46Ala");
         assertEquals(46, variant.positionOfFirstAlteredCodon());
-        assertEquals("ENSG00000159840", variant.mGene.GeneId);
+        assertEquals("ENSG00000159840", variant.Gene.GeneId);
     }
 
     @Test
@@ -204,7 +204,7 @@ public class VariantParserTest extends ReversePaveTestBase
     {
         SingleAminoAcidVariant variant = (SingleAminoAcidVariant) variantParser.parse("ENSG00000159840:p.Pro46Ala");
         assertEquals(46, variant.positionOfFirstAlteredCodon());
-        assertEquals("ZYX", variant.mGene.GeneName);
+        assertEquals("ZYX", variant.Gene.GeneName);
     }
 
     @Test
@@ -246,27 +246,27 @@ public class VariantParserTest extends ReversePaveTestBase
     public void parseDeletionInsertion()
     {
         DeletionInsertion di = (DeletionInsertion) variantParser.parse("EGFR:p.L747_A750delinsP");
-        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals("EGFR", di.Gene.GeneName);
         assertEquals(747, di.positionOfFirstAlteredCodon());
-        assertEquals(4, di.mRefLength);
-        assertEquals(aaSeq("P"), di.mAlt);
+        assertEquals(4, di.RefLength);
+        assertEquals(aaSeq("P"), di.Alt);
 
         // ADCK2 Glu301_Thr303delinsGlnGln, which is E301_T303delinsQQ
         DeletionInsertion di2 = (DeletionInsertion) variantParser.parse("ADCK2:p.Glu301_Thr303delinsGlnGln");
-        assertEquals("ADCK2", di2.mGene.GeneName);
+        assertEquals("ADCK2", di2.Gene.GeneName);
         assertEquals(301, di2.positionOfFirstAlteredCodon());
-        assertEquals(3, di2.mRefLength);
-        assertEquals(aaSeq("QQ"), di2.mAlt);
+        assertEquals(3, di2.RefLength);
+        assertEquals(aaSeq("QQ"), di2.Alt);
     }
 
     @Test
     public void parseDeletionInsertionWithGene()
     {
         DeletionInsertion di = (DeletionInsertion) variantParser.parseGeneVariant("EGFR", "L747_A750delinsP");
-        assertEquals("EGFR", di.mGene.GeneName);
+        assertEquals("EGFR", di.Gene.GeneName);
         assertEquals(747, di.positionOfFirstAlteredCodon());
-        assertEquals(4, di.mRefLength);
-        assertEquals(aaSeq("P"), di.mAlt);
+        assertEquals(4, di.RefLength);
+        assertEquals(aaSeq("P"), di.Alt);
     }
 
     @Test
@@ -280,14 +280,14 @@ public class VariantParserTest extends ReversePaveTestBase
     public void parseDuplicationWithGene()
     {
         Duplication dup = (Duplication) variantParser.parseGeneVariant("PIK3R1", "Y452dup");
-        assertEquals("PIK3R1", dup.mGene.GeneName);
+        assertEquals("PIK3R1", dup.Gene.GeneName);
         assertEquals(452, dup.positionOfFirstAlteredCodon());
-        assertEquals(1, dup.mRefLength);
+        assertEquals(1, dup.RefLength);
 
         Duplication dup2 = (Duplication) variantParser.parseGeneVariant("PIK3R1", "E458_Y463dup");
-        assertEquals("PIK3R1", dup2.mGene.GeneName);
+        assertEquals("PIK3R1", dup2.Gene.GeneName);
         assertEquals(458, dup2.positionOfFirstAlteredCodon());
-        assertEquals(6, dup2.mRefLength);
+        assertEquals(6, dup2.RefLength);
     }
 
     private void checkSaavInputResultsInErrorWithMessage(String input, String expectedMessage)

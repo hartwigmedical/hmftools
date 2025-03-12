@@ -13,37 +13,33 @@ import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Insertion extends ProteinVariant
 {
-    @NotNull
-    public final AminoAcidSequence mInsertedSequence;
+    public final AminoAcidSequence InsertedSequence;
 
-    public Insertion(@NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
-            @NotNull final AminoAcidRange refRange,
-            @NotNull final AminoAcidSequence insertedSequence)
+    public Insertion(GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
+            AminoAcidRange refRange,
+            AminoAcidSequence insertedSequence)
     {
         super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
         Preconditions.checkArgument(insertedSequence.length() > 0);
         Preconditions.checkArgument(refRange.length() == 2);
-        mInsertedSequence = insertedSequence;
+        InsertedSequence = insertedSequence;
     }
 
     @VisibleForTesting
     Set<String> possibleInsertedNucleotideSequences()
     {
-        final NucleotidesCalculator nucleotidesCalculator = new NucleotidesCalculator(mInsertedSequence, "", "");
-        if(mInsertedSequence.length() > 1)
+        final NucleotidesCalculator nucleotidesCalculator = new NucleotidesCalculator(InsertedSequence, "", "");
+        if(InsertedSequence.length() > 1)
         {
             return Set.of(nucleotidesCalculator.anyBaseSequence());
         }
         return nucleotidesCalculator.allPossibleBaseSequences();
     }
 
-    @NotNull
     @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
@@ -62,7 +58,7 @@ public class Insertion extends ProteinVariant
                 basesToInsert = Nucleotides.reverseComplementBases(basesToInsert);
             }
             String withBasesInserted =
-                    context.mExon.baseSequenceWithInsertionApplied(insertionPosition, basesToInsert, context.IsPositiveStrand);
+                    context.Exon.baseSequenceWithInsertionApplied(insertionPosition, basesToInsert, context.IsPositiveStrand);
             AminoAcidSequence acids = AminoAcidSequence.fromNucleotides(withBasesInserted);
             String alt = ref + basesToInsert;
             result.add(new ChangeResult(acids, withBasesInserted, locationOfChange, ref, alt));
@@ -88,6 +84,6 @@ public class Insertion extends ProteinVariant
     AminoAcidSequence variantSequence()
     {
         int pointOfInsertion = super.positionOfFirstAlteredCodon();
-        return completeReferenceAminoAcidSequence().insert(pointOfInsertion, mInsertedSequence);
+        return completeReferenceAminoAcidSequence().insert(pointOfInsertion, InsertedSequence);
     }
 }

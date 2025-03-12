@@ -5,37 +5,26 @@ import java.util.Objects;
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 
-import org.jetbrains.annotations.NotNull;
-
 public class ChangeResult
 {
-    @NotNull
-    public final AminoAcidSequence mAminoAcids;
+    public final AminoAcidSequence Acids;
+    public final String ExonBases;
+    final int Location;
+    final String RefBases;
+    final String AltBases;
 
-    @NotNull
-    public final String mBases;
-
-    final int mLocation;
-
-    @NotNull
-    final String mRefBases;
-
-    @NotNull
-    final String mAltBases;
-
-    public ChangeResult(@NotNull final AminoAcidSequence mAminoAcids, @NotNull final String mBases, final int mLocation,
-            @NotNull final String mRefBases, @NotNull final String altBases)
+    public ChangeResult(AminoAcidSequence aminoAcids, String exonBases, int location, String refBases, String altBases)
     {
-        this.mAminoAcids = mAminoAcids;
-        this.mBases = mBases;
-        this.mLocation = mLocation;
-        this.mRefBases = mRefBases;
-        this.mAltBases = altBases;
+        Acids = aminoAcids;
+        ExonBases = exonBases;
+        Location = location;
+        RefBases = refBases;
+        AltBases = altBases;
     }
 
     public BaseSequenceChange asChange(String chromosome)
     {
-        return new BaseSequenceChange(mRefBases, mAltBases, chromosome, mLocation);
+        return new BaseSequenceChange(RefBases, AltBases, chromosome, Location);
     }
 
     @Override
@@ -46,26 +35,26 @@ public class ChangeResult
             return false;
         }
         final ChangeResult that = (ChangeResult) o;
-        return mLocation == that.mLocation && Objects.equals(mAminoAcids, that.mAminoAcids)
-                && Objects.equals(mBases, that.mBases) && Objects.equals(mRefBases, that.mRefBases)
-                && Objects.equals(mAltBases, that.mAltBases);
+        return Location == that.Location && Objects.equals(Acids, that.Acids)
+                && Objects.equals(ExonBases, that.ExonBases) && Objects.equals(RefBases, that.RefBases)
+                && Objects.equals(AltBases, that.AltBases);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mAminoAcids, mBases, mLocation, mRefBases, mAltBases);
+        return Objects.hash(Acids, ExonBases, Location, RefBases, AltBases);
     }
 
     @Override
     public String toString()
     {
         return "ChangeResult{" +
-                "mAminoAcids=" + mAminoAcids +
-                ", mBases='" + mBases + '\'' +
-                ", mLocation=" + mLocation +
-                ", mRefBases='" + mRefBases + '\'' +
-                ", altBases='" + mAltBases + '\'' +
+                "AminoAcids=" + Acids +
+                ", ExonBases='" + ExonBases + '\'' +
+                ", Location=" + Location +
+                ", RefBases='" + RefBases + '\'' +
+                ", AltBases='" + AltBases + '\'' +
                 '}';
     }
 }

@@ -1,36 +1,27 @@
 package com.hartwig.hmftools.pavereverse.variants;
 
-import static com.hartwig.hmftools.pavereverse.Checks.isNucleotideSequence;
+import static com.hartwig.hmftools.pavereverse.util.Checks.isNucleotideSequence;
 
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
 public class DeletionInsertionChange
 {
-    @NotNull
-    private final String Ref;
-
-    @NotNull
-    private final String Alt;
-
-    @NotNull
-    private final String Inserted;
-
-    @NotNull
-    private final String Deleted;
-
+    private final String mRef;
+    private final String mAlt;
+    private final String mInserted;
+    private final String mDeleted;
     private final int DeletionStart;
 
-    static int lengthOfCommonPrefix(@NotNull String s, @NotNull String t)
+    static int lengthOfCommonPrefix(String s, String t)
     {
         int length = Math.min(s.length(), t.length());
-        for (int i = 0; i < length; i++)
+        for(int i = 0; i < length; i++)
         {
-            if (s.charAt(i) != t.charAt(i))
+            if(s.charAt(i) != t.charAt(i))
             {
                 return i;
             }
@@ -38,36 +29,34 @@ public class DeletionInsertionChange
         return length;
     }
 
-    static int lengthOfCommonSuffix(@NotNull String s, @NotNull String t)
+    static int lengthOfCommonSuffix(String s, String t)
     {
         return lengthOfCommonPrefix(StringUtils.reverse(s), StringUtils.reverse(t));
     }
 
-    DeletionInsertionChange(@NotNull final String ref, @NotNull final String alt)
+    DeletionInsertionChange(String ref, String alt)
     {
         Preconditions.checkArgument(isNucleotideSequence(ref));
         Preconditions.checkArgument(isNucleotideSequence(alt));
-        this.Ref = ref;
-        this.Alt = alt;
+        mRef = ref;
+        mAlt = alt;
         int commonSuffixLength = lengthOfCommonSuffix(ref, alt);
         String refWithoutCommonSuffix = ref.substring(0, ref.length() - commonSuffixLength);
         String altWithoutCommonSuffix = alt.substring(0, alt.length() - commonSuffixLength);
         int commonPrefixLength = lengthOfCommonPrefix(refWithoutCommonSuffix, altWithoutCommonSuffix);
-        Deleted = refWithoutCommonSuffix.substring(commonPrefixLength);
-        Inserted = altWithoutCommonSuffix.substring(commonPrefixLength);
+        mDeleted = refWithoutCommonSuffix.substring(commonPrefixLength);
+        mInserted = altWithoutCommonSuffix.substring(commonPrefixLength);
         DeletionStart = commonPrefixLength;
     }
 
-    @NotNull
     String deleted()
     {
-        return Deleted;
+        return mDeleted;
     }
 
-    @NotNull
     String inserted()
     {
-        return Inserted;
+        return mInserted;
     }
 
     int positionOfDeletion()
@@ -83,23 +72,23 @@ public class DeletionInsertionChange
             return false;
         }
         final DeletionInsertionChange that = (DeletionInsertionChange) o;
-        return Objects.equals(Ref, that.Ref) && Objects.equals(Alt, that.Alt);
+        return Objects.equals(mRef, that.mRef) && Objects.equals(mAlt, that.mAlt);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(Ref, Alt);
+        return Objects.hash(mRef, mAlt);
     }
 
     @Override
     public String toString()
     {
         return "DeletionInsertionChange{" +
-                "Ref='" + Ref + '\'' +
-                ", Alt='" + Alt + '\'' +
-                ", Inserted='" + Inserted + '\'' +
-                ", Deleted='" + Deleted + '\'' +
+                "Ref='" + mRef + '\'' +
+                ", Alt='" + mAlt + '\'' +
+                ", Inserted='" + mInserted + '\'' +
+                ", Deleted='" + mDeleted + '\'' +
                 ", DeletionStart=" + DeletionStart +
                 '}';
     }

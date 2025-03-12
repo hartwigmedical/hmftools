@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.pavereverse.ReversePaveTestBase;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class NucleotidesCalculatorTest extends ReversePaveTestBase
@@ -20,10 +19,13 @@ public class NucleotidesCalculatorTest extends ReversePaveTestBase
     @Test
     public void someBaseSequenceTest()
     {
-        Assert.assertEquals("TGG", calculator("W", "", "").anyBaseSequence());
-        Assert.assertEquals("TGGTGG", calculator("WW", "", "").anyBaseSequence());
+        assertEquals("TGG", calculator("W", "", "").anyBaseSequence());
+        assertEquals("TGGTGG", calculator("WW", "", "").anyBaseSequence());
         String s = calculator("FEAST", "", "").anyBaseSequence();
-        Assert.assertEquals("FEAST", AminoAcidSequence.fromNucleotides(s).sequence());
+        assertEquals("FEAST", AminoAcidSequence.fromNucleotides(s).sequence());
+        // It should always give the same result (but we don't care what it is).
+        assertEquals("TTCGAAGCAAGCACA", s);
+        assertEquals("TTCGAAGCAAGCACA", calculator("FEAST", "", "").anyBaseSequence());
     }
 
     @Test
@@ -85,7 +87,7 @@ public class NucleotidesCalculatorTest extends ReversePaveTestBase
         expected.add("AAAAACGAC");
         expected.add("AAGAATGAC");
         expected.add("AAGAACGAC");
-        Assert.assertEquals(expected, calculator("KND", "", "").allPossibleBaseSequences());
+        assertEquals(expected, calculator("KND", "", "").allPossibleBaseSequences());
     }
 
     @Test

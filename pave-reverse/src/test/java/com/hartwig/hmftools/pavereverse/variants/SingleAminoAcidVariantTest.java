@@ -20,7 +20,7 @@ public class SingleAminoAcidVariantTest extends VariantTest
     public void codingRegionLengthsTest()
     {
         SingleAminoAcidVariant variant = this.saav("ADCK2:p.V2K");
-        assertEquals(627, variant.mAminoAcidSequence.AminoAcids.length()); // sanity
+        assertEquals(627, variant.AminoAcidsTranscript.AminoAcids.length()); // sanity
         List<Integer> returned = variant.codingRegionLengths();
         assertEquals(8, returned.size());
         assertEquals(3 * 627, returned.stream().mapToInt(Integer::intValue).sum());
@@ -36,7 +36,7 @@ public class SingleAminoAcidVariantTest extends VariantTest
         SingleAminoAcidVariant variant = this.saav("ZYX:p.A2E");
         List<Integer> returned = variant.codingRegionLengths();
         assertEquals(9, returned.size());
-        assertEquals(573, variant.mAminoAcidSequence.AminoAcids.length()); // sanity
+        assertEquals(573, variant.AminoAcidsTranscript.AminoAcids.length()); // sanity
         assertEquals(3 * 573, returned.stream().mapToInt(Integer::intValue).sum());
         assertEquals(208, returned.get(0).intValue()); // coding start > end of this exon
         assertEquals(200, returned.get(1).intValue());

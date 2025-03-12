@@ -9,40 +9,34 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 
 public class PaddedExon
 {
-    public final int mIndex;
-    @NotNull
+    public final int Index;
     private final String mBasesOfFirstCodonInPreviousExon;
-    @NotNull
     private final String mBasesOfLastCodonInFollowingExon;
-    @NotNull
     private final String mExonBases;
     private final int mExonStart;
-    @NotNull
     private final String mIntronicPrefix;
-    @NotNull
     private final String mIntronicSuffix;
 
     public PaddedExon(
-            final int mIndex, @NotNull final String basesOfFirstCodonInPreviousExon,
-            @NotNull final String basesOfLastCodonInFollowingExon,
-            @NotNull final String exonBases,
-            final int exonStart,
-            @NotNull final String intronicPrefix,
-            @NotNull final String intronicSuffix)
+            int mIndex, String basesOfFirstCodonInPreviousExon,
+            String basesOfLastCodonInFollowingExon,
+            String exonBases,
+            int exonStart,
+            String intronicPrefix,
+            String intronicSuffix)
     {
         Preconditions.checkArgument(basesOfFirstCodonInPreviousExon.length() < 3);
         Preconditions.checkArgument(basesOfLastCodonInFollowingExon.length() < 3);
-        this.mIndex = mIndex;
-        this.mIntronicPrefix = intronicPrefix;
-        this.mIntronicSuffix = intronicSuffix;
-        this.mBasesOfFirstCodonInPreviousExon = basesOfFirstCodonInPreviousExon;
-        this.mBasesOfLastCodonInFollowingExon = basesOfLastCodonInFollowingExon;
-        this.mExonBases = exonBases;
-        this.mExonStart = exonStart;
+        Index = mIndex;
+        mIntronicPrefix = intronicPrefix;
+        mIntronicSuffix = intronicSuffix;
+        mBasesOfFirstCodonInPreviousExon = basesOfFirstCodonInPreviousExon;
+        mBasesOfLastCodonInFollowingExon = basesOfLastCodonInFollowingExon;
+        mExonBases = exonBases;
+        mExonStart = exonStart;
         Preconditions.checkArgument(totalLength() % 3 == 0);
     }
 
@@ -64,7 +58,7 @@ public class PaddedExon
         return mBasesOfFirstCodonInPreviousExon + left + right + mBasesOfLastCodonInFollowingExon;
     }
 
-    public String baseSequenceWithDuplicationApplied(final int start, final int end, final boolean positiveStrand)
+    public String baseSequenceWithDuplicationApplied(int start, int end, boolean positiveStrand)
     {
         Preconditions.checkArgument(start >= 0);
         Preconditions.checkArgument(start < end);
@@ -88,7 +82,7 @@ public class PaddedExon
         return mBasesOfFirstCodonInPreviousExon + left + middle + middle + right + mBasesOfLastCodonInFollowingExon;
     }
 
-    public String baseSequenceWithInsertionApplied(final int position, final String basesToInsert, final boolean positiveStrand)
+    public String baseSequenceWithInsertionApplied(int position, String basesToInsert, boolean positiveStrand)
     {
         Preconditions.checkArgument(position >= 0);
         Preconditions.checkArgument(position <= mExonBases.length());
@@ -107,7 +101,7 @@ public class PaddedExon
         return mBasesOfFirstCodonInPreviousExon + left + basesToInsert + right + mBasesOfLastCodonInFollowingExon;
     }
 
-    public Pair<String, String> forwardStrandBaseAndLeftNeighbour(final int position, final boolean isPositiveStrand)
+    public Pair<String, String> forwardStrandBaseAndLeftNeighbour(int position, boolean isPositiveStrand)
     {
         Preconditions.checkArgument(position >= 0);
         Preconditions.checkArgument(position < mExonBases.length());
@@ -123,7 +117,7 @@ public class PaddedExon
         return Pair.of(left, right);
     }
 
-    public String baseSequenceWithSingleBaseRemoved(final int position, final boolean isPositiveStrand)
+    public String baseSequenceWithSingleBaseRemoved(int position, boolean isPositiveStrand)
     {
         Preconditions.checkArgument(position >= 0);
         Preconditions.checkArgument(position < mExonBases.length());
@@ -144,7 +138,7 @@ public class PaddedExon
         return mBasesOfFirstCodonInPreviousExon + left + right + rightPadding + mBasesOfLastCodonInFollowingExon;
     }
 
-    public String baseSequenceWithBasesReplacedAtStrandLocation(final int location, final String current, final String replacementBases)
+    public String baseSequenceWithBasesReplacedAtStrandLocation(int location, String current, String replacementBases)
     {
         // Prefix|-------l      r----|Suffix
         int leftEnd = location - mExonStart;
@@ -233,7 +227,7 @@ public class PaddedExon
         return CodonWithinExons.factory("", bodySequence, "");
     }
 
-    public SplitCodonSequence getSplitSequenceForCodons(int startCodon, int count, final boolean isPositiveStrand)
+    public SplitCodonSequence getSplitSequenceForCodons(int startCodon, int count, boolean isPositiveStrand)
     {
         Preconditions.checkArgument(startCodon >= 0);
         if(startCodon == 0)
@@ -278,7 +272,7 @@ public class PaddedExon
         return new SplitCodonSequence(fragmentInExon, "", start + mExonStart);
     }
 
-    public int codonLocationInExonBody(int codonIndex, final boolean isPositiveStrand)
+    public int codonLocationInExonBody(int codonIndex, boolean isPositiveStrand)
     {
         Preconditions.checkArgument(codonIndex >= 0);
 

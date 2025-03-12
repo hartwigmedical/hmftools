@@ -5,24 +5,20 @@ import static com.hartwig.hmftools.pavereverse.batch.VariantsEncoder.columns;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.logging.log4j.util.BiConsumer;
-
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
 import com.hartwig.hmftools.pavereverse.ReversePave;
 
-import org.jetbrains.annotations.NotNull;
+import org.apache.logging.log4j.util.BiConsumer;
 
 public class BatchProcessor
 {
+    private final ReversePave mReversePave;
 
-    @NotNull
-    private final ReversePave reversePave;
-
-    public BatchProcessor(@NotNull final ReversePave reversePave)
+    public BatchProcessor(ReversePave reversePave)
     {
-        this.reversePave = reversePave;
+        mReversePave = reversePave;
     }
 
     public void process(String inputTsv, String outputTsv) throws IOException
@@ -37,7 +33,7 @@ public class BatchProcessor
                 String gene = row.get(0);
                 String transcript = row.get(1);
                 String proteinVariant = row.get(2);
-                BaseSequenceVariants variants = reversePave.calculateVariant(gene, transcript, proteinVariant);
+                BaseSequenceVariants variants = mReversePave.calculateVariant(gene, transcript, proteinVariant);
                 writer.writeRow(new VariantRow(gene, proteinVariant, variants));
             }
         }

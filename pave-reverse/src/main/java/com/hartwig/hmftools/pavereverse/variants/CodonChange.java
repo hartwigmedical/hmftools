@@ -4,44 +4,33 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.pavereverse.Checks;
+import com.hartwig.hmftools.pavereverse.util.Checks;
+import com.hartwig.hmftools.pavereverse.util.PRUtils;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 
 public class CodonChange implements Comparable<CodonChange>
 {
-    @NotNull
     public final String ReferenceCodon;
-    @NotNull
     public final String AlternateCodon;
     private final int EditDistance;
 
-    public CodonChange(@NotNull final String referenceCodon, @NotNull final String alternateCodon)
+    public CodonChange(String referenceCodon, String alternateCodon)
     {
         Preconditions.checkArgument(Checks.isCodon(referenceCodon));
         Preconditions.checkArgument(Checks.isCodon(alternateCodon));
-        this.ReferenceCodon = referenceCodon;
-        this.AlternateCodon = alternateCodon;
-        int distance = 0;
-        for(int i = 0; i < 3; ++i)
-        {
-            if(referenceCodon.charAt(i) != alternateCodon.charAt(i))
-            {
-                distance += 1;
-            }
-        }
-        EditDistance = distance;
+        ReferenceCodon = referenceCodon;
+        AlternateCodon = alternateCodon;
+        EditDistance = PRUtils.substitutionDistance(referenceCodon, alternateCodon);
     }
 
-    @NotNull
     public CodonChange reverseComplement()
     {
         return new CodonChange(Nucleotides.reverseComplementBases(ReferenceCodon), Nucleotides.reverseComplementBases(AlternateCodon));
     }
 
     @Override
-    public int compareTo(@NotNull final CodonChange o)
+    public int compareTo(CodonChange o)
     {
         if(!ReferenceCodon.equals(o.ReferenceCodon))
         {
@@ -72,26 +61,26 @@ public class CodonChange implements Comparable<CodonChange>
         return -1;
     }
 
-    public Pair<String,String> differenceStrings()
+    public Pair<String, String> differenceStrings()
     {
         StringBuilder refBuilder = new StringBuilder();
         StringBuilder altBuilder = new StringBuilder();
         int differencesAnnotated = 0;
         for(int i = 0; i < 3; ++i)
         {
-            if (differencesAnnotated == EditDistance)
+            if(differencesAnnotated == EditDistance)
             {
                 break;
             }
             final char refChar = ReferenceCodon.charAt(i);
             final char altChar = AlternateCodon.charAt(i);
             boolean differentHere = refChar != altChar;
-            if (differentHere || differencesAnnotated > 0)
+            if(differentHere || differencesAnnotated > 0)
             {
                 refBuilder.append(refChar);
                 altBuilder.append(altChar);
             }
-            if (differentHere)
+            if(differentHere)
             {
                 differencesAnnotated++;
             }
@@ -120,8 +109,8 @@ public class CodonChange implements Comparable<CodonChange>
     public String toString()
     {
         return "CodonChange{" +
-                "referenceCodon='" + ReferenceCodon + '\'' +
-                ", alternateCodon='" + AlternateCodon + '\'' +
+                "ReferenceCodon='" + ReferenceCodon + '\'' +
+                ", AlternateCodon='" + AlternateCodon + '\'' +
                 '}';
     }
 }

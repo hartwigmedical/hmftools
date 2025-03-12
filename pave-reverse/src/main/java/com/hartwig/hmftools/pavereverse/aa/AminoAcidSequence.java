@@ -11,15 +11,11 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.codon.Codons;
 
-import org.jetbrains.annotations.NotNull;
-
 public class AminoAcidSequence
 {
-    @NotNull
     private final List<AminoAcid> aminoAcids;
 
-    @NotNull
-    public static AminoAcidSequence parse(@NotNull final String sequence)
+    public static AminoAcidSequence parse(String sequence)
     {
         Pattern variantListPattern = Pattern.compile("([A-Z][a-z]*)");
         final Matcher variantListMatcher = variantListPattern.matcher(sequence);
@@ -33,12 +29,12 @@ public class AminoAcidSequence
         return new AminoAcidSequence(aminoAcids);
     }
 
-    public static AminoAcidSequence fromNucleotides(@NotNull final String nucleotides)
+    public static AminoAcidSequence fromNucleotides(String nucleotides)
     {
         Preconditions.checkArgument(!nucleotides.isEmpty(), "Non-empty nucleotide sequence required");
         Preconditions.checkArgument(nucleotides.length() % 3 == 0, "Length of sequence must be a multiple of 3");
         List<AminoAcid> aminoAcids = Lists.newArrayList();
-        for (int i = 0; i < nucleotides.length(); i += 3)
+        for(int i = 0; i < nucleotides.length(); i += 3)
         {
             String codon = nucleotides.substring(i, i + 3);
             String acid = AminoAcids.findAminoAcidForCodon(codon);
@@ -64,14 +60,14 @@ public class AminoAcidSequence
         return new AminoAcidSequence(Lists.newArrayList());
     }
 
-    AminoAcidSequence(@NotNull final List<AminoAcid> aminoAcids)
+    AminoAcidSequence(List<AminoAcid> aminoAcids)
     {
         this.aminoAcids = List.copyOf(aminoAcids);
     }
 
     public String symbolAt(int index)
     {
-        return get(index).mSymbol;
+        return get(index).Symbol;
     }
 
     public AminoAcid get(int index)
@@ -82,7 +78,7 @@ public class AminoAcidSequence
 
     public String sequence()
     {
-        return aminoAcids.stream().map(aa -> aa.mSymbol).collect(Collectors.joining());
+        return aminoAcids.stream().map(aa -> aa.Symbol).collect(Collectors.joining());
     }
 
     public int length()
@@ -90,29 +86,25 @@ public class AminoAcidSequence
         return aminoAcids.size();
     }
 
-    @NotNull
     public AminoAcidSequence subsequenceUpToInclusive(int i)
     {
         Preconditions.checkArgument(i >= 0 && i <= aminoAcids.size(), "Index out of bounds");
         return new AminoAcidSequence(aminoAcids.subList(0, i));
     }
 
-    @NotNull
     public AminoAcidSequence subsequenceAfterExclusive(int i)
     {
         Preconditions.checkArgument(i >= 0 && i < aminoAcids.size(), "Index out of bounds");
         return new AminoAcidSequence(aminoAcids.subList(i + 1, aminoAcids.size()));
     }
 
-    @NotNull
-    public AminoAcidSequence append(@NotNull AminoAcidSequence other)
+    public AminoAcidSequence append(AminoAcidSequence other)
     {
         List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids);
         newAminoAcids.addAll(other.aminoAcids);
         return new AminoAcidSequence(newAminoAcids);
     }
 
-    @NotNull
     public AminoAcidSequence duplicateRange(int startInclusive, int endExclusive)
     {
         List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, startInclusive));
@@ -122,7 +114,6 @@ public class AminoAcidSequence
         return new AminoAcidSequence(newAminoAcids);
     }
 
-    @NotNull
     public AminoAcidSequence deleteRange(int startInclusive, int endExclusive)
     {
         List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, startInclusive));
@@ -130,7 +121,6 @@ public class AminoAcidSequence
         return new AminoAcidSequence(newAminoAcids);
     }
 
-    @NotNull
     public AminoAcidSequence insert(int positionAfterWhichToInsert, AminoAcidSequence toInsert)
     {
         List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, positionAfterWhichToInsert));
@@ -139,8 +129,7 @@ public class AminoAcidSequence
         return new AminoAcidSequence(newAminoAcids);
     }
 
-    @NotNull
-    public AminoAcidSequence replaceRange(int start, int end, @NotNull AminoAcidSequence replacement)
+    public AminoAcidSequence replaceRange(int start, int end, AminoAcidSequence replacement)
     {
         List<AminoAcid> newAminoAcids = Lists.newArrayList(aminoAcids.subList(0, start - 1));
         newAminoAcids.addAll(replacement.aminoAcids);
@@ -148,7 +137,6 @@ public class AminoAcidSequence
         return new AminoAcidSequence(newAminoAcids);
     }
 
-    @NotNull
     public AminoAcidSequence replace(int position, AminoAcid replacement)
     {
         Preconditions.checkArgument(position >= 1 && position <= aminoAcids.size(), "Index out of bounds");

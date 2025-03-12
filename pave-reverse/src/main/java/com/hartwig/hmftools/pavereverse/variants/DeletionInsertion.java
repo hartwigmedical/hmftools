@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.pavereverse.variants;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -12,49 +14,47 @@ import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 import com.hartwig.hmftools.pavereverse.base.SplitCodonSequence;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.pavereverse.util.PRUtils;
 
 public class DeletionInsertion extends ProteinVariant
 {
-    @NotNull
-    public final AminoAcidSequence mAlt;
+    public final AminoAcidSequence Alt;
 
     public DeletionInsertion(
-            @NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
-            @NotNull final AminoAcidRange refRange,
-            @NotNull final AminoAcidSequence alt)
+            GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
+            AminoAcidRange refRange,
+            AminoAcidSequence alt)
     {
         super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
-        this.mAlt = alt;
+        Alt = alt;
     }
 
     @Override
     AminoAcidSequence variantSequence()
     {
         int startOfDeletedSection = positionOfFirstAlteredCodon();
-        int endOfDeletedSection = startOfDeletedSection + this.mRefLength - 1;
-        return completeReferenceAminoAcidSequence().replaceRange(startOfDeletedSection, endOfDeletedSection, mAlt);
+        int endOfDeletedSection = startOfDeletedSection + this.RefLength - 1;
+        return completeReferenceAminoAcidSequence().replaceRange(startOfDeletedSection, endOfDeletedSection, Alt);
     }
 
-    @NotNull
     @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
-        SplitCodonSequence seq = context.basesForProteinChange(positionOfFirstAlteredCodon(), mRefLength);
-        Set<String> destinationBasesForwardStrand = new NucleotidesCalculator(mAlt,seq.retainedPrefix(), seq.retainedSuffix()).allPossibleBaseSequences();
-        if(mGene.reverseStrand())
+        SplitCodonSequence seq = context.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength);
+        Set<String> newBases = new NucleotidesCalculator(Alt, seq.retainedPrefix(), seq.retainedSuffix()).allPossibleBaseSequences();
+        if(Gene.reverseStrand())
         {
-            destinationBasesForwardStrand = destinationBasesForwardStrand.stream().map(Nucleotides::reverseComplementBases).collect(Collectors.toSet());
+            newBases = newBases.stream().map(Nucleotides::reverseComplementBases).collect(toSet());
         }
         int changeStart = seq.locationOfDeletedBases();
-        String referenceBases = mGene.forwardStrand()
+        String referenceBases = Gene.forwardStrand()
                 ? seq.segmentThatIsModified()
                 : Nucleotides.reverseComplementBases(seq.segmentThatIsModified());
         Set<ChangeResult> result = new HashSet<>();
-        destinationBasesForwardStrand.forEach(bases -> {
+        newBases.forEach(bases ->
+        {
             DeletionInsertionChange changeCanonicaliser = new DeletionInsertionChange(referenceBases, bases);
             String ref = changeCanonicaliser.deleted();
             String alt = changeCanonicaliser.inserted();
@@ -71,5 +71,31 @@ public class DeletionInsertion extends ProteinVariant
     boolean seekResultsInCompanionContext(boolean resultsFoundAlready)
     {
         return !resultsFoundAlready;
+    }
+
+    @Override
+    Collection<ChangeResult> selectChangesToReport(Collection<ChangeResult> changes)
+    {
+        if(RefLength == 2 && Alt.length() == 2)
+        {
+            final int[] minEditDistanceSoFar = { Integer.MAX_VALUE };
+            Set<ChangeResult> result = new HashSet<>();
+            changes.forEach(change ->
+            {
+                int editDistance = PRUtils.substitutionDistance(change.RefBases, change.AltBases);
+                if(editDistance < minEditDistanceSoFar[0])
+                {
+                    result.clear();
+                    result.add(change);
+                    minEditDistanceSoFar[0] = editDistance;
+                }
+                else if(editDistance == minEditDistanceSoFar[0])
+                {
+                    result.add(change);
+                }
+            });
+            return result;
+        }
+        return changes;
     }
 }

@@ -22,15 +22,15 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class ReversePaveConfig
 {
-    public final String mVcfFile;
-    public final String mTsvInputFile;
-    public final String mServeJsonInputFile;
-    public final String mTsvOuputFile;
-    public final String mode;
-    public final String mEnsembleDataDir;
-    public RefGenomeSource mRefGenome;
-    public final RefGenomeVersion mRefGenVersion;
-    public final EnsemblDataCache mEnsemblCache;
+    public final String VcfFile;
+    public final String TsvInputFile;
+    public final String ServeJsonInputFile;
+    public final String TsvOuputFile;
+    public final String Mode;
+    public final String EnsembleDataDir;
+    public RefGenomeSource RefGenome;
+    public final RefGenomeVersion RefGenVersion;
+    public final EnsemblDataCache EnsemblCache;
 
     public static final String VCF_INPUT_FILE = "vcf_input";
     public static final String TSV_INPUT_FILE = "tsv_input";
@@ -45,24 +45,24 @@ public class ReversePaveConfig
 
     public ReversePaveConfig(final ConfigBuilder configBuilder)
     {
-        mode = configBuilder.getValue(MODE, BATCH_MODE);
-        mVcfFile = configBuilder.getValue(VCF_INPUT_FILE);
-        mTsvInputFile = configBuilder.getValue(TSV_INPUT_FILE);
-        mTsvOuputFile = configBuilder.getValue(TSV_OUTPUT_FILE);
-        mServeJsonInputFile = configBuilder.getValue(SERVE_JSON_INPUT_FILE);
-        mEnsembleDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
+        Mode = configBuilder.getValue(MODE, BATCH_MODE);
+        VcfFile = configBuilder.getValue(VCF_INPUT_FILE);
+        TsvInputFile = configBuilder.getValue(TSV_INPUT_FILE);
+        TsvOuputFile = configBuilder.getValue(TSV_OUTPUT_FILE);
+        ServeJsonInputFile = configBuilder.getValue(SERVE_JSON_INPUT_FILE);
+        EnsembleDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
         try
         {
-            final String refGenomeFile = configBuilder.getValue(REF_GENOME);
+            String refGenomeFile = configBuilder.getValue(REF_GENOME);
             IndexedFastaSequenceFile refGenome = new IndexedFastaSequenceFile(new File(refGenomeFile));
-            mRefGenome = new RefGenomeSource(refGenome);
+            RefGenome = new RefGenomeSource(refGenome);
         }
         catch(IOException e)
         {
             RPV_LOGGER.error("failed to load ref genome: {}", e.toString());
         }
-        mRefGenVersion = RefGenomeVersion.from(configBuilder);
-        mEnsemblCache = new EnsemblDataCache(configBuilder);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        EnsemblCache = new EnsemblDataCache(configBuilder);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)

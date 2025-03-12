@@ -7,18 +7,15 @@ import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
 import com.hartwig.hmftools.pavereverse.ReversePave;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class RoundTripChecker
 {
-    @NotNull
-    private final ReversePave reversePave;
+    private final ReversePave mReversePave;
 
-    public RoundTripChecker(@NotNull final ReversePave reversePave)
+    public RoundTripChecker(ReversePave reversePave)
     {
-        this.reversePave = reversePave;
+        mReversePave = reversePave;
     }
 
     public void compareActualChangesWithCalculated(VariantContext context, VariantImpact impact)
@@ -38,7 +35,7 @@ public class RoundTripChecker
         BaseSequenceVariants calculatedVariants;
         try
         {
-            calculatedVariants = reversePave.calculateVariant(gene, transcript, variant);
+            calculatedVariants = mReversePave.calculateVariant(gene, transcript, variant);
         }
         catch(Exception e)
         {

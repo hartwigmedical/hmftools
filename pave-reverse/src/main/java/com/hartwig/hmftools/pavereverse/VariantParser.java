@@ -2,7 +2,7 @@ package com.hartwig.hmftools.pavereverse;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.pavereverse.Checks.HGVS_FORMAT_REQUIRED;
+import static com.hartwig.hmftools.pavereverse.util.Checks.HGVS_FORMAT_REQUIRED;
 
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
+import com.hartwig.hmftools.pavereverse.util.Checks;
 import com.hartwig.hmftools.pavereverse.variants.Deletion;
 import com.hartwig.hmftools.pavereverse.variants.DeletionInsertion;
 import com.hartwig.hmftools.pavereverse.variants.Duplication;
@@ -29,8 +30,6 @@ import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
 import com.hartwig.hmftools.pavereverse.variants.SingleAminoAcidVariant;
 import com.hartwig.hmftools.pavereverse.variants.StartLost;
 import com.hartwig.hmftools.pavereverse.variants.StopGained;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VariantParser
 {
@@ -43,21 +42,19 @@ public class VariantParser
 
     private static class ProteinTranscript
     {
-        @NotNull
         final TranscriptAminoAcids mAminoAcids;
-        @NotNull
         final TranscriptData mTranscriptData;
 
-        private ProteinTranscript(@NotNull final TranscriptAminoAcids aminoAcids, @NotNull final TranscriptData transcriptData)
+        private ProteinTranscript(TranscriptAminoAcids aminoAcids, TranscriptData transcriptData)
         {
-            this.mAminoAcids = aminoAcids;
-            this.mTranscriptData = transcriptData;
+            mAminoAcids = aminoAcids;
+            mTranscriptData = transcriptData;
         }
     }
 
     private interface TranscriptRetriever
     {
-        Set<ProteinTranscript> getApplicableTranscripts(final GeneData geneData, final TranscriptFilter refFilter);
+        Set<ProteinTranscript> getApplicableTranscripts(GeneData geneData, TranscriptFilter refFilter);
     }
 
     private class FilterTranscripts implements TranscriptRetriever
@@ -70,7 +67,7 @@ public class VariantParser
         }
 
         @Override
-        public Set<ProteinTranscript> getApplicableTranscripts(final GeneData geneData, final TranscriptFilter refFilter)
+        public Set<ProteinTranscript> getApplicableTranscripts(GeneData geneData, TranscriptFilter refFilter)
         {
             List<TranscriptData> allTranscripts = mEnsemblCache.getTranscripts(geneData.GeneId);
             Set<ProteinTranscript> matchingRef = filter(allTranscripts, refFilter);
@@ -142,19 +139,15 @@ public class VariantParser
 
     private static class VariantFactory
     {
-        @NotNull
         private final GeneData mGeneData;
-        @NotNull
         private final AminoAcidRange mRefRange;
-        @NotNull
         private final Set<ProteinTranscript> mTranscripts;
 
-        private VariantFactory(@NotNull final GeneData geneData, @NotNull final AminoAcidRange refRange,
-                @NotNull final Set<ProteinTranscript> transcript)
+        private VariantFactory(GeneData geneData, AminoAcidRange refRange, Set<ProteinTranscript> transcript)
         {
-            this.mGeneData = geneData;
-            this.mRefRange = refRange;
-            this.mTranscripts = transcript;
+            mGeneData = geneData;
+            mRefRange = refRange;
+            mTranscripts = transcript;
         }
 
         Set<ProteinVariant> buildSingleAminoAcidVariants(AminoAcidSpecification altSpec)
@@ -222,31 +215,31 @@ public class VariantParser
         mTranscriptAminoAcidsMap = transcriptAminoAcidsMap;
     }
 
-    public Set<ProteinVariant> parseGeneVariants(@NotNull String gene, @NotNull String variant)
+    public Set<ProteinVariant> parseGeneVariants(String gene, String variant)
     {
         return parseGeneVariant(gene, variant, new FilterTranscripts(true));
     }
 
-    ProteinVariant parseGeneVariant(@NotNull String gene, @NotNull String variant)
+    ProteinVariant parseGeneVariant(String gene, String variant)
     {
         Set<ProteinVariant> variants = parseGeneVariant(gene, variant, new FilterTranscripts(false));
         Preconditions.checkArgument(variants.size() == 1);
         return variants.iterator().next();
     }
 
-    ProteinVariant parseGeneVariant(@NotNull String gene, @NotNull String specificTranscript, @NotNull String variant)
+    ProteinVariant parseGeneVariant(String gene, String specificTranscript, String variant)
     {
         return parseGeneVariant(gene, trimInitialPdot(variant), new GetSpecificTranscript(specificTranscript)).iterator().next();
     }
 
-    ProteinVariant parse(@NotNull String expression)
+    ProteinVariant parse(String expression)
     {
         String[] geneVar = extractGeneAndVariant(expression);
         String variantDescription = trimInitialPdot(geneVar[1]);
         return parseGeneVariant(geneVar[0], variantDescription);
     }
 
-    private static String trimInitialPdot(@NotNull String variant)
+    private static String trimInitialPdot(String variant)
     {
         if(variant.startsWith("p."))
         {
@@ -255,7 +248,7 @@ public class VariantParser
         return variant;
     }
 
-    private Set<ProteinVariant> parseGeneVariant(@NotNull String gene, @NotNull String variant, TranscriptRetriever transcriptRetriever)
+    private Set<ProteinVariant> parseGeneVariant(String gene, String variant, TranscriptRetriever transcriptRetriever)
     {
         if(variant.contains("delins"))
         {
@@ -294,7 +287,7 @@ public class VariantParser
         return parseFactory(gene, variant, transcriptRetriever).buildSingleAminoAcidVariants(altSpec);
     }
 
-    private VariantFactory parseFactory(@NotNull String gene, @NotNull String variantDescription,
+    private VariantFactory parseFactory(String gene, String variantDescription,
             final TranscriptRetriever transcriptRetriever)
     {
         GeneData geneData = lookupGene(gene);
@@ -304,7 +297,6 @@ public class VariantParser
         return new VariantFactory(geneData, refRange, transcriptData);
     }
 
-    @NotNull
     private static AminoAcidRange getAminoAcidRange(final String description, final String rangeDescription)
     {
         AminoAcidRange refRange;
@@ -320,7 +312,6 @@ public class VariantParser
         return refRange;
     }
 
-    @NotNull
     private static AminoAcidRange parseAminoAcidRange(final String refAltParts)
     {
         String[] refParts = refAltParts.split("_");
@@ -333,7 +324,6 @@ public class VariantParser
         return new AminoAcidRange(refStart, refStop);
     }
 
-    @NotNull
     private GeneData lookupGene(final String reference)
     {
         GeneData geneData = mEnsemblCache.getGeneDataByName(reference);

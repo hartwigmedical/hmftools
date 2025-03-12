@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.pavereverse.base;
 
-import static com.hartwig.hmftools.pavereverse.Checks.isNucleotideSequence;
+import static com.hartwig.hmftools.pavereverse.util.Checks.isNucleotideSequence;
 
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A sequence of bases that is subject to an insertion and deletion
@@ -15,84 +13,76 @@ import org.jetbrains.annotations.NotNull;
  */
 public class SplitCodonSequence
 {
-    @NotNull
-    private final String Left;
+    private final String mLeft;
+    private final String mRight;
+    private final int mPositionOfChange;
 
-    @NotNull
-    private final String Right;
-
-    private final int PositionOfChange;
-
-    public SplitCodonSequence(@NotNull final String left, @NotNull final String right, final int positionOfChange)
+    public SplitCodonSequence(String left, String right, int positionOfChange)
     {
-        PositionOfChange = positionOfChange;
+        mPositionOfChange = positionOfChange;
         Preconditions.checkArgument(isNucleotideSequence(left));
         if(!right.isBlank())
         {
             Preconditions.checkArgument(isNucleotideSequence(right));
         }
-        this.Left = left;
-        this.Right = right;
+        mLeft = left;
+        mRight = right;
         Preconditions.checkArgument(completeSequence().length() % 3 == 0);
     }
 
     public int locationOfDeletedBases()
     {
-        return PositionOfChange;
+        return mPositionOfChange;
     }
 
-    @NotNull
     public String retainedPrefix()
     {
-        if(Right.length() > 2)
+        if(mRight.length() > 2)
         {
-            return Left;
+            return mLeft;
         }
         return "";
     }
 
-    @NotNull
     public String retainedSuffix()
     {
-        if (Left.length() > 2)
+        if(mLeft.length() > 2)
         {
-            return Right;
+            return mRight;
         }
         return "";
     }
 
     boolean couldBeDeletionInsertion()
     {
-        if(Right.isBlank())
+        if(mRight.isBlank())
         {
             return true;
         }
-        return Left.length() < 3 || Right.length() < 3;
+        return mLeft.length() < 3 || mRight.length() < 3;
     }
 
-    @NotNull
     public String segmentThatIsModified()
     {
-        if(Right.isBlank())
+        if(mRight.isBlank())
         {
-            return Left;
+            return mLeft;
         }
-        return Left.length() < 3 ? Right : Left;
+        return mLeft.length() < 3 ? mRight : mLeft;
     }
 
     boolean spansTwoExons()
     {
-        return !Right.isBlank();
+        return !mRight.isBlank();
     }
 
-    @NotNull
     String completeSequence()
     {
-        if(Right.isBlank())
+        if(mRight.isBlank())
         {
-            return Left;
+            return mLeft;
         }
-        return Left + Right;
+        return mLeft + mRight;
     }
 
     @Override
@@ -103,23 +93,23 @@ public class SplitCodonSequence
             return false;
         }
         final SplitCodonSequence that = (SplitCodonSequence) o;
-        return PositionOfChange == that.PositionOfChange && Objects.equals(Left, that.Left)
-                && Objects.equals(Right, that.Right);
+        return mPositionOfChange == that.mPositionOfChange && Objects.equals(mLeft, that.mLeft)
+                && Objects.equals(mRight, that.mRight);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(Left, Right, PositionOfChange);
+        return Objects.hash(mLeft, mRight, mPositionOfChange);
     }
 
     @Override
     public String toString()
     {
         return "SplitCodonSequence{" +
-                "Left='" + Left + '\'' +
-                ", Right='" + Right + '\'' +
-                ", PositionOfChange=" + PositionOfChange +
+                "Left='" + mLeft + '\'' +
+                ", Right='" + mRight + '\'' +
+                ", PositionOfChange=" + mPositionOfChange +
                 '}';
     }
 }

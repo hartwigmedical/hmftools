@@ -5,21 +5,14 @@ import java.util.List;
 
 import com.hartwig.hmftools.pavereverse.ReversePave;
 
-import org.jetbrains.annotations.NotNull;
-
 class StatsForGene
 {
-    final ReversePave baseSequenceVariantsCalculator;
-    @NotNull
-    public final String mGene;
-
+    final ReversePave Reverse;
+    public final String Gene;
     public int NumberProcessedWithoutError = 0;
     public int NumberNotParsed = 0;
-
     public int NumberWithDifferentHotspots = 0;
-
     public int NumberWithSameHotspots = 0;
-
     public int NumberWithSameHotspotsThatUseNonCanonicalTranscript = 0;
     public int NumberWithDifferentHotspotsThatUseNonCanonicalTranscript = 0;
     public int NumberWithNoMatchingTranscript = 0;
@@ -31,24 +24,24 @@ class StatsForGene
     public final List<VariantStatus> AnnotationsWithDifferentHotspots = new ArrayList<>();
     public final List<DifferenceWithTransvar> Differences = new ArrayList<>();
 
-    StatsForGene(final ReversePave baseSequenceVariantsCalculator, @NotNull final String gene)
+    StatsForGene(ReversePave baseSequenceVariantsCalculator, String gene)
     {
-        this.baseSequenceVariantsCalculator = baseSequenceVariantsCalculator;
-        mGene = gene;
+        Reverse = baseSequenceVariantsCalculator;
+        Gene = gene;
     }
 
     public void recordResultsForAnnotation(VariantStatus comparison)
     {
-        if(comparison.mParseException != null)
+        if(comparison.ParsingError != null)
         {
-            System.out.println(comparison.mParseException.getMessage());
+            System.out.println(comparison.ParsingError.getMessage());
         }
         if(comparison.hasProcessingError())
         {
-            Throwable t = comparison.mProcessingError;
+            Throwable t = comparison.ProcessingError;
             System.out.println(t.getMessage());
         }
-        if(comparison.hotspotsSame())
+        if(comparison.haveSameChanges())
         {
             NumberWithSameHotspots++;
             if(comparison.usesNonCanonicalTranscript())
@@ -60,7 +53,7 @@ class StatsForGene
         {
             AnnotationsWithDifferentHotspots.add(comparison);
             NumberWithDifferentHotspots++;
-            Differences.add(new DifferenceWithTransvar(comparison, baseSequenceVariantsCalculator));
+            Differences.add(new DifferenceWithTransvar(comparison, Reverse));
             if(comparison.usesNonCanonicalTranscript())
             {
                 NumberWithDifferentHotspotsThatUseNonCanonicalTranscript++;
@@ -77,7 +70,7 @@ class StatsForGene
     public String toString()
     {
         return "StatsForGene{" +
-                "Gene='" + mGene + '\'' +
+                "Gene='" + Gene + '\'' +
                 ", NumberNotParsed=" + NumberNotParsed +
                 ", NumberWithDifferentHotspots=" + NumberWithDifferentHotspots +
                 ", NumberWithSameHotspots=" + NumberWithSameHotspots +

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pavereverse.aa;
 
-import static com.hartwig.hmftools.pavereverse.Checks.matchPattern;
+import static com.hartwig.hmftools.pavereverse.util.Checks.matchPattern;
 
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -8,9 +8,6 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
-
-import org.jetbrains.annotations.NotNull;
-
 import com.hartwig.hmftools.pavereverse.TranscriptFilter;
 
 /**
@@ -19,47 +16,46 @@ import com.hartwig.hmftools.pavereverse.TranscriptFilter;
  */
 public class AminoAcidSpecification implements TranscriptFilter
 {
-    public final int mPosition;
-    private final AminoAcid mAminoAcid;
+    public final int Position;
+    private final AminoAcid Acid;
 
-    @NotNull
     public static AminoAcidSpecification parse(String aaPos)
     {
         Pattern pattern = Pattern.compile("([A-Z](?:[a-z][a-z])?+)(\\d+)");
-        final Matcher matcher = matchPattern(pattern, aaPos);
+        Matcher matcher = matchPattern(pattern, aaPos);
 
         return new AminoAcidSpecification(Integer.parseInt(matcher.group(2)), matcher.group(1));
     }
 
-    public AminoAcidSpecification(final int position, final String aminoAcid)
+    public AminoAcidSpecification(int position, String aminoAcid)
     {
         this(position, aminoAcid != null ? new AminoAcid(aminoAcid) : null);
     }
 
-    public AminoAcidSpecification(final int position, final AminoAcid aminoAcid)
+    public AminoAcidSpecification(int position, AminoAcid aminoAcid)
     {
         Preconditions.checkArgument(position > 0);
-        this.mPosition = position;
-        this.mAminoAcid = aminoAcid;
+        Position = position;
+        Acid = aminoAcid;
     }
 
     public AminoAcid value()
     {
-        return mAminoAcid;
+        return Acid;
     }
 
     @Override
-    public boolean applies(final TranscriptAminoAcids aminoAcids)
+    public boolean applies(TranscriptAminoAcids aminoAcids)
     {
-        if (mPosition > aminoAcids.AminoAcids.length())
+        if(Position > aminoAcids.AminoAcids.length())
         {
             return false;
         }
-        if (mAminoAcid == null)
+        if(Acid == null)
         {
             return true;
         }
-        return aminoAcids.AminoAcids.substring(mPosition - 1, mPosition).equals(mAminoAcid.mSymbol);
+        return aminoAcids.AminoAcids.substring(Position - 1, Position).equals(Acid.Symbol);
     }
 
     @Override
@@ -70,24 +66,23 @@ public class AminoAcidSpecification implements TranscriptFilter
             return false;
         }
         final AminoAcidSpecification that = (AminoAcidSpecification) o;
-        return mPosition == that.mPosition && Objects.equals(mAminoAcid, that.mAminoAcid);
+        return Position == that.Position && Objects.equals(Acid, that.Acid);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mPosition, mAminoAcid);
+        return Objects.hash(Position, Acid);
     }
 
     @Override
     public String toString()
     {
-        return "[" + mPosition + "," + symbol() + ']';
+        return "[" + Position + "," + symbol() + ']';
     }
 
-    @NotNull
     public String symbol()
     {
-        return mAminoAcid == null ? "?" : mAminoAcid.mSymbol;
+        return Acid == null ? "?" : Acid.Symbol;
     }
 }

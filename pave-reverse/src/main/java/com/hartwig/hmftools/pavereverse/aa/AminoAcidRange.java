@@ -4,9 +4,6 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
-
-import org.jetbrains.annotations.NotNull;
-
 import com.hartwig.hmftools.pavereverse.TranscriptFilter;
 
 /**
@@ -14,21 +11,19 @@ import com.hartwig.hmftools.pavereverse.TranscriptFilter;
  */
 public class AminoAcidRange implements TranscriptFilter
 {
-    @NotNull
     private final AminoAcidSpecification mFirst;
-    @NotNull
     private final AminoAcidSpecification mLast;
 
-    public AminoAcidRange(@NotNull final AminoAcidSpecification first, @NotNull final AminoAcidSpecification last)
+    public AminoAcidRange(AminoAcidSpecification first, AminoAcidSpecification last)
     {
-        Preconditions.checkArgument(first.mPosition <= last.mPosition, "End position must not be before start position");
-        this.mFirst = first;
-        this.mLast = last;
+        Preconditions.checkArgument(first.Position <= last.Position, "End position must not be before start position");
+        mFirst = first;
+        mLast = last;
     }
 
     public int startPosition()
     {
-        return mFirst.mPosition;
+        return mFirst.Position;
     }
 
     public AminoAcid aminoAcidAtStart()
@@ -38,11 +33,11 @@ public class AminoAcidRange implements TranscriptFilter
 
     public int length()
     {
-        return mLast.mPosition - mFirst.mPosition + 1;
+        return mLast.Position - mFirst.Position + 1;
     }
 
     @Override
-    public boolean applies(final TranscriptAminoAcids aminoAcids)
+    public boolean applies(TranscriptAminoAcids aminoAcids)
     {
         return mFirst.applies(aminoAcids) && mLast.applies(aminoAcids);
     }

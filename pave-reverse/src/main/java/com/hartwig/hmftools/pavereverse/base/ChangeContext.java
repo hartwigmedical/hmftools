@@ -6,27 +6,25 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 
 public class ChangeContext
 {
-    @NotNull
-    public final PaddedExon mExon;
+    public final PaddedExon Exon;
     public final int StartPositionInExon;
     public final int FinishPositionInExon;
     public final boolean IsPositiveStrand;
     private final int AminoAcidNumberOfFirstAminoAcid;
     private ChangeContext mCompanionContext = null;
 
-    public ChangeContext(@NotNull final PaddedExon containingExon, final int startPositionInExon,
-            final int finishPositionInExon,
-            final boolean isPositiveStrand,
+    public ChangeContext(PaddedExon containingExon, int startPositionInExon,
+            int finishPositionInExon,
+            boolean isPositiveStrand,
             int aminoAcidNumberOfFirstAminoAcidStartingInExon)
     {
-        this.mExon = containingExon;
-        this.StartPositionInExon = startPositionInExon;
-        this.FinishPositionInExon = finishPositionInExon;
-        this.IsPositiveStrand = isPositiveStrand;
+        Exon = containingExon;
+        StartPositionInExon = startPositionInExon;
+        FinishPositionInExon = finishPositionInExon;
+        IsPositiveStrand = isPositiveStrand;
         AminoAcidNumberOfFirstAminoAcid = aminoAcidNumberOfFirstAminoAcidStartingInExon;
     }
 
@@ -35,23 +33,23 @@ public class ChangeContext
         return mCompanionContext;
     }
 
-    public void setCompanionContext(@NotNull ChangeContext companionContext)
+    public void setCompanionContext(ChangeContext companionContext)
     {
-        Preconditions.checkArgument(companionContext.mExon.mIndex == mExon.mIndex - 1);
+        Preconditions.checkArgument(companionContext.Exon.Index == Exon.Index - 1);
         Preconditions.checkArgument(companionContext.IsPositiveStrand == IsPositiveStrand);
-        this.mCompanionContext = companionContext;
+        mCompanionContext = companionContext;
     }
 
     public Pair<String, String> forwardStrandBaseAndLeftNeighbour()
     {
-        return mExon.forwardStrandBaseAndLeftNeighbour(StartPositionInExon, IsPositiveStrand);
+        return Exon.forwardStrandBaseAndLeftNeighbour(StartPositionInExon, IsPositiveStrand);
     }
 
     public ChangeContext shiftLeft(int i)
     {
         int start = IsPositiveStrand ? StartPositionInExon - i : StartPositionInExon + i;
         int end = IsPositiveStrand ? FinishPositionInExon - i : FinishPositionInExon + i;
-        return new ChangeContext(mExon, start, end, IsPositiveStrand, AminoAcidNumberOfFirstAminoAcid);
+        return new ChangeContext(Exon, start, end, IsPositiveStrand, AminoAcidNumberOfFirstAminoAcid);
     }
 
     public int positionOfChangeStartInStrand()
@@ -77,19 +75,19 @@ public class ChangeContext
         Preconditions.checkArgument(firstAminoAcid >= 0);
         Preconditions.checkArgument(numberOfAminoAcidsChanged >= 0);
         int codonNumber = firstAminoAcid - AminoAcidNumberOfFirstAminoAcid + 1;
-        return mExon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged, IsPositiveStrand);
+        return Exon.getSplitSequenceForCodons(codonNumber, numberOfAminoAcidsChanged, IsPositiveStrand);
     }
 
     public CodonWithinExons codonForProteinChange(int position)
     {
         Preconditions.checkArgument(position >= 0);
         int codonNumber = position - AminoAcidNumberOfFirstAminoAcid + 1;
-        return mExon.getCodon(codonNumber, IsPositiveStrand);
+        return Exon.getCodon(codonNumber, IsPositiveStrand);
     }
 
     public String exonBasesWithReplacementAppliedAtStrandLocation(int strandLocationOfChange, String currentBases, String alternateBases)
     {
-        String result = mExon.baseSequenceWithBasesReplacedAtStrandLocation(strandLocationOfChange, currentBases, alternateBases);
+        String result = Exon.baseSequenceWithBasesReplacedAtStrandLocation(strandLocationOfChange, currentBases, alternateBases);
         return IsPositiveStrand ? result : Nucleotides.reverseComplementBases(result);
     }
 
@@ -97,18 +95,18 @@ public class ChangeContext
     {
         if(IsPositiveStrand)
         {
-            return mExon.baseImmediatelyBefore(StartPositionInExon) + mExon.basesBetween(StartPositionInExon, FinishPositionInExon);
+            return Exon.baseImmediatelyBefore(StartPositionInExon) + Exon.basesBetween(StartPositionInExon, FinishPositionInExon);
         }
-        int end = mExon.inExonLength() - StartPositionInExon - 1;
-        int start = mExon.inExonLength() - FinishPositionInExon - 1;
-        return mExon.baseImmediatelyBefore(start) + mExon.basesBetween(start, end);
+        int end = Exon.inExonLength() - StartPositionInExon - 1;
+        int start = Exon.inExonLength() - FinishPositionInExon - 1;
+        return Exon.baseImmediatelyBefore(start) + Exon.basesBetween(start, end);
     }
 
     @Override
     public String toString()
     {
         return "ChangeContext{" +
-                "containingExon=" + mExon +
+                "containingExon=" + Exon +
                 ", startPositionInExon=" + StartPositionInExon +
                 ", finishPositionInExon=" + FinishPositionInExon +
                 '}';
@@ -123,17 +121,17 @@ public class ChangeContext
         }
         final ChangeContext that = (ChangeContext) o;
         return StartPositionInExon == that.StartPositionInExon && FinishPositionInExon == that.FinishPositionInExon
-                && Objects.equals(mExon, that.mExon);
+                && Objects.equals(Exon, that.Exon);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mExon, StartPositionInExon, FinishPositionInExon);
+        return Objects.hash(Exon, StartPositionInExon, FinishPositionInExon);
     }
 
-    private int positionBeforeStrandPositionFor(final int position)
+    private int positionBeforeStrandPositionFor(int position)
     {
-        return mExon.toStrandCoordinates(position, IsPositiveStrand) - 1;
+        return Exon.toStrandCoordinates(position, IsPositiveStrand) - 1;
     }
 }

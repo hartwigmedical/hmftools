@@ -9,14 +9,10 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 
-import org.jetbrains.annotations.NotNull;
-
 public class AminoAcid
 {
     public static final AminoAcid START = new AminoAcid("M");
-
-    @NotNull
-    public final String mSymbol;
+    public final String Symbol;
 
     static boolean isValidAminoAcidIdentifier(String s)
     {
@@ -27,33 +23,30 @@ public class AminoAcid
         return AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.containsKey(s);
     }
 
-    public AminoAcid(@NotNull final String symbol)
+    public AminoAcid(String symbol)
     {
         Preconditions.checkArgument(isValidAminoAcidIdentifier(symbol), "Not a valid amino acid identifier: " + symbol);
-        this.mSymbol = AminoAcids.forceSingleLetterProteinAnnotation(symbol);
+        Symbol = AminoAcids.forceSingleLetterProteinAnnotation(symbol);
     }
 
-    @NotNull
-    public Set<String> matchingCodons(@NotNull final String prefix, @NotNull final String suffix)
+    public Set<String> matchingCodons(String prefix, String suffix)
     {
         Preconditions.checkArgument(prefix.length() < 3);
         Preconditions.checkArgument(suffix.length() < 3);
         return matchingCodons(prefix, suffix, false);
     }
 
-    @NotNull
-    public Set<String> matchingTruncatedCodons(@NotNull final String prefix, @NotNull final String suffix)
+    public Set<String> matchingTruncatedCodons(String prefix, String suffix)
     {
         Preconditions.checkArgument(prefix.length() < 3);
         Preconditions.checkArgument(suffix.length() < 3);
         return matchingCodons(prefix, suffix, true);
     }
 
-    @NotNull
-    private Set<String> matchingCodons(@NotNull final String prefix, @NotNull final String suffix, final boolean truncate)
+    private Set<String> matchingCodons(String prefix, String suffix, boolean truncate)
     {
-        final Set<String> result = new HashSet<>();
-        AMINO_ACID_TO_CODON_MAP.get(mSymbol).forEach(codon ->
+        Set<String> result = new HashSet<>();
+        AMINO_ACID_TO_CODON_MAP.get(Symbol).forEach(codon ->
         {
             if(codon.startsWith(prefix) && codon.endsWith(suffix))
             {
@@ -83,18 +76,18 @@ public class AminoAcid
             return false;
         }
         final AminoAcid aminoAcid = (AminoAcid) o;
-        return Objects.equals(mSymbol, aminoAcid.mSymbol);
+        return Objects.equals(Symbol, aminoAcid.Symbol);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(mSymbol);
+        return Objects.hashCode(Symbol);
     }
 
     @Override
     public String toString()
     {
-        return mSymbol;
+        return Symbol;
     }
 }

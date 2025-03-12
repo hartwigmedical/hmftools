@@ -9,20 +9,17 @@ import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 
-import org.jetbrains.annotations.NotNull;
-
 public class SingleAminoAcidVariant extends SingleCodonVariant
 {
-    @NotNull
     private final AminoAcidSpecification mAlt;
 
     public SingleAminoAcidVariant(
-            @NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
-            @NotNull final AminoAcidSpecification alt)
+            GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
+            AminoAcidSpecification alt)
     {
-        super(gene, transcript, aminoAcidSequence, alt.mPosition);
+        super(gene, transcript, aminoAcidSequence, alt.Position);
         this.mAlt = alt;
     }
 
@@ -32,9 +29,8 @@ public class SingleAminoAcidVariant extends SingleCodonVariant
         return completeReferenceAminoAcidSequence().replace(positionOfFirstAlteredCodon(), mAlt.value());
     }
 
-    @NotNull
     @Override
-    Set<CodonChange> possibleVariants(@NotNull final CodonWithinExons codon)
+    Set<CodonChange> possibleVariants(CodonWithinExons codon)
     {
         return codon.possibleVariantsGiving(mAlt.value());
     }

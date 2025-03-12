@@ -2,30 +2,24 @@ package com.hartwig.hmftools.pavereverse;
 
 import java.util.Objects;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class BaseSequenceChange
 {
-    @NotNull
     public final String Ref;
-    @NotNull
     public final String Alt;
-    @NotNull
-    public final String mChromosome;
-    public final int mPosition;
+    public final String Chromosome;
+    public final int Position;
 
-    public BaseSequenceChange(@NotNull final String ref, @NotNull final String alt, @NotNull final String chromosome, final int position)
+    public BaseSequenceChange(String ref, String alt, String chromosome, final int position)
     {
-        this.Ref = ref;
-        this.Alt = alt;
-        this.mChromosome = chromosome;
-        this.mPosition = position;
+        Ref = ref;
+        Alt = alt;
+        Chromosome = chromosome;
+        Position = position;
     }
 
-    @NotNull
     public String toCsv()
     {
-        return Ref + "," + Alt + "," + mPosition;
+        return Ref + "," + Alt + "," + Position;
     }
 
     @Override
@@ -34,8 +28,8 @@ public final class BaseSequenceChange
         return "BaseSequenceChange{" +
                 "Ref='" + Ref + '\'' +
                 ", Alt='" + Alt + '\'' +
-                ", Chromosome='" + mChromosome + '\'' +
-                ", Position=" + mPosition +
+                ", Chromosome='" + Chromosome + '\'' +
+                ", Position=" + Position +
                 '}';
     }
 
@@ -47,13 +41,14 @@ public final class BaseSequenceChange
             return false;
         }
         final BaseSequenceChange baseSequenceChange = (BaseSequenceChange) o;
-        return mPosition == baseSequenceChange.mPosition && Objects.equals(Ref, baseSequenceChange.Ref) && Objects.equals(Alt, baseSequenceChange.Alt)
-                && Objects.equals(mChromosome, baseSequenceChange.mChromosome);
+        return Position == baseSequenceChange.Position && Objects.equals(Ref, baseSequenceChange.Ref)
+                && Objects.equals(Alt, baseSequenceChange.Alt)
+                && Objects.equals(Chromosome, baseSequenceChange.Chromosome);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(Ref, Alt, mChromosome, mPosition);
+        return Objects.hash(Ref, Alt, Chromosome, Position);
     }
 }

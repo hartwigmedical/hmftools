@@ -15,8 +15,6 @@ import com.hartwig.hmftools.pavereverse.batch.BatchProcessor;
 import com.hartwig.hmftools.pavereverse.roundtrip.RoundTripChecker;
 import com.hartwig.hmftools.pavereverse.serve.ProcessServeData;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -25,19 +23,19 @@ public class ReversePaveApplication
     private final ReversePaveConfig mConfig;
     private final ReversePave reversePave;
 
-    public ReversePaveApplication(final ConfigBuilder configBuilder)
+    public ReversePaveApplication(ConfigBuilder configBuilder)
     {
         mConfig = new ReversePaveConfig(configBuilder);
-        reversePave = new ReversePave(mConfig.mEnsemblCache, mConfig.mEnsembleDataDir, mConfig.mRefGenome);
+        reversePave = new ReversePave(mConfig.EnsemblCache, mConfig.EnsembleDataDir, mConfig.RefGenome);
     }
 
     public void run()
     {
-        if(mConfig.mode.equals(ROUND_TRIP_MODE))
+        if(mConfig.Mode.equals(ROUND_TRIP_MODE))
         {
             roundTrip();
         }
-        else if(mConfig.mode.equals(SERVE_JSON_MODE))
+        else if(mConfig.Mode.equals(SERVE_JSON_MODE))
         {
             processServeJson();
         }
@@ -49,10 +47,10 @@ public class ReversePaveApplication
 
     private void processServeJson()
     {
-        ProcessServeData processServeData = new ProcessServeData(reversePave, mConfig.mRefGenVersion);
+        ProcessServeData processServeData = new ProcessServeData(reversePave, mConfig.RefGenVersion);
         try
         {
-            processServeData.checkServeData(mConfig.mServeJsonInputFile, mConfig.mTsvOuputFile);
+            processServeData.checkServeData(mConfig.ServeJsonInputFile, mConfig.TsvOuputFile);
         }
         catch(IOException e)
         {
@@ -65,7 +63,7 @@ public class ReversePaveApplication
         BatchProcessor batchProcessor = new BatchProcessor(reversePave);
         try
         {
-            batchProcessor.process(mConfig.mTsvInputFile, mConfig.mTsvOuputFile);
+            batchProcessor.process(mConfig.TsvInputFile, mConfig.TsvOuputFile);
         }
         catch(IOException e)
         {
@@ -77,7 +75,7 @@ public class ReversePaveApplication
     {
         RoundTripChecker checker = new RoundTripChecker(reversePave);
 
-        VcfFileReader vcfFileReader = new VcfFileReader(mConfig.mVcfFile, true);
+        VcfFileReader vcfFileReader = new VcfFileReader(mConfig.VcfFile, true);
         VCFHeader inputHeader = vcfFileReader.vcfHeader();
 
         for(VariantContext context : vcfFileReader.iterator())
@@ -89,7 +87,7 @@ public class ReversePaveApplication
         vcfFileReader.close();
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         ReversePaveConfig.addConfig(configBuilder);

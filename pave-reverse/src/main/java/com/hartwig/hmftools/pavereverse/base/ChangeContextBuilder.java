@@ -5,33 +5,29 @@ import java.util.List;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import org.jetbrains.annotations.NotNull;
-
 public class ChangeContextBuilder
 {
-    @NotNull
     public final ChangeContextData Data;
     public final ChangeContextData CompanionData;
 
-    public ChangeContextBuilder(@NotNull final ChangeContextData data, @NotNull final ChangeContextData companionData)
+    public ChangeContextBuilder(ChangeContextData data, ChangeContextData companionData)
     {
-        this.Data = data;
-        this.CompanionData = companionData;
+        Data = data;
+        CompanionData = companionData;
     }
 
-    public ChangeContextBuilder(final int exonIndex,
-            final int changeStart,
-            final int changeEnd,
-            final int paddingInPreviousExon,
-            final int paddingInNextExon,
-            final int numberOfCodonsStartingInPreviousExons)
+    public ChangeContextBuilder(int exonIndex,
+            int changeStart,
+            int changeEnd,
+            int paddingInPreviousExon,
+            int paddingInNextExon,
+            int numberOfCodonsStartingInPreviousExons)
     {
-        this.Data =
+        Data =
                 new ChangeContextData(exonIndex, changeStart, changeEnd, paddingInPreviousExon, paddingInNextExon, numberOfCodonsStartingInPreviousExons);
-        this.CompanionData = null;
+        CompanionData = null;
     }
 
-    @NotNull
     public ChangeContext build(String chromosome, RefGenomeInterface genome, List<ChrBaseRegion> codingRegions, boolean isPositiveStrand)
     {
         ChangeContext result = build(Data, chromosome, genome, codingRegions, isPositiveStrand);

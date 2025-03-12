@@ -9,36 +9,33 @@ import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Deletion extends ProteinVariant
 {
-    public Deletion(@NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
-            @NotNull final AminoAcidRange refRange)
+    public Deletion(GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
+            AminoAcidRange refRange)
     {
         super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
     }
 
-    @NotNull
     @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
         int start = context.StartPositionInExon;
         int end = context.FinishPositionInExon + 1;
-        String bases = context.mExon.baseSequenceWithFramePreservingDeletionApplied(start, end, context.IsPositiveStrand);
+        String bases = context.Exon.baseSequenceWithFramePreservingDeletionApplied(start, end, context.IsPositiveStrand);
         AminoAcidSequence resultSequence = AminoAcidSequence.fromNucleotides(bases);
         String deleted = context.refBases();
-        String altBases = deleted.substring(0,  1);
-        return Set.of(new ChangeResult(resultSequence, bases,context.positionOfChangeStartInStrand(), deleted, altBases));
+        String altBases = deleted.substring(0, 1);
+        return Set.of(new ChangeResult(resultSequence, bases, context.positionOfChangeStartInStrand(), deleted, altBases));
     }
 
     @Override
     AminoAcidSequence variantSequence()
     {
         int startOfDeletedSection = positionOfFirstAlteredCodon() - 1;
-        int endOfDeletedSection = startOfDeletedSection + this.mRefLength;
+        int endOfDeletedSection = startOfDeletedSection + this.RefLength;
         return completeReferenceAminoAcidSequence().deleteRange(startOfDeletedSection, endOfDeletedSection);
     }
 }

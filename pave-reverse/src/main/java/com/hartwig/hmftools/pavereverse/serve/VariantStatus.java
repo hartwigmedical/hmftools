@@ -1,85 +1,76 @@
 package com.hartwig.hmftools.pavereverse.serve;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
 
-import org.jetbrains.annotations.NotNull;
-
 class VariantStatus
 {
-    static VariantStatus withProcessingException(@NotNull final ProteinAnnotationCollator collator, final @NotNull Throwable e)
+    static VariantStatus withProcessingException(ProteinAnnotationCollator collator, Throwable e)
     {
         VariantStatus status = new VariantStatus((collator));
-        status.mProcessingError = e;
+        status.ProcessingError = e;
         return status;
     }
 
-    @NotNull
-    final ProteinAnnotationCollator collator;
+    final ProteinAnnotationCollator Collator;
+    Exception ParsingError = null;
+    Throwable ProcessingError = null;
+    BaseSequenceVariants Variant;
 
-    Exception mParseException = null;
-
-    Throwable mProcessingError = null;
-
-    BaseSequenceVariants variant;
-
-    VariantStatus(@NotNull final ProteinAnnotationCollator collator, BaseSequenceVariants variant)
+    VariantStatus(ProteinAnnotationCollator collator, BaseSequenceVariants variant)
     {
-        this.collator = collator;
-        this.variant = variant;
+        Collator = collator;
+        Variant = variant;
     }
 
-    VariantStatus(@NotNull final ProteinAnnotationCollator collator)
+    VariantStatus(ProteinAnnotationCollator collator)
     {
-        this.collator = collator;
+        Collator = collator;
     }
 
     boolean usesNonCanonicalTranscript()
     {
-        return !variant.mTranscript.IsCanonical;
+        return !Variant.Transcript.IsCanonical;
     }
 
     boolean parsedOk()
     {
-        return mParseException == null;
+        return ParsingError == null;
     }
 
     boolean hasProcessingError()
     {
-        return mProcessingError != null;
+        return ProcessingError != null;
     }
 
-    boolean hotspotsSame()
+    boolean haveSameChanges()
     {
-        var common = Sets.intersection(collator.hotspots, variant.changes());
+        var common = Sets.intersection(Collator.ChangeSequences, Variant.changes());
         if(!common.isEmpty())
         {
             return true;
         }
-        if(collator.mAnnotation.contains("ins"))
+        if(Collator.Annotation.contains("ins"))
         {
-            if(collator.hotspots.size() == 1 && variant.changes().size() == 1)
+            if(Collator.ChangeSequences.size() == 1 && Variant.changes().size() == 1)
             {
-                return hotspotsSameModuloAlt();
+                return changesSameModuloAlt();
             }
         }
 
-        if(collator.mAnnotation.endsWith("dup"))
+        if(Collator.Annotation.endsWith("dup"))
         {
-            if(collator.hotspots.size() == 1 && variant.changes().size() == 1)
+            if(Collator.ChangeSequences.size() == 1 && Variant.changes().size() == 1)
             {
-                return hotspotsSameModuloAlt();
+                return changesSameModuloAlt();
             }
 
-            return collator.hotspots.containsAll(variant.changes());
+            return Collator.ChangeSequences.containsAll(Variant.changes());
         }
-        if(collator.mAnnotation.endsWith("fs"))
+        if(Collator.Annotation.endsWith("fs"))
         {
-            if(collator.hotspots.containsAll(variant.changes()))
+            if(Collator.ChangeSequences.containsAll(Variant.changes()))
             {
                 return true;
             }
@@ -87,19 +78,19 @@ class VariantStatus
         return false;
     }
 
-    boolean hotspotsSameModuloAlt()
+    boolean changesSameModuloAlt()
     {
-        if(variant.changes().size() != 1)
+        if(Variant.changes().size() != 1)
         {
             return false;
         }
-        if(collator.hotspots.size() != 1)
+        if(Collator.ChangeSequences.size() != 1)
         {
             return false;
         }
-        BaseSequenceChange calculatedHS = variant.changes().iterator().next();
-        BaseSequenceChange givenHS = collator.hotspots.iterator().next();
-        if(calculatedHS.mPosition != givenHS.mPosition)
+        BaseSequenceChange calculatedHS = Variant.changes().iterator().next();
+        BaseSequenceChange givenHS = Collator.ChangeSequences.iterator().next();
+        if(calculatedHS.Position != givenHS.Position)
         {
             return false;
         }
@@ -107,6 +98,6 @@ class VariantStatus
         {
             return false;
         }
-        return givenHS.mChromosome.equals(calculatedHS.mChromosome);
+        return givenHS.Chromosome.equals(calculatedHS.Chromosome);
     }
 }

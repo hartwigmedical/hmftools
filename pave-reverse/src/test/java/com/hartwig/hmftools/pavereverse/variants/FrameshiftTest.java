@@ -54,11 +54,11 @@ public class FrameshiftTest extends VariantTest
         Set<ChangeResult> results = fs.applyChange(context);
         Assert.assertEquals(1, results.size());
         ChangeResult result = results.iterator().next();
-        Assert.assertEquals("MARRS", result.mAminoAcids.sequence());
-        String bases = result.mBases;
+        Assert.assertEquals("MARRS", result.Acids.sequence());
+        String bases = result.ExonBases;
         Assert.assertEquals("ATGGCCCGCAGGTCT", bases);
-        Assert.assertEquals(9 + 6 - 1, result.mLocation);
-        Assert.assertEquals("CG", result.mRefBases);
-        Assert.assertEquals("C", result.mAltBases);
+        Assert.assertEquals(9 + 6 - 1, result.Location);
+        Assert.assertEquals("CG", result.RefBases);
+        Assert.assertEquals("C", result.AltBases);
     }
 }

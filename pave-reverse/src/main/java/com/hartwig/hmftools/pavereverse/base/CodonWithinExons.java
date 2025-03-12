@@ -1,20 +1,17 @@
 package com.hartwig.hmftools.pavereverse.base;
 
-import static com.hartwig.hmftools.pavereverse.Checks.isNucleotideSequence;
+import static com.hartwig.hmftools.pavereverse.util.Checks.isNucleotideSequence;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
-
-import org.jetbrains.annotations.NotNull;
-
-import com.hartwig.hmftools.pavereverse.variants.CodonChange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcid;
+import com.hartwig.hmftools.pavereverse.variants.CodonChange;
 
 public class CodonWithinExons
 {
-    public static CodonWithinExons factory(@NotNull String left, @NotNull BaseSequence body, @NotNull String right)
+    public static CodonWithinExons factory(String left, BaseSequence body, String right)
     {
         Preconditions.checkArgument(left.isEmpty() || right.isEmpty());
         Preconditions.checkArgument(left.isEmpty() || isNucleotideSequence(left));
@@ -37,19 +34,16 @@ public class CodonWithinExons
         Body = body;
     }
 
-    @NotNull
     public String fixedPrefix()
     {
         return "";
     }
 
-    @NotNull
     public String fixedSuffix()
     {
         return "";
     }
 
-    @NotNull
     public String variablePart()
     {
         return Body.Bases;
@@ -67,13 +61,11 @@ public class CodonWithinExons
         return Body.Start + positionWithinCodonOfChange;
     }
 
-    @NotNull
     public Set<CodonChange> possibleVariantsGivingStop()
     {
         return possibleVariantsGiving(new AminoAcid("X"));
     }
 
-    @NotNull
     public Set<CodonChange> possibleVariantsGiving(AminoAcid aminoAcid)
     {
         Set<String> possibleCodons = aminoAcid.matchingCodons(fixedPrefix(), fixedSuffix());
@@ -82,13 +74,11 @@ public class CodonWithinExons
         return result;
     }
 
-    @NotNull
     public String codon()
     {
         return fixedPrefix() + variablePart() + fixedSuffix();
     }
 
-    @NotNull
     public CodonWithinExons reverseComplement()
     {
         return new CodonWithinExons(Body.reverseComplement());

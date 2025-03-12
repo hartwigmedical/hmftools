@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.util.BiConsumer;
-
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
+
+import org.apache.logging.log4j.util.BiConsumer;
 
 public class VariantsEncoder implements BiConsumer<VariantRow, DelimFileWriter.Row>
 {
@@ -27,7 +27,7 @@ public class VariantsEncoder implements BiConsumer<VariantRow, DelimFileWriter.R
     {
         row.set(GENE, variantRow.mGene);
         row.set(HGVS_PROTEIN, variantRow.mProteinHGSV);
-        row.set(CHROMOSOME, variantRow.mVariants.mChromosome);
+        row.set(CHROMOSOME, variantRow.mVariants.Chromosome);
         row.set(TRANSCRIPT, variantRow.mVariants.transcriptName());
         row.set(VARIANTS, encodeChanges(variantRow.mVariants.changes()));
     }

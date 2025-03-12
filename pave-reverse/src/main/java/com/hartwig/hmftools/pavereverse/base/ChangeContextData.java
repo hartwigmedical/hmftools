@@ -9,12 +9,12 @@ public class ChangeContextData
     public final int PaddingInNextExon;
     public final int AminoAcidNumberOfFirstAminoAcidStartingInExon;
 
-    public ChangeContextData(final int exonIndex,
-            final int changeStart,
-            final int changeEnd,
-            final int paddingInPreviousExon,
-            final int paddingInNextExon,
-            final int numberOfCodonsStartingInPreviousExons)
+    public ChangeContextData(int exonIndex,
+            int changeStart,
+            int changeEnd,
+            int paddingInPreviousExon,
+            int paddingInNextExon,
+            int numberOfCodonsStartingInPreviousExons)
     {
         ExonIndex = exonIndex;
         ChangeStart = changeStart;

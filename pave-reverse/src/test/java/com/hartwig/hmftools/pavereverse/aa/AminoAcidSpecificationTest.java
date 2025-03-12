@@ -65,7 +65,7 @@ public class AminoAcidSpecificationTest extends ReversePaveTestBase
         M   A   A   L   S   G   ... P V H X
          */
         final TranscriptData brafCanonicalTranscript = transcript("ENSG00000157764", "ENST00000646891");
-        final TranscriptAminoAcids brafCanonical = reversePave.mTranscriptAminoAcidsMap.get(brafCanonicalTranscript.TransName);
+        final TranscriptAminoAcids brafCanonical = reversePave.TranscriptAminoAcidsMap.get(brafCanonicalTranscript.TransName);
         final int brafLength = brafCanonical.AminoAcids.length();
         assertTrue(aas(1, "M").applies(brafCanonical));
         assertTrue(aas(2, "A").applies(brafCanonical));

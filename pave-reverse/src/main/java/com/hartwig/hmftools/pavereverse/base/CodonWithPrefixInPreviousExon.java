@@ -3,37 +3,32 @@ package com.hartwig.hmftools.pavereverse.base;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
-import org.jetbrains.annotations.NotNull;
-
 class CodonWithPrefixInPreviousExon extends CodonWithinExons
 {
-    @NotNull
-    private final String Prefix;
+    private final String mPrefix;
 
-    CodonWithPrefixInPreviousExon(@NotNull String prefix, final BaseSequence body)
+    CodonWithPrefixInPreviousExon(String prefix, BaseSequence body)
     {
         super(body);
-        this.Prefix = prefix;
+        mPrefix = prefix;
     }
 
     public int forwardStrandLocationOfChange(int positionWithinCodonOfChange)
     {
-        Preconditions.checkArgument(positionWithinCodonOfChange >= Prefix.length());
+        Preconditions.checkArgument(positionWithinCodonOfChange >= mPrefix.length());
         Preconditions.checkArgument(positionWithinCodonOfChange <= 2);
-        return Body.Start + positionWithinCodonOfChange - Prefix.length();
+        return Body.Start + positionWithinCodonOfChange - mPrefix.length();
     }
 
     @Override
-    @NotNull
     public CodonWithinExons reverseComplement()
     {
-        return new CodonWithSuffixInNextExon(Body.reverseComplement(), Nucleotides.reverseComplementBases(Prefix));
+        return new CodonWithSuffixInNextExon(Body.reverseComplement(), Nucleotides.reverseComplementBases(mPrefix));
     }
 
-    @NotNull
     @Override
     public String fixedPrefix()
     {
-        return Prefix;
+        return mPrefix;
     }
 }

@@ -24,15 +24,15 @@ public class InsertionTest extends VariantTest
 
         final Iterator<ChangeResult> iterator = results.iterator();
         ChangeResult result1 = iterator.next();
-        Assert.assertEquals("MAAYQV", result1.mAminoAcids.sequence());
-        String bases1 = result1.mBases;
+        Assert.assertEquals("MAAYQV", result1.Acids.sequence());
+        String bases1 = result1.ExonBases;
         Assert.assertTrue(bases1.startsWith(exon0Bases.substring(0,9)));
         Assert.assertTrue(bases1.endsWith(exon0Bases.substring(9)));
         Assert.assertEquals("Y", AminoAcidSequence.fromNucleotides(bases1.substring(9, 12)).sequence());
 
         ChangeResult result2 = iterator.next();
-        Assert.assertEquals("MAAYQV", result2.mAminoAcids.sequence());
-        String bases2 = result2.mBases;
+        Assert.assertEquals("MAAYQV", result2.Acids.sequence());
+        String bases2 = result2.ExonBases;
         Assert.assertTrue(bases2.startsWith(exon0Bases.substring(0,9)));
         Assert.assertTrue(bases2.endsWith(exon0Bases.substring(9)));
         Assert.assertEquals("Y", AminoAcidSequence.fromNucleotides(bases2.substring(9, 12)).sequence());
@@ -49,29 +49,11 @@ public class InsertionTest extends VariantTest
         Set<ChangeResult> results = insertion.applyChange(context);
         Assert.assertEquals(1, results.size());
         ChangeResult result = results.iterator().next();
-        Assert.assertEquals("MAASPQRQV", result.mAminoAcids.sequence());
-        String bases = result.mBases;
+        Assert.assertEquals("MAASPQRQV", result.Acids.sequence());
+        String bases = result.ExonBases;
         Assert.assertTrue(bases.startsWith(exon0Bases.substring(0,9)));
         Assert.assertTrue(bases.endsWith(exon0Bases.substring(9)));
         Assert.assertEquals("SPQR", AminoAcidSequence.fromNucleotides(bases.substring(9, 21)).sequence());
-    }
-
-//    @Test
-    public void applyChangeNegativeStrandTest()
-    {
-        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC", "TACG");
-        ChangeContext context = new ChangeContext(exon, 3, 4, false, 1);
-        Insertion insertion = new Insertion(gene, transcript, taa, aar, aaSeq("SPQR"));
-        Set<ChangeResult> results = insertion.applyChange(context);
-        Assert.assertEquals(1, results.size());
-        ChangeResult result = results.iterator().next();
-        Assert.assertEquals("MAASPQRQVAPAAS", result.mAminoAcids.sequence());
-        String bases = result.mBases;
-        Assert.assertTrue(bases.startsWith(exon0Bases.substring(0,3)));
-        Assert.assertTrue(bases.endsWith(exon0Bases.substring(4)));
-        String basesRC = Nucleotides.reverseComplementBases(bases);
-        String aminoAcidsFromBases = AminoAcidSequence.fromNucleotides(basesRC).sequence();
-        Assert.assertEquals("MAASPQRQVAPAAS", aminoAcidsFromBases);
     }
 
     @Test

@@ -19,7 +19,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
         BaseSequenceVariants variant = reversePave.calculateVariant("MTOR", transcriptId, "L2230V");
 
         assertEquals(transcriptId, variant.transcriptName());
-        assertEquals("1", variant.mChromosome);
+        assertEquals("1", variant.Chromosome);
         checkChanges(variant,
                 basesChange("A", "C", "chr1", 11_122_101),
                 basesChange("TAA", "GAC", "chr1", 11_122_099),
@@ -72,7 +72,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
         BaseSequenceVariants variant = reversePave.calculateVariant("MTOR:p.L2230V");
 
         assertEquals("ENST00000361445", variant.transcriptName());
-        assertEquals("1", variant.mChromosome);
+        assertEquals("1", variant.Chromosome);
         checkChanges(variant,
                 basesChange("A", "C", "chr1", 11_122_101),
                 basesChange("TAA", "GAC", "chr1", 11_122_099),
@@ -85,7 +85,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
     public void brafSNV()
     {
         BaseSequenceVariants variant = reversePave.calculateVariant("BRAF:p.V600E");
-        assertEquals("7", variant.mChromosome);
+        assertEquals("7", variant.Chromosome);
         checkChanges(variant,
                 basesChange("A", "T", "chr7", 140753336),
                 basesChange("CA", "TT", "chr7", 140753335)
@@ -127,7 +127,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
         // R is {CG*, AGG, AGA}. Need one of these from G**, *GT. Option is C -> G at 10142187
         BaseSequenceVariants record = reversePave.calculateVariant("VHL:p.G114R");
         assertEquals("ENST00000256474", record.transcriptName());
-        assertEquals("3", record.mChromosome);
+        assertEquals("3", record.Chromosome);
         checkSingleChange(record, "G", "C", "chr3", 10_142_187);
     }
 
@@ -147,7 +147,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
          */
         BaseSequenceVariants variant = reversePave.calculateVariant("TET2:p.Y1294A");
         assertEquals("ENST00000380013", variant.transcriptName()); // TransvarConvertTest has ENST00000540549
-        assertEquals("4", variant.mChromosome);
+        assertEquals("4", variant.Chromosome);
         //        assertEquals(10_142_187, record.Position); // serve example has 10_183_871, which is from v37, I think
 
         checkChanges(variant,
@@ -227,7 +227,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
  */
         BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.L747_A750delinsP");
         assertEquals("ENST00000275493", record.transcriptName());
-        assertEquals("7", record.mChromosome);
+        assertEquals("7", record.Chromosome);
         //        assertEquals(55_174_776, record.Position);
 
         Set<BaseSequenceChange> hotspots = record.changes();
@@ -263,7 +263,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
          */
         BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.A750_I759delinsG");
         assertEquals("ENST00000275493", record.transcriptName());
-        assertEquals("7", record.mChromosome);
+        assertEquals("7", record.Chromosome);
 
         Set<BaseSequenceChange> hotspots = record.changes();
         assertEquals(4, hotspots.size());
@@ -295,7 +295,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
          */
         BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.L747_K754delinsSPQ");
         assertEquals("ENST00000275493", record.transcriptName());
-        assertEquals("7", record.mChromosome);
+        assertEquals("7", record.Chromosome);
 
         Set<BaseSequenceChange> hotspots = record.changes();
         assertEquals(48, hotspots.size());
@@ -322,7 +322,7 @@ public final class ReversePaveTest extends ReversePaveTestBase
          */
         BaseSequenceVariants record =  reversePave.calculateVariant("VHL:p.A5_W8delinsM");
         assertEquals("ENST00000256474", record.transcriptName());
-        assertEquals("3", record.mChromosome);
+        assertEquals("3", record.Chromosome);
 
         checkSingleChange(record, "GCGGAGAACTG", "AT", "chr3", 10141860);
     }
@@ -342,7 +342,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
         BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.I744_K745delinsKIPVAI");
         assertEquals("ENST00000275493", record.transcriptName());
-        assertEquals("7", record.mChromosome);
+        assertEquals("7", record.Chromosome);
 
         Set<BaseSequenceChange> hotspots = record.changes();
         assertEquals(1152, hotspots.size());
@@ -369,7 +369,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
 
         BaseSequenceVariants record =  reversePave.calculateVariant("ZYX:p.P67_D70delinsWKY");
         assertEquals("ENST00000322764", record.transcriptName());
-        assertEquals("7", record.mChromosome);
+        assertEquals("7", record.Chromosome);
         //        assertEquals(143_381_770, record.Position);
 //        assertTrue(record.SpansMultipleExons);
 
@@ -407,7 +407,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
 
         BaseSequenceVariants record =  reversePave.calculateVariant("ZYX:p.E382_G385delinsDP");
         assertEquals("ENST00000322764", record.transcriptName());
-        assertEquals("7", record.mChromosome);
+        assertEquals("7", record.Chromosome);
         //        assertEquals(143_388_490, record.Position);
 //        assertTrue(record.SpansMultipleExons);
 
@@ -445,7 +445,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         */
         BaseSequenceVariants record =  reversePave.calculateVariant("VHL:p.R3_R4delinsQ");
         assertEquals("ENST00000256474", record.transcriptName());
-        assertEquals("3", record.mChromosome);
+        assertEquals("3", record.Chromosome);
 
         Set<BaseSequenceChange> hotspots = record.changes();
         assertEquals(2, hotspots.size());
@@ -478,7 +478,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
         BaseSequenceVariants record =  reversePave.calculateVariant("BRAF:p.A3_L4delinsE");
         assertEquals("ENST00000646891", record.transcriptName()); // canonical
-        assertEquals("7", record.mChromosome);
+        assertEquals("7", record.Chromosome);
 
         Set<BaseSequenceChange> hotspots = record.changes();
         assertEquals(2, hotspots.size());
@@ -506,7 +506,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
          */
         BaseSequenceVariants record = reversePave.calculateVariant("PIK3R1:p.E451_Y452delinsD");
         assertEquals("ENST00000521381", record.transcriptName()); // canonical
-        assertEquals("5", record.mChromosome);
+        assertEquals("5", record.Chromosome);
 
         Set<BaseSequenceChange> hotspots = record.changes();
         assertEquals(2, hotspots.size());
@@ -552,7 +552,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         BaseSequenceVariants record = reversePave.calculateVariant("PIK3R1:p.K459del");
         // EK: GAA AAA, G is at 68_293_781
         assertEquals("ENST00000521381", record.transcriptName()); // canonical
-        assertEquals("5", record.mChromosome);
+        assertEquals("5", record.Chromosome);
         checkSingleChange(record, "GAAA", "G", "chr5", 68_293_781);
 
         record = reversePave.calculateVariant("PIK3R1:p.D464del");
@@ -821,7 +821,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertEquals("G", hotspot.Ref);
         String codons = hotspot.Alt.substring(1);
         assertEquals("FARM", AminoAcidSequence.fromNucleotides(codons).sequence());
-        assertEquals(10_141_862, hotspot.mPosition);
+        assertEquals(10_141_862, hotspot.Position);
     }
 
     @Test
@@ -836,7 +836,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertEquals("C", hotspot.Ref);
         String codons = hotspot.Alt.substring(1);
         assertEquals("SH", AminoAcidSequence.fromNucleotides(codons).sequence());
-        assertEquals(55_181_328, hotspot.mPosition);
+        assertEquals(55_181_328, hotspot.Position);
     }
 
     @Test
@@ -859,7 +859,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         assertEquals("G", hotspot.Ref);
         String codons = hotspot.Alt.substring(1);
         assertEquals("GLVQVTGSSDNEYFYVDFREYE", AminoAcidSequence.fromNucleotides(codons).sequence());
-        assertEquals(10_141_862, hotspot.mPosition);
+        assertEquals(10_141_862, hotspot.Position);
     }
 
     @Test
@@ -966,5 +966,18 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
                 basesChange("T", "C", "chr17", 43_124_096),
                 basesChange("T", "G", "chr17", 43_124_096)
         );
+    }
+
+    @Test
+    public void length2Delins()
+    {
+        // Only the variants with the shortest edit distance should be returned.
+        BaseSequenceVariants variant = reversePave.calculateVariant("EGFR", "L858_A859delinsRS");
+        // CTG GCC -> {CG*, AGG, AGA}{TC*, AGC, AGT}. Variant with fewest changes is CGG TCC.
+        Set<BaseSequenceChange> hotspots = variant.changes();
+        assertEquals(1, hotspots.size());
+        BaseSequenceChange hotspot = hotspots.iterator().next();
+        assertEquals("TGG", hotspot.Ref);
+        assertEquals("GGT", hotspot.Alt);
     }
 }

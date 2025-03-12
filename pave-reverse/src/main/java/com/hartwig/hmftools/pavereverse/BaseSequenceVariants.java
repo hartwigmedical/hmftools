@@ -5,35 +5,26 @@ import java.util.Set;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class BaseSequenceVariants
 {
-    @NotNull
-    public final TranscriptData mTranscript;
-    @NotNull
-    public final String mChromosome;
-    @NotNull
-    final Set<BaseSequenceChange> mChanges;
+    public final TranscriptData Transcript;
+    public final String Chromosome;
+    final Set<BaseSequenceChange> Changes;
 
-    public BaseSequenceVariants(
-            @NotNull final TranscriptData transcript,
-            @NotNull final String chromosome,
-            @NotNull final Set<BaseSequenceChange> changes)
+    public BaseSequenceVariants(TranscriptData transcript, String chromosome, Set<BaseSequenceChange> changes)
     {
-        mTranscript = transcript;
-        mChromosome = RefGenomeFunctions.stripChrPrefix(chromosome);
-        mChanges = changes;
+        Transcript = transcript;
+        Chromosome = RefGenomeFunctions.stripChrPrefix(chromosome);
+        Changes = changes;
     }
 
     public String transcriptName()
     {
-        return mTranscript.TransName;
+        return Transcript.TransName;
     }
 
-    @NotNull
     public Set<BaseSequenceChange> changes()
     {
-        return mChanges;
+        return Changes;
     }
 }

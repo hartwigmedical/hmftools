@@ -23,18 +23,17 @@ import com.hartwig.hmftools.pavereverse.batch.VariantRow;
 import com.hartwig.hmftools.pavereverse.batch.VariantsEncoder;
 
 import org.apache.logging.log4j.util.BiConsumer;
-import org.jetbrains.annotations.NotNull;
 
 public class ProcessServeData
 {
-    private final Map<String, Set<ServeItem>> geneToItems = new HashMap<>();
-    private final ReversePave reversePave;
+    private final Map<String, Set<ServeItem>> mGeneToItems = new HashMap<>();
+    private final ReversePave mReversePave;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    public ProcessServeData(final ReversePave reversePave, final RefGenomeVersion refGenomeVersion)
+    public ProcessServeData(ReversePave reversePave, RefGenomeVersion refGenomeVersion)
     {
-        this.reversePave = reversePave;
-        this.mRefGenomeVersion = refGenomeVersion;
+        mReversePave = reversePave;
+        mRefGenomeVersion = refGenomeVersion;
     }
 
     public void checkServeData(String serveFilePath, String outputTsvFilePath) throws IOException
@@ -43,7 +42,7 @@ public class ProcessServeData
         BiConsumer<VariantRow, DelimFileWriter.Row> encoder = new VariantsEncoder();
         DelimFileWriter<VariantRow> writer = new DelimFileWriter<>(outputTsvFilePath, columns(), encoder);
         List<StatsForGene> results = new ArrayList<>();
-        for(String gene : geneToItems.keySet())
+        for(String gene : mGeneToItems.keySet())
         {
             results.add(processVariantsForGene(gene, writer));
         }
@@ -79,11 +78,11 @@ public class ProcessServeData
                 continue;
             }
             ServeItem item = new ServeItem(gene, annotation, chromosome, ref, alt, position);
-            if(!geneToItems.containsKey(gene))
+            if(!mGeneToItems.containsKey(gene))
             {
-                geneToItems.put(gene, new HashSet<>());
+                mGeneToItems.put(gene, new HashSet<>());
             }
-            geneToItems.get(gene).add(item);
+            mGeneToItems.get(gene).add(item);
         }
     }
 
@@ -92,7 +91,7 @@ public class ProcessServeData
         return jsonObject.get(key).getAsString();
     }
 
-    private void reportResults(@NotNull List<StatsForGene> statsForGenes)
+    private void reportResults(List<StatsForGene> statsForGenes)
     {
         int numberOfGenes = 0;
         int numberNotParsed = 0;
@@ -115,10 +114,11 @@ public class ProcessServeData
             numberWithProcessingError += stats.NumberWithProcessingError;
             numberWithVariantsAcrossMultipleExons += stats.NumberWithChangesAcrossMultipleExons;
             numberForWhichNoVariantCouldBeCalculated += stats.NumberForWhichNoVariantCouldBeCalculated;
-            stats.Differences.forEach(d -> {
-                Integer typeCount = differenceTypes.remove(d.type);
+            stats.Differences.forEach(d ->
+            {
+                Integer typeCount = differenceTypes.remove(d.mType);
                 Integer newCount = typeCount == null ? 1 : typeCount + 1;
-                differenceTypes.put(d.type, newCount);
+                differenceTypes.put(d.mType, newCount);
             });
         }
         p("OVERALL STATS");
@@ -138,7 +138,7 @@ public class ProcessServeData
     private StatsForGene processVariantsForGene(String gene, DelimFileWriter<VariantRow> outputWriter)
     {
         Map<String, ProteinAnnotationCollator> collators = new HashMap<>();
-        geneToItems.get(gene).forEach(serveItem ->
+        mGeneToItems.get(gene).forEach(serveItem ->
         {
             if(!collators.containsKey(serveItem.Annotation))
             {
@@ -146,7 +146,7 @@ public class ProcessServeData
             }
             collators.get(serveItem.Annotation).addHotspot(serveItem);
         });
-        final StatsForGene statsForGene = new StatsForGene(reversePave, gene);
+        final StatsForGene statsForGene = new StatsForGene(mReversePave, gene);
         collators.keySet().forEach(annotation ->
         {
             ProteinAnnotationCollator collator = collators.get(annotation);
@@ -155,11 +155,11 @@ public class ProcessServeData
             {
                 if(comparison.hasProcessingError())
                 {
-                    String msg = comparison.mProcessingError.getMessage();
+                    String msg = comparison.ProcessingError.getMessage();
                     if(msg == null)
                     {
                         p("This one had an error with no message: " + collator);
-                        p("The processing error was: " + comparison.mProcessingError);
+                        p("The processing error was: " + comparison.ProcessingError);
                         statsForGene.NumberWithProcessingError++;
                     }
                     else
@@ -192,7 +192,7 @@ public class ProcessServeData
                 {
                     statsForGene.recordResultsForAnnotation(comparison);
                     statsForGene.NumberProcessedWithoutError++;
-                    outputWriter.writeRow(new VariantRow(comparison.collator.mGene, comparison.collator.mAnnotation, comparison.variant));
+                    outputWriter.writeRow(new VariantRow(comparison.Collator.Gene, comparison.Collator.Annotation, comparison.Variant));
                 }
             }
             else
@@ -209,7 +209,7 @@ public class ProcessServeData
         try
         {
             BaseSequenceVariants baseSequenceVariants =
-                    reversePave.calculateVariantAllowMultipleNonCanonicalTranscriptMatches(collator.mGene, collator.mAnnotation);
+                    mReversePave.calculateVariantAllowMultipleNonCanonicalTranscriptMatches(collator.Gene, collator.Annotation);
             return new VariantStatus(collator, baseSequenceVariants);
         }
         catch(Throwable t)

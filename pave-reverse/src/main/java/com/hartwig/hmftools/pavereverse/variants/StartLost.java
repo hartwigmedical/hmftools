@@ -13,14 +13,12 @@ import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 
-import org.jetbrains.annotations.NotNull;
-
 public class StartLost extends SingleCodonVariant
 {
-    public StartLost(@NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
-            @NotNull final AminoAcidRange refRange)
+    public StartLost(GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
+            AminoAcidRange refRange)
     {
         super(gene, transcript, aminoAcidSequence, refRange.startPosition());
         Preconditions.checkArgument(refRange.length() == 1);
@@ -34,9 +32,8 @@ public class StartLost extends SingleCodonVariant
         return AminoAcidSequence.empty();
     }
 
-    @NotNull
     @Override
-    Set<CodonChange> possibleVariants(@NotNull final CodonWithinExons codon)
+    Set<CodonChange> possibleVariants(CodonWithinExons codon)
     {
         Set<CodonChange> changes = new HashSet<>();
         changes.add(new CodonChange("ATG", "ATA"));

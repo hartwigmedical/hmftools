@@ -6,36 +6,32 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
-
 import com.hartwig.hmftools.pavereverse.aa.AminoAcid;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 public class Frameshift extends ProteinVariant
 {
-    @NotNull
-    public final AminoAcid mFirstChangedAminoAcid;
+    public final AminoAcid FirstChangedAminoAcid;
 
-    public Frameshift(@NotNull final GeneData gene,
-            @NotNull final TranscriptData transcript,
-            @NotNull final TranscriptAminoAcids aminoAcidSequence,
-            @NotNull final AminoAcidRange refRange)
+    public Frameshift(GeneData gene,
+            TranscriptData transcript,
+            TranscriptAminoAcids aminoAcidSequence,
+            AminoAcidRange refRange)
     {
         super(gene, transcript, aminoAcidSequence, refRange.startPosition(), refRange.length());
         Preconditions.checkArgument(refRange.length() == 1);
-        mFirstChangedAminoAcid = refRange.aminoAcidAtStart();
+        FirstChangedAminoAcid = refRange.aminoAcidAtStart();
     }
 
-    @NotNull
     @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
         Pair<String, String> baseToLeftAndBaseDeleted = context.forwardStrandBaseAndLeftNeighbour();
-        String newBases = context.mExon.baseSequenceWithSingleBaseRemoved(context.StartPositionInExon, context.IsPositiveStrand);
+        String newBases = context.Exon.baseSequenceWithSingleBaseRemoved(context.StartPositionInExon, context.IsPositiveStrand);
         AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
         String alt = baseToLeftAndBaseDeleted.getLeft();
         String ref = alt + baseToLeftAndBaseDeleted.getRight();
@@ -62,6 +58,6 @@ public class Frameshift extends ProteinVariant
         {
             return false;
         }
-        return !candidate.get(variantSequence().length()).equals(mFirstChangedAminoAcid);
+        return !candidate.get(variantSequence().length()).equals(FirstChangedAminoAcid);
     }
 }

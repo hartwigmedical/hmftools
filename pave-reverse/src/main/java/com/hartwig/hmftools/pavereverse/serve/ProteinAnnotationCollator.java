@@ -7,35 +7,26 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
 
-import org.jetbrains.annotations.NotNull;
-
 class ProteinAnnotationCollator
 {
-    @NotNull
-    final String mChromosome;
-
-    @NotNull
-    final String mGene;
-
-    @NotNull
-    final String mAnnotation;
-
-    @NotNull
-    Set<BaseSequenceChange> hotspots = new HashSet<>();
+    final String Chromosome;
+    final String Gene;
+    final String Annotation;
+    Set<BaseSequenceChange> ChangeSequences = new HashSet<>();
 
     public ProteinAnnotationCollator(ServeItem serveItem)
     {
-        mChromosome = serveItem.Chromosome;
-        mGene = serveItem.Gene;
-        mAnnotation = serveItem.Annotation;
+        Chromosome = serveItem.Chromosome;
+        Gene = serveItem.Gene;
+        Annotation = serveItem.Annotation;
     }
 
     public void addHotspot(ServeItem serveItem)
     {
-        Preconditions.checkArgument(serveItem.Chromosome.equals(mChromosome));
-        Preconditions.checkArgument(serveItem.Gene.equals(mGene));
-        Preconditions.checkArgument(serveItem.Annotation.equals(mAnnotation));
-        hotspots.add(new BaseSequenceChange(serveItem.Ref, serveItem.Alt, mChromosome, serveItem.Position));
+        Preconditions.checkArgument(serveItem.Chromosome.equals(Chromosome));
+        Preconditions.checkArgument(serveItem.Gene.equals(Gene));
+        Preconditions.checkArgument(serveItem.Annotation.equals(Annotation));
+        ChangeSequences.add(new BaseSequenceChange(serveItem.Ref, serveItem.Alt, Chromosome, serveItem.Position));
     }
 
     @Override
@@ -46,23 +37,23 @@ class ProteinAnnotationCollator
             return false;
         }
         final ProteinAnnotationCollator that = (ProteinAnnotationCollator) o;
-        return Objects.equals(mChromosome, that.mChromosome) && Objects.equals(mGene, that.mGene)
-                && Objects.equals(mAnnotation, that.mAnnotation);
+        return Objects.equals(Chromosome, that.Chromosome) && Objects.equals(Gene, that.Gene)
+                && Objects.equals(Annotation, that.Annotation);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mChromosome, mGene, mAnnotation);
+        return Objects.hash(Chromosome, Gene, Annotation);
     }
 
     @Override
     public String toString()
     {
         return "ProteinAnnotationCollator{" +
-                "mChromosome='" + mChromosome + '\'' +
-                ", mGene='" + mGene + '\'' +
-                ", mAnnotation='" + mAnnotation + '\'' +
+                "mChromosome='" + Chromosome + '\'' +
+                ", mGene='" + Gene + '\'' +
+                ", mAnnotation='" + Annotation + '\'' +
                 '}';
     }
 }

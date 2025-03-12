@@ -1,25 +1,28 @@
 package com.hartwig.hmftools.pavereverse.serve;
 
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
-import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
 import com.hartwig.hmftools.pavereverse.ReversePave;
+import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
 
 class DifferenceWithTransvar
 {
-    public final BaseSequenceVariants variant;
-    public final ProteinAnnotationCollator collator;
-    public final String type;
+    public final BaseSequenceVariants mVariant;
+    public final ProteinAnnotationCollator mCollator;
+    public final String mType;
 
-    DifferenceWithTransvar(final VariantStatus variantStatus, ReversePave baseSequenceVariantsCalculator)
+    DifferenceWithTransvar(VariantStatus variantStatus, ReversePave baseSequenceVariantsCalculator)
     {
-        this.variant = variantStatus.variant;
-        this.collator = variantStatus.collator;
+        this.mVariant = variantStatus.Variant;
+        this.mCollator = variantStatus.Collator;
         ProteinVariant transvalVariant =
-                baseSequenceVariantsCalculator.variationParser().parseGeneVariants(collator.mGene, collator.mAnnotation).iterator().next();
-        type = transvalVariant.getClass().getSimpleName();
-        System.out.println(type + " difference for: " + collator.mGene + " " + collator.mAnnotation
-                + ", calculated: " + variant.transcriptName() + " canonical: " + variant.mTranscript.IsCanonical
-                + " " + variant.changes()
-                + " from transvar: " + collator.hotspots);
+                baseSequenceVariantsCalculator.variationParser()
+                        .parseGeneVariants(mCollator.Gene, mCollator.Annotation)
+                        .iterator()
+                        .next();
+        mType = transvalVariant.getClass().getSimpleName();
+        System.out.println(mType + " difference for: " + mCollator.Gene + " " + mCollator.Annotation
+                + ", calculated: " + mVariant.transcriptName() + " canonical: " + mVariant.Transcript.IsCanonical
+                + " " + mVariant.changes()
+                + " from transvar: " + mCollator.ChangeSequences);
     }
 }

@@ -20,58 +20,59 @@ import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
  */
 public class ReversePave
 {
-    public final RefGenomeInterface mRefGenome;
-    public final EnsemblDataCache mEnsemblCache;
-    public final Map<String, TranscriptAminoAcids> mTranscriptAminoAcidsMap = new HashMap<>();
+    public final RefGenomeInterface RefGenome;
+    public final EnsemblDataCache EnsemblCache;
+    public final Map<String, TranscriptAminoAcids> TranscriptAminoAcidsMap = new HashMap<>();
 
-    public ReversePave(final EnsemblDataCache ensemblCache, final String ensemblDataPath, final RefGenomeInterface refGenome)
+    public ReversePave(EnsemblDataCache ensemblCache, String ensemblDataPath, RefGenomeInterface refGenome)
     {
-        mEnsemblCache = ensemblCache;
-        mRefGenome = refGenome;
-        mEnsemblCache.setRequiredData(true, true, true, false);
-        mEnsemblCache.load(false);
-        mEnsemblCache.createTranscriptIdMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataPath, mTranscriptAminoAcidsMap, List.of(), false);
+        EnsemblCache = ensemblCache;
+        RefGenome = refGenome;
+        EnsemblCache.setRequiredData(true, true, true, false);
+        EnsemblCache.load(false);
+        EnsemblCache.createTranscriptIdMap();
+        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataPath, TranscriptAminoAcidsMap, List.of(), false);
     }
 
-    public ReversePave(final File ensemblDataDir, final RefGenomeVersion genomeVersion, final RefGenomeInterface refGenome)
+    public ReversePave(File ensemblDataDir, RefGenomeVersion genomeVersion, RefGenomeInterface refGenome)
     {
         this(new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), genomeVersion), ensemblDataDir.getAbsolutePath(), refGenome);
     }
 
     public VariantParser variationParser()
     {
-        return new VariantParser(mEnsemblCache, mTranscriptAminoAcidsMap);
+        return new VariantParser(EnsemblCache, TranscriptAminoAcidsMap);
     }
 
     public BaseSequenceVariants calculateVariant(String proteinVariant)
     {
         ProteinVariant variant = variationParser().parse(proteinVariant);
-        return variant.calculateVariant(mRefGenome);
+        return variant.calculateVariant(RefGenome);
     }
 
     public BaseSequenceVariants calculateVariant(String gene, String proteinVariant)
     {
         ProteinVariant variant = variationParser().parseGeneVariant(gene, proteinVariant);
-        return variant.calculateVariant(mRefGenome);
+        return variant.calculateVariant(RefGenome);
     }
 
     public BaseSequenceVariants calculateVariant(String gene, String transcriptId, String proteinVariant)
     {
         ProteinVariant variant = variationParser().parseGeneVariant(gene, transcriptId, proteinVariant);
-        return variant.calculateVariant(mRefGenome);
+        return variant.calculateVariant(RefGenome);
     }
 
     public BaseSequenceVariants calculateVariantAllowMultipleNonCanonicalTranscriptMatches(String gene, String proteinVariant)
     {
         Set<ProteinVariant> allMatchingVariants = variationParser().parseGeneVariants(gene, proteinVariant);
-        Map<String, BaseSequenceVariants> transcriptIdToVariant  = new HashMap<>();
-        allMatchingVariants.forEach(variant -> {
+        Map<String, BaseSequenceVariants> transcriptIdToVariant = new HashMap<>();
+        allMatchingVariants.forEach(variant ->
+        {
             try
             {
-                transcriptIdToVariant.put(variant.mTranscript.TransName, variant.calculateVariant(mRefGenome));
+                transcriptIdToVariant.put(variant.Transcript.TransName, variant.calculateVariant(RefGenome));
             }
-            catch (IllegalArgumentException e)
+            catch(IllegalArgumentException e)
             {
                 // eg incomplete transcript... just ignore it.
             }
@@ -88,14 +89,15 @@ public class ReversePave
         else
         {
             BaseSequenceVariants example = transcriptIdToVariant.values().iterator().next();
-            transcriptIdToVariant.values().forEach(variant -> {
-               if(!variant.changes().equals(example.changes()))
-               {
-                   String name1 = variant.mTranscript.TransName;
-                   String name2 = example.mTranscript.TransName;
-                   String msg = format("Transcripts %s and %s both match %s but produce different hotspots", name1, name2, proteinVariant);
-                   throw new IllegalArgumentException(msg);
-               }
+            transcriptIdToVariant.values().forEach(variant ->
+            {
+                if(!variant.changes().equals(example.changes()))
+                {
+                    String name1 = variant.Transcript.TransName;
+                    String name2 = example.Transcript.TransName;
+                    String msg = format("Transcripts %s and %s both match %s but produce different hotspots", name1, name2, proteinVariant);
+                    throw new IllegalArgumentException(msg);
+                }
             });
             return example;
         }

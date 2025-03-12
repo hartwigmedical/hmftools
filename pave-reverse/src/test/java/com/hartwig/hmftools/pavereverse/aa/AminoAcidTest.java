@@ -47,8 +47,8 @@ public class AminoAcidTest extends ReversePaveTestBase
     @Test
     public void isConvertedToSingleLetter()
     {
-        Assert.assertEquals("A", new AminoAcid("A").mSymbol);
-        Assert.assertEquals("A", new AminoAcid("Ala").mSymbol);
+        Assert.assertEquals("A", new AminoAcid("A").Symbol);
+        Assert.assertEquals("A", new AminoAcid("Ala").Symbol);
     }
 
     @Test
