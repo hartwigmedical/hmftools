@@ -5,9 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
-import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
-import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
@@ -21,13 +18,13 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.collect.UnionFind;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -480,11 +477,24 @@ public class UmiGroupBuilder
         if(!umiConfig.Duplex)
             return;
 
-        // add single fragments as umi groups
+        // early exit: there are no fragments with unmapped mates
+        boolean hasUnmappedMateFragments = Stream.concat(
+                        umiGroups.stream().map(DuplicateGroup::fragmentCoordinates),
+                        singleFragments.stream().map(ReadInfo::coordinates))
+                .anyMatch(x -> !x.UnmappedSourced && x.PositionUpper == NO_POSITION);
+        if(!hasUnmappedMateFragments)
+            return;
+
+        // add single fragments as umiGroups
         for(ReadInfo readInfo : singleFragments)
         {
-            DuplicateGroup umiGroup = new DuplicateGroup(Lists.newArrayList(readInfo.read()), readInfo.coordinates());
-            umiGroups.add(umiGroup);
+            SAMRecord read = readInfo.read();
+            FragmentCoords currentCoords = readInfo.coordinates();
+            FragmentCoords preCollapsedCoords = readInfo.preCollapsedCoordinates();
+            String umiId = umiConfig.extractUmiId(read.getReadName());
+            DuplicateGroup duplicateGroup = new DuplicateGroup(umiId, Lists.newArrayList(read), preCollapsedCoords);
+            duplicateGroup.updateFragmentCoordinates(currentCoords);
+            umiGroups.add(duplicateGroup);
         }
 
         singleFragments.clear();
@@ -494,27 +504,19 @@ public class UmiGroupBuilder
         SortedMap<Integer, SortedSet<Integer>> unmappedMateGroupsIndices = Maps.newTreeMap();
         for(int i = 0; i < umiGroups.size(); i++)
         {
-            DuplicateGroup umiGroup = umiGroups.get(i);
+            DuplicateGroup duplicateGroup = umiGroups.get(i);
             umiGroupMerger.add(i);
-            FragmentCoords coords = umiGroup.fragmentCoordinates();
-            if(coords.PositionUpper != NO_POSITION)
+            FragmentCoords coords = duplicateGroup.fragmentCoordinates();
+            if(coords.UnmappedSourced || coords.PositionUpper != NO_POSITION)
                 continue;
 
-            if(coords.UnmappedSourced)
+            String umiId = duplicateGroup.umiId();
+            if(umiId.charAt(umiId.length() - 1) != 'G')
                 continue;
 
-            for(SAMRecord read : umiGroup.reads())
+            for(FragmentCoords preCollapsedCoords : duplicateGroup.preCollapsedFragmentCoordinates())
             {
-                // we must recompute 5' position, since duplicate group collapsing may distort this
-                Orientation readOrient = read.getReadNegativeStrandFlag() ? REVERSE : FORWARD;
-                int position = read.getCigar() != null ?
-                        getFivePrimeUnclippedPosition(read) :
-                        getFivePrimeUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readOrient.isForward());
-
-                String umiId = umiConfig.extractUmiId(read.getReadName());
-                if(umiId.charAt(umiId.length() - 1) != 'G')
-                    continue;
-
+                int position = preCollapsedCoords.ReadIsLower ? preCollapsedCoords.PositionLower : preCollapsedCoords.PositionUpper;
                 unmappedMateGroupsIndices.computeIfAbsent(position, key -> Sets.newTreeSet());
                 unmappedMateGroupsIndices.get(position).add(i);
             }
@@ -523,18 +525,15 @@ public class UmiGroupBuilder
         // merge other umi groups into the above umi groups with unmapped mate
         for(int i = 0; i < umiGroups.size(); i++)
         {
-            DuplicateGroup umiGroup = umiGroups.get(i);
-            if(umiGroup.fragmentCoordinates().UnmappedSourced)
+            DuplicateGroup duplicateGroup = umiGroups.get(i);
+            if(duplicateGroup.fragmentCoordinates().UnmappedSourced)
                 continue;
 
-            for(SAMRecord read : umiGroup.reads())
-            {
-                String umiId = umiConfig.extractUmiId(read.getReadName());
-                Orientation readOrient = read.getReadNegativeStrandFlag() ? REVERSE : FORWARD;
-                int position = read.getCigar() != null ?
-                        getFivePrimeUnclippedPosition(read) :
-                        getFivePrimeUnclippedPosition(read.getAlignmentStart(), read.getCigarString(), readOrient.isForward());
+            String umiId = duplicateGroup.umiId();
 
+            for(FragmentCoords preCollapsedCoords : duplicateGroup.preCollapsedFragmentCoordinates())
+            {
+                int position = preCollapsedCoords.ReadIsLower ? preCollapsedCoords.PositionLower : preCollapsedCoords.PositionUpper;
                 SortedSet<Integer> unmappedMateGroupIndices = unmappedMateGroupsIndices.get(position);
                 if(unmappedMateGroupIndices == null)
                     continue;
@@ -545,27 +544,23 @@ public class UmiGroupBuilder
                         continue;
 
                     DuplicateGroup unmappedMateGroup = umiGroups.get(j);
+                    String unmappedMateUmiId = unmappedMateGroup.umiId();
+                    String unmappedMateUmiIdPrefix = trimPolyGTail(unmappedMateUmiId);
+                    String umiIdPrefix = trimPolyGTail(umiId);
+                    int trimmedLength = min(unmappedMateUmiIdPrefix.length(), umiIdPrefix.length());
+                    unmappedMateUmiIdPrefix = unmappedMateUmiIdPrefix.substring(0, trimmedLength);
+                    umiIdPrefix = umiIdPrefix.substring(0, trimmedLength);
+                    if(!umiIdPrefix.equals(unmappedMateUmiIdPrefix))
+                        continue;
+
                     boolean merge = false;
-                    for(SAMRecord unmappedMateRead : unmappedMateGroup.reads())
+                    for(FragmentCoords unmappedMateCoords : unmappedMateGroup.preCollapsedFragmentCoordinates())
                     {
-                        Orientation unmappedMateReadOrient = unmappedMateRead.getReadNegativeStrandFlag() ? REVERSE : FORWARD;
-                        int unmappedMateReadPosition = unmappedMateRead.getCigar() != null ?
-                                getFivePrimeUnclippedPosition(unmappedMateRead) :
-                                getFivePrimeUnclippedPosition(unmappedMateRead.getAlignmentStart(), unmappedMateRead.getCigarString(), unmappedMateReadOrient.isForward());
+                        int unmappedMateReadPosition = unmappedMateCoords.ReadIsLower
+                                ? unmappedMateCoords.PositionLower
+                                : unmappedMateCoords.PositionUpper;
 
                         if(unmappedMateReadPosition != position)
-                            continue;
-
-                        String unmappedMateUmiId = umiConfig.extractUmiId(unmappedMateRead.getReadName());
-                        if(unmappedMateUmiId.charAt(unmappedMateUmiId.length() - 1) != 'G')
-                            continue;
-
-                        String unmappedMateUmiIdPrefix = trimPolyGTail(unmappedMateUmiId);
-                        String umiIdPrefix = trimPolyGTail(umiId);
-                        int trimmedLength = min(unmappedMateUmiIdPrefix.length(), umiIdPrefix.length());
-                        unmappedMateUmiIdPrefix = unmappedMateUmiIdPrefix.substring(0, trimmedLength);
-                        umiIdPrefix = umiIdPrefix.substring(0, trimmedLength);
-                        if(!umiIdPrefix.equals(unmappedMateUmiIdPrefix))
                             continue;
 
                         merge = true;
@@ -602,12 +597,6 @@ public class UmiGroupBuilder
             }
 
             DuplicateGroup baseGroup = partitionGroups.get(firstFullyMappedGroupIdx);
-            if(baseGroup.umiId() == null)
-            {
-                String umiId = umiConfig.extractUmiId(baseGroup.reads().get(0).getReadName());
-                baseGroup = new DuplicateGroup(umiId, baseGroup.reads(), baseGroup.fragmentCoordinates());
-            }
-
             for(int i = 0; i < partitionGroups.size(); i++)
             {
                 if(i == firstFullyMappedGroupIdx)
