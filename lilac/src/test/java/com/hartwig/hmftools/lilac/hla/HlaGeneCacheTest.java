@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -24,7 +23,7 @@ public class HlaGeneCacheTest
 
         assertEquals(3, hlaTranscriptMap.size());
 
-        GeneCache geneCache = new GeneCache(hlaTranscriptMap, Collections.emptyList(), Collections.emptyList());
+        GeneCache geneCache = new GeneCache(hlaTranscriptMap);
 
         assertEquals(3, geneCache.GeneIds.size());
 

@@ -24,53 +24,13 @@ public class GeneCache
 
     public final int ExpectAlleleCount;
 
-    public final List<String> ExcludedAlleles;
-    public final List<String> StopLossAlleles;
-
     public final Map<String,List<Integer>> AminoAcidExonBoundaries;
     public final int MaxCommonAminoAcidExonBoundary;
 
     public final Map<String,List<Integer>> NucleotideExonBoundaries;
     public final Map<String,Integer> NucleotideLengths;
 
-    /*
-    public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
-    public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
-
-    public static final int EXPECTED_ALLELE_COUNT = 6;
-
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191", "A*02:783", "B*07:282");
-
-    // common INDEL associated with allele C*04:09N
-    public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
-
-    public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
-    public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);
-    public static final List<Integer> C_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 338, 349, 365);
-
-    public static final int NUC_LENGTH_A = 1098;
-    public static final int NUC_LENGTH_B = 1089;
-    public static final int NUC_LENGTH_C = 1101;
-
-    public static final int MAX_AMINO_ACID_BOUNDARY = 298;
-
-    public static final Map<String,List<Integer>> NUCLEOTIDE_EXON_BOUNDARIES = Maps.newHashMap();
-
-    // common routines using constants
-    public static List<Integer> getAminoAcidExonBoundaries(final String gene)
-    {
-        return gene.equals(GENE_A) ? A_EXON_BOUNDARIES : (gene.equals(GENE_B) ? B_EXON_BOUNDARIES : C_EXON_BOUNDARIES);
-    }
-
-    public static List<Integer> getNucleotideExonBoundaries(final String gene)
-    {
-        return NUCLEOTIDE_EXON_BOUNDARIES.get(gene);
-    }
-
-    */
-
-    public GeneCache(
-            final Map<String,TranscriptData> hlaTranscriptMap, final List<String> excludedAlleles, final List<String> stopLossAlleles)
+    public GeneCache(final Map<String,TranscriptData> hlaTranscriptMap)
     {
         GeneTranscriptMap = hlaTranscriptMap;
 
@@ -79,9 +39,6 @@ public class GeneCache
         GeneIds = GeneNames.stream().map(x -> shortGeneName(x)).collect(Collectors.toList());
 
         ExpectAlleleCount = GeneIds.size() * 2;
-
-        ExcludedAlleles = excludedAlleles;
-        StopLossAlleles = stopLossAlleles;
 
         AminoAcidExonBoundaries = Maps.newHashMap();
         NucleotideExonBoundaries = Maps.newHashMap();
