@@ -95,14 +95,41 @@ public class ComplexBuilder
 
         candidatesAfterUniqueGroups.addAll(commonAllelesInDiscardedUniqueGroups);
 
+        LL_LOGGER.debug("  keeping {} common allele(s) in discarded unique groups: {}",
+                commonAllelesInDiscardedUniqueGroups.size(), HlaAllele.toString(commonAllelesInDiscardedUniqueGroups));
+
+        // ensure that common alleles from the same 2-digit group as alleles with wildcards are kept
+        Set<HlaAllele> wilcardAlleleGroups = candidatesAfterUniqueGroups.stream()
+                .filter(x -> x.hasWildcards())
+                .map(x -> x.asAlleleGroup())
+                .collect(Collectors.toSet());
+
+        List<HlaAllele> commonAllelesFromSameGroupAsWildcardAlleles = mRefData.CommonAlleles.stream()
+                .filter(x -> !candidatesAfterUniqueGroups.contains(x))
+                .filter(x -> wilcardAlleleGroups.contains(x.asAlleleGroup()))
+                .collect(Collectors.toList());
+
+        candidatesAfterUniqueGroups.addAll(commonAllelesFromSameGroupAsWildcardAlleles);
+
+        LL_LOGGER.debug("  keeping {} common allele(s) in the same 2-digit group as wildcard allele candidates: {}",
+                commonAllelesFromSameGroupAsWildcardAlleles.size(), HlaAllele.toString(commonAllelesFromSameGroupAsWildcardAlleles));
+
         // ensure known stop-loss alleles are kept
-        recoveredAlleles.stream()
+        List<HlaAllele> allelesWithStopLossIndel = recoveredAlleles.stream()
                 .filter(x -> mRefData.KnownStopLossIndelAlleles.containsValue(x))
                 .filter(x -> !candidatesAfterUniqueGroups.contains(x))
-                .forEach(x -> candidatesAfterUniqueGroups.add(x));
+                .collect(Collectors.toList());
 
-        mConfirmedRecoveredAlleles.addAll(recoveredAlleles.stream()
-                .filter(x -> candidatesAfterUniqueGroups.contains(x)).collect(Collectors.toList()));
+        candidatesAfterUniqueGroups.addAll(allelesWithStopLossIndel);
+
+        LL_LOGGER.debug("  keeping {} allele(s) with stop loss indel: {}",
+                allelesWithStopLossIndel.size(), HlaAllele.toString(allelesWithStopLossIndel));
+
+        mConfirmedRecoveredAlleles.addAll(
+                recoveredAlleles.stream()
+                .filter(x -> candidatesAfterUniqueGroups.contains(x))
+                .collect(Collectors.toList())
+        );
 
         if(!mConfirmedRecoveredAlleles.isEmpty())
         {
