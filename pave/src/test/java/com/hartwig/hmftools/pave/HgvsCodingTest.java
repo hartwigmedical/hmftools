@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateTestBases;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
@@ -235,5 +236,156 @@ public class HgvsCodingTest
         assertEquals(-3, impact.codingContext().NearestExonDistance);
 
         assertEquals("c.16-4_16-3dupAA", impact.codingContext().Hgvs);
+    }
+
+    @Test
+    public void testRightAlignmentOfCodingOfInFrameDuplication()
+    {
+        // pos codons: M 20-22, A 23-25, D 26-28, A 29-31, D 32-34, S 35-37, Q 38-40, L 41-43, G 44-46, H 47-49, E 50-52, stopX 47-49
+        // amino acids:           M   A   D   A   D   S   Q
+        // exon 1:                20           30
+        // position:              012 345 678 901 234 567 890
+        String refCodingBases1 = "ATG GCT GAT GCT GAT TCG CAG".replace(" ", "");
+
+        // intron:              41     50
+        // position             123456789012345
+        // bases into intron:   12345   7654321
+        String intronicBases = "TTTTGGGGCCCCAAA";
+
+        // amino acids:           L   G   H   E   X
+        // exon 2:                56   60           70
+        // position:              678 901 234 567 890
+        String refCodingBases2 = "TTA GGA CAC GAG TAA".replace(" ", "");
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases1 + intronicBases + refCodingBases2 + generateTestBases(20);
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] {10, 56}, 30,
+                20, 70, false, "");
+
+        // duplication of first AD in ADAD should be reported right-maximal
+        // ATG [GCT GAT] GCT GAT TCG CAG -> ATG [GCT GAT GCT GAT] GCT GAT TCG CAG = ATG GCT GAT [GCT GAT GCT GAT] TCG CAG
+        int pos = 23;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = refBases.substring(pos, pos + 7);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        String altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, posTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("c.9_14dupGCTGAT", impact.codingContext().Hgvs);
+        assertEquals("p.Ala4_Asp5dup", impact.proteinContext().Hgvs);
+
+        // duplication of DA in ADAD should give the same result
+        // ATG GCT [GAT GCT] GAT TCG CAG -> ATG GCT [GAT GCT GAT GCT] GAT TCG CAG = ATG GCT GAT [GCT GAT GCT GAT] TCG CAG
+        pos = 23 + 3;
+        ref = refBases.substring(pos, pos + 1);
+        alt = refBases.substring(pos, pos + 7);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        impact = classifier.classifyVariant(var, posTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("c.9_14dupGCTGAT", impact.codingContext().Hgvs);
+        assertEquals("p.Ala4_Asp5dup", impact.proteinContext().Hgvs);
+
+        // duplication of second AD in ADAD should give the same result
+        // ATG GCT GAT [GCT GAT] TCG CAG -> ATG GCT GAT [GCT GAT GCT GAT] TCG CAG
+        pos = 23 + 6;
+        ref = refBases.substring(pos, pos + 1);
+        alt = refBases.substring(pos, pos + 7);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        impact = classifier.classifyVariant(var, posTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("c.9_14dupGCTGAT", impact.codingContext().Hgvs);
+        assertEquals("p.Ala4_Asp5dup", impact.proteinContext().Hgvs);
+    }
+
+    @Test
+    public void testRightAlignmentOfCodingOfFrameshiftDuplication()
+    {
+        // pos codons: M 20-22, A 23-25, D 26-28, M 29-31, A 32-34, S 35-37, Q 38-40, L 41-43, G 44-46, H 47-49, E 50-52, stopX 47-49
+        // amino acids:           M   A   D   M   A   S   Q
+        // exon 1:                20           30
+        // position:              012 345 678 901 234 567 890
+        String refCodingBases1 = "ATG GCT GAT ATG GCC TCG CAG".replace(" ", "");
+        String intronicBases = "TTTTGGGGCCCCAAA"; // same as previous test
+        String refCodingBases2 = "TTAGGACACGAGTAA"; // ditto
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases1 + intronicBases + refCodingBases2 + generateTestBases(20);
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] {10, 56}, 30,
+                20, 70, false, "");
+
+        int pos = 29;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = refBases.substring(pos, pos + 6);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        String altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, posTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        // ATG GCT GAT A[TG GCC] TCG CAG -> ATG GCT GAT A[TG GCC TG GCC] TCG CAG = ATG GCT GAT AT[G GCC TG GCC T]CG CAG
+        assertEquals("c.9_14dupGCTGAT", impact.codingContext().Hgvs);
+        // new AA seq is M A D M A W P
+        assertEquals("p.Trp6fs", impact.proteinContext().Hgvs);
+    }
+
+    @Test
+    public void testRightAlignmentOfCodingOfFrameshiftDeletion()
+    {
+        // amino acids:           M   K   E   K   K   K   P
+        // exon 1:                20           30
+        // position:              012 345 678 901 234 567 890
+        String refCodingBases1 = "ATG AAG GAA AAA AAA AAG CCT".replace(" ", "");
+        String intronicBases = "TTTTGGGGCCCCAAA"; // same as previous test
+        String refCodingBases2 = "TTAGGACACGAGTAA"; // ditto
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases1 + intronicBases + refCodingBases2 + generateTestBases(20);
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] {10, 56}, 30,
+                20, 70, false, "");
+
+        int pos = 34;
+        String ref = refBases.substring(pos, pos + 3);
+        String alt = refBases.substring(pos, pos + 1);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        String altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, posTrans);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+
+        assertEquals("c.16_17delAA", impact.codingContext().Hgvs);
+        assertEquals("p.Lys6fs", impact.proteinContext().Hgvs);
     }
 }
