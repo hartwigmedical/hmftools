@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -19,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
@@ -30,6 +32,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadCache
 {
+    public static ConcurrentHashMap<Long, PerformanceCounter> DUP_GROUP_COLLAPSE_THREAD_PC = new ConcurrentHashMap<>();
+
     private final int mGroupSize;
     private final int mMaxSoftClipLength;
     private final boolean mUseFragmentOrientation;
@@ -217,7 +221,15 @@ public class ReadCache
         if(mDuplicateGroupCollapser == null)
             return new FragmentCoordReads(duplicateGroups, singleReads);
 
-        return mDuplicateGroupCollapser.collapse(duplicateGroups, singleReads);
+        long threadId = Thread.currentThread().getId();
+        DUP_GROUP_COLLAPSE_THREAD_PC.computeIfAbsent(threadId, x -> new PerformanceCounter(format("Dup group collapse threadId(%d)", x), false));
+        PerformanceCounter dupGroupCollapsePc = DUP_GROUP_COLLAPSE_THREAD_PC.get(threadId);
+
+        dupGroupCollapsePc.start();
+        var output = mDuplicateGroupCollapser.collapse(duplicateGroups, singleReads);
+        dupGroupCollapsePc.stop();
+
+        return output;
     }
 
     public int minCachedReadStart()

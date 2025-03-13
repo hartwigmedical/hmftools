@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.redux.PartitionThread.splitRegionsIntoPartitions;
+import static com.hartwig.hmftools.redux.ReadCache.DUP_GROUP_COLLAPSE_THREAD_PC;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
@@ -185,6 +186,11 @@ public class ReduxApplication
             finalBamWriter.logTimes();
 
         logPerformanceStats(combinedPerfCounters);
+
+        for(PerformanceCounter pc : DUP_GROUP_COLLAPSE_THREAD_PC.values())
+        {
+            pc.logStats();
+        }
 
         RD_LOGGER.info("Redux complete, mins({})", runTimeMinsStr(startTimeMs));
     }
