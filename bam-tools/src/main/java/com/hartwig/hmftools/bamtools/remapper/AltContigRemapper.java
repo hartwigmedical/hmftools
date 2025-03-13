@@ -39,7 +39,8 @@ public class AltContigRemapper
     public void run()
     {
         long startTimeMs = System.currentTimeMillis();
-        BT_LOGGER.info("starting alt contig remapper");
+        BT_LOGGER.info("starting Alt-Contig remapper");
+
         try(SamReader samReader = SamReaderFactory.makeDefault().open(new File(mConfig.OrigBamFile)))
         {
 
@@ -50,10 +51,9 @@ public class AltContigRemapper
             File interimOutputFile = new File(interimOutputFileName);
             try(SAMFileWriter bamWriter = new FastBamWriter(newHeader, interimOutputFileName))
             {
-                BT_LOGGER.info("New BAM writer created.");
-
                 final BwaHlaRecordPairAligner aligner = new BwaHlaRecordPairAligner(mConfig.pairAligner(), newHeader, mConfig.RefGenVersion);
                 HlaTransformer transformer = new HlaTransformer(aligner);
+
                 if(mConfig.SliceHlaRegionsOnly)
                 {
                     List<ChrBaseRegion> hlaRegions = new ArrayList<>();
@@ -65,6 +65,7 @@ public class AltContigRemapper
                             hlaRegions.add(baseRegion);
                         }
                     });
+
                     hlaRegions.addAll(getHlaRegions(mConfig.RefGenVersion));
                     BamSlicer bamSlicer = new BamSlicer(0, false, false, false);
                     hlaRegions.forEach(region ->
@@ -75,33 +76,36 @@ public class AltContigRemapper
                     samReader.forEach(record -> transformer.process(record).forEach(bamWriter::addAlignment));
                 }
 
-                BT_LOGGER.info("Input file processed. Number of HLA records: " + transformer.numberOfHlaRecordsProcessed());
+                BT_LOGGER.info("input BAM processed, reads({}) hlaReads({})",
+                        transformer.totalReadsProcessed(), transformer.hlaRecordsProcessed());
+
                 // Deal with any unmatched reads.
                 List<SAMRecord> unmatched = transformer.unmatchedRecords();
                 if(!unmatched.isEmpty())
                 {
-                    BT_LOGGER.warn("Some HLA contig records were unmatched. " + unmatched);
+                    BT_LOGGER.warn("HLA contig records unmatched({})", unmatched);
                     SingleRecordAligner unmatchedRecordsAligner = mConfig.singleRecordAligner(newHeader);
                     unmatched.forEach(samRecord -> unmatchedRecordsAligner.alignSequence(samRecord).forEach(bamWriter::addAlignment));
                 }
                 else
                 {
-                    BT_LOGGER.info("No HLA contig records were unmatched.");
+                    BT_LOGGER.info("no HLA contig records were unmatched");
                 }
             }
             catch(Exception e)
             {
-                BT_LOGGER.error("Error processing or writing records.", e);
+                BT_LOGGER.error("Error processing or writing records", e);
                 throw new RuntimeException(e);
             }
-            BT_LOGGER.info("BAM Writer closed.");
+
+            BT_LOGGER.debug("BAM writer closed");
 
             // If the samtools path has been provided, sort the output. Else simply rename the unsorted file.
             if(mConfig.BamToolPath != null)
             {
-                BT_LOGGER.info("Sorting output. Threads: " + mConfig.Threads);
+                BT_LOGGER.debug("sorting output");
                 writeSortedBam(interimOutputFileName, mConfig.OutputFile, mConfig.BamToolPath, mConfig.Threads);
-                BT_LOGGER.info("Sorting complete.");
+                BT_LOGGER.info("sorting complete");
             }
             else
             {
@@ -117,7 +121,7 @@ public class AltContigRemapper
         {
             throw new UncheckedIOException(e);
         }
-        BT_LOGGER.info("Remapping complete in {} minutes.", runTimeMinsStr(startTimeMs));
+        BT_LOGGER.info("remapping complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private static void writeSortedBam(final String unsortedBam, final String sortedBam, final String bamToolPath, final int threads)
