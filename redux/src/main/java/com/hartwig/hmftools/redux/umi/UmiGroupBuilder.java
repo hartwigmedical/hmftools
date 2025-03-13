@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +29,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.collect.UnionFind;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
@@ -36,6 +38,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class UmiGroupBuilder
 {
+    public static ConcurrentHashMap<Long, PerformanceCounter> POLYG_THREAD_PC = new ConcurrentHashMap<>();
+
     private final SequencingType mSequencing;
     private final UmiConfig mUmiConfig;
     private final UmiStatistics mStats;
@@ -72,7 +76,13 @@ public class UmiGroupBuilder
             allUmiGroups.addAll(umiGroups);
         }
 
+        long threadId = Thread.currentThread().getId();
+        POLYG_THREAD_PC.computeIfAbsent(threadId, x -> new PerformanceCounter(format("PolyG UMI threadId(%d)", x), false));
+        PerformanceCounter polyGUmiPc = POLYG_THREAD_PC.get(threadId);
+
+        polyGUmiPc.start();
         collapsePolyGDuplexUmis(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+        polyGUmiPc.stop();
 
         if(formCoordGroups)
         {

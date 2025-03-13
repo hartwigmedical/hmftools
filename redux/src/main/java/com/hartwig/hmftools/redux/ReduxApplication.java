@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.POLYG_THREAD_PC;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
 import static com.hartwig.hmftools.redux.write.PartitionInfo.partitionInfoStr;
 
@@ -188,6 +189,11 @@ public class ReduxApplication
         logPerformanceStats(combinedPerfCounters);
 
         for(PerformanceCounter pc : DUP_GROUP_COLLAPSE_THREAD_PC.values())
+        {
+            pc.logStats();
+        }
+
+        for(PerformanceCounter pc : POLYG_THREAD_PC.values())
         {
             pc.logStats();
         }
