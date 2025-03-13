@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -16,13 +15,12 @@ import static com.hartwig.hmftools.lilac.LilacConfig.MHC_CLASS;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.registerCommonConfig;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
-import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
-import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
-import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
-import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.SEQUENCE_DELIM;
@@ -37,11 +35,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.lilac.GeneCache;
 import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
@@ -49,24 +46,33 @@ import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateReferenceSequences
 {
     private final String mResourceDir;
-    private final MhcClass mClassType;
+    private final GeneCache mGeneCache;
 
     private final List<HlaSequenceLoci> mNucleotideSequences;
     private final List<HlaSequenceLoci> mAminoAcidSequences;
 
     private final HlaAlleleCache mAlleleCache;
 
-    public GenerateReferenceSequences(final String resourceDir, final MhcClass classType)
+    public GenerateReferenceSequences(final ConfigBuilder configBuilder)
     {
         mAlleleCache = new HlaAlleleCache();
-        mResourceDir = resourceDir;
-        mClassType = classType;
+        mResourceDir = configBuilder.getValue(RESOURCE_DIR);
+
+        MhcClass classType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
+
+        if(classType != MhcClass.CLASS_1)
+        {
+            LL_LOGGER.error("only class-1 support for now");
+            System.exit(1);
+        }
+
+        Map<String,TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, classType);
+        mGeneCache = new GeneCache(classType, hlaTranscriptMap);
 
         mNucleotideSequences = Lists.newArrayList();
         mAminoAcidSequences = Lists.newArrayList();
@@ -83,13 +89,11 @@ public class GenerateReferenceSequences
 
         configBuilder.checkAndParseCommandLine(args);
 
-        MhcClass classType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
-
-        GenerateReferenceSequences seqGenerator = new GenerateReferenceSequences(configBuilder.getValue(RESOURCE_DIR), classType);
+        GenerateReferenceSequences seqGenerator = new GenerateReferenceSequences(configBuilder);
 
         LL_LOGGER.info("generating HLA sequence reference data");
 
-        EXCLUDED_ALLELES.clear();
+        CLASS_1_EXCLUDED_ALLELES.clear();
 
         if(!seqGenerator.loadSequenceFiles())
         {
@@ -251,9 +255,6 @@ public class GenerateReferenceSequences
             return;
         }
 
-        final Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
-        populateHlaTranscripts(hlaTranscriptMap, V37, mClassType);
-
         List<Integer> sequenceMaxLengths = Lists.newArrayList();
         int sequenceLociMax = sequenceData.stream().mapToInt(x -> x.length()).max().orElse(0);
 
@@ -302,9 +303,9 @@ public class GenerateReferenceSequences
             writer.newLine();
 
             // then actual transcript positions for the exon boundaries
-            for(String gene : GENE_CACHE.GeneNames)
+            for(String gene : mGeneCache.GeneNames)
             {
-                TranscriptData transData = hlaTranscriptMap.get(gene);
+                TranscriptData transData = mGeneCache.GeneTranscriptMap.get(gene);
                 String geneStr = padString(gene, alleleNameLength);
                 writer.write(geneStr);
 

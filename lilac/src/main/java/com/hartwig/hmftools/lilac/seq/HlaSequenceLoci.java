@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.seq;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILDCARD;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;

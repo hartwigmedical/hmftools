@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.MAX_AMINO_ACID_BOUNDARY;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
 
@@ -134,8 +134,10 @@ public class AminoAcidFragmentPipeline
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
                 mMinEvidence, mMinHighQualEvidence, geneRefNucFrags, highQualFrags);
 
+        int maxCommonAminoAcidExonBoundary = GENE_CACHE.MaxCommonAminoAcidExonBoundary;
+
         Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
-                .filter(x -> x <= MAX_AMINO_ACID_BOUNDARY).collect(Collectors.toSet());
+                .filter(x -> x <= maxCommonAminoAcidExonBoundary).collect(Collectors.toSet());
 
         NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(mMinBaseQuality, mMinEvidence, aminoAcidBoundaries);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);

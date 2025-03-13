@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
 import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
 
 import static org.junit.Assert.assertEquals;
@@ -19,10 +20,9 @@ public class HlaGeneCacheTest
     @Test
     public void testClass1GeneCache()
     {
-        Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
-
         MhcClass mhcClass = MhcClass.CLASS_1;
-        populateHlaTranscripts(hlaTranscriptMap, RefGenomeVersion.V37, mhcClass);
+
+        Map<String,TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, mhcClass);
 
         assertEquals(3, hlaTranscriptMap.size());
 

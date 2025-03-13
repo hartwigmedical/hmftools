@@ -3,10 +3,8 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class LilacConstants
 {
@@ -60,32 +58,7 @@ public class LilacConstants
     public static final String HLA_B = longGeneName(GENE_B);
     public static final String HLA_C = longGeneName(GENE_C);
 
-    // all of these are to be replaced by the GeneCache
-    public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
-    public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);
-    public static final List<Integer> C_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 338, 349, 365);
-
-    public static final int NUC_LENGTH_A = 1098;
-    public static final int NUC_LENGTH_B = 1089;
-    public static final int NUC_LENGTH_C = 1101;
-
-    public static final int MAX_AMINO_ACID_BOUNDARY = 298;
-
-    public static final Map<String,List<Integer>> NUCLEOTIDE_EXON_BOUNDARIES = Maps.newHashMap();
-
-    // common routines using constants
-    public static List<Integer> getAminoAcidExonBoundaries(final String gene)
-    {
-        return gene.equals(GENE_A) ? A_EXON_BOUNDARIES : (gene.equals(GENE_B) ? B_EXON_BOUNDARIES : C_EXON_BOUNDARIES);
-    }
-
-    public static List<Integer> getNucleotideExonBoundaries(final String gene)
-    {
-        return NUCLEOTIDE_EXON_BOUNDARIES.get(gene);
-    }
-
-
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191", "A*02:783", "B*07:282");
+    public static final List<String> CLASS_1_EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191", "A*02:783", "B*07:282");
 
     // common INDEL associated with allele C*04:09N
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";

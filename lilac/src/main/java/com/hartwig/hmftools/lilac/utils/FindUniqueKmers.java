@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
-import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
+import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import java.io.File;
@@ -59,8 +59,7 @@ public class FindUniqueKmers
 
         mClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
 
-        Map<String, TranscriptData> hlaTranscriptMap = Maps.newHashMap();
-        populateHlaTranscripts(hlaTranscriptMap, RefGenomeVersion.V37, mClassType);
+        Map<String,TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, mClassType);
         mGeneCache = new GeneCache(mClassType, hlaTranscriptMap);
 
         mAminoAcidSequences = Lists.newArrayList();

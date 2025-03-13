@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.evidence;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

@@ -115,10 +115,12 @@ public class GeneCache
 
                 if(hasExonBoundary)
                 {
-                    nucleotideExonBoundaries.add(totalCodingBases);
-
                     int aminoAcidIndex = totalCodingBases / 3;
                     aminoAcidExonBoundaries.add(aminoAcidIndex);
+
+                    nucleotideExonBoundaries.add(aminoAcidIndex * 3);
+                    nucleotideExonBoundaries.add(aminoAcidIndex * 3 + 1);
+                    nucleotideExonBoundaries.add(aminoAcidIndex * 3 + 2);
                 }
             }
 
@@ -169,5 +171,4 @@ public class GeneCache
     {
         return gene.length() == 1 ? HLA_PREFIX + gene : gene;
     }
-
 }

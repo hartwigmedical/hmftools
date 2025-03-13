@@ -347,8 +347,7 @@ public class LilacConfig
     {
         configBuilder.addPath(RESOURCE_DIR, true, "Path to resource files");
 
-        configBuilder.addConfigItem(
-                MHC_CLASS, false, enumValueSelectionAsStr(MhcClass.values(), "MHC Class Type"), MhcClass.CLASS_1.toString());
+        configBuilder.addConfigItem(MHC_CLASS, false, "MHC Class Type", MhcClass.CLASS_1.toString());
     }
 
     private List<HlaAllele> parseAlleleList(final String allelesStr)

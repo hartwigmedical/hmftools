@@ -4,10 +4,11 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_FRAGMENTS;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
 
@@ -280,8 +281,9 @@ public class HlaYCoverage
         if(fragment.aminoAcidLoci().contains(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
             ++miscCounts[Y0101_X];
 
-        int exon3Start = A_EXON_BOUNDARIES.get(1) + 1;
-        int exon3End = A_EXON_BOUNDARIES.get(2);
+        List<Integer> hlaAExonBoundaries = getAminoAcidExonBoundaries(HLA_A);
+        int exon3Start = hlaAExonBoundaries.get(1) + 1;
+        int exon3End = hlaAExonBoundaries.get(2);
 
         if(fragment.aminoAcidLoci().get(0) >= exon3Start && fragment.aminoAcidLoci().get(fragment.aminoAcidLoci().size() - 1) <= exon3End)
             ++miscCounts[EXON_3];

@@ -5,13 +5,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_C;
-import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
@@ -259,9 +252,11 @@ public class NucleotideFragmentFactory
     {
         final Map<String,int[]> geneBaseDepth = Maps.newHashMap();
 
-        geneBaseDepth.put(HLA_A, new int[NUC_LENGTH_A]);
-        geneBaseDepth.put(HLA_B, new int[NUC_LENGTH_B]);
-        geneBaseDepth.put(HLA_C, new int[NUC_LENGTH_C]);
+        for(String geneName : GENE_CACHE.GeneNames)
+        {
+            int geneNucleotideCount = GENE_CACHE.NucleotideLengths.get(geneName);
+            geneBaseDepth.put(geneName, new int[geneNucleotideCount]);
+        }
 
         for(Fragment fragment : fragments)
         {

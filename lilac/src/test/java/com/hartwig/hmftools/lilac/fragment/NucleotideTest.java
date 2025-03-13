@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
+import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.ReferenceData.B_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
-
-import static org.junit.Assert.assertFalse;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
