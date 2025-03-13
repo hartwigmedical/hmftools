@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -43,7 +44,7 @@ public class DeletionInsertion extends ProteinVariant
     Set<ChangeResult> applyChange(ChangeContext context)
     {
         SplitCodonSequence seq = context.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength);
-        Set<String> newBases = new NucleotidesCalculator(Alt, seq.retainedPrefix(), seq.retainedSuffix()).allPossibleBaseSequences();
+        Set<String> newBases = possibleInsertedNucleotideSequences(seq.retainedPrefix(), seq.retainedSuffix());
         if(Gene.reverseStrand())
         {
             newBases = newBases.stream().map(Nucleotides::reverseComplementBases).collect(toSet());
@@ -65,6 +66,17 @@ public class DeletionInsertion extends ProteinVariant
         });
 
         return result;
+    }
+
+    @VisibleForTesting
+    Set<String> possibleInsertedNucleotideSequences(String prefix, String suffix)
+    {
+        final NucleotidesCalculator nucleotidesCalculator = new NucleotidesCalculator(Alt, prefix, suffix);
+        if(Alt.length() > 2)
+        {
+            return Set.of(nucleotidesCalculator.anyBaseSequence());
+        }
+        return nucleotidesCalculator.allPossibleBaseSequences();
     }
 
     @Override

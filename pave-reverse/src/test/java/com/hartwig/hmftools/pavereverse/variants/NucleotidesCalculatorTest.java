@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pavereverse.variants;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -17,7 +18,7 @@ import org.junit.Test;
 public class NucleotidesCalculatorTest extends ReversePaveTestBase
 {
     @Test
-    public void someBaseSequenceTest()
+    public void anyBaseSequenceTest()
     {
         assertEquals("TGG", calculator("W", "", "").anyBaseSequence());
         assertEquals("TGGTGG", calculator("WW", "", "").anyBaseSequence());
@@ -26,6 +27,24 @@ public class NucleotidesCalculatorTest extends ReversePaveTestBase
         // It should always give the same result (but we don't care what it is).
         assertEquals("TTCGAAGCAAGCACA", s);
         assertEquals("TTCGAAGCAAGCACA", calculator("FEAST", "", "").anyBaseSequence());
+    }
+
+    @Test
+    public void anyBaseSequenceWithFixedAffixesTest()
+    {
+        assertEquals("GG", calculator("W", "T", "").anyBaseSequence());
+        assertEquals("TG", calculator("W", "", "G").anyBaseSequence());
+        assertEquals("G", calculator("W", "T", "G").anyBaseSequence());
+        assertNull(calculator("W", "C", "").anyBaseSequence());
+        assertNull(calculator("W", "", "T").anyBaseSequence());
+        assertNull(calculator("W", "A", "T").anyBaseSequence());
+
+        assertEquals("GA", calculator("R", "A", "").anyBaseSequence());
+        assertEquals("AG", calculator("R", "", "G").anyBaseSequence());
+        assertEquals("G", calculator("R", "A", "G").anyBaseSequence());
+
+        assertEquals("CGAAGCAAGCACA", calculator("FEAST", "TT", "").anyBaseSequence());
+        assertEquals("TTCGAAGCAAGCA", calculator("FEAST", "", "CT").anyBaseSequence());
     }
 
     @Test

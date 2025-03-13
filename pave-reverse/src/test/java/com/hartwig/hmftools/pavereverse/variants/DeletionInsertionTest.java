@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.base.ChangeContext;
+import com.hartwig.hmftools.pavereverse.base.PaddedExon;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,5 +46,20 @@ public class DeletionInsertionTest extends VariantTest
         Collection<ChangeResult> reportingChanges = di.selectChangesToReport(changes);
         assertEquals(1, reportingChanges.size());
         assertEquals("GCCGAG", reportingChanges.iterator().next().AltBases);
+    }
+
+    @Test
+    public void veryLongInsertionTest()
+    {
+        final String longSeq = "LRSALRSLRSLRSTAALRSTLL";
+        AminoAcidSequence replacement = AminoAcidSequence.parse(longSeq);
+
+        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC", "TACG");
+        ChangeContext context = new ChangeContext(exon, 9, 10, true, 1);
+        DeletionInsertion di = new DeletionInsertion(gene, transcript, taa, aar, replacement);
+        Set<ChangeResult> results = di.applyChange(context);
+        Assert.assertEquals(1, results.size());
+        ChangeResult result = results.iterator().next();
+        Assert.assertEquals("MA" + longSeq + "V", result.Acids.sequence());
     }
 }

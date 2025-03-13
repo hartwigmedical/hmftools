@@ -28,17 +28,15 @@ public class NucleotidesCalculator
 
     public String anyBaseSequence()
     {
-        // We only need this for situations where there is neither prefix nor suffix,
-        // and we can only guarantee a non-null result with these preconditions.
-        Preconditions.checkArgument(mPrefix.isEmpty());
-        Preconditions.checkArgument(mSuffix.isEmpty());
-
+        List<Set<String>> candidateCodons = candidateAlternativeTruncatedCodons();
         StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < mAminoAcids.length(); i++)
+        for(Set<String> choices : candidateCodons)
         {
-            Set<String> allCodons = mAminoAcids.get(i).matchingTruncatedCodons("", "");
-            // We want this to be deterministic, even if it's arbitrary
-            String first = new TreeSet<>(allCodons).first();
+            if(choices.isEmpty())
+            {
+                return null;
+            }
+            String first = new TreeSet<>(choices).first();
             builder.append(first);
         }
         return builder.toString();

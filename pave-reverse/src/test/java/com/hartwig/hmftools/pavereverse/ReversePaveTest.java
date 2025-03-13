@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 public final class ReversePaveTest extends ReversePaveTestBase
@@ -277,37 +276,12 @@ public final class ReversePaveTest extends ReversePaveTestBase
     @Test
     public void egfrServeExample2()
     {
-        /*
-        This is an example where Transvar reports one hotspot, and we report 48.
-        L747_K754delinsSPQ
-
-        Here's what Transvar says:
-        Printing hotspots for 'EGFR:p.L747_K754delinsSPQ' on transcript null
-        Hotspot{ref=TTAAGAGAAGCAACATCTCCGA, alt=AGCCCTC, chromosome=chr7, position=55174776}
-
-        L   R   E   A   T   S   P   K
-        TTA AGA GAA GCA ACA TCT CCG AAA
-        EXON starts at 55_174_722
-        GGACTCTGGATCCCAGAAGGTGAGAAAGTTAAAATTCCCGTCGCTATCAAGGAA - these 54 nukes precede the codon for L
-        therefore L is at 55_174_722 + 54 = 55_174_776
-
-        candidateAlternativeCodons={TCA, AGC, AGT, TCC, TCG, TCT}*{CCA, CCC, CCG, CCT}*{CAA, CAG} (48 possibilities)
-         */
         BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.L747_K754delinsSPQ");
         assertEquals("ENST00000275493", record.transcriptName());
         assertEquals("7", record.Chromosome);
-
-        Set<BaseSequenceChange> hotspots = record.changes();
-        assertEquals(48, hotspots.size());
-        assertTrue(hotspots.contains(basesChange("TTAAGAGAAGCAACATCTCCGA", "AGCCCTC", "chr7", 55_174_776)));
-        String originalBases = StringUtils.remove("TTA AGA GAA GCA ACA TCT CCG AAA", ' ');
-        for(BaseSequenceChange hotspot : hotspots)
-        {
-            String newBases = StringUtils.replaceOnce(originalBases, hotspot.Ref, hotspot.Alt);
-            AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
-            assertEquals("SPQ", newAminoAcids.toString());
-        }
-    }
+        // {TCA, AGC, AGT, TCC, TCG, TCT}*{CCA, CCC, CCG, CCT}*{CAA, CAG} we choose AGC CCA CAA, which bleeds into a section of As
+        checkSingleChange(record, "TTAAGAGAAGCAACATCTCCGA", "AGCCCAC", "chr7", 55_174_776);
+     }
 
     @Test
     public void vhlDelIns()
@@ -330,23 +304,11 @@ public final class ReversePaveTest extends ReversePaveTestBase
     @Test
     public void manyOptionsEGFR()
     {
-        /*
-        Converting transvar output line to TransvarRecord: 'EGFR:p.I744_K745delinsKIPVAI
-        ENST00000275493 (protein_coding)	EGFR	+	chr7:g.55174767_55174772delinsAAGATCCCTGTAGCAATC/c.2230_2235delinsAAGATCCCTGTAGCAATC/p.I744_K745delinsKIPVAI
-        inside_[cds_in_exon_19]	CSQN=MultiAAMissense;
-        1152_CandidatesOmitted;aliases=ENSP00000275493;source=Ensembl'
-Interpreting transvar record: 'TransvarRecord{transcript=ENST00000275493, chromosome=7, gdnaPosition=55174767, variantSpanMultipleExons=false, annotation=TransvarComplexInsertDelete{deletedBaseCount=6, insertedSequence=AAGATCCCTGTAGCAATC, candidateAlternativeCodons=[]}}'
-Converted 'EGFR|null|p.I744_K745delinsKIPVAI' to 1 hotspot(s)
-Printing hotspots for 'EGFR:p.I744_K745delinsKIPVAI' on transcript null
-Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
-         */
-        BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.I744_K745delinsKIPVAI");
+        // EGFR exon 19 insertion EGFR-K745_E746insIPVAIK ...https://pmc.ncbi.nlm.nih.gov/articles/PMC10330422/
+        BaseSequenceVariants record =  reversePave.calculateVariant("EGFR:p.K745_E746delinsIPVAIK");
         assertEquals("ENST00000275493", record.transcriptName());
         assertEquals("7", record.Chromosome);
-
-        Set<BaseSequenceChange> hotspots = record.changes();
-        assertEquals(1152, hotspots.size());
-        assertTrue(hotspots.contains(basesChange("TCAAG", "AGATCCCTGTAGCAATC", "chr7", 55174768)));
+        checkSingleChange(record, "AGG", "TACCAGTAGCAATAA", "chr7", 55174771);
     }
 
     @Test
@@ -361,6 +323,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         Options for K: {AAA, AAG}
         Options for Y, assuming that codon ends in AC: {TAC}
         So the coding change is: [CCC CCG GAA G] goes to [TGG AAA T] or [TGG AAG T]
+        Because the inserted sequence has length > 2, we just choose the first alphabetically.
 
         This is something that Transvar doesn't handle:
         Converted 'ZYX|null|p.P67_D70delinsWKY' to 0 hotspot(s)
@@ -370,13 +333,7 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
         BaseSequenceVariants record =  reversePave.calculateVariant("ZYX:p.P67_D70delinsWKY");
         assertEquals("ENST00000322764", record.transcriptName());
         assertEquals("7", record.Chromosome);
-        //        assertEquals(143_381_770, record.Position);
-//        assertTrue(record.SpansMultipleExons);
-
-        Set<BaseSequenceChange> hotspots = record.changes();
-        assertEquals(2, hotspots.size());
-        assertTrue(hotspots.contains(basesChange("CCCCCGGAAG", "TGGAAAT", "chr7", 143_381_770)));
-        assertTrue(hotspots.contains(basesChange("CCCCCGGAAG", "TGGAAGT", "chr7", 143_381_770)));
+        checkSingleChange(record, "CCCCCGGAAG", "TGGAAAT", "chr7", 143_381_770);
     }
 
     @Test
@@ -865,15 +822,6 @@ Hotspot{ref=TCAAG, alt=AGATCCCTGTAGCAATC, chromosome=chr7, position=55174768}
     @Test
     public void insertionOnReverseStrand()
     {
-//        TransvalVariant variant = transval.calculateVariant("BRAF", "R506_K507insLLR");
-//        Set<TransvalHotspot> hotspots = variant.hotspots();
-//        assertEquals(1, hotspots.size());
-//        TransvalHotspot hotspot = hotspots.iterator().next();
-//        assertEquals("C", hotspot.Ref);
-//        String codons = hotspot.Alt.substring(1);
-//        assertEquals("LLR", AminoAcidSequence.fromNucleotides(Nucleotides.reverseComplementBases(codons)).sequence());
-//        assertEquals(140_777_087, hotspot.mPosition);
-
         var variant = reversePave.calculateVariant("BRAF", "H510_V511insW");
         checkSingleChange(variant, "C", "CCCA", "chr7", 140_777_075);
     }
