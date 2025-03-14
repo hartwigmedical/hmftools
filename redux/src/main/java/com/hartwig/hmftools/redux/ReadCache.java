@@ -218,6 +218,12 @@ public class ReadCache
         if(duplicateGroups == null && singleReads == null)
             return null;
 
+        // TODO:
+        if(true)
+        {
+            return new FragmentCoordReads(duplicateGroups, singleReads);
+        }
+
         if(mDuplicateGroupCollapser == null)
             return new FragmentCoordReads(duplicateGroups, singleReads);
 

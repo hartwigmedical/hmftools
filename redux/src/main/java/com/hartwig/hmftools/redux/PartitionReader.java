@@ -40,6 +40,7 @@ import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -377,11 +378,18 @@ public class PartitionReader
             {
                 duplicateGroup.setPCRClusterCount(mConfig.Sequencing);
                 duplicateGroup.formConsensusRead(mConsensusReads);
+                duplicateGroup.dumpReads();
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
 
             postProcessPrimaryRead(duplicateGroup.primaryRead());
             mBamWriter.writeDuplicateGroup(duplicateGroup);
+        }
+
+        for(ReadInfo singleRead : fragmentCoordReads.SingleReads)
+        {
+            System.out.println(singleRead.read().getReadName());
+            System.out.println("");
         }
 
         postProcessSingleReads(fragmentCoordReads.SingleReads);

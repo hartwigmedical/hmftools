@@ -232,4 +232,15 @@ public class DuplicateGroup
     {
         return format("id(%s) reads(%d) coords(%s)", mUmiId, mReads.size(), mFragmentCoords.Key);
     }
+
+    public void dumpReads()
+    {
+        System.out.println(mConsensusRead.getReadName());
+        for(SAMRecord read : mReads)
+        {
+            System.out.println(read.getReadName());
+        }
+
+        System.out.println("");
+    }
 }
