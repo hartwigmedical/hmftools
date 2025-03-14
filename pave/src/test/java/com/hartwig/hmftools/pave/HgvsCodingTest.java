@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIF
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateTestBases;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -274,6 +275,8 @@ public class HgvsCodingTest
         String alt = refBases.substring(pos, pos + 7);
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
+        VariantData realigned = createRightAlignedVariant( var, refGenome);
+
         String altBases = alt.substring(1);
         var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
 
@@ -314,6 +317,43 @@ public class HgvsCodingTest
 
         assertEquals("c.9_14dupGCTGAT", impact.codingContext().Hgvs);
         assertEquals("p.Ala4_Asp5dup", impact.proteinContext().Hgvs);
+    }
+
+    @Test
+    public void testRightAlignmentOfCodingOfInFrameDuplicationInRegionOfRepeatedAminoAcids()
+    {
+        // amino acids:           M   A   P   P   P   P   Q
+        // exon 1:                20           30
+        // position:              012 345 678 901 234 567 890
+        String refCodingBases1 = "ATG GCT CCA CCC CCG CCT CAG".replace(" ", "");
+        String intronicBases = "TTTTGGGGCCCCAAA"; // as in previous test
+        String refCodingBases2 = "TTAGGACACGAGTAA"; // "
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases1 + intronicBases + refCodingBases2 + generateTestBases(20);
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] {10, 56}, 30,
+                20, 70, false, "");
+
+        // duplication of first P should be reported right-maximal
+        int pos = 25;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = refBases.substring(pos, pos + 4);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        String altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, posTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        // [CCA]CCC -> [CCACCA]CCC = C[CACCAC]CC = CC[ACCACC]C
+        assertEquals("c.9_11dupACC", impact.codingContext().Hgvs);
+        assertEquals("p.P6dup", impact.proteinContext().Hgvs);
     }
 
     @Test
