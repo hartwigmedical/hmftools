@@ -115,7 +115,7 @@ public class CallerApplication
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
 
-        mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds, discordantStats.shortInversionRate());
+        mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds, discordantStats);
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache(mConfig, new TargetRegions(configBuilder));

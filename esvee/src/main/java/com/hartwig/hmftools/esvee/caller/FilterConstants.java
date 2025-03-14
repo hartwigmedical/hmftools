@@ -75,6 +75,10 @@ public class FilterConstants
     public static final int INV_SHORT_RATE_LOWER = 200;
     public static final int INV_SHORT_RATE_HIGHER = 400;
 
+    public static final int INV_SHORT_FRAGMENT_LENGTH = 300;
+    public static final double INV_SHORT_FRAGMENT_MIN_AF = 0.05;
+    public static final int INV_SHORT_FRAGMENT_AF_RATIO = 50;
+
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 

@@ -17,6 +17,9 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_LEN
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MAX_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MIN_AF;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_SHORT_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_AF_RATIO;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_MIN_AF;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_LOWER;
@@ -36,9 +39,10 @@ import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_SUPPORT;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL;
-import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_LOW_VAF_DEL;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_FRAG_LOW_VAF;
+import static com.hartwig.hmftools.esvee.common.FilterType.DEL_SHORT_LOW_VAF;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
-import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_LOW_VAF_INV;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
 
 import java.util.List;
@@ -49,6 +53,7 @@ import com.hartwig.hmftools.common.sv.SvVcfTags;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 import htsjdk.variant.variantcontext.Genotype;
 
@@ -56,13 +61,20 @@ public class VariantFilters
 {
     private final FilterConstants mFilterConstants;
     private final FragmentLengthBounds mFragmentLengthBounds;
-    private final double mShortInversionRate;
+    private final DiscordantStats mDiscordantStats;
 
-    public VariantFilters(final FilterConstants filterConstants, final FragmentLengthBounds fragmentLengthBounds, double shortInvRate)
+    private final double mShortInversionRate;
+    private final double mShortFragmentInversionRate;
+
+    public VariantFilters(
+            final FilterConstants filterConstants, final FragmentLengthBounds fragmentLengthBounds, final DiscordantStats discordantStats)
     {
         mFilterConstants = filterConstants;
         mFragmentLengthBounds = fragmentLengthBounds;
-        mShortInversionRate = shortInvRate;
+        mDiscordantStats = discordantStats;
+
+        mShortInversionRate = mDiscordantStats.shortInversionRate();
+        mShortFragmentInversionRate = mDiscordantStats.shortInversionFragmentRate();
     }
 
     public void applyFilters(final Variant var)
@@ -94,11 +106,14 @@ public class VariantFilters
         if(belowMinFragmentLength(var))
             var.addFilter(SHORT_FRAG_LENGTH);
 
-        if(isShortLowVafInversion(var))
-            var.addFilter(SHORT_LOW_VAF_INV);
+        if(isInversionShortLowVafHomology(var))
+            var.addFilter(INV_SHORT_LOW_VAF_HOM);
 
-        if(isShortLowVafDeletion(var))
-            var.addFilter(SHORT_LOW_VAF_DEL);
+        if(isInversionShortFragmentLowVaf(var))
+            var.addFilter(INV_SHORT_FRAG_LOW_VAF);
+
+        if(isDeletionShortLowVaf(var))
+            var.addFilter(DEL_SHORT_LOW_VAF);
 
         if(failsStrandBias(var))
             var.addFilter(STRAND_BIAS);
@@ -285,7 +300,7 @@ public class VariantFilters
         return svAvgLength < lowerLengthLimit;
     }
 
-    private boolean isShortLowVafInversion(final Variant var)
+    private boolean isInversionShortLowVafHomology(final Variant var)
     {
         // filter INVs if adjusted AF is low and length < 3K
         if(var.type() != INV)
@@ -313,7 +328,21 @@ public class VariantFilters
         return !anySamplesAboveAfThreshold(var, vafThreshold);
     }
 
-    private boolean isShortLowVafDeletion(final Variant var)
+    private boolean isInversionShortFragmentLowVaf(final Variant var)
+    {
+        // Filter for short inv (vaf < 0.05; length < 300; vaf/shortInvRate < 50)
+        if(var.type() != INV)
+            return false;
+
+        if(var.adjustedLength() > INV_SHORT_FRAGMENT_LENGTH)
+            return false;
+
+        double vafThreshold = max(INV_SHORT_FRAGMENT_MIN_AF, INV_SHORT_FRAGMENT_AF_RATIO * mShortFragmentInversionRate);
+
+        return !anySamplesAboveAfThreshold(var, vafThreshold);
+    }
+
+    private boolean isDeletionShortLowVaf(final Variant var)
     {
         // filter DELs if AF is < 0.05> and length < 3K
         if(var.type() != DEL)
@@ -387,11 +416,16 @@ public class VariantFilters
             }
         }
 
-        SV_LOGGER.debug("variants passing({})", passingVariants);
+        SV_LOGGER.info("variants passing({}) filtered({})", passingVariants, variantList.size() - passingVariants);
 
-        for(Map.Entry<FilterType,Integer> entry : filterCounts.entrySet())
+        for(FilterType filterType : FilterType.values())
         {
-            SV_LOGGER.debug("variant filter {}: count({})", entry.getKey(), entry.getValue());
+            Integer count = filterCounts.get(filterType);
+
+            if(count != null)
+            {
+                SV_LOGGER.debug("variant filter {}: count({})", filterType, count);
+            }
         }
     }
 }
