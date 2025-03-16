@@ -33,7 +33,7 @@ public class BatchProcessor
                 String gene = row.get(0);
                 String transcript = row.get(1);
                 String proteinVariant = row.get(2);
-                BaseSequenceVariants variants = mReversePave.calculateVariant(gene, transcript, proteinVariant);
+                BaseSequenceVariants variants = mReversePave.calculateProteinVariant(gene, transcript, proteinVariant);
                 writer.writeRow(new VariantRow(gene, proteinVariant, variants));
             }
         }

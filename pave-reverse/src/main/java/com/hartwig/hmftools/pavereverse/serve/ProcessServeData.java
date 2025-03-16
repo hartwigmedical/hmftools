@@ -209,7 +209,7 @@ public class ProcessServeData
         try
         {
             BaseSequenceVariants baseSequenceVariants =
-                    mReversePave.calculateVariantAllowMultipleNonCanonicalTranscriptMatches(collator.Gene, collator.Annotation);
+                    mReversePave.calculateProteinVariantAllowingMultipleNonCanonicalTranscriptMatches(collator.Gene, collator.Annotation);
             return new VariantStatus(collator, baseSequenceVariants);
         }
         catch(Throwable t)

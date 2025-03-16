@@ -22,7 +22,7 @@ import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
 import com.hartwig.hmftools.pavereverse.base.BaseSequence;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 import com.hartwig.hmftools.pavereverse.base.SplitCodonSequence;
-import com.hartwig.hmftools.pavereverse.variants.SingleAminoAcidVariant;
+import com.hartwig.hmftools.pavereverse.protein.SingleAminoAcidVariant;
 
 public class ReversePaveTestBase
 {
@@ -53,7 +53,7 @@ public class ReversePaveTestBase
 
     public SingleAminoAcidVariant saav(String definition)
     {
-        return (SingleAminoAcidVariant) reversePave.variationParser().parse(definition);
+        return (SingleAminoAcidVariant) reversePave.proteinVariantParser().parse(definition);
     }
 
     protected SplitCodonSequence seq(String left, String right)
@@ -85,6 +85,14 @@ public class ReversePaveTestBase
     protected AminoAcidSequence aaSeq(String sequence)
     {
         return AminoAcidSequence.parse(sequence);
+    }
+
+    protected void check(BaseSequenceChange change, String ref, String alt, String chr, int position)
+    {
+        assertEquals(change.Ref, ref);
+        assertEquals(change.Alt, alt);
+        assertEquals(change.Chromosome, chr);
+        assertEquals(change.Position, position);
     }
 
     protected void checkSingleChange(BaseSequenceVariants variant, String ref, String alt, String chr, int position)

@@ -35,7 +35,7 @@ public class RoundTripChecker
         BaseSequenceVariants calculatedVariants;
         try
         {
-            calculatedVariants = mReversePave.calculateVariant(gene, transcript, variant);
+            calculatedVariants = mReversePave.calculateProteinVariant(gene, transcript, variant);
         }
         catch(Exception e)
         {

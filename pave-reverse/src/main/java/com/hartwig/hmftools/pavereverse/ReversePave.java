@@ -13,7 +13,9 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
+import com.hartwig.hmftools.pavereverse.parse.DnaVariantParser;
+import com.hartwig.hmftools.pavereverse.protein.ProteinVariant;
+import com.hartwig.hmftools.pavereverse.parse.ProteinVariantParser;
 
 /**
  * Calculates the possible base sequence changes that give rise to a protein-level change.
@@ -39,32 +41,42 @@ public class ReversePave
         this(new EnsemblDataCache(ensemblDataDir.getAbsolutePath(), genomeVersion), ensemblDataDir.getAbsolutePath(), refGenome);
     }
 
-    public VariantParser variationParser()
+    public BaseSequenceChange calculateDnaVariant(String gene, String transcriptId, String dnaVariant)
     {
-        return new VariantParser(EnsemblCache, TranscriptAminoAcidsMap);
+        return dnaVariantParser().parse(gene, transcriptId, dnaVariant).toGenomicVariant();
     }
 
-    public BaseSequenceVariants calculateVariant(String proteinVariant)
+    public DnaVariantParser dnaVariantParser()
     {
-        ProteinVariant variant = variationParser().parse(proteinVariant);
+        return new DnaVariantParser(EnsemblCache, TranscriptAminoAcidsMap);
+    }
+
+    public ProteinVariantParser proteinVariantParser()
+    {
+        return new ProteinVariantParser(EnsemblCache, TranscriptAminoAcidsMap);
+    }
+
+    public BaseSequenceVariants calculateProteinVariant(String proteinVariant)
+    {
+        ProteinVariant variant = proteinVariantParser().parse(proteinVariant);
         return variant.calculateVariant(RefGenome);
     }
 
-    public BaseSequenceVariants calculateVariant(String gene, String proteinVariant)
+    public BaseSequenceVariants calculateProteinVariant(String gene, String proteinVariant)
     {
-        ProteinVariant variant = variationParser().parseGeneVariant(gene, proteinVariant);
+        ProteinVariant variant = proteinVariantParser().parseGeneVariant(gene, proteinVariant);
         return variant.calculateVariant(RefGenome);
     }
 
-    public BaseSequenceVariants calculateVariant(String gene, String transcriptId, String proteinVariant)
+    public BaseSequenceVariants calculateProteinVariant(String gene, String transcriptId, String proteinVariant)
     {
-        ProteinVariant variant = variationParser().parseGeneVariant(gene, transcriptId, proteinVariant);
+        ProteinVariant variant = proteinVariantParser().parseGeneVariant(gene, transcriptId, proteinVariant);
         return variant.calculateVariant(RefGenome);
     }
 
-    public BaseSequenceVariants calculateVariantAllowMultipleNonCanonicalTranscriptMatches(String gene, String proteinVariant)
+    public BaseSequenceVariants calculateProteinVariantAllowingMultipleNonCanonicalTranscriptMatches(String gene, String proteinVariant)
     {
-        Set<ProteinVariant> allMatchingVariants = variationParser().parseGeneVariants(gene, proteinVariant);
+        Set<ProteinVariant> allMatchingVariants = proteinVariantParser().parseGeneVariants(gene, proteinVariant);
         Map<String, BaseSequenceVariants> transcriptIdToVariant = new HashMap<>();
         allMatchingVariants.forEach(variant ->
         {

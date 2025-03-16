@@ -2,7 +2,7 @@ package com.hartwig.hmftools.pavereverse.serve;
 
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
 import com.hartwig.hmftools.pavereverse.ReversePave;
-import com.hartwig.hmftools.pavereverse.variants.ProteinVariant;
+import com.hartwig.hmftools.pavereverse.protein.ProteinVariant;
 
 class DifferenceWithTransvar
 {
@@ -15,7 +15,7 @@ class DifferenceWithTransvar
         this.mVariant = variantStatus.Variant;
         this.mCollator = variantStatus.Collator;
         ProteinVariant transvalVariant =
-                baseSequenceVariantsCalculator.variationParser()
+                baseSequenceVariantsCalculator.proteinVariantParser()
                         .parseGeneVariants(mCollator.Gene, mCollator.Annotation)
                         .iterator()
                         .next();

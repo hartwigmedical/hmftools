@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.pavereverse.variants.CodonChange;
+import com.hartwig.hmftools.pavereverse.protein.CodonChange;
 import com.hartwig.hmftools.pavereverse.ReversePaveTestBase;
 
 import org.junit.Test;
