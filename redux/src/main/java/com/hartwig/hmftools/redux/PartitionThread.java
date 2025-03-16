@@ -112,8 +112,11 @@ public class PartitionThread extends Thread
 
         List<ChrBaseRegion> genomeRegions = getRefGenomeRegions(specificRegions, refGenomeVersion, refGenome);
 
+        // divvy up standard chromosomes amongst the reads evenly by base length, but for other contigs just add them to the final thread
+
         // ignore lengths for alt-contigs so they don't impact the partitioning of actual chromosomes and reads
-        long totalLength = genomeRegions.stream().mapToLong(x -> regionIntervalLength(x)).sum();
+        long totalLength = genomeRegions.stream().mapToLong(x -> isAltRegionContig(x.Chromosome) ? 0 : x.baseLength()).sum();
+
         long intervalLength = (int)ceil(totalLength / (double)threadCount);
 
         int chrEndBuffer = (int)round(intervalLength * 0.05);
@@ -124,8 +127,14 @@ public class PartitionThread extends Thread
 
         for(ChrBaseRegion genomeRegion : genomeRegions)
         {
+            if(isAltRegionContig(genomeRegion.Chromosome))
+            {
+                currentRegions.add(genomeRegion);
+                continue;
+            }
+
             nextRegionStart = 1;
-            int regionLength = regionIntervalLength(genomeRegion);
+            int regionLength = genomeRegion.baseLength();
             int remainingChromosomeLength = regionLength;
 
             while(currentLength + remainingChromosomeLength >= intervalLength)
@@ -161,11 +170,6 @@ public class PartitionThread extends Thread
         }
 
         return partitionRegions.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
-    }
-
-    private static int regionIntervalLength(final ChrBaseRegion region)
-    {
-        return isAltRegionContig(region.Chromosome) ? 1 : region.baseLength();
     }
 
     private static List<ChrBaseRegion> getRefGenomeRegions(
