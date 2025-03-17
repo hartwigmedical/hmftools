@@ -82,7 +82,7 @@ public class ReversePave
         {
             try
             {
-                transcriptIdToVariant.put(variant.Transcript.TransName, variant.calculateVariant(RefGenome));
+                transcriptIdToVariant.put(variant.transcriptName(), variant.calculateVariant(RefGenome));
             }
             catch(IllegalArgumentException e)
             {
@@ -105,8 +105,8 @@ public class ReversePave
             {
                 if(!variant.changes().equals(example.changes()))
                 {
-                    String name1 = variant.Transcript.TransName;
-                    String name2 = example.Transcript.TransName;
+                    String name1 = variant.transcriptName();
+                    String name2 = example.transcriptName();
                     String msg = format("Transcripts %s and %s both match %s but produce different hotspots", name1, name2, proteinVariant);
                     throw new IllegalArgumentException(msg);
                 }

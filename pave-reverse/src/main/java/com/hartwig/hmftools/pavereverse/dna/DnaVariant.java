@@ -1,35 +1,30 @@
 package com.hartwig.hmftools.pavereverse.dna;
 
-import java.util.Objects;
-
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
+import com.hartwig.hmftools.pavereverse.protein.HgvsVariant;
 import com.hartwig.hmftools.pavereverse.util.Checks;
 
-public class DnaVariant
+public class DnaVariant extends HgvsVariant
 {
-    public final GeneData Gene;
-    public final TranscriptData Transcript;
-    public final int Position;
+    public final HgvsAddress Address;
     public final String Ref;
     public final String Alt;
 
-    public DnaVariant(final GeneData gene, final TranscriptData transcript, final int position, final String ref, final String alt)
+    public DnaVariant(GeneData gene, TranscriptData transcript, HgvsAddress address, String ref, String alt)
     {
-        Preconditions.checkArgument(Objects.equals(transcript.GeneId, gene.GeneId));
+        super(gene, transcript);
         Preconditions.checkArgument(Checks.isNucleotideSequence(ref));
         Preconditions.checkArgument(Checks.isNucleotideSequence(alt));
-        Gene = gene;
-        Transcript = transcript;
-        Position = position;
+        Address = address;
         Ref = ref;
         Alt = alt;
     }
 
     public BaseSequenceChange toGenomicVariant()
     {
-        return null;
+        return new BaseSequenceChange(Ref, Alt, chromosome(), Address.toStrandLocation(geneTranscript()));
     }
 }

@@ -21,7 +21,7 @@ class DifferenceWithTransvar
                         .next();
         mType = transvalVariant.getClass().getSimpleName();
         System.out.println(mType + " difference for: " + mCollator.Gene + " " + mCollator.Annotation
-                + ", calculated: " + mVariant.transcriptName() + " canonical: " + mVariant.Transcript.IsCanonical
+                + ", calculated: " + mVariant.transcriptName() + " canonical: " + mVariant.transcriptIsCanonical()
                 + " " + mVariant.changes()
                 + " from transvar: " + mCollator.ChangeSequences);
     }

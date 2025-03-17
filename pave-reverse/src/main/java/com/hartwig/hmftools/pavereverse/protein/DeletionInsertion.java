@@ -45,12 +45,12 @@ public class DeletionInsertion extends ProteinVariant
     {
         SplitCodonSequence seq = context.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength);
         Set<String> newBases = possibleInsertedNucleotideSequences(seq.retainedPrefix(), seq.retainedSuffix());
-        if(Gene.reverseStrand())
+        if(reverseStrand())
         {
             newBases = newBases.stream().map(Nucleotides::reverseComplementBases).collect(toSet());
         }
         int changeStart = seq.locationOfDeletedBases();
-        String referenceBases = Gene.forwardStrand()
+        String referenceBases = forwardStrand()
                 ? seq.segmentThatIsModified()
                 : Nucleotides.reverseComplementBases(seq.segmentThatIsModified());
         Set<ChangeResult> result = new HashSet<>();

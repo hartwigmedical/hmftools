@@ -23,6 +23,11 @@ public final class BaseSequenceVariants
         return Transcript.TransName;
     }
 
+    public boolean transcriptIsCanonical()
+    {
+        return Transcript.IsCanonical;
+    }
+
     public Set<BaseSequenceChange> changes()
     {
         return Changes;

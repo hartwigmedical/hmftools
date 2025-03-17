@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.pavereverse.ReversePaveTestBase;
 import com.hartwig.hmftools.pavereverse.dna.DnaVariant;
+import com.hartwig.hmftools.pavereverse.dna.DownstreamOfCodingEndAddress;
+import com.hartwig.hmftools.pavereverse.dna.InExonAddress;
+import com.hartwig.hmftools.pavereverse.dna.UpstreamOfCodingStartAddress;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -11,6 +14,8 @@ import org.junit.Test;
 public class DnaVariantParserTest extends ReversePaveTestBase
 {
     private DnaVariantParser parser;
+    private final String zyx = "ZYX";
+    private final String zyxCanonical = "ENST00000322764";
 
     @Before
     public void setUp()
@@ -19,16 +24,35 @@ public class DnaVariantParserTest extends ReversePaveTestBase
     }
 
     @Test
-    public void parseSubstitutionTest()
+    public void parseSubstitutionInExonTest()
     {
-        final String transcriptId = "ENST00000322764";
-        DnaVariant variant = parser.parse("ZYX", transcriptId, "6G>A");
-        assertEquals(transcriptId, variant.Transcript.TransName);
-        assertEquals("ZYX", variant.Gene.GeneName);
+        DnaVariant variant = parser.parse(zyx, zyxCanonical, "6G>A");
+        assertEquals(zyxCanonical, variant.transcriptName());
+        assertEquals("ZYX", variant.geneName());
         assertEquals("G", variant.Ref);
         assertEquals("A", variant.Alt);
-        assertEquals(6, variant.Position);
+        assertEquals(6, ((InExonAddress) variant.Address).IndexOfBaseInCodingBases);
     }
 
+    @Test
+    public void parseSubstitutionUpstreamOfCodingStartTest()
+    {
+        DnaVariant variant = parser.parse("ZYX", zyxCanonical, "-6G>A");
+        assertEquals(zyxCanonical, variant.transcriptName());
+        assertEquals(zyx, variant.geneName());
+        assertEquals("G", variant.Ref);
+        assertEquals("A", variant.Alt);
+        assertEquals(6, ((UpstreamOfCodingStartAddress) variant.Address).IndexUpstreamOfStart);
+    }
 
+    @Test
+    public void parseDownstreamOfCodingEndTest()
+    {
+        DnaVariant variant = parser.parse(zyx, zyxCanonical, "*12C>G");
+        assertEquals(zyxCanonical, variant.transcriptName());
+        assertEquals(zyx, variant.geneName());
+        assertEquals("C", variant.Ref);
+        assertEquals("G", variant.Alt);
+        assertEquals(12, ((DownstreamOfCodingEndAddress) variant.Address).IndexDownstreamOfEnd);
+    }
 }

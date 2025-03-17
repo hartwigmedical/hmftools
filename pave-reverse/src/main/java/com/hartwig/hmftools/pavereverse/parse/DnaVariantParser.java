@@ -9,6 +9,10 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.pavereverse.dna.DnaVariant;
+import com.hartwig.hmftools.pavereverse.dna.DownstreamOfCodingEndAddress;
+import com.hartwig.hmftools.pavereverse.dna.HgvsAddress;
+import com.hartwig.hmftools.pavereverse.dna.InExonAddress;
+import com.hartwig.hmftools.pavereverse.dna.UpstreamOfCodingStartAddress;
 
 public class DnaVariantParser extends VariantParser
 {
@@ -23,17 +27,31 @@ public class DnaVariantParser extends VariantParser
         TranscriptData transcriptData = EnsemblCache.getTranscriptData(geneData.GeneId, transcriptId);
         if(variant.contains(">"))
         {
-            Pattern p = Pattern.compile("(\\d+)([ACGT]+)>([ACGT]+)");
+            Pattern p = Pattern.compile("([-*])?(\\d+)([ACGT]+)>([ACGT]+)");
             Matcher matcher = p.matcher(variant);
             boolean matches = matcher.find();
             if(!matches)
             {
                 throw new IllegalArgumentException("Variant " + variant);
             }
-            int position = Integer.parseInt(matcher.group(1));
-            String ref = matcher.group(2);
-            String alt = matcher.group(3);
-            return new DnaVariant(geneData, transcriptData, position, ref, alt);
+            String upstreamDownstreamMarker = matcher.group(1);
+            int position = Integer.parseInt(matcher.group(2));
+            String ref = matcher.group(3);
+            String alt = matcher.group(4);
+            HgvsAddress address;
+            if("-".equals(upstreamDownstreamMarker))
+            {
+                address = new UpstreamOfCodingStartAddress(position);
+            }
+            else if("*".equals(upstreamDownstreamMarker))
+            {
+                address = new DownstreamOfCodingEndAddress(position);
+            }
+            else
+            {
+                address = new InExonAddress(position);
+            }
+            return new DnaVariant(geneData, transcriptData, address, ref, alt);
         }
         return null;
     }

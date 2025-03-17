@@ -31,7 +31,7 @@ class VariantStatus
 
     boolean usesNonCanonicalTranscript()
     {
-        return !Variant.Transcript.IsCanonical;
+        return !Variant.transcriptIsCanonical();
     }
 
     boolean parsedOk()
