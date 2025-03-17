@@ -901,6 +901,7 @@ public class JunctionTracker
         purgeSupplementaryDuplicates(junctionData);
 
         junctionFrags = junctionData.junctionFragmentCount(); // re-assessed
+        exactSupportCount = junctionData.exactSupportFragmentCount();
 
         return junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport;
     }

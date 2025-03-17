@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.prep.SpanningReadCache.formChromosomePartition;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
+import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.SUPPORT;
 
 import java.util.Comparator;
@@ -132,7 +133,7 @@ public class ReadGroup
         return mReads.size() == 2 && mReads.stream().allMatch(x -> !x.hasSuppAlignment() && !x.isSupplementaryAlignment());
     }
 
-    public boolean allNoSupport() { return mReads.stream().allMatch(x -> x.readType() == ReadType.NO_SUPPORT); }
+    public boolean allNoSupport() { return mReads.stream().allMatch(x -> x.readType() == NO_SUPPORT); }
 
     public boolean hasReadType(final ReadType type) { return mReads.stream().anyMatch(x -> x.readType() == type); }
 
@@ -198,6 +199,7 @@ public class ReadGroup
             return true;
 
         if(mReads.stream().allMatch(x -> x.readType() == CANDIDATE_SUPPORT
+        || x.readType() == NO_SUPPORT
         || x.isUnmapped()
         || (x.readType() == SUPPORT && ReadFilterType.isSet(x.filters(), SOFT_CLIP_LOW_BASE_QUAL))))
         {

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.prep.TestUtils.REGION_2;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.REGION_3;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.JUNCTION;
+import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -384,5 +385,22 @@ public class SpanningReadsCacheTest
 
         mSpanningReadCache.reset();
         spanningGroupsMap.clear();
+
+        // test a candidate with a local mate
+        PrepRead read3 = PrepRead.from(createSamRecord(
+                readIdStr(readId), CHR_1, 10800, CHR_1, 11300, true, false, ""));
+
+        read3.setReadType(CANDIDATE_SUPPORT);
+
+        PrepRead mate3 = PrepRead.from(createSamRecord(
+                readIdStr(readId), CHR_1, 11300, CHR_1, 10800, false, false, ""));
+
+        mate3.setReadType(NO_SUPPORT);
+
+        ReadGroup rg3 = new ReadGroup(read3);
+        rg3.addRead(mate3);
+        rg3.setPartitionCount(REGION_2, PARTITION_SIZE);
+        assertEquals(1, rg3.partitionCount());
+        assertTrue(rg3.conditionalOnRemoteReads());
     }
 }

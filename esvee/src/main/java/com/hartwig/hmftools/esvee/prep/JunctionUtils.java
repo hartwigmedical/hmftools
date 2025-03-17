@@ -286,47 +286,54 @@ public final class JunctionUtils
 
     public static void purgeSupplementaryDuplicates(final JunctionData junctionData)
     {
-        if(junctionData.junctionGroups().size() < 2)
+        int splitFragCount = junctionData.junctionGroups().size() + junctionData.exactSupportGroups().size();
+
+        if(splitFragCount < 2)
             return;
 
         // find duplicates missed by Redux where the primary and supplementary have the same coordinates (and mates match)
         // in which case keep primaries and dedup (remove) supplementaries at the lower location, and vice versa at the upper location
         Map<Integer,List<PrepRead>> initialPositionMap = Maps.newHashMap();
 
-        for(ReadGroup readGroup : junctionData.junctionGroups())
+        for(int i = 0; i <= 1; ++i)
         {
-            // require paired reads with a supplementary read
-            for(PrepRead read : readGroup.reads())
+            List<ReadGroup> splitReadGroups = (i == 0) ? junctionData.junctionGroups() : junctionData.exactSupportGroups();
+
+            for(ReadGroup readGroup : splitReadGroups)
             {
-                if(!read.isMateMapped() || !read.hasSuppAlignment())
-                    continue;
-
-                if(read.readType() != ReadType.JUNCTION)
-                    continue;
-
-                if(junctionData.Orient.isForward())
+                // require paired reads with a supplementary read
+                for(PrepRead read : readGroup.reads())
                 {
-                    if(read.end() != junctionData.Position)
+                    if(!read.isMateMapped() || !read.hasSuppAlignment())
                         continue;
-                }
-                else
-                {
-                    if(read.start() != junctionData.Position)
+
+                    if(read.readType() != ReadType.JUNCTION && read.readType() != ReadType.EXACT_SUPPORT)
                         continue;
+
+                    if(junctionData.Orient.isForward())
+                    {
+                        if(read.end() != junctionData.Position)
+                            continue;
+                    }
+                    else
+                    {
+                        if(read.start() != junctionData.Position)
+                            continue;
+                    }
+
+                    int unclippedPosition = unclippedPosition(read);
+
+                    List<PrepRead> matchingGroups = initialPositionMap.get(unclippedPosition);
+
+                    if(matchingGroups == null)
+                    {
+                        matchingGroups = Lists.newArrayList();
+                        initialPositionMap.put(unclippedPosition, matchingGroups);
+                    }
+
+                    matchingGroups.add(read);
+                    break;
                 }
-
-                int unclippedPosition = unclippedPosition(read);
-
-                List<PrepRead> matchingGroups = initialPositionMap.get(unclippedPosition);
-
-                if(matchingGroups == null)
-                {
-                    matchingGroups = Lists.newArrayList();
-                    initialPositionMap.put(unclippedPosition, matchingGroups);
-                }
-
-                matchingGroups.add(read);
-                break;
             }
         }
 
@@ -384,19 +391,30 @@ public final class JunctionUtils
         if(removeReadIds.isEmpty())
             return;
 
-        int index = 0;
-        while(index < junctionData.junctionGroups().size())
+        for(int i = 0; i <= 1; ++i)
         {
-            ReadGroup readGroup = junctionData.junctionGroups().get(index);
+            List<ReadGroup> splitReadGroups = (i == 0) ? junctionData.junctionGroups() : junctionData.exactSupportGroups();
 
-            if(removeReadIds.remove(readGroup.id()))
+            int index = 0;
+            while(index < splitReadGroups.size())
             {
-                junctionData.junctionGroups().remove(index);
+                ReadGroup readGroup = splitReadGroups.get(index);
+
+                if(removeReadIds.remove(readGroup.id()))
+                {
+                    splitReadGroups.remove(index);
+
+                    if(removeReadIds.isEmpty())
+                        break;
+                }
+                else
+                {
+                    ++index;
+                }
             }
-            else
-            {
-                ++index;
-            }
+
+            if(removeReadIds.isEmpty())
+                break;
         }
     }
 }

@@ -102,6 +102,7 @@ public class BreakendWriter
             sj.add("InsertionType");
             sj.add("UniqueFragPos");
             sj.add("ClosestAssembly");
+            sj.add("NonPrimaryFragments");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -233,6 +234,8 @@ public class BreakendWriter
 
                 String assemblyMatchStr = getClosestAssembly(breakend, assemblyAlignment.assemblies(), closestAssemblyMap, true);
                 sj.add(assemblyMatchStr);
+
+                sj.add(String.valueOf(breakend.nonPrimaryAssemblyFragmentCount()));
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();
