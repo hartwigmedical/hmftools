@@ -154,7 +154,7 @@ public class ReduxConfig
         mIsValid = true;
         SampleId = configBuilder.getValue(SAMPLE);
 
-        String bamFiles = configBuilder.hasValue(INPUT_BAM) ? configBuilder.getValue(INPUT_BAM) : configBuilder.getValue(BAM_FILE);
+        String bamFiles = configBuilder.getValue(INPUT_BAM);
         BamFiles = Arrays.stream(bamFiles.split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList());
 
         if(BamFiles.isEmpty())
@@ -314,7 +314,6 @@ public class ReduxConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPath(BAM_FILE, false, "BAM filename, deprecated, use 'input_bam' instead");
         configBuilder.addPaths(INPUT_BAM, false, "BAM file path, separated by ',' if multiple");
         configBuilder.addConfigItem(OUTPUT_BAM, false, "Output BAM filename");
         addRefGenomeConfig(configBuilder, true);
