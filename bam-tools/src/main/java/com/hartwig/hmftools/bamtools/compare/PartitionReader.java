@@ -287,6 +287,15 @@ public class PartitionReader implements Runnable
 
             if(!config.IgnoreDupDiffs && origRead.getDuplicateReadFlag() != newRead.getDuplicateReadFlag())
                 diffs.add(format("duplicate(%s/%s)", origRead.getDuplicateReadFlag(), newRead.getDuplicateReadFlag()));
+
+            if(!skipUnmappingMateDifference)
+            {
+                if(origRead.getReadUnmappedFlag() != newRead.getReadUnmappedFlag())
+                    diffs.add(format("unmapped(%s/%s)", origRead.getReadUnmappedFlag(), newRead.getReadUnmappedFlag()));
+
+                if(origRead.getMateUnmappedFlag() != newRead.getMateUnmappedFlag())
+                    diffs.add(format("mateUnmapped(%s/%s)", origRead.getMateUnmappedFlag(), newRead.getMateUnmappedFlag()));
+            }
         }
 
         // check key attributes:

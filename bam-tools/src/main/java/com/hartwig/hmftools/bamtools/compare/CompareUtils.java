@@ -27,6 +27,7 @@ public class CompareUtils
         {
             return str1.equals(str2);
         }
+
         // they are not the same orientation, check str1 forward and str2 backwards
         if (str1.length() == str2.length())
         {
@@ -48,8 +49,9 @@ public class CompareUtils
         {
             return bases1.equals(bases2);
         }
+
         // they are not the same orientation, check bases1 forward and bases2 backwards and apply complement
-        if (bases1.length() == bases2.length())
+        if(bases1.length() == bases2.length())
         {
             for(int i = 0; i < bases1.length(); i++)
             {
