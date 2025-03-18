@@ -12,6 +12,18 @@ public class ReadInfo
     private FragmentCoords mCoordinates;
     private FragmentCoords mPreCollapsedCoordinates;
 
+    private ReadInfo(final SAMRecord read, final FragmentCoords fragCoords, final FragmentCoords preCollapsedCoordinates)
+    {
+        mRead = read;
+        mCoordinates = fragCoords;
+        mPreCollapsedCoordinates = preCollapsedCoordinates;
+    }
+
+    public ReadInfo deepCopy()
+    {
+        return new ReadInfo(mRead, mCoordinates, mPreCollapsedCoordinates);
+    }
+
     public ReadInfo(final SAMRecord read, final FragmentCoords fragCoords)
     {
         mRead = read;

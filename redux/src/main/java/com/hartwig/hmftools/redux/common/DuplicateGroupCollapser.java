@@ -104,7 +104,11 @@ public interface DuplicateGroupCollapser
             if(mDuplicateGroup != null)
                 return mDuplicateGroup;
 
-            return new DuplicateGroup(Lists.newArrayList(mSingleRead.read()), mSingleRead.coordinates());
+            FragmentCoords preCollapsedCoords = mSingleRead.preCollapsedCoordinates();
+            FragmentCoords coords = mSingleRead.coordinates();
+            DuplicateGroup duplicateGroup = new DuplicateGroup(Lists.newArrayList(mSingleRead.read()), preCollapsedCoords);
+            duplicateGroup.updateFragmentCoordinates(coords);
+            return duplicateGroup;
         }
 
         public SingleReadOrDuplicateGroup merge(final SingleReadOrDuplicateGroup otherGroup)
@@ -151,7 +155,7 @@ public interface DuplicateGroupCollapser
 
     @VisibleForTesting
     @Nullable
-    static String collapseToKeyWithoutCoordinates(final FragmentCoords fragmentCoords, boolean keyByFragmentOrientation)
+    static String collapseToKeyWithoutCoordinates(final FragmentCoords fragmentCoords)
     {
         if(fragmentCoords.Unpaired)
             return null;
@@ -166,7 +170,7 @@ public interface DuplicateGroupCollapser
 
         String upperOrientation = fragmentCoords.OrientUpper == FORWARD ? "F" : "R";
         String isLowerString = fragmentCoords.ReadIsLower ? "L" : "U";
-        String fragmentOrientationSuffix = !keyByFragmentOrientation || fragmentCoords.forwardFragment() ? "" : ":N";
+        String fragmentOrientationSuffix = fragmentCoords.forwardFragment() ? "" : ":N";
         return format("%s:%s:%s:%s:%s%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix, fragmentOrientationSuffix);
     }
 
@@ -179,11 +183,11 @@ public interface DuplicateGroupCollapser
         private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedUpperGroupIndices;
         private final Map<String, OneDGridMap<SingleReadOrDuplicateGroup>> mGroupsWithUnmappedReadOrMate;
 
-        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedLowerCoordIndices;
-        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedUpperCoordIndices;
-        private final Map<String, OneDGridMap<FragmentCoords>> mCoordsWithUnmappedReadOrMate;
+        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedLowerForwardCoordIndices;
+        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedUpperForwardCoordIndices;
+        private final Map<String, OneDGridMap<FragmentCoords>> mForwardCoordsWithUnmappedReadOrMate;
 
-        private final UnionFind<FragmentCoords> mDuplexCoordsMerger;
+        private final UnionFind<FragmentCoords> mForwardCoordsMerger;
 
         public IlluminaCollapser()
         {
@@ -192,11 +196,11 @@ public interface DuplicateGroupCollapser
             mFixedUpperGroupIndices = Maps.newHashMap();
             mGroupsWithUnmappedReadOrMate = Maps.newHashMap();
 
-            mFixedLowerCoordIndices = Maps.newHashMap();
-            mFixedUpperCoordIndices = Maps.newHashMap();
-            mCoordsWithUnmappedReadOrMate = Maps.newHashMap();
+            mFixedLowerForwardCoordIndices = Maps.newHashMap();
+            mFixedUpperForwardCoordIndices = Maps.newHashMap();
+            mForwardCoordsWithUnmappedReadOrMate = Maps.newHashMap();
 
-            mDuplexCoordsMerger = new UnionFind<>();
+            mForwardCoordsMerger = new UnionFind<>();
         }
 
         public void addSingleRead(final ReadInfo readInfo)
@@ -212,16 +216,17 @@ public interface DuplicateGroupCollapser
         private void addGroup(final SingleReadOrDuplicateGroup group)
         {
             FragmentCoords coords = group.fragmentCoordinates();
-            mDuplexCoordsMerger.add(coords);
-            String collapsedKey = collapseToKeyWithoutCoordinates(coords, true);
-            String collapsedDuplexKey = collapseToKeyWithoutCoordinates(coords, false);
+            FragmentCoords forwardCoords = coords.withFragmentOrientation(FORWARD);
+            mForwardCoordsMerger.add(forwardCoords);
+            String collapsedKey = collapseToKeyWithoutCoordinates(coords);
+            String collapsedForwardKey = collapseToKeyWithoutCoordinates(forwardCoords);
             if(coords.PositionUpper == NO_POSITION)
             {
                 mGroupsWithUnmappedReadOrMate.computeIfAbsent(collapsedKey, key -> new OneDGridMap<>());
                 mGroupsWithUnmappedReadOrMate.get(collapsedKey).put(coords.PositionLower, group);
 
-                mCoordsWithUnmappedReadOrMate.computeIfAbsent(collapsedDuplexKey, key -> new OneDGridMap<>());
-                mCoordsWithUnmappedReadOrMate.get(collapsedDuplexKey).put(coords.PositionLower, coords);
+                mForwardCoordsWithUnmappedReadOrMate.computeIfAbsent(collapsedForwardKey, key -> new OneDGridMap<>());
+                mForwardCoordsWithUnmappedReadOrMate.get(collapsedForwardKey).put(forwardCoords.PositionLower, forwardCoords);
                 return;
             }
 
@@ -236,54 +241,58 @@ public interface DuplicateGroupCollapser
             mFixedUpperGroupIndices.get(collapsedKey).computeIfAbsent(coords.PositionUpper, key -> new OneDGridMap<>());
             mFixedUpperGroupIndices.get(collapsedKey).get(coords.PositionUpper).put(coords.PositionLower, groupIndex);
 
-            mFixedLowerCoordIndices.computeIfAbsent(collapsedDuplexKey, key -> Maps.newTreeMap());
-            mFixedLowerCoordIndices.get(collapsedDuplexKey).computeIfAbsent(coords.PositionLower, key -> new OneDGridMap<>());
-            mFixedLowerCoordIndices.get(collapsedDuplexKey).get(coords.PositionLower).put(coords.PositionUpper, groupIndex);
+            mFixedLowerForwardCoordIndices.computeIfAbsent(collapsedForwardKey, key -> Maps.newTreeMap());
+            mFixedLowerForwardCoordIndices.get(collapsedForwardKey).computeIfAbsent(forwardCoords.PositionLower, key -> new OneDGridMap<>());
+            mFixedLowerForwardCoordIndices.get(collapsedForwardKey).get(forwardCoords.PositionLower).put(forwardCoords.PositionUpper, groupIndex);
 
-            mFixedUpperCoordIndices.computeIfAbsent(collapsedDuplexKey, key -> Maps.newTreeMap());
-            mFixedUpperCoordIndices.get(collapsedDuplexKey).computeIfAbsent(coords.PositionUpper, key -> new OneDGridMap<>());
-            mFixedUpperCoordIndices.get(collapsedDuplexKey).get(coords.PositionUpper).put(coords.PositionLower, groupIndex);
+            mFixedUpperForwardCoordIndices.computeIfAbsent(collapsedForwardKey, key -> Maps.newTreeMap());
+            mFixedUpperForwardCoordIndices.get(collapsedForwardKey).computeIfAbsent(forwardCoords.PositionUpper, key -> new OneDGridMap<>());
+            mFixedUpperForwardCoordIndices.get(collapsedForwardKey).get(forwardCoords.PositionUpper).put(forwardCoords.PositionLower, groupIndex);
         }
 
-        private void collapseDuplexCoordsMerger()
+        private void collapseForwardCoordsMerger()
         {
-            for(OneDGridMap<FragmentCoords> coordGroup : mCoordsWithUnmappedReadOrMate.values())
+            for(OneDGridMap<FragmentCoords> coordGroup : mForwardCoordsWithUnmappedReadOrMate.values())
             {
                 List<List<FragmentCoords>> partitions = coordGroup.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE);
                 for(List<FragmentCoords> partition : partitions)
                 {
                     for(int i = 1; i < partition.size(); i++)
-                        mDuplexCoordsMerger.merge(partition.get(0), partition.get(i));
+                        mForwardCoordsMerger.merge(partition.get(0), partition.get(i));
                 }
             }
 
-            List<List<Integer>> mergedCoordGroupsIndices = mFixedLowerCoordIndices.values().stream()
+            List<List<Integer>> mergedForwardCoordGroupsIndices = mFixedLowerForwardCoordIndices.values().stream()
                     .flatMap(x -> x.values().stream())
                     .flatMap(x -> x.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE).stream())
                     .collect(Collectors.toList());
 
-            for(List<Integer> mergedCoordGroupIndices : mergedCoordGroupsIndices)
+            for(List<Integer> mergedForwardCoordGroupIndices : mergedForwardCoordGroupsIndices)
             {
-                FragmentCoords firstCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(0)).fragmentCoordinates();
-                for(int i = 1; i < mergedCoordGroupIndices.size(); i++)
+                FragmentCoords firstCoord = mFullyMappedGroups.get(mergedForwardCoordGroupIndices.get(0)).fragmentCoordinates();
+                FragmentCoords firstForwardCoord = firstCoord.withFragmentOrientation(FORWARD);
+                for(int i = 1; i < mergedForwardCoordGroupIndices.size(); i++)
                 {
-                    FragmentCoords secondCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(i)).fragmentCoordinates();
-                    mDuplexCoordsMerger.merge(firstCoord, secondCoord);
+                    FragmentCoords secondCoord = mFullyMappedGroups.get(mergedForwardCoordGroupIndices.get(i)).fragmentCoordinates();
+                    FragmentCoords secondForwardCoord = secondCoord.withFragmentOrientation(FORWARD);
+                    mForwardCoordsMerger.merge(firstForwardCoord, secondForwardCoord);
                 }
             }
 
-            mergedCoordGroupsIndices = mFixedUpperCoordIndices.values().stream()
+            mergedForwardCoordGroupsIndices = mFixedUpperForwardCoordIndices.values().stream()
                     .flatMap(x -> x.values().stream())
                     .flatMap(x -> x.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE).stream())
                     .collect(Collectors.toList());
 
-            for(List<Integer> mergedCoordGroupIndices : mergedCoordGroupsIndices)
+            for(List<Integer> mergedForwardCoordGroupIndices : mergedForwardCoordGroupsIndices)
             {
-                FragmentCoords firstCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(0)).fragmentCoordinates();
-                for(int i = 1; i < mergedCoordGroupIndices.size(); i++)
+                FragmentCoords firstCoord = mFullyMappedGroups.get(mergedForwardCoordGroupIndices.get(0)).fragmentCoordinates();
+                FragmentCoords firstForwardCoord = firstCoord.withFragmentOrientation(FORWARD);
+                for(int i = 1; i < mergedForwardCoordGroupIndices.size(); i++)
                 {
-                    FragmentCoords secondCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(i)).fragmentCoordinates();
-                    mDuplexCoordsMerger.merge(firstCoord, secondCoord);
+                    FragmentCoords secondCoord = mFullyMappedGroups.get(mergedForwardCoordGroupIndices.get(i)).fragmentCoordinates();
+                    FragmentCoords secondForwardCoord = secondCoord.withFragmentOrientation(FORWARD);
+                    mForwardCoordsMerger.merge(firstForwardCoord, secondForwardCoord);
                 }
             }
         }
@@ -293,8 +302,9 @@ public interface DuplicateGroupCollapser
             for(SingleReadOrDuplicateGroup collapsedGroup : collapsedGroups)
             {
                 FragmentCoords coord = collapsedGroup.fragmentCoordinates();
-                FragmentCoords repCoord = mDuplexCoordsMerger.getRepresentative(coord);
-                FragmentCoords collapsedCoord = repCoord.withFragmentOrientation(coord.FragmentOrient);
+                FragmentCoords forwardCoord = coord.withFragmentOrientation(FORWARD);
+                FragmentCoords repForwardCoord = mForwardCoordsMerger.getRepresentative(forwardCoord);
+                FragmentCoords collapsedCoord = repForwardCoord.withFragmentOrientation(coord.FragmentOrient);
                 collapsedGroup.updateFragmentCoordinates(collapsedCoord);
             }
         }
@@ -304,7 +314,7 @@ public interface DuplicateGroupCollapser
             if(mFullyMappedGroups.isEmpty() && mGroupsWithUnmappedReadOrMate.isEmpty())
                 return null;
 
-            collapseDuplexCoordsMerger();
+            collapseForwardCoordsMerger();
 
             List<SingleReadOrDuplicateGroup> finalCollapsedGroups = Lists.newArrayList();
             for(OneDGridMap<SingleReadOrDuplicateGroup> duplicateGroups : mGroupsWithUnmappedReadOrMate.values())
@@ -372,7 +382,8 @@ public interface DuplicateGroupCollapser
         if(duplicateGroups != null)
             duplicateGroups.forEach(collapser::addDuplicateGroup);
 
-        return collapser.getCollapsedGroups();
+        var result = collapser.getCollapsedGroups();
+        return result;
     }
 
     class UltimaCollapser

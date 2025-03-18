@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux;
 
 import static java.lang.String.format;
+import static java.util.regex.Matcher.quoteReplacement;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
@@ -16,12 +17,14 @@ import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_M
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.DEBUG_READS;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -216,12 +219,27 @@ public class PartitionReader
             fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
     }
 
+    private static String getCleanSamString(final SAMRecord read)
+    {
+        String samString = read.getSAMString();
+        samString = samString.replaceAll("[\\t]RG:Z:[^\\s]+", "");
+        samString = samString.replaceAll("[\\n]$", "");
+        return samString;
+    }
+
     private void processSamRecord(final SAMRecord read)
     {
         int readStart = read.getAlignmentStart();
 
         if(!mCurrentRegion.containsPosition(readStart)) // to avoid processing reads from the prior region again
             return;
+
+        read.setDuplicateReadFlag(false);
+        if(!Objects.equals(System.getProperty("env"), "test") && !DEBUG_READS.isEmpty())
+        {
+            if(!DEBUG_READS.contains(getCleanSamString(read)))
+                return;
+        }
 
         ++mProcessedReads;
 

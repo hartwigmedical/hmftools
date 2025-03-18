@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux;
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.String.format;
+import static java.util.regex.Matcher.quoteReplacement;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -25,6 +27,7 @@ import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -73,8 +76,21 @@ public class ReadCache
         this(groupSize, maxSoftClipLength, useFragmentOrientation, new DuplicateGroupCollapseConfig(sequencingType));
     }
 
+    private static synchronized void logRead(final SAMRecord read)
+    {
+        String samString = read.getSAMString();
+        samString = samString.replaceAll("[\\t]RG:Z:[^\\s]+", "");
+        samString = samString.replaceAll("[\\t]", quoteReplacement("\\t"));
+        samString = samString.replaceAll("[\\n]$", "");
+        samString = format("\"%s\",", samString);
+        System.out.println(samString);
+    }
+
     public void processRead(final SAMRecord read)
     {
+        if(!UmiGroupBuilder.DEBUG_READS.isEmpty() && !Objects.equals(System.getProperty("env"), "test"))
+            logRead(read);
+
         int readLeftSoftClip = leftSoftClipLength(read);
 
         if(readLeftSoftClip > mMaxSoftClipLength)

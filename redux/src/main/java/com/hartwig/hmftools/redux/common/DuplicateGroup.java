@@ -44,6 +44,18 @@ public class DuplicateGroup
     private Set<FragmentCoords> mPreCollapsedFragmentCoords;
     private int mPCRClusterCount;
 
+    public DuplicateGroup deepCopy()
+    {
+        DuplicateGroup copy = new DuplicateGroup(mUmiId, Lists.newArrayList(mReads), mFragmentCoords);
+        copy.mConsensusRead = mConsensusRead;
+        copy.mPrimaryRead = mPrimaryRead;
+        copy.mDualStrand = mDualStrand;
+        copy.mPCRClusterCount = mPCRClusterCount;
+        copy.mPreCollapsedFragmentCoords = mPreCollapsedFragmentCoords == null ? null : Sets.newHashSet(mPreCollapsedFragmentCoords);
+
+        return copy;
+    }
+
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
     {
         this(id, Lists.newArrayList(read), fragmentCoords);

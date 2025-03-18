@@ -11,16 +11,27 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.illuminaCollapse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.redux.common.DuplicateGroup;
+import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 import htsjdk.samtools.SAMRecord;
@@ -46,7 +57,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = mateReversed ? "1:R:U" : "1:F:U";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -79,7 +90,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = readReversed ? "1:R" : "1:F";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -114,7 +125,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = primaryReversed ? "1:R:S" : "1:F:S";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -152,7 +163,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords);
 
                 String lowerOrientation = coords.OrientLower == FORWARD ? "F" : "R";
                 String upperOrientation = coords.OrientUpper == FORWARD ? "F" : "R";
@@ -208,7 +219,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords);
 
                 String lowerOrientation = coords.OrientLower == FORWARD ? "F" : "R";
                 String upperOrientation = coords.OrientUpper == FORWARD ? "F" : "R";
@@ -257,5 +268,67 @@ public class DuplicateGroupCollapserTest
         };
 
         return DynamicTest.stream(Stream.of(testCases), TestCase::name, TestCase::check);
+    }
+
+    // TODO: rename
+    @Test
+    public void testIlluminaCollapse()
+    {
+        String chromosome = CHR_1;
+        int minReadStart = 100;
+        int readStart1 = minReadStart;
+        int readStart2 = minReadStart + 8;
+        int mateStart = minReadStart + 381;
+
+        int readLength = 143;
+        String readBases = "A".repeat(readLength);
+        String cigar = readLength + "M";
+
+        SAMRecord forwardFragment1 = SamRecordTestUtils.createSamRecord("READ_001", chromosome, readStart1, readBases, cigar, chromosome, mateStart, false, false, null, true, cigar);
+        forwardFragment1.setFirstOfPairFlag(true);
+        forwardFragment1.setSecondOfPairFlag(false);
+        FragmentCoords forwardCoord1 = FragmentCoords.fromRead(forwardFragment1, true);
+
+        SAMRecord forwardFragment2 = SamRecordTestUtils.createSamRecord("READ_002", chromosome, readStart2, readBases, cigar, chromosome, mateStart, false, false, null, true, cigar);
+        forwardFragment2.setFirstOfPairFlag(true);
+        forwardFragment2.setSecondOfPairFlag(false);
+        FragmentCoords forwardCoord2 = FragmentCoords.fromRead(forwardFragment2, true);
+
+        SAMRecord reverseFragment1 = SamRecordTestUtils.createSamRecord("READ_003", chromosome, readStart2, readBases, cigar, chromosome, mateStart, false, false, null, true, cigar);
+        reverseFragment1.setFirstOfPairFlag(false);
+        reverseFragment1.setSecondOfPairFlag(true);
+        FragmentCoords reverseCoord = FragmentCoords.fromRead(reverseFragment1, true);
+
+        SAMRecord reverseFragment2 = SamRecordTestUtils.createSamRecord("READ_004", chromosome, readStart2, readBases, cigar, chromosome, mateStart, false, false, null, true, cigar);
+        reverseFragment2.setFirstOfPairFlag(false);
+        reverseFragment2.setSecondOfPairFlag(true);
+
+        DuplicateGroup reverseDuplicateGroup = new DuplicateGroup(Lists.newArrayList(reverseFragment1, reverseFragment2), reverseCoord);
+        ReadInfo forwardSingle1 = new ReadInfo(forwardFragment1, forwardCoord1);
+        ReadInfo forwardSingle2 = new ReadInfo(forwardFragment2, forwardCoord2);
+
+        List<DuplicateGroup> duplicateGroups = Lists.newArrayList(reverseDuplicateGroup);
+        List<ReadInfo> singleReads = Lists.newArrayList(forwardSingle1, forwardSingle2);
+        FragmentCoordReads collapsed = illuminaCollapse(duplicateGroups, singleReads);
+
+        assertTrue(collapsed.SingleReads.isEmpty());
+        assertEquals(2, collapsed.DuplicateGroups.size());
+
+        List<DuplicateGroup> forwardCollapsedGroups = collapsed.DuplicateGroups.stream().filter(x -> x.fragmentCoordinates().forwardFragment()).collect(Collectors.toList());
+        List<DuplicateGroup> reverseCollapsedGroups = collapsed.DuplicateGroups.stream().filter(x -> !x.fragmentCoordinates().forwardFragment()).collect(Collectors.toList());
+
+        assertEquals(1, forwardCollapsedGroups.size());
+        assertEquals(1, reverseCollapsedGroups.size());
+
+        DuplicateGroup forwardCollapsedGroup = forwardCollapsedGroups.get(0);
+        DuplicateGroup reverseCollapsedGroup = reverseCollapsedGroups.get(0);
+
+        assertEquals(Sets.newHashSet(forwardFragment1, forwardFragment2), Sets.newHashSet(forwardCollapsedGroup.reads()));
+        assertEquals(Sets.newHashSet(reverseFragment1, reverseFragment2), Sets.newHashSet(reverseCollapsedGroup.reads()));
+
+        assertEquals(forwardCollapsedGroup.fragmentCoordinates(), reverseCollapsedGroup.fragmentCoordinates().withFragmentOrientation(FORWARD));
+
+        assertEquals(Sets.newHashSet(forwardCoord1, forwardCoord2), forwardCollapsedGroup.preCollapsedFragmentCoordinates());
+        assertEquals(Sets.newHashSet(reverseCoord), reverseCollapsedGroup.preCollapsedFragmentCoordinates());
     }
 }
