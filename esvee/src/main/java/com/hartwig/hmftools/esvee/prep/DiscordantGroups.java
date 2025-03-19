@@ -315,12 +315,6 @@ public class DiscordantGroups
         return isDiscordantFragment(firstRead.record(), mMinDiscordantFragmentLength, null);
     }
 
-    public static void addDiscordantStats(final ReadGroup readGroup, final DiscordantStats stats)
-    {
-        PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
-        stats.addRead(firstRead);
-    }
-
     public boolean isRelevantDiscordantGroup(final ReadGroup readGroup)
     {
         boolean hasNonSupp = false;

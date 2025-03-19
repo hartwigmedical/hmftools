@@ -23,22 +23,22 @@ import com.hartwig.hmftools.esvee.prep.PrepConfig;
 
 public class DiscordantStats
 {
-    public final long ProcessedReads;
-    public final long PrepReads;
+    public final long TotalReads; // ie from the full original BAM(s)
+    public final long PrepReads; // written by prep, so candidate discordant reads (not fragments)
 
     // note these counts are in fragment terms hence see doubling in rate calc
     public final long[] TypeCounts;
 
-    public DiscordantStats(final long processedReads, final long prepReads, final long[] typeCounts)
+    public DiscordantStats(final long totalReads, final long prepReads, final long[] typeCounts)
     {
-        ProcessedReads = processedReads;
+        TotalReads = totalReads;
         PrepReads = prepReads;
         TypeCounts = typeCounts;
     }
 
     public DiscordantStats()
     {
-        ProcessedReads = 0;
+        TotalReads = 0;
         PrepReads = 0;
         TypeCounts = new long[DiscordantFragType.values().length];
     }
@@ -47,8 +47,10 @@ public class DiscordantStats
     private static final int LENGTH_5K = 5000;
     private static final int LENGTH_100K = 100_000;
 
-    public void addRead(final PrepRead read)
+    public void processReadGroup(final ReadGroup readGroup)
     {
+        PrepRead read = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
+
         addToCounts(
                 read.Chromosome, read.MateChromosome, read.start(), read.MatePosStart, read.orientation(), read.mateOrientation(),
                 inferredInsertSizeAbs(read.record()));
@@ -112,19 +114,19 @@ public class DiscordantStats
     public double shortInversionRate()
     {
         long shortInvCount = TypeCounts[DiscordantFragType.InvLt1K.ordinal()] + TypeCounts[DiscordantFragType.Inv1To5K.ordinal()];
-        return ProcessedReads > 0 ? shortInvCount / (double)ProcessedReads : 0;
+        return TotalReads > 0 ? shortInvCount / (double) TotalReads : 0;
     }
 
     public double shortInversionFragmentRate()
     {
         long shortInvCount = TypeCounts[DiscordantFragType.InvLt1K.ordinal()];
-        return ProcessedReads > 0 ? shortInvCount / (double)ProcessedReads : 0;
+        return TotalReads > 0 ? shortInvCount / (double) TotalReads : 0;
     }
 
     public double discordantRate()
     {
         double totalDiscordant = Arrays.stream(TypeCounts).sum();
-        return ProcessedReads > 0 ? totalDiscordant / (double)ProcessedReads : 0;
+        return TotalReads > 0 ? totalDiscordant / (double) TotalReads : 0;
     }
 
     public String toString()
@@ -136,14 +138,14 @@ public class DiscordantStats
             sj.add(format("%s=%d", type, TypeCounts[type.ordinal()]));
         }
 
-        return format("totalReads=%d writtenReads=%d %s", ProcessedReads, PrepReads, sj);
+        return format("totalReads=%d writtenReads=%d %s", TotalReads, PrepReads, sj);
     }
 
     private static final String FLD_TOTAL_READS = "TotalReads";
     private static final String FLD_PREP_READS = "PrepReads";
 
     public static void writeDiscordantStats(
-            final PrepConfig config, final long processedReads, final long writtenReads, final DiscordantStats discordantStats)
+            final PrepConfig config, final long totalReads, final long writtenReads, final DiscordantStats discordantStats)
     {
         try
         {
@@ -164,7 +166,7 @@ public class DiscordantStats
             writer.newLine();
 
             sj = new StringJoiner(TSV_DELIM);
-            sj.add(String.valueOf(processedReads));
+            sj.add(String.valueOf(totalReads));
             sj.add(String.valueOf(writtenReads));
 
             for(DiscordantFragType type : DiscordantFragType.values())
@@ -190,7 +192,7 @@ public class DiscordantStats
             List<String> lines = Files.readAllLines(Paths.get(filename));
             String[] values = lines.get(1).split(TSV_DELIM);
 
-            long processedReads = Long.parseLong(values[0]);
+            long totalReads = Long.parseLong(values[0]);
             long prepReads = 0;
 
             long[] typeCounts = new long[DiscordantFragType.values().length];
@@ -202,7 +204,7 @@ public class DiscordantStats
                 typeCounts[i] = Long.parseLong(values[i + 2]);
             }
 
-            return new DiscordantStats(processedReads, prepReads, typeCounts);
+            return new DiscordantStats(totalReads, prepReads, typeCounts);
         }
         catch(Exception e)
         {

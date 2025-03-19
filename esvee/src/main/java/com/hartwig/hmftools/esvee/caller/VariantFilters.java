@@ -337,7 +337,7 @@ public class VariantFilters
         if(var.adjustedLength() > INV_SHORT_FRAGMENT_LENGTH)
             return false;
 
-        double vafThreshold = max(INV_SHORT_FRAGMENT_MIN_AF, INV_SHORT_FRAGMENT_AF_RATIO * mShortFragmentInversionRate);
+        double vafThreshold = min(INV_SHORT_FRAGMENT_MIN_AF, INV_SHORT_FRAGMENT_AF_RATIO * mShortFragmentInversionRate);
 
         return !anySamplesAboveAfThreshold(var, vafThreshold);
     }

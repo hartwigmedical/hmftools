@@ -199,14 +199,14 @@ public class FiltersTest
                 "01", CHR_1, CHR_1, 100, 200, ORIENT_FWD, ORIENT_FWD, "",
                 Maps.newHashMap(), null, null);
 
-        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 9);
-        var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 9);
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 3);
+        var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 3);
 
         long[] typeCounts = new long[DiscordantFragType.values().length];
-        typeCounts[DiscordantFragType.InvLt1K.ordinal()] = 200;
+        typeCounts[DiscordantFragType.InvLt1K.ordinal()] = 6_000;
         DiscordantStats discordantStats = new DiscordantStats(100_000, 10_000, typeCounts);
 
-        // set required rate to 10%
+        // set required rate to 2.5%
         VariantFilters invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, discordantStats);
         invFilters.applyFilters(var);
         assertTrue(var.filters().contains(FilterType.INV_SHORT_FRAG_LOW_VAF));
