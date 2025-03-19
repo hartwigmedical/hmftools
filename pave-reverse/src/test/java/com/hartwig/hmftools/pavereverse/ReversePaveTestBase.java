@@ -16,9 +16,9 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.hartwig.hmftools.pavereverse.aa.AminoAcid;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcid;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSpecification;
 import com.hartwig.hmftools.pavereverse.base.BaseSequence;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 import com.hartwig.hmftools.pavereverse.base.SplitCodonSequence;

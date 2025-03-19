@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pavereverse.aa;
+package com.hartwig.hmftools.pavereverse.aminoacids;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;

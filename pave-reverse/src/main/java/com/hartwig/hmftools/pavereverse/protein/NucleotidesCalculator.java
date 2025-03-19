@@ -8,7 +8,7 @@ import java.util.TreeSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 
 public class NucleotidesCalculator
 {

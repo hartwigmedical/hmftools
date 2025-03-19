@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.pavereverse.ReversePaveTestBase;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 
 import org.junit.Test;
 

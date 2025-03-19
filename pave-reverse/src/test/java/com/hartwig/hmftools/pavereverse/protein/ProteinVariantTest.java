@@ -7,8 +7,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.pavereverse.FixedStringGenome;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 
 import org.junit.Assert;
 import org.junit.Test;

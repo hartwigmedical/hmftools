@@ -6,8 +6,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.Set;
 
 import com.hartwig.hmftools.pavereverse.base.PaddedExon;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 

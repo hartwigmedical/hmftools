@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 
 import org.junit.Test;
 

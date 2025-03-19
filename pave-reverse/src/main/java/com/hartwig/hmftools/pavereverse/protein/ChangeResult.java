@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pavereverse.protein;
 import java.util.Objects;
 
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 
 public class ChangeResult
 {

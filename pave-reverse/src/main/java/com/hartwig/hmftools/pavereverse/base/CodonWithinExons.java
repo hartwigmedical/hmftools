@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcid;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcid;
 import com.hartwig.hmftools.pavereverse.protein.CodonChange;
 
 public class CodonWithinExons

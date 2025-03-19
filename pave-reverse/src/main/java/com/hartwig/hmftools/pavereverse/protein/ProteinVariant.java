@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 import com.hartwig.hmftools.pavereverse.base.ChangeContextBuilder;
 

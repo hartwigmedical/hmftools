@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.pavereverse.protein;
 
 import com.hartwig.hmftools.pavereverse.BaseSequenceVariants;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 
 import org.junit.Assert;
 import org.junit.Test;

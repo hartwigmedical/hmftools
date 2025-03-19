@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 
 public class Insertion extends ProteinVariant

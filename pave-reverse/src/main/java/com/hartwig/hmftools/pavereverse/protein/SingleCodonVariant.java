@@ -6,7 +6,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.ChangeContext;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 

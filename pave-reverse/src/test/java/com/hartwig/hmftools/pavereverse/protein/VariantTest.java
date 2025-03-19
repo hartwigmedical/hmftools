@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.pavereverse.FixedStringGenome;
 import com.hartwig.hmftools.pavereverse.ReversePaveTestBase;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidRange;
 
 public class VariantTest extends ReversePaveTestBase
 {

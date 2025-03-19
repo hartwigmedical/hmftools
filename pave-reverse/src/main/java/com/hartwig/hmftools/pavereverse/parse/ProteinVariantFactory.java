@@ -4,9 +4,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSpecification;
 import com.hartwig.hmftools.pavereverse.protein.Deletion;
 import com.hartwig.hmftools.pavereverse.protein.DeletionInsertion;
 import com.hartwig.hmftools.pavereverse.protein.Duplication;

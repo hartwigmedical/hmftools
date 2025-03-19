@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pavereverse.protein;
 
-import static com.hartwig.hmftools.pavereverse.aa.AminoAcid.START;
+import static com.hartwig.hmftools.pavereverse.aminoacids.AminoAcid.START;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -9,8 +9,8 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSequence;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 
 public class StartLost extends SingleCodonVariant

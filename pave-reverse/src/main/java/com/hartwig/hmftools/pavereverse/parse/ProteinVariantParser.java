@@ -11,8 +11,8 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidRange;
-import com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidRange;
+import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSpecification;
 import com.hartwig.hmftools.pavereverse.protein.ProteinVariant;
 import com.hartwig.hmftools.pavereverse.util.Checks;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pavereverse.aa;
+package com.hartwig.hmftools.pavereverse.aminoacids;
 
 import java.util.Objects;
 

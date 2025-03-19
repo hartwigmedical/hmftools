@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.pavereverse.aa;
+package com.hartwig.hmftools.pavereverse.aminoacids;
 
-import static com.hartwig.hmftools.pavereverse.aa.AminoAcidSpecification.parse;
+import static com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSpecification.parse;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
