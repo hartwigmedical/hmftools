@@ -79,7 +79,7 @@ public class CallerApplication
             System.exit(1);
         }
 
-        if(configBuilder.hasValue(ARTEFACT_PON_BED_SV_FILE) && configBuilder.hasValue(ARTEFACT_PON_BED_SGL_FILE))
+        if(configBuilder.hasValue(ARTEFACT_PON_BED_SV_FILE) || configBuilder.hasValue(ARTEFACT_PON_BED_SGL_FILE))
         {
             mArtefactPonCache = new PonCache(
                     configBuilder.getInteger(GERMLINE_PON_MARGIN),
