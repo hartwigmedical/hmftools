@@ -6,31 +6,23 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.DiscordantGroups.addDiscordantStats;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
-import static com.hartwig.hmftools.esvee.prep.JunctionUtils.purgeSupplementaryDuplicates;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.markSupplementaryDuplicates;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
-import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
-
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
 import java.util.List;
@@ -57,8 +49,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
-import htsjdk.samtools.CigarElement;
-
 public class JunctionTracker
 {
     private final ChrBaseRegion mRegion;
@@ -68,7 +58,7 @@ public class JunctionTracker
     private final List<KnownHotspot> mKnownHotspots;
     private final BlacklistLocations mBlacklist;
 
-    private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
+    private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
 
@@ -242,10 +232,20 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.InitJunctions);
 
+        int duplicateGroups = markSupplementaryDuplicates(mReadGroupMap);
+
+        if(duplicateGroups > 0)
+        {
+            SV_LOGGER.debug("region({}) marked {} supplementary duplicates", mRegion, duplicateGroups);
+        }
+
         // create junctions from read groups and then assignment supporting of various kinds
         // NOTE: the read groups are not ordered by position until the discordant group routine below
         for(ReadGroup readGroup : mReadGroupMap.values())
         {
+            if(readGroup.groupStatus() == ReadGroupStatus.DUPLICATE)
+                continue;
+
             if(mExpectedReadIds.remove(readGroup.id()))
             {
                 readGroup.markHasRemoteJunctionReads();
@@ -850,6 +850,12 @@ public class JunctionTracker
         // any reads no longer in any junction need to be reset to candidates only and will be passed to the spanning partition cache
         for(ReadGroup readGroup : removedReadGroups)
         {
+            if(readGroup.groupStatus() == ReadGroupStatus.DUPLICATE)
+            {
+                readGroup.reads().forEach(x -> x.setReadType(NO_SUPPORT));
+                continue;
+            }
+
             if(!readGroup.hasJunctionPositions())
             {
                 mRemoteCandidateReadGroups.add(readGroup);
@@ -898,10 +904,13 @@ public class JunctionTracker
         if(junctionFrags + exactSupportCount < mFilterConfig.MinJunctionSupport)
             return false;
 
+        /*
         purgeSupplementaryDuplicates(junctionData);
 
-        junctionFrags = junctionData.junctionFragmentCount(); // re-assessed
+        // re-assessed after duplicate assessment
+        junctionFrags = junctionData.junctionFragmentCount();
         exactSupportCount = junctionData.exactSupportFragmentCount();
+        */
 
         return junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport;
     }

@@ -17,13 +17,17 @@ import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
+import static org.junit.Assert.assertNotEquals;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -31,6 +35,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.junit.Test;
@@ -378,20 +383,26 @@ public class JunctionsTest
                 false, suppDataLower, true, mateCigar));
         primary2.setReadType(JUNCTION);
 
-        JunctionData junctionDataLower = new JunctionData(1000, REVERSE, primary1);
-        junctionDataLower.addJunctionReadGroup(new ReadGroup(primary1));
-        junctionDataLower.addJunctionReadGroup(new ReadGroup(supp2));
+        Map<String,ReadGroup> readGroupsMap = Maps.newHashMap();
+        ReadGroup readGroup1 = new ReadGroup(primary1);
+        readGroupsMap.put(readGroup1.id(), readGroup1);
 
-        JunctionUtils.purgeSupplementaryDuplicates(junctionDataLower);
-        assertEquals(1, junctionDataLower.junctionFragmentCount());
-        assertEquals(primary1.id(), junctionDataLower.junctionGroups().get(0).id());
+        ReadGroup readGroup2 = new ReadGroup(supp2);
+        readGroupsMap.put(readGroup2.id(), readGroup2);
 
-        JunctionData junctionDataUpper = new JunctionData(1019, FORWARD, primary2);
-        junctionDataUpper.addJunctionReadGroup(new ReadGroup(primary2));
-        junctionDataUpper.addJunctionReadGroup(new ReadGroup(supp1));
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap);
+        assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
+        assertEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
 
-        JunctionUtils.purgeSupplementaryDuplicates(junctionDataUpper);
-        assertEquals(1, junctionDataUpper.junctionFragmentCount());
-        assertEquals(supp1.id(), junctionDataLower.junctionGroups().get(0).id());
+        // test that the upper reads find the same duplicate
+        readGroup1 = new ReadGroup(supp1);
+        readGroupsMap.put(readGroup1.id(), readGroup1);
+
+        readGroup2 = new ReadGroup(primary2);
+        readGroupsMap.put(readGroup2.id(), readGroup2);
+
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap);
+        assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
+        assertEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
     }
 }

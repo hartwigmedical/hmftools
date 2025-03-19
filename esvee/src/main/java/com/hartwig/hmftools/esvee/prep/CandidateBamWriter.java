@@ -201,7 +201,7 @@ public class CandidateBamWriter
 
                     if(readGroups.size() >= READ_GROUP_FLUSH)
                     {
-                        mResultsWriter.writeReadGroup(readGroups);
+                        mResultsWriter.writeReadGroups(readGroups);
                         readGroups.clear();
                     }
                 }
@@ -213,7 +213,7 @@ public class CandidateBamWriter
                 }
             }
 
-            mResultsWriter.writeReadGroup(readGroups);
+            mResultsWriter.writeReadGroups(readGroups);
 
             SV_LOGGER.debug("chr({}) matched and wrote {} candidate reads", mChromosome, matchedCandidates);
 
