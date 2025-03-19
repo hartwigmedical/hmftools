@@ -2,11 +2,11 @@ package com.hartwig.hmftools.pavereverse.dna;
 
 import com.hartwig.hmftools.pavereverse.gene.GeneTranscript;
 
-public class DownstreamOfCodingEndAddress implements HgvsAddress
+public class InExonDownstreamOfCodingEnd implements HgvsAddress
 {
     public final int IndexDownstreamOfEnd;
 
-    public DownstreamOfCodingEndAddress(final int indexOfBaseInCodingBases)
+    public InExonDownstreamOfCodingEnd(final int indexOfBaseInCodingBases)
     {
         this.IndexDownstreamOfEnd = indexOfBaseInCodingBases;
     }
@@ -14,6 +14,6 @@ public class DownstreamOfCodingEndAddress implements HgvsAddress
     @Override
     public int toStrandLocation(GeneTranscript geneTranscript)
     {
-        return geneTranscript.Transcript.CodingEnd + IndexDownstreamOfEnd;
+        return geneTranscript.absolutePositionOf3PrimeUtrExonicBase(IndexDownstreamOfEnd);
     }
 }

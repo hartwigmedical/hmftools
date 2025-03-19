@@ -20,12 +20,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.junit.Assert;
+import org.junit.Test;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class TestDataCreator
 {
-//    @Test
+    @Test
     public void createReducedEnsemblDataSet() throws IOException
     {
         File fullEnsemblDataDir = new File("/Users/timlavers/work/data/v6_0/ref/38/common/ensembl_data");
@@ -44,7 +45,8 @@ public class TestDataCreator
                 "ARID1A",
                 "KIT",
                 "BRCA1",
-                "DYRK1A"
+                "DYRK1A",
+                "TATDN2"
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneNames);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
@@ -61,7 +63,8 @@ public class TestDataCreator
                 "ENSG00000117713", // ARID1A
                 "ENSG00000157404", // KIT
                 "ENSG00000012048",  // BRCA1
-                "ENSG00000157540" // DYRK1A
+                "ENSG00000157540", // DYRK1A
+                "ENSG00000157014" // TATDN2
         );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
 

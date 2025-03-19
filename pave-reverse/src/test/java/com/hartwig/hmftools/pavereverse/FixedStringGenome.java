@@ -13,7 +13,7 @@ public class FixedStringGenome extends SimpleTestGenome
     @Override
     public String getBaseString(final String chromosome, final int posStart, final int posEnd)
     {
-        return Bases.substring(posStart, posEnd + 1);
+        return Bases.substring(posStart - 1, posEnd);
     }
 
     @Override

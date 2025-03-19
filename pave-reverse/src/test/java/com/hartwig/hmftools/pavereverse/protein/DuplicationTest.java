@@ -13,7 +13,7 @@ public class DuplicationTest extends VariantTest
     {
         Duplication duplication = new Duplication(gene, transcript, taa, aar);
         BaseSequenceVariants variant = duplication.calculateVariant(fsg);
-        checkSingleChange(variant, "C", "CGCGCAG", "chr5", 14);
+        checkSingleChange(variant, "C", "CGCGCAG", "chr5", 15);
     }
 
     @Test

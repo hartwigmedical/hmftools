@@ -32,6 +32,8 @@ public class Duplication extends ProteinVariant
         String refBase = duplicated.substring(0, 1);
         return Set.of(new ChangeResult(acids, bases, changeContext.positionOfChangeStartInStrand(), refBase, duplicated));
     }
+    // TGGCCGCGCAGGTCT
+    //
 
     @Override
     AminoAcidSequence variantSequence()

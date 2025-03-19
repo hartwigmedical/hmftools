@@ -13,7 +13,7 @@ import com.hartwig.hmftools.pavereverse.gene.GeneTranscript;
 
 import org.junit.Test;
 
-public class UpstreamOfCodingStartAddressTest extends ReversePaveTestBase
+public class InIntronAfterExonTest extends ReversePaveTestBase
 {
     @Test
     public void locationTest()
@@ -26,7 +26,9 @@ public class UpstreamOfCodingStartAddressTest extends ReversePaveTestBase
         TranscriptData transcript = createTransExons(geneData.GeneId, 123, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "whatever");
         GeneTranscript gt = new GeneTranscript(geneData, transcript);
 
-        assertEquals(14, new UpstreamOfCodingStartAddress(1).toStrandLocation(gt));
-        assertEquals(13, new UpstreamOfCodingStartAddress(2).toStrandLocation(gt));
+        assertEquals(21, new InIntronAfterExon(6, 1).toStrandLocation(gt));
+        assertEquals(22, new InIntronAfterExon(6, 2).toStrandLocation(gt));
+        assertEquals(30 + 10 + 1, new InIntronAfterExon(17, 1).toStrandLocation(gt));
+        assertEquals(30 + 10 + 3, new InIntronAfterExon(17, 3).toStrandLocation(gt));
     }
 }

@@ -16,13 +16,10 @@ import org.junit.Test;
 public class ProteinVariantTest extends VariantTest
 {
     @Test
-    public void calculateVariantTest()
+    public void replaceExonAminoAcids()
     {
         final int iId = 111;
-        GeneData g = new GeneData("GeneId", "BLAH", "chr5", (byte) 1, 10, 115, "q13.1");
-        TranscriptData transcriptData = new TranscriptData(500, "TrName", g.GeneId, true, (byte) 1, 10, 115, 10, 115, "protein_coding");
         String aminoAcids = "MANGYFLAPPYELEPHANTSEARS";
-        TranscriptAminoAcids transcriptAminoAcids = new TranscriptAminoAcids(g.GeneId, g.GeneName, transcriptData.TransName, true, aminoAcids);
 
         // M   A   N   G    Y   F   L    A   P    P   Y   E    L   E   P    H   A   N    T   S   E    A   R   S
         // ATG|GCA|AAC|G GA|TAT|TTC|TT A|GCA|CCA| CCA|TAT|GAA| TTA|GAA|C CA|CAC|GCA|A AC|ACC|TCA|GA A|GCA|AGG|TCA
@@ -55,6 +52,11 @@ public class ProteinVariantTest extends VariantTest
                 b5 + "AAAA" +
                 b6 + "CCCC" +
                 b7 + "TGATGATTT";
+        int genomeLength = allBases.length();
+        GeneData g = new GeneData("GeneId", "BLAH", "chr5", (byte) 1, 5, genomeLength - 5, "q13.1");
+        TranscriptData transcriptData = new TranscriptData(500, "TrName", g.GeneId, true, (byte) 1, 10, genomeLength - 5, 10, genomeLength - 10, "protein_coding");
+        TranscriptAminoAcids transcriptAminoAcids = new TranscriptAminoAcids(g.GeneId, g.GeneName, transcriptData.TransName, true, aminoAcids);
+
         FixedStringGenome fixedGenome = new FixedStringGenome(allBases);
         transcriptData.setExons(List.of(e0, e1, e2, e3, e4, e5, e6, e7));
 
