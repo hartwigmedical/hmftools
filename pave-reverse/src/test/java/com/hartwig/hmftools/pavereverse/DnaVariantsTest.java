@@ -91,4 +91,17 @@ public final class DnaVariantsTest extends ReversePaveTestBase
         bsc = reversePave.calculateDnaVariant(tatdn2, tatdn2Canonical, "c.*39-3C>T");
         check(bsc, "C", "T", "chr3", 10_279_218);
     }
+
+    @Test
+    public void deletionOfSingleBase()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(tatdn2, tatdn2Canonical, "c.977delA");
+        check(bsc, "CA", "C", "chr3", 10_270_158);
+    }
+
+    @Test
+    public void deletionOfRange()
+    {
+
+    }
 }

@@ -43,7 +43,7 @@ public class ReversePave
 
     public BaseSequenceChange calculateDnaVariant(String gene, String transcriptId, String dnaVariant)
     {
-        return dnaVariantParser().parse(gene, transcriptId, dnaVariant).toGenomicVariant();
+        return dnaVariantParser().parse(gene, transcriptId, dnaVariant).toGenomicVariant(RefGenome);
     }
 
     public DnaVariantParser dnaVariantParser()

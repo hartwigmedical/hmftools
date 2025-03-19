@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.pavereverse.dna.DeletionVariant;
 import com.hartwig.hmftools.pavereverse.dna.DnaVariant;
 import com.hartwig.hmftools.pavereverse.dna.HgvsAddress;
 import com.hartwig.hmftools.pavereverse.dna.InExon;
@@ -18,8 +19,10 @@ import com.hartwig.hmftools.pavereverse.dna.InIntronAfterExon;
 import com.hartwig.hmftools.pavereverse.dna.InIntronBeforeExon;
 import com.hartwig.hmftools.pavereverse.dna.InIntronDownstreamOfCodingEnd;
 import com.hartwig.hmftools.pavereverse.dna.InIntronUpstreamOfCodingStart;
+import com.hartwig.hmftools.pavereverse.dna.SubstitutionVariant;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.NotNull;
 
 public class DnaVariantParser extends VariantParser
 {
@@ -35,21 +38,46 @@ public class DnaVariantParser extends VariantParser
         String trimmedVariant = trimInitialCdot(variant);
         if(trimmedVariant.contains(">"))
         {
-            Pattern roughStructurePattern = Pattern.compile("([+\\-*\\d]+)([ACGT]+)>([ACGT]+)");
-            Matcher roughStructureMatcher = roughStructurePattern.matcher(trimmedVariant);
-            boolean roughStructureFound = roughStructureMatcher.matches();
-
-            if(!roughStructureFound)
-            {
-                throw new IllegalArgumentException("Variant not parsed: " + variant);
-            }
-            String positionInfo = roughStructureMatcher.group(1);
-            HgvsAddress address = parseAddress(positionInfo);
-            String ref = roughStructureMatcher.group(2);
-            String alt = roughStructureMatcher.group(3);
-            return new DnaVariant(geneData, transcriptData, address, ref, alt);
+            return getSubstitutionVariant(trimmedVariant, geneData, transcriptData);
+        }
+        else if(trimmedVariant.contains("del"))
+        {
+            return getDelVariant(trimmedVariant, geneData, transcriptData);
         }
         return null;
+    }
+
+    private static DnaVariant getDelVariant(String variant, GeneData geneData, TranscriptData transcriptData)
+    {
+        Pattern roughStructurePattern = Pattern.compile("([+\\-*\\d]+)del([ACGT]*)");
+        Matcher roughStructureMatcher = roughStructurePattern.matcher(variant);
+        boolean roughStructureFound = roughStructureMatcher.matches();
+
+        if(!roughStructureFound)
+        {
+            throw new IllegalArgumentException("Variant not parsed: " + variant);
+        }
+        String positionInfo = roughStructureMatcher.group(1);
+        HgvsAddress address = parseAddress(positionInfo);
+        String ref = groupOrBlank(roughStructureMatcher, 2);
+        return new DeletionVariant(geneData, transcriptData, address, ref);
+    }
+
+    private static DnaVariant getSubstitutionVariant(String variant, GeneData geneData, TranscriptData transcriptData)
+    {
+        Pattern roughStructurePattern = Pattern.compile("([+\\-*\\d]+)([ACGT]+)>([ACGT]+)");
+        Matcher roughStructureMatcher = roughStructurePattern.matcher(variant);
+        boolean roughStructureFound = roughStructureMatcher.matches();
+
+        if(!roughStructureFound)
+        {
+            throw new IllegalArgumentException("Variant not parsed: " + variant);
+        }
+        String positionInfo = roughStructureMatcher.group(1);
+        HgvsAddress address = parseAddress(positionInfo);
+        String ref = roughStructureMatcher.group(2);
+        String alt = roughStructureMatcher.group(3);
+        return new SubstitutionVariant(geneData, transcriptData, address, ref, alt);
     }
 
     @VisibleForTesting
