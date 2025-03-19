@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 
@@ -47,6 +48,8 @@ public class FragmentData
 
     public String mateChromosome() { return Read.MateChromosome; }
     public Orientation mateOrientation() { return Read.mateOrientation(); }
+
+    public boolean isConsensus() { return Read.record().hasAttribute(CONSENSUS_READ_ATTRIBUTE); }
 
     public boolean matches(final FragmentData other)
     {

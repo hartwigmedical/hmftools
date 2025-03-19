@@ -232,9 +232,9 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.InitJunctions);
 
-        int duplicateGroups = markSupplementaryDuplicates(mReadGroupMap);
+        int duplicateGroups = markSupplementaryDuplicates(mReadGroupMap, mReadIdTrimmer);
 
-        if(duplicateGroups > 0)
+        if(duplicateGroups > 100)
         {
             SV_LOGGER.debug("region({}) marked {} supplementary duplicates", mRegion, duplicateGroups);
         }
