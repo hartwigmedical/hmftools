@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pavereverse.gene;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 
@@ -25,18 +26,22 @@ public class GeneTranscriptTest extends ReversePaveTestBase
 
     GeneData geneData = createEnsemblGeneData("id132", "BLAH", "1",  POS_STRAND, 5, 125);
     TranscriptData transcript = createTransExons(geneData.GeneId, 123, POS_STRAND, exonStarts, 9, codingStart, codingEnd, false, "whatever");
+    TranscriptData rsTranscript = createTransExons(geneData.GeneId, 124, NEG_STRAND, exonStarts, 9, codingStart, codingEnd, false, "whatever");
     GeneTranscript geneTranscript = new GeneTranscript(geneData, transcript);
+    GeneTranscript geneTranscriptRS = new GeneTranscript(geneData, rsTranscript);
 
     @Test
     public void totalTranslatedLength()
     {
         assertEquals(20, geneTranscript.totalTranslatedLength());
+        assertEquals(20, geneTranscriptRS.totalTranslatedLength());
     }
 
     @Test
     public void codingRegionLengths()
     {
         assertEquals(List.of(5, 10, 5), geneTranscript.codingRegionLengths());
+        assertEquals(List.of(5, 10, 5), geneTranscriptRS.codingRegionLengths());
     }
 
     @Test
@@ -53,6 +58,19 @@ public class GeneTranscriptTest extends ReversePaveTestBase
     }
 
     @Test
+    public void absolutePositionOfTranslatedBaseReverseStrand()
+    {
+        assertEquals(94, geneTranscriptRS.absolutePositionOfTranslatedBase(1));
+        assertEquals(93, geneTranscriptRS.absolutePositionOfTranslatedBase(2));
+        assertEquals(90, geneTranscriptRS.absolutePositionOfTranslatedBase(5));
+        assertEquals(79, geneTranscriptRS.absolutePositionOfTranslatedBase(6));
+        assertEquals(78, geneTranscriptRS.absolutePositionOfTranslatedBase(7));
+        assertEquals(70, geneTranscriptRS.absolutePositionOfTranslatedBase(15));
+        assertEquals(59, geneTranscriptRS.absolutePositionOfTranslatedBase(16));
+        assertEquals(55, geneTranscriptRS.absolutePositionOfTranslatedBase(20));
+    }
+
+    @Test
     public void absolutePositionOf5PrimeUtrExonicBase()
     {
         assertEquals(54, geneTranscript.absolutePositionOf5PrimeUtrExonicBase(-1));
@@ -65,6 +83,16 @@ public class GeneTranscriptTest extends ReversePaveTestBase
     }
 
     @Test
+    public void absolutePositionOf5PrimeUtrExonicBaseReverseStrand()
+    {
+        assertEquals(95, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-1));
+        assertEquals(96, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-2));
+        assertEquals(99, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-5));
+        assertEquals(110, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-6));
+        assertEquals(119, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-15));
+    }
+
+    @Test
     public void absolutePositionOf3PrimeUtrExonicBase()
     {
         assertEquals(95, geneTranscript.absolutePositionOf3PrimeUtrExonicBase(1));
@@ -72,5 +100,17 @@ public class GeneTranscriptTest extends ReversePaveTestBase
         assertEquals(99, geneTranscript.absolutePositionOf3PrimeUtrExonicBase(5));
         assertEquals(110, geneTranscript.absolutePositionOf3PrimeUtrExonicBase(6));
         assertEquals(119, geneTranscript.absolutePositionOf3PrimeUtrExonicBase(15));
+    }
+
+    @Test
+    public void absolutePositionOf3PrimeUtrExonicBaseReverseStrand()
+    {
+        assertEquals(54, geneTranscriptRS.absolutePositionOf3PrimeUtrExonicBase(1));
+        assertEquals(53, geneTranscriptRS.absolutePositionOf3PrimeUtrExonicBase(2));
+        assertEquals(50, geneTranscriptRS.absolutePositionOf3PrimeUtrExonicBase(5));
+        assertEquals(39, geneTranscriptRS.absolutePositionOf3PrimeUtrExonicBase(6));
+        assertEquals(30, geneTranscriptRS.absolutePositionOf3PrimeUtrExonicBase(15));
+        assertEquals(19, geneTranscriptRS.absolutePositionOf3PrimeUtrExonicBase(16));
+        assertEquals(10, geneTranscriptRS.absolutePositionOf3PrimeUtrExonicBase(25));
     }
 }

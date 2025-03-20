@@ -10,12 +10,19 @@ public class AnnotatedExon
     public final int FirstBase;
     public final int LastBase;
     public final ExonData Exon;
+    public final boolean IsForwardStrand;
 
-    public AnnotatedExon(final int firstBase, final int lastBase, final ExonData exon)
+    public AnnotatedExon(int firstBase, int lastBase, ExonData exon, boolean forwardStrand)
     {
         FirstBase = firstBase;
         LastBase = lastBase;
         Exon = exon;
+        IsForwardStrand = forwardStrand;
+    }
+
+    public AnnotatedExon(final int firstBase, final int lastBase, final ExonData exon)
+    {
+        this(firstBase, lastBase, exon, true);
     }
 
     public boolean contains(int base)
@@ -26,7 +33,12 @@ public class AnnotatedExon
     public int getAbsolutePosition(final int base)
     {
         Preconditions.checkArgument(base >= FirstBase && base <= LastBase);
-        return Exon.Start + (base - FirstBase);
+        final int offset = base - FirstBase;
+        if (IsForwardStrand)
+        {
+            return Exon.Start + offset;
+        }
+        return Exon.End - offset;
     }
 
     @Override

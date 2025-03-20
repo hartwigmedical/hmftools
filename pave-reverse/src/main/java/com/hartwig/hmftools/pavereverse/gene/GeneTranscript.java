@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -28,44 +29,61 @@ public class GeneTranscript
         mAnnotatedExons = new ArrayList<>();
         List<ChrBaseRegion> codingRegions = new ArrayList<>();
         final AtomicInteger basesCovered = new AtomicInteger(0);
-        final AtomicBoolean startFound = new AtomicBoolean(false);
-        final AtomicInteger indexOfFirstTranslatedBase = new AtomicInteger(0);
-        final AtomicInteger indexOfLastTranslatedBase = new AtomicInteger(0);
-        transcriptData.exons().forEach(exon ->
+        final AtomicBoolean firstCodingBaseFound = new AtomicBoolean(false);
+        final AtomicInteger indexOfFirstCodingBase = new AtomicInteger(0);
+        final AtomicInteger indexOfLastCodingBase = new AtomicInteger(0);
+        if(transcriptData.posStrand())
         {
-            int firstBaseInExon = basesCovered.get() + 1;
-            int lastBaseInExon = firstBaseInExon + exon.baseLength() - 1;
-            mAnnotatedExons.add(new AnnotatedExon(firstBaseInExon, lastBaseInExon, exon));
-            if(exon.End >= transcriptData.CodingStart && exon.Start <= transcriptData.CodingEnd)
+            transcriptData.exons().forEach(exon ->
             {
-                if(!startFound.get())
+                int firstBaseInExon = basesCovered.get() + 1;
+                int lastBaseInExon = firstBaseInExon + exon.baseLength() - 1;
+                mAnnotatedExons.add(new AnnotatedExon(firstBaseInExon, lastBaseInExon, exon));
+                if(exon.End >= transcriptData.CodingStart && exon.Start <= transcriptData.CodingEnd)
                 {
-                    indexOfFirstTranslatedBase.set(firstBaseInExon + (transcriptData.CodingStart - exon.Start));
-                    startFound.set(true);
+                    if(!firstCodingBaseFound.get())
+                    {
+                        indexOfFirstCodingBase.set(firstBaseInExon + (transcriptData.CodingStart - exon.Start));
+                        firstCodingBaseFound.set(true);
+                    }
+                    if(exon.End >= transcriptData.CodingEnd)
+                    {
+                        indexOfLastCodingBase.set(firstBaseInExon + (transcriptData.CodingEnd - exon.Start));
+                    }
+                    codingRegions.add(new ChrBaseRegion(geneData.Chromosome, Math.max(exon.Start, transcriptData.CodingStart), Math.min(exon.End, transcriptData.CodingEnd)));
                 }
-                if(exon.End >= transcriptData.CodingEnd)
-                {
-                    indexOfLastTranslatedBase.set(firstBaseInExon + (transcriptData.CodingEnd - exon.Start));
-                }
-                codingRegions.add(new ChrBaseRegion(geneData.Chromosome, Math.max(exon.Start, transcriptData.CodingStart), Math.min(exon.End, transcriptData.CodingEnd)));
-            }
-            basesCovered.set(lastBaseInExon);
-        });
-        if(transcriptData.negStrand())
-        {
-            List<ChrBaseRegion> reversed = new ArrayList<>(codingRegions);
-            Collections.reverse(reversed);
-            CodingRegions = Collections.unmodifiableList(reversed);
-            mIndexOfFirstTranslatedBase = -99; // todo
-            mIndexOfLastTranslatedBase = -99;
+                basesCovered.set(lastBaseInExon);
+            });
         }
         else
         {
-            CodingRegions = codingRegions;
-            mIndexOfFirstTranslatedBase = indexOfFirstTranslatedBase.get();
-            mIndexOfLastTranslatedBase = indexOfLastTranslatedBase.get();
-            Preconditions.checkState(totalTranslatedLength() == (mIndexOfLastTranslatedBase - mIndexOfFirstTranslatedBase + 1));
+            List<ExonData> exons = new ArrayList<>(transcriptData.exons());
+            Collections.reverse(exons);
+            exons.forEach(exon ->
+            {
+                int firstBaseInExon = basesCovered.get() + 1;
+                int lastBaseInExon = firstBaseInExon + exon.baseLength() - 1;
+                mAnnotatedExons.add(new AnnotatedExon(firstBaseInExon, lastBaseInExon, exon, false));
+                if(exon.End >= transcriptData.CodingStart && exon.Start <= transcriptData.CodingEnd)
+                {
+                    if(!firstCodingBaseFound.get())
+                    {
+                        indexOfFirstCodingBase.set(firstBaseInExon + (exon.End - transcriptData.CodingEnd));
+                        firstCodingBaseFound.set(true);
+                    }
+                    if(exon.Start <= transcriptData.CodingStart)
+                    {
+                        indexOfLastCodingBase.set(firstBaseInExon + (exon.End - transcriptData.CodingStart));
+                    }
+                    codingRegions.add(new ChrBaseRegion(geneData.Chromosome, Math.max(exon.Start, transcriptData.CodingStart), Math.min(exon.End, transcriptData.CodingEnd)));
+                }
+                basesCovered.set(lastBaseInExon);
+            });
         }
+        CodingRegions = codingRegions;
+        mIndexOfFirstTranslatedBase = indexOfFirstCodingBase.get();
+        mIndexOfLastTranslatedBase = indexOfLastCodingBase.get();
+        Preconditions.checkState(totalTranslatedLength() == (mIndexOfLastTranslatedBase - mIndexOfFirstTranslatedBase + 1));
     }
 
     public List<Integer> codingRegionLengths()

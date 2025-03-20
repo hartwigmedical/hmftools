@@ -1,4 +1,7 @@
 # ReversePave
+
+**This was written for a code walk-through. It has not been kept up-to-date.**
+
 This is a tool for evaluating the possible DNA changes that give rise to a given protein variant.
 
 ## Inputs

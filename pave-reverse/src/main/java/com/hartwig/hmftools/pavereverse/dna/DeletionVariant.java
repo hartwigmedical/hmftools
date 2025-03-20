@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pavereverse.dna;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pavereverse;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public final class DnaVariantsTest extends ReversePaveTestBase
@@ -23,6 +24,16 @@ public final class DnaVariantsTest extends ReversePaveTestBase
 
         bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.1615G>T");
         check(bsc, "G", "T", "chr7", 143390578);
+    }
+
+    @Test
+    public void substitutionAtStartOfExonReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.1A>C");
+        check(bsc, "T", "G", "chr7", 140_924_703);
+
+        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.10G>C");
+        check(bsc, "C", "G", "chr7", 140_924_694);
     }
 
     @Test
@@ -99,9 +110,10 @@ public final class DnaVariantsTest extends ReversePaveTestBase
         check(bsc, "CA", "C", "chr3", 10_270_158);
     }
 
-    @Test
+//    @Test
     public void deletionOfRange()
     {
-
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(tatdn2, tatdn2Canonical, "c.974_977delA");
+        check(bsc, "GAGCA", "G", "chr3", 10_270_155);
     }
 }
