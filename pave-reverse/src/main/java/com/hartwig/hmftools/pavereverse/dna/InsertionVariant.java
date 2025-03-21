@@ -1,0 +1,33 @@
+package com.hartwig.hmftools.pavereverse.dna;
+
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+public class InsertionVariant extends DnaVariant
+{
+    private final String mInsertedBases;
+
+    public InsertionVariant(GeneData gene, TranscriptData transcript, HgvsAddress start, HgvsAddress end, String insertedBases)
+    {
+        super(gene, transcript, start, end);
+        mInsertedBases = insertedBases;
+    }
+
+    public String insertedBases()
+    {
+        return mInsertedBases;
+    }
+
+    public BaseSequenceChange toGenomicVariant(RefGenomeInterface genome)
+    {
+        Pair<Integer, Integer> startStop = getAbsoluteLocationsOfChange();
+        String ref = genome.getBaseString(chromosome(), startStop.getLeft(), startStop.getLeft());
+        String insertedBases = forwardStrand() ? mInsertedBases : Nucleotides.reverseComplementBases(mInsertedBases);
+        return new BaseSequenceChange(ref, ref + insertedBases, chromosome(), startStop.getLeft());
+    }
+}

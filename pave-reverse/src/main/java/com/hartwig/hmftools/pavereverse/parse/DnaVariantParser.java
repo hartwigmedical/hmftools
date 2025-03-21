@@ -20,6 +20,7 @@ import com.hartwig.hmftools.pavereverse.dna.InIntronAfterExon;
 import com.hartwig.hmftools.pavereverse.dna.InIntronBeforeExon;
 import com.hartwig.hmftools.pavereverse.dna.InIntronDownstreamOfCodingEnd;
 import com.hartwig.hmftools.pavereverse.dna.InIntronUpstreamOfCodingStart;
+import com.hartwig.hmftools.pavereverse.dna.InsertionVariant;
 import com.hartwig.hmftools.pavereverse.dna.SubstitutionVariant;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -30,14 +31,15 @@ public class DnaVariantParser extends VariantParser
 {
     private static final String ADDRESS_RANGE_CHARS = "([+\\-*\\d_]+)";
     private static final String OPTIONAL_BASES = "([ACGT]*)";
+    private static final String REQUIRED_BASES = "([ACGT]+)";
 
     private interface VariantBuilder
     {
         DnaVariant build(GeneData geneData,
                 TranscriptData transcriptData,
                 Pair<HgvsAddress, HgvsAddress> addresses,
-                String ref,
-                String alt);
+                String bases1,
+                String bases2);
     }
 
     public DnaVariantParser(EnsemblDataCache ensemblDataCache, Map<String, TranscriptAminoAcids> transcriptAminoAcidsMap)
@@ -61,6 +63,10 @@ public class DnaVariantParser extends VariantParser
         else if(trimmedVariant.contains("del"))
         {
             return getDelVariant(trimmedVariant, geneData, transcriptData);
+        }
+        else if(trimmedVariant.contains("ins"))
+        {
+            return getInsVariant(trimmedVariant, geneData, transcriptData);
         }
         return null;
     }
@@ -91,7 +97,16 @@ public class DnaVariantParser extends VariantParser
                 "del" + OPTIONAL_BASES,
                 geneData,
                 transcriptData,
-                (geneData1, transcriptData1, addresses, ref, alt) -> new DeletionVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), ref));
+                (geneData1, transcriptData1, addresses, b1, b2) -> new DeletionVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), b1));
+    }
+
+    private static DnaVariant getInsVariant(String variant, GeneData geneData, TranscriptData transcriptData)
+    {
+        return buildVariant(variant,
+                "ins" + REQUIRED_BASES,
+                geneData,
+                transcriptData,
+                (geneData1, transcriptData1, addresses, b1, b2) -> new InsertionVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), b1));
     }
 
     private static DnaVariant getDupVariant(String variant, GeneData geneData, TranscriptData transcriptData)
@@ -100,7 +115,7 @@ public class DnaVariantParser extends VariantParser
                 "dup" + OPTIONAL_BASES,
                 geneData,
                 transcriptData,
-                (geneData1, transcriptData1, addresses, ref, alt) -> new DuplicationVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), ref));
+                (geneData1, transcriptData1, addresses, b1, b2) -> new DuplicationVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), b1));
     }
 
     private static DnaVariant getSubstitutionVariant(String variant, GeneData geneData, TranscriptData transcriptData)
@@ -109,7 +124,7 @@ public class DnaVariantParser extends VariantParser
                 "([ACGT]+)>([ACGT]+)",
                 geneData,
                 transcriptData,
-                (geneData1, transcriptData1, addresses, ref, alt) -> new SubstitutionVariant(geneData, transcriptData, addresses.getLeft(), ref, alt));
+                (geneData1, transcriptData1, addresses, b1, b2) -> new SubstitutionVariant(geneData, transcriptData, addresses.getLeft(), b1, b2));
     }
 
     private static Pair<HgvsAddress, HgvsAddress> parseAddresses(String addresses)

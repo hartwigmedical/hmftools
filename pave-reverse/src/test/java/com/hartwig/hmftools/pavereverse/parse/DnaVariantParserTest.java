@@ -12,6 +12,7 @@ import com.hartwig.hmftools.pavereverse.dna.InIntronBeforeExon;
 import com.hartwig.hmftools.pavereverse.dna.InExonUpstreamOfCodingStart;
 import com.hartwig.hmftools.pavereverse.dna.InIntronDownstreamOfCodingEnd;
 import com.hartwig.hmftools.pavereverse.dna.InIntronUpstreamOfCodingStart;
+import com.hartwig.hmftools.pavereverse.dna.InsertionVariant;
 import com.hartwig.hmftools.pavereverse.dna.SubstitutionVariant;
 
 import org.junit.Before;
@@ -137,5 +138,14 @@ public class DnaVariantParserTest extends ReversePaveTestBase
         DuplicationVariant duplication = (DuplicationVariant) parser.parse(zyx, zyxCanonical, "c.3_7dupGCGGC");
         assertEquals(3, ((InExon)duplication.AddressOfChangeStart).IndexOfBaseInCodingBases);
         assertEquals(7, ((InExon)duplication.AddressOfChangeEnd).IndexOfBaseInCodingBases);
+    }
+
+    @Test
+    public void parseInsertion()
+    {
+        InsertionVariant insertionVariant = (InsertionVariant) parser.parse(zyx, zyxCanonical, "c.3_7insGCGGC");
+        assertEquals(3, ((InExon)insertionVariant.AddressOfChangeStart).IndexOfBaseInCodingBases);
+        assertEquals(7, ((InExon)insertionVariant.AddressOfChangeEnd).IndexOfBaseInCodingBases);
+        assertEquals("GCGGC", insertionVariant.insertedBases());
     }
 }

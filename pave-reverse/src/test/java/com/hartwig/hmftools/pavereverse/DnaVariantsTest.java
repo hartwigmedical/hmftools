@@ -165,4 +165,18 @@ public final class DnaVariantsTest extends ReversePaveTestBase
         bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "608+3_608+4dupAT");
         check(bsc, "C", "CAT", "chr7", 140_808_887);
     }
+
+    @Test
+    public void insertion()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-15-3_-15-2insGGATCC");
+        check(bsc, "C", "CGGATCC", "chr7", 143_381_554);
+    }
+
+    @Test
+    public void insertionReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.*2_*3insGGATTC");
+        check(bsc, "G", "GGAATCC", "chr7", 140_734_594);
+    }
 }

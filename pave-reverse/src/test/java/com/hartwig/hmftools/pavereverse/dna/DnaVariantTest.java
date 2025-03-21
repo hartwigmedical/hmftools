@@ -36,6 +36,26 @@ public class DnaVariantTest extends ReversePaveTestBase
             new FixedStringGenome("ACTGCCCCCACGTACGTACTTTTTTTTTTACGTACGTACAAAAAAAAAACCCCCATGCCATATATATATCGTGCTAGGGTATATATATACCTTAAGGGGCCCCCCAATTC");
 
     @Test
+    public void insertionReverseStrand()
+    {
+        InsertionVariant duplication = new InsertionVariant(geneDataRS, transcriptRS, new InExon(8), new InExon(9), "GTA");
+        BaseSequenceChange change = duplication.toGenomicVariant(genome);
+        check(change,77, "G", "GTAC" );
+    }
+
+    @Test
+    public void insertion()
+    {
+        InsertionVariant duplication = new InsertionVariant(geneData, transcript, new InExon(9), new InExon(10), "GTA");
+        BaseSequenceChange change = duplication.toGenomicVariant(genome);
+        check(change,73, "G", "GGTA" );
+
+        duplication = new InsertionVariant(geneData, transcript, new InIntronAfterExon(15, 2), new InIntronAfterExon(15, 3), "GTA");
+        change = duplication.toGenomicVariant(genome);
+        check(change,81, "A", "AGTA" );
+    }
+
+    @Test
     public void duplicationOfRangeReverseStrand()
     {
         DuplicationVariant duplication = new DuplicationVariant(geneDataRS, transcriptRS, new InExon(9), new InExon(11), "CTA");
