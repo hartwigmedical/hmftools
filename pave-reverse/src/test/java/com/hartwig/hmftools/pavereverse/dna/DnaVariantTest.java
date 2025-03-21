@@ -36,6 +36,22 @@ public class DnaVariantTest extends ReversePaveTestBase
             new FixedStringGenome("ACTGCCCCCACGTACGTACTTTTTTTTTTACGTACGTACAAAAAAAAAACCCCCATGCCATATATATATCGTGCTAGGGTATATATATACCTTAAGGGGCCCCCCAATTC");
 
     @Test
+    public void substitution()
+    {
+        SubstitutionVariant substitution = new SubstitutionVariant(geneData, transcript, new InExon(2), new InExon(4), "TGC", "AAAAA" );
+        BaseSequenceChange change = substitution.toGenomicVariant(genome);
+        check(change,56, "TGC", "AAAAA" );
+    }
+
+    @Test
+    public void substitutionReverseStrand()
+    {
+        SubstitutionVariant substitution = new SubstitutionVariant(geneDataRS, transcriptRS, new InExon(2), new InExon(5), "TAAG", "GGCCC");
+        BaseSequenceChange change = substitution.toGenomicVariant(genome);
+        check(change, 91, "CTTA", "GGGCC");
+    }
+
+    @Test
     public void insertionReverseStrand()
     {
         InsertionVariant duplication = new InsertionVariant(geneDataRS, transcriptRS, new InExon(8), new InExon(9), "GTA");
@@ -104,7 +120,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     }
 
     @Test
-    public void substitution()
+    public void singleBaseSubstitution()
     {
         SubstitutionVariant variant = new SubstitutionVariant(geneData, transcript, new InExon(7), "G", "T");
         BaseSequenceChange change = variant.toGenomicVariant(genome);
@@ -112,11 +128,11 @@ public class DnaVariantTest extends ReversePaveTestBase
     }
 
     @Test
-    public void substitutionRS()
+    public void singleBaseSubstitutionReverseStrand()
     {
-        SubstitutionVariant variant = new SubstitutionVariant(geneDataRS, transcriptRS, new InExon(2), "A", "G");
+        SubstitutionVariant variant = new SubstitutionVariant(geneDataRS, transcriptRS, new InExon(2), "T", "G");
         BaseSequenceChange change = variant.toGenomicVariant(genome);
-        check(change, 94, "T", "C");
+        check(change, 94, "A", "C");
     }
 
     @Test
@@ -128,7 +144,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     }
 
     @Test
-    public void deletionRS()
+    public void deletionReverseStrand()
     {
         DeletionVariant deletionVariant = new DeletionVariant(geneDataRS, transcriptRS, new InExon(14), "A");
         BaseSequenceChange change = deletionVariant.toGenomicVariant(genome);

@@ -13,6 +13,20 @@ public final class DnaVariantsTest extends ReversePaveTestBase
     }
 
     @Test
+    public void mnvSubstitution()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "210_212delCTTinsGAAC");
+        check(bsc, "CTT", "GAAC", "chr7", 143382249);
+    }
+
+    @Test
+    public void mnvSubstitutionReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.135_138delGGAGinsTTTT");
+        check(bsc, "CTCC", "AAAA", "chr7", 140_924_566);
+    }
+
+    @Test
     public void substitutionAtStartOfExon()
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.209A>T");
@@ -31,15 +45,15 @@ public final class DnaVariantsTest extends ReversePaveTestBase
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.1A>C");
         check(bsc, "T", "G", "chr7", 140_924_703);
 
-        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.10G>C");
-        check(bsc, "C", "G", "chr7", 140_924_694);
+        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.10C>T");
+        check(bsc, "G", "A", "chr7", 140_924_694);
     }
 
     @Test
     public void substitutionAtEndOfExon()
     {
-        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.208A>T");
-        check(bsc, "A", "T", "chr7", 143381779);
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.208G>T");
+        check(bsc, "G", "T", "chr7", 143381779);
 
         bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.408G>T");
         check(bsc, "G", "T", "chr7", 143382447);
@@ -51,8 +65,8 @@ public final class DnaVariantsTest extends ReversePaveTestBase
     @Test
     public void substitutionAtEndOfExonReverseStrand()
     {
-        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.138C>T");
-        check(bsc, "G", "A", "chr7", 140_924_566);
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.138G>T");
+        check(bsc, "C", "A", "chr7", 140_924_566);
 
         bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.608G>C");
         check(bsc, "C", "G", "chr7", 140_808_892);
