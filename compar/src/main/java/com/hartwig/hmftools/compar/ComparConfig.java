@@ -335,7 +335,8 @@ public class ComparConfig
         registerSampleIds(sampleId, germlineSampleId, null, null, null, null);
     }
     
-    private void registerSampleIds(final String sampleId, final String germlineSampleId, final String refSampleId,
+    private void registerSampleIds(
+            final String sampleId, final String germlineSampleId, final String refSampleId,
             final String refGermlineSampleId, final String newSampleId, final String newGermlineSampleId)
     {
         SampleIds.add(sampleId);
