@@ -16,7 +16,11 @@ public class InIntronAfterExon implements HgvsAddress
     @Override
     public int toStrandLocation(GeneTranscript geneTranscript)
     {
-        InExon inExon = new InExon(ExonBaseIndex);
-        return inExon.toStrandLocation(geneTranscript) + IndexAfterExonBase;
+        final int strandLocationOfExonicBase = new InExon(ExonBaseIndex).toStrandLocation(geneTranscript);
+        if(geneTranscript.Transcript.posStrand())
+        {
+            return strandLocationOfExonicBase + IndexAfterExonBase;
+        }
+        return strandLocationOfExonicBase - IndexAfterExonBase;
     }
 }

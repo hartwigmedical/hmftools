@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.pavereverse.dna;
 
-import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
+import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 
@@ -26,11 +26,62 @@ public class DnaVariantTest extends ReversePaveTestBase
     // ____-----++++++++++----------++++++++++----------+++++*****----------**********----------******++++------_____
     // ACTGCCCCCACGTACGTACTTTTTTTTTTACGTACGTACAAAAAAAAAACCCCCATGCCATATATATATCGTGCTAGGGTATATATATACCTTAAGGGGCCCCCCAATTC
 
-    GeneData geneData = createEnsemblGeneData("id132", "BLAH", "1",  POS_STRAND, 5, 105);
-    GeneData geneDataRS = createEnsemblGeneData("id133", "BLAG", "1",  NEG_STRAND, 5, 105);
-    TranscriptData transcript = createTransExons(geneData.GeneId, 123, POS_STRAND, exonStarts, 9, codingStart, codingEnd, false, "whatever");
-    TranscriptData transcriptRS = createTransExons(geneDataRS.GeneId, 124, NEG_STRAND, exonStarts, 9, codingStart, codingEnd, false, "whatever");
-    RefGenomeInterface genome = new FixedStringGenome("ACTGCCCCCACGTACGTACTTTTTTTTTTACGTACGTACAAAAAAAAAACCCCCATGCCATATATATATCGTGCTAGGGTATATATATACCTTAAGGGGCCCCCCAATTC");
+    GeneData geneData = createEnsemblGeneData("id132", "BLAH", "1", POS_STRAND, 5, 105);
+    GeneData geneDataRS = createEnsemblGeneData("id133", "BLAG", "1", NEG_STRAND, 5, 105);
+    TranscriptData transcript =
+            createTransExons(geneData.GeneId, 123, POS_STRAND, exonStarts, 9, codingStart, codingEnd, false, "whatever");
+    TranscriptData transcriptRS =
+            createTransExons(geneDataRS.GeneId, 124, NEG_STRAND, exonStarts, 9, codingStart, codingEnd, false, "whatever");
+    RefGenomeInterface genome =
+            new FixedStringGenome("ACTGCCCCCACGTACGTACTTTTTTTTTTACGTACGTACAAAAAAAAAACCCCCATGCCATATATATATCGTGCTAGGGTATATATATACCTTAAGGGGCCCCCCAATTC");
+
+    @Test
+    public void duplicationOfRangeReverseStrand()
+    {
+        DuplicationVariant duplication = new DuplicationVariant(geneDataRS, transcriptRS, new InExon(9), new InExon(11), "CTA");
+        BaseSequenceChange change = duplication.toGenomicVariant(genome);
+        check(change,74, "C", "CTAG" );
+    }
+
+    @Test
+    public void duplicationReverseStrand()
+    {
+        DuplicationVariant duplication = new DuplicationVariant(geneDataRS, transcriptRS, new InExon(2), new InExon(2), "T");
+        BaseSequenceChange change = duplication.toGenomicVariant(genome);
+        check(change,93, "T", "TA" );
+    }
+
+    @Test
+    public void duplication()
+    {
+        DuplicationVariant duplication = new DuplicationVariant(geneData, transcript, new InExon(16), new InExon(16), "C");
+        BaseSequenceChange change = duplication.toGenomicVariant(genome);
+        check(change,89, "A", "AC" );
+    }
+
+    @Test
+    public void duplicationOfRange()
+    {
+        DuplicationVariant duplication = new DuplicationVariant(geneData, transcript, new InExon(6), new InExon(10), "C");
+        BaseSequenceChange change = duplication.toGenomicVariant(genome);
+        check(change,69, "T", "TCGTGC" );
+    }
+
+    @Test
+    public void deletionOfRange()
+    {
+        DeletionVariant deletionVariant = new DeletionVariant(geneData, transcript, new InExon(7), new InExon(10), "GTGC");
+        BaseSequenceChange change = deletionVariant.toGenomicVariant(genome);
+        check(change, 70, "CGTGC", "C");
+    }
+
+    @Test
+    public void deletionOfRangeReverseStrand()
+    {
+        DeletionVariant deletionVariant = new DeletionVariant(geneDataRS, transcriptRS, new InExon(7), new InExon(10), "AGGG");
+        BaseSequenceChange change = deletionVariant.toGenomicVariant(genome);
+        check(change, 75, "TAGGG", "T");
+    }
 
     @Test
     public void substitution()

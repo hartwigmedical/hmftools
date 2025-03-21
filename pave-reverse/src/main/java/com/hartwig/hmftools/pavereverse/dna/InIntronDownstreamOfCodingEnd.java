@@ -18,6 +18,11 @@ public class InIntronDownstreamOfCodingEnd implements HgvsAddress
     @Override
     public int toStrandLocation(GeneTranscript geneTranscript)
     {
-        return new InExonDownstreamOfCodingEnd(IndexOfExonicBase).toStrandLocation(geneTranscript) + RelativePositionOfIntronicBase;
+        final int exonicBaseLocation = new InExonDownstreamOfCodingEnd(IndexOfExonicBase).toStrandLocation(geneTranscript);
+        if(geneTranscript.Transcript.posStrand())
+        {
+            return exonicBaseLocation + RelativePositionOfIntronicBase;
+        }
+        return exonicBaseLocation - RelativePositionOfIntronicBase;
     }
 }

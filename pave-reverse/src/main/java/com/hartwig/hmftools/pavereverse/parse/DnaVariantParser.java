@@ -4,13 +4,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.pavereverse.dna.DeletionVariant;
 import com.hartwig.hmftools.pavereverse.dna.DnaVariant;
+import com.hartwig.hmftools.pavereverse.dna.DuplicationVariant;
 import com.hartwig.hmftools.pavereverse.dna.HgvsAddress;
 import com.hartwig.hmftools.pavereverse.dna.InExon;
 import com.hartwig.hmftools.pavereverse.dna.InExonDownstreamOfCodingEnd;
@@ -22,10 +23,23 @@ import com.hartwig.hmftools.pavereverse.dna.InIntronUpstreamOfCodingStart;
 import com.hartwig.hmftools.pavereverse.dna.SubstitutionVariant;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.jetbrains.annotations.NotNull;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class DnaVariantParser extends VariantParser
 {
+    private static final String ADDRESS_RANGE_CHARS = "([+\\-*\\d_]+)";
+    private static final String OPTIONAL_BASES = "([ACGT]*)";
+
+    private interface VariantBuilder
+    {
+        DnaVariant build(GeneData geneData,
+                TranscriptData transcriptData,
+                Pair<HgvsAddress, HgvsAddress> addresses,
+                String ref,
+                String alt);
+    }
+
     public DnaVariantParser(EnsemblDataCache ensemblDataCache, Map<String, TranscriptAminoAcids> transcriptAminoAcidsMap)
     {
         super(ensemblDataCache, transcriptAminoAcidsMap);
@@ -40,6 +54,10 @@ public class DnaVariantParser extends VariantParser
         {
             return getSubstitutionVariant(trimmedVariant, geneData, transcriptData);
         }
+        else if(trimmedVariant.contains("dup"))
+        {
+            return getDupVariant(trimmedVariant, geneData, transcriptData);
+        }
         else if(trimmedVariant.contains("del"))
         {
             return getDelVariant(trimmedVariant, geneData, transcriptData);
@@ -47,41 +65,66 @@ public class DnaVariantParser extends VariantParser
         return null;
     }
 
-    private static DnaVariant getDelVariant(String variant, GeneData geneData, TranscriptData transcriptData)
+    private static DnaVariant buildVariant(String variant,
+            String variantSpecificPattern,
+            GeneData geneData,
+            TranscriptData transcriptData,
+            VariantBuilder variantBuilder)
     {
-        Pattern roughStructurePattern = Pattern.compile("([+\\-*\\d]+)del([ACGT]*)");
+        Pattern roughStructurePattern = Pattern.compile(ADDRESS_RANGE_CHARS + variantSpecificPattern);
         Matcher roughStructureMatcher = roughStructurePattern.matcher(variant);
         boolean roughStructureFound = roughStructureMatcher.matches();
-
         if(!roughStructureFound)
         {
             throw new IllegalArgumentException("Variant not parsed: " + variant);
         }
         String positionInfo = roughStructureMatcher.group(1);
-        HgvsAddress address = parseAddress(positionInfo);
+        Pair<HgvsAddress, HgvsAddress> addresses = parseAddresses(positionInfo);
         String ref = groupOrBlank(roughStructureMatcher, 2);
-        return new DeletionVariant(geneData, transcriptData, address, ref);
+        String alt = groupOrBlank(roughStructureMatcher, 3);
+        return variantBuilder.build(geneData, transcriptData, addresses, ref, alt);
+    }
+
+    private static DnaVariant getDelVariant(String variant, GeneData geneData, TranscriptData transcriptData)
+    {
+        return buildVariant(variant,
+                "del" + OPTIONAL_BASES,
+                geneData,
+                transcriptData,
+                (geneData1, transcriptData1, addresses, ref, alt) -> new DeletionVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), ref));
+    }
+
+    private static DnaVariant getDupVariant(String variant, GeneData geneData, TranscriptData transcriptData)
+    {
+        return buildVariant(variant,
+                "dup" + OPTIONAL_BASES,
+                geneData,
+                transcriptData,
+                (geneData1, transcriptData1, addresses, ref, alt) -> new DuplicationVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), ref));
     }
 
     private static DnaVariant getSubstitutionVariant(String variant, GeneData geneData, TranscriptData transcriptData)
     {
-        Pattern roughStructurePattern = Pattern.compile("([+\\-*\\d]+)([ACGT]+)>([ACGT]+)");
-        Matcher roughStructureMatcher = roughStructurePattern.matcher(variant);
-        boolean roughStructureFound = roughStructureMatcher.matches();
-
-        if(!roughStructureFound)
-        {
-            throw new IllegalArgumentException("Variant not parsed: " + variant);
-        }
-        String positionInfo = roughStructureMatcher.group(1);
-        HgvsAddress address = parseAddress(positionInfo);
-        String ref = roughStructureMatcher.group(2);
-        String alt = roughStructureMatcher.group(3);
-        return new SubstitutionVariant(geneData, transcriptData, address, ref, alt);
+        return buildVariant(variant,
+                "([ACGT]+)>([ACGT]+)",
+                geneData,
+                transcriptData,
+                (geneData1, transcriptData1, addresses, ref, alt) -> new SubstitutionVariant(geneData, transcriptData, addresses.getLeft(), ref, alt));
     }
 
-    @VisibleForTesting
-    static HgvsAddress parseAddress(String address)
+    private static Pair<HgvsAddress, HgvsAddress> parseAddresses(String addresses)
+    {
+        if(addresses.contains("_"))
+        {
+            String[] parts = addresses.split("_");
+            Preconditions.checkArgument(parts.length == 2, "Invalid address: " + addresses);
+            return new ImmutablePair<>(parseAddress(parts[0]), parseAddress(parts[1]));
+        }
+        HgvsAddress address = parseAddress(addresses);
+        return new ImmutablePair<>(address, address);
+    }
+
+    private static HgvsAddress parseAddress(String address)
     {
         // 67, -1, *1, 87+1, 88-1, -85+1, -84-3, *38-3, *23+2
         Pattern p = Pattern.compile("([\\-*]?)(\\d*?)([\\-+]?)(\\d+)");
@@ -145,6 +188,10 @@ public class DnaVariantParser extends VariantParser
 
     private static String groupOrBlank(Matcher matcher, int group)
     {
+        if(group > matcher.groupCount())
+        {
+            return "";
+        }
         String result = matcher.group(group);
         return result == null ? "" : result;
     }

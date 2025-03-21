@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.pavereverse;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public final class DnaVariantsTest extends ReversePaveTestBase
@@ -50,10 +49,27 @@ public final class DnaVariantsTest extends ReversePaveTestBase
     }
 
     @Test
+    public void substitutionAtEndOfExonReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.138C>T");
+        check(bsc, "G", "A", "chr7", 140_924_566);
+
+        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.608G>C");
+        check(bsc, "C", "G", "chr7", 140_808_892);
+    }
+
+    @Test
     public void substitutionUpstreamOfStart()
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-1C>A");
         check(bsc, "C", "A", "chr7", 143381572 - 1);
+    }
+
+    @Test
+    public void substitutionUpstreamOfStartReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.-10C>T");
+        check(bsc, "G", "A", "chr7", 140_924_713);
     }
 
     @Test
@@ -110,10 +126,43 @@ public final class DnaVariantsTest extends ReversePaveTestBase
         check(bsc, "CA", "C", "chr3", 10_270_158);
     }
 
-//    @Test
+    @Test
     public void deletionOfRange()
     {
-        BaseSequenceChange bsc = reversePave.calculateDnaVariant(tatdn2, tatdn2Canonical, "c.974_977delA");
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(tatdn2, tatdn2Canonical, "c.974_977delAGCA");
         check(bsc, "GAGCA", "G", "chr3", 10_270_155);
+    }
+
+    @Test
+    public void deletionOfRangeReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "602_606delTAGGA");
+        check(bsc, "CATCCT", "C", "chr7", 140_808_893);
+    }
+
+    @Test
+    public void duplication()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-15-2dupA");
+        check(bsc, "C", "CA", "chr7", 143381554);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-15-5_-15-2dup");
+        check(bsc, "C", "CCCCA", "chr7", 143381551);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-15-5_-14dup");
+        check(bsc, "C", "CCCCAGCA", "chr7", 143381551);
+    }
+
+    @Test
+    public void duplicationReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "606dupT");
+        check(bsc, "C", "CA", "chr7", 140_808_893);
+
+        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "608dupG");
+        check(bsc, "C", "CC", "chr7", 140_808_891);
+
+        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "608+3_608+4dupAT");
+        check(bsc, "C", "CAT", "chr7", 140_808_887);
     }
 }

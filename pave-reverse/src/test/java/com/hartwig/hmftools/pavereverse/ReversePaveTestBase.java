@@ -95,10 +95,10 @@ public class ReversePaveTestBase
 
     protected void check(BaseSequenceChange change, String ref, String alt, String chr, int position)
     {
-        assertEquals(change.Ref, ref);
-        assertEquals(change.Alt, alt);
-        assertEquals(change.Chromosome, chr);
-        assertEquals(change.Position, position);
+        assertEquals(ref, change.Ref);
+        assertEquals(alt, change.Alt);
+        assertEquals(chr, change.Chromosome);
+        assertEquals(position, change.Position);
     }
 
     protected void checkSingleChange(BaseSequenceVariants variant, String ref, String alt, String chr, int position)

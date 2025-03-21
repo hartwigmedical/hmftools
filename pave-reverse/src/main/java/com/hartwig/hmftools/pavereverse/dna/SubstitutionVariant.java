@@ -27,8 +27,8 @@ public class SubstitutionVariant extends DnaVariant
     {
         if(forwardStrand())
         {
-            return new BaseSequenceChange(Ref, Alt, chromosome(), Address.toStrandLocation(geneTranscript()));
+            return new BaseSequenceChange(Ref, Alt, chromosome(), AddressOfChangeStart.toStrandLocation(geneTranscript()));
         }
-        return new BaseSequenceChange(reverseComplementBases(Ref), reverseComplementBases(Alt), chromosome(), Address.toStrandLocation(geneTranscript()));
+        return new BaseSequenceChange(reverseComplementBases(Ref), reverseComplementBases(Alt), chromosome(), AddressOfChangeStart.toStrandLocation(geneTranscript()));
     }
 }
