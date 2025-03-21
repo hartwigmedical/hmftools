@@ -39,6 +39,16 @@ public class DnaVariantParserTest extends ReversePaveTestBase
     }
 
     @Test
+    public void parseComplexSubstitution()
+    {
+        SubstitutionVariant sub = (SubstitutionVariant) parser.parse(zyx, zyxCanonical, "c.3_10delinsAA");
+        assertEquals(3, ((InExon)sub.AddressOfChangeStart).IndexOfBaseInCodingBases);
+        assertEquals(10, ((InExon)sub.AddressOfChangeEnd).IndexOfBaseInCodingBases);
+        assertEquals("", sub.Ref);
+        assertEquals("AA", sub.Alt);
+    }
+
+    @Test
     public void parseSubstitutionInExon()
     {
         SubstitutionVariant variant = (SubstitutionVariant) parser.parse(zyx, zyxCanonical, "6G>A");

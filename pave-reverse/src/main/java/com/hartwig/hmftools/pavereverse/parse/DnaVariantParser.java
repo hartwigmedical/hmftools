@@ -60,6 +60,10 @@ public class DnaVariantParser extends VariantParser
         {
             return getDupVariant(trimmedVariant, geneData, transcriptData);
         }
+        else if(trimmedVariant.contains("delins"))
+        {
+            return getComplexMnvVariant(trimmedVariant, geneData, transcriptData);
+        }
         else if(trimmedVariant.contains("del") && trimmedVariant.contains("ins"))
         {
             return getDelInsVariant(trimmedVariant, geneData, transcriptData);
@@ -102,6 +106,15 @@ public class DnaVariantParser extends VariantParser
                 geneData,
                 transcriptData,
                 (geneData1, transcriptData1, addresses, b1, b2) -> new DeletionVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), b1));
+    }
+
+    private static DnaVariant getComplexMnvVariant(String variant, GeneData geneData, TranscriptData transcriptData)
+    {
+        return buildVariant(variant,
+                "delins" + REQUIRED_BASES,
+                geneData,
+                transcriptData,
+                (geneData1, transcriptData1, addresses, b1, b2) -> new SubstitutionVariant(geneData1, transcriptData1, addresses.getLeft(), addresses.getRight(), "", b1));
     }
 
     private static DnaVariant getDelInsVariant(String variant, GeneData geneData, TranscriptData transcriptData)

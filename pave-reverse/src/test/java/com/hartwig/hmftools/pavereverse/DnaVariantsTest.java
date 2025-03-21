@@ -17,12 +17,29 @@ public final class DnaVariantsTest extends ReversePaveTestBase
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "210_212delCTTinsGAAC");
         check(bsc, "CTT", "GAAC", "chr7", 143382249);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "210delCinsGAAC");
+        check(bsc, "C", "GAAC", "chr7", 143382249);
     }
 
     @Test
     public void mnvSubstitutionReverseStrand()
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.135_138delGGAGinsTTTT");
+        check(bsc, "CTCC", "AAAA", "chr7", 140_924_566);
+    }
+
+    @Test
+    public void complexMNV()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "211_218delinsGAAC");
+        check(bsc, "TTTCCCCT", "GAAC", "chr7", 143382250);
+    }
+
+    @Test
+    public void complexMnvReverseStrand()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.135_138delinsTTTT");
         check(bsc, "CTCC", "AAAA", "chr7", 140_924_566);
     }
 
