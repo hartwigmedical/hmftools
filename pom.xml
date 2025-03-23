@@ -59,7 +59,7 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <amber.version>4.2</amber.version>
+        <amber.version>4.1.1</amber.version>
         <bam-tools.version>1.4</bam-tools.version>
         <chord.version>2.1.0</chord.version>
         <cuppa.version>2.2.1</cuppa.version>
