@@ -30,6 +30,16 @@ public class AnnotatedExon
         return FirstBase <= base && LastBase >= base;
     }
 
+    public int getAbsolutePositionOfBaseUpstreamOfExon(int base)
+    {
+        Preconditions.checkArgument(base <= 0);
+        if (IsForwardStrand)
+        {
+            return Exon.Start + base - 1;
+        }
+        return Exon.End - base + 1;
+    }
+
     public int getAbsolutePosition(final int base)
     {
         Preconditions.checkArgument(base >= FirstBase && base <= LastBase);

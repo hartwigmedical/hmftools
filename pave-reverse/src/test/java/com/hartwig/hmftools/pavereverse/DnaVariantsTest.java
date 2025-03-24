@@ -4,12 +4,35 @@ import org.junit.Test;
 
 public final class DnaVariantsTest extends ReversePaveTestBase
 {
+    @Test
+    public void tert()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant("TERT", "ENST00000310581", "c.-146C>T");
+        check(bsc, "G", "A", "chr5", 1295135);
+    }
+
+    @Test
+    public void baseIsBeforeFirstUtrExon()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-80G>A");
+        check(bsc, "G", "A", "chr7", 143381345); // Sanity check, this is actually the first 5' UTR exonic base.
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-81C>A");
+        check(bsc, "C", "A", "chr7", 143381344);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-85G>A");
+        check(bsc, "G", "A", "chr7", 143381340);
+    }
 
     @Test
     public void calculateVariantsForSuppliedTranscriptId()
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.5C>A");
         check(bsc, "C", "A", "chr7", 143381572 + 5 - 1);
+
+        // Now with a different transcript.
+        bsc = reversePave.calculateDnaVariant(zyx, "ENST00000354434", "c.2C>A");
+        check(bsc, "C", "A", "chr7", 143381575 + 2 - 1);
     }
 
     @Test

@@ -122,6 +122,10 @@ public class GeneTranscript
 
     private int absolutePosition(int index)
     {
+        if(index <= 0)
+        {
+            return mAnnotatedExons.get(0).getAbsolutePositionOfBaseUpstreamOfExon(index);
+        }
         AnnotatedExon exon = seek(index);
         if(exon == null)
         {

@@ -165,6 +165,11 @@ public class HgvsAddressTest extends ReversePaveTestBase
     {
         assertEquals(14, new InExonUpstreamOfCodingStart(-1).toStrandLocation(gt));
         assertEquals(13, new InExonUpstreamOfCodingStart(-2).toStrandLocation(gt));
+        assertEquals(10, new InExonUpstreamOfCodingStart(-5).toStrandLocation(gt));
+
+        // This is before the exon, but we need this for some variants (eg TERT)
+        assertEquals(9, new InExonUpstreamOfCodingStart(-6).toStrandLocation(gt));
+        assertEquals(8, new InExonUpstreamOfCodingStart(-7).toStrandLocation(gt));
     }
 
     @Test
@@ -172,6 +177,11 @@ public class HgvsAddressTest extends ReversePaveTestBase
     {
         assertEquals(56, new InExonUpstreamOfCodingStart(-1).toStrandLocation(gtRS));
         assertEquals(57, new InExonUpstreamOfCodingStart(-2).toStrandLocation(gtRS));
+        assertEquals(60, new InExonUpstreamOfCodingStart(-5).toStrandLocation(gtRS));
+
+        // This is before the exon, but we need this for some variants (eg TERT)
+        assertEquals(61, new InExonUpstreamOfCodingStart(-6).toStrandLocation(gtRS));
+        assertEquals(62, new InExonUpstreamOfCodingStart(-7).toStrandLocation(gtRS));
     }
 
 }

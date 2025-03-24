@@ -20,6 +20,7 @@ public class TinyGenome extends SimpleTestGenome
         data.add( new ChromosomeSnippet("chr3", 10_000_000, 3_000_000, "tinygenome/chr3_part.txt"));
         data.add( new ChromosomeSnippet("chr4", 54_000_000, 1_000_000, "tinygenome/chr4_part_54.txt"));
         data.add( new ChromosomeSnippet("chr4", 105_000_000, 3_000_000, "tinygenome/chr4_part.txt"));
+        data.add( new ChromosomeSnippet("chr5", 1_000_000, 1_000_000, "tinygenome/chr5_part_1.txt"));
         data.add( new ChromosomeSnippet("chr5", 68_000_000, 1_000_000, "tinygenome/chr5_part_68.txt"));
         data.add( new ChromosomeSnippet("chr7", 140_000_000, 10_000_000, "tinygenome/chr7_part.txt"));
         data.add( new ChromosomeSnippet("chr7", 55_000_000, 3_000_000, "tinygenome/chr7_part_55.txt"));

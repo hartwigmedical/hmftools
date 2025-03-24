@@ -31,6 +31,24 @@ public class GeneTranscriptTest extends ReversePaveTestBase
     GeneTranscript geneTranscriptRS = new GeneTranscript(geneData, rsTranscript);
 
     @Test
+    public void getAbsolutePositionOfBaseBeforeTranscriptStart()
+    {
+        assertEquals(9, geneTranscript.absolutePositionOf5PrimeUtrExonicBase(-26));
+        assertEquals(5, geneTranscript.absolutePositionOf5PrimeUtrExonicBase(-30));
+        assertEquals(4, geneTranscript.absolutePositionOf5PrimeUtrExonicBase(-31));
+        assertEquals(3, geneTranscript.absolutePositionOf5PrimeUtrExonicBase(-32));
+    }
+
+    @Test
+    public void getAbsolutePositionOfBaseBeforeTranscriptStartReverseStrand()
+    {
+        assertEquals(120, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-16));
+        assertEquals(124, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-20));
+        assertEquals(125, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-21));
+        assertEquals(126, geneTranscriptRS.absolutePositionOf5PrimeUtrExonicBase(-22));
+    }
+
+    @Test
     public void totalTranslatedLength()
     {
         assertEquals(20, geneTranscript.totalTranslatedLength());

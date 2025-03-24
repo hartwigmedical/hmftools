@@ -31,6 +31,20 @@ public class AnnotatedExonTest extends ReversePaveTestBase
     }
 
     @Test
+    public void getAbsolutePositionOfBaseUpstreamOfExon()
+    {
+        assertEquals(104, annotatedExon.getAbsolutePositionOfBaseUpstreamOfExon(0));
+        assertEquals(103, annotatedExon.getAbsolutePositionOfBaseUpstreamOfExon(-1));
+    }
+
+    @Test
+    public void getAbsolutePositionOfBaseUpstreamOfExonReverseStrand()
+    {
+        assertEquals(116, annotatedExonRS.getAbsolutePositionOfBaseUpstreamOfExon(0));
+        assertEquals(117, annotatedExonRS.getAbsolutePositionOfBaseUpstreamOfExon(-1));
+    }
+
+    @Test
     public void getAbsolutePosition()
     {
         assertEquals(105, annotatedExon.getAbsolutePosition(10));
