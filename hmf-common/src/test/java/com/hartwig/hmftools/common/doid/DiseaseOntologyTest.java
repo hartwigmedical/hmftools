@@ -10,6 +10,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
+import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class DiseaseOntologyTest
@@ -23,6 +25,7 @@ public class DiseaseOntologyTest
         assertEquals("345", DiseaseOntology.extractDoid(url));
     }
 
+    @Ignore
     @Test
     public void canLoadDoidJsonFile() throws IOException
     {

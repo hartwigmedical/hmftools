@@ -22,7 +22,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
-import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -235,7 +234,7 @@ public class PartitionSlicer
             SV_LOGGER.debug("region({}) readGroups({} spanning={} candidate={}) expected({})",
                     mRegion, totalGroupCount, spanningGroupCount, remoteCandidateCount, expectedGroupCount);
 
-            mWriter.writeReadGroup(junctionGroups);
+            mWriter.writeReadGroups(junctionGroups);
         }
 
         if(mConfig.WriteTypes.contains(PREP_JUNCTION))

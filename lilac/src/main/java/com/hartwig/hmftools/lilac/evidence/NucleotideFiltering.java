@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.evidence;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
-import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -77,7 +77,7 @@ public class NucleotideFiltering
         // convert from amino acid exon boundaries to nucleotides for each gene
         Map<String,List<Integer>> hetLociMap = Maps.newHashMap();
 
-        for(String gene : GENE_IDS)
+        for(String gene : GENE_CACHE.GeneIds)
         {
             List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
 

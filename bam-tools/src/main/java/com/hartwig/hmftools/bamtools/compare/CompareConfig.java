@@ -88,7 +88,7 @@ public class CompareConfig
 
         BT_LOGGER.info("outputFile({})", OutputFile);
 
-        BT_LOGGER.info("ignore(dupicateDiffs={} alterations={} consensusReads={} suppReads={} suppAttrDiffs={} reduxUnmapped={})",
+        BT_LOGGER.info("ignore(duplicateDiffs={} alterations={} consensusReads={} suppReads={} suppAttrDiffs={} reduxUnmapped={})",
                 IgnoreDupDiffs, IgnoreAlterations, IgnoreConsensusReads, IgnoreSupplementaryReads, IgnoreSupplementaryAttribute,
                 IgnoreReduxUnmapped);
 

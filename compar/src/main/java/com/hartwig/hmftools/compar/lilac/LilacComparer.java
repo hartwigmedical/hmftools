@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.compar.lilac;
 
+import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_MISSENSE;
+import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_NFS;
+import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_SPLICE;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_ALIGN_FRAGS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_INDELS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
@@ -8,14 +11,6 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.compar.common.Category.LILAC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_ALLELES;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_INFRAME_INDEL;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_MISSENSE;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_REF_TOTAL;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_SPLICE;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_SYNONYMOUS;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_TUMOR_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_TUMOR_TOTAL;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_VARIANTS;
 
 import java.io.IOException;
@@ -54,19 +49,19 @@ public class LilacComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_REF_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        thresholds.addFieldThreshold(FLD_TUMOR_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        thresholds.addFieldThreshold(LilacAllele.FLD_REF_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        thresholds.addFieldThreshold(LilacAllele.FLD_TUMOR_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_TOTAL_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_FIT_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_DISC_ALIGN_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_DISC_INDELS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
 
         thresholds.addFieldThreshold(FLD_MISSENSE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(FLD_NONSENSE_OR_FRAMESHIFT, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(FLD_NFS, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
         thresholds.addFieldThreshold(FLD_SPLICE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(FLD_INFRAME_INDEL, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(FLD_SYNONYMOUS, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(FLD_TUMOR_COPY_NUMBER, 0.5, 0.15);
+        thresholds.addFieldThreshold(LilacAllele.FLD_INDEL, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(LilacAllele.FLD_SYNON, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        thresholds.addFieldThreshold(LilacAllele.FLD_TUMOR_CN, 0.5, 0.15);
     }
 
     @Override

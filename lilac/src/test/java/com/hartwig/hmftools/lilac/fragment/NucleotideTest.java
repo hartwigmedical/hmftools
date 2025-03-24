@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
+import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.ReferenceData.B_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
@@ -54,15 +54,22 @@ public class NucleotideTest
             Set<String> expectedGenes, String alignedGene, List<Integer> aminoAcideIndices)
     {
         Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
-        Fragment result = enricher.enrich(fragment);
-        assertTrue(namesMatch(result.getGenes(), expectedGenes));
+        Fragment result = enricher.checkAddAdditionalGenes(fragment);
+        assertTrue(namesMatch(result.genes(), expectedGenes));
     }
 
     private Fragment create(final String gene, final List<Integer> indices)
     {
-        List<Integer> qualities = Lists.newArrayList();
-        qualities.add(0);
-        return new Fragment(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
+        List<Integer> qualities = Lists.newArrayListWithCapacity(indices.size());
+        List<String> nucleotides = Lists.newArrayListWithCapacity(indices.size());
+
+        for(int i = 0; i < indices.size(); ++i)
+        {
+            qualities.add(0);
+            nucleotides.add("G");
+        }
+
+        return new Fragment(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, nucleotides);
     }
 
 }

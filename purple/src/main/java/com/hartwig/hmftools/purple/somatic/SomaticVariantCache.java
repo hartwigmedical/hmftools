@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_LEVEL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.parseTincLevel;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
@@ -63,8 +64,8 @@ public class SomaticVariantCache
         VcfFileReader vcfReader = new VcfFileReader(somaticVcf);
         mVcfHeader = vcfReader.vcfHeader();
 
-        VCFHeaderLine tincHeader = mVcfHeader.getMetaDataLine(TINC_LEVEL);
-        mTincLevel = tincHeader != null ? Double.parseDouble(tincHeader.toString()) : 0;
+        // example tag: ##tincLevel=0.950
+        mTincLevel = parseTincLevel(mVcfHeader);
 
         mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, mConfig.ReferenceId, mConfig.TumorId);
 

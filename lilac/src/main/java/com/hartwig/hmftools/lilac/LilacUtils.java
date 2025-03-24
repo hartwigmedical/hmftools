@@ -1,13 +1,30 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 
 public class LilacUtils
 {
+    public static int calcNucelotideLocus(final List<TranscriptData> transcripts, int position)
+    {
+        for(TranscriptData transData : transcripts)
+        {
+            if(!positionWithin(position, transData.CodingStart, transData.CodingEnd))
+                continue;
+
+            // locus is a zero-based index, so the first coding base has locus of 0
+            return calcCodingBases(transData, position).CodingBases - 1;
+        }
+        return -1;
+    }
+
     public static List<Integer> formRange(int start, int end)
     {
         List<Integer> indices = Lists.newArrayList();
@@ -24,6 +41,16 @@ public class LilacUtils
     {
         List<Integer> list = Lists.newArrayListWithExpectedSize(array.length);
         Arrays.stream(array).forEach(x -> list.add(x));
+        return list;
+    }
+
+    public static List<Integer> arrayToList(final byte[] array)
+    {
+        List<Integer> list = Lists.newArrayListWithExpectedSize(array.length);
+
+        for(int i = 0; i < array.length; ++i)
+            list.add(Integer.valueOf(array[i]));
+
         return list;
     }
 

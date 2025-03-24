@@ -28,6 +28,8 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantFragType;
+import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 import org.junit.Test;
 
@@ -38,7 +40,7 @@ public class FiltersTest
     private static final FragmentLengthBounds FRAG_LENGTHS = new FragmentLengthBounds(
             100, 900, 500, 0.1);
 
-    private final VariantFilters mVariantFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.001);
+    private final VariantFilters mVariantFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, new DiscordantStats());
 
     @Test
     public void testDeduplication()
@@ -162,7 +164,7 @@ public class FiltersTest
     }
 
     @Test
-    public void testShortLowVafInversion()
+    public void testInversionShortLowVafHomology()
     {
         Map<String, Object> commonAttributes = Maps.newHashMap();
         commonAttributes.put(HOMSEQ, "AGGCT");
@@ -175,13 +177,39 @@ public class FiltersTest
         var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 5);
         var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 5);
 
-        VariantFilters invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.0001);
-        invFilters.applyFilters(var);
-        assertFalse(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
+        long[] typeCounts = new long[DiscordantFragType.values().length];
+        typeCounts[DiscordantFragType.Inv1To5K.ordinal()] = 10;
+        DiscordantStats discordantStats = new DiscordantStats(100_000, 10_000, typeCounts);
 
-        invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, 0.1);
+        VariantFilters invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, discordantStats);
         invFilters.applyFilters(var);
-        assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_INV));
+        assertFalse(var.filters().contains(FilterType.INV_SHORT_LOW_VAF_HOM));
+
+        typeCounts[DiscordantFragType.Inv1To5K.ordinal()] = 10_000;
+        discordantStats = new DiscordantStats(100_000, 10_000, typeCounts);
+        invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, discordantStats);
+        invFilters.applyFilters(var);
+        assertTrue(var.filters().contains(FilterType.INV_SHORT_LOW_VAF_HOM));
+    }
+
+    @Test
+    public void testInversionShortFragmentLowVaf()
+    {
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, 100, 200, ORIENT_FWD, ORIENT_FWD, "",
+                Maps.newHashMap(), null, null);
+
+        var.contextStart().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 9);
+        var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 9);
+
+        long[] typeCounts = new long[DiscordantFragType.values().length];
+        typeCounts[DiscordantFragType.InvLt1K.ordinal()] = 200;
+        DiscordantStats discordantStats = new DiscordantStats(100_000, 10_000, typeCounts);
+
+        // set required rate to 10%
+        VariantFilters invFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, discordantStats);
+        invFilters.applyFilters(var);
+        assertTrue(var.filters().contains(FilterType.INV_SHORT_FRAG_LOW_VAF));
     }
 
     @Test
@@ -208,7 +236,7 @@ public class FiltersTest
         var.contextEnd().getGenotype(TEST_SAMPLE_ID).getExtendedAttributes().put(TOTAL_FRAGS, 5);
 
         mVariantFilters.applyFilters(var);
-        assertTrue(var.filters().contains(FilterType.SHORT_LOW_VAF_DEL));
+        assertTrue(var.filters().contains(FilterType.DEL_SHORT_LOW_VAF));
     }
     @Test
     public void testMarkGermline()

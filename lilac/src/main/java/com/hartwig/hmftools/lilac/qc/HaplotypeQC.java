@@ -181,12 +181,12 @@ public class HaplotypeQC
 
                 for(int locus = haplotype.StartLocus; locus <= haplotype.EndLocus; ++locus)
                 {
-                    int index = fragment.getAminoAcidLoci().indexOf(locus);
+                    int index = fragment.aminoAcidLoci().indexOf(locus);
                     String fragmentAA = "";
 
                     if(index >= 0)
                     {
-                        fragmentAA = fragment.getAminoAcids().get(index);
+                        fragmentAA = fragment.aminoAcids().get(index);
                     }
                     else
                     {

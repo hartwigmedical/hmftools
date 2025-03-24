@@ -33,15 +33,6 @@ public class LilacData implements ComparableItem
     protected static final String FLD_ALLELES = "Alleles";
     protected static final String FLD_VARIANTS = "SomaticVariants";
 
-    protected static final String FLD_REF_TOTAL = "RefTotal";
-    protected static final String FLD_TUMOR_TOTAL = "TumorTotal";
-    protected static final String FLD_MISSENSE = "SomaticMissense";
-    protected static final String FLD_NONSENSE_OR_FRAMESHIFT = "SomaticNonsenseOrFrameshift";
-    protected static final String FLD_SPLICE = "SomaticSplice";
-    protected static final String FLD_INFRAME_INDEL = "SomaticInframeIndel";
-    protected static final String FLD_SYNONYMOUS = "SomaticSynonymous";
-    protected static final String FLD_TUMOR_COPY_NUMBER = "TumorCopyNumber";
-
     private static final String ALLELE_DELIM = ":";
 
     public LilacData(final LilacQcData qcData, final List<LilacAllele> alleles)
@@ -124,17 +115,17 @@ public class LilacData implements ComparableItem
             if(matchingNewAllele != null)
             {
                 List<String> temporaryDiffs = Lists.newArrayList();
-                checkDiff(temporaryDiffs, FLD_MISSENSE, refAllele.somaticMissense(), matchingNewAllele.somaticMissense(), thresholds);
-                checkDiff(temporaryDiffs, FLD_NONSENSE_OR_FRAMESHIFT, refAllele.somaticNonsenseOrFrameshift(),
+                checkDiff(temporaryDiffs, LilacAllele.FLD_MISSENSE, refAllele.somaticMissense(), matchingNewAllele.somaticMissense(), thresholds);
+                checkDiff(temporaryDiffs, LilacAllele.FLD_NFS, refAllele.somaticNonsenseOrFrameshift(),
                         matchingNewAllele.somaticNonsenseOrFrameshift(), thresholds);
-                checkDiff(temporaryDiffs, FLD_SPLICE, refAllele.somaticSplice(), matchingNewAllele.somaticSplice(), thresholds);
-                checkDiff(temporaryDiffs, FLD_INFRAME_INDEL, refAllele.somaticInframeIndel(), matchingNewAllele.somaticInframeIndel(), thresholds);
-                checkDiff(temporaryDiffs, FLD_TUMOR_COPY_NUMBER, refAllele.tumorCopyNumber(), matchingNewAllele.tumorCopyNumber(), thresholds);
+                checkDiff(temporaryDiffs, LilacAllele.FLD_SPLICE, refAllele.somaticSplice(), matchingNewAllele.somaticSplice(), thresholds);
+                checkDiff(temporaryDiffs, LilacAllele.FLD_INDEL, refAllele.somaticInframeIndel(), matchingNewAllele.somaticInframeIndel(), thresholds);
+                checkDiff(temporaryDiffs, LilacAllele.FLD_TUMOR_CN, refAllele.tumorCopyNumber(), matchingNewAllele.tumorCopyNumber(), thresholds);
                 if(matchLevel == MatchLevel.DETAILED)
                 {
-                    checkDiff(temporaryDiffs, FLD_REF_TOTAL, refAllele.refFragments(), matchingNewAllele.refFragments(), thresholds);
-                    checkDiff(temporaryDiffs, FLD_TUMOR_TOTAL, refAllele.tumorFragments(), matchingNewAllele.tumorFragments(), thresholds);
-                    checkDiff(temporaryDiffs, FLD_SYNONYMOUS, refAllele.somaticSynonymous(), matchingNewAllele.somaticSynonymous(), thresholds);
+                    checkDiff(temporaryDiffs, LilacAllele.FLD_REF_TOTAL, refAllele.refFragments(), matchingNewAllele.refFragments(), thresholds);
+                    checkDiff(temporaryDiffs, LilacAllele.FLD_TUMOR_TOTAL, refAllele.tumorFragments(), matchingNewAllele.tumorFragments(), thresholds);
+                    checkDiff(temporaryDiffs, LilacAllele.FLD_SYNON, refAllele.somaticSynonymous(), matchingNewAllele.somaticSynonymous(), thresholds);
 
                 }
 

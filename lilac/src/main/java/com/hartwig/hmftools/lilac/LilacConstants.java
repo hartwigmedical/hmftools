@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
+
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class LilacConstants
 {
@@ -44,67 +44,33 @@ public class LilacConstants
     public static final double WARN_LOW_COVERAGE_DEPTH = 10;
     public static final int DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD = 300;
 
+    public static final String HLA_PREFIX = "HLA-";
+    public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
+
+    // MHC class 1 constants
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";
     public static final String GENE_C = "C";
     public static final String GENE_Y = "Y";
     public static final String GENE_H = "H";
 
-    public static final String HLA_PREFIX = "HLA-";
     public static final String HLA_A = longGeneName(GENE_A);
     public static final String HLA_B = longGeneName(GENE_B);
     public static final String HLA_C = longGeneName(GENE_C);
 
-    public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
-    public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
-
-    public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
-
-    public static final int EXPECTED_ALLELE_COUNT = 6;
-
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191", "A*02:783", "B*07:282");
+    public static final List<String> CLASS_1_EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191", "A*02:783", "B*07:282");
 
     // common INDEL associated with allele C*04:09N
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
 
-    public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
-    public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);
-    public static final List<Integer> C_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 338, 349, 365);
-
-    public static final int NUC_LENGTH_A = 1098;
-    public static final int NUC_LENGTH_B = 1089;
-    public static final int NUC_LENGTH_C = 1101;
-
-    public static final int MAX_AMINO_ACID_BOUNDARY = 298;
-
-    public static final Map<String,List<Integer>> NUCLEOTIDE_EXON_BOUNDARIES = Maps.newHashMap();
 
     public static final int SPLICE_VARIANT_BUFFER = 5;
 
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
-    // common routines using constants
-    public static List<Integer> getAminoAcidExonBoundaries(final String gene)
-    {
-        return gene.equals(GENE_A) ? A_EXON_BOUNDARIES : (gene.equals(GENE_B) ? B_EXON_BOUNDARIES : C_EXON_BOUNDARIES);
-    }
-
-    public static List<Integer> getNucleotideExonBoundaries(final String gene)
-    {
-        return NUCLEOTIDE_EXON_BOUNDARIES.get(gene);
-    }
-
-    public static String shortGeneName(final String gene)
-    {
-        return gene.startsWith(HLA_PREFIX) ? gene.substring(gene.length() - 1) : gene;
-    }
-
-    public static String longGeneName(final String gene)
-    {
-        return gene.length() == 1 ? HLA_PREFIX + gene : gene;
-    }
-
     // output file IDs
+    public static String LILAC_FILE_ID = ".lilac.";
+
     public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
     public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
     public static String LILAC_FILE_FRAGMENTS = "fragments.tsv";

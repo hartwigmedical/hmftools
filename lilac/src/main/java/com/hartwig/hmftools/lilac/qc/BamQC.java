@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -36,7 +36,7 @@ public class BamQC
 
         GeneLowCoverageCounts = Maps.newHashMap();
 
-        for(String gene : HLA_GENES)
+        for(String gene : GENE_CACHE.GeneNames)
         {
             int lowCoverageCount = (int) Arrays.stream(geneBaseDepth.get(gene)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
             GeneLowCoverageCounts.put(gene, lowCoverageCount);

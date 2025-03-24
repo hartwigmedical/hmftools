@@ -5,14 +5,9 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_C;
-import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
+import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
@@ -22,9 +17,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.utils.SuffixTree;
+import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.read.ReadRecord;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.LociPosition;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,22 +28,22 @@ import java.util.stream.Collectors;
 
 public class NucleotideFragmentFactory
 {
+    private final ReferenceData mReferenceData;
     private final LinkedHashMap<HlaSequenceLoci,SuffixTree> mInsertSuffixTrees;
     private final LinkedHashMap<HlaSequenceLoci,SuffixTree> mDeleteSuffixTrees;
     private final int mMinBaseQuality;
-    private final LociPosition mLociPosition;
 
     public NucleotideFragmentFactory(
-            int minBaseQuality, final List<HlaSequenceLoci> inserts, final List<HlaSequenceLoci> deletes, final LociPosition lociPosition)
+            int minBaseQuality, final ReferenceData referenceData)
     {
         mMinBaseQuality = minBaseQuality;
-        mLociPosition = lociPosition;
+        mReferenceData = referenceData;
 
         mInsertSuffixTrees = Maps.newLinkedHashMap();
         mDeleteSuffixTrees = Maps.newLinkedHashMap();
 
-        inserts.stream().forEach(x -> mInsertSuffixTrees.put(x, new SuffixTree(x.sequence())));
-        deletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
+        mReferenceData.AminoAcidSequencesWithInserts.stream().forEach(x -> mInsertSuffixTrees.put(x, new SuffixTree(x.sequence())));
+        mReferenceData.AminoAcidSequencesWithDeletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
     public final Fragment createFragment(final ReadRecord record, final String geneName, final byte geneStrand)
@@ -58,21 +53,24 @@ public class NucleotideFragmentFactory
 
         boolean reverseStrand = geneStrand == NEG_STRAND;
 
-        int samCodingStartLoci = reverseStrand
-                ? mLociPosition.calcNucelotideLocus(record.PositionEnd) : mLociPosition.calcNucelotideLocus(record.PositionStart);
+        int codingPositionStartLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, record.PositionStart);
+        int codingPositionEndLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, record.PositionEnd);
 
-        int samCodingEndLoci = reverseStrand
-                ? mLociPosition.calcNucelotideLocus(record.PositionStart) : mLociPosition.calcNucelotideLocus(record.PositionEnd);
+        int samCodingStartLoci = !reverseStrand ? codingPositionStartLoci : codingPositionEndLoci;
+        int samCodingEndLoci = !reverseStrand ? codingPositionEndLoci : codingPositionStartLoci;
 
-        final char[] codingRegionRead = record.codingRegionRead(reverseStrand);
-        final int[] codingRegionQuality = record.codingRegionQuality(reverseStrand);
+        int readLength = record.ReadEnd - record.ReadStart + 1;
+        final char[] codingRegionReadBases = new char[readLength];
+        final byte[] codingRegionQualities = new byte[readLength];
+
+        record.populateCodingRegion(codingRegionReadBases, codingRegionQualities, reverseStrand);
 
         if(record.containsIndel() || record.containsSoftClip())
         {
             List<Integer> aminoAcidIndices = calcAminoAcidIndices(samCodingStartLoci, samCodingEndLoci);
             int firstAAIndex = aminoAcidIndices.get(0);
             int nucleotideStartLoci = firstAAIndex * 3;
-            String sequence = String.valueOf(codingRegionRead);
+            String sequence = String.valueOf(codingRegionReadBases);
             int startLoci = nucleotideStartLoci - samCodingStartLoci;
 
             if(startLoci < 0 || startLoci >= sequence.length())
@@ -108,9 +106,17 @@ public class NucleotideFragmentFactory
         if(samCodingStartLoci < 0 || samCodingEndLoci < 0)
             return null;
 
-        List<Integer> lociRange = formRange(samCodingStartLoci, samCodingEndLoci);
-        List<String> nucleotides = arrayToList(codingRegionRead);
-        List<Integer> qualities = arrayToList(codingRegionQuality);
+        int rangeLength = samCodingEndLoci - samCodingStartLoci + 1;
+        List<Integer> lociRange = Lists.newArrayListWithCapacity(rangeLength);
+        List<String> nucleotides = Lists.newArrayListWithCapacity(rangeLength);
+        List<Integer> qualities = Lists.newArrayListWithCapacity(rangeLength);
+
+        for(int i = 0; i < rangeLength; ++i)
+        {
+            lociRange.add(samCodingStartLoci + i);
+            nucleotides.add(String.valueOf(codingRegionReadBases[i]));
+            qualities.add(Integer.valueOf(codingRegionQualities[i]));
+        }
 
         return new Fragment(record, geneName, Sets.newHashSet(geneName), lociRange, qualities, nucleotides);
     }
@@ -144,7 +150,7 @@ public class NucleotideFragmentFactory
             HlaSequenceLoci seqLoci = matchedSeqLoci.get(i);
             List<Integer> filteredAaIndices = matchedIndicesList.get(i);
             Fragment fragment = createIndelFragment(record, geneName, filteredAaIndices.get(0), aminoAcids, seqLoci);
-            if(!fragment.getNucleotideLoci().isEmpty())
+            if(!fragment.nucleotideLoci().isEmpty())
                 return fragment;
         }
 
@@ -152,8 +158,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment createIndelFragment(
-            final ReadRecord record, final String geneName, final int startLoci,
-            final String bamSequence, final HlaSequenceLoci hlaSequence)
+            final ReadRecord record, final String geneName, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
         List<Integer> aminoAcidLoci = formRange(startLoci, endLoci);
@@ -215,21 +220,21 @@ public class NucleotideFragmentFactory
 
     public int calculatePercentileBaseQuality(final List<Fragment> fragments, double percentile)
     {
-        int maxBaseQual = mMinBaseQuality * 2; // for purpose of data capture only
+        // calculates the nth percentile base quality for each fragment's nucleotides
+        int maxBaseQual = mMinBaseQuality * 2;
         int[] baseQualFrequeny = new int[maxBaseQual + 1];
         long totalBases = 0;
 
         for(Fragment fragment : fragments)
         {
-            for(Integer baseQual : fragment.getRawNucleotideQuality())
+            for(Integer baseQual : fragment.rawNucleotideQuality())
             {
                 ++totalBases;
                 ++baseQualFrequeny[min(baseQual, maxBaseQual)];
             }
         }
 
-        // calculate median
-        long percentileEntry = (long)round(totalBases * percentile);
+        long percentileEntry = round(totalBases * percentile);
         long cumulativeTotal = 0;
 
         for(int i = 0; i < baseQualFrequeny.length; ++i)
@@ -247,15 +252,17 @@ public class NucleotideFragmentFactory
     {
         final Map<String,int[]> geneBaseDepth = Maps.newHashMap();
 
-        geneBaseDepth.put(HLA_A, new int[NUC_LENGTH_A]);
-        geneBaseDepth.put(HLA_B, new int[NUC_LENGTH_B]);
-        geneBaseDepth.put(HLA_C, new int[NUC_LENGTH_C]);
+        for(String geneName : GENE_CACHE.GeneNames)
+        {
+            int geneNucleotideCount = GENE_CACHE.NucleotideLengths.get(geneName);
+            geneBaseDepth.put(geneName, new int[geneNucleotideCount]);
+        }
 
         for(Fragment fragment : fragments)
         {
             int[] baseDepth = geneBaseDepth.get(fragment.readGene());
 
-            for(int locus : fragment.getRawNucleotideLoci())
+            for(int locus : fragment.rawNucleotideLoci())
             {
                 if(locus < baseDepth.length)
                     ++baseDepth[locus];

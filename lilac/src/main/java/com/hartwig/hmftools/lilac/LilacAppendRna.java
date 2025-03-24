@@ -3,10 +3,8 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
-import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -95,17 +93,11 @@ public class LilacAppendRna
 
         List<HlaAllele> winningAlleles = aminoAcidSequences.stream().map(x -> x.Allele).collect(Collectors.toList());
 
-        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(
-                mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes,
-                mRefData.LociPositionFinder);
-
-        NucleotideGeneEnrichment nucleotideGeneEnrichment = new NucleotideGeneEnrichment(
-                A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
+        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mConfig.MinBaseQual, mRefData);
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, Collections.emptyList());
 
         int totalFragmentCount = solutionAlleles.stream().mapToInt(x -> x.refFragments()).sum();
-        double minEvidence = mConfig.calcMinEvidence(totalFragmentCount);
 
         // recoveredSequences
         // Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
@@ -120,7 +112,7 @@ public class LilacAppendRna
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
 
         ComplexCoverage rnaCoverage = extractRnaCoverage(
-                mConfig.RnaBam, mConfig, mRefData, nucleotideFragFactory, nucleotideGeneEnrichment, aminoAcidPipeline,
+                mConfig.RnaBam, mConfig, mRefData, nucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, aminoAcidPipeline,
                 fragAlleleMapper, winningAlleles, aminoAcidSequences, nucleotideSequences);
 
         /*
@@ -146,9 +138,9 @@ public class LilacAppendRna
             return ComplexCoverage.create(Lists.newArrayList());
         }
 
-        BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config, referenceData.HlaTranscriptData, nucleotideFragFactory);
+        BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config, GENE_CACHE.GeneTranscriptMap, nucleotideFragFactory);
 
-        List<Fragment> rnaNucleotideFrags = nucleotideGeneEnrichment.enrich(rnaBamReader.findGeneFragments());
+        List<Fragment> rnaNucleotideFrags = nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaBamReader.findGeneFragments());
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 

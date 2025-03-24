@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_LEVEL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.writeTincLevel;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_AVG_READS;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
@@ -46,10 +47,7 @@ public class TincVcfWriter
 
         VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
-        if(tincLevel > 0)
-        {
-            vcfHeader.addMetaDataLine(new VCFHeaderLine(TINC_LEVEL, format("%.3f", tincLevel)));
-        }
+        writeTincLevel(vcfHeader, tincLevel);
 
         if(!vcfHeader.hasFormatLine(TINC_RECOVERED_FLAG))
         {

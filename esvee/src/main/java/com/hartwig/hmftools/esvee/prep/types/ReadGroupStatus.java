@@ -7,5 +7,6 @@ public enum ReadGroupStatus
     EXPECTED,
     PAIRED, // all non-supp reads have their mates
     SUPPLEMENTARY, // all reads are supplementaries
-    COMPLETE; // has all reads
+    COMPLETE, // has all reads
+    DUPLICATE; // marked as a special type of duplicate
 }

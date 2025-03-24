@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_WILDCARD_FRAGMENTS;
-import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
-import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
-import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.getNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNMATCHED_AMINO_ACID;
@@ -118,10 +118,10 @@ public class FragmentAlleleMapper
 
             for(Map.Entry<String,Map<Integer,Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
             {
-                if(!fragment.getGenes().contains(longGeneName(geneEntry.getKey())))
+                if(!fragment.genes().contains(longGeneName(geneEntry.getKey())))
                     continue;
 
-                if(fragment.getAminoAcidLoci().stream().anyMatch(x -> geneEntry.getValue().containsKey(x)))
+                if(fragment.aminoAcidLoci().stream().anyMatch(x -> geneEntry.getValue().containsKey(x)))
                 {
                     hasHetLoci = true;
                     break;
@@ -146,7 +146,7 @@ public class FragmentAlleleMapper
         Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
 
         mRefNucleotideHetLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
-                x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
+                x.getKey(), fragment.nucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
         Map<HlaAllele, SequenceMatchType> nucleotideAlleleMatches = findNucleotideMatches(fragment, nucleotideSequences);
 
@@ -206,12 +206,12 @@ public class FragmentAlleleMapper
             String gene = entry.getKey();
             List<Integer> refNucleotideLoci = entry.getValue();
 
-            List<Integer> fragmentMatchedLoci = fragment.getNucleotideLoci().stream()
+            List<Integer> fragmentMatchedLoci = fragment.nucleotideLoci().stream()
                     .filter(y -> refNucleotideLoci.contains(y)).collect(Collectors.toList());
 
             // also check for support from low-qual reads at this same location
             List<Integer> missedNucleotideLoci = refNucleotideLoci.stream()
-                    .filter(x -> !fragment.getNucleotideLoci().contains(x)).collect(Collectors.toList());
+                    .filter(x -> !fragment.nucleotideLoci().contains(x)).collect(Collectors.toList());
 
             for(Integer missedLocus : missedNucleotideLoci)
             {
@@ -262,7 +262,7 @@ public class FragmentAlleleMapper
             if(existingMatch != null && existingMatch == FULL)
                 continue;
 
-            if(!fragment.getGenes().contains(allele.geneName()))
+            if(!fragment.genes().contains(allele.geneName()))
                 continue;
 
             List<Integer> fragNucleotideLoci = fragGeneLociMap.get(allele.Gene);
@@ -334,7 +334,7 @@ public class FragmentAlleleMapper
         {
             Map<Integer,Set<String>> hetLociSeqMap = geneEntry.getValue();
 
-            List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
                     .filter(x -> hetLociSeqMap.containsKey(x)).collect(Collectors.toList());
 
             // also attempt to retrieve amino acids from low-qual nucleotides
@@ -379,7 +379,7 @@ public class FragmentAlleleMapper
         {
             HlaAllele allele = sequence.Allele;
 
-            if(!fragment.getGenes().contains(allele.geneName()))
+            if(!fragment.genes().contains(allele.geneName()))
             {
                 alleleMatches.put(allele, NO_LOCI);
                 continue;

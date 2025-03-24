@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -19,8 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.bam.SamRecordUtils;
-import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.prep.PrepConfig;
 
@@ -31,21 +28,6 @@ public class DiscordantStats
 
     // note these counts are in fragment terms hence see doubling in rate calc
     public final long[] TypeCounts;
-
-    private enum DiscordantType
-    {
-        Translocation,
-        InvLt1K,
-        Inv1To5K,
-        Inv5To100K,
-        InvGt100K,
-        Del1To5K,
-        Del5To100K,
-        DelGt100K,
-        Dup1To5K,
-        Dup5To100K,
-        DupGt100K;
-    }
 
     public DiscordantStats(final long processedReads, final long prepReads, final long[] typeCounts)
     {
@@ -58,7 +40,7 @@ public class DiscordantStats
     {
         ProcessedReads = 0;
         PrepReads = 0;
-        TypeCounts = new long[DiscordantType.values().length];
+        TypeCounts = new long[DiscordantFragType.values().length];
     }
 
     private static final int LENGTH_SHORT = 1000;
@@ -78,7 +60,7 @@ public class DiscordantStats
     {
         if(!chromosome1.equals(chromosome2))
         {
-            ++TypeCounts[DiscordantType.Translocation.ordinal()];
+            ++TypeCounts[DiscordantFragType.Translocation.ordinal()];
             return;
         }
 
@@ -87,13 +69,13 @@ public class DiscordantStats
         if(orientation1 == orientation2)
         {
             if(distance < LENGTH_SHORT)
-                TypeCounts[DiscordantType.InvLt1K.ordinal()] += 2; // assumes mate is in the same read group so not also registered
+                TypeCounts[DiscordantFragType.InvLt1K.ordinal()] += 2; // assumes mate is in the same read group so not also registered
             else if(distance < LENGTH_5K)
-                ++TypeCounts[DiscordantType.Inv1To5K.ordinal()];
+                ++TypeCounts[DiscordantFragType.Inv1To5K.ordinal()];
             else if(distance < LENGTH_100K)
-                ++TypeCounts[DiscordantType.Inv5To100K.ordinal()];
+                ++TypeCounts[DiscordantFragType.Inv5To100K.ordinal()];
             else
-                ++TypeCounts[DiscordantType.InvGt100K.ordinal()];
+                ++TypeCounts[DiscordantFragType.InvGt100K.ordinal()];
         }
         else
         {
@@ -101,20 +83,20 @@ public class DiscordantStats
             {
                 // DEL-type orientation
                 if(distance < LENGTH_5K)
-                    ++TypeCounts[DiscordantType.Del1To5K.ordinal()];
+                    ++TypeCounts[DiscordantFragType.Del1To5K.ordinal()];
                 else if(distance < LENGTH_100K)
-                    ++TypeCounts[DiscordantType.Del5To100K.ordinal()];
+                    ++TypeCounts[DiscordantFragType.Del5To100K.ordinal()];
                 else
-                    ++TypeCounts[DiscordantType.DelGt100K.ordinal()];
+                    ++TypeCounts[DiscordantFragType.DelGt100K.ordinal()];
             }
             else
             {
                 if(distance < LENGTH_5K)
-                    ++TypeCounts[DiscordantType.Dup1To5K.ordinal()];
+                    ++TypeCounts[DiscordantFragType.Dup1To5K.ordinal()];
                 else if(distance < LENGTH_100K)
-                    ++TypeCounts[DiscordantType.Dup5To100K.ordinal()];
+                    ++TypeCounts[DiscordantFragType.Dup5To100K.ordinal()];
                 else
-                    ++TypeCounts[DiscordantType.DupGt100K.ordinal()];
+                    ++TypeCounts[DiscordantFragType.DupGt100K.ordinal()];
             }
         }
     }
@@ -129,7 +111,13 @@ public class DiscordantStats
 
     public double shortInversionRate()
     {
-        long shortInvCount = TypeCounts[DiscordantType.InvLt1K.ordinal()] + TypeCounts[DiscordantType.Inv1To5K.ordinal()];
+        long shortInvCount = TypeCounts[DiscordantFragType.InvLt1K.ordinal()] + TypeCounts[DiscordantFragType.Inv1To5K.ordinal()];
+        return ProcessedReads > 0 ? shortInvCount / (double)ProcessedReads : 0;
+    }
+
+    public double shortInversionFragmentRate()
+    {
+        long shortInvCount = TypeCounts[DiscordantFragType.InvLt1K.ordinal()];
         return ProcessedReads > 0 ? shortInvCount / (double)ProcessedReads : 0;
     }
 
@@ -143,7 +131,7 @@ public class DiscordantStats
     {
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 
-        for(DiscordantType type : DiscordantType.values())
+        for(DiscordantFragType type : DiscordantFragType.values())
         {
             sj.add(format("%s=%d", type, TypeCounts[type.ordinal()]));
         }
@@ -167,7 +155,7 @@ public class DiscordantStats
             sj.add(FLD_TOTAL_READS);
             sj.add(FLD_PREP_READS);
 
-            for(DiscordantType type : DiscordantType.values())
+            for(DiscordantFragType type : DiscordantFragType.values())
             {
                 sj.add(type.toString());
             }
@@ -179,7 +167,7 @@ public class DiscordantStats
             sj.add(String.valueOf(processedReads));
             sj.add(String.valueOf(writtenReads));
 
-            for(DiscordantType type : DiscordantType.values())
+            for(DiscordantFragType type : DiscordantFragType.values())
             {
                 sj.add(String.valueOf(discordantStats.TypeCounts[type.ordinal()]));
             }
@@ -205,7 +193,7 @@ public class DiscordantStats
             long processedReads = Long.parseLong(values[0]);
             long prepReads = 0;
 
-            long[] typeCounts = new long[DiscordantType.values().length];
+            long[] typeCounts = new long[DiscordantFragType.values().length];
 
             prepReads = Long.parseLong(values[1]);
 

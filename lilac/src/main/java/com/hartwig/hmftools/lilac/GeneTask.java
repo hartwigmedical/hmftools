@@ -33,17 +33,18 @@ public class GeneTask implements Callable
 
     public GeneTask(
             final LilacConfig config, final ReferenceData referenceData, final AminoAcidFragmentPipeline aminoAcidPipeline,
-            final Candidates candidateFactory, double minEvidence, final HlaContext hlaContext)
+            final Candidates candidateFactory, final HlaContext hlaContext)
     {
         mConfig = config;
         mRefData = referenceData;
         mAminoAcidPipeline = aminoAcidPipeline;
         mCandidateFactory = candidateFactory;
-        mMinEvidence = minEvidence;
+        mMinEvidence = aminoAcidPipeline.minEvidence();
 
         mHlaContext = hlaContext;
 
-        mCandidateFrags = Lists.newArrayList();
+        // extract fragments relevant for this gene, copying fragment data in the process to avoid concurrent access as they are filtered
+        mCandidateFrags = Lists.newArrayList(mAminoAcidPipeline.referencePhasingFragments(mHlaContext));
         mCandidatesAlleles = Lists.newArrayList();
         mPhasedEvidence = Lists.newArrayList();
     }
@@ -53,8 +54,6 @@ public class GeneTask implements Callable
     @Override
     public Long call()
     {
-        mCandidateFrags.addAll(mAminoAcidPipeline.referencePhasingFragments(mHlaContext));
-
         // determine un-phased Candidates
         List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
 

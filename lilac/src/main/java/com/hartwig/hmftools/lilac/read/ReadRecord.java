@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarHandler;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -28,12 +29,16 @@ public class ReadRecord
     public final String Id;
     public final int SoftClippedStart; // soft-clipped bases at start and end
     public final int SoftClippedEnd;
+
+    // coords which cover the coding region of the applicable gene
     public final int PositionStart; // adjusted by soft-clipped bases
     public final int PositionEnd;
+
+    // corresponding read base indices
     public final int ReadStart;
     public final int ReadEnd;
 
-    private final List<Indel> mIndels;
+    private final List<Indel> mIndels; // indels within the coding region
     private final SAMRecord mSamRecord;
 
     public ReadRecord(
@@ -73,68 +78,29 @@ public class ReadRecord
 
     public final boolean containsIndel() { return !mIndels.isEmpty(); }
 
-    public final char[] codingRegionRead(boolean reverseCompliment)
+    public void populateCodingRegion(final char[] readBases, final byte[] readQuals, boolean reverseCompliment)
     {
-        final char[] readBases = forwardRead();
-
-        if(!reverseCompliment)
-            return readBases;
-
-        final char[] reverseBases = new char[readBases.length];
-
-        int index = 0;
-        for(int i = readBases.length - 1; i >= 0; --i, ++index)
+        if(reverseCompliment)
         {
-            reverseBases[index] = reverseCompliment(readBases[i]);
+            int index = readBases.length - 1;
+            for(int i = ReadStart; i <= ReadEnd; ++i)
+            {
+                readBases[index] = Nucleotides.swapDnaBase(mSamRecord.getReadString().charAt(i));
+                readQuals[index] = mSamRecord.getBaseQualities()[i];
+                --index;
+            }
+
         }
-
-        return reverseBases;
-    }
-
-    public final int[] codingRegionQuality(boolean reverseCompliment)
-    {
-        final int[] readQuals = forwardQuality();
-
-        if(!reverseCompliment)
-            return readQuals;
-
-        final int[] reverseQuals = new int[readQuals.length];
-
-        int index = 0;
-        for(int i = readQuals.length - 1; i >= 0; --i, ++index)
+        else
         {
-            reverseQuals[index] = readQuals[i];
+            int index = 0;
+            for(int i = ReadStart; i <= ReadEnd; ++i)
+            {
+                readBases[index] = mSamRecord.getReadString().charAt(i);
+                readQuals[index] = mSamRecord.getBaseQualities()[i];
+                ++index;
+            }
         }
-
-        return reverseQuals;
-    }
-
-    private char[] forwardRead()
-    {
-        int readLength = ReadEnd - ReadStart + 1;
-        final char[] readBases = new char[readLength];
-
-        int index = 0;
-        for(int i = ReadStart; i <= ReadEnd; ++i)
-        {
-            readBases[index++] = mSamRecord.getReadString().charAt(i);
-        }
-
-        return readBases;
-    }
-
-    private int[] forwardQuality()
-    {
-        int readLength = ReadEnd - ReadStart + 1;
-        final int[] readQuals = new int[readLength];
-
-        int index = 0;
-        for(int i = ReadStart; i <= ReadEnd; ++i)
-        {
-            readQuals[index++] = mSamRecord.getBaseQualities()[i];
-        }
-
-        return readQuals;
     }
 
     public List<ReadRecord> alignmentsOnly()
@@ -257,17 +223,5 @@ public class ReadRecord
 
         CigarHandler.traverseCigar(record, cigarHandler);
         return indels;
-    }
-
-    public static char reverseCompliment(char base)
-    {
-        switch(base)
-        {
-            case 'G': return 'C';
-            case 'A': return 'T';
-            case 'T': return 'A';
-            case 'C': return 'G';
-        }
-        return base;
     }
 }

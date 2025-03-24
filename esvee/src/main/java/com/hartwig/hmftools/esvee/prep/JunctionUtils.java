@@ -4,24 +4,24 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.FragmentData.unclippedPosition;
+import static com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus.DUPLICATE;
 
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.FragmentData;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -284,36 +284,26 @@ public final class JunctionUtils
         }
     }
 
-    public static void purgeSupplementaryDuplicates(final JunctionData junctionData)
+    public static int markSupplementaryDuplicates(final Map<String,ReadGroup> readGroupMap, final ReadIdTrimmer readIdTrimmer)
     {
-        if(junctionData.junctionGroups().size() < 2)
-            return;
-
-        // find duplicates missed by Redux where the primary and supplementary have the same coordinates (and mates match)
-        // in which case keep primaries and dedup (remove) supplementaries at the lower location, and vice versa at the upper location
         Map<Integer,List<PrepRead>> initialPositionMap = Maps.newHashMap();
 
-        for(ReadGroup readGroup : junctionData.junctionGroups())
+        for(ReadGroup readGroup : readGroupMap.values())
         {
+            if(readGroup.reads().stream().noneMatch(x -> x.hasSuppAlignment()))
+                continue;
+
+            if(readGroup.reads().stream().noneMatch(x -> x.readType() == ReadType.JUNCTION || x.readType() == ReadType.CANDIDATE_SUPPORT))
+                continue;
+
             // require paired reads with a supplementary read
             for(PrepRead read : readGroup.reads())
             {
                 if(!read.isMateMapped() || !read.hasSuppAlignment())
                     continue;
 
-                if(read.readType() != ReadType.JUNCTION)
+                if(read.readType() != ReadType.JUNCTION && read.readType() != ReadType.CANDIDATE_SUPPORT)
                     continue;
-
-                if(junctionData.Orient.isForward())
-                {
-                    if(read.end() != junctionData.Position)
-                        continue;
-                }
-                else
-                {
-                    if(read.start() != junctionData.Position)
-                        continue;
-                }
 
                 int unclippedPosition = unclippedPosition(read);
 
@@ -330,35 +320,32 @@ public final class JunctionUtils
             }
         }
 
-        if(initialPositionMap.values().stream().noneMatch(x -> x.size() > 1)) // early exit if no 5' positions have more than a single entry
-            return;
-
-        Set<String> removeReadIds = Sets.newHashSet();
+        int duplicateFragmentCount = 0;
 
         for(List<PrepRead> reads : initialPositionMap.values())
         {
             if(reads.size() < 2)
                 continue;
 
-             boolean hasSupp = false;
-             boolean hasPrimary = false;
+            boolean hasSupp = false;
+            boolean hasPrimary = false;
 
-             List<FragmentData> fragments = Lists.newArrayListWithCapacity(reads.size());
+            List<FragmentData> fragments = Lists.newArrayListWithCapacity(reads.size());
 
-             for(PrepRead read : reads)
-             {
-                 fragments.add(new FragmentData(read));
+            for(PrepRead read : reads)
+            {
+                fragments.add(new FragmentData(read));
 
-                 if(read.isSupplementaryAlignment())
+                if(read.isSupplementaryAlignment())
                     hasSupp = true;
-                 else
+                else
                     hasPrimary = true;
-             }
+            }
 
-             if(!hasSupp || !hasPrimary)
-                 continue;
+            if(!hasSupp || !hasPrimary)
+                continue;
 
-             // de-dup supplementaries
+            // mark any group where the supplementary is a duplicate and the lower (in coord terms) of the two spanning reads
             for(int i = 0; i < reads.size() - 1; ++i)
             {
                 FragmentData firstFrag = fragments.get(i);
@@ -371,32 +358,32 @@ public final class JunctionUtils
                         continue;
 
                     // the supp will be removed if it is the lower coordinate of the 2, or its supplementary is likewise
-                    boolean removeNext = (firstFrag.IsPrimary == firstFrag.ReadIsLowerVsSuppData);
+                    // but favour consensus reads over non-consensus
+                    boolean markNextAsDuplicate;
 
-                    if(removeNext)
-                        removeReadIds.add(nextFrag.Read.id());
+                    boolean firstIsConsensus = firstFrag.isConsensus();
+
+                    if(firstIsConsensus != nextFrag.isConsensus())
+                    {
+                        markNextAsDuplicate = firstIsConsensus;
+                    }
                     else
-                        removeReadIds.add(firstFrag.Read.id());
+                    {
+                        markNextAsDuplicate = (firstFrag.IsPrimary == firstFrag.ReadIsLowerVsSuppData);
+                    }
+
+                    String duplicateReadId = readIdTrimmer.trim(markNextAsDuplicate ? nextFrag.Read.id() : firstFrag.Read.id());
+
+                    SV_LOGGER.trace("duplicate fragment({}) vs other({})",
+                            markNextAsDuplicate ? nextFrag : firstFrag, markNextAsDuplicate ? firstFrag : nextFrag);
+
+                    ReadGroup duplicateGroup = readGroupMap.get(duplicateReadId);
+                    duplicateGroup.setGroupState(DUPLICATE);
+                    ++duplicateFragmentCount;
                 }
             }
         }
 
-        if(removeReadIds.isEmpty())
-            return;
-
-        int index = 0;
-        while(index < junctionData.junctionGroups().size())
-        {
-            ReadGroup readGroup = junctionData.junctionGroups().get(index);
-
-            if(removeReadIds.remove(readGroup.id()))
-            {
-                junctionData.junctionGroups().remove(index);
-            }
-            else
-            {
-                ++index;
-            }
-        }
+        return duplicateFragmentCount;
     }
 }

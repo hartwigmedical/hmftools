@@ -52,13 +52,15 @@ public class AlignmentFragments
         public final List<SupportRead> DuplicateReads; // identical reads from another assembly
         public int FragmentLength;
         public boolean Processed;
+        public boolean InPrimaryAssembly;
 
-        public FragmentReads(final SupportRead read)
+        public FragmentReads(final SupportRead read, boolean inPrimaryAssembly)
         {
             PrimaryReads = Lists.newArrayList(read);
             DuplicateReads = Lists.newArrayList();
             FragmentLength = -1;
             Processed = false;
+            InPrimaryAssembly = inPrimaryAssembly;
         }
 
         public void addRead(final SupportRead read)
@@ -111,10 +113,13 @@ public class AlignmentFragments
         Map<String,FragmentReads> fragmentMap = Maps.newHashMap();
 
         List<JunctionAssembly> assemblies;
+        List<JunctionAssembly> primaryAssemblies;
 
         if(mAssemblyAlignment.phaseSet() != null)
         {
             assemblies = Lists.newArrayList(mAssemblyAlignment.phaseSet().allAssemblies());
+
+            primaryAssemblies = mAssemblyAlignment.assemblies();
 
             for(PhaseSet mergedPhaseSet : mAssemblyAlignment.phaseSet().mergedPhaseSets())
             {
@@ -124,10 +129,13 @@ public class AlignmentFragments
         else
         {
             assemblies = mAssemblyAlignment.assemblies();
+            primaryAssemblies = assemblies;
         }
 
         for(JunctionAssembly assembly : assemblies)
         {
+            boolean inPrimaryAssembly = primaryAssemblies.contains(assembly);
+
             for(SupportRead read : assembly.support())
             {
                 // only check split status and fragment length from the primary pair, but take a supplementary where the primary wasn't captured
@@ -137,10 +145,12 @@ public class AlignmentFragments
 
                 if(fragmentReads == null)
                 {
-                    fragmentReads = new FragmentReads(read);
+                    fragmentReads = new FragmentReads(read, inPrimaryAssembly);
                     fragmentMap.put(read.id(), fragmentReads);
                     continue;
                 }
+
+                fragmentReads.InPrimaryAssembly |= inPrimaryAssembly;
 
                 // if the group has already been processed, then just fill in the read details for this read
                 if(fragmentReads.Processed)
@@ -160,7 +170,7 @@ public class AlignmentFragments
                 fragmentReads.Processed = true;
 
                 // find associated breakends
-                processSupportReads(firstRead, secondRead);
+                processSupportReads(firstRead, secondRead, inPrimaryAssembly);
 
                 // apply to all
                 fragmentReads.setFragmentLength();
@@ -176,13 +186,13 @@ public class AlignmentFragments
             SupportRead firstRead = fragmentReads.findSpecificRead(true, true);
             SupportRead secondRead = fragmentReads.findSpecificRead(false, true);
 
-            processSupportReads(firstRead, secondRead);
+            processSupportReads(firstRead, secondRead, fragmentReads.InPrimaryAssembly);
 
             fragmentReads.setFragmentLength();
         }
     }
 
-    private void processSupportReads(final SupportRead firstRead, final SupportRead secondRead)
+    private void processSupportReads(final SupportRead firstRead, final SupportRead secondRead, boolean inPrimaryAssembly)
     {
         List<ReadBreakendMatch> firstBreakendMatches = firstRead != null ? findReadBreakendMatch(firstRead) : Collections.emptyList();
         List<ReadBreakendMatch> secondBreakendMatches = secondRead != null ? findReadBreakendMatch(secondRead) : Collections.emptyList();
@@ -202,15 +212,15 @@ public class AlignmentFragments
 
         if(!firstBreakendMatches.isEmpty() && !secondBreakendMatches.isEmpty())
         {
-            processCompleteFragment(firstRead, secondRead, firstBreakendMatches, secondBreakendMatches);
+            processCompleteFragment(firstRead, secondRead, inPrimaryAssembly, firstBreakendMatches, secondBreakendMatches);
         }
         else if(!firstBreakendMatches.isEmpty())
         {
-            processSoloRead(firstRead, firstBreakendMatches);
+            processSoloRead(firstRead, inPrimaryAssembly, firstBreakendMatches);
         }
         else if(!secondBreakendMatches.isEmpty())
         {
-            processSoloRead(secondRead, secondBreakendMatches);
+            processSoloRead(secondRead, inPrimaryAssembly, secondBreakendMatches);
         }
     }
 
@@ -227,7 +237,7 @@ public class AlignmentFragments
     }
 
     private void processCompleteFragment(
-            final SupportRead firstRead, final SupportRead secondRead,
+            final SupportRead firstRead, final SupportRead secondRead, boolean inPrimaryAssembly,
             final List<ReadBreakendMatch> firstBreakendMatches, final List<ReadBreakendMatch> secondBreakendMatches)
     {
         int lowerIndex = min(firstRead.fullAssemblyIndexStart(), secondRead.fullAssemblyIndexStart());
@@ -281,12 +291,18 @@ public class AlignmentFragments
             breakend.addInferredFragmentLength(fragmentLength, true);
             breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
+            if(!inPrimaryAssembly)
+                breakend.addNonPrimaryAssemblyFragmentCount();
+
             if(!breakend.isSingle())
             {
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(fragmentLength, true);
                 otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
+
+                if(!inPrimaryAssembly)
+                    otherBreakend.addNonPrimaryAssemblyFragmentCount();
             }
         }
     }
@@ -305,7 +321,7 @@ public class AlignmentFragments
         }
     }
 
-    private void processSoloRead(final SupportRead read, final List<ReadBreakendMatch> readBreakendMatches)
+    private void processSoloRead(final SupportRead read, boolean inPrimaryAssembly, final List<ReadBreakendMatch> readBreakendMatches)
     {
         int forwardReads = 0;
         int reverseReads = 0;
@@ -377,11 +393,18 @@ public class AlignmentFragments
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
             breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
+            if(!inPrimaryAssembly)
+                breakend.addNonPrimaryAssemblyFragmentCount();
+
             if(!breakend.isSingle())
             {
-                breakend.otherBreakend().updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
-                breakend.otherBreakend().addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-                breakend.otherBreakend().addFragmentPositions(fragCoords[0], fragCoords[1]);
+                Breakend otherBreakend = breakend.otherBreakend();
+                otherBreakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+                otherBreakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
+                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
+
+                if(!inPrimaryAssembly)
+                    otherBreakend.addNonPrimaryAssemblyFragmentCount();
             }
         }
     }
@@ -586,16 +609,6 @@ public class AlignmentFragments
                     return true;
             }
         }
-
-        /*
-        for(BreakendSegment segment : breakend.segments())
-        {
-            int segmentBreakendIndex = segment.SegmentOrient.isForward() ? segment.Alignment.sequenceEnd() : segment.Alignment.sequenceStart();
-
-            if(readSeqIndexStart < segmentBreakendIndex && readSeqIndexEnd > segmentBreakendIndex)
-                return true;
-        }
-        */
 
         return false;
     }

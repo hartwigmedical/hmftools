@@ -200,7 +200,7 @@ public class ResultsWriter
             for(Fragment fragment : fragments)
             {
                 StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
-                fragment.getGenes().forEach(x -> genesStr.add(x));
+                fragment.genes().forEach(x -> genesStr.add(x));
 
                 mFragmentWriter.write(String.format("%s\t%s\t%s\t%s",
                         source.toString(), fragment.id(), fragment.readInfo(), genesStr));

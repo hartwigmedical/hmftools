@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -17,20 +18,26 @@ import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
+import static org.junit.Assert.assertNotEquals;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.junit.Test;
@@ -366,7 +373,7 @@ public class JunctionsTest
         PrepRead supp1 = PrepRead.from(SamRecordTestUtils.createSamRecord(
                 primary1.id(), CHR_3, 1000, readBases, upperCigar, CHR_2, 1000, false,
                 true, suppDataLower, true, mateCigar));
-        supp1.setReadType(JUNCTION);
+        supp1.setReadType(CANDIDATE_SUPPORT);
 
         PrepRead supp2 = PrepRead.from(SamRecordTestUtils.createSamRecord(
                 READ_ID_GENERATOR.nextId(), CHR_1, 1000, readBases, lowerCigar, CHR_2, 1000, false,
@@ -376,22 +383,55 @@ public class JunctionsTest
         PrepRead primary2 = PrepRead.from(SamRecordTestUtils.createSamRecord(
                 supp2.id(), CHR_3, 1000, readBases, upperCigar, CHR_2, 1000, false,
                 false, suppDataLower, true, mateCigar));
-        primary2.setReadType(JUNCTION);
+        primary2.setReadType(CANDIDATE_SUPPORT);
 
-        JunctionData junctionDataLower = new JunctionData(1000, REVERSE, primary1);
-        junctionDataLower.addJunctionReadGroup(new ReadGroup(primary1));
-        junctionDataLower.addJunctionReadGroup(new ReadGroup(supp2));
+        ReadIdTrimmer readIdTrimmer = new ReadIdTrimmer(true);
 
-        JunctionUtils.purgeSupplementaryDuplicates(junctionDataLower);
-        assertEquals(1, junctionDataLower.junctionFragmentCount());
-        assertEquals(primary1.id(), junctionDataLower.junctionGroups().get(0).id());
+        Map<String,ReadGroup> readGroupsMap = Maps.newHashMap();
 
-        JunctionData junctionDataUpper = new JunctionData(1019, FORWARD, primary2);
-        junctionDataUpper.addJunctionReadGroup(new ReadGroup(primary2));
-        junctionDataUpper.addJunctionReadGroup(new ReadGroup(supp1));
+        ReadGroup readGroup1 = new ReadGroup(primary1, readIdTrimmer.trim(primary1.id()));
+        readGroupsMap.put(readGroup1.id(), readGroup1);
 
-        JunctionUtils.purgeSupplementaryDuplicates(junctionDataUpper);
-        assertEquals(1, junctionDataUpper.junctionFragmentCount());
-        assertEquals(supp1.id(), junctionDataLower.junctionGroups().get(0).id());
+        ReadGroup readGroup2 = new ReadGroup(supp2, readIdTrimmer.trim(supp2.id()));
+        readGroupsMap.put(readGroup2.id(), readGroup2);
+
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
+        assertEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
+
+        // test that the upper reads find the same duplicate
+        readGroup1 = new ReadGroup(supp1, readIdTrimmer.trim(supp1.id()));
+        readGroupsMap.put(readGroup1.id(), readGroup1);
+
+        readGroup2 = new ReadGroup(primary2, readIdTrimmer.trim(primary2.id()));
+        readGroupsMap.put(readGroup2.id(), readGroup2);
+
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
+        assertEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
+
+        // repeat again, checking that consensus reads are favoured over non-consensus
+        supp2.record().setAttribute(CONSENSUS_READ_ATTRIBUTE, "2:0");
+        primary2.record().setAttribute(CONSENSUS_READ_ATTRIBUTE, "2:0");
+
+        readGroup1 = new ReadGroup(primary1, readIdTrimmer.trim(primary1.id()));
+        readGroupsMap.put(readGroup1.id(), readGroup1);
+
+        readGroup2 = new ReadGroup(supp2, readIdTrimmer.trim(supp2.id()));
+        readGroupsMap.put(readGroup2.id(), readGroup2);
+
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        assertEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
+        assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
+
+        readGroup1 = new ReadGroup(supp1, readIdTrimmer.trim(supp1.id()));
+        readGroupsMap.put(readGroup1.id(), readGroup1);
+
+        readGroup2 = new ReadGroup(primary2, readIdTrimmer.trim(primary2.id()));
+        readGroupsMap.put(readGroup2.id(), readGroup2);
+
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        assertEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
+        assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
     }
 }
