@@ -33,7 +33,7 @@ public class AnnotatedExon
     public int getAbsolutePositionOfBaseUpstreamOfExon(int base)
     {
         Preconditions.checkArgument(base <= 0);
-        if (IsForwardStrand)
+        if(IsForwardStrand)
         {
             return Exon.Start + base - 1;
         }
@@ -44,7 +44,7 @@ public class AnnotatedExon
     {
         Preconditions.checkArgument(base >= FirstBase && base <= LastBase);
         final int offset = base - FirstBase;
-        if (IsForwardStrand)
+        if(IsForwardStrand)
         {
             return Exon.Start + offset;
         }

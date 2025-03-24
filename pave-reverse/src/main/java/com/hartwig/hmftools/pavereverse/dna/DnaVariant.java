@@ -20,11 +20,6 @@ public abstract class DnaVariant extends HgvsVariant
         AddressOfChangeEnd = addressOfChangeEnd;
     }
 
-    public DnaVariant(GeneData gene, TranscriptData transcript, HgvsAddress addressOfChangeStart)
-    {
-        this(gene, transcript, addressOfChangeStart, addressOfChangeStart);
-    }
-
     public abstract BaseSequenceChange toGenomicVariant(RefGenomeInterface genome);
 
     Pair<Integer, Integer> getAbsoluteLocationsOfChange()

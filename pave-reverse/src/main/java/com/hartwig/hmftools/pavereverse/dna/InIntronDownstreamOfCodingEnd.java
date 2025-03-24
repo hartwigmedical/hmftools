@@ -8,7 +8,7 @@ public class InIntronDownstreamOfCodingEnd implements HgvsAddress
     public final int IndexOfExonicBase;
     public final int RelativePositionOfIntronicBase;
 
-    public InIntronDownstreamOfCodingEnd(int indexOfExonicBase, final int relativePositionOfIntronicBase)
+    public InIntronDownstreamOfCodingEnd(int indexOfExonicBase, int relativePositionOfIntronicBase)
     {
         Preconditions.checkArgument(indexOfExonicBase > 0);
         RelativePositionOfIntronicBase = relativePositionOfIntronicBase;

@@ -13,19 +13,19 @@ import com.hartwig.hmftools.pavereverse.TranscriptFilter;
 
 class FilterTranscripts implements TranscriptRetriever
 {
-    private final ProteinVariantParser proteinVariantParser;
-    final boolean returnVariantForEachNonCanonicalTranscript;
+    private final ProteinVariantParser mVariantParser;
+    private final boolean mReturnVariantForEachNonCanonicalTranscript;
 
     FilterTranscripts(final ProteinVariantParser proteinVariantParser, final boolean returnVariantForEachNonCanonicalTranscript)
     {
-        this.proteinVariantParser = proteinVariantParser;
-        this.returnVariantForEachNonCanonicalTranscript = returnVariantForEachNonCanonicalTranscript;
+        mVariantParser = proteinVariantParser;
+        mReturnVariantForEachNonCanonicalTranscript = returnVariantForEachNonCanonicalTranscript;
     }
 
     @Override
     public Set<ProteinTranscript> getApplicableTranscripts(GeneData geneData, TranscriptFilter refFilter)
     {
-        List<TranscriptData> allTranscripts = proteinVariantParser.EnsemblCache.getTranscripts(geneData.GeneId);
+        List<TranscriptData> allTranscripts = mVariantParser.EnsemblCache.getTranscripts(geneData.GeneId);
         Set<ProteinTranscript> matchingRef = filter(allTranscripts, refFilter);
         if(matchingRef.isEmpty())
         {
@@ -40,7 +40,7 @@ class FilterTranscripts implements TranscriptRetriever
         {
             return Set.of(canonical);
         }
-        if(matchingRef.size() > 1 && !returnVariantForEachNonCanonicalTranscript)
+        if(matchingRef.size() > 1 && !mReturnVariantForEachNonCanonicalTranscript)
         {
             String msg =
                     format("No canonical transcript, but multiple non-canonical transcripts, found for gene: %s, ref: %s", geneData.GeneId, refFilter);
@@ -55,7 +55,7 @@ class FilterTranscripts implements TranscriptRetriever
         Set<ProteinTranscript> result = new HashSet<>();
         transcriptDataList.forEach(transcriptData ->
         {
-            TranscriptAminoAcids aminoAcidsSequence = proteinVariantParser.TranscriptAminoAcidsMap.get(transcriptData.TransName);
+            TranscriptAminoAcids aminoAcidsSequence = mVariantParser.TranscriptAminoAcidsMap.get(transcriptData.TransName);
             if(aminoAcidsSequence != null && filter.applies(aminoAcidsSequence))
             {
                 result.add(new ProteinTranscript(aminoAcidsSequence, transcriptData));

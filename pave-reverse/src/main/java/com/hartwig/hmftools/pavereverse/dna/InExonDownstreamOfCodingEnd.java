@@ -8,7 +8,7 @@ public class InExonDownstreamOfCodingEnd implements HgvsAddress
 
     public InExonDownstreamOfCodingEnd(final int indexOfBaseInCodingBases)
     {
-        this.IndexDownstreamOfEnd = indexOfBaseInCodingBases;
+        IndexDownstreamOfEnd = indexOfBaseInCodingBases;
     }
 
     @Override

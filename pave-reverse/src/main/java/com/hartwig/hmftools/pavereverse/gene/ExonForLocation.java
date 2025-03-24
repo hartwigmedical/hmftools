@@ -21,7 +21,8 @@ public class ExonForLocation
             lengthUpToCurrent = lengthIncludingCurrent;
             exonLength = exonLengths.get(i);
             lengthIncludingCurrent += exonLength;
-            if (location < lengthIncludingCurrent) {
+            if(location < lengthIncludingCurrent)
+            {
                 exonIndex = i;
                 break;
             }

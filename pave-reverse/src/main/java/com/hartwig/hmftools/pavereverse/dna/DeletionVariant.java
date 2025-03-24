@@ -13,7 +13,7 @@ public class DeletionVariant extends DnaVariant
 
     public DeletionVariant(GeneData gene, TranscriptData transcript, HgvsAddress address, String deletedBases)
     {
-        this(gene, transcript, address,address, deletedBases);
+        this(gene, transcript, address, address, deletedBases);
     }
 
     public DeletionVariant(GeneData gene, TranscriptData transcript, HgvsAddress start, HgvsAddress end, String deletedBases)

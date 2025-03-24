@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.pavereverse.parse.DnaVariantParser;
-import com.hartwig.hmftools.pavereverse.protein.ProteinVariant;
 import com.hartwig.hmftools.pavereverse.parse.ProteinVariantParser;
+import com.hartwig.hmftools.pavereverse.protein.ProteinVariant;
 
 /**
  * Calculates the possible base sequence changes that give rise to a protein-level change.

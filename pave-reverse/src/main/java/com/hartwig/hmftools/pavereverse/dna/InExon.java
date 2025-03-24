@@ -8,7 +8,7 @@ public class InExon implements HgvsAddress
 
     public InExon(final int indexOfBaseInCodingBases)
     {
-        this.IndexOfBaseInCodingBases = indexOfBaseInCodingBases;
+        IndexOfBaseInCodingBases = indexOfBaseInCodingBases;
     }
 
     @Override

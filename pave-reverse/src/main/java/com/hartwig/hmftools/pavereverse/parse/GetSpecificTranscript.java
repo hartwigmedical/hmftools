@@ -11,28 +11,28 @@ import com.hartwig.hmftools.pavereverse.TranscriptFilter;
 
 class GetSpecificTranscript implements TranscriptRetriever
 {
-    private final ProteinVariantParser proteinVariantParser;
-    final String transcriptId;
+    private final ProteinVariantParser mVariantParser;
+    private final String mTranscriptId;
 
     GetSpecificTranscript(final ProteinVariantParser proteinVariantParser, final String transcriptId)
     {
-        this.proteinVariantParser = proteinVariantParser;
-        this.transcriptId = transcriptId;
+        mVariantParser = proteinVariantParser;
+        mTranscriptId = transcriptId;
     }
 
     @Override
     public Set<ProteinTranscript> getApplicableTranscripts(final GeneData geneData, final TranscriptFilter refFilter)
     {
-        TranscriptData transcriptData = proteinVariantParser.EnsemblCache.getTranscriptData(geneData.GeneId, transcriptId);
+        TranscriptData transcriptData = mVariantParser.EnsemblCache.getTranscriptData(geneData.GeneId, mTranscriptId);
         if(transcriptData == null)
         {
-            String msg = format("No transcript found. Gene: %s, transcript id: %s", geneData.GeneId, transcriptId);
+            String msg = format("No transcript found. Gene: %s, transcript id: %s", geneData.GeneId, mTranscriptId);
             throw new IllegalArgumentException(msg);
         }
-        TranscriptAminoAcids aminoAcidsSequence = proteinVariantParser.TranscriptAminoAcidsMap.get(transcriptData.TransName);
+        TranscriptAminoAcids aminoAcidsSequence = mVariantParser.TranscriptAminoAcidsMap.get(transcriptData.TransName);
         if(!refFilter.applies(aminoAcidsSequence))
         {
-            String m = format("Transcript does not match. Gene: %s, transcript: %s, ref: %s", geneData.GeneId, transcriptId, refFilter);
+            String m = format("Transcript does not match. Gene: %s, transcript: %s, ref: %s", geneData.GeneId, mTranscriptId, refFilter);
             throw new IllegalArgumentException(m);
         }
         return Set.of(new ProteinTranscript(aminoAcidsSequence, transcriptData));
