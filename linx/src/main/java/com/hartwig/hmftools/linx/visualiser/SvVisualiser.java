@@ -300,6 +300,12 @@ public class SvVisualiser implements AutoCloseable
 
         final List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
 
+        if(copyNumbers.isEmpty() || segments.isEmpty() || links.isEmpty())
+        {
+            VIS_LOGGER.warn("plot({}) missing required CN , segment or link info", sample);
+            return;
+        }
+
         final ColorPicker color = colorPickerFactory.create(links);
 
         final CircosData circosData = new CircosData(
