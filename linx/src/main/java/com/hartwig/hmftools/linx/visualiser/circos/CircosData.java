@@ -14,9 +14,9 @@ import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.DisruptedExons;
+import com.hartwig.hmftools.linx.visualiser.data.GeneUtils;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
-import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
@@ -24,57 +24,55 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
-import org.jetbrains.annotations.NotNull;
-
 public class CircosData
 {
-    private final List<VisGeneExon> exons;
-    private final List<VisSvData> links;
-    private final List<Gene> genes;
-    private final List<VisSegment> segments;
-    private final List<GenomeRegion> lineElements;
-    private final List<GenomeRegion> fragileSites;
-    private final List<VisCopyNumber> copyNumbers;
-    private final List<GenomeRegion> disruptedGeneRegions;
-    private final List<Connector> connectors;
+    public final List<VisGeneExon> Exons;
+    public final List<VisSvData> SvData;
+    public final List<Gene> Genes;
+    public final List<VisSegment> Segments;
+    public final List<GenomeRegion> LineElements;
+    public final List<GenomeRegion> FragileSites;
+    public final List<VisCopyNumber> CopyNumbers;
+    public final List<GenomeRegion> DisruptedGeneRegions;
+    public final List<Connector> Connectors;
 
-    private final List<VisSvData> unadjustedLinks;
-    private final List<VisCopyNumber> unadjustedCopyNumbers;
+    public final List<VisSvData> UnadjustedLinks;
+    public final List<VisCopyNumber> UnadjustedCopyNumbers;
 
-    private final Set<GenomePosition> contigLengths;
+    public final Set<GenomePosition> ContigLengths;
 
-    private final Set<String> upstreamGenes;
-    private final Set<String> downstreamGenes;
+    public final Set<String> UpstreamGenes;
+    public final Set<String> DownstreamGenes;
 
-    private final CircosConfig config;
+    public final CircosConfig Config;
 
-    private final int maxTracks;
-    private final double maxPloidy;
-    private final double maxCopyNumber;
-    private final double maxMinorAllelePloidy;
-    private final double labelSize;
-    private final double geneLabelSize;
-    private final int maxFrame;
+    public final int MaxTracks;
+    public final double MaxPloidy;
+    public final double MaxCopyNumber;
+    public final double MaxMinorAllelePloidy;
+    public final double LabelSize;
+    public final double GeneLabelSize;
+    public final int MaxFrame;
 
     public CircosData(
             boolean showSimpleSvSegments, final CircosConfig config, final List<VisSegment> unadjustedSegments,
             final List<VisSvData> unadjustedLinks, final List<VisCopyNumber> unadjustedCopyNumbers,
             final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions)
     {
-        this.upstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
-        this.downstreamGenes = fusions.stream().map(x -> x.GeneNameDown).collect(toSet());
-        this.unadjustedLinks = unadjustedLinks;
-        this.unadjustedCopyNumbers = unadjustedCopyNumbers;
-        this.config = config;
+        UpstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
+        DownstreamGenes = fusions.stream().map(x -> x.GeneNameDown).collect(toSet());
+        UnadjustedLinks = unadjustedLinks;
+        UnadjustedCopyNumbers = unadjustedCopyNumbers;
+        Config = config;
 
-        final List<GenomeRegion> unadjustedDisruptedGeneRegions = DisruptedExons.disruptedGeneRegions(fusions, unadjustedExons);
+        List<GenomeRegion> unadjustedDisruptedGeneRegions = DisruptedExons.disruptedGeneRegions(fusions, unadjustedExons);
 
-        final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
+        List<Gene> unadjustedGenes = GeneUtils.uniqueGenes(unadjustedExons);
 
-        final List<VisGeneExon> unadjustedGeneExons = VisExons.geneExons(unadjustedGenes, unadjustedExons);
-        final List<GenomeRegion> unadjustedGeneExonRegions = unadjustedGeneExons.stream().collect(Collectors.toList());
+        List<VisGeneExon> unadjustedGeneExons = VisExons.geneExons(unadjustedGenes, unadjustedExons);
+        List<GenomeRegion> unadjustedGeneExonRegions = unadjustedGeneExons.stream().collect(Collectors.toList());
 
-        final List<GenomePosition> positionsToScale = Lists.newArrayList();
+        List<GenomePosition> positionsToScale = Lists.newArrayList();
         positionsToScale.addAll(VisLinks.allPositions(unadjustedLinks));
         positionsToScale.addAll(Span.allPositions(unadjustedSegments));
         positionsToScale.addAll(config.InterpolateCopyNumberPositions
@@ -85,127 +83,70 @@ public class CircosData
             positionsToScale.addAll(Span.allPositions(unadjustedGeneExonRegions));
         }
 
-        final List<GenomeRegion> unadjustedFragileSites =
+        List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToRegions(Highlights.FRAGILE_SITES, Span.spanPositions(positionsToScale));
 
-        final List<GenomeRegion> unadjustedLineElements =
+        List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToRegions(Highlights.LINE_ELEMENTS, Span.spanPositions(positionsToScale));
 
         final ScalePosition scalePosition = new ScalePosition(positionsToScale);
-        contigLengths = scalePosition.contigLengths();
-        segments = scalePosition.scaleSegments(unadjustedSegments);
-        links = scalePosition.scaleLinks(unadjustedLinks);
-        copyNumbers = scalePosition.interpolateCopyNumbers(unadjustedCopyNumbers);
-        fragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
-        lineElements = scalePosition.interpolateRegions(unadjustedLineElements);
-        genes = scalePosition.interpolateGene(unadjustedGenes);
-        disruptedGeneRegions = scalePosition.interpolateRegions(unadjustedDisruptedGeneRegions);
-        exons = scalePosition.interpolateExons(unadjustedGeneExons);
+        ContigLengths = scalePosition.contigLengths();
+        Segments = scalePosition.scaleSegments(unadjustedSegments);
+        SvData = scalePosition.scaleLinks(unadjustedLinks);
+        CopyNumbers = scalePosition.interpolateCopyNumbers(unadjustedCopyNumbers);
+        FragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
+        LineElements = scalePosition.interpolateRegions(unadjustedLineElements);
+        Genes = scalePosition.interpolateGene(unadjustedGenes);
+        DisruptedGeneRegions = scalePosition.interpolateRegions(unadjustedDisruptedGeneRegions);
+        Exons = scalePosition.interpolateExons(unadjustedGeneExons);
 
-        maxTracks = segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
-        maxCopyNumber = copyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);
-        maxMinorAllelePloidy = copyNumbers.stream().mapToDouble(VisCopyNumber::minorAlleleCopyNumber).max().orElse(0);
+        MaxTracks = Segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
+        MaxCopyNumber = CopyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);
+        MaxMinorAllelePloidy = CopyNumbers.stream().mapToDouble(VisCopyNumber::minorAlleleCopyNumber).max().orElse(0);
 
-        double maxLinkPloidy = links.stream().mapToDouble(x -> x.JCN).max().orElse(0);
-        double maxSegmentsPloidy = segments.stream().mapToDouble(x -> x.LinkPloidy).max().orElse(0);
+        double maxLinkPloidy = SvData.stream().mapToDouble(x -> x.JCN).max().orElse(0);
+        double maxSegmentsPloidy = Segments.stream().mapToDouble(x -> x.LinkPloidy).max().orElse(0);
 
-        maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
-        connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
-        labelSize = config.labelSize(untruncatedVisCopyNumberFilesCount());
+        MaxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
+        Connectors = new Connectors(showSimpleSvSegments).createConnectors(Segments, SvData);
+        LabelSize = config.labelSize(untruncatedVisCopyNumberFilesCount());
 
-        int actualMaxGeneCharacters = genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
-        geneLabelSize = actualMaxGeneCharacters > config.MaxGeneCharacters
-                ? 0.9d * config.MaxGeneCharacters / actualMaxGeneCharacters * labelSize
-                : labelSize;
+        int actualMaxGeneCharacters = Genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
+        GeneLabelSize = actualMaxGeneCharacters > config.MaxGeneCharacters
+                ? 0.9d * config.MaxGeneCharacters / actualMaxGeneCharacters * LabelSize
+                : LabelSize;
 
-        maxFrame = segments.stream().mapToInt(x -> x.Frame).max().orElse(0);
+        MaxFrame = Segments.stream().mapToInt(x -> x.Frame).max().orElse(0);
     }
 
     public List<Connector> connectors()
     {
-        return connectors;
-    }
-
-    @NotNull
-    public List<GenomeRegion> disruptedGeneRegions()
-    {
-        return disruptedGeneRegions;
-    }
-
-    @NotNull
-    public Set<String> upstreamGenes()
-    {
-        return upstreamGenes;
-    }
-
-    @NotNull
-    public Set<String> downstreamGenes()
-    {
-        return downstreamGenes;
+        return Connectors;
     }
 
     public boolean displayGenes()
     {
-        return !exons.isEmpty() && Doubles.positive(config.GeneRelativeSize);
+        return !Exons.isEmpty() && Doubles.positive(Config.GeneRelativeSize);
     }
 
-    public int maxTracks()
-    {
-        return maxTracks;
-    }
-
-    public double maxPloidy()
-    {
-        return maxPloidy;
-    }
-
-    public int maxFrame()
-    {
-        return maxFrame;
-    }
-
-    public double maxCopyNumber()
-    {
-        return maxCopyNumber;
-    }
-
-    public double maxMinorAllelePloidy()
-    {
-        return maxMinorAllelePloidy;
-    }
-
-    public List<Gene> genes() { return genes; }
-    public List<VisSvData> unadjustedLinks() { return unadjustedLinks; }
-    public List<VisCopyNumber> unadjustedAlterations() { return unadjustedCopyNumbers; }
-    public List<VisSegment> segments() { return segments; }
-    public List<VisSvData> links() { return links; }
-    public List<VisCopyNumber> copyNumbers() { return copyNumbers; }
-    public List<VisGeneExon> exons() { return exons; }
-    public List<GenomeRegion> fragileSites() { return fragileSites; }
-    public List<GenomeRegion> lineElements() { return lineElements; }
-
-    public Set<GenomePosition> contigLengths()
-    {
-        return contigLengths;
-    }
-
+    // public List<VisCopyNumber> unadjustedAlterations() { return unadjustedCopyNumbers; }
     public int totalContigLength()
     {
-        return contigLengths().stream().mapToInt(x -> (int) x.position()).sum();
+        return ContigLengths.stream().mapToInt(x -> (int) x.position()).sum();
     }
 
     private long untruncatedVisCopyNumberFilesCount()
     {
-        return copyNumbers.stream().filter(x -> !x.Truncated).count();
+        return CopyNumbers.stream().filter(x -> !x.Truncated).count();
     }
 
     public double labelSize()
     {
-        return labelSize;
+        return LabelSize;
     }
 
     public double geneLabelSize()
     {
-        return geneLabelSize;
+        return GeneLabelSize;
     }
 }

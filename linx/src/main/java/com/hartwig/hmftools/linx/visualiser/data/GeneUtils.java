@@ -13,9 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
-import org.jetbrains.annotations.NotNull;
-
-public class Genes
+public class GeneUtils
 {
     public static List<Gene> uniqueGenes(final List<VisGeneExon> exons)
     {
