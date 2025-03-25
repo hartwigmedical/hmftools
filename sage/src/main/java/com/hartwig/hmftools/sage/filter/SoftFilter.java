@@ -84,5 +84,14 @@ public enum SoftFilter
 
         return !softFilters.isEmpty();
     }
+
+    public static boolean filtersMatch(final Set<SoftFilter> first, final Set<SoftFilter> second)
+    {
+        if(first.size() != second.size())
+            return false;
+
+        return first.stream().allMatch(x -> second.contains(x));
+
+    }
 }
 

@@ -39,6 +39,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -172,20 +173,6 @@ public class VariantCache
             writeFitVariants();
     }
 
-    private enum FilterReason
-    {
-        NONE,
-        INDEL,
-        FILTERED,
-        GNOMAD,
-        PON,
-        LOW_ABQ,
-        GERMLINE_AF,
-        MQF,
-        NEAR_INDEL,
-        REF_DEPTH;
-    }
-
     private void downsampleFittingVariants()
     {
         int nthCount = (int)floor(mFittingVariants.size() / (double)TINC_MAX_FITTING_VARIANTS);
@@ -310,15 +297,6 @@ public class VariantCache
 
             for(VariantContext variantContext : vcfFileReader.regionIterator(chrRegion))
             {
-                /*
-                if(!mConfig.SpecificRegions.isEmpty())
-                {
-                    if(mConfig.SpecificRegions.stream()
-                            .noneMatch(x -> x.containsPosition(variantContext.getContig(), variantContext.getStart())))
-                        continue;
-                }
-                */
-
                 processVariant(variantContext);
                 ++variantCount;
 
@@ -341,6 +319,8 @@ public class VariantCache
             VariantData variant = new VariantData(variantContext, mGenotypeIds);
             mVariants.add(variant);
 
+            setPonData(variant);
+
             FilterReason filterReason = checkFilters(variant);
 
             if(filterReason == FilterReason.NONE)
@@ -349,7 +329,8 @@ public class VariantCache
                 ++mFilterCounts[filterReason.ordinal()];
         }
 
-        private FilterReason checkFilters(final VariantData variant)
+        @VisibleForTesting
+        public static FilterReason checkFilters(final VariantData variant)
         {
             // annotate and evaluate for use as a fitting variant
             FilterReason filterReason = FilterReason.NONE;
@@ -380,8 +361,6 @@ public class VariantCache
                 else if(variant.Context.hasAttribute(NEARBY_INDEL_FLAG))
                     filterReason = FilterReason.NEAR_INDEL;
             }
-
-            setPonData(variant);
 
             // check the PON for variants not otherwise filtered
             if(filterReason == FilterReason.NONE)
