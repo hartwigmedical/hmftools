@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.common;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
@@ -9,14 +11,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.collect.Heap;
-import com.hartwig.hmftools.common.collect.TwoDGridMap;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
@@ -53,7 +58,6 @@ public interface DuplicateGroupCollapser
 
         return false;
     }
-
 
     BinaryOperator<DuplicateGroup> DUPLICATE_GROUP_MERGER = (acc, group) ->
     {
@@ -260,8 +264,29 @@ public interface DuplicateGroupCollapser
 
     class SbxCollapser
     {
+        private record FragStartEnd(int fragStartPos, int fragEndPos) implements Comparable<FragStartEnd>
+        {
+            @Override
+            public int compareTo(final FragStartEnd o)
+            {
+                int diffFragStartPos = fragStartPos - o.fragStartPos;
+                if(diffFragStartPos != 0)
+                    return diffFragStartPos;
+
+                return fragEndPos - o.fragEndPos;
+            }
+
+            public int distance(final FragStartEnd o)
+            {
+                return abs(fragStartPos - o.fragStartPos) + abs(fragEndPos - o.fragEndPos);
+            }
+        }
+
+        private static final Comparator<Map.Entry<FragStartEnd, DuplicateGroup>> KEY_GROUP_ENTRY_COMPARATOR =
+                Comparator.comparingInt((Map.Entry<FragStartEnd, DuplicateGroup> x) -> x.getValue().readCount()).reversed();
+
         private final int mMaxDuplicateDistance;
-        private final Map<String, TwoDGridMap<DuplicateGroup>> mKeyGroups;
+        private final Map<String, Map<FragStartEnd, DuplicateGroup>> mKeyGroups;
 
         public SbxCollapser(int maxDuplicateDistance)
         {
@@ -281,8 +306,8 @@ public interface DuplicateGroupCollapser
             String collapsedKey = collapseKey(coords);
             int fragStartPos = coords.ReadIsLower ? coords.PositionLower : coords.PositionUpper;
             int fragEndPos = coords.ReadIsLower ? coords.PositionUpper : coords.PositionLower;
-            mKeyGroups.computeIfAbsent(collapsedKey, key -> new TwoDGridMap<>());
-            mKeyGroups.get(collapsedKey).merge(fragStartPos, fragEndPos, duplicateGroup, DUPLICATE_GROUP_MERGER);
+            mKeyGroups.computeIfAbsent(collapsedKey, key -> Maps.newHashMap());
+            mKeyGroups.get(collapsedKey).merge(new FragStartEnd(fragStartPos, fragEndPos), duplicateGroup, DUPLICATE_GROUP_MERGER);
         }
 
         public FragmentCoordReads getCollapsedGroups()
@@ -291,10 +316,73 @@ public interface DuplicateGroupCollapser
                 return null;
 
             List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
-            for(TwoDGridMap<DuplicateGroup> keyGroup : mKeyGroups.values())
+            for(Map<FragStartEnd, DuplicateGroup> keyGroup : mKeyGroups.values())
             {
-                List<DuplicateGroup> keyGroupCollapsed = keyGroup.mergeValuesByDistance(mMaxDuplicateDistance, DUPLICATE_GROUP_MERGER);
-                collapsedGroups.addAll(keyGroupCollapsed);
+                if(keyGroup.size() == 1)
+                {
+                    collapsedGroups.addAll(keyGroup.values());
+                    continue;
+                }
+
+                List<FragStartEnd> allKeys = Lists.newArrayList(keyGroup.keySet());
+                Map<FragStartEnd, Set<FragStartEnd>> keyAdjacency = Maps.newHashMap();
+                for(FragStartEnd key : allKeys)
+                    keyAdjacency.put(key, Sets.newHashSet());
+
+                for(int i = 0; i < allKeys.size() - 1; i++)
+                {
+                    FragStartEnd key1 = allKeys.get(i);
+                    for(int j = i + 1; j < allKeys.size(); j++)
+                    {
+                        FragStartEnd key2 = allKeys.get(j);
+                        if(key1.distance(key2) <= mMaxDuplicateDistance)
+                        {
+                            keyAdjacency.get(key1).add(key2);
+                            keyAdjacency.get(key2).add(key1);
+                        }
+                    }
+                }
+
+                Heap<Map.Entry<FragStartEnd, DuplicateGroup>> entryHeap = new Heap<>(KEY_GROUP_ENTRY_COMPARATOR);
+                entryHeap.addAll(keyGroup.entrySet());
+                while(!entryHeap.isEmpty())
+                {
+                    Map.Entry<FragStartEnd, DuplicateGroup> entry = entryHeap.pop();
+                    if(!keyGroup.containsKey(entry.getKey()))
+                        continue;
+
+                    keyGroup.remove(entry.getKey());
+                    DuplicateGroup collapsedGroup = entry.getValue();
+                    Set<FragStartEnd> neighbours = keyAdjacency.get(entry.getKey()).stream()
+                            .filter(keyGroup::containsKey)
+                            .collect(Collectors.toCollection(Sets::newHashSet));
+
+                    if(neighbours.isEmpty())
+                    {
+                        collapsedGroups.add(collapsedGroup);
+                        continue;
+                    }
+
+                    Heap<Map.Entry<FragStartEnd, DuplicateGroup>> neighbourHeap = new Heap<>(KEY_GROUP_ENTRY_COMPARATOR);
+                    for(FragStartEnd neighbour : neighbours)
+                    {
+                        Map.Entry<FragStartEnd, DuplicateGroup> neighbourEntry = Pair.of(neighbour, keyGroup.get(neighbour));
+                        neighbourHeap.add(neighbourEntry);
+                    }
+
+                    while(!neighbourHeap.isEmpty())
+                    {
+                        Map.Entry<FragStartEnd, DuplicateGroup> neighbourEntry = neighbourHeap.pop();
+                        if(!neighbours.contains(neighbourEntry.getKey()))
+                            continue;
+
+                        keyGroup.remove(neighbourEntry.getKey());
+                        neighbours.retainAll(keyAdjacency.get(neighbourEntry.getKey()));
+                        collapsedGroup.addReads(neighbourEntry.getValue().reads());
+                    }
+
+                    collapsedGroups.add(collapsedGroup);
+                }
             }
 
             return getFragmentCoordReads(collapsedGroups);
