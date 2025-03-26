@@ -26,8 +26,11 @@ public class InsertionVariant extends DnaVariant
     public BaseSequenceChange toGenomicVariant(RefGenomeInterface genome)
     {
         Pair<Integer, Integer> startStop = getAbsoluteLocationsOfChange();
-        String ref = genome.getBaseString(chromosome(), startStop.getLeft(), startStop.getLeft());
+        LeftMostEquivalentInsertionFinder finder =
+                new LeftMostEquivalentInsertionFinder(genome, chromosome(), startStop.getLeft(), mInsertedBases);
+        int canonicalInsertionPoint = finder.findLeftMostEquivalentPosition();
+        String ref = genome.getBaseString(chromosome(), canonicalInsertionPoint, canonicalInsertionPoint);
         String insertedBases = forwardStrand() ? mInsertedBases : Nucleotides.reverseComplementBases(mInsertedBases);
-        return new BaseSequenceChange(ref, ref + insertedBases, chromosome(), startStop.getLeft());
+        return new BaseSequenceChange(ref, ref + insertedBases, chromosome(), canonicalInsertionPoint);
     }
 }

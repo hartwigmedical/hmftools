@@ -5,14 +5,14 @@ import org.junit.Test;
 public final class DnaVariantsTest extends ReversePaveTestBase
 {
     @Test
-    public void tert()
+    public void baseIsUpstreamOfFirstUtrExonReverseStrand()
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant("TERT", "ENST00000310581", "c.-146C>T");
         check(bsc, "G", "A", "chr5", 1295135);
     }
 
     @Test
-    public void baseIsBeforeFirstUtrExon()
+    public void baseIsUpstreamOfFirstUtrExon()
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-80G>A");
         check(bsc, "G", "A", "chr7", 143381345); // Sanity check, this is actually the first 5' UTR exonic base.
@@ -213,8 +213,8 @@ public final class DnaVariantsTest extends ReversePaveTestBase
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "606dupT");
         check(bsc, "C", "CA", "chr7", 140_808_893);
 
-        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "608dupG");
-        check(bsc, "C", "CC", "chr7", 140_808_891);
+        bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "608+1dupG");
+        check(bsc, "A", "AC", "chr7", 140_808_890);
 
         bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "608+3_608+4dupAT");
         check(bsc, "C", "CAT", "chr7", 140_808_887);
@@ -232,5 +232,94 @@ public final class DnaVariantsTest extends ReversePaveTestBase
     {
         BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "c.*2_*3insGGATTC");
         check(bsc, "G", "GGAATCC", "chr7", 140_734_594);
+    }
+
+    @Test
+    public void deletionsAreLeftAligned()
+    {
+        //               143381572
+        //               |
+        //               1     7
+        // AGCCCGGCCCGGCCATGGCGGCCCCCCG...
+
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.7del");
+        check(bsc, "CG", "C", "chr7", 143381576);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.13del");
+        check(bsc, "GC", "G", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.12_13del");
+        check(bsc, "GCC", "G", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.11_13del");
+        check(bsc, "GCCC", "G", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.10_13del");
+        check(bsc, "GCCCC", "G", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.9_13del");
+        check(bsc, "GCCCCC", "G", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-8_-4del");
+        check(bsc, "AGCCCG", "A", "chr7", 143381558);
+    }
+
+    @Test
+    public void deletionsOnReverseStrandAreAlreadyLeftAligned()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "592delT");
+        check(bsc, "TA", "T", "chr7", 140_808_907);
+    }
+
+    @Test
+    public void insertionsAreLeftAligned()
+    {
+        // 143381572
+        // |
+        // 1     7
+        // ATGGCGGCCCCCCG...
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.7_8insGGG");
+        check(bsc, "C", "CGGG", "chr7", 143381576);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.13_14insC");
+        check(bsc, "G", "GC", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.13_14insCCC");
+        check(bsc, "G", "GCCC", "chr7", 143381578);
+    }
+
+    @Test
+    public void insertionsOnReverseStrandAreAlreadyLeftAligned()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "600_601insTTT");
+        check(bsc, "G", "GAAA", "chr7", 140_808_899);
+    }
+
+    @Test
+    public void duplicationsAreLeftAligned()
+    {
+        //               143381572
+        //               |
+        //               1     7
+        // AGCCCGGCCCGGCCATGGCGGCCCCCCG...
+
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.7dup");
+        check(bsc, "C", "CG", "chr7", 143381576);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.12_13dup");
+        check(bsc, "G", "GCC", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.11_13dup");
+        check(bsc, "G", "GCCC", "chr7", 143381578);
+
+        bsc = reversePave.calculateDnaVariant(zyx, zyxCanonical, "c.-8_-4dup");
+        check(bsc, "A", "AGCCCG", "chr7", 143381558);
+    }
+
+    @Test
+    public void duplicationsOnReverseStrandAreAlreadyLeftAligned()
+    {
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant(braf, brafCanonical, "585_586dupT");
+        check(bsc, "G", "GCA", "chr7", 140_808_913);
     }
 }

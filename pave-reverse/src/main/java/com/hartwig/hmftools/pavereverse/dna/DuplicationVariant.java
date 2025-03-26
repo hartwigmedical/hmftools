@@ -20,8 +20,10 @@ public class DuplicationVariant extends DnaVariant
     public BaseSequenceChange toGenomicVariant(RefGenomeInterface genome)
     {
         Pair<Integer, Integer> startStop = getAbsoluteLocationsOfChange();
-        int neighbourPosition = startStop.getLeft() - 1;
-        String alt = genome.getBaseString(chromosome(), neighbourPosition, startStop.getRight());
+        int canonicalStart = new LeftMostEquivalentDuplicationFinder(genome, chromosome(), startStop.getLeft(), startStop.getRight()).findLeftMostEquivalentPosition();
+        int neighbourPosition = canonicalStart - 1;
+        int end = neighbourPosition + startStop.getRight() - startStop.getLeft() + 1;
+        String alt = genome.getBaseString(chromosome(), neighbourPosition, end);
 
         return new BaseSequenceChange(alt.substring(0, 1), alt, chromosome(), neighbourPosition);
     }

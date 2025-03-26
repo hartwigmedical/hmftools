@@ -36,11 +36,36 @@ public class DnaVariantTest extends ReversePaveTestBase
             new FixedStringGenome("ACTGCCCCCACGTACGTACTTTTTTTTTTACGTACGTACAAAAAAAAAACCCCCATGCCATATATATATCGTGCTAGGGTATATATATACCTTAAGGGGCCCCCCAATTC");
 
     @Test
+    public void leftAlignDuplication()
+    {
+        DuplicationVariant duplicationVariant =
+                new DuplicationVariant(geneData, transcript, new InIntronBeforeExon(6, 2), new InIntronBeforeExon(6, 1), "AT");
+        BaseSequenceChange change = duplicationVariant.toGenomicVariant(genome);
+        check(change, 59, "C", "CAT");
+    }
+
+    @Test
+    public void leftAlignDeletion()
+    {
+        DeletionVariant deletionVariant = new DeletionVariant(geneData, transcript, new InExon(15), new InExon(15), "G");
+        BaseSequenceChange change = deletionVariant.toGenomicVariant(genome);
+        check(change, 76, "AG", "A");
+    }
+
+    @Test
+    public void leftAlignInsertion()
+    {
+        InsertionVariant insertionVariant = new InsertionVariant(geneData, transcript, new InExon(19), new InExon(20), "TTT");
+        BaseSequenceChange change = insertionVariant.toGenomicVariant(genome);
+        check(change, 91, "C", "CTTT");
+    }
+
+    @Test
     public void substitution()
     {
-        SubstitutionVariant substitution = new SubstitutionVariant(geneData, transcript, new InExon(2), new InExon(4), "TGC", "AAAAA" );
+        SubstitutionVariant substitution = new SubstitutionVariant(geneData, transcript, new InExon(2), new InExon(4), "TGC", "AAAAA");
         BaseSequenceChange change = substitution.toGenomicVariant(genome);
-        check(change,56, "TGC", "AAAAA" );
+        check(change, 56, "TGC", "AAAAA");
     }
 
     @Test
@@ -56,7 +81,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     {
         InsertionVariant duplication = new InsertionVariant(geneDataRS, transcriptRS, new InExon(8), new InExon(9), "GTA");
         BaseSequenceChange change = duplication.toGenomicVariant(genome);
-        check(change,77, "G", "GTAC" );
+        check(change, 77, "G", "GTAC");
     }
 
     @Test
@@ -64,11 +89,15 @@ public class DnaVariantTest extends ReversePaveTestBase
     {
         InsertionVariant duplication = new InsertionVariant(geneData, transcript, new InExon(9), new InExon(10), "GTA");
         BaseSequenceChange change = duplication.toGenomicVariant(genome);
-        check(change,73, "G", "GGTA" );
+        check(change, 73, "G", "GGTA");
+
+        duplication = new InsertionVariant(geneData, transcript, new InIntronAfterExon(15, 3), new InIntronAfterExon(15, 4), "GTA");
+        change = duplication.toGenomicVariant(genome);
+        check(change, 82, "T", "TGTA");
 
         duplication = new InsertionVariant(geneData, transcript, new InIntronAfterExon(15, 2), new InIntronAfterExon(15, 3), "GTA");
         change = duplication.toGenomicVariant(genome);
-        check(change,81, "A", "AGTA" );
+        check(change, 78, "G", "GGTA");
     }
 
     @Test
@@ -76,7 +105,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     {
         DuplicationVariant duplication = new DuplicationVariant(geneDataRS, transcriptRS, new InExon(9), new InExon(11), "CTA");
         BaseSequenceChange change = duplication.toGenomicVariant(genome);
-        check(change,74, "C", "CTAG" );
+        check(change, 74, "C", "CTAG");
     }
 
     @Test
@@ -84,7 +113,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     {
         DuplicationVariant duplication = new DuplicationVariant(geneDataRS, transcriptRS, new InExon(2), new InExon(2), "T");
         BaseSequenceChange change = duplication.toGenomicVariant(genome);
-        check(change,93, "T", "TA" );
+        check(change, 93, "T", "TA");
     }
 
     @Test
@@ -92,7 +121,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     {
         DuplicationVariant duplication = new DuplicationVariant(geneData, transcript, new InExon(16), new InExon(16), "C");
         BaseSequenceChange change = duplication.toGenomicVariant(genome);
-        check(change,89, "A", "AC" );
+        check(change, 89, "A", "AC");
     }
 
     @Test
@@ -100,7 +129,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     {
         DuplicationVariant duplication = new DuplicationVariant(geneData, transcript, new InExon(6), new InExon(10), "C");
         BaseSequenceChange change = duplication.toGenomicVariant(genome);
-        check(change,69, "T", "TCGTGC" );
+        check(change, 69, "T", "TCGTGC");
     }
 
     @Test
