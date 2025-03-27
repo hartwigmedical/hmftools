@@ -100,7 +100,7 @@ public abstract class BamWriter
                 mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId());
         }
 
-        for(SAMRecord read : group.reads())
+        for(SAMRecord read : group.allReads())
         {
             if(mConfig.UMIs.Enabled)
                 read.setAttribute(UMI_ATTRIBUTE, group.umiId());
