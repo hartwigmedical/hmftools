@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V37;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V38;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_ABQ_MIN;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_DEPTH_HIGH;
@@ -78,6 +80,11 @@ public class VariantCache
 
         mGnomadCache = new GnomadCache(mConfig.RefGenVersion, mConfig.GnomadFile, mConfig.GnomadDirectory);
         mPonCache = new PonCache(mConfig.PonFilename, true);
+
+        if(mConfig.RefGenVersion.is37())
+            mPonCache.loadFilters(PON_FILTERS_V37);
+        else
+            mPonCache.loadFilters(PON_FILTERS_V38);
 
         if(Files.exists(Paths.get(mConfig.InputVcf)))
         {
