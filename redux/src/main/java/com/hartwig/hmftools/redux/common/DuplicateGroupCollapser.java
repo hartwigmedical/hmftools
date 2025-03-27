@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
+// TODO: run SBX and ultima bams
 @FunctionalInterface
 public interface DuplicateGroupCollapser
 {
