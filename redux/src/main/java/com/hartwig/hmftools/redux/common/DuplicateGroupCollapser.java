@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.redux.common;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.collect.MergeUtils.clusterMerger;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
@@ -99,6 +102,26 @@ public interface DuplicateGroupCollapser
             return key + "_S";
 
         return key;
+    }
+
+    @Nullable
+    static String collapseToKeyWithoutCoordinates(final FragmentCoords fragmentCoords, boolean keyByFragmentOrientation)
+    {
+        if(fragmentCoords.Unpaired)
+            return null;
+
+        String lowerOrientation = fragmentCoords.OrientLower == FORWARD ? "F" : "R";
+        String suppSuffix = fragmentCoords.SuppReadInfo == null ? "" : ":S";
+        if(fragmentCoords.PositionUpper == NO_POSITION)
+        {
+            String unmappedSuffix = fragmentCoords.UnmappedSourced ? ":U" : "";
+            return format("%s:%s%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, unmappedSuffix, suppSuffix);
+        }
+
+        String upperOrientation = fragmentCoords.OrientUpper == FORWARD ? "F" : "R";
+        String isLowerString = fragmentCoords.ReadIsLower ? "L" : "U";
+        String fragmentOrientationSuffix = !keyByFragmentOrientation || fragmentCoords.forwardFragment() ? "" : ":N";
+        return format("%s:%s:%s:%s:%s%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix, fragmentOrientationSuffix);
     }
 
     int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;

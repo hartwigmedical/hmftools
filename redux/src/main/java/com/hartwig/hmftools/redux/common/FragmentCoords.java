@@ -247,6 +247,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         }
     }
 
+    // TODO: Do we need this?
     public FragmentCoords withFragmentOrientation(final Orientation fragmentOrientation)
     {
         if(FragmentOrient == fragmentOrientation)

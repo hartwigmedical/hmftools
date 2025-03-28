@@ -65,7 +65,8 @@ public class PartitionReaderTest
         mWriter = new TestBamWriter(config);
 
         mPartitionReader = createPartitionRead(config, mWriter);
-        mPartitionReader.clearDuplicateGroupCollapser();
+        // TODO:
+//        mPartitionReader.clearDuplicateGroupCollapser();
     }
 
     @Test

@@ -197,7 +197,7 @@ public class ReadCacheTest
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(2, fragmentCoordsReads.totalReadCount());
 
-        // no chain collapsing collapsing
+        // no chain collapsing
         readCache.clear();
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));

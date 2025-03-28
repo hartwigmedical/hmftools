@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
 import static com.hartwig.hmftools.redux.common.Constants.MIN_POLYG_UMI_TAIL_LENGTH;
@@ -32,6 +33,8 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -110,6 +113,8 @@ public class UmiGroupBuilder
                 collapseCoordinateGroup(coordGroup, allUmiGroups, singleFragments);
             }
         }
+
+        Mutate.jitterCollapseUmiGroups(mSequencing, allUmiGroups, singleFragments);
 
         List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
 
@@ -475,7 +480,7 @@ public class UmiGroupBuilder
     public static void collapsePolyGDuplexUmis(final SequencingType sequencingType, final UmiConfig umiConfig,
             final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
-        if(sequencingType != SequencingType.ILLUMINA)
+        if(sequencingType != ILLUMINA)
             return;
 
         if(!umiConfig.Duplex)
@@ -602,6 +607,224 @@ public class UmiGroupBuilder
             umiGroups.add(group);
         }
     }
+
+    // TODO: remove class
+    public static class Mutate
+    {
+        // TODO: Visible
+        public static void jitterCollapseUmiGroups(final SequencingType sequencingType, final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
+        {
+            if(sequencingType != ILLUMINA)
+                return;
+
+            // TODO: HERE
+            throw new NotImplementedException("TODO");
+        }
+    }
+
+    // TODO:
+    //    class IlluminaCollapser
+    //    {
+    //        private final List<SingleReadOrDuplicateGroup> mFullyMappedGroups;
+    //        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedLowerGroupIndices;
+    //        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedUpperGroupIndices;
+    //        private final Map<String, OneDGridMap<SingleReadOrDuplicateGroup>> mGroupsWithUnmappedReadOrMate;
+    //
+    //        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedLowerCoordIndices;
+    //        private final Map<String, SortedMap<Integer, OneDGridMap<Integer>>> mFixedUpperCoordIndices;
+    //        private final Map<String, OneDGridMap<FragmentCoords>> mCoordsWithUnmappedReadOrMate;
+    //
+    //        private final UnionFind<FragmentCoords> mDuplexCoordsMerger;
+    //
+    //        public IlluminaCollapser()
+    //        {
+    //            mFullyMappedGroups = Lists.newArrayList();
+    //            mFixedLowerGroupIndices = Maps.newHashMap();
+    //            mFixedUpperGroupIndices = Maps.newHashMap();
+    //            mGroupsWithUnmappedReadOrMate = Maps.newHashMap();
+    //
+    //            mFixedLowerCoordIndices = Maps.newHashMap();
+    //            mFixedUpperCoordIndices = Maps.newHashMap();
+    //            mCoordsWithUnmappedReadOrMate = Maps.newHashMap();
+    //
+    //            mDuplexCoordsMerger = new UnionFind<>();
+    //        }
+    //
+    //        public void addSingleRead(final ReadInfo readInfo)
+    //        {
+    //            addGroup(new SingleReadOrDuplicateGroup(readInfo));
+    //        }
+    //
+    //        public void addDuplicateGroup(final DuplicateGroup duplicateGroup)
+    //        {
+    //            addGroup(new SingleReadOrDuplicateGroup(duplicateGroup));
+    //        }
+    //
+    //        private void addGroup(final SingleReadOrDuplicateGroup group)
+    //        {
+    //            FragmentCoords coords = group.fragmentCoordinates();
+    //            mDuplexCoordsMerger.add(coords);
+    //            String collapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+    //            String collapsedDuplexKey = collapseToKeyWithoutCoordinates(coords, false);
+    //            if(coords.PositionUpper == NO_POSITION)
+    //            {
+    //                mGroupsWithUnmappedReadOrMate.computeIfAbsent(collapsedKey, key -> new OneDGridMap<>());
+    //                mGroupsWithUnmappedReadOrMate.get(collapsedKey).put(coords.PositionLower, group);
+    //
+    //                mCoordsWithUnmappedReadOrMate.computeIfAbsent(collapsedDuplexKey, key -> new OneDGridMap<>());
+    //                mCoordsWithUnmappedReadOrMate.get(collapsedDuplexKey).put(coords.PositionLower, coords);
+    //                return;
+    //            }
+    //
+    //            mFullyMappedGroups.add(group);
+    //            int groupIndex = mFullyMappedGroups.size() - 1;
+    //
+    //            mFixedLowerGroupIndices.computeIfAbsent(collapsedKey, key -> Maps.newTreeMap());
+    //            mFixedLowerGroupIndices.get(collapsedKey).computeIfAbsent(coords.PositionLower, key -> new OneDGridMap<>());
+    //            mFixedLowerGroupIndices.get(collapsedKey).get(coords.PositionLower).put(coords.PositionUpper, groupIndex);
+    //
+    //            mFixedUpperGroupIndices.computeIfAbsent(collapsedKey, key -> Maps.newTreeMap());
+    //            mFixedUpperGroupIndices.get(collapsedKey).computeIfAbsent(coords.PositionUpper, key -> new OneDGridMap<>());
+    //            mFixedUpperGroupIndices.get(collapsedKey).get(coords.PositionUpper).put(coords.PositionLower, groupIndex);
+    //
+    //            mFixedLowerCoordIndices.computeIfAbsent(collapsedDuplexKey, key -> Maps.newTreeMap());
+    //            mFixedLowerCoordIndices.get(collapsedDuplexKey).computeIfAbsent(coords.PositionLower, key -> new OneDGridMap<>());
+    //            mFixedLowerCoordIndices.get(collapsedDuplexKey).get(coords.PositionLower).put(coords.PositionUpper, groupIndex);
+    //
+    //            mFixedUpperCoordIndices.computeIfAbsent(collapsedDuplexKey, key -> Maps.newTreeMap());
+    //            mFixedUpperCoordIndices.get(collapsedDuplexKey).computeIfAbsent(coords.PositionUpper, key -> new OneDGridMap<>());
+    //            mFixedUpperCoordIndices.get(collapsedDuplexKey).get(coords.PositionUpper).put(coords.PositionLower, groupIndex);
+    //        }
+    //
+    //        private void collapseDuplexCoordsMerger()
+    //        {
+    //            for(OneDGridMap<FragmentCoords> coordGroup : mCoordsWithUnmappedReadOrMate.values())
+    //            {
+    //                List<List<FragmentCoords>> partitions = coordGroup.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE);
+    //                for(List<FragmentCoords> partition : partitions)
+    //                {
+    //                    for(int i = 1; i < partition.size(); i++)
+    //                        mDuplexCoordsMerger.merge(partition.get(0), partition.get(i));
+    //                }
+    //            }
+    //
+    //            List<List<Integer>> mergedCoordGroupsIndices = mFixedLowerCoordIndices.values().stream()
+    //                    .flatMap(x -> x.values().stream())
+    //                    .flatMap(x -> x.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE).stream())
+    //                    .collect(Collectors.toList());
+    //
+    //            for(List<Integer> mergedCoordGroupIndices : mergedCoordGroupsIndices)
+    //            {
+    //                FragmentCoords firstCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(0)).fragmentCoordinates();
+    //                for(int i = 1; i < mergedCoordGroupIndices.size(); i++)
+    //                {
+    //                    FragmentCoords secondCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(i)).fragmentCoordinates();
+    //                    mDuplexCoordsMerger.merge(firstCoord, secondCoord);
+    //                }
+    //            }
+    //
+    //            mergedCoordGroupsIndices = mFixedUpperCoordIndices.values().stream()
+    //                    .flatMap(x -> x.values().stream())
+    //                    .flatMap(x -> x.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE).stream())
+    //                    .collect(Collectors.toList());
+    //
+    //            for(List<Integer> mergedCoordGroupIndices : mergedCoordGroupsIndices)
+    //            {
+    //                FragmentCoords firstCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(0)).fragmentCoordinates();
+    //                for(int i = 1; i < mergedCoordGroupIndices.size(); i++)
+    //                {
+    //                    FragmentCoords secondCoord = mFullyMappedGroups.get(mergedCoordGroupIndices.get(i)).fragmentCoordinates();
+    //                    mDuplexCoordsMerger.merge(firstCoord, secondCoord);
+    //                }
+    //            }
+    //        }
+    //
+    //        private void replaceCoordsWithRepresentatives(final List<SingleReadOrDuplicateGroup> collapsedGroups)
+    //        {
+    //            for(SingleReadOrDuplicateGroup collapsedGroup : collapsedGroups)
+    //            {
+    //                FragmentCoords coord = collapsedGroup.fragmentCoordinates();
+    //                FragmentCoords repCoord = mDuplexCoordsMerger.getRepresentative(coord);
+    //                FragmentCoords collapsedCoord = repCoord.withFragmentOrientation(coord.FragmentOrient);
+    //                collapsedGroup.updateFragmentCoordinates(collapsedCoord);
+    //            }
+    //        }
+    //
+    //        public FragmentCoordReads getCollapsedGroups()
+    //        {
+    //            if(mFullyMappedGroups.isEmpty() && mGroupsWithUnmappedReadOrMate.isEmpty())
+    //                return null;
+    //
+    //            collapseDuplexCoordsMerger();
+    //
+    //            List<SingleReadOrDuplicateGroup> finalCollapsedGroups = Lists.newArrayList();
+    //            for(OneDGridMap<SingleReadOrDuplicateGroup> duplicateGroups : mGroupsWithUnmappedReadOrMate.values())
+    //            {
+    //                finalCollapsedGroups.addAll(
+    //                        duplicateGroups.mergeValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE, SingleReadOrDuplicateGroup::merge));
+    //            }
+    //
+    //            UnionFind<Integer> merger = new UnionFind<>();
+    //            for(int i = 0; i < mFullyMappedGroups.size(); i++)
+    //                merger.add(i);
+    //
+    //            List<List<Integer>> mergedGroupsIndices = mFixedLowerGroupIndices.values().stream()
+    //                    .flatMap(x -> x.values().stream())
+    //                    .flatMap(x -> x.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE).stream())
+    //                    .collect(Collectors.toList());
+    //
+    //            for(List<Integer> mergedGroupIndices : mergedGroupsIndices)
+    //            {
+    //                for(int i = 1; i < mergedGroupIndices.size(); i++)
+    //                    merger.merge(mergedGroupIndices.get(0), mergedGroupIndices.get(i));
+    //            }
+    //
+    //            mergedGroupsIndices = mFixedUpperGroupIndices.values().stream()
+    //                    .flatMap(x -> x.values().stream())
+    //                    .flatMap(x -> x.partitionValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE).stream())
+    //                    .collect(Collectors.toList());
+    //
+    //            for(List<Integer> mergedGroupIndices : mergedGroupsIndices)
+    //            {
+    //                for(int i = 1; i < mergedGroupIndices.size(); i++)
+    //                    merger.merge(mergedGroupIndices.get(0), mergedGroupIndices.get(i));
+    //            }
+    //
+    //            for(Set<Integer> mergedGroupIndices : merger.getPartitions())
+    //            {
+    //                finalCollapsedGroups.add(mergedGroupIndices.stream()
+    //                        .map(mFullyMappedGroups::get)
+    //                        .reduce(SingleReadOrDuplicateGroup::merge)
+    //                        .orElse(null));
+    //            }
+    //
+    //            replaceCoordsWithRepresentatives(finalCollapsedGroups);
+    //            return getFragmentCoordReads(finalCollapsedGroups);
+    //        }
+    //    }
+    //
+    //    static FragmentCoordReads illuminaCollapse(
+    //            @Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads)
+    //    {
+    //        boolean unpairedReads;
+    //        if(singleReads != null && !singleReads.isEmpty())
+    //            unpairedReads = singleReads.get(0).coordinates().Unpaired;
+    //        else
+    //            unpairedReads = duplicateGroups.get(0).fragmentCoordinates().Unpaired;
+    //
+    //        if(unpairedReads)
+    //            return new FragmentCoordReads(duplicateGroups, singleReads);
+    //
+    //        IlluminaCollapser collapser = new IlluminaCollapser();
+    //
+    //        if(singleReads != null)
+    //            singleReads.forEach(collapser::addSingleRead);
+    //
+    //        if(duplicateGroups != null)
+    //            duplicateGroups.forEach(collapser::addDuplicateGroup);
+    //
+    //        return collapser.getCollapsedGroups();
+    //    }
 
     @VisibleForTesting
     public static boolean hasDuplexUmiMatch(final String first, final String second, final String duplexDelim, int permittedDiff)
