@@ -85,6 +85,7 @@ public class ReversePaveApplication
             checker.compareActualChangesWithCalculated(fullContext, variantImpact);
         }
         vcfFileReader.close();
+        checker.printResults();
     }
 
     public static void main(String[] args)

@@ -30,6 +30,22 @@ public final class DeletionInsertionsTest extends ReversePaveTestBase
         assertTrue(hotspots.contains(basesChange("TTAAGAGAAGCA", "CCG", "chr7", 55174776)));
         assertTrue(hotspots.contains(basesChange("TTAAGAGAAG", "C", "chr7", 55174776)));
         assertTrue(hotspots.contains(basesChange("TTAAGAGAAGCA", "CCC", "chr7", 55174776)));
+
+        // This variant arose in Actin...
+        record =  reversePave.calculateProteinVariant("EGFR:p.L747_K754delinsSPE");
+        // chr7    55,174,776
+        //         |
+        // ... GAA TTA AGA GAA GCA ACA TCT CCG AAA GCC ...
+        // ... GAA TTA AGA GAA GCA ACA TCT CCG AAA GCC ...
+        // ... E   L   R   E   A   T   S   P   K   A   ...
+        // ... 746                                 755
+        // ref: TTAAGAGAAGCAACATCTCCGA @55174776
+        // alt: AGCCCAG
+        // GAA TTA AGA GAA GCA ACA TCT CCG AAA GCC
+        // GAA  AGCCCAG  AA GCC
+        // GAA AGC CCA GAA GCC
+        // E   S   P   E   A
+        checkSingleChange(record,"TTAAGAGAAGCAACATCTCCGA", "AGCCCAG", "chr7",55174776);
     }
 
     @Test

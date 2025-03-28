@@ -17,18 +17,73 @@ public class RoundTripChecker
     {
         mReversePave = reversePave;
     }
+    private int numberOfCodingVariantsOk = 0;
+    private int numberOfCodingVariantsInError = 0;
 
+    public void printResults()
+    {
+        RPV_LOGGER.info("Coding variants ok: " + numberOfCodingVariantsOk);
+        RPV_LOGGER.info("Coding variants in error: " + numberOfCodingVariantsInError);
+
+    }
     public void compareActualChangesWithCalculated(VariantContext context, VariantImpact impact)
     {
-        if(shouldIgnoreVariant(impact))
+        boolean compareProteinImpacts = hasComparableProteinImpact(impact);
+        boolean compareCoding = hasCodingImpact(impact);
+        if(compareProteinImpacts || compareCoding)
         {
+            int start = context.getStart();
+            String ref = context.getReference().getBaseString();
+            String alt = context.getAltAlleleWithHighestAlleleCount().getBaseString();
+            BaseSequenceChange actualChange = new BaseSequenceChange(ref, alt, context.getContig(), start);
+            if(compareProteinImpacts)
+            {
+//                compareActualWithCalculatedProteinImpact(actualChange, impact);
+            }
+            if(compareCoding)
+            {
+                compareActualWithCalculatedChange(actualChange, impact);
+            }
+        }
+    }
+
+    private void compareActualWithCalculatedChange(BaseSequenceChange actualChange, VariantImpact impact)
+    {
+        String gene = impact.GeneName;
+        String transcript = impact.CanonicalTranscript;
+        String variant = impact.CanonicalHgvsCoding;
+        if(variant.contains("c.-219+9700_-219+9699dupGG") && variant.contains("_"))
+        {
+            System.out.println(">>>>DUP!! gene: " + gene + " transcript: " + transcript + " variant: " + variant);
+        }
+        BaseSequenceChange calculated;
+        try
+        {
+            calculated = mReversePave.calculateDnaVariant(gene, transcript, variant);
+        }
+        catch(Exception e)
+        {
+            RPV_LOGGER.error("Failed to compute DNA change for " + gene + ", " + variant + " and " + transcript, e);
             return;
         }
-        int start = context.getStart();
-        String ref = context.getReference().getBaseString();
-        String alt = context.getAltAlleleWithHighestAlleleCount().getBaseString();
-        BaseSequenceChange actualChange = new BaseSequenceChange(ref, alt, context.getContig(), start);
+        if(!actualChange.equals(calculated))
+        {
+            String message = "Calculated change does not equal actual change.";
+            message += "\nGene: " + gene + ", Transcript: " + transcript + ", Variant: " + variant;
+            message += "\n    Actual: " + actualChange;
+            message += "\nCalculated: " + calculated;
+            RPV_LOGGER.warn(message);
+           numberOfCodingVariantsInError++;
+        }
+        else
+        {
+//            RPV_LOGGER.info("Coding OK for: " + variant);
+            numberOfCodingVariantsOk++;
+        }
+    }
 
+    private void compareActualWithCalculatedProteinImpact(BaseSequenceChange actualChange, VariantImpact impact)
+    {
         String gene = impact.GeneName;
         String transcript = impact.CanonicalTranscript;
         String variant = impact.CanonicalHgvsProtein;
@@ -51,25 +106,31 @@ public class RoundTripChecker
         }
         else
         {
-            RPV_LOGGER.info("Ok: " + actualChange);
+//            RPV_LOGGER.info("Protein OK: " + actualChange);
         }
     }
 
-    private boolean shouldIgnoreVariant(VariantImpact variantImpact)
+    private boolean hasCodingImpact(VariantImpact impact)
+    {
+        String codingHgvs = impact.CanonicalHgvsCoding;
+        return codingHgvs != null && codingHgvs.startsWith("c.");
+    }
+
+    private boolean hasComparableProteinImpact(VariantImpact variantImpact)
     {
         final String proteinVariant = variantImpact.CanonicalHgvsProtein;
         if(!proteinVariant.startsWith("p."))
         {
-            return true;
+            return false;
         }
         if(proteinVariant.endsWith("="))
         {
-            return true;
+            return false;
         }
         if(proteinVariant.equals("p.?"))
         {
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 }

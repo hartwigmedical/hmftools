@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneDa
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -29,6 +31,42 @@ public class GeneTranscriptTest extends ReversePaveTestBase
     TranscriptData rsTranscript = createTransExons(geneData.GeneId, 124, NEG_STRAND, exonStarts, 9, codingStart, codingEnd, false, "whatever");
     GeneTranscript geneTranscript = new GeneTranscript(geneData, transcript);
     GeneTranscript geneTranscriptRS = new GeneTranscript(geneData, rsTranscript);
+
+    @Test
+    public void isCodingBaseAtTheStartOfAnExon()
+    {
+        assertTrue(geneTranscript.isCodingBaseAtTheStartOfAnExon(6));
+        assertTrue(geneTranscript.isCodingBaseAtTheStartOfAnExon(16));
+        assertFalse(geneTranscript.isCodingBaseAtTheStartOfAnExon(1));
+        assertFalse(geneTranscript.isCodingBaseAtTheStartOfAnExon(20));
+    }
+
+    @Test
+    public void isCodingBaseAtTheStartOfAnExonReverseStrand()
+    {
+        assertTrue(geneTranscriptRS.isCodingBaseAtTheStartOfAnExon(6));
+        assertTrue(geneTranscriptRS.isCodingBaseAtTheStartOfAnExon(16));
+        assertFalse(geneTranscriptRS.isCodingBaseAtTheStartOfAnExon(1));
+        assertFalse(geneTranscriptRS.isCodingBaseAtTheStartOfAnExon(20));
+    }
+
+    @Test
+    public void isCodingBaseAtTheEndOfAnExon()
+    {
+        assertTrue(geneTranscript.isCodingBaseAtTheEndOfAnExon(5));
+        assertTrue(geneTranscript.isCodingBaseAtTheEndOfAnExon(15));
+        assertFalse(geneTranscript.isCodingBaseAtTheEndOfAnExon(10));
+        assertFalse(geneTranscript.isCodingBaseAtTheEndOfAnExon(20));
+    }
+
+    @Test
+    public void isCodingBaseAtTheEndOfAnExonReverseStrand()
+    {
+        assertTrue(geneTranscriptRS.isCodingBaseAtTheEndOfAnExon(5));
+        assertTrue(geneTranscriptRS.isCodingBaseAtTheEndOfAnExon(15));
+        assertFalse(geneTranscriptRS.isCodingBaseAtTheEndOfAnExon(10));
+        assertFalse(geneTranscriptRS.isCodingBaseAtTheEndOfAnExon(20));
+    }
 
     @Test
     public void getAbsolutePositionOfBaseBeforeTranscriptStart()

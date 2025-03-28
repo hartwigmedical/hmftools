@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneDa
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -54,6 +55,20 @@ public class HgvsAddressTest extends ReversePaveTestBase
     // 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
     // 1        10        20        30        40        50        60        70        80        90        100       110
     // ____-----++++++++++----------++++++++++----------+++++*****----------**********----------*****+++++------_____
+
+    @Test
+    public void consistencyWarning()
+    {
+        assertNull(new InIntronAfterExon(6, 1).consistencyWarnings(gt));
+        String warning = new InIntronAfterExon(5, 2).consistencyWarnings(gt);
+        String expected = "Base 5 is not at the end of an exon in TRAN0123 for gene BLAH";
+        assertEquals(expected, warning);
+
+        assertNull(new InIntronBeforeExon(7, 1).consistencyWarnings(gtRS));
+        warning = new InIntronBeforeExon(6, 2).consistencyWarnings(gtRS);
+        expected = "Base 6 is not at the start of an exon in TRAN0123 for gene BLAH";
+        assertEquals(expected, warning);
+    }
 
     @Test
     public void inIntronBeforeExonReverseStrand()

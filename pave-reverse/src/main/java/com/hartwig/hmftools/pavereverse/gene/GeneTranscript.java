@@ -91,6 +91,18 @@ public class GeneTranscript
         return CodingRegions.stream().map(ChrBaseRegion::baseLength).collect(Collectors.toList());
     }
 
+    public boolean isCodingBaseAtTheStartOfAnExon(int base)
+    {
+        int baseToSeek = base + mIndexOfFirstTranslatedBase - 1;
+        return mAnnotatedExons.stream().anyMatch(annotatedExon -> annotatedExon.FirstBase == baseToSeek);
+    }
+
+    public boolean isCodingBaseAtTheEndOfAnExon(int base)
+    {
+        int baseToSeek = base + mIndexOfFirstTranslatedBase - 1;
+        return mAnnotatedExons.stream().anyMatch(annotatedExon -> annotatedExon.LastBase == baseToSeek);
+    }
+
     public int totalTranslatedLength()
     {
         return CodingRegions.stream().mapToInt(ChrBaseRegion::baseLength).sum();

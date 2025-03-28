@@ -36,6 +36,14 @@ public class DnaVariantTest extends ReversePaveTestBase
             new FixedStringGenome("ACTGCCCCCACGTACGTACTTTTTTTTTTACGTACGTACAAAAAAAAAACCCCCATGCCATATATATATCGTGCTAGGGTATATATATACCTTAAGGGGCCCCCCAATTC");
 
     @Test
+    public void useReverseComplementBasesWhenDeterminingLeftAlignmentForReverseStrandInsertion()
+    {
+        InsertionVariant duplication = new InsertionVariant(geneDataRS, transcriptRS, new InExon(4), new InExon(5), "C");
+        BaseSequenceChange change = duplication.toGenomicVariant(genome);
+        check(change, 91, "C", "CG");
+    }
+
+    @Test
     public void leftAlignDuplication()
     {
         DuplicationVariant duplicationVariant =
