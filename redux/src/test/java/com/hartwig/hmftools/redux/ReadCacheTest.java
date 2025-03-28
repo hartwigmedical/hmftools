@@ -447,6 +447,37 @@ public class ReadCacheTest
         assertEquals(13, fragmentCoordsReads.totalReadCount());
     }
 
+    @Test
+    public void testSbxDuplicateGroupCollapsingLargestGroupFirst()
+    {
+        int maxDuplicateDistnace = 1;
+        DuplicateGroupCollapseConfig groupCollapseConfig = new DuplicateGroupCollapseConfig(SBX, maxDuplicateDistnace);
+        ReadCache readCache = new ReadCache(100, 100, false, groupCollapseConfig);
+
+        SAMRecord read1 = createUnpairedRecord(CHR_1, 100, 150, false);
+
+        SAMRecord read2 = createUnpairedRecord(CHR_1, 100, 151, false);
+        SAMRecord read3 = createUnpairedRecord(CHR_1, 100, 151, false);
+
+        SAMRecord read4 = createUnpairedRecord(CHR_1, 100, 152, false);
+        SAMRecord read5 = createUnpairedRecord(CHR_1, 100, 152, false);
+        SAMRecord read6 = createUnpairedRecord(CHR_1, 100, 152, false);
+
+        readCache.processRead(read1);
+        readCache.processRead(read2);
+        readCache.processRead(read3);
+        readCache.processRead(read4);
+        readCache.processRead(read5);
+        readCache.processRead(read6);
+
+        FragmentCoordReads fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(5, fragmentCoordsReads.DuplicateGroups.get(0).readCount());
+        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(6, fragmentCoordsReads.totalReadCount());
+    }
+
     // TODO:
 //    @Test
 //    public void testIlluminaUnmappedMateDuplicateGroupCollapsing()
