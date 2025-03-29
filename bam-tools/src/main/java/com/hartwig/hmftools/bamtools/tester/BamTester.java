@@ -30,6 +30,8 @@ public class BamTester
     {
         long startTimeMs = System.currentTimeMillis();
 
+        BT_LOGGER.info("running BAM tester");
+
         List<ChrBaseRegion> partitionRegions = PartitionTask.splitRegionsIntoPartitions(
                 mConfig.BamFile, mConfig.RefGenomeFile, mConfig.Threads, mConfig.SpecificChrRegions, mConfig.PartitionSize);
 

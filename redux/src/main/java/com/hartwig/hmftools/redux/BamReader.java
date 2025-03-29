@@ -93,7 +93,6 @@ public class BamReader
 
             if(topReader.finished())
             {
-                RD_LOGGER.trace("bam({}) finished", topReader.filename());
                 mFinishedBamReaders.add(topReader);
             }
             else
