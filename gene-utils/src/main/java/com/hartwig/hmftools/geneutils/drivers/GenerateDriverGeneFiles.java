@@ -179,6 +179,8 @@ public class GenerateDriverGeneFiles
     {
         String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
 
+        GU_LOGGER.debug("loading Ensembl data cache");
+
         EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
@@ -367,6 +369,8 @@ public class GenerateDriverGeneFiles
         try
         {
             GermlineHotspotVCF.write(refGenomeVersion, clinvarFile, germlineHotspotFile, germlineHotspotGenes);
+
+            GU_LOGGER.debug("germline hotspots VCF written");
         }
         catch(IOException e)
         {

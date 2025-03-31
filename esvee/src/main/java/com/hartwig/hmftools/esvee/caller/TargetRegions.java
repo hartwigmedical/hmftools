@@ -1,37 +1,39 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
+import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class TargetRegions
 {
-    private final Map<String,List<NamedBed>> mTargetRegions;
+    private final Map<String,List<BaseRegion>> mTargetRegions;
 
-    public TargetRegions(final ConfigBuilder configBuilder)
+    public TargetRegions(final String targetRegionsBedFile, final RefGenomeVersion refGenVersion)
     {
         mTargetRegions = Maps.newHashMap();
 
-        if(configBuilder.hasValue(TARGET_REGIONS_BED))
-            loadTargetRegionsBed(configBuilder.getValue(TARGET_REGIONS_BED));
+        if(targetRegionsBedFile != null)
+        {
+            loadTargetRegionsBed(targetRegionsBedFile, refGenVersion);
+        }
     }
 
     public boolean hasTargetRegions() { return !mTargetRegions.isEmpty(); }
 
     public boolean inTargetRegions(final String chromsome, int position)
     {
-        final List<NamedBed> chrRegions = mTargetRegions.get(chromsome);
+        final List<BaseRegion> chrRegions = mTargetRegions.get(chromsome);
 
         if(chrRegions == null)
             return false;
@@ -39,35 +41,22 @@ public class TargetRegions
         return chrRegions.stream().anyMatch(x -> positionWithin(position, x.start(), x.end()));
     }
 
-    private void loadTargetRegionsBed(final String bedFile)
+    private void loadTargetRegionsBed(final String filename, final RefGenomeVersion refGenVersion)
     {
-        if(bedFile == null)
+        if(filename == null)
             return;
 
-        try
+        Map<Chromosome,List<BaseRegion>> chrRegionsMap = loadBedFileChrMap(filename);
+
+        for(Map.Entry<Chromosome,List<BaseRegion>> entry : chrRegionsMap.entrySet())
         {
-            List<NamedBed> namedBedRecords = readBedFile(bedFile);
+            String chromosome = refGenVersion.versionedChromosome(entry.getKey().toString());
+            mTargetRegions.put(chromosome, entry.getValue());
 
-            for(NamedBed namedBed : namedBedRecords)
-            {
-                List<NamedBed> chrRegions = mTargetRegions.get(namedBed.chromosome());
-
-                if(chrRegions == null)
-                {
-                    chrRegions = Lists.newArrayList();
-                    mTargetRegions.put(namedBed.chromosome(), chrRegions);
-                }
-
-                chrRegions.add(namedBed);
-            }
-
-            SV_LOGGER.info("loaded {} target regions from file({})",
-                    mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), bedFile);
         }
-        catch (IOException e)
-        {
-            SV_LOGGER.error("failed to load target regions BED file: {}", e.toString());
-        }
+
+        SV_LOGGER.info("loaded {} target regions from file({})",
+                mTargetRegions.values().stream().mapToInt(x -> x.size()).sum(), filename);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)

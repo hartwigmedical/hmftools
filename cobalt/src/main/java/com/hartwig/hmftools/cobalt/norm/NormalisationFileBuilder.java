@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.cobalt.norm.FileWriter.writeNormalisationFile
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.MIN_ENRICHMENT_RATIO;
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcRelativeEnrichment;
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcSampleAdjustedRatios;
-import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
 import static com.hartwig.hmftools.common.genome.gc.GCBucket.calcGcBucket;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
