@@ -33,7 +33,7 @@ public class ReadCache
     private final int mGroupSize;
     private final int mMaxSoftClipLength;
     private final boolean mUseFragmentOrientation;
-    private DuplicateGroupCollapser mDuplicateGroupCollapser;
+    private final DuplicateGroupCollapser mDuplicateGroupCollapser;
 
     private int mCurrentReadMinPosition;
     private String mCurrentChromosome;
@@ -363,7 +363,4 @@ public class ReadCache
         mLastCacheReadCount = 0;
         mCheckSizeReadCount = 0;
     }
-
-    @VisibleForTesting
-    public void clearDuplicateGroupCollapser() { mDuplicateGroupCollapser = null; }
 }

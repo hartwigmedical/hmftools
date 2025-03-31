@@ -104,7 +104,7 @@ public interface DuplicateGroupCollapser
     }
 
     @Nullable
-    static String collapseToKeyWithoutCoordinates(final FragmentCoords fragmentCoords, boolean keyByFragmentOrientation)
+    static String collapseToNonOrientedKeyWithoutCoordinates(final FragmentCoords fragmentCoords)
     {
         if(fragmentCoords.Unpaired)
             return null;
@@ -119,8 +119,7 @@ public interface DuplicateGroupCollapser
 
         String upperOrientation = fragmentCoords.OrientUpper == FORWARD ? "F" : "R";
         String isLowerString = fragmentCoords.ReadIsLower ? "L" : "U";
-        String fragmentOrientationSuffix = !keyByFragmentOrientation || fragmentCoords.forwardFragment() ? "" : ":N";
-        return format("%s:%s:%s:%s:%s%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix, fragmentOrientationSuffix);
+        return format("%s:%s:%s:%s:%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix);
     }
 
     int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
