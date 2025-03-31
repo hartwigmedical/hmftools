@@ -28,7 +28,7 @@ import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadCache
+public class ReadCache implements IReadCache
 {
     private final int mGroupSize;
     private final int mMaxSoftClipLength;
@@ -73,6 +73,7 @@ public class ReadCache
         this(groupSize, maxSoftClipLength, useFragmentOrientation, new DuplicateGroupCollapseConfig(sequencingType));
     }
 
+    @Override
     public void processRead(final SAMRecord read)
     {
         int readLeftSoftClip = leftSoftClipLength(read);
@@ -101,13 +102,18 @@ public class ReadCache
         checkCacheSize();
     }
 
+    public int maxSoftClipLength() { return mMaxSoftClipLength; }
+
+    @Override
     public int currentReadMinPosition() { return mCurrentReadMinPosition; }
 
+    @Override
     public FragmentCoordReads popReads()
     {
         return popPassedReads(true);
     }
 
+    @Override
     public FragmentCoordReads evictAll()
     {
         return popPassedReads(false);
@@ -220,6 +226,7 @@ public class ReadCache
         return mDuplicateGroupCollapser.collapse(duplicateGroups, singleReads);
     }
 
+    @Override
     public int minCachedReadStart()
     {
         return mPositionGroups.stream().mapToInt(x -> x.minReadPosition()).min().orElse(-1);
@@ -349,8 +356,11 @@ public class ReadCache
         mLastCacheReadCount = newReadCount;
     }
 
+    @Override
     @VisibleForTesting
     public int cachedReadCount() { return mPositionGroups.stream().mapToInt(x -> x.readCount()).sum(); }
+
+    @Override
     public int cachedFragCoordGroups() { return mPositionGroups.stream().mapToInt(x -> x.FragCoordsMap.size()).sum(); }
     public int cachedReadGroups() { return mPositionGroups.size(); }
 

@@ -1,23 +1,25 @@
 package com.hartwig.hmftools.redux.common;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.collect.MergeUtils.clusterMerger;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.collect.OneDGridMap;
-import com.hartwig.hmftools.common.collect.TwoDGridMap;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -62,9 +64,7 @@ public interface DuplicateGroupCollapser
         return acc;
     };
 
-    int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
-
-    private static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
+    static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
     {
         List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
         List<ReadInfo> singleReads = Lists.newArrayList();
@@ -100,9 +100,8 @@ public interface DuplicateGroupCollapser
         return key;
     }
 
-    @VisibleForTesting
     @Nullable
-    static String collapseToKeyWithoutCoordinates(final FragmentCoords fragmentCoords, boolean keyByFragmentOrientation)
+    static String collapseToNonOrientedKeyWithoutCoordinates(final FragmentCoords fragmentCoords)
     {
         if(fragmentCoords.Unpaired)
             return null;
@@ -117,13 +116,18 @@ public interface DuplicateGroupCollapser
 
         String upperOrientation = fragmentCoords.OrientUpper == FORWARD ? "F" : "R";
         String isLowerString = fragmentCoords.ReadIsLower ? "L" : "U";
-        String fragmentOrientationSuffix = !keyByFragmentOrientation || fragmentCoords.forwardFragment() ? "" : ":N";
-        return format("%s:%s:%s:%s:%s%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix, fragmentOrientationSuffix);
+        return format("%s:%s:%s:%s:%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix);
     }
+
+    int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
+    Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount).reversed();
 
     class UltimaCollapser
     {
-        private final Map<String, OneDGridMap<DuplicateGroup>> mFivePrimeGroups;
+        private static final Comparator<Map.Entry<Integer, DuplicateGroup>> FIVE_PRIME_GROUP_ENTRY_COMPARATOR =
+                Comparator.comparingInt((Map.Entry<Integer, DuplicateGroup> x) -> x.getValue().readCount()).reversed();
+
+        private final Map<String, TreeMap<Integer, DuplicateGroup>> mFivePrimeGroups;
 
         public UltimaCollapser()
         {
@@ -140,7 +144,7 @@ public interface DuplicateGroupCollapser
             FragmentCoords coords = duplicateGroup.fragmentCoordinates();
             int fragEndPos = coords.ReadIsLower ? coords.PositionUpper : coords.PositionLower;
             String fivePrimeKey = collapseToFivePrimeKey(coords);
-            OneDGridMap<DuplicateGroup> fivePrimeGroup = getOrCreateFivePrimeGroup(fivePrimeKey);
+            TreeMap<Integer, DuplicateGroup> fivePrimeGroup = getOrCreateFivePrimeGroup(fivePrimeKey);
             fivePrimeGroup.merge(fragEndPos, duplicateGroup, DUPLICATE_GROUP_MERGER);
         }
 
@@ -149,25 +153,22 @@ public interface DuplicateGroupCollapser
             if(mFivePrimeGroups.isEmpty())
                 return null;
 
-            List<DuplicateGroup> finalCollapsedGroups = null;
-            for(OneDGridMap<DuplicateGroup> fivePrimeGroup : mFivePrimeGroups.values())
+            List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
+            for(TreeMap<Integer, DuplicateGroup> fivePrimeGroup : mFivePrimeGroups.values())
             {
-                List<DuplicateGroup> collapsedGroups = fivePrimeGroup.mergeValuesByDistance(SINGLE_END_JITTER_COLLAPSE_DISTANCE, DUPLICATE_GROUP_MERGER);
-                if(finalCollapsedGroups == null)
-                {
-                    finalCollapsedGroups = collapsedGroups;
-                    continue;
-                }
-
-                finalCollapsedGroups.addAll(collapsedGroups);
+                collapsedGroups.addAll(clusterMerger(
+                        fivePrimeGroup,
+                        (x, y) -> abs(x - y) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE,
+                        DUPLICATE_GROUP_COMPARATOR,
+                        DUPLICATE_GROUP_MERGER));
             }
 
-            return getFragmentCoordReads(finalCollapsedGroups);
+            return getFragmentCoordReads(collapsedGroups);
         }
 
-        private OneDGridMap<DuplicateGroup> getOrCreateFivePrimeGroup(final String fivePrimeKey)
+        private TreeMap<Integer, DuplicateGroup> getOrCreateFivePrimeGroup(final String fivePrimeKey)
         {
-            mFivePrimeGroups.computeIfAbsent(fivePrimeKey, key -> new OneDGridMap<>());
+            mFivePrimeGroups.computeIfAbsent(fivePrimeKey, key -> Maps.newTreeMap());
             return mFivePrimeGroups.get(fivePrimeKey);
         }
     }
@@ -198,7 +199,7 @@ public interface DuplicateGroupCollapser
                 SAMRecord read = readInfo.read();
                 FragmentCoords coords = readInfo.coordinates();
                 String fivePrimeKey = collapseToFivePrimeKey(coords);
-                DuplicateGroup duplicateGroup = new DuplicateGroup(null, readInfo.read(), coords);
+                DuplicateGroup duplicateGroup = new DuplicateGroup(null, read, coords);
                 fivePrimeGroups.merge(fivePrimeKey, duplicateGroup, DUPLICATE_GROUP_MERGER);
             }
         }
@@ -220,8 +221,26 @@ public interface DuplicateGroupCollapser
 
     class SbxCollapser
     {
+        private record FragStartEnd(int fragStartPos, int fragEndPos) implements Comparable<FragStartEnd>
+        {
+            @Override
+            public int compareTo(final FragStartEnd o)
+            {
+                int diffFragStartPos = fragStartPos - o.fragStartPos;
+                if(diffFragStartPos != 0)
+                    return diffFragStartPos;
+
+                return fragEndPos - o.fragEndPos;
+            }
+
+            public int distance(final FragStartEnd o)
+            {
+                return abs(fragStartPos - o.fragStartPos) + abs(fragEndPos - o.fragEndPos);
+            }
+        }
+
         private final int mMaxDuplicateDistance;
-        private final Map<String, TwoDGridMap<DuplicateGroup>> mKeyGroups;
+        private final Map<String, Map<FragStartEnd, DuplicateGroup>> mKeyGroups;
 
         public SbxCollapser(int maxDuplicateDistance)
         {
@@ -231,7 +250,8 @@ public interface DuplicateGroupCollapser
 
         public void addSingleRead(final ReadInfo readInfo)
         {
-            addDuplicateGroup(new DuplicateGroup(null, readInfo.read(), readInfo.coordinates()));
+            DuplicateGroup duplicateGroup = new DuplicateGroup(null, readInfo.read(), readInfo.coordinates());
+            addDuplicateGroup(duplicateGroup);
         }
 
         public void addDuplicateGroup(final DuplicateGroup duplicateGroup)
@@ -240,8 +260,8 @@ public interface DuplicateGroupCollapser
             String collapsedKey = collapseKey(coords);
             int fragStartPos = coords.ReadIsLower ? coords.PositionLower : coords.PositionUpper;
             int fragEndPos = coords.ReadIsLower ? coords.PositionUpper : coords.PositionLower;
-            mKeyGroups.computeIfAbsent(collapsedKey, key -> new TwoDGridMap<>());
-            mKeyGroups.get(collapsedKey).merge(fragStartPos, fragEndPos, duplicateGroup, DUPLICATE_GROUP_MERGER);
+            mKeyGroups.computeIfAbsent(collapsedKey, key -> Maps.newHashMap());
+            mKeyGroups.get(collapsedKey).merge(new FragStartEnd(fragStartPos, fragEndPos), duplicateGroup, DUPLICATE_GROUP_MERGER);
         }
 
         public FragmentCoordReads getCollapsedGroups()
@@ -249,12 +269,10 @@ public interface DuplicateGroupCollapser
             if(mKeyGroups.isEmpty())
                 return null;
 
+            BiPredicate<FragStartEnd, FragStartEnd> canMergeFn = (x, y) -> x.distance(y) <= mMaxDuplicateDistance;
             List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
-            for(TwoDGridMap<DuplicateGroup> keyGroup : mKeyGroups.values())
-            {
-                List<DuplicateGroup> keyGroupCollapsed = keyGroup.mergeValuesByDistance(mMaxDuplicateDistance, DUPLICATE_GROUP_MERGER);
-                collapsedGroups.addAll(keyGroupCollapsed);
-            }
+            for(Map<FragStartEnd, DuplicateGroup> keyGroup : mKeyGroups.values())
+                collapsedGroups.addAll(clusterMerger(keyGroup, canMergeFn, DUPLICATE_GROUP_COMPARATOR, DUPLICATE_GROUP_MERGER));
 
             return getFragmentCoordReads(collapsedGroups);
         }

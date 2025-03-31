@@ -2,14 +2,12 @@ package com.hartwig.hmftools.redux.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.common.FragmentStatus.UNSET;
-
 import htsjdk.samtools.SAMRecord;
 
 public class ReadInfo
 {
     private final SAMRecord mRead;
-    private FragmentCoords mCoordinates;
+    private final FragmentCoords mCoordinates;
 
     public ReadInfo(final SAMRecord read, final FragmentCoords fragCoords)
     {

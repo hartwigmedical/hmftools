@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import htsjdk.samtools.SAMRecord;
+
 public class FragmentCoordReads
 {
     public final List<DuplicateGroup> DuplicateGroups;

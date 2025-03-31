@@ -217,7 +217,6 @@ public class ReduxConfig
 
         UMIs = UmiConfig.from(configBuilder);
 
-
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
         JitterConfig = JitterAnalyserConfig.create(
                 SampleId, RefGenomeFile, RefGenVersion, Sequencing, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);

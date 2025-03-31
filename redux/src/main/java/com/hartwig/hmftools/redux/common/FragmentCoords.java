@@ -128,6 +128,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             return ReadIsLower || UnmappedSourced ? OrientLower : OrientUpper;
     }
 
+    public String lowerCoordinate()
+    {
+        return formCoordinate(ChromsomeLower, PositionLower, OrientLower.isForward());
+    }
+
     public String keyNonOriented() { return mKeyNonOriented != null ? mKeyNonOriented : Key; }
 
     private static String formCoordinate(final String chromosome, final int position, final boolean isForward)

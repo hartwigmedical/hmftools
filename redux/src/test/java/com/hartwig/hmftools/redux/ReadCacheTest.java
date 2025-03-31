@@ -197,7 +197,7 @@ public class ReadCacheTest
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(2, fragmentCoordsReads.totalReadCount());
 
-        // chain collapsing collapsing
+        // no chain collapsing
         readCache.clear();
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
@@ -207,8 +207,37 @@ public class ReadCacheTest
         fragmentCoordsReads = readCache.evictAll();
 
         assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(3, fragmentCoordsReads.totalReadCount());
+
+        // no after group
+        readCache.clear();
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+
+        fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(3, fragmentCoordsReads.totalReadCount());
+
+        // after group is larger than before group
+        readCache.clear();
+
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        readCache.processRead(createUnpairedRecord(CHR_1, 90, 100 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+
+        fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(6, fragmentCoordsReads.totalReadCount());
 
         // a more complex scenario
         readCache.clear();
@@ -234,8 +263,8 @@ public class ReadCacheTest
 
         fragmentCoordsReads = readCache.evictAll();
 
-        assertEquals(3, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(5, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(2, fragmentCoordsReads.SingleReads.size());
         assertEquals(15, fragmentCoordsReads.totalReadCount());
     }
 
@@ -376,7 +405,7 @@ public class ReadCacheTest
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(2, fragmentCoordsReads.totalReadCount());
 
-        // chain collapsing collapsing
+        // no chain collapsing
         readCache.clear();
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
@@ -387,7 +416,7 @@ public class ReadCacheTest
 
         fragmentCoordsReads = readCache.evictAll();
 
-        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(2, fragmentCoordsReads.DuplicateGroups.size());
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(4, fragmentCoordsReads.totalReadCount());
 
@@ -413,9 +442,40 @@ public class ReadCacheTest
 
         fragmentCoordsReads = readCache.evictAll();
 
-        assertEquals(3, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(4, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(4, fragmentCoordsReads.SingleReads.size());
         assertEquals(13, fragmentCoordsReads.totalReadCount());
+    }
+
+    @Test
+    public void testSbxDuplicateGroupCollapsingLargestGroupFirst()
+    {
+        int maxDuplicateDistnace = 1;
+        DuplicateGroupCollapseConfig groupCollapseConfig = new DuplicateGroupCollapseConfig(SBX, maxDuplicateDistnace);
+        ReadCache readCache = new ReadCache(100, 100, false, groupCollapseConfig);
+
+        SAMRecord read1 = createUnpairedRecord(CHR_1, 100, 150, false);
+
+        SAMRecord read2 = createUnpairedRecord(CHR_1, 100, 151, false);
+        SAMRecord read3 = createUnpairedRecord(CHR_1, 100, 151, false);
+
+        SAMRecord read4 = createUnpairedRecord(CHR_1, 100, 152, false);
+        SAMRecord read5 = createUnpairedRecord(CHR_1, 100, 152, false);
+        SAMRecord read6 = createUnpairedRecord(CHR_1, 100, 152, false);
+
+        readCache.processRead(read1);
+        readCache.processRead(read2);
+        readCache.processRead(read3);
+        readCache.processRead(read4);
+        readCache.processRead(read5);
+        readCache.processRead(read6);
+
+        FragmentCoordReads fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(5, fragmentCoordsReads.DuplicateGroups.get(0).readCount());
+        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(6, fragmentCoordsReads.totalReadCount());
     }
 
     private static SAMRecord createRecord(final String chromosome, final int readStart, boolean isReversed)

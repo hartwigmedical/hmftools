@@ -10,6 +10,8 @@ public class Constants
     public static final int DEFAULT_MAX_UMI_BASE_DIFF = 1;
     public static final int MAX_IMBALANCED_UMI_BASE_DIFF = 4;
     public static final int MAX_IMBALANCED_UMI_COUNT = 25;
+    public static final int MIN_POLYG_UMI_TAIL_LENGTH = 2;
+    public static final int MAX_UMI_BASE_DIFF_JITTER_COLLAPSE = 1;
 
     public static final char DEFAULT_DUPLEX_UMI_DELIM = '_';
 

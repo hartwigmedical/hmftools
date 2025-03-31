@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.common;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
@@ -20,7 +21,7 @@ public class DuplicateGroupBuilder
         mFormConsensus = config.FormConsensus;
         mUmiConfig = config.UMIs;
         mStats = new Statistics();
-        mUmiGroupBuilder = new UmiGroupBuilder(config.UMIs, mStats.UmiStats);
+        mUmiGroupBuilder = new UmiGroupBuilder(config.Sequencing, config.UMIs, mStats.UmiStats);
     }
 
     public Statistics statistics() { return mStats; }
@@ -88,5 +89,11 @@ public class DuplicateGroupBuilder
         }
 
         return readBaseCount > 0 ? readBaseQualTotal / (double)readBaseCount : 0;
+    }
+
+    @VisibleForTesting
+    public UmiGroupBuilder umiGroupBuilder()
+    {
+        return mUmiGroupBuilder;
     }
 }
