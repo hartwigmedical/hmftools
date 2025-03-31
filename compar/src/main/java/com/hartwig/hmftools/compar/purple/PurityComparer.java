@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PLOIDY;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PURITY;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_SV_TMB;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TINC_LEVEL;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TMB;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TMB_STATUS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TML;
@@ -59,6 +60,7 @@ public class PurityComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_CN_SEGS, 5, 0.2);
         thresholds.addFieldThreshold(FLD_UNS_CN_SEGS, 5, 0.2);
         thresholds.addFieldThreshold(FLD_SV_TMB, 2, 0.05);
+        thresholds.addFieldThreshold(FLD_TINC_LEVEL, 0.1, 0);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class PurityComparer implements ItemComparer
     {
         return Lists.newArrayList(
                 FLD_PURITY, FLD_PLOIDY, FLD_CONTAMINATION, FLD_TMB, FLD_TML, FLD_MS_INDELS, FLD_SV_TMB, FLD_CN_SEGS ,FLD_UNS_CN_SEGS,
-                FLD_QC_STATUS, FLD_GENDER, FLD_GERM_ABS, FLD_FIT_METHOD, FLD_MS_STATUS, FLD_TMB_STATUS, FLD_TML_STATUS);
+                FLD_QC_STATUS, FLD_GENDER, FLD_GERM_ABS, FLD_FIT_METHOD, FLD_MS_STATUS, FLD_TMB_STATUS, FLD_TML_STATUS, FLD_TINC_LEVEL);
     }
 
     @Override
