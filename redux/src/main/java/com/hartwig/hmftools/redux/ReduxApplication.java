@@ -9,12 +9,15 @@ import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.JITTER_COLLAPSE_PCS;
+import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.POLYG_UMI_COLLAPSE_PCS;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
 import static com.hartwig.hmftools.redux.write.PartitionInfo.partitionInfoStr;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
@@ -165,10 +168,9 @@ public class ReduxApplication
             }
         }
 
+        combinedStats.writeDuplicateStats(mConfig);
         if(mConfig.WriteStats)
         {
-            combinedStats.writeDuplicateStats(mConfig);
-
             if(mConfig.UMIs.Enabled)
             {
                 combinedStats.UmiStats.writePositionFragmentsData(mConfig);
@@ -185,6 +187,16 @@ public class ReduxApplication
             finalBamWriter.logTimes();
 
         logPerformanceStats(combinedPerfCounters);
+
+        for(PerformanceCounter pc : JITTER_COLLAPSE_PCS.values())
+        {
+            pc.logStats();
+        }
+
+        for(PerformanceCounter pc : POLYG_UMI_COLLAPSE_PCS.values())
+        {
+            pc.logStats();
+        }
 
         RD_LOGGER.info("Redux complete, mins({})", runTimeMinsStr(startTimeMs));
     }
