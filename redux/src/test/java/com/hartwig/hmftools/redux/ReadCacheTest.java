@@ -405,7 +405,7 @@ public class ReadCacheTest
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(2, fragmentCoordsReads.totalReadCount());
 
-        // chain collapsing collapsing
+        // no chain collapsing
         readCache.clear();
 
         readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
@@ -416,7 +416,7 @@ public class ReadCacheTest
 
         fragmentCoordsReads = readCache.evictAll();
 
-        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(2, fragmentCoordsReads.DuplicateGroups.size());
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(4, fragmentCoordsReads.totalReadCount());
 
@@ -442,8 +442,8 @@ public class ReadCacheTest
 
         fragmentCoordsReads = readCache.evictAll();
 
-        assertEquals(3, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(4, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(4, fragmentCoordsReads.SingleReads.size());
         assertEquals(13, fragmentCoordsReads.totalReadCount());
     }
 
