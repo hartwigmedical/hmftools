@@ -12,12 +12,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.LikelihoodMethod;
+import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;

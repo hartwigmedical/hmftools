@@ -8,13 +8,13 @@ import static com.hartwig.hmftools.purple.PurpleConstants.MAX_INDEL_DRIVER_REPEA
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.ModifiableDndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogFactory;
+import com.hartwig.hmftools.common.driver.LikelihoodMethod;
+import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.ModifiableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;

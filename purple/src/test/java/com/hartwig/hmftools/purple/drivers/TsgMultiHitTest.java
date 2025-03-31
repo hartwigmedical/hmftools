@@ -12,10 +12,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;

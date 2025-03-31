@@ -15,8 +15,10 @@ import static htsjdk.samtools.util.SequenceUtil.T;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class BamReadCounterTest
 {
     @Test

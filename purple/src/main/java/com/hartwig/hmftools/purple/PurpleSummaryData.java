@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.purple.fitting.FittedPurityScoreFactory.polyc
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
+import com.hartwig.hmftools.common.driver.DeletionDrivers;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
