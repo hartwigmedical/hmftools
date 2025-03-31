@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STR
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -46,7 +46,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = mateReversed ? "1:R:U" : "1:F:U";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -79,7 +79,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = readReversed ? "1:R" : "1:F";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -114,7 +114,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = primaryReversed ? "1:R:S" : "1:F:S";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -152,14 +152,12 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
 
                 String lowerOrientation = coords.OrientLower == FORWARD ? "F" : "R";
                 String upperOrientation = coords.OrientUpper == FORWARD ? "F" : "R";
                 String isLowerStr = isLower ? "L" : "U";
                 String expectedCollapsedKey = format("1:%s:1:%s:%s", lowerOrientation, upperOrientation, isLowerStr);
-                if(!coords.keyNonOriented().equals(coords.Key))
-                    expectedCollapsedKey = expectedCollapsedKey + ":N";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
             }
@@ -208,14 +206,12 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
 
                 String lowerOrientation = coords.OrientLower == FORWARD ? "F" : "R";
                 String upperOrientation = coords.OrientUpper == FORWARD ? "F" : "R";
                 String isLowerStr = isLower ? "L" : "U";
                 String expectedCollapsedKey = format("1:%s:1:%s:%s:S", lowerOrientation, upperOrientation, isLowerStr);
-                if(!coords.keyNonOriented().equals(coords.Key))
-                    expectedCollapsedKey = expectedCollapsedKey + ":N";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
             }

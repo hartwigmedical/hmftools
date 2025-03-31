@@ -38,6 +38,8 @@ import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.umi.PositionFragmentCounts;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
+import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
+import com.hartwig.hmftools.redux.umi.UmiStatistics;
 
 import org.junit.jupiter.api.Test;
 
@@ -438,6 +440,244 @@ public class UmiDuplicatesTest
 
         assertEquals(13, mWriter.nonConsensusWriteCount());
         assertEquals(4, mWriter.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaJitterUmiGroupCollapse()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
+
+        String umi1 = "AAAAA";
+        String umi2 = "AAATA";
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi1), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi2), CHR_1, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
+                false, null, true, TEST_READ_CIGAR);
+
+        partitionReader.processRead(read1);
+        partitionReader.processRead(read2);
+        partitionReader.postProcessRegion();
+
+        assertEquals(2, writer.nonConsensusWriteCount());
+        assertEquals(1, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaMateJitterUmiGroupCollapse()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
+
+        String umi = "AAAAA";
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false,
+                false, null, true, TEST_READ_CIGAR);
+
+        partitionReader.processRead(read1);
+        partitionReader.processRead(read2);
+        partitionReader.postProcessRegion();
+
+        assertEquals(2, writer.nonConsensusWriteCount());
+        assertEquals(1, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaJitterDuplexUmiGroupCollapse()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
+
+        String umidId1Part1 = "TATTAT";
+        String umidId2Part1 = "TATGAT";
+        String umidIdPart2 = "GCGGCG";
+        String umiId = umidId1Part1 + DEFAULT_DUPLEX_UMI_DELIM + umidIdPart2;
+        String umiIdReversed = umidIdPart2 + DEFAULT_DUPLEX_UMI_DELIM + umidId2Part1;
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umiId), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+        read1.setFirstOfPairFlag(true);
+        read1.setSecondOfPairFlag(false);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(nextReadId(umiIdReversed), CHR_1, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE,
+                TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+        read1.setFirstOfPairFlag(false);
+        read1.setSecondOfPairFlag(true);
+
+        partitionReader.processRead(read1);
+        partitionReader.processRead(read2);
+        partitionReader.postProcessRegion();
+
+        assertEquals(2, writer.nonConsensusWriteCount());
+        assertEquals(1, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaMateJitterDuplexUmiGroupCollapse()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
+
+        String umidIdPart1 = "TATTAT";
+        String umidIdPart2 = "GCGGCG";
+        String umiId = umidIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umidIdPart2;
+        String umiIdReversed = umidIdPart2 + DEFAULT_DUPLEX_UMI_DELIM + umidIdPart1;
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umiId), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+        read1.setFirstOfPairFlag(true);
+        read1.setSecondOfPairFlag(false);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(nextReadId(umiIdReversed), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
+                1_000 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false, false, null, true, TEST_READ_CIGAR);
+        read1.setFirstOfPairFlag(false);
+        read1.setSecondOfPairFlag(true);
+
+        partitionReader.processRead(read1);
+        partitionReader.processRead(read2);
+        partitionReader.postProcessRegion();
+
+        assertEquals(2, writer.nonConsensusWriteCount());
+        assertEquals(1, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaJitterUmiGroupNoCollapseDueToNoFixedFragmentEnd()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
+
+        String umi = "AAAAA";
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi), CHR_1, 101, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_001, false, false, null, true, TEST_READ_CIGAR);
+
+        partitionReader.processRead(read1);
+        partitionReader.processRead(read2);
+        partitionReader.postProcessRegion();
+
+        assertEquals(2, writer.nonConsensusWriteCount());
+        assertEquals(0, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaJitterDuplexUmiGroupNoCollapseDueToUMIMismatch()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
+
+        String umidIdPart1 = "TATTAT";
+        String umidId1Part2 = "GCGGCG";
+        String umidId2Part2 = "GCATCG";
+        String umiId = umidIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umidId1Part2;
+        String umiIdReversed = umidId2Part2 + DEFAULT_DUPLEX_UMI_DELIM + umidIdPart1;
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umiId), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+        read1.setFirstOfPairFlag(true);
+        read1.setSecondOfPairFlag(false);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(nextReadId(umiIdReversed), CHR_1, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE,
+                TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+        read1.setFirstOfPairFlag(false);
+        read1.setSecondOfPairFlag(true);
+
+        partitionReader.processRead(read1);
+        partitionReader.processRead(read2);
+        partitionReader.postProcessRegion();
+
+        assertEquals(2, writer.nonConsensusWriteCount());
+        assertEquals(0, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testIlluminaJitterUmiGroupCollapsedReadsNotUsedForConsensus()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        UmiConfig umiConfig = config.UMIs;
+
+        UmiGroupBuilder umiGroupBuilder = new UmiGroupBuilder(ILLUMINA, umiConfig, new UmiStatistics());
+
+        String umi1 = "AAAAA";
+        String umi2 = "AAATA";
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi1), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null, true, TEST_READ_CIGAR);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                nextReadId(umi2), CHR_1, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
+                false, null, true, TEST_READ_CIGAR);
+
+        List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
+        List<ReadInfo> singleFragments = Lists.newArrayList(
+                new ReadInfo(read1, FragmentCoords.fromRead(read1, true)),
+                new ReadInfo(read2, FragmentCoords.fromRead(read2, true))
+        );
+
+        List<DuplicateGroup> umiGroups = umiGroupBuilder.processUmiGroups(duplicateGroups, singleFragments, true);
+
+        assertTrue(singleFragments.isEmpty());
+        assertEquals(1, umiGroups.size());
+
+        DuplicateGroup umiGroup = umiGroups.get(0);
+
+        assertEquals(1, umiGroup.reads().size());
+        assertEquals(1, umiGroup.nonConsensusReads().size());
     }
 
     @Test

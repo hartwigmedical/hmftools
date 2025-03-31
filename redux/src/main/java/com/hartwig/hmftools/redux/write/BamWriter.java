@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux.write;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
@@ -44,7 +45,8 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
-        mRecomputeFragCoords = mReadDataWriter.enabled() && DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse);
+        mRecomputeFragCoords = mReadDataWriter.enabled() && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse) || (
+                config.Sequencing == ILLUMINA && config.UMIs.Enabled));
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -71,11 +73,8 @@ public abstract class BamWriter
     {
         for(ReadInfo readInfo : readInfos)
         {
-            SAMRecord read = readInfo.read();
-            String fragCoords = readInfo.preCollapsedCoordinates().Key;
-
             // UMIs are not captured nor written for non-duplicates
-            writeRead(read, FragmentStatus.NONE, fragCoords, "");
+            writeRead(readInfo.read(), FragmentStatus.NONE, readInfo.coordinates().Key, "");
         }
     }
 
