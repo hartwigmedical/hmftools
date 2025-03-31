@@ -16,6 +16,8 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -33,15 +35,15 @@ public class DuplicateGroup
 {
     private final String mUmiId; // the UMI if enabled
 
-    // with duplicate group collapsing reads in mReads may not have mFragmentCoords FragmentCoords, see mPreCollapsedFragmentCoords
-    private FragmentCoords mFragmentCoords;
+    // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
+    private final FragmentCoords mFragmentCoords;
     private final List<SAMRecord> mReads;
+    private final List<SAMRecord> mNonConsensusReads;
 
     private SAMRecord mConsensusRead;
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
 
-    private Set<FragmentCoords> mPreCollapsedFragmentCoords;
     private int mPCRClusterCount;
 
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
@@ -59,47 +61,25 @@ public class DuplicateGroup
         mUmiId = id;
         mFragmentCoords = fragmentCoords;
         mReads = reads;
+        mNonConsensusReads = Lists.newArrayList();
 
         mConsensusRead = null;
         mPrimaryRead = null;
         mDualStrand = false;
 
-        mPreCollapsedFragmentCoords = null;
         mPCRClusterCount = UNSET_COUNT;
     }
 
     public void addRead(final SAMRecord read) { mReads.add(read); }
     public void addReads(final List<SAMRecord> reads) { mReads.addAll(reads); }
+    public void addNonConsensusReads(final List<SAMRecord> reads) { mNonConsensusReads.addAll(reads); }
 
     public List<SAMRecord> reads() { return mReads; }
-    public int readCount() { return mReads.size(); }
+    public List<SAMRecord> nonConsensusReads() { return mNonConsensusReads; }
+    public List<SAMRecord> allReads() { return Stream.concat(mReads.stream(), mNonConsensusReads.stream()).collect(Collectors.toList()); }
+    public int readCount() { return mReads.size() + mNonConsensusReads.size(); }
 
     public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
-
-    public Set<FragmentCoords> preCollapsedFragmentCoordinates()
-    {
-        if(mPreCollapsedFragmentCoords == null)
-        {
-            mPreCollapsedFragmentCoords = Sets.newHashSet();
-            mPreCollapsedFragmentCoords.add(mFragmentCoords);
-        }
-
-        return mPreCollapsedFragmentCoords;
-    }
-
-    public void updateFragmentCoordinates(final FragmentCoords coords)
-    {
-        if(mFragmentCoords.equals(coords))
-            return;
-
-        if(mPreCollapsedFragmentCoords == null)
-        {
-            mPreCollapsedFragmentCoords = Sets.newHashSet();
-            mPreCollapsedFragmentCoords.add(mFragmentCoords);
-        }
-
-        mFragmentCoords = coords;
-    }
 
     public List<SAMRecord> duplicate() { return mReads; }
     public SAMRecord consensusRead() { return mConsensusRead; }
@@ -120,8 +100,10 @@ public class DuplicateGroup
             ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmiId);
 
             // set consensus read attributes
-            int firstInPairCount = (int)mReads.stream().filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag()).count();
-            int readCount = mReads.size();
+            int firstInPairCount = (int) Stream.concat(mReads.stream(), mNonConsensusReads.stream())
+                    .filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag())
+                    .count();
+            int readCount = mReads.size() + mNonConsensusReads.size();
             boolean isPrimaryGroup = firstInPairCount >= readCount / 2;
 
             if(!isPrimaryGroup)
@@ -164,7 +146,16 @@ public class DuplicateGroup
             readNameAttributes.add(attributes);
         }
 
-        if(mReads.size() == 2)
+        for(SAMRecord read : mNonConsensusReads)
+        {
+            IlluminaReadNameAttributes attributes = getReadNameAttributes(read.getReadName());
+            if(attributes == null)
+                return;
+
+            readNameAttributes.add(attributes);
+        }
+
+        if(readNameAttributes.size() == 2)
         {
             IlluminaReadNameAttributes readNameAttributes1 = readNameAttributes.get(0);
             IlluminaReadNameAttributes readNameAttributes2 = readNameAttributes.get(1);
@@ -214,22 +205,8 @@ public class DuplicateGroup
         }
     }
 
-    public DuplicateGroup merge(final DuplicateGroup otherGroup)
-    {
-        if(mPreCollapsedFragmentCoords == null)
-        {
-            mPreCollapsedFragmentCoords = Sets.newHashSet();
-            mPreCollapsedFragmentCoords.add(mFragmentCoords);
-        }
-
-        mPreCollapsedFragmentCoords.addAll(otherGroup.preCollapsedFragmentCoordinates());
-        mReads.addAll(otherGroup.reads());
-
-        return this;
-    }
-
     public String toString()
     {
-        return format("id(%s) reads(%d) coords(%s)", mUmiId, mReads.size(), mFragmentCoords.Key);
+        return format("id(%s) reads(%d) coords(%s)", mUmiId, readCount(), mFragmentCoords.Key);
     }
 }
