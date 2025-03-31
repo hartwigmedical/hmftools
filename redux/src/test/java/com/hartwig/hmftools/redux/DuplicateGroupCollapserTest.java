@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STR
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -46,7 +46,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = mateReversed ? "1:R:U" : "1:F:U";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -79,7 +79,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = readReversed ? "1:R" : "1:F";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -114,7 +114,7 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
                 String expectedCollapsedKey = primaryReversed ? "1:R:S" : "1:F:S";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
@@ -152,14 +152,12 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
 
                 String lowerOrientation = coords.OrientLower == FORWARD ? "F" : "R";
                 String upperOrientation = coords.OrientUpper == FORWARD ? "F" : "R";
                 String isLowerStr = isLower ? "L" : "U";
                 String expectedCollapsedKey = format("1:%s:1:%s:%s", lowerOrientation, upperOrientation, isLowerStr);
-                if(!coords.keyNonOriented().equals(coords.Key))
-                    expectedCollapsedKey = expectedCollapsedKey + ":N";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
             }
@@ -208,14 +206,12 @@ public class DuplicateGroupCollapserTest
 
                 FragmentCoords coords = FragmentCoords.fromRead(read, true);
 
-                String actualCollapsedKey = collapseToKeyWithoutCoordinates(coords, true);
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
 
                 String lowerOrientation = coords.OrientLower == FORWARD ? "F" : "R";
                 String upperOrientation = coords.OrientUpper == FORWARD ? "F" : "R";
                 String isLowerStr = isLower ? "L" : "U";
                 String expectedCollapsedKey = format("1:%s:1:%s:%s:S", lowerOrientation, upperOrientation, isLowerStr);
-                if(!coords.keyNonOriented().equals(coords.Key))
-                    expectedCollapsedKey = expectedCollapsedKey + ":N";
 
                 assertEquals(expectedCollapsedKey, actualCollapsedKey);
             }
@@ -254,6 +250,63 @@ public class DuplicateGroupCollapserTest
                 new TestCase("firstOfPair_isUpper_primaryForward_supplementaryForward_mateForward", true, false, false, false, false),
                 new TestCase("secondOfPair_isUpper_primaryReverse_supplementaryForward_mateForward", false, false, true, false, false),
                 new TestCase("secondOfPair_isUpper_primaryForward_supplementaryForward_mateForward", false, false, false, false, false),
+        };
+
+        return DynamicTest.stream(Stream.of(testCases), TestCase::name, TestCase::check);
+    }
+
+    @TestFactory
+    public Stream<DynamicTest> testCollapseToKeyWithoutCoordinatesMateHasSameFivePrimePos()
+    {
+        record TestCase(boolean firstOfPair, boolean readReversed, boolean mateReversed)
+        {
+            private static final int FIVE_PRIME_POS = 200;
+
+            public void check()
+            {
+                int readStart = !readReversed ? FIVE_PRIME_POS : FIVE_PRIME_POS - (TEST_READ_BASES.length() - 1);
+                int mateStart = !mateReversed ? FIVE_PRIME_POS : FIVE_PRIME_POS - (TEST_READ_BASES.length() - 1);
+                SAMRecord read = SamRecordTestUtils.createSamRecord("READ_001", CHR_1, readStart, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
+                        mateStart, readReversed, false, null, mateReversed, TEST_READ_CIGAR);
+                read.setFirstOfPairFlag(firstOfPair);
+                read.setSecondOfPairFlag(!firstOfPair);
+
+                FragmentCoords coords = FragmentCoords.fromRead(read, true);
+
+                assertEquals(FIVE_PRIME_POS, coords.PositionLower);
+                assertEquals(FIVE_PRIME_POS, coords.PositionUpper);
+                assertEquals(firstOfPair, coords.ReadIsLower);
+
+                String actualCollapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
+
+                String lowerOrientation = coords.OrientLower == FORWARD ? "F" : "R";
+                String upperOrientation = coords.OrientUpper == FORWARD ? "F" : "R";
+                String isLowerStr = firstOfPair ? "L" : "U";
+                String expectedCollapsedKey = format("1:%s:1:%s:%s", lowerOrientation, upperOrientation, isLowerStr);
+
+                assertEquals(expectedCollapsedKey, actualCollapsedKey);
+            }
+
+            public String name()
+            {
+                return format(
+                        "%sOfPair_read%s_mate%s",
+                        firstOfPair ? "first" : "second",
+                        readReversed ? "Reverse" : "Forward",
+                        mateReversed ? "Reverse" : "Forward"
+                );
+            }
+        }
+
+        TestCase[] testCases = new TestCase[] {
+                new TestCase(true, false, false),
+                new TestCase(true, false, true),
+                new TestCase(true, true, false),
+                new TestCase(true, true, true),
+                new TestCase(false, false, false),
+                new TestCase(false, false, true),
+                new TestCase(false, true, false),
+                new TestCase(false, true, true),
         };
 
         return DynamicTest.stream(Stream.of(testCases), TestCase::name, TestCase::check);

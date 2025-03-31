@@ -1,13 +1,19 @@
 package com.hartwig.hmftools.redux.umi;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.collect.MergeUtils.clusterMerger;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
+import static com.hartwig.hmftools.redux.common.Constants.MAX_UMI_BASE_DIFF_JITTER_COLLAPSE;
 import static com.hartwig.hmftools.redux.common.Constants.MIN_POLYG_UMI_TAIL_LENGTH;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.polyGTailLength;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.trimPolyGTail;
@@ -41,11 +47,14 @@ public class UmiGroupBuilder
     private final UmiConfig mUmiConfig;
     private final UmiStatistics mStats;
 
+    private boolean mJitterCollapsingEnabled;
+
     public UmiGroupBuilder(final SequencingType sequencing, final UmiConfig config, final UmiStatistics stats)
     {
         mSequencing = sequencing;
         mUmiConfig = config;
         mStats = stats;
+        mJitterCollapsingEnabled = true;
     }
 
     public List<DuplicateGroup> processUmiGroups(
@@ -109,6 +118,11 @@ public class UmiGroupBuilder
             {
                 collapseCoordinateGroup(coordGroup, allUmiGroups, singleFragments);
             }
+        }
+
+        if(mJitterCollapsingEnabled)
+        {
+            jitterCollapseUmiGroups(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
         }
 
         List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
@@ -475,7 +489,12 @@ public class UmiGroupBuilder
     public static void collapsePolyGDuplexUmis(final SequencingType sequencingType, final UmiConfig umiConfig,
             final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
-        if(sequencingType != SequencingType.ILLUMINA)
+        if(umiGroups.isEmpty() && singleFragments.isEmpty())
+        {
+            return;
+        }
+
+        if(sequencingType != ILLUMINA)
             return;
 
         if(!umiConfig.Duplex)
@@ -603,6 +622,114 @@ public class UmiGroupBuilder
         }
     }
 
+    private static DuplicateGroup jitterMergeFn(final DuplicateGroup acc, final DuplicateGroup group)
+    {
+        acc.addNonConsensusReads(group.allReads());
+        return acc;
+    }
+
+    private record JitterCollapseElementKey(long keyId, FragmentCoords coords, String umiId)
+    {
+        public boolean canMerge(final UmiConfig umiConfig, final JitterCollapseElementKey o)
+        {
+            int lowerDiff = abs(coords.PositionLower - o.coords.PositionLower);
+            int upperDiff = abs(coords.PositionUpper - o.coords.PositionUpper);
+            if(lowerDiff > 0 && upperDiff > 0)
+            {
+                return false;
+            }
+
+            if(lowerDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE || upperDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE)
+            {
+                return false;
+            }
+
+            if(coords.FragmentOrient == o.coords.FragmentOrient)
+            {
+                return !exceedsUmiIdDiff(umiId, o.umiId, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE);
+            }
+
+            if(!umiConfig.Duplex)
+            {
+                return false;
+            }
+
+            return hasDuplexUmiMatch(umiId, o.umiId, umiConfig.DuplexDelim, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE);
+        }
+    }
+
+    private static void jitterCollapseUmiGroups(final SequencingType sequencingType, final UmiConfig umiConfig,
+            final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
+    {
+        if(umiGroups.isEmpty() && singleFragments.isEmpty())
+        {
+            return;
+        }
+
+        if(sequencingType != ILLUMINA)
+        {
+            return;
+        }
+
+        boolean isUnpaired = Stream.concat(
+                        umiGroups.stream().map(DuplicateGroup::fragmentCoordinates),
+                        singleFragments.stream().map(ReadInfo::coordinates))
+                .anyMatch(x -> x.Unpaired);
+        if(isUnpaired)
+        {
+            return;
+        }
+
+        for(ReadInfo readInfo : singleFragments)
+        {
+            SAMRecord read = readInfo.read();
+            FragmentCoords coords = readInfo.coordinates();
+            String umiId = umiConfig.extractUmiId(read.getReadName());
+            DuplicateGroup duplicateGroup = new DuplicateGroup(umiId, read, coords);
+            umiGroups.add(duplicateGroup);
+        }
+
+        singleFragments.clear();
+
+        List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
+        Map<String, List<DuplicateGroup>> keyGroups = Maps.newHashMap();
+        for(DuplicateGroup group : umiGroups)
+        {
+            FragmentCoords coords = group.fragmentCoordinates();
+            if(coords.PositionUpper == NO_POSITION)
+            {
+                finalUmiGroups.add(group);
+                continue;
+            }
+
+            String collapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
+            keyGroups.computeIfAbsent(collapsedKey, key -> Lists.newArrayList());
+            keyGroups.get(collapsedKey).add(group);
+        }
+
+        umiGroups.clear();
+
+        long keyId = 0;
+        for(List<DuplicateGroup> keyGroup : keyGroups.values())
+        {
+            Map<JitterCollapseElementKey, DuplicateGroup> elements = Maps.newHashMap();
+            for(DuplicateGroup group : keyGroup)
+            {
+                FragmentCoords coords = group.fragmentCoordinates();
+                String umiId = group.umiId();
+                JitterCollapseElementKey key = new JitterCollapseElementKey(keyId, coords, umiId);
+                keyId++;
+                elements.put(key, group);
+            }
+
+            List<DuplicateGroup> mergedGroups = clusterMerger(
+                    elements, (x, y) -> x.canMerge(umiConfig, y), DuplicateGroup::readCount, UmiGroupBuilder::jitterMergeFn);
+            finalUmiGroups.addAll(mergedGroups);
+        }
+
+        umiGroups.addAll(finalUmiGroups);
+    }
+
     @VisibleForTesting
     public static boolean hasDuplexUmiMatch(final String first, final String second, final String duplexDelim, int permittedDiff)
     {
@@ -700,5 +827,11 @@ public class UmiGroupBuilder
         }
 
         mStats.recordUmiBaseStats(mUmiConfig, groups);
+    }
+
+    @VisibleForTesting
+    public void disableJitterCollapsing()
+    {
+        mJitterCollapsingEnabled = false;
     }
 }

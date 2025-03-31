@@ -35,6 +35,7 @@ import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
@@ -449,8 +450,8 @@ public class PartitionReader
     }
 
     @VisibleForTesting
-    public void clearDuplicateGroupCollapser() { mReadCache.clearDuplicateGroupCollapser(); }
-
-    @VisibleForTesting
-    public ReadCache readCache() { return mReadCache; }
+    public UmiGroupBuilder umiGroupBuilder()
+    {
+        return mDuplicateGroupBuilder.umiGroupBuilder();
+    }
 }
