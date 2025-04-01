@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
@@ -25,6 +26,7 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DI
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.createOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -41,9 +43,6 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -188,13 +187,6 @@ public class GenerateDriverGeneFiles
                 refGenomeVersion, codingWithUtr, actionableGenes.size());
 
         writeGenePanelRegions(refGenomeVersion, ensemblDataCache, actionableGenes, true, codingWithUtr);
-
-        String coverageWithoutUtr = formVersionFile(mOutputDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
-
-        GU_LOGGER.info("writing {} panel coverage regions file({}) for {} genes",
-                refGenomeVersion, coverageWithoutUtr, coverageGenes.size());
-
-        writeGenePanelRegions(refGenomeVersion, ensemblDataCache, coverageGenes, false, coverageWithoutUtr);
     }
 
     private void writeGenePanelRegions(
@@ -271,24 +263,24 @@ public class GenerateDriverGeneFiles
 
         try
         {
-            List<NamedBed> bedRegions = panelRegions.stream().map(x -> codingRegionToNamedBed(x)).collect(Collectors.toList());
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            NamedBedFile.writeBedFile(outputFile, bedRegions);
+            for(GeneRegion geneRegion : panelRegions)
+            {
+                String geneExonRank = format("%s_%d", geneRegion.GeneName, geneRegion.ExonRank);
+
+                writer.write(format("%s\t%d\t%d\t%s",
+                        geneRegion.Chromosome, geneRegion.start() - 1, geneRegion.end(), geneExonRank));
+
+                writer.newLine();
+            }
+
+            writer.close();
         }
         catch(IOException e)
         {
             GU_LOGGER.error("failed to write gene panel file: {}", e.toString());
         }
-    }
-
-    private static NamedBed codingRegionToNamedBed(final GeneRegion geneRegion)
-    {
-        return ImmutableNamedBed.builder()
-                .chromosome(geneRegion.Chromosome)
-                .start(geneRegion.start())
-                .end(geneRegion.end())
-                .name(format("%s_%d", geneRegion.GeneName, geneRegion.ExonRank))
-                .build();
     }
 
     private void writeGermlineBlacklist(final RefGenomeVersion refGenomeVersion)

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.targetregion.RegionData.validate;
 import static com.hartwig.hmftools.geneutils.targetregion.RegionType.CODING;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +29,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -258,7 +258,7 @@ public class GenerateTargetRegionsBed
     {
         try
         {
-            List<String> outputLines = Lists.newArrayList();
+            BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
             for(HumanChromosome chromosome : HumanChromosome.values())
             {
@@ -275,12 +275,12 @@ public class GenerateTargetRegionsBed
                 for(RegionData region : regions)
                 {
                     // BED file positions require a +1 offset
-                    outputLines.add(format("%s\t%d\t%d\t%s",
-                            chrStr, region.start() - 1, region.end(), region.idName()));
+                    writer.write(format("%s\t%d\t%d\t%s", chrStr, region.start() - 1, region.end(), region.idName()));
+                    writer.newLine();
                 }
             }
 
-            NamedBedFile.write(mOutputFile, outputLines);
+            writer.close();
         }
         catch(IOException e)
         {

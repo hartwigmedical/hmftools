@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.loadActionableGenes;
-import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
@@ -258,22 +256,5 @@ public class ReferenceData
                 }
             }
         }
-    }
-
-    private static ListMultimap<Chromosome,NamedBed> readNamedBedFile(final String panelBed) throws IOException
-    {
-        final ListMultimap<Chromosome,NamedBed> panel = ArrayListMultimap.create();
-        if(!panelBed.isEmpty())
-        {
-            for(NamedBed bed : NamedBedFile.readBedFile(panelBed))
-            {
-                if(HumanChromosome.contains(bed.chromosome()))
-                {
-                    panel.put(HumanChromosome.fromString(bed.chromosome()), bed);
-                }
-            }
-        }
-
-        return panel;
     }
 }
