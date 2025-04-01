@@ -6,11 +6,7 @@ When using paired reference/tumor data, AMBER is also able to:
   - facilitate sample matching / patient deduplication by recording SNPs in the germline
   - identify long regions of homozygosty and consanguinity
 
-## Installation
-
-To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
-
-Ref genome versions 37 and 38 of the likely heterozygous sites are available to download from [HMFTools-Resources > DNA Pipeline > copy_number](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
 
 The Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is required for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
@@ -114,7 +110,7 @@ If the tumor / tumor bam are not specified then Amber will be run in germline on
 
 ## Targeted Mode
 
-AMBER may be run on targeted data.   The differences in behaviour in Amber in targeted mode are documented here: [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md#amber).  
+AMBER may be run on targeted data. The differences in behaviour in Amber in targeted mode are documented here: [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md#amber).  
 
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
@@ -209,8 +205,6 @@ java -cp amber.jar com.hartwig.hmftools.patientdb.amber.LoadAmberData \
     -db_pass password \
     -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
-
-The Amber.snpcheck.37.vcf (and 38 equivalent) are available to download from [HMFTools-Resources > Amber](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
 
 An example query to check if a sample is one of many for a patient is:
 ```

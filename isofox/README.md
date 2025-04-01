@@ -65,10 +65,8 @@ enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes 
 drop_dups | Default is false. By default duplicate fragments will be counted towards transcript expression.
 
 ### Reference Files
-Reference files are available for GRCh37 and GRCh38:
-- Isofox: expected transcript expression and GC Bias [HMFTools-Resources > RNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/rna_pipeline/)
-- KnownFusions: HMF known fusion data [HMFTools-Resources > DNA Pipeline > sv](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/)
-- Ensembl: cached Ensembl files [HMFTools-Resources > DNA Pipeline > common](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/)
+
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
 
 Note that the Ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
 
