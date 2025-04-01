@@ -17,6 +17,7 @@ public class RoundTripChecker
     {
         mReversePave = reversePave;
     }
+
     private int numberOfCodingVariantsOk = 0;
     private int numberOfCodingVariantsInError = 0;
 
@@ -26,6 +27,7 @@ public class RoundTripChecker
         RPV_LOGGER.info("Coding variants in error: " + numberOfCodingVariantsInError);
 
     }
+
     public void compareActualChangesWithCalculated(VariantContext context, VariantImpact impact)
     {
         boolean compareProteinImpacts = hasComparableProteinImpact(impact);
@@ -38,7 +40,7 @@ public class RoundTripChecker
             BaseSequenceChange actualChange = new BaseSequenceChange(ref, alt, context.getContig(), start);
             if(compareProteinImpacts)
             {
-//                compareActualWithCalculatedProteinImpact(actualChange, impact);
+                //                compareActualWithCalculatedProteinImpact(actualChange, impact);
             }
             if(compareCoding)
             {
@@ -52,10 +54,14 @@ public class RoundTripChecker
         String gene = impact.GeneName;
         String transcript = impact.CanonicalTranscript;
         String variant = impact.CanonicalHgvsCoding;
-        if(variant.contains("c.-219+9700_-219+9699dupGG") && variant.contains("_"))
-        {
-            System.out.println(">>>>DUP!! gene: " + gene + " transcript: " + transcript + " variant: " + variant);
-        }
+//        if(!variant.contains("_"))
+//        {
+//            return;
+//        }
+        //        if(variant.contains("c.-73-4038_-73-4039dupGG") && variant.contains("_"))
+        //        {
+        //            System.out.println(">>>>DUP!! gene: " + gene + " transcript: " + transcript + " variant: " + variant);
+        //        }
         BaseSequenceChange calculated;
         try
         {
@@ -73,11 +79,11 @@ public class RoundTripChecker
             message += "\n    Actual: " + actualChange;
             message += "\nCalculated: " + calculated;
             RPV_LOGGER.warn(message);
-           numberOfCodingVariantsInError++;
+            numberOfCodingVariantsInError++;
         }
         else
         {
-//            RPV_LOGGER.info("Coding OK for: " + variant);
+//            RPV_LOGGER.info("Coding OK for: " + gene + " " + variant);
             numberOfCodingVariantsOk++;
         }
     }
@@ -106,7 +112,7 @@ public class RoundTripChecker
         }
         else
         {
-//            RPV_LOGGER.info("Protein OK: " + actualChange);
+            //            RPV_LOGGER.info("Protein OK: " + actualChange);
         }
     }
 

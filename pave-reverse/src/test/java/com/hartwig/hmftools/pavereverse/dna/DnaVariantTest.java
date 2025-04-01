@@ -145,7 +145,7 @@ public class DnaVariantTest extends ReversePaveTestBase
     {
         DeletionVariant deletionVariant = new DeletionVariant(geneData, transcript, new InExon(7), new InExon(10), "GTGC");
         BaseSequenceChange change = deletionVariant.toGenomicVariant(genome);
-        check(change, 70, "CGTGC", "C");
+        check(change, 69, "TCGTG", "T");
     }
 
     @Test

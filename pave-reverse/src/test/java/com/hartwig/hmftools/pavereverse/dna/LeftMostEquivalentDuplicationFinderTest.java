@@ -12,6 +12,24 @@ public class LeftMostEquivalentDuplicationFinderTest
     private RefGenomeInterface genome;
     
     @Test
+    public void lookRight()
+    {
+        // GTCCTCCTCTCCT
+        // GTCCTCCT CTC CT
+        // >GTCCTCCT CTC CTC CT
+
+        // GTC CTC CTCTCCT
+        // <GTC CTC CTC CTCTCCT
+
+        // >GTCCTCCTCTCCTCCT
+        // <GTCCTCCTCCTCTCCT
+
+        genome = new FixedStringGenome("GTCCTCCTCTCCT");
+        LeftMostEquivalentDuplicationFinder finder = finder( 9, 11);
+        assertEquals(9, finder.findLeftMostEquivalentPosition());
+    }
+
+    @Test
     public void singleBaseDuplication()
     {
         genome = new FixedStringGenome("CCTGAAAAAAGG");
@@ -26,28 +44,28 @@ public class LeftMostEquivalentDuplicationFinderTest
 
         finder = finder( 4, 4);
         assertEquals(4, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder( 5, 5);
         assertEquals(5, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder(6, 6);
         assertEquals(5, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder( 7, 7);
         assertEquals(5, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder(8, 8);
         assertEquals(5, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder(9, 9);
         assertEquals(5, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder( 10, 10);
         assertEquals(5, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder( 11, 11);
         assertEquals(11, finder.findLeftMostEquivalentPosition());
-        
+
         finder = finder( 12, 12);
         assertEquals(11, finder.findLeftMostEquivalentPosition());
     }
@@ -88,7 +106,7 @@ public class LeftMostEquivalentDuplicationFinderTest
     }
 
     @Test
-    public void repeatLength2Deletion()
+    public void repeatLength2Duplication()
     {
         genome = new FixedStringGenome("ACCGCGCGTT");
         LeftMostEquivalentDuplicationFinder finder = finder(1, 2);
@@ -116,8 +134,9 @@ public class LeftMostEquivalentDuplicationFinderTest
     }
 
     @Test
-    public void repeatLength3Deletion()
+    public void repeatLength3Duplication()
     {
+        // Note xyz xyz xyz = x yzx yzx yz = xy zxy zxy z
         genome = new FixedStringGenome("AAAGTTGTTGTTGTT");
         LeftMostEquivalentDuplicationFinder finder = finder(1, 3);
         assertEquals(1, finder.findLeftMostEquivalentPosition());
@@ -132,34 +151,34 @@ public class LeftMostEquivalentDuplicationFinderTest
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(5, 7);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(6, 8);
-        assertEquals(6, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(7, 9);
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(8, 10);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(9, 11);
-        assertEquals(6, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(10, 12);
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(11, 13);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(12, 14);
-        assertEquals(6, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(7, 12);
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(8, 13);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(7, 15);
         assertEquals(4, finder.findLeftMostEquivalentPosition());

@@ -15,8 +15,14 @@ public class LeftMostEquivalentDuplicationFinder extends LeftMostEquivalentChang
     @Override
     boolean changeAtPositionIsEquivalent(final int position)
     {
-        String atPosition = getBases(position);
-        return atPosition.equals(mRef);
+        // S = vwxyz
+        // S_dup(w) = S_dup(y) <=> vwwxyz = vwxyyz <=> vwwxy = vwxyy <=> vwwx = vwxy <=> wwx = wxy <=> wx = xy
+
+        String basesToDuplicateAtCurrentPosition = getBases(position);
+        String basesFromCurrentPositionToOriginalPosition = mGenome.getBaseString(mChromosome, position, mStart - 1);
+        String withDuplicationAtOriginalPosition = basesFromCurrentPositionToOriginalPosition + mRef;
+        String withDuplicationAtCurrentPosition = basesToDuplicateAtCurrentPosition + basesFromCurrentPositionToOriginalPosition;
+        return withDuplicationAtOriginalPosition.equals(withDuplicationAtCurrentPosition);
     }
 
     private String getBases(int position)

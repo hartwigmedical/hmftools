@@ -115,6 +115,13 @@ public class LeftMostEquivalentDeletionFinderTest
         assertEquals(6, finder.findLeftMostEquivalentPosition());
     }
 
+    @Test
+    public void doNotSkipLength3()
+    {
+        genome = new FixedStringGenome("ATTTCTCTCTTCTA");
+        LeftMostEquivalentDeletionFinder finder = finder(8, 10);
+        assertEquals(8, finder.findLeftMostEquivalentPosition());
+    }
 
     @Test
     public void repeatLength3Deletion()
@@ -133,34 +140,34 @@ public class LeftMostEquivalentDeletionFinderTest
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(5, 7);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(6, 8);
-        assertEquals(6, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(7, 9);
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(8, 10);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(9, 11);
-        assertEquals(6, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(10, 12);
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(11, 13);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(12, 14);
-        assertEquals(6, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(7, 12);
         assertEquals(4, finder.findLeftMostEquivalentPosition());
 
         finder = finder(8, 13);
-        assertEquals(5, finder.findLeftMostEquivalentPosition());
+        assertEquals(4, finder.findLeftMostEquivalentPosition());
     }
 
     private LeftMostEquivalentDeletionFinder finder(int start, int end)

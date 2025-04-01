@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pavereverse.dna;
 
+import static com.hartwig.hmftools.pavereverse.ReversePaveConfig.RPV_LOGGER;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public abstract class LeftMostEquivalentChangeFinder
@@ -24,6 +26,7 @@ public abstract class LeftMostEquivalentChangeFinder
         int position = mStart;
         int result = mStart;
         int distanceFromPreviousMatch = 0;
+        int numberOfLoops = 0;
         while(position > 0)
         {
             if(changeAtPositionIsEquivalent(position))
@@ -40,6 +43,10 @@ public abstract class LeftMostEquivalentChangeFinder
                 distanceFromPreviousMatch++;
             }
             position--;
+            if(++numberOfLoops > 100){
+                RPV_LOGGER.warn("Left-most search exceeded 100 loops, perhaps range has negative length");
+                break;
+            }
         }
         return result;
     }
