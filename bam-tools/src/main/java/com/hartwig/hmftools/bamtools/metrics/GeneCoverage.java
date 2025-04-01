@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.gene.GeneRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
-import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
