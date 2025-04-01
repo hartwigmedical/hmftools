@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange;
 
+import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateGeneCoverageFilename;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CHORD_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CUPPA_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_GERMLINE_DIR;
@@ -132,7 +133,7 @@ public interface OrangeWGSRefConfig
             builder.sageSomaticRefSampleBQRPlot(mandatoryPath(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
 
             String sageGermlineDir = pathResolver.resolveMandatoryToolDirectory(SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-            builder.sageGermlineGeneCoverageTsv(mandatoryPath(SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
+            builder.sageGermlineGeneCoverageTsv(mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
 
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
