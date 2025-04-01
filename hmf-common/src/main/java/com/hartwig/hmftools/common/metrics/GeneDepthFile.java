@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.common.sage;
+package com.hartwig.hmftools.common.metrics;
 
+import static com.hartwig.hmftools.common.metrics.BamMetricsSummary.BAM_METRICS_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +21,16 @@ public final class GeneDepthFile
     public static final String COL_POS_START = "posStart";
     public static final String COL_POS_END = "posEnd";
     public static final String COL_MV_LIKELIHOOD = "missedVariantLikelihood";
+
+    public static String generateGeneCoverageFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".gene_coverage.tsv";
+    }
+
+    public static String generateExonMediansFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".exon_medians.tsv";
+    }
 
     public static void write(final String filename, final List<GeneDepth> depths, final List<Integer> depthBuckets) throws IOException
     {

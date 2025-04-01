@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.fusion;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -19,7 +20,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.DRIVER_GENE_PANEL_TSV;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
@@ -61,7 +61,7 @@ public class GenerateFusionFiles
         GU_LOGGER.info("starting known fusion file generation");
 
         mKnownFusionDbFile = configBuilder.getValue(KNOWN_FUSION_DB_FILE);
-        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_TSV);
+        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_OPTION);
         mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(configBuilder);
     }

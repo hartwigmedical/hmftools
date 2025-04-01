@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.driver.panel;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.NONE;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -20,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DriverGeneFile
 {
-    private static final String DELIMITER = "\t";
     private static final String OTHER_TRANS_DELIM = ";";
 
     private DriverGeneFile() {}
@@ -43,7 +43,7 @@ public final class DriverGeneFile
         List<DriverGene> driverGenes = Lists.newArrayList();
 
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         int geneIndex = fieldsIndexMap.get("gene");
@@ -71,7 +71,7 @@ public final class DriverGeneFile
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             List<String> otherReportableTrans = Arrays.stream(values[altTransIndex].split(OTHER_TRANS_DELIM))
                     .filter(x -> !x.isEmpty())
@@ -125,7 +125,7 @@ public final class DriverGeneFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER).add("gene")
+        return new StringJoiner(TSV_DELIM).add("gene")
                 .add("reportMissense")
                 .add("reportNonsense")
                 .add("reportSplice")
@@ -145,7 +145,7 @@ public final class DriverGeneFile
 
     private static String toString(final DriverGene gene)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(gene.gene())
                 .add(String.valueOf(gene.reportMissenseAndInframe()))
                 .add(String.valueOf(gene.reportNonsenseAndFrameshift()))

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.geneutils.drivers;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.getTranscriptRegions;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -18,9 +18,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.DRIVER_GENE_PANEL_TSV;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
@@ -36,11 +34,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.GeneRegion;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
@@ -49,7 +47,6 @@ import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -71,7 +68,7 @@ public class GenerateDriverGeneFiles
     {
         GU_LOGGER.info("starting driver gene panel generation");
 
-        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_TSV);
+        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_OPTION);
         mGeneIdFile = configBuilder.getValue(GENE_ID_FILE);
         mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(configBuilder);
@@ -206,14 +203,14 @@ public class GenerateDriverGeneFiles
     {
         final Map<String,List<GeneData>> chrGeneDataMap = ensemblDataCache.getChrGeneDataMap();
 
-        List<CodingRegion> panelRegions = Lists.newArrayList();
+        List<GeneRegion> panelRegions = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
             List<GeneData> geneDataList = chrGeneDataMap.get(chromosomeStr);
 
-            List<CodingRegion> chrPanelRegions = Lists.newArrayList();
+            List<GeneRegion> chrPanelRegions = Lists.newArrayList();
 
             for(GeneData geneData : geneDataList)
             {
@@ -222,7 +219,7 @@ public class GenerateDriverGeneFiles
 
                 TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");
 
-                List<CodingRegion> transcriptRegions = getTranscriptRegions(geneData, transData, includeUTR);
+                List<GeneRegion> transcriptRegions = getTranscriptRegions(geneData, transData, includeUTR, true);
 
                 chrPanelRegions.addAll(transcriptRegions);
             }
@@ -237,12 +234,12 @@ public class GenerateDriverGeneFiles
             // check for overlaps with the previous region
             while(index < chrPanelRegions.size() - 1)
             {
-                CodingRegion region = chrPanelRegions.get(index);
+                GeneRegion region = chrPanelRegions.get(index);
 
                 int nextIndex = index + 1;
                 while(nextIndex < chrPanelRegions.size())
                 {
-                    CodingRegion nextRegion = chrPanelRegions.get(nextIndex);
+                    GeneRegion nextRegion = chrPanelRegions.get(nextIndex);
 
                     if(region.end() >= nextRegion.start())
                     {
@@ -274,7 +271,7 @@ public class GenerateDriverGeneFiles
 
         try
         {
-            List<NamedBed> bedRegions = panelRegions.stream().map(x -> x.asBed()).collect(Collectors.toList());
+            List<NamedBed> bedRegions = panelRegions.stream().map(x -> codingRegionToNamedBed(x)).collect(Collectors.toList());
 
             NamedBedFile.writeBedFile(outputFile, bedRegions);
         }
@@ -284,52 +281,14 @@ public class GenerateDriverGeneFiles
         }
     }
 
-    private class CodingRegion extends ChrBaseRegion
+    private static NamedBed codingRegionToNamedBed(final GeneRegion geneRegion)
     {
-        public final String GeneName;
-        public final int ExonRank;
-
-        public CodingRegion(final String chromosome, final int posStart, final int posEnd, final String geneName, final int exonRank)
-        {
-            super(chromosome, posStart, posEnd);
-            GeneName = geneName;
-            ExonRank = exonRank;
-        }
-
-        public NamedBed asBed()
-        {
-            return ImmutableNamedBed.builder()
-                    .chromosome(Chromosome)
-                    .start(start())
-                    .end(end())
-                    .name(format("%s_%d", GeneName, ExonRank))
-                    .build();
-        }
-    }
-
-    private static final int SPLICE_SIZE = 10;
-
-    private List<CodingRegion> getTranscriptRegions(final GeneData geneData, final TranscriptData transData, boolean includeUTR)
-    {
-        int startPosition = includeUTR || transData.nonCoding() ? transData.TransStart : transData.CodingStart;
-        int endPosition = includeUTR || transData.nonCoding() ? transData.TransEnd : transData.CodingEnd;
-
-        final List<CodingRegion> regions = Lists.newArrayList();
-
-        for(int i = 0; i < transData.exons().size(); i++)
-        {
-            ExonData exon = transData.exons().get(i);
-            int exonStart = i == 0 ? exon.Start : exon.Start - SPLICE_SIZE;
-            int exonEnd = i == transData.exons().size() - 1 ? exon.End : exon.End + SPLICE_SIZE;
-
-            if(positionsOverlap(startPosition, endPosition, exonStart, exonEnd))
-            {
-                regions.add(new CodingRegion(
-                        geneData.Chromosome, max(startPosition, exonStart), min(endPosition, exonEnd), geneData.GeneName, exon.Rank));
-            }
-        }
-
-        return regions;
+        return ImmutableNamedBed.builder()
+                .chromosome(geneRegion.Chromosome)
+                .start(geneRegion.start())
+                .end(geneRegion.end())
+                .name(format("%s_%d", geneRegion.GeneName, geneRegion.ExonRank))
+                .build();
     }
 
     private void writeGermlineBlacklist(final RefGenomeVersion refGenomeVersion)

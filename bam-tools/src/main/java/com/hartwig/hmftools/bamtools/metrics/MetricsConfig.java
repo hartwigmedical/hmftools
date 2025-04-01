@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTI
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.REGIONS_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
@@ -69,6 +71,8 @@ public class MetricsConfig
 
     public final Map<String,List<BaseRegion>> TargetRegions;
     public final boolean OnlyTargetRegions;
+
+    public final GeneCoverage GeneRegionCoverage;
 
     // metrics capture config
     public final boolean ExcludeZeroCoverage;
@@ -135,6 +139,8 @@ public class MetricsConfig
         BT_LOGGER.info("output({})", OutputDir);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+
+        GeneRegionCoverage = new GeneCoverage(configBuilder);
 
         MapQualityThreshold = configBuilder.getInteger(MAP_QUAL_THRESHOLD);
         BaseQualityThreshold = configBuilder.getInteger(BASE_QUAL_THRESHOLD);
@@ -225,6 +231,9 @@ public class MetricsConfig
                 OFF_TARGET_FRAG_OVERLAP_THRESHOLD,
                 "Write regions of high off-target fragment overlap if pile-up above threshold (0=disabled)", 0);
 
+        addEnsemblDir(configBuilder);
+        DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
+
         configBuilder.addFlag(EXCLUDE_ZERO_COVERAGE, "Exclude bases with zero coverage");
         configBuilder.addFlag(WRITE_OFF_TARGET, "Write off-target data");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
@@ -259,6 +268,7 @@ public class MetricsConfig
         LogReadIds = Collections.emptyList();
         UnmappableRegions = Collections.emptyList();
         TargetRegions = Maps.newHashMap();
+        GeneRegionCoverage = new GeneCoverage(null);
         OnlyTargetRegions = false;
         PartitionReadCountCheck = 0;
 

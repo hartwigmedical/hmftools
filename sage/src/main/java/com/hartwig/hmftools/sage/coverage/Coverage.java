@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -15,8 +14,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.sage.GeneDepth;
-import com.hartwig.hmftools.common.sage.GeneDepthFile;
+import com.hartwig.hmftools.common.metrics.GeneDepth;
+import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.sage.SageConfig;
 
