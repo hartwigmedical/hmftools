@@ -15,7 +15,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
@@ -82,7 +81,6 @@ public class SageApplication implements AutoCloseable
     private void run() throws IOException
     {
         long startTimeMs = System.currentTimeMillis();
-        final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig.Common);
 
         SageCommon.setReadLength(mConfig.Common, mRefData.PanelWithHotspots, mConfig.TumorBams.get(0));
 
@@ -118,12 +116,11 @@ public class SageApplication implements AutoCloseable
                 continue;
 
             final ChromosomePipeline pipeline = new ChromosomePipeline(
-                    chromosome, mConfig, mRefData, recalibrationMap, msiJitterCalcs, coverage, mPhaseSetCounter, mVcfWriter, mFragmentLengths);
+                    chromosome, mConfig, mRefData, recalibrationMap, msiJitterCalcs, mPhaseSetCounter, mVcfWriter, mFragmentLengths);
 
             pipeline.process();
         }
 
-        coverage.writeFiles(mConfig.Common.OutputFile);
         mFragmentLengths.close();
         mVcfWriter.close();
 

@@ -19,7 +19,6 @@ import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
@@ -36,7 +35,6 @@ public class RegionThread extends Thread
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
-    private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
     private final Queue<PartitionTask> mPartitions;
@@ -53,7 +51,7 @@ public class RegionThread extends Thread
 
     public RegionThread(
             final String chromosome, final SageCallConfig config,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final Coverage coverage,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<SimpleVariant> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengthWriter fragmentLengths)
@@ -65,7 +63,6 @@ public class RegionThread extends Thread
         mRefGenome = new RefGenomeSource(mRefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
-        mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
         mFragmentLengths = fragmentLengths;
 
@@ -137,7 +134,7 @@ public class RegionThread extends Thread
 
         return new RegionTask(
                 partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
-                regionHighConfidence, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter, mCoverage, mSamSlicerFactory,
+                regionHighConfidence, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter, mSamSlicerFactory,
                 mFragmentLengths);
     }
 }

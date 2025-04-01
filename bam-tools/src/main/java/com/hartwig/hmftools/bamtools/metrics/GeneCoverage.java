@@ -39,7 +39,7 @@ public class GeneCoverage
     private final Map<String,List<ExonCoverage>> mChrGeneRegionsMap;
 
     private static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
-    private static final int MAX_DEPTH_BUCKET = 10000;
+    public static final int MAX_DEPTH_BUCKET = 10000;
     protected static final int GENE_COVERAGE_MIN_MAP_QUALITY = 10;
 
     public GeneCoverage(final ConfigBuilder configBuilder)
