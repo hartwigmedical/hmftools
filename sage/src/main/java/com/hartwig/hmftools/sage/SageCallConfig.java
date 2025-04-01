@@ -66,7 +66,9 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
-        RunTinc = configBuilder.hasFlag(RUN_TINC);
+
+        // TINC can only run with a single germline sample
+        RunTinc = configBuilder.hasFlag(RUN_TINC) && Common.ReferenceIds.size() == 1;
     }
 
     public boolean isValid()
