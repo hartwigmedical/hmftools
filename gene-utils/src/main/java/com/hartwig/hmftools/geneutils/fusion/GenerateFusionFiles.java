@@ -2,7 +2,7 @@ package com.hartwig.hmftools.geneutils.fusion;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -61,7 +61,7 @@ public class GenerateFusionFiles
         GU_LOGGER.info("starting known fusion file generation");
 
         mKnownFusionDbFile = configBuilder.getValue(KNOWN_FUSION_DB_FILE);
-        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_OPTION);
+        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL);
         mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(configBuilder);
     }

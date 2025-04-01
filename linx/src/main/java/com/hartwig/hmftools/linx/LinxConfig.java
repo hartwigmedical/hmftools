@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.loadDriverGenes;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
@@ -257,7 +257,7 @@ public class LinxConfig
         addRefGenomeVersion(configBuilder);
 
         configBuilder.addConfigItem(VCF_FILE, "Path to the PURPLE structural variant VCF file");
-        configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, false, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
         configBuilder.addPath(LINE_ELEMENT_FILE, false, "Line elements file");
         configBuilder.addPath(FRAGILE_SITE_FILE, false, "Fragile site file");
         configBuilder.addFlag(GERMLINE, "Process germline SVs");

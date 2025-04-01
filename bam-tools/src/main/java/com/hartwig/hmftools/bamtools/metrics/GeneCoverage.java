@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneRegions;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateExonMediansFilename;
@@ -45,7 +45,7 @@ public class GeneCoverage
     {
         mChrGeneRegionsMap = Maps.newHashMap();
 
-        if(configBuilder == null || !configBuilder.hasValue(ENSEMBL_DATA_DIR) || !configBuilder.hasValue(DRIVER_GENE_PANEL_OPTION))
+        if(configBuilder == null || !configBuilder.hasValue(ENSEMBL_DATA_DIR) || !configBuilder.hasValue(DRIVER_GENE_PANEL))
             return;
 
         EnsemblDataCache ensemblDataCache = new EnsemblDataCache(configBuilder);

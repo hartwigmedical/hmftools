@@ -63,7 +63,7 @@ public class ReferenceData
         GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
 
-        if(configBuilder.hasValue(DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION))
+        if(configBuilder.hasValue(DriverGenePanelConfig.DRIVER_GENE_PANEL))
         {
             DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
         }

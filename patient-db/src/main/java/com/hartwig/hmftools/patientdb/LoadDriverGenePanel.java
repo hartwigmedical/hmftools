@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
@@ -25,7 +25,7 @@ public class LoadDriverGenePanel
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         DatabaseAccess.addDatabaseCmdLineArgs(configBuilder, true);
-        configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addConfigItem(DRIVER_GENE_PANEL, DRIVER_GENE_PANEL_DESC);
 
         configBuilder.checkAndParseCommandLine(args);
 

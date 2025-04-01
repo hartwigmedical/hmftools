@@ -2,7 +2,7 @@ package com.hartwig.hmftools.pave.compare;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
@@ -32,7 +32,7 @@ public class ImpactComparisons
 
         mGeneDataCache = new GeneDataCache(
                 configBuilder.getValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
-                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION));
+                configBuilder.getValue(DRIVER_GENE_PANEL));
 
         mWriter = new ComparisonWriter(mGeneDataCache, mConfig);
     }

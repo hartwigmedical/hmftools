@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.pave.compare;
 
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
@@ -122,7 +122,7 @@ public class ComparisonConfig
         configBuilder.addFlag(WRITE_TRANS_DATA, "Write detailed transcript impact data");
         configBuilder.addFlag(WRITE_MATCHES, "Write matches as well");
         addRefGenomeFile(configBuilder, true);
-        configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addConfigItem(DRIVER_GENE_PANEL, DRIVER_GENE_PANEL_DESC);
         addEnsemblDir(configBuilder);
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.geneutils.drivers;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.getTranscriptRegions;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
@@ -68,7 +68,7 @@ public class GenerateDriverGeneFiles
     {
         GU_LOGGER.info("starting driver gene panel generation");
 
-        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_OPTION);
+        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL);
         mGeneIdFile = configBuilder.getValue(GENE_ID_FILE);
         mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
         mOutputDir = parseOutputDir(configBuilder);
