@@ -24,9 +24,6 @@ Whilst Linx is designed primarily for somatic SV, it can also be run in a more l
 * [Visualisation](#visualisation)  
 * [Version History](#version-history)
 
-## Installation
-The latest version of Linx can be downloaded from the [Hartwig releases page](https://github.com/hartwigmedical/hmftools/releases/)
-
 ## Configuration
 ### Core configuration
 All values are optional unless otherwise specified.
