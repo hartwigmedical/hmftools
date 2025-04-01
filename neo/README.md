@@ -82,7 +82,7 @@ If RNA is available, find evidence supporting the somatic variants. Run SageAppe
 Call Neo to evaluate the neoepitope allele peptides. This requires all previous steps plus Lilac allele coverage.
 (See https://github.com/hartwigmedical/hmftools/tree/master/lilac)
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 ```
 java -cp neo.jar com.hartwig.hmftools.neo.scorer.NeoScorer

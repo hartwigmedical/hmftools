@@ -22,7 +22,7 @@ SAGE also supports the ability append additional reference samples to an existin
 In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
 The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
 

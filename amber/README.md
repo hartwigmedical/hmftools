@@ -6,7 +6,7 @@ When using paired reference/tumor data, AMBER is also able to:
   - facilitate sample matching / patient deduplication by recording SNPs in the germline
   - identify long regions of homozygosty and consanguinity
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 The Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is required for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:

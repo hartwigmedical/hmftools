@@ -43,7 +43,7 @@ fragile_site_file | Linx has in-built default set of known fragile sites, but ov
 line_element_file | Linx has in-built default set of LINE source regions, but override as required (format: Chromosome,PosStart,PosEnd)
 ensembl_data_dir | Directory for Ensembl reference files
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
  
 ### Example Usage
 This is a typical command to run LINX for a single sample from PURPLE output.

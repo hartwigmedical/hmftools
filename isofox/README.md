@@ -66,7 +66,7 @@ drop_dups | Default is false. By default duplicate fragments will be counted tow
 
 ### Reference Files
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 Note that the Ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
 

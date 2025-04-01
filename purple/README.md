@@ -39,7 +39,7 @@ PURPLE may also be run on targeted data. For more info please see [here](https:/
   + [Charts](#charts)
 * [Version History / Download Links](#version-history-and-download-links)
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 While these are sufficient to run PURPLE there are a number of optional dependencies that provide additional functionality.
 

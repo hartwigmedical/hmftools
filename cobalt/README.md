@@ -52,7 +52,7 @@ Post GC normalization, COBALT is able to detect the following germline chromosom
 
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 COBALT depends on the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package for segmentation.
 The R package [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) is also used.

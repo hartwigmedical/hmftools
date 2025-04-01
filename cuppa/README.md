@@ -179,7 +179,7 @@ Conditional requirements:
 2. One or many of `-sample_data_dir`, `-purple_dir`, `-linx_dir`, `-virus_dir`, or `-isofox_dir` are provided such that the combination of directories covers all input files. Wildcards (`*`) are replaced with sample names 
 3. `-ref_alt_sj_sites` is required when running in RNA mode (i.e. `-categories` is RNA or ALL).
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 ## Classifier (Python component)
 
@@ -242,7 +242,7 @@ pip install cuppa_jar/pycuppa/
 ```
 
 ### Predicting
-Pre-trained classifiers (`cuppa_classifier.pickle.gz` files) for hg37 and hg38 can be downloaded from the [HMF Resource page](./pipeline/README_RESOURCES.md).
+Pre-trained classifiers (`cuppa_classifier.pickle.gz` files) for hg37 and hg38 can be downloaded from the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 To predict on a single sample, the below example commands can be used. This produces the outputs as specified in section: [Classifier output](#classifier-output).
 

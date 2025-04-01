@@ -8,7 +8,7 @@ To install, download the latest compiled jar file from the [download links](#ver
 ### Resource Files
 Sigs requires a signature definition file, for example the COSMIC 30 SNV signatures. 
 
-All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](./pipeline/README_RESOURCES.md).
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
 ### Mandatory Arguments
 
