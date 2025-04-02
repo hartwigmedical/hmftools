@@ -72,7 +72,7 @@ public class ConsensusReads
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
-            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId);
+            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, templateRead.getFirstOfPairFlag());
 
             return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
         }
@@ -115,7 +115,7 @@ public class ConsensusReads
 
                 // fall-back to selecting the read with the longest aligned bases, highest average qual
                 SAMRecord primaryRead = selectPrimaryRead(readsView);
-                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId);
+                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId, templateRead.getFirstOfPairFlag());
 
                 return new ConsensusReadInfo(consensusRead, templateRead, consensusState.outcome());
             }
@@ -214,7 +214,7 @@ public class ConsensusReads
             return groupId + readId.substring(lastDelim + 1);
     }
 
-    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId)
+    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, boolean isFirstOfPair)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
 
@@ -229,6 +229,8 @@ public class ConsensusReads
         record.setAlignmentStart(read.getAlignmentStart());
         record.setCigar(read.getCigar());
         record.setFlags(read.getFlags());
+        record.setFirstOfPairFlag(isFirstOfPair);
+        record.setSecondOfPairFlag(!isFirstOfPair);
         record.setDuplicateReadFlag(false);
         if(!record.getReadPairedFlag())
             return record;
