@@ -3,8 +3,8 @@ package com.hartwig.hmftools.compar.purple;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -83,7 +83,8 @@ public class CopyNumberData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final CopyNumberData otherCn = (CopyNumberData) other;
 
@@ -93,6 +94,6 @@ public class CopyNumberData implements ComparableItem
         checkDiff(diffs, FLD_MAJOR_ALLELE_CN, CopyNumber.majorAlleleCopyNumber(), otherCn.CopyNumber.majorAlleleCopyNumber(), thresholds);
         checkDiff(diffs, FLD_METHOD, CopyNumber.method().toString(), otherCn.CopyNumber.method().toString());
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }

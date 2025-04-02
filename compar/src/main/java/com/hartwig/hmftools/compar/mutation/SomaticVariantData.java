@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
+import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static java.lang.String.format;
@@ -53,6 +54,7 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.MismatchType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.jooq.Record;
@@ -85,6 +87,7 @@ public class SomaticVariantData implements ComparableItem
     public final double VariantCopyNumber;
     public final double PurityAdjustedVaf;
     public final AllelicDepth TumorDepth;
+    public final boolean IsFromUnfilteredVcf;
 
     private String mComparisonChromosome;
     private int mComparisonPosition;
@@ -100,7 +103,7 @@ public class SomaticVariantData implements ComparableItem
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
             final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
-            final AllelicDepth tumorDepth)
+            final AllelicDepth tumorDepth, final boolean isFromUnfilteredVcf)
     {
         Chromosome = chromosome;
         Position = position;
@@ -124,6 +127,7 @@ public class SomaticVariantData implements ComparableItem
         VariantCopyNumber = variantCopyNumber;
         PurityAdjustedVaf = purityAdjustedVaf;
         TumorDepth = tumorDepth;
+        IsFromUnfilteredVcf = isFromUnfilteredVcf;
 
         mComparisonChromosome = chromosome;
         mComparisonPosition = position;
@@ -197,16 +201,22 @@ public class SomaticVariantData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
-        return findDiffs(other, thresholds, MatchFilterStatus.BOTH_UNFILTERED, false);
+        return findMismatch(other, matchLevel, thresholds, includeMatches, false);
     }
 
-    protected Mismatch findDiffs(
-            final ComparableItem other, final DiffThresholds thresholds, MatchFilterStatus matchFilterStatus, boolean nonPurple)
+    protected Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches, final boolean nonPurpleVcfs)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
+        final List<String> diffs = findDiffs(otherVar, thresholds, nonPurpleVcfs);
+        return createMismatch(diffs, other, matchLevel, includeMatches);
+    }
 
+    private List<String> findDiffs(final SomaticVariantData otherVar, final DiffThresholds thresholds, final boolean nonPurpleVcfs)
+    {
         final List<String> diffs = Lists.newArrayList();
 
         if(Qual != NO_QUAL_PRESENT && otherVar.Qual != NO_QUAL_PRESENT)
@@ -217,7 +227,7 @@ public class SomaticVariantData implements ComparableItem
         checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorDepth.AlleleReadCount, otherVar.TumorDepth.AlleleReadCount, thresholds);
         checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorDepth.TotalReadCount, otherVar.TumorDepth.TotalReadCount, thresholds);
 
-        if(matchFilterStatus.canComparePurpleFields())
+        if(canComparePaveFields(otherVar))
         {
             // assumes Pave annotated - could possibly check VCF for presence of tags
             checkDiff(diffs, FLD_GENE, Gene, otherVar.Gene);
@@ -227,7 +237,7 @@ public class SomaticVariantData implements ComparableItem
             checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
         }
 
-        if(matchFilterStatus.canComparePurpleFields() && !nonPurple)
+        if(canComparePurpleFields(otherVar, nonPurpleVcfs))
         {
             checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
             checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
@@ -245,25 +255,61 @@ public class SomaticVariantData implements ComparableItem
         if(Filters.isEmpty() && otherVar.Filters.isEmpty() && !diffs.contains(FILTER_DIFF))
         {
             // if ones side is filtered, suggests was filtered downstream of Sage (eg Pave or Purple) so indicate this
-            if(matchFilterStatus == MatchFilterStatus.REF_FILTERED)
+            if(IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf)
                 diffs.add(format("%s(%s/%s)", FILTER_DIFF, "FILTERED", PASS));
-            else if(matchFilterStatus == MatchFilterStatus.NEW_FILTERED)
+            else if(!IsFromUnfilteredVcf && otherVar.IsFromUnfilteredVcf)
                 diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS, "FILTERED"));
         }
-
-        if(diffs.isEmpty())
-            return null;
-        else if(matchFilterStatus == MatchFilterStatus.BOTH_UNFILTERED)
-            return new Mismatch(this, other, VALUE, diffs);
-        else if(matchFilterStatus == MatchFilterStatus.REF_FILTERED)
-            return new Mismatch(this, other, NEW_ONLY, diffs);
-        else if(matchFilterStatus == MatchFilterStatus.NEW_FILTERED)
-            return new Mismatch(this, other, REF_ONLY, diffs);
-        else
-            throw new RuntimeException(String.format("Unrecognized value for MatchFilterStatus: %s", matchFilterStatus));
+        return diffs;
     }
 
-    public static SomaticVariantData fromContext(final VariantContext context, final String sampleId)
+    private Mismatch createMismatch(final List<String> diffs, final ComparableItem other, final MatchLevel matchLevel,
+            final boolean includeMatches)
+    {
+        if(diffs.isEmpty() && !includeMatches)
+            return null;
+
+        final SomaticVariantData otherVar = (SomaticVariantData) other;
+
+        boolean isRefCalled = isCalled(matchLevel);
+        boolean isNewCalled = otherVar.isCalled(matchLevel);
+
+        final MismatchType mismatchType;
+        if(diffs.isEmpty())
+            mismatchType = FULL_MATCH;
+        else if(isRefCalled && isNewCalled)
+            mismatchType = VALUE;
+        else if(!isRefCalled && isNewCalled)
+            mismatchType = NEW_ONLY;
+        else
+        {
+            // Has to be REF_ONLY, since we never compare uncalled variants with uncalled variants due to earlier filters
+            mismatchType = REF_ONLY;
+        }
+        return new Mismatch(this, other, mismatchType, diffs);
+    }
+
+    private boolean isCalled(final MatchLevel matchLevel)
+    {
+        if(matchLevel == MatchLevel.REPORTABLE)
+            return !IsFromUnfilteredVcf && reportable();
+        else if(matchLevel == MatchLevel.DETAILED)
+            return !IsFromUnfilteredVcf && (reportable() || !Gene.isEmpty());
+        else
+            throw new RuntimeException("Unrecognized match level: " + matchLevel.toString());
+    }
+
+    private boolean canComparePaveFields(final SomaticVariantData otherVar)
+    {
+        return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf;
+    }
+
+    private boolean canComparePurpleFields(final SomaticVariantData otherVar, final boolean nonPurpleVcfs)
+    {
+        return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf && !nonPurpleVcfs;
+    }
+
+    public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile)
     {
         int position = context.getStart();
         String chromosome = context.getContig();
@@ -294,7 +340,8 @@ public class SomaticVariantData implements ComparableItem
                 context.getFilters(),
                 context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0),
                 context.getAttributeAsDouble(PURPLE_AF, 0),
-                AllelicDepth.fromGenotype(context.getGenotype(sampleId)));
+                AllelicDepth.fromGenotype(context.getGenotype(sampleId)),
+                fromUnfilteredFile);
     }
 
     public static SomaticVariantData fromRecord(final Record record)
@@ -326,7 +373,8 @@ public class SomaticVariantData implements ComparableItem
                 filters,
                 record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER),
                 record.getValue(SOMATICVARIANT.ADJUSTEDVAF),
-                tumorDepth);
+                tumorDepth,
+                false);
     }
 
     private static final String SNPEFF_WORST = "SEW";

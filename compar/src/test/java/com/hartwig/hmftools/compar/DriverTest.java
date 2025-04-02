@@ -18,16 +18,37 @@ import com.hartwig.hmftools.compar.common.MismatchType;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.driver.DriverData;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class DriverTest
 {
     @Test
-    public void testDriverDiffs()
+    public void testDriverDiffsWithoutMatches()
     {
+        List<Mismatch> mismatches = generateTestMismatches(false);
 
-        List<Mismatch> mismatches = Lists.newArrayList();
+        assertEquals(3, mismatches.size());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.NEW_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.VALUE).count());
+    }
 
+    @Test
+    public void testDriverDiffsWithMatches()
+    {
+        List<Mismatch> mismatches = generateTestMismatches(true);
+
+        assertEquals(4, mismatches.size());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.NEW_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.VALUE).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.FULL_MATCH).count());
+    }
+
+    @NotNull
+    private static List<Mismatch> generateTestMismatches(final boolean includeMatches)
+    {
         ComparConfig config = new ComparConfig();
         DriverComparer driverComparer = new DriverComparer(config);
 
@@ -43,12 +64,12 @@ public class DriverTest
         refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2), "3", false));
         newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2), "3", false));
 
-        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, refItems, newItems);
+        refItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2), "4", false));
+        newItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2), "4", false));
 
-        assertEquals(3, mismatches.size());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.REF_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.NEW_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType == MismatchType.VALUE).count());
+        List<Mismatch> mismatches = Lists.newArrayList();
+        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, includeMatches, refItems, newItems);
+        return mismatches;
     }
 
     private static DriverCatalog createDriverCatalog(final String gene, final DriverType type, double likelihood, double minCopyNumber)

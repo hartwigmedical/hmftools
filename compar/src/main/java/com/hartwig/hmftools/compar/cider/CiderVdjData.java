@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.cider;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.CDR3_SEQUENCE;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
@@ -62,7 +63,8 @@ public class CiderVdjData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem o, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem o, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final Cdr3Sequence other = ((CiderVdjData) o).mCdr3Sequence;
 
@@ -71,7 +73,7 @@ public class CiderVdjData implements ComparableItem
         checkDiff(diffs, Cdr3SequenceFile.Column.filter.name(), mCdr3Sequence.filter(), other.filter());
         checkDiff(diffs, Cdr3SequenceFile.Column.locus.name(), mCdr3Sequence.locus(), other.locus());
 
-        return !diffs.isEmpty() ? new Mismatch(this, o, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, o, diffs, includeMatches);
     }
 
     public String toString()

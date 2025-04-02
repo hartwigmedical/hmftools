@@ -3,8 +3,8 @@ package com.hartwig.hmftools.compar.peach;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.PEACH;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -71,7 +71,8 @@ public class PeachData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final PeachData otherData = (PeachData) other;
 
@@ -82,6 +83,6 @@ public class PeachData implements ComparableItem
         checkDiff(diffs, FLD_DRUGS, Genotype.linkedDrugs(), otherData.Genotype.linkedDrugs());
         checkDiff(diffs, FLD_PRESCRIPTION_URLS, Genotype.urlPrescriptionInfo(), otherData.Genotype.urlPrescriptionInfo());
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }

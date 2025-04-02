@@ -54,6 +54,7 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 | write_detailed                                          | Write a file per compared category                                                                            |
 | somatic_unfiltered_vcf_ref & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                 |
 | liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)      |
+| include_matches                                         | Also include matching entries in output file(s)                                                               |
 
 ### Sample ID Mappings
 If the same patient has different sample IDs for different runs and these are used for all filenames, then specify these mappings in the sample ID file, eg:

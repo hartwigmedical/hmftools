@@ -156,7 +156,6 @@ public class SomaticVariantComparer implements ItemComparer
                 final SomaticVariantData refVariant = refVariants.get(index1);
 
                 SomaticVariantData matchedVariant = null;
-                MatchFilterStatus matchFilterStatus = null;
 
                 // shift index2 back to index at or before first potentially matching variant
                 while(index2 > 0 && (index2 >= newVariants.size() || newVariants.get(index2).Position >= refVariant.comparisonPosition()))
@@ -171,7 +170,6 @@ public class SomaticVariantComparer implements ItemComparer
                     if(refVariant.matches(newVariant))
                     {
                         matchedVariant = newVariant;
-                        matchFilterStatus = MatchFilterStatus.BOTH_UNFILTERED;
                         newVariants.remove(index2);
                         break;
                     }
@@ -189,7 +187,6 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(unfilteredVariant != null)
                     {
-                        matchFilterStatus = MatchFilterStatus.NEW_FILTERED;
                         unfilteredVariant.setComparisonCoordinates(refVariant.Chromosome, refVariant.Position);
                         matchedVariant = unfilteredVariant;
                     }
@@ -201,7 +198,8 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(includeMismatchWithVariant(refVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
-                        Mismatch mismatch = refVariant.findDiffs(matchedVariant, mConfig.Thresholds, matchFilterStatus, usesNonPurpleVcfs);
+                        Mismatch mismatch =
+                                refVariant.findMismatch(matchedVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches, usesNonPurpleVcfs);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -226,7 +224,7 @@ public class SomaticVariantComparer implements ItemComparer
                 if(unfilteredVariant != null)
                 {
                     unfilteredVariant.setComparisonCoordinates(newVariant.Chromosome, newVariant.Position);
-                    mismatches.add(unfilteredVariant.findDiffs(newVariant, mConfig.Thresholds, MatchFilterStatus.REF_FILTERED, usesNonPurpleVcfs));
+                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches, usesNonPurpleVcfs));
                 }
                 else
                 {
@@ -238,8 +236,7 @@ public class SomaticVariantComparer implements ItemComparer
         return true;
     }
 
-    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource,
-            final String sourceSampleId)
+    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource, final String sampleId)
     {
         VcfFileReader unfilteredVcfReader = mUnfilteredVcfReaders.get(otherSource);
 
@@ -263,7 +260,7 @@ public class SomaticVariantComparer implements ItemComparer
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
-                    AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId)));
+                    AllelicDepth.fromGenotype(context.getGenotype(sampleId)), true);
         }
 
         return null;
@@ -376,7 +373,7 @@ public class SomaticVariantComparer implements ItemComparer
             if(variantContext.isFiltered())
                 continue;
 
-            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId);
+            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId, false);
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
