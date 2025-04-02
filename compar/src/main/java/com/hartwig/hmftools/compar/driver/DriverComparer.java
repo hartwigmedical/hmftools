@@ -98,7 +98,7 @@ public class DriverComparer implements ItemComparer
 
             // add germline as well if present
             String purpleGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
-            String linxGermlineDriverFile = LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, false);
+            String linxGermlineDriverFile = LinxDriver.generateCatalogFilename(fileSources.LinxGermline, sampleId, false);
 
             if(Files.exists(Paths.get(purpleGermlineDriverFile)))
             {

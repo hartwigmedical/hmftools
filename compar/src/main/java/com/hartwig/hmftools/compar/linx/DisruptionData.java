@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -70,7 +70,8 @@ public class DisruptionData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final DisruptionData otherDisruptionData = (DisruptionData)other;
 
@@ -124,7 +125,7 @@ public class DisruptionData implements ComparableItem
             diffs.add(format("unmatchedSv(/%s)", otherBreakendData.svInfoStr()));
         }
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 
     public BreakendData findMatchingBreakend(final BreakendData breakend, final List<BreakendData> otherBreakends)

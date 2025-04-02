@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -70,7 +70,8 @@ public class GermlineDeletionData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final GermlineDeletionData otherDeletion = (GermlineDeletionData) other;
 
@@ -84,6 +85,6 @@ public class GermlineDeletionData implements ComparableItem
         checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDeletion.mComparisonChromosome);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, Deletion.ChromosomeBand, otherDeletion.Deletion.ChromosomeBand);
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }

@@ -79,6 +79,7 @@ public class ComparConfig
     public final String OutputId;
 
     public final boolean WriteDetailed;
+    public final boolean IncludeMatches;
     public final int Threads;
 
     public final GenomeLiftoverCache LiftoverCache;
@@ -95,6 +96,7 @@ public class ComparConfig
     public static final String THRESHOLDS = "thresholds";
 
     public static final String WRITE_DETAILED_FILES = "write_detailed";
+    public static final String INCLUDE_MATCHES = "include_matches";
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
@@ -146,6 +148,7 @@ public class ComparConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED_FILES);
+        IncludeMatches = configBuilder.hasFlag(INCLUDE_MATCHES);
         Threads = parseThreads(configBuilder);
 
         SourceNames = Lists.newArrayList(REF_SOURCE, NEW_SOURCE);
@@ -435,6 +438,7 @@ public class ComparConfig
         registerConfig(configBuilder);
 
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
+        configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
 
@@ -453,6 +457,7 @@ public class ComparConfig
         OutputDir = null;
         OutputId = "";
         WriteDetailed = false;
+        IncludeMatches = false;
         Threads = 0;
 
         DbConnections = Maps.newHashMap();
