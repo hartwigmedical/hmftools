@@ -140,6 +140,11 @@ public class FileSources
             addPathConfig(configBuilder, VIRUS_DIR_CFG, VIRUS_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CIDER_DIR_CFG, CIDER_DIR_DESC, sourceName);
             addPathConfig(configBuilder, TEAL_DIR_CFG, TEAL_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, TUMOR_FLAGSTAT, formSourceDescription("Tumor flagstat", sourceName), sourceName);
+            addPathConfig(configBuilder, GERMLINE_FLAGSTAT, formSourceDescription("Germline flagstat", sourceName), sourceName);
+            addPathConfig(configBuilder, TUMOR_BAM_METRICS, formSourceDescription("Tumor BAM metrics", sourceName), sourceName);
+            addPathConfig(configBuilder, GERMLINE_BAM_METRICS, formSourceDescription("Germline BAM metrics", sourceName), sourceName);
+            addPathConfig(configBuilder, SNP_GENOTYPE, formSourceDescription("SNP genotype", sourceName), sourceName);
 
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_VCF, sourceName), false,
@@ -148,22 +153,6 @@ public class FileSources
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_UNFILTERED_VCF, sourceName), false,
                     formSourceDescription("VCF to search for filtered variants", sourceName));
-
-            configBuilder.addPath(
-                    formSourceConfig(TUMOR_FLAGSTAT, sourceName), false,
-                    formSourceDescription("Tumor flagstat", sourceName));
-            configBuilder.addPath(
-                    formSourceConfig(GERMLINE_FLAGSTAT, sourceName), false,
-                    formSourceDescription("Germline flagstat", sourceName));
-            configBuilder.addPath(
-                    formSourceConfig(TUMOR_BAM_METRICS, sourceName), false,
-                    formSourceDescription("Tumor BAM metrics", sourceName));
-            configBuilder.addPath(
-                    formSourceConfig(GERMLINE_BAM_METRICS, sourceName), false,
-                    formSourceDescription("Germline BAM metrics", sourceName));
-            configBuilder.addPath(
-                    formSourceConfig(SNP_GENOTYPE, sourceName), false,
-                    formSourceDescription("SNP genotype", sourceName));
         }
     }
 
