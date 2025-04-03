@@ -71,7 +71,7 @@ public class Read
 
     private boolean mIsReference;
     private boolean mHasLineTail;
-    private int mTrimCount;
+    private int mTrimCount; // if non-zero this has been done to the 3' end
     private boolean mLowQualTrimmed;
 
     public Read(final SAMRecord record)
@@ -176,7 +176,9 @@ public class Read
     public int unclippedStart()  { return mUnclippedStart; }
     public int unclippedEnd() { return mUnclippedEnd; }
 
-    // convenience
+    public int fragmentEnd() { return positiveStrand() ? mUnclippedStart : mUnclippedEnd; }
+
+        // convenience
     public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart || mIndelImpliedUnclippedStart != null; }
     public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd || mIndelImpliedUnclippedEnd != null; }
 
@@ -359,11 +361,6 @@ public class Read
             return false;
 
         return allowReadMatch || getFlags() != other.getFlags();
-    }
-
-    public static boolean hasMatchingFragmentRead(final List<Read> support, final Read read)
-    {
-        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
     }
 
     public static List<Read> findMatchingFragmentSupport(final List<Read> support, final Read read)

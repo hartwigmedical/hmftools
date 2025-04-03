@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
@@ -89,30 +88,6 @@ public class ExtReadParseState
         }
 
         mExhausted = mCurrentIndex < 0 || mCurrentIndex >= mRead.basesLength();
-    }
-
-    public void movePastLowQualBases()
-    {
-        moveNext();
-
-        while(!exhausted() && belowMinQual(currentQual()))
-        {
-            moveNext();
-        }
-    }
-
-    public byte nextHighQualBase()
-    {
-        int index = mCurrentIndex;
-        while(!exhausted() && belowMinQual(mRead.getBaseQuality()[index]))
-        {
-            ++index;
-        }
-
-        if(exhausted())
-            return -1;
-        else
-            return mRead.getBases()[index];
     }
 
     public void resetIndex()
@@ -257,5 +232,30 @@ public class ExtReadParseState
                 mRead.id(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
                 mExtensionLength, mJunctionIndex, mCurrentIndex, mHighQualMatches, mMismatches, mPermittedMismatches,
                 mLineExtensionIndex >= 0 ? format(" lineIndex(%d)", mLineExtensionIndex) : "", mExhausted ? " exhausted" : "");
+    }
+
+    // unused - may use something like this for other seq-tech
+    public void movePastLowQualBases()
+    {
+        moveNext();
+
+        while(!exhausted() && belowMinQual(currentQual()))
+        {
+            moveNext();
+        }
+    }
+
+    public byte nextHighQualBase()
+    {
+        int index = mCurrentIndex;
+        while(!exhausted() && belowMinQual(mRead.getBaseQuality()[index]))
+        {
+            ++index;
+        }
+
+        if(exhausted())
+            return -1;
+        else
+            return mRead.getBases()[index];
     }
 }

@@ -45,8 +45,9 @@ public class RefBaseExtensionTest
 
         Read read = createRead(READ_ID_GENERATOR.nextId(), 161, readBases, readCigar);
 
-        List<Read> junctionReads = Lists.newArrayList(
-                read, cloneRead(read, READ_ID_GENERATOR.nextId()), cloneRead(read, READ_ID_GENERATOR.nextId()));
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 162, readBases.substring(1), "19M10I20M50S");
+
+        List<Read> junctionReads = Lists.newArrayList(read, read2);
 
         List<JunctionAssembly> assemblies = junctionAssembler.processJunction(junctionReads);
 
@@ -67,9 +68,9 @@ public class RefBaseExtensionTest
         readCigar = "10M10D20M50S";
 
         read = createRead(READ_ID_GENERATOR.nextId(), 161, readBases, readCigar);
+        read2 = createRead(READ_ID_GENERATOR.nextId(), 162, readBases.substring(1), "9M10D20M50S");
 
-        junctionReads = Lists.newArrayList(
-                read, cloneRead(read, READ_ID_GENERATOR.nextId()), cloneRead(read, READ_ID_GENERATOR.nextId()));
+        junctionReads = Lists.newArrayList(read, read2);
 
         assemblies = junctionAssembler.processJunction(junctionReads);
 

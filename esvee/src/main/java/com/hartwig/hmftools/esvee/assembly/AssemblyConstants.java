@@ -37,7 +37,7 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_REF_READ_MIN_SOFT_CLIP = 10;
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
     public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
-    public static final int ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS = 3;
+    public static final int ASSEMBLY_MIN_DISTINCT_FRAGS = 2;
 
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
@@ -68,8 +68,6 @@ public final class AssemblyConstants
     // phasing
     public static final int REMOTE_PHASING_MIN_READS = 2;
     public static final int REMOTE_REGION_MERGE_MARGIN = 500;
-    public static final int REMOTE_REGION_REF_MIN_READS = REMOTE_PHASING_MIN_READS;
-    public static final double REMOTE_REGION_REF_MIN_READ_PERCENT = 0.1;
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
     public static final int PHASED_ASSEMBLY_MIN_TI = 30;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
