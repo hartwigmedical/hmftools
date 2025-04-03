@@ -1,0 +1,3 @@
+gene	haplotype	count	function	linkedDrugs	prescriptionUrls
+DPYD	*1	2	Normal Function	5-Fluorouracil;Capecitabine;Tegafur	https://www.pharmgkb.org/guidelineAnnotation/PA166104939;https://www.pharmgkb.org/guidelineAnnotation/PA166104963;https://www.pharmgkb.org/guidelineAnnotation/PA166104944
+UGT1A1	*1	2	Normal Function	Irinotecan	https://www.pharmgkb.org/guidelineAnnotation/PA166104951
