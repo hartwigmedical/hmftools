@@ -1,2 +1,2 @@
 sample	p_BRCA1	p_BRCA2	p_hrd	hr_status	hrd_type	remarks_hr_status	remarks_hrd_type
-tumor_sample	0	0	0	HR_proficient	none
+tumor_sample	0	0	0	HR_proficient	none		
