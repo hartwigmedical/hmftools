@@ -127,6 +127,9 @@ public class SomaticVariantComparer implements ItemComparer
             return false;
         }
 
+        final String refSourceSampleId = mConfig.sourceSampleId(REF_SOURCE, sampleId);
+        final String newSourceSampleId = mConfig.sourceSampleId(NEW_SOURCE, sampleId);
+
         final Map<String,List<SomaticVariantData>> refVariantsMap = buildVariantMap(allRefVariants);
         final Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(allNewVariants);
         final List<SomaticVariantData> emptyVariants = Lists.newArrayList();
@@ -182,7 +185,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(matchedVariant == null)
                 {
-                    final SomaticVariantData unfilteredVariant = findUnfilteredVariant(refVariant, NEW_SOURCE, sampleId);
+                    final SomaticVariantData unfilteredVariant = findUnfilteredVariant(refVariant, NEW_SOURCE, newSourceSampleId);
 
                     if(unfilteredVariant != null)
                     {
@@ -218,7 +221,7 @@ public class SomaticVariantComparer implements ItemComparer
                 if(!includeMismatchWithVariant(newVariant, matchLevel))
                     continue;
 
-                SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, REF_SOURCE, sampleId);
+                SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, REF_SOURCE, refSourceSampleId);
 
                 if(unfilteredVariant != null)
                 {
@@ -235,7 +238,8 @@ public class SomaticVariantComparer implements ItemComparer
         return true;
     }
 
-    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource, final String sampleId)
+    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource,
+            final String sourceSampleId)
     {
         VcfFileReader unfilteredVcfReader = mUnfilteredVcfReaders.get(otherSource);
 
@@ -259,7 +263,7 @@ public class SomaticVariantComparer implements ItemComparer
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
-                    AllelicDepth.fromGenotype(context.getGenotype(sampleId)));
+                    AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId)));
         }
 
         return null;
