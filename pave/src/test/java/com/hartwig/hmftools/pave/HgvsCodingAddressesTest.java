@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
@@ -38,6 +39,7 @@ public class HgvsCodingAddressesTest
     MockRefGenome refGenome = new MockRefGenome();
     private final ImpactClassifier classifier;
     private final TranscriptData transcriptData;
+    private final TranscriptData transcriptDataRS;
 
     public HgvsCodingAddressesTest()
     {
@@ -47,8 +49,146 @@ public class HgvsCodingAddressesTest
         //            |   exon1    |   intron1  |   exon2    |   intron2  |   exon3    |   intron4  |   exon4    |   intron5  |   exon5    |   intron6  |   exon6
         // random 20  CTAGGACACGAG CGAGGGCCCAAA CGACACGAGTAA GGGCCCAAATTT ATGAAGGAACCT AAAGGGCCCTTT AAGATGGAACCT AACCGGTTACGT GTACACAAGCCT CACCGGTTACGT ATACACAAGCCT random 20
         //            |                         |          |              |                         |                         |                         |
-        //            -24                       -12        -1             1                         13                        *1                        *13
+        //  +         -24                       -12        -1             1                         13                        *1                        *13
+        //  -         *24        *13            *12        *1             24         13             12         1              *1                        *13
         transcriptData = createTransExons(GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 21, 45, 69, 93, 117, 141 }, 11, 69, 104, false, "");
+        transcriptDataRS = createTransExons(GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] { 21, 45, 69, 93, 117, 141 }, 11, 69, 104, false, "");
+    }
+
+    @Test
+    public void secondDownstreamExonRS()
+    {
+        checkDupRS(30,  2, "c.*13_*14dupCT");
+//        checkDelRS(30,  2, "c.*13_*14delCT");
+        checkInsRS(31,  "C", "c.*13_*14insG");
+        checkSnvRS(31,  "A", "T", "c.*14T>A");
+
+        checkSnvRS(32, "G", "A", "c.*13C>T");
+    }
+
+    @Test
+    public void secondDownstreamIntronExonBoundaryRS()
+    {
+//        checkDupRS(31,  2, "c.*13-1_*13dupGC");
+//        checkDelRS(31,  2, "c.*13-1_*13delGC");
+//        checkInsRS(32,  "AA", "c.*13_*13+1insTT");
+    }
+
+    @Test
+    public void secondDownstreamIntronRS()
+    {
+        checkDupRS(34,  4, "c.*13-6_*13-3dupCCCT");
+//        checkDelRS(34,  4, "c.*13-6_*13-3delCCCT");
+        checkInsRS(35,  "GG", "c.*13-4_*13-3insCC");
+        checkSnvRS(35, "A", "C", "c.*13-3T>G");
+
+        checkSnvRS(44, "A", "C", "c.*12+1T>G");
+    }
+
+    @Test
+    public void downstreamExonIntronBoundaryRS()
+    {
+        checkDupRS(43,  2, "c.*12-0_*12+1dupGT"); // c.*12_*12+1dupGT
+        checkDelRS(43,  2, "c.*12_*12+1delGT");
+        checkInsRS(44, "CG",  "c.*12-0_*12+1insCG"); // c.*12_*12+1insCG ??
+        checkSnvRS(44, "A", "G", "c.*12+1T>C");
+    }
+
+    @Test
+    public void firstDownstreamExonRS()
+    {
+        checkDupRS(45,  2, "c.*10_*11dupTC");
+        checkDelRS(45,  2, "c.*10_*11delTC");
+        checkInsRS(45,  "TA", "c.*11_*12insTA");
+        checkSnvRS(45, "C", "G", "c.*12G>C");
+
+        checkDupRS(54,  2, "c.*1_*2dupTT");
+        //        checkDelRS(54,  2, "c.*1_*2delTT");
+        checkInsRS(55,  "CC", "c.*1_*2insGG");
+        checkSnvRS(55, "A", "C", "c.*2T>G");
+
+        checkDupRS(54,  2, "c.*1_*2dupTT");
+//        checkDelRS(54,  2, "c.*1_*2delTT");
+        checkInsRS(55,  "CC", "c.*1_*2insGG");
+        checkSnvRS(55, "A", "C", "c.*2T>G");
+
+        checkSnvRS(56, "A", "C", "c.*1T>G");
+    }
+
+    @Test
+    public void firstDownstreamIntronRS()
+    {
+//        checkDupRS(64,  2, "c.24+3_24+4dupAT");
+//        checkDelRS(64,  2, "c.24+3_24+4delAT");
+//        checkInsRS(60,  "AAA", "c.22_23insTTT");
+//        checkSnvRS(60, "T", "C", "c.23A>G");
+
+//        checkSnvRS(68, "T", "C", "c.24+1A>G");
+//        checkSnvRS(67, "T", "C", "c.24+2A>G");
+    }
+
+    @Test
+    public void secondCodingExonRS()
+    {
+        checkDupRS(70,  2, "c.21_22dupTC");
+        checkDelRS(70,  2, "c.21_22delTC");
+        checkInsRS(70,  "AAA", "c.22_23insTTT");
+        checkSnvRS(70, "T", "C", "c.23A>G");
+
+//        checkDupRS(68,  2, "c.23_24dupAT");
+//        checkDelRS(68,  2, "c.23_24delAT");
+        checkInsRS(69,  "AAA", "c.23_24insTTT");
+        checkSnvRS(69, "A", "C", "c.24T>G");
+    }
+
+    @Test
+    public void intronExonBoundary2RS()
+    {
+//        checkDupRS(79, 2, "c.13-1_13dupTA");
+        checkDelRS(79, 2, "c.13-1_13delTA");
+        checkInsRS(79, "CAG",  "c.13_14insCTG"); // in the exon but useful comparison with ins at 80 below
+//        checkInsRS(80, "CAG",  "c.13-1_13insCTG");
+        checkSnvRS(80, "T", "C", "c.13A>G");
+    }
+
+    @Test
+    public void firstIntronRS()
+    {
+        checkDupRS(89, 3, "c.12+1_12+3dupAAA");
+        checkDelRS(89, 3, "c.12+1_12+3delAAA");
+        checkInsRS(89, "AA",  "c.12+3_12+4insTT");
+        checkSnvRS(89, "C", "T", "c.12+4G>A");
+
+        checkDupRS(81, 2, "c.13-3_13-2dupTT");
+        checkDelRS(81, 3, "c.13-4_13-2delCTT");
+        checkInsRS(81, "CAG",  "c.13-2_13-1insCTG");
+        checkSnvRS(81, "A", "C", "c.13-1T>G");
+    }
+
+    @Test
+    public void exonBoundaryRS()
+    {
+        checkSnvRS(93, "A", "C", "c.12T>G");
+
+        checkDelRS(91, 2, "c.12_12+1delTA");
+        checkDupRS(91, 2, "c.12-0_12+1dupTA"); // c.12_12+1dupTA ?
+
+        checkDelRS(90, 3, "c.12_12+2delTAA");
+        checkDupRS(90, 3, "c.12-0_12+2dupTAA");
+
+        checkDelRS(90, 4, "c.11_12+2delTTAA");
+//        checkDupRS(90, 4, "c.11_12+2dupTTAA");
+    }
+
+    @Test
+    public void firstCodingExonRS()
+    {
+        checkSnvRS(104, "T", "C", "c.1A>G");
+
+        checkDupRS(102,  2, "c.1_2dupAG");
+        checkDelRS(102,  2, "c.1_2delAG");
+        checkInsRS(103,  "C", "c.1_2insG");
+        checkSnvRS(103, "C", "G", "c.2G>C");
     }
 
     @Test
@@ -56,42 +196,42 @@ public class HgvsCodingAddressesTest
     {
         // boundary
 //        checkDupAt(127, 2, "c.*12_*12+1dupTC");
-        checkDelAt(127, 2, "c.*12_*12+1delTC");
-        checkInsAt(128, "GG", "c.*12-0_*12+1insGG"); // c.*12_*12+1insGG
+        checkDel(127, 2, "c.*12_*12+1delTC");
+        checkIns(128, "GG", "c.*12-0_*12+1insGG"); // c.*12_*12+1insGG
 
         // in intron6
-        checkDupAt(128, 2, "c.*12+1_*12+2dupCA");
-        checkDelAt(128, 2, "c.*12+1_*12+2delCA");
-        checkInsAt(129, "GG",  "c.*12+1_*12+2insGG");
-        checkSnvAt(129, "C", "G", "c.*12+1C>G");
+        checkDup(128, 2, "c.*12+1_*12+2dupCA");
+        checkDel(128, 2, "c.*12+1_*12+2delCA");
+        checkIns(129, "GG",  "c.*12+1_*12+2insGG");
+        checkSnv(129, "C", "G", "c.*12+1C>G");
 
-        checkDupAt(133, 2, "c.*12+6_*12+7dupGT");
-        checkDelAt(133, 2, "c.*12+6_*12+7delGT");
-        checkInsAt(134, "AA",  "c.*12+6_*12+7insAA");
-        checkSnvAt(134, "G", "A", "c.*12+6G>A");
+        checkDup(133, 2, "c.*12+6_*12+7dupGT");
+        checkDel(133, 2, "c.*12+6_*12+7delGT");
+        checkIns(134, "AA",  "c.*12+6_*12+7insAA");
+        checkSnv(134, "G", "A", "c.*12+6G>A");
 
 //        checkDupAt(134, 2, "c.*13-6_*13-5dupTT");
 //        checkDelAt(134, 2, "c.*13-6_*13-5delTT");
-        checkInsAt(135, "AA",  "c.*13-6_*13-5insAA");
-        checkSnvAt(135, "T", "A", "c.*13-6T>A");
+        checkIns(135, "AA",  "c.*13-6_*13-5insAA");
+        checkSnv(135, "T", "A", "c.*13-6T>A");
 
         // exon6
-        checkDupAt(140, 2, "c.*13_*14dupAT");
+        checkDup(140, 2, "c.*13_*14dupAT");
 //        checkDelAt(140, 2, "c.*13_*14delAT");
-        checkInsAt(141, "CC",  "c.*13_*14insCC");
-        checkSnvAt(141, "A", "T", "c.*13A>T");
+        checkIns(141, "CC",  "c.*13_*14insCC");
+        checkSnv(141, "A", "T", "c.*13A>T");
 
-        checkDupAt(141, 2, "c.*14_*15dupTA");
-        checkDelAt(141, 2, "c.*14_*15delTA");
-        checkInsAt(142, "CC",  "c.*14_*15insCC");
-        checkSnvAt(142, "T", "G", "c.*14T>G");
+        checkDup(141, 2, "c.*14_*15dupTA");
+        checkDel(141, 2, "c.*14_*15delTA");
+        checkIns(142, "CC",  "c.*14_*15insCC");
+        checkSnv(142, "T", "G", "c.*14T>G");
 
-        checkDupAt(150, 2, "c.*23_*24dupCT");
-        checkDelAt(150, 2, "c.*23_*24delCT");
-        checkInsAt(151, "AA",  "c.*23_*24insAA");
-        checkSnvAt(151, "C", "G", "c.*23C>G");
+        checkDup(150, 2, "c.*23_*24dupCT");
+        checkDel(150, 2, "c.*23_*24delCT");
+        checkIns(151, "AA",  "c.*23_*24insAA");
+        checkSnv(151, "C", "G", "c.*23C>G");
 
-        checkSnvAt(152, "T", "G", "c.*24T>G");
+        checkSnv(152, "T", "G", "c.*24T>G");
     }
 
     @Test
@@ -99,29 +239,29 @@ public class HgvsCodingAddressesTest
     {
         //        checkDupAt(116, 2, "c.*1_*2dupGT");
         //        checkDelAt(116, 2, "c.*1_*2delGT");
-        checkInsAt(117, "CC", "c.*1_*2insCC");
-        checkSnvAt(117, "G", "C", "c.*1G>C");
+        checkIns(117, "CC", "c.*1_*2insCC");
+        checkSnv(117, "G", "C", "c.*1G>C");
 
-        checkDupAt(119, 2, "c.*4_*5dupCA");
-        checkDelAt(119, 2, "c.*4_*5delCA");
-        checkInsAt(120, "GG", "c.*4_*5insGG");
-        checkSnvAt(120, "C", "A", "c.*4C>A");
+        checkDup(119, 2, "c.*4_*5dupCA");
+        checkDel(119, 2, "c.*4_*5delCA");
+        checkIns(120, "GG", "c.*4_*5insGG");
+        checkSnv(120, "C", "A", "c.*4C>A");
 
-        checkDupAt(126, 2, "c.*11_*12dupCT");
-        checkDelAt(126, 2, "c.*11_*12delCT");
-        checkInsAt(127, "GG", "c.*11_*12insGG");
-        checkSnvAt(127, "C", "A", "c.*11C>A");
+        checkDup(126, 2, "c.*11_*12dupCT");
+        checkDel(126, 2, "c.*11_*12delCT");
+        checkIns(127, "GG", "c.*11_*12insGG");
+        checkSnv(127, "C", "A", "c.*11C>A");
 
-        checkDupAt(127, 1, "c.*12dupT");
-        checkDelAt(127, 1, "c.*12delT");
-        checkInsAt(128, "GG", "c.*12-0_*12+1insGG"); // c.*12_*12+1insGG ?
-        checkSnvAt(128, "T", "A", "c.*12T>A");
+        checkDup(127, 1, "c.*12dupT");
+        checkDel(127, 1, "c.*12delT");
+        checkIns(128, "GG", "c.*12-0_*12+1insGG"); // c.*12_*12+1insGG ?
+        checkSnv(128, "T", "A", "c.*12T>A");
     }
 
     @Test
     public void downnstreamIntronExonBoundary()
     {
-        checkDupAt(115, 2, "c.*1-1_*1-0dupTG");
+        checkDup(115, 2, "c.*1-1_*1-0dupTG");
         //        checkDelAt(115, 2, "c.*1-1_*1delTG");
         //        checkInsAt(116, "CC", "c.*1-1_*1insCC");
     }
@@ -129,20 +269,20 @@ public class HgvsCodingAddressesTest
     @Test
     public void downstreamIntron()
     {
-        checkDupAt(104, 2, "c.24+1_24+2dupAA");
-        checkDelAt(104, 2, "c.24+1_24+2delAA");
-        checkInsAt(105, "CC", "c.24+1_24+2insCC");
-        checkSnvAt(105, "A", "C", "c.24+1A>C");
+        checkDup(104, 2, "c.24+1_24+2dupAA");
+        checkDel(104, 2, "c.24+1_24+2delAA");
+        checkIns(105, "CC", "c.24+1_24+2insCC");
+        checkSnv(105, "A", "C", "c.24+1A>C");
 
-        checkDupAt(109, 2, "c.24+6_24+7dupGT"); //c.24+6_c.*1-6dupGT?
-        checkDelAt(109, 2, "c.24+6_24+7delGT");
-        checkInsAt(110, "CC", "c.24+6_24+7insCC");
-        checkSnvAt(110, "G", "C", "c.24+6G>C");
+        checkDup(109, 2, "c.24+6_24+7dupGT"); //c.24+6_c.*1-6dupGT?
+        checkDel(109, 2, "c.24+6_24+7delGT");
+        checkIns(110, "CC", "c.24+6_24+7insCC");
+        checkSnv(110, "G", "C", "c.24+6G>C");
 
         //        checkDupAt(109, 2, "c.*1-2_*1-1dupGT");
-        checkDelAt(114, 2, "c.*1-2_*1-1delGT");
-        checkInsAt(115, "CC", "c.*1-2_*1-1insCC");
-        checkSnvAt(115, "G", "C", "c.*1-2G>C");
+        checkDel(114, 2, "c.*1-2_*1-1delGT");
+        checkIns(115, "CC", "c.*1-2_*1-1insCC");
+        checkSnv(115, "G", "C", "c.*1-2G>C");
     }
 
     @Test
@@ -150,128 +290,128 @@ public class HgvsCodingAddressesTest
     {
         //        checkDupAt(103, 2, "c.24_24+1dupTA");
         //        checkDelAt(103, 2, "c.24_24+1delTA");
-        checkInsAt(104, "GG", "c.24-0_24+1insGG"); // c.24_24+1insGG?
+        checkIns(104, "GG", "c.24-0_24+1insGG"); // c.24_24+1insGG?
     }
 
     @Test
     public void secondCodingExon()
     {
-        checkDupAt(102, 2, "c.23_24dupCT");
+        checkDup(102, 2, "c.23_24dupCT");
         //        checkDelAt(102, 2, "c.23_24delCT");
-        checkInsAt(103, "A", "c.23_24insA");
-        checkSnvAt(103, "C", "G", "c.23C>G");
+        checkIns(103, "A", "c.23_24insA");
+        checkSnv(103, "C", "G", "c.23C>G");
 
-        checkDupAt(93, 3, "c.14_16dupAGA");
-        checkDelAt(93, 3, "c.14_16delAGA");
-        checkInsAt(94, "C", "c.14_15insC");
-        checkSnvAt(94, "A", "C", "c.14A>C");
+        checkDup(93, 3, "c.14_16dupAGA");
+        checkDel(93, 3, "c.14_16delAGA");
+        checkIns(94, "C", "c.14_15insC");
+        checkSnv(94, "A", "C", "c.14A>C");
 
         //        checkDupAt(92, 3, "c.13_15dupAAG");
-        checkDelAt(92, 3, "c.13_15delAAG");
-        checkInsAt(93, "C", "c.13_14insC");
-        checkSnvAt(93, "A", "C", "c.13A>C");
+        checkDel(92, 3, "c.13_15delAAG");
+        checkIns(93, "C", "c.13_14insC");
+        checkSnv(93, "A", "C", "c.13A>C");
     }
 
     @Test
     public void firstIntronSecondExonBoundary()
     {
-        checkDupAt(90, 3, "c.13-2_13-0dupTTA"); // c.13-2_13dupTTA ?
-        checkDelAt(90, 3, "c.13-2_13delTTA");
+        checkDup(90, 3, "c.13-2_13-0dupTTA"); // c.13-2_13dupTTA ?
+        checkDel(90, 3, "c.13-2_13delTTA");
     }
 
     @Test
     public void firstIntron()
     {
-        checkDupAt(90, 2, "c.13-2_13-1dupTT");
-        checkDelAt(90, 2, "c.13-2_13-1delTT");
-        checkInsAt(91, "AC", "c.13-2_13-1insAC");
-        checkSnvAt(92, "T", "A", "c.13-1T>A");
+        checkDup(90, 2, "c.13-2_13-1dupTT");
+        checkDel(90, 2, "c.13-2_13-1delTT");
+        checkIns(91, "AC", "c.13-2_13-1insAC");
+        checkSnv(92, "T", "A", "c.13-1T>A");
 
         //        checkDupAt(86, 3, "c.13-6_13-4dupCCC");
         //        checkDelAt(86, 3, "c.13-6_13-4delCCC");
-        checkInsAt(87, "TT", "c.13-6_13-5insTT");
-        checkSnvAt(87, "C", "T", "c.13-6C>T");
+        checkIns(87, "TT", "c.13-6_13-5insTT");
+        checkSnv(87, "C", "T", "c.13-6C>T");
 
-        checkDupAt(85, 3, "c.12+6_12+8dupGCC");
-        checkDelAt(85, 3, "c.12+6_12+8delGCC");
-        checkInsAt(86, "TT", "c.12+6_12+7insTT");
-        checkSnvAt(86, "G", "T", "c.12+6G>T");
+        checkDup(85, 3, "c.12+6_12+8dupGCC");
+        checkDel(85, 3, "c.12+6_12+8delGCC");
+        checkIns(86, "TT", "c.12+6_12+7insTT");
+        checkSnv(86, "G", "T", "c.12+6G>T");
 
-        checkDupAt(84, 3, "c.12+5_12+7dupGGC");
-        checkDelAt(84, 3, "c.12+5_12+7delGGC");
-        checkInsAt(85, "TT", "c.12+5_12+6insTT");
-        checkSnvAt(85, "G", "T", "c.12+5G>T");
+        checkDup(84, 3, "c.12+5_12+7dupGGC");
+        checkDel(84, 3, "c.12+5_12+7delGGC");
+        checkIns(85, "TT", "c.12+5_12+6insTT");
+        checkSnv(85, "G", "T", "c.12+5G>T");
 
-        checkDupAt(80, 2, "c.12+1_12+2dupAA");
-        checkDelAt(80, 2, "c.12+1_12+2delAA");
-        checkInsAt(81, "CC", "c.12+1_12+2insCC");
-        checkSnvAt(81, "A", "C", "c.12+1A>C");
+        checkDup(80, 2, "c.12+1_12+2dupAA");
+        checkDel(80, 2, "c.12+1_12+2delAA");
+        checkIns(81, "CC", "c.12+1_12+2insCC");
+        checkSnv(81, "A", "C", "c.12+1A>C");
     }
 
     @Test
     public void firstExonFirstIntronBoundary()
     {
         //        checkDupAt(79, 2, "c.12_12+1dupTT");
-        checkDelAt(79, 3, "c.12_12+2delTAA");
-        checkInsAt(80, "CC", "c.12-0_12+1insCC"); // c.12_12+1insCC ??
+        checkDel(79, 3, "c.12_12+2delTAA");
+        checkIns(80, "CC", "c.12-0_12+1insCC"); // c.12_12+1insCC ??
     }
 
     @Test
     public void firstCodingExon()
     {
-        checkDupAt(79, 1, "c.12dupT");
-        checkDelAt(79, 1, "c.12delT");
-        checkSnvAt(80, "T", "A", "c.12T>A");
+        checkDup(79, 1, "c.12dupT");
+        checkDel(79, 1, "c.12delT");
+        checkSnv(80, "T", "A", "c.12T>A");
 
-        checkDupAt(78, 2, "c.11_12dupCT");
-        checkDelAt(78, 2, "c.11_12delCT");
-        checkInsAt(79, "AA", "c.11_12insAA");
-        checkSnvAt(79, "C", "T", "c.11C>T");
+        checkDup(78, 2, "c.11_12dupCT");
+        checkDel(78, 2, "c.11_12delCT");
+        checkIns(79, "AA", "c.11_12insAA");
+        checkSnv(79, "C", "T", "c.11C>T");
 
-        checkDupAt(76, 2, "c.9_10dupAC");
-        checkDelAt(76, 2, "c.9_10delAC");
-        checkInsAt(77, "TTT", "c.9_10insTTT");
-        checkSnvAt(77, "A", "C", "c.9A>C");
+        checkDup(76, 2, "c.9_10dupAC");
+        checkDel(76, 2, "c.9_10delAC");
+        checkIns(77, "TTT", "c.9_10insTTT");
+        checkSnv(77, "A", "C", "c.9A>C");
 
-        checkDupAt(71, 2, "c.4_5dupAA");
-        checkDelAt(71, 2, "c.4_5delAA");
-        checkInsAt(72, "TTT", "c.4_5insTTT");
-        checkSnvAt(72, "A", "C", "c.4A>C");
+        checkDup(71, 2, "c.4_5dupAA");
+        checkDel(71, 2, "c.4_5delAA");
+        checkIns(72, "TTT", "c.4_5insTTT");
+        checkSnv(72, "A", "C", "c.4A>C");
 
-        checkDupAt(69, 2, "c.2_3dupTG");
-        checkDelAt(69, 2, "c.2_3delTG");
-        checkInsAt(70, "C", "c.2_3insC");
-        checkSnvAt(70, "T", "C", "c.2T>C");
+        checkDup(69, 2, "c.2_3dupTG");
+        checkDel(69, 2, "c.2_3delTG");
+        checkIns(70, "C", "c.2_3insC");
+        checkSnv(70, "T", "C", "c.2T>C");
 
         //        checkDupAt(68, 3, "c.1_3dupATG");
-        checkDelAt(68, 3, "c.1_3delATG");
-        checkInsAt(69, "CC", "c.1_2insCC");
-        checkSnvAt(69, "A", "C", "c.1A>C");
-        checkDelAt(68, 1, "c.1delA");
+        checkDel(68, 3, "c.1_3delATG");
+        checkIns(69, "CC", "c.1_2insCC");
+        checkSnv(69, "A", "C", "c.1A>C");
+        checkDel(68, 1, "c.1delA");
     }
 
     @Test
     public void firstUpstreamIntron()
     {
         //        checkDupAt(66, 2, "c.1-2_1-1dupTT");
-        checkDelAt(66, 2, "c.1-2_1-1delTT");
+        checkDel(66, 2, "c.1-2_1-1delTT");
         //        checkDupAt(64, 4, "c.1-4_1-1dupATTT");
-        checkDelAt(64, 4, "c.1-4_1-1delATTT");
+        checkDel(64, 4, "c.1-4_1-1delATTT");
         //        checkDupAt(63, 3, "c.1-5_1-3dupAAT");
-        checkDelAt(63, 3, "c.1-5_1-3delAAT");
-        checkDelAt(63, 1, "c.1-5delA");
-        checkDelAt(62, 1, "c.-1+7delA");
-        checkDelAt(61, 1, "c.-1+6delC");
-        checkDelAt(59, 1, "c.-1+4delC");
-        checkDelAt(58, 1, "c.-1+3delG");
-        checkDelAt(57, 1, "c.-1+2delG");
-        checkDelAt(56, 1, "c.-1+1delG");
+        checkDel(63, 3, "c.1-5_1-3delAAT");
+        checkDel(63, 1, "c.1-5delA");
+        checkDel(62, 1, "c.-1+7delA");
+        checkDel(61, 1, "c.-1+6delC");
+        checkDel(59, 1, "c.-1+4delC");
+        checkDel(58, 1, "c.-1+3delG");
+        checkDel(57, 1, "c.-1+2delG");
+        checkDel(56, 1, "c.-1+1delG");
     }
 
     @Test
     public void firstUpstreamExon()
     {
-        checkDelAt(55, 1, "c.-1delA");
+        checkDel(55, 1, "c.-1delA");
         //        checkDupAt(62, 3, "c.-1+6_-1+8dupAAA"); // -1+6_1-4 ??
         //        checkDelAt(62, 3, "c.-1+6_-1+8delAAA");
         //        checkDupAt(59, 3, "c.-1+3_-1+5dupCCC");
@@ -281,46 +421,61 @@ public class HgvsCodingAddressesTest
         //        checkDupAt(56, 3, "c.-1+0_-1+2dupGGG");
         //        checkDelAt(56, 3, "c.-1_-1+2delGGG");
         //        checkDupAt(55, 2, "c.-2_-1dupAA");
-        checkDelAt(55, 1, "c.-1delA");
-        checkDelAt(55, 2, "c.-1_-1+1delAG");
+        checkDel(55, 1, "c.-1delA");
+        checkDel(55, 2, "c.-1_-1+1delAG");
         //        checkDupAt(54, 2, "c.-2_-1dupAA");
-        checkDelAt(54, 2, "c.-2_-1delAA");
+        checkDel(54, 2, "c.-2_-1delAA");
         //        checkDupAt(46, 2, "c.-11_-10dupAC");
-        checkDelAt(46, 2, "c.-10_-9delAC");
+        checkDel(46, 2, "c.-10_-9delAC");
         //        checkDupAt(45, 2, "c.-12_-11dupAC");
-        checkDelAt(45, 2, "c.-11_-10delGA");
-        checkDelAt(45, 1, "c.-11delG");
+        checkDel(45, 2, "c.-11_-10delGA");
+        checkDel(45, 1, "c.-11delG");
         //        checkDelAt(44, 1, "c.-12delC");
     }
 
     @Test
     public void secondUpstreamIntron()
     {
-        checkDelAt(43, 1, "c.-12-1delA");
-        checkDelAt(40, 4, "c.-12-4_-12-1delCAAA");
-        checkDelAt(36, 2, "c.-13+5_-13+6delGG");
-        checkDelAt(32, 2, "c.-13+1_-13+2delCG");
+        checkDel(43, 1, "c.-12-1delA");
+        checkDel(40, 4, "c.-12-4_-12-1delCAAA");
+        checkDel(36, 2, "c.-13+5_-13+6delGG");
+        checkDel(32, 2, "c.-13+1_-13+2delCG");
     }
 
     @Test
     public void secondUpstreamExon()
     {
-        checkDelAt(31, 2, "c.-13_-13+1delGC");
-        checkDelAt(27, 3, "c.-17_-15delACG");
-        checkDelAt(23, 3, "c.-21_-19delGGA");
-        checkDelAt(21, 1, "c.-23delT");
+        checkDel(31, 2, "c.-13_-13+1delGC");
+        checkDel(27, 3, "c.-17_-15delACG");
+        checkDel(23, 3, "c.-21_-19delGGA");
+        checkDel(21, 1, "c.-23delT");
         //        checkDelAt(20, 1, "c.-24delC");
     }
 
-    private void checkDupAt(int position, int length, String expected)
+    private void checkDup(int position, int length, String expected)
     {
         checkVariantImpact(expected, createDupVariant(refBases, position, length));
     }
 
-    private void checkSnvAt(int position, String ref, String alt, String expected)
+    private void checkDupRS(int position, int length, String expected)
+    {
+        checkVariantImpact(expected, createDupVariant(refBases, position, length), false);
+    }
+
+    private void checkSnv(int position, String ref, String alt, String expected)
+    {
+        checkSnv(position, ref, alt, expected, true);
+    }
+
+    private void checkSnvRS(int position, String ref, String alt, String expected)
+    {
+        checkSnv(position, ref, alt, expected, false);
+    }
+
+    private void checkSnv(int position, String ref, String alt, String expected, boolean forwardStrand)
     {
         checkBaseAt(position, ref);
-        checkVariantImpact(expected, createSnvVariant(position, ref, alt));
+        checkVariantImpact(expected, createSnvVariant(position, ref, alt), forwardStrand);
     }
 
     private void checkBaseAt(int position, String ref)
@@ -342,22 +497,37 @@ public class HgvsCodingAddressesTest
     private VariantData createSnvVariant(int position, String ref, String alt)
     {
         return new VariantData(CHR_1, position, ref, alt);
-
     }
 
-    private void checkInsAt(int position, String bases, String expected)
+    private void checkIns(int position, String bases, String expected)
     {
         checkVariantImpact(expected, createInsVariant(position, bases));
     }
 
-    private void checkDelAt(int position, int length, String expected)
+    private void checkInsRS(int position, String bases, String expected)
+    {
+        checkVariantImpact(expected, createInsVariant(position, bases), false);
+    }
+
+    private void checkDel(int position, int length, String expected)
     {
         checkVariantImpact(expected, createDelVariant(refBases, position, length));
     }
 
+    private void checkDelRS(int position, int length, String expected)
+    {
+        checkVariantImpact(expected, createDelVariant(refBases, position, length), false);
+    }
+
     private void checkVariantImpact(final String expected, final VariantData var)
     {
-        VariantTransImpact impact = classifier.classifyVariant(var, transcriptData);
+        checkVariantImpact(expected,var, true);
+    }
+
+    private void checkVariantImpact(String expected, VariantData var, boolean forwardStrand)
+    {
+        TranscriptData td = forwardStrand ? transcriptData : transcriptDataRS;
+        VariantTransImpact impact = classifier.classifyVariant(var, td);
         assertEquals(expected, impact.codingContext().Hgvs);
     }
 
