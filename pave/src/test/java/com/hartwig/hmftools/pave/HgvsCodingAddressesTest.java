@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class HgvsCodingAddressesTest
 {
-    // random(20) exon1 intron1 exon2 intron2 exon3(coding) intron3 exon4(coding) random(20)
     // all exons and introns of length 12
     String exon1 = "CTAGGACACGAG";
     String intron1 = "CGAGGGCCCAAA";
@@ -28,8 +27,14 @@ public class HgvsCodingAddressesTest
     String exon3 = "ATGAAGGAACCT";
     String intron3 = "AAAGGGCCCTTT";
     String exon4 = "AAGATGGAACCT";
+    String intron4 = "AACCGGTTACGT";
+    String exon5 = "GTACACAAGCCT";
+    String intron6 = "CACCGGTTACGT";
+    String exon6 = "ATACACAAGCCT";
 
-    private final String refBases = generateTestBases(20) + exon1 + intron1 + exon2 + intron2 + exon3 + intron3 + exon4 + generateTestBases(20);
+    private final String refBases = generateTestBases(20)
+            + exon1 + intron1 + exon2 + intron2 + exon3 + intron3 + exon4 + intron4 + exon5 + intron6 + exon6
+            + generateTestBases(20);
     MockRefGenome refGenome = new MockRefGenome();
     private final ImpactClassifier classifier;
     private final TranscriptData transcriptData;
@@ -38,19 +43,121 @@ public class HgvsCodingAddressesTest
     {
         refGenome.RefGenomeMap.put(CHR_1, refBases);
         classifier = new ImpactClassifier(refGenome);
-        //                      21           33           45           57           69           81           93           105
-        //                      |   exon1    |   intron1  |   exon2    |   intron2  |   exon3    |   intron4  |   exon4    |
-        // GATCGATCGATCGATCGATC CTAGGACACGAG CGAGGGCCCAAA CGACACGAGTAA GGGCCCAAATTT ATGAAGGAACCT AAAGGGCCCTTT AAGATGGAACCT GATCGATCGATCGATCGATC
-        //                      |                         |          |              |                         |
-        //                      -24                       -12        -1             1                         13
-        transcriptData = createTransExons(GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 21, 45, 69, 93 }, 11, 69, 104, false, "");
+        //            21           33           45           57           69           81           93           105          117          129          141
+        //            |   exon1    |   intron1  |   exon2    |   intron2  |   exon3    |   intron4  |   exon4    |   intron5  |   exon5    |   intron6  |   exon6
+        // random 20  CTAGGACACGAG CGAGGGCCCAAA CGACACGAGTAA GGGCCCAAATTT ATGAAGGAACCT AAAGGGCCCTTT AAGATGGAACCT AACCGGTTACGT GTACACAAGCCT CACCGGTTACGT ATACACAAGCCT random 20
+        //            |                         |          |              |                         |                         |                         |
+        //            -24                       -12        -1             1                         13                        *1                        *13
+        transcriptData = createTransExons(GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 21, 45, 69, 93, 117, 141 }, 11, 69, 104, false, "");
+    }
+
+    @Test
+    public void secondDownstreamIntronAndExon()
+    {
+        // boundary
+//        checkDupAt(127, 2, "c.*12_*12+1dupTC");
+        checkDelAt(127, 2, "c.*12_*12+1delTC");
+        checkInsAt(128, "GG", "c.*12-0_*12+1insGG"); // c.*12_*12+1insGG
+
+        // in intron6
+        checkDupAt(128, 2, "c.*12+1_*12+2dupCA");
+        checkDelAt(128, 2, "c.*12+1_*12+2delCA");
+        checkInsAt(129, "GG",  "c.*12+1_*12+2insGG");
+        checkSnvAt(129, "C", "G", "c.*12+1C>G");
+
+        checkDupAt(133, 2, "c.*12+6_*12+7dupGT");
+        checkDelAt(133, 2, "c.*12+6_*12+7delGT");
+        checkInsAt(134, "AA",  "c.*12+6_*12+7insAA");
+        checkSnvAt(134, "G", "A", "c.*12+6G>A");
+
+//        checkDupAt(134, 2, "c.*13-6_*13-5dupTT");
+//        checkDelAt(134, 2, "c.*13-6_*13-5delTT");
+        checkInsAt(135, "AA",  "c.*13-6_*13-5insAA");
+        checkSnvAt(135, "T", "A", "c.*13-6T>A");
+
+        // exon6
+        checkDupAt(140, 2, "c.*13_*14dupAT");
+//        checkDelAt(140, 2, "c.*13_*14delAT");
+        checkInsAt(141, "CC",  "c.*13_*14insCC");
+        checkSnvAt(141, "A", "T", "c.*13A>T");
+
+        checkDupAt(141, 2, "c.*14_*15dupTA");
+        checkDelAt(141, 2, "c.*14_*15delTA");
+        checkInsAt(142, "CC",  "c.*14_*15insCC");
+        checkSnvAt(142, "T", "G", "c.*14T>G");
+
+        checkDupAt(150, 2, "c.*23_*24dupCT");
+        checkDelAt(150, 2, "c.*23_*24delCT");
+        checkInsAt(151, "AA",  "c.*23_*24insAA");
+        checkSnvAt(151, "C", "G", "c.*23C>G");
+
+        checkSnvAt(152, "T", "G", "c.*24T>G");
+    }
+
+    @Test
+    public void downstreamExon()
+    {
+        //        checkDupAt(116, 2, "c.*1_*2dupGT");
+        //        checkDelAt(116, 2, "c.*1_*2delGT");
+        checkInsAt(117, "CC", "c.*1_*2insCC");
+        checkSnvAt(117, "G", "C", "c.*1G>C");
+
+        checkDupAt(119, 2, "c.*4_*5dupCA");
+        checkDelAt(119, 2, "c.*4_*5delCA");
+        checkInsAt(120, "GG", "c.*4_*5insGG");
+        checkSnvAt(120, "C", "A", "c.*4C>A");
+
+        checkDupAt(126, 2, "c.*11_*12dupCT");
+        checkDelAt(126, 2, "c.*11_*12delCT");
+        checkInsAt(127, "GG", "c.*11_*12insGG");
+        checkSnvAt(127, "C", "A", "c.*11C>A");
+
+        checkDupAt(127, 1, "c.*12dupT");
+        checkDelAt(127, 1, "c.*12delT");
+        checkInsAt(128, "GG", "c.*12-0_*12+1insGG"); // c.*12_*12+1insGG ?
+        checkSnvAt(128, "T", "A", "c.*12T>A");
+    }
+
+    @Test
+    public void downnstreamIntronExonBoundary()
+    {
+        checkDupAt(115, 2, "c.*1-1_*1-0dupTG");
+        //        checkDelAt(115, 2, "c.*1-1_*1delTG");
+        //        checkInsAt(116, "CC", "c.*1-1_*1insCC");
+    }
+
+    @Test
+    public void downstreamIntron()
+    {
+        checkDupAt(104, 2, "c.24+1_24+2dupAA");
+        checkDelAt(104, 2, "c.24+1_24+2delAA");
+        checkInsAt(105, "CC", "c.24+1_24+2insCC");
+        checkSnvAt(105, "A", "C", "c.24+1A>C");
+
+        checkDupAt(109, 2, "c.24+6_24+7dupGT"); //c.24+6_c.*1-6dupGT?
+        checkDelAt(109, 2, "c.24+6_24+7delGT");
+        checkInsAt(110, "CC", "c.24+6_24+7insCC");
+        checkSnvAt(110, "G", "C", "c.24+6G>C");
+
+        //        checkDupAt(109, 2, "c.*1-2_*1-1dupGT");
+        checkDelAt(114, 2, "c.*1-2_*1-1delGT");
+        checkInsAt(115, "CC", "c.*1-2_*1-1insCC");
+        checkSnvAt(115, "G", "C", "c.*1-2G>C");
+    }
+
+    @Test
+    public void secondExonDownstreamIntronBoundary()
+    {
+        //        checkDupAt(103, 2, "c.24_24+1dupTA");
+        //        checkDelAt(103, 2, "c.24_24+1delTA");
+        checkInsAt(104, "GG", "c.24-0_24+1insGG"); // c.24_24+1insGG?
     }
 
     @Test
     public void secondCodingExon()
     {
         checkDupAt(102, 2, "c.23_24dupCT");
-//        checkDelAt(102, 2, "c.23_24delCT");
+        //        checkDelAt(102, 2, "c.23_24delCT");
         checkInsAt(103, "A", "c.23_24insA");
         checkSnvAt(103, "C", "G", "c.23C>G");
 
@@ -81,7 +188,7 @@ public class HgvsCodingAddressesTest
         checkSnvAt(92, "T", "A", "c.13-1T>A");
 
         //        checkDupAt(86, 3, "c.13-6_13-4dupCCC");
-//        checkDelAt(86, 3, "c.13-6_13-4delCCC");
+        //        checkDelAt(86, 3, "c.13-6_13-4delCCC");
         checkInsAt(87, "TT", "c.13-6_13-5insTT");
         checkSnvAt(87, "C", "T", "c.13-6C>T");
 
@@ -104,7 +211,7 @@ public class HgvsCodingAddressesTest
     @Test
     public void firstExonFirstIntronBoundary()
     {
-//        checkDupAt(79, 2, "c.12_12+1dupTT");
+        //        checkDupAt(79, 2, "c.12_12+1dupTT");
         checkDelAt(79, 3, "c.12_12+2delTAA");
         checkInsAt(80, "CC", "c.12-0_12+1insCC"); // c.12_12+1insCC ??
     }
