@@ -55,8 +55,8 @@ public class GermlineGainLossFactory
     {
         TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
         CopyNumberInterpretation interpretation = GermlineDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
-                ? CopyNumberInterpretation.FULL_LOSS
-                : CopyNumberInterpretation.PARTIAL_LOSS;
+                ? CopyNumberInterpretation.FULL_DEL
+                : CopyNumberInterpretation.PARTIAL_DEL;
         double minCopies = GermlineDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
         double maxCopies = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
         String chromosome = GermlineDeletionUtil.getChromosome(deletionsForGene);

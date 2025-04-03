@@ -299,7 +299,7 @@
     ],
     "allSomaticGainsLosses": [
       {
-        "interpretation": "FULL_LOSS",
+        "interpretation": "FULL_DEL",
         "chromosome": 5,
         "chromosomeBand": "q2.2",
         "gene": "SMAD4",
@@ -311,7 +311,7 @@
     ],
     "reportableSomaticGainsLosses": [
       {
-        "interpretation": "FULL_LOSS",
+        "interpretation": "FULL_DEL",
         "chromosome": "5",
         "chromosomeBand": "q2.2",
         "gene": "SMAD4",

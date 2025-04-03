@@ -220,7 +220,7 @@ public class OrangeJsonTest
         assertEquals("SMAD4", gainLoss.gene());
         assertEquals("ENST00000591126", gainLoss.transcript());
         assertFalse(gainLoss.isCanonical());
-        assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
+        assertEquals(CopyNumberInterpretation.FULL_DEL, gainLoss.interpretation());
         assertEquals(0.1, gainLoss.minCopies(), EPSILON);
         assertEquals(1.2, gainLoss.maxCopies(), EPSILON);
 

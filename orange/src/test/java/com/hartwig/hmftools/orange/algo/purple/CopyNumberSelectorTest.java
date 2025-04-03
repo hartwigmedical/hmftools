@@ -106,7 +106,7 @@ public class CopyNumberSelectorTest
     public void canSelectPotentiallyInterestingLosses()
     {
         ImmutablePurpleGainLoss.Builder lossBuilder =
-                TestPurpleGainLossFactory.builder().interpretation(CopyNumberInterpretation.FULL_LOSS).minCopies(0).maxCopies(0);
+                TestPurpleGainLossFactory.builder().interpretation(CopyNumberInterpretation.FULL_DEL).minCopies(0).maxCopies(0);
 
         PurpleGainLoss interestingLoss = lossBuilder.chromosome("chr2").chromosomeBand("band 1").gene("gene 2").build();
         PurpleGainLoss lossWithReportable = lossBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 3").build();

@@ -114,8 +114,8 @@ public final class ImmuneEscapeInterpreter
         {
             if(somaticGainLoss.gene().equals(geneToCheck) && somaticGainLoss.isCanonical())
             {
-                return somaticGainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
-                        || somaticGainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
+                return somaticGainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL
+                        || somaticGainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
             }
         }
 

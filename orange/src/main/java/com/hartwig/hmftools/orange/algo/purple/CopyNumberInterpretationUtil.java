@@ -25,8 +25,8 @@ public final class CopyNumberInterpretationUtil
                 return CopyNumberInterpretation.PARTIAL_GAIN;
             case DEL:
                 return Doubles.greaterThan(cnaDriver.maxCopyNumber(), 0.5)
-                        ? CopyNumberInterpretation.PARTIAL_LOSS
-                        : CopyNumberInterpretation.FULL_LOSS;
+                        ? CopyNumberInterpretation.PARTIAL_DEL
+                        : CopyNumberInterpretation.FULL_DEL;
             default:
                 throw new IllegalStateException("Driver not an AMP or DEL: " + cnaDriver);
         }

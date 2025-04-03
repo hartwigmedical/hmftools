@@ -147,13 +147,13 @@ final class CopyNumberSelector
             @NotNull List<PurpleGainLoss> reportableGainsLosses)
     {
         List<PurpleGainLoss> unreportedLosses = unreportedGainsLosses.stream()
-                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
-                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
+                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL)
                 .collect(Collectors.toList());
 
         List<PurpleGainLoss> reportableLosses = reportableGainsLosses.stream()
-                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
-                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
+                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL)
                 .collect(Collectors.toList());
 
         List<PurpleGainLoss> lossesAutosomes = Lists.newArrayList();

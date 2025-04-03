@@ -221,8 +221,8 @@ public class SomaticFindingsChapter implements ReportChapter
         List<PurpleGainLoss> losses = Lists.newArrayList();
         for(PurpleGainLoss gainLoss : gainsLosses)
         {
-            if(gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
-                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+            if(gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
+                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL)
             {
                 losses.add(gainLoss);
             }

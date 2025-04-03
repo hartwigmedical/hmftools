@@ -283,13 +283,13 @@ public final class GermlineConversion
         }
         else if(isFullLoss(somaticLoss))
         {
-            interpretation = CopyNumberInterpretation.FULL_LOSS;
+            interpretation = CopyNumberInterpretation.FULL_DEL;
             maxCopies = somaticLoss.maxCopies();
         }
         else
         {
             // germline full loss and somatic partial loss
-            interpretation = CopyNumberInterpretation.FULL_LOSS;
+            interpretation = CopyNumberInterpretation.FULL_DEL;
             maxCopies = germlineLoss.maxCopies();
         }
 
@@ -312,12 +312,12 @@ public final class GermlineConversion
 
     private static boolean isFullLoss(@NotNull PurpleGainLoss gainLoss)
     {
-        return gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS;
+        return gainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL;
     }
 
     private static boolean isPartialLoss(final @NotNull PurpleGainLoss gainLoss)
     {
-        return gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
+        return gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
     }
 
     @NotNull

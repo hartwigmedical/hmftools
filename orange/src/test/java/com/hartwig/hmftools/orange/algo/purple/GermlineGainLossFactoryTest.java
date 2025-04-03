@@ -55,7 +55,7 @@ public class GermlineGainLossFactoryTest
 
         assertEquals(1, map.keySet().size());
         assertTrue(map.get(gainLoss));
-        assertEquals(CopyNumberInterpretation.PARTIAL_LOSS, gainLoss.interpretation());
+        assertEquals(CopyNumberInterpretation.PARTIAL_DEL, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
         assertEquals(0, gainLoss.minCopies(), EPSILON);
         assertEquals(4, gainLoss.maxCopies(), EPSILON);
@@ -76,7 +76,7 @@ public class GermlineGainLossFactoryTest
 
         assertEquals(1, map.keySet().size());
         assertFalse(map.get(gainLoss));
-        assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
+        assertEquals(CopyNumberInterpretation.FULL_DEL, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
         assertEquals(0, gainLoss.minCopies(), EPSILON);
         assertEquals(0, gainLoss.maxCopies(), EPSILON);
@@ -107,7 +107,7 @@ public class GermlineGainLossFactoryTest
 
         assertEquals(1, map.keySet().size());
         assertTrue(map.get(gainLoss));
-        assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
+        assertEquals(CopyNumberInterpretation.FULL_DEL, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
         assertEquals(0, gainLoss.minCopies(), EPSILON);
         assertEquals(0.2, gainLoss.maxCopies(), EPSILON);

@@ -42,7 +42,7 @@ public class ImmuneEscapeInterpreterTest
                         .build())
                 .addAllSomaticGainsLosses(TestPurpleGainLossFactory.builder()
                         .gene("TABBP")
-                        .interpretation(CopyNumberInterpretation.FULL_LOSS)
+                        .interpretation(CopyNumberInterpretation.FULL_DEL)
                         .isCanonical(false)
                         .build())
                 .addAllSomaticGainsLosses(TestPurpleGainLossFactory.builder()
@@ -237,7 +237,7 @@ public class ImmuneEscapeInterpreterTest
                 .addAllSomaticGainsLosses(TestPurpleGainLossFactory.builder()
                         .gene(gene)
                         .isCanonical(true)
-                        .interpretation(CopyNumberInterpretation.FULL_LOSS)
+                        .interpretation(CopyNumberInterpretation.FULL_DEL)
                         .build())
                 .build();
     }
