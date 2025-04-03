@@ -108,18 +108,8 @@ public class JunctionAssembler
                     }
                 }
 
-                if((mJunction.isForward() && read.indelImpliedAlignmentEnd() > 0)
-                || (mJunction.isReverse() && read.indelImpliedAlignmentStart() > 0))
-                {
-                    buildIndelFrequencies(indelLengthReads, read);
-                }
-
                 junctionReads.add(read);
             }
-
-            List<Read> dominantIndelReads = findMaxFrequencyIndelReads(indelLengthReads);
-
-            extensionReads.addAll(dominantIndelReads);
         }
 
         if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))

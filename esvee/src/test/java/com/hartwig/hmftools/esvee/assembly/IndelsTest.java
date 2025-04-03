@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 
 import static org.junit.Assert.assertEquals;
@@ -15,6 +17,7 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -67,6 +70,41 @@ public class IndelsTest
     }
 
     @Test
+    public void testIndelReadsSupportingSplitJunctions()
+    {
+        String extBases = REF_BASES_400.substring(300, 350);
+
+        Junction posJunction = new Junction(CHR_1, 100, FORWARD);
+
+        // assembly has 2 high-qual junction reads
+        String readBases = REF_BASES_400.substring(51, 101) + extBases;
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases, makeCigarString(readBases, 0, extBases.length()));
+
+        String readBases2 = readBases.substring(1);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 52, readBases, makeCigarString(readBases2, 0, extBases.length()));
+
+        // various indel reads that support the junction
+        Read indel1 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases, "40M10I50M");
+        ReadAdjustments.convertEdgeIndelsToSoftClip(indel1);
+
+        Read indel2 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases, "40M10D60M");
+        ReadAdjustments.convertEdgeIndelsToSoftClip(indel2);
+
+        List<Read> reads = List.of(read1, read2, indel1, indel2);
+
+        JunctionAssembler junctionAssembler = new JunctionAssembler(posJunction);
+        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(reads);
+        assertEquals(1, assemblies.size());
+        JunctionAssembly assembly = assemblies.get(0);
+        assertEquals(4, assembly.supportCount());
+        assertEquals(0, assembly.mismatchReadCount());
+
+        // note the indel with 10D does not support the ref but this not currently checked
+
+    }
+
+
+        @Test
     public void testLongDeleteAssemblies()
     {
         Junction posJunction = new Junction(CHR_1, 50, FORWARD, false, true, false);

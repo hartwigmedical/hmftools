@@ -3,6 +3,10 @@ package com.hartwig.hmftools.esvee.assembly.read;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
 
+import javax.annotation.Nullable;
+
+import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 import htsjdk.samtools.CigarElement;
@@ -43,14 +47,28 @@ public final class ReadUtils
 
     public static int getReadIndexAtReferencePosition(final Read read, final int refPosition, boolean allowExtrapolation)
     {
+        return getReadIndexAtReferencePosition(read, refPosition, allowExtrapolation, null);
+    }
+
+    public static int getReadIndexAtReferencePosition(final Read read, final Junction junction, boolean allowExtrapolation)
+    {
+        return getReadIndexAtReferencePosition(read, junction.Position, allowExtrapolation, junction.Orient);
+    }
+
+    public static int getReadIndexAtReferencePosition(
+            final Read read, final int refPosition, boolean allowExtrapolation, @Nullable final Orientation requiredOrientation)
+    {
         // finds the read index given a reference position, and extrapolates outwards from alignments as required
 
-        // for indel reads, use the implied alignment and unclipped positions from each direction
-        int alignmentStart = allowExtrapolation && read.indelImpliedAlignmentStart() > 0 ?
-                read.indelImpliedAlignmentStart() : read.alignmentStart();
+        int alignmentStart = read.alignmentStart();
+        int alignmentEnd = read.alignmentEnd();
 
-        int alignmentEnd = allowExtrapolation && read.indelImpliedAlignmentEnd() > 0 ?
-                read.indelImpliedAlignmentEnd() : read.alignmentEnd();
+        // for indel reads, use the implied alignment and unclipped positions for the applicable direction
+        if((requiredOrientation == null || requiredOrientation.isReverse()) && allowExtrapolation && read.indelImpliedAlignmentStart() > 0)
+            alignmentStart = read.indelImpliedAlignmentStart();
+
+        if((requiredOrientation == null || requiredOrientation.isForward()) && allowExtrapolation && read.indelImpliedAlignmentEnd() > 0)
+            alignmentEnd = read.indelImpliedAlignmentEnd();
 
         if(refPosition <= alignmentStart)
         {
