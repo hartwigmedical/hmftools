@@ -241,7 +241,7 @@ public class ConfigBuilder
 
     private boolean isValidPath(final ConfigItem item)
     {
-        if(!item.hasValue() || item.value().contains("*") || item.value().contains("$"))
+        if(!item.hasValue())
             return true;
 
         List<String> paths = item.Type == PATHS ?
@@ -257,11 +257,16 @@ public class ConfigBuilder
                 path = pathPrefix + path;
             }
 
-            if(!Files.exists(Paths.get(path)))
+            if(!containsWildcard(path) && !Files.exists(Paths.get(path)))
                 return false;
         }
 
         return true;
+    }
+
+    private boolean containsWildcard(final String path)
+    {
+        return path.contains("*") || path.contains("$");
     }
 
     public void checkAndParseCommandLine(final String[] args)
