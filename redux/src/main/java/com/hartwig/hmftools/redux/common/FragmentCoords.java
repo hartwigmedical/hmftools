@@ -216,13 +216,19 @@ public class FragmentCoords implements Comparable<FragmentCoords>
                     readIsLower, suppReadInfo, isUnmapped, false, !isPaired);
         }
 
-        if(readChromosome.equals(mateChromosome))
+        // the following determination of which of the primary reads is consider 'lower' in the fragment must give the same result
+        // from each of their perspectives
+        if(!readChromosome.equals(mateChromosome))
         {
-            readIsLower = readPosition <= matePosition;
+            readIsLower = read.getReferenceIndex() < read.getMateReferenceIndex();
+        }
+        else if(readPosition != matePosition)
+        {
+            readIsLower = readPosition < matePosition;
         }
         else
         {
-            readIsLower = read.getReferenceIndex() < read.getMateReferenceIndex();
+            readIsLower = read.getFirstOfPairFlag();
         }
 
         Orientation fragmentOrientation = (!isPaired || (readIsLower == read.getFirstOfPairFlag())) ? FORWARD : REVERSE;

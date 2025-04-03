@@ -149,5 +149,29 @@ public class FragmentUtilsTest
         assertTrue(fragmentCoords.ReadIsLower);
         assertTrue(fragmentCoords.forwardFragment());
         assertEquals("1:100_199", fragmentCoords.keyNonOriented());
+
+        // matching 5' positions, determine by first-in-pair
+        read = createSamRecord(
+                TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR,
+                CHR_1, 100, false, false, null, false, TEST_READ_CIGAR);
+
+        fragmentCoords = createFragmentCoords(read);
+        assertEquals(100, fragmentCoords.PositionLower);
+        assertEquals(100, fragmentCoords.PositionUpper);
+        assertEquals(FORWARD, fragmentCoords.OrientLower);
+        assertEquals(FORWARD, fragmentCoords.OrientUpper);
+        assertTrue(fragmentCoords.ReadIsLower);
+        assertEquals("1:100_1:100_L", fragmentCoords.keyNonOriented());
+
+        flipFirstInPair(read);
+
+        fragmentCoords = createFragmentCoords(read);
+        assertEquals(100, fragmentCoords.PositionLower);
+        assertEquals(100, fragmentCoords.PositionUpper);
+        assertEquals(FORWARD, fragmentCoords.OrientLower);
+        assertEquals(FORWARD, fragmentCoords.OrientUpper);
+        assertFalse(fragmentCoords.ReadIsLower);
+        assertEquals("1:100_1:100_U", fragmentCoords.keyNonOriented());
+
     }
 }
