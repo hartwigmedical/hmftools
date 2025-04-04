@@ -4,7 +4,12 @@ WiGiTS is a universal open source suite of genome and transcriptome analysis too
 
 ![HMF_Pipeline](./pipeline/wigits.png)
 
-We recommend to run WiGiTS using the NextFlow implementation called [OncoAnalyser](./pipeline/README_ONCOANALYSER.md).
+The current release of the WiGiTs pipeline is v2.0. Release notes are [here](./pipeline/docs/v2_0/WiGiTs_v2.0_ReleaseNotes.pdf).
+
+We recommend to run WiGiTS using the NextFlow implementation called [OncoAnalyser](./pipeline/README_ONCOANALYSER.md). It will be available on nfCore April 2025.
+
+A detailed list of the resource files used to run the WiGiTs pipeline is [here](./pipeline/README_RESOURCES.md).
+The files themselves are available for download [here](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/pipeline/oncoanalyser/).
 
 The pipeline can be run on a targeted panel eg TSO500 - see detailed information [here](./pipeline/README_TARGETED.md).
 
@@ -60,11 +65,6 @@ The following external tools are also used in the pipeline:
 | [Virus Interpreter](./virus-interpreter/README.md)                                 | Filtering, annotation and interpretation of virus breakend data      | [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.3) |
 | [Orange](./orange/README.md)                                                       | PDF summary report and JSON file of all WGS output                   | [3.7.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.1-rc.1)        |
 | Patient-reporter                                                                   | PDF summary report and JSON file of all clinical relevant WGS output | 7.25.1                                                                                |
-
-### Resource files
-
-Resource files for each component (GRCh37 and GRCh38) are available to download
-from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
 
 
 

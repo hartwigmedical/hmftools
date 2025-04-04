@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
+import static com.hartwig.hmftools.common.driver.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
 
 import static junit.framework.TestCase.assertFalse;
@@ -9,16 +9,13 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
-import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.driver.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;

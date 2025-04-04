@@ -172,7 +172,6 @@ public final class FileCommon
         return formPrepInputFilename(outputDir, sampleId, PREP_DISC_STATS_FILE_ID, outputId);
     }
 
-
     public static String formOutputFile(
             final String outputDir, final String sampleId, final String appStage, final String fileType, @Nullable final String outputId)
     {

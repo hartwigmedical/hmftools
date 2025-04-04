@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.drivers;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
+import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.driver.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -18,8 +18,8 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;

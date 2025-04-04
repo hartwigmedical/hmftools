@@ -61,8 +61,8 @@ public class CircosConfigWriter
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.InnerRadius;
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
-        int cnaGainTracks = Math.max(2, (int) Math.round(Math.ceil(data.maxCopyNumber() - 2)));
-        int mapGainTracks = Math.max(1, (int) Math.round(Math.ceil(data.maxMinorAllelePloidy() - 1)));
+        int cnaGainTracks = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
+        int mapGainTracks = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
         double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTracks + mapGainTracks);
 
         if(displayGenes)
@@ -96,7 +96,7 @@ public class CircosConfigWriter
     public double svTrackRelative(int track)
     {
         double difference = segmentOuterRadius() - segmentInnerRadius;
-        double singleTrack = difference / circosData.maxTracks();
+        double singleTrack = difference / circosData.MaxTracks;
 
         return segmentInnerRadius + track * singleTrack;
     }
@@ -111,12 +111,12 @@ public class CircosConfigWriter
         final String fileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
         final String configPath = outputDir + File.separator + fileName;
 
-        int chromosomeCount = circosData.contigLengths().size();
+        int chromosomeCount = circosData.ContigLengths.size();
         int totalContigLength = circosData.totalContigLength();
 
-        int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.maxCopyNumber() - 2)));
+        int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.MaxCopyNumber - 2)));
 
-        int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.maxMinorAllelePloidy() - 1)));
+        int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.MaxMinorAllelePloidy - 1)));
         double distanceLabelOffset = Math.ceil(4 * labelSize);
 
         final Charset charset = StandardCharsets.UTF_8;
@@ -147,8 +147,8 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", copyNumberOuterRadius + "r -" + distanceLabelOffset + "p")
 
-                        .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
-                        .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))
+                        .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.MaxTracks))
+                        .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.MaxTracks))
 
                         .replaceAll("SUBSTITUTE_LABEL_SIZE", String.valueOf(labelSize))
 

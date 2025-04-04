@@ -459,11 +459,11 @@ public class PonCache
                 lastRegionStart = ponRegion.RegionStart;
             }
 
-            SV_LOGGER.info("loaded {} germline SV PON records from file({})", itemCount, filename);
+            SV_LOGGER.info("loaded {} SV PON records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
-            SV_LOGGER.error("failed to load germline SV PON file({}): {}", filename, e.toString());
+            SV_LOGGER.error("failed to load SV PON file({}): {}", filename, e.toString());
             mHasValidData = false;
             return;
         }
@@ -517,11 +517,11 @@ public class PonCache
                 lastRegion = ponRegion.Region;
             }
 
-            SV_LOGGER.info("loaded {} germline SGL PON records from file({})", itemCount, filename);
+            SV_LOGGER.info("loaded {} SGL PON records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
-            SV_LOGGER.error("failed to load germline SGL PON file({}): {}", filename, e.toString());
+            SV_LOGGER.error("failed to load SGL PON file({}): {}", filename, e.toString());
             mHasValidData = false;
         }
     }

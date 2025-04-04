@@ -65,7 +65,7 @@
         <cuppa.version>2.2.1</cuppa.version>
         <cider.version>1.0.2</cider.version>
         <cobalt.version>2.1</cobalt.version>
-        <compar.version>1.3</compar.version>
+        <compar.version>1.4</compar.version>
         <crest.version>1.0.0</crest.version>
         <cuppa.version>2.3</cuppa.version>
         <esvee.version>1.1</esvee.version>
@@ -89,7 +89,7 @@
         <sigs.version>1.2.1</sigs.version>
         <sv-tools.version>1.0</sv-tools.version>
         <teal.version>1.3.3</teal.version>
-        <virus-interpreter.version>1.7</virus-interpreter.version>
+        <virus-interpreter.version>1.7.1</virus-interpreter.version>
         <v-chord.version>1.0</v-chord.version>
         <wisp.version>1.2</wisp.version>
 

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -79,7 +80,7 @@ public class CallerApplication
             System.exit(1);
         }
 
-        if(configBuilder.hasValue(ARTEFACT_PON_BED_SV_FILE) && configBuilder.hasValue(ARTEFACT_PON_BED_SGL_FILE))
+        if(configBuilder.hasValue(ARTEFACT_PON_BED_SV_FILE) || configBuilder.hasValue(ARTEFACT_PON_BED_SGL_FILE))
         {
             mArtefactPonCache = new PonCache(
                     configBuilder.getInteger(GERMLINE_PON_MARGIN),
@@ -115,10 +116,13 @@ public class CallerApplication
 
         SV_LOGGER.info("fragment length dist: {}", fragmentLengthBounds);
 
-        mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds, discordantStats.shortInversionRate());
+        mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds, discordantStats);
 
         mProcessedVariants = 0;
-        mSvDataCache = new SvDataCache(mConfig, new TargetRegions(configBuilder));
+
+        TargetRegions targetRegions = new TargetRegions(configBuilder.getValue(TARGET_REGIONS_BED), mConfig.RefGenVersion);
+        mSvDataCache = new SvDataCache(mConfig, targetRegions);
+
         mRepeatMaskAnnotator = new RepeatMaskAnnotator();
 
         if(configBuilder.hasValue(REPEAT_MASK_FILE))

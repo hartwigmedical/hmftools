@@ -33,8 +33,7 @@ public interface BamPartition
         return new BamPartitionWholeBam();
     }
 
-    // partition by genomic region. It only return reads where the alignment start is
-    // inside the region
+    // partition by genomic region. It only return reads where the alignment start is inside the region
     class BamPartitionByRegion implements BamPartition
     {
         private final ChrBaseRegion mBaseRegion;
@@ -45,57 +44,58 @@ public interface BamPartition
         }
 
         @Override
-        public String toString()
-        {
-            return String.format("%s:%,d-%,d", mBaseRegion.chromosome(), mBaseRegion.start(), mBaseRegion.end());
-        }
+        public String toString() { return mBaseRegion.toString(); }
 
         @Override
         public SAMRecordIterator iterator(SamReader samReader)
         {
-if (samReader.getFileHeader().getSequenceIndex(mBaseRegion.Chromosome) < 0) {
-    return new SAMRecordIterator()
-    {
-        @Override
-        public SAMRecordIterator assertSorted(final SAMFileHeader.SortOrder sortOrder)
-        {
-            return null;
-        }
+            if(samReader.getFileHeader().getSequenceIndex(mBaseRegion.Chromosome) < 0)
+            {
+                return new SAMRecordIterator()
+                {
+                    @Override
+                    public SAMRecordIterator assertSorted(final SAMFileHeader.SortOrder sortOrder)
+                    {
+                        return null;
+                    }
 
-        @Override
-        public void close()
-        {
+                    @Override
+                    public void close()
+                    {
 
-        }
+                    }
 
-        @Override
-        public boolean hasNext()
-        {
-            return false;
-        }
+                    @Override
+                    public boolean hasNext()
+                    {
+                        return false;
+                    }
 
-        @Override
-        public SAMRecord next()
-        {
-            return null;
-        }
-    };
-}
-            SAMRecordIterator overlappingItr = samReader.query(mBaseRegion.chromosome(),
-                    mBaseRegion.start(), mBaseRegion.end(), false);
+                    @Override
+                    public SAMRecord next()
+                    {
+                        return null;
+                    }
+                };
+            }
+
+            SAMRecordIterator overlappingItr = samReader.query(mBaseRegion.chromosome(), mBaseRegion.start(), mBaseRegion.end(), false);
 
             // wrap the iterator to skip over records where the start alignment is not inside the region
             // this is to avoid processing a bam record twice if it overlaps two regions
             return new SAMRecordIterator()
             {
                 SAMRecord nextRead = null;
+
                 @Override
                 public SAMRecordIterator assertSorted(final SAMFileHeader.SortOrder sortOrder)
                 {
                     return overlappingItr.assertSorted(sortOrder);
                 }
+
                 @Override
                 public void close() { overlappingItr.close(); }
+
                 @Override
                 public boolean hasNext()
                 {
@@ -112,6 +112,7 @@ if (samReader.getFileHeader().getSequenceIndex(mBaseRegion.Chromosome) < 0) {
                     }
                     return nextRead != null;
                 }
+
                 @Override
                 public SAMRecord next()
                 {

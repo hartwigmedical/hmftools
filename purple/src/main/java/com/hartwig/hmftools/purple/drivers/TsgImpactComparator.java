@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.drivers;
 
 import java.util.Comparator;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
+import com.hartwig.hmftools.common.driver.DriverImpact;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 

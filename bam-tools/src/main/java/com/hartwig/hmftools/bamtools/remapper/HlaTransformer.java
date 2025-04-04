@@ -11,7 +11,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class HlaTransformer
 {
-
     private static final String HLA_PREFIX = "hla-";
 
     static boolean hasSomeHlaReference(SAMRecord record)
@@ -36,7 +35,9 @@ public class HlaTransformer
 
     private final HlaRecordPairAligner mAligner;
     private final Map<String, SAMRecord> mRecordsByName = new HashMap<>();
-    private int mNumberProcessed = 0;
+
+    private long mTotalReadCount = 0;
+    private long mHlaReadCount = 0;
 
     public HlaTransformer(final HlaRecordPairAligner aligner)
     {
@@ -45,6 +46,8 @@ public class HlaTransformer
 
     public List<SAMRecord> process(final SAMRecord record)
     {
+        ++mTotalReadCount;
+
         if(!hasSomeHlaReference(record))
         {
             return List.of(record);
@@ -54,7 +57,7 @@ public class HlaTransformer
         {
             return List.of();
         }
-        mNumberProcessed++;
+        mHlaReadCount++;
         if(mRecordsByName.containsKey(record.getReadName()))
         {
             SAMRecord match = mRecordsByName.remove(record.getReadName());
@@ -73,10 +76,8 @@ public class HlaTransformer
         return new ArrayList<>(mRecordsByName.values());
     }
 
-    public int numberOfHlaRecordsProcessed()
-    {
-        return mNumberProcessed;
-    }
+    public long hlaRecordsProcessed() { return mHlaReadCount; }
+    public long totalReadsProcessed() { return mTotalReadCount; }
 
     private RecordPair pair(final SAMRecord s, final SAMRecord r)
     {

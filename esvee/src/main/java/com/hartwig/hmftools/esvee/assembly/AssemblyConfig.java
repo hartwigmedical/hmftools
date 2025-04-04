@@ -276,7 +276,7 @@ public class AssemblyConfig
 
         ApplyRemotePhasingReadCheckThreshold = configBuilder.hasFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD);
 
-        READ_ID_TRIMMER = new ReadIdTrimmer(!hasFilters);
+        READ_ID_TRIMMER = new ReadIdTrimmer(!hasFilters && TumorBams.size() == 1);
     }
 
     public List<String> combinedSampleIds()

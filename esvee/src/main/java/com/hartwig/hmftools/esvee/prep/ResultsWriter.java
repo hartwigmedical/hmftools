@@ -40,7 +40,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
-import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
 public class ResultsWriter
 {
@@ -76,7 +75,7 @@ public class ResultsWriter
 
     public long writtenCount() { return mBamWriter != null ? mBamWriter.writtenCount() : 0; }
 
-    public synchronized void writeReadGroup(final List<ReadGroup> readGroups)
+    public synchronized void writeReadGroups(final List<ReadGroup> readGroups)
     {
         for(ReadGroup readGroup : readGroups)
         {
@@ -107,6 +106,9 @@ public class ResultsWriter
     private static boolean filterReadGroup(final ReadGroup readGroup)
     {
         if(readGroup.conditionalOnRemoteReads() && !readGroup.hasRemoteJunctionReads())
+            return true;
+
+        if(readGroup.groupStatus() == ReadGroupStatus.DUPLICATE)
             return true;
 
         return false;

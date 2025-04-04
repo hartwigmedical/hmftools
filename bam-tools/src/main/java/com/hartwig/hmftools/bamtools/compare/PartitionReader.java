@@ -1,27 +1,16 @@
 package com.hartwig.hmftools.bamtools.compare;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.compare.CompareUtils.basesMatch;
-import static com.hartwig.hmftools.bamtools.compare.CompareUtils.stringsMatch;
+import static com.hartwig.hmftools.bamtools.compare.CompareUtils.compareReads;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.ORIG_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.VALUE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 
-import static htsjdk.samtools.util.SequenceUtil.reverseComplement;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -44,6 +33,9 @@ public class PartitionReader implements Runnable
     private final UnmatchedReadHandler mUnmatchedReadHandler;
     private final boolean mLogReadIds;
 
+    private long mReadCount;
+    private long mNextLogReadCount;
+
     private final Statistics mStats;
 
     public PartitionReader(
@@ -60,6 +52,10 @@ public class PartitionReader implements Runnable
         mReadWriter = readWriter;
         mUnmatchedReadHandler = unmatchedReadHandler;
         mStats = new Statistics();
+
+        mReadCount = 0;
+        mNextLogReadCount = LOG_COUNT;
+
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
@@ -105,23 +101,18 @@ public class PartitionReader implements Runnable
                     final SAMRecord origBamRead = origBamItr.next();
                     processOrigBamRecord(origBamRead);
                     origReadAlignStart = origBamRead.getAlignmentStart();
-                    // BT_LOGGER.info("advance orig");
                 }
+
                 if(advanceNew)
                 {
                     newBamReadCount++;
                     final SAMRecord newBamRead = newBamItr.next();
                     processNewBamRecord(newBamRead);
                     newReadAlignStart = newBamRead.getAlignmentStart();
-                    // BT_LOGGER.info("advance new");
                 }
 
-                // BT_LOGGER.printf(Level.INFO, "orig align start: %,d, new align start: %,d", origReadAlignStart, newReadAlignStart);
-
-                // check if we need to dump the reads to unmatched read handler, this is to
-                // protect against running out of memory
-                if(mUnmatchedReadHandler != null &&
-                        mOrigBamReads.size() + mNewBamReads.size() > mConfig.MaxCachedReadsPerThread)
+                // check if we need to dump the reads to unmatched read handler, this is to protect against running out of memory
+                if(mUnmatchedReadHandler != null && mOrigBamReads.size() + mNewBamReads.size() > mConfig.MaxCachedReadsPerThread)
                 {
                     BT_LOGGER.trace("max cache read limit exceeded, writing reads to hash bam");
                     mUnmatchedReadHandler.handleOrigBamReads(mOrigBamReads.values());
@@ -144,17 +135,13 @@ public class PartitionReader implements Runnable
     {
         if(mLogReadIds && mConfig.LogReadIds.contains(origBamRead.getReadName()))
         {
-            BT_LOGGER.debug("[orig bam] specific readId({})", origBamRead.getReadName());
+            BT_LOGGER.debug("orig bam: specific readId({})", origBamRead.getReadName());
         }
 
         if(excludeRead(origBamRead))
             return;
 
-        /*
-        if((mStats.RefReadCount % LOG_COUNT) == 0)
-        {
-            BT_LOGGER.debug("partition({}) orig reads processed({})", mRegion, mStats.RefReadCount);
-        }*/
+        checkLogReadCounts();
 
         // create a key
         ReadKey readKey = ReadKey.from(origBamRead);
@@ -174,22 +161,17 @@ public class PartitionReader implements Runnable
         }
     }
 
-    private static final int LOG_COUNT = 1_000_000;
-
     private void processNewBamRecord(final SAMRecord newBamRead)
     {
         if(mLogReadIds && mConfig.LogReadIds.contains(newBamRead.getReadName()))
         {
-            BT_LOGGER.debug("[new bam] specific readId({})", newBamRead.getReadName());
+            BT_LOGGER.debug("new bam: specific readId({})", newBamRead.getReadName());
         }
 
         if(excludeRead(newBamRead))
             return;
 
-        /*if((mStats.NewReadCount % LOG_COUNT) == 0)
-        {
-            BT_LOGGER.debug("partition new reads processed({})", mStats.NewReadCount);
-        }*/
+        checkLogReadCounts();
 
         // create a key
         ReadKey readKey = ReadKey.from(newBamRead);
@@ -242,15 +224,13 @@ public class PartitionReader implements Runnable
         mNewBamReads.clear();
     }
 
-    private static final List<String> KEY_ATTRIBUTES = List.of(SUPPLEMENTARY_ATTRIBUTE, MATE_CIGAR_ATTRIBUTE);
-
     private void checkReadDetails(final SAMRecord origRead, final SAMRecord newRead)
     {
         ++mStats.OrigReadCount;
         ++mStats.NewReadCount;
 
         // note that the ReadKey of both reads match
-        if(mConfig.IgnoreReduxUnmapped && (origRead.hasAttribute(UNMAP_ATTRIBUTE) || newRead.hasAttribute(UNMAP_ATTRIBUTE)))
+        if(mConfig.IgnoreReduxAlterations && (origRead.hasAttribute(UNMAP_ATTRIBUTE) || newRead.hasAttribute(UNMAP_ATTRIBUTE)))
             return;
 
         List<String> diffs = compareReads(origRead, newRead, mConfig);
@@ -261,92 +241,38 @@ public class PartitionReader implements Runnable
         }
     }
 
-    @VisibleForTesting
-    public static List<String> compareReads(final SAMRecord origRead, final SAMRecord newRead, final CompareConfig config)
-    {
-        List<String> diffs = new ArrayList<>();
-
-        boolean skipUnmappingMateDifference = config.IgnoreReduxUnmapped && origRead.getMateUnmappedFlag() != newRead.getMateUnmappedFlag();
-
-        if(!skipUnmappingMateDifference)
-        {
-            if(origRead.getInferredInsertSize() != newRead.getInferredInsertSize())
-                diffs.add(format("insertSize(%d/%d)", origRead.getInferredInsertSize(), newRead.getInferredInsertSize()));
-        }
-
-        if(origRead.getMappingQuality() != newRead.getMappingQuality())
-            diffs.add(format("mapQuality(%d/%d)", origRead.getMappingQuality(), newRead.getMappingQuality()));
-
-        if(!origRead.getCigarString().equals(newRead.getCigarString()))
-            diffs.add(format("cigar(%s/%s)", origRead.getCigarString(), newRead.getCigarString()));
-
-        if(origRead.getFlags() != newRead.getFlags())
-        {
-            if(origRead.getReadNegativeStrandFlag() != newRead.getReadNegativeStrandFlag())
-                diffs.add(format("negStrand(%s/%s)", origRead.getReadNegativeStrandFlag(), newRead.getReadNegativeStrandFlag()));
-
-            if(!config.IgnoreDupDiffs && origRead.getDuplicateReadFlag() != newRead.getDuplicateReadFlag())
-                diffs.add(format("duplicate(%s/%s)", origRead.getDuplicateReadFlag(), newRead.getDuplicateReadFlag()));
-        }
-
-        // check key attributes:
-        for(String attribute : KEY_ATTRIBUTES)
-        {
-            if(attribute.equals(SUPPLEMENTARY_ATTRIBUTE))
-            {
-                if(config.IgnoreSupplementaryAttribute)
-                    continue;
-
-                if(origRead.hasAttribute(UNMAP_ATTRIBUTE) || newRead.hasAttribute(UNMAP_ATTRIBUTE))
-                    continue;
-            }
-
-            if(skipUnmappingMateDifference && attribute.equals(MATE_CIGAR_ATTRIBUTE))
-                continue;
-
-            String readAttr1 = origRead.getStringAttribute(attribute);
-            String readAttr2 = newRead.getStringAttribute(attribute);
-
-            if(!Objects.equals(readAttr1, readAttr2)) // Objects.equals handles null case
-            {
-                diffs.add(format("attrib_%s(%s/%s)", attribute,
-                        readAttr1 == null ? "missing" : readAttr1,
-                        readAttr2 == null ? "missing" : readAttr2));
-            }
-        }
-
-        // check the read bases, make sure we account for the read negative strand flag
-        if(!basesMatch(
-                origRead.getReadString(), origRead.getReadNegativeStrandFlag(),
-                newRead.getReadString(), newRead.getReadNegativeStrandFlag()))
-        {
-            diffs.add(format("bases(%s/%s)",
-                    origRead.getReadNegativeStrandFlag() ? reverseComplement(origRead.getReadString()) : origRead.getReadString(),
-                    newRead.getReadNegativeStrandFlag() ? reverseComplement(newRead.getReadString()) : newRead.getReadString()));
-        }
-
-        // check the base qual, make sure we account for the read negative strand flag
-        if(!stringsMatch(
-                origRead.getBaseQualityString(), origRead.getReadNegativeStrandFlag(),
-                newRead.getBaseQualityString(), newRead.getReadNegativeStrandFlag()))
-        {
-            diffs.add(format("baseQual(%s/%s)",
-                    origRead.getReadNegativeStrandFlag()
-                            ? new StringBuilder(origRead.getBaseQualityString()).reverse()
-                            : origRead.getBaseQualityString(),
-                    newRead.getReadNegativeStrandFlag()
-                            ? new StringBuilder(newRead.getBaseQualityString()).reverse()
-                            : newRead.getBaseQualityString()));
-        }
-
-        return diffs;
-    }
-
     private boolean excludeRead(final SAMRecord read)
     {
-        return read.isSecondaryAlignment() ||
-              (mConfig.IgnoreAlterations && (read.hasAttribute(CONSENSUS_READ_ATTRIBUTE) || read.hasAttribute(UNMAP_ATTRIBUTE))) ||
-              (mConfig.IgnoreConsensusReads && read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) ||
-              (mConfig.IgnoreSupplementaryReads && read.getSupplementaryAlignmentFlag());
+        if(read.isSecondaryAlignment())
+            return true;
+
+        if(mConfig.IgnoreReduxAlterations)
+        {
+            if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE) || read.hasAttribute(UNMAP_ATTRIBUTE))
+                return true;
+        }
+
+        if(mConfig.IgnoreConsensusReads && read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+            return true;
+
+        if(mConfig.IgnoreSupplementaryReads && read.getSupplementaryAlignmentFlag())
+            return true;
+
+        return false;
+    }
+
+    private static final int LOG_COUNT = 1_000_000;
+
+    private void checkLogReadCounts()
+    {
+        ++mReadCount;
+
+        if(mReadCount >= mNextLogReadCount)
+        {
+            mNextLogReadCount += LOG_COUNT;
+
+            BT_LOGGER.debug("partition({}) reads processed total({}) orig({}) new({})",
+                    mBamPartition, mReadCount, mStats.OrigReadCount, mStats.NewReadCount);
+        }
     }
 }

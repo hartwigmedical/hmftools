@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V37;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V38;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_ABQ_MIN;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_GERMLINE_DEPTH_HIGH;
@@ -39,6 +41,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -77,6 +80,11 @@ public class VariantCache
 
         mGnomadCache = new GnomadCache(mConfig.RefGenVersion, mConfig.GnomadFile, mConfig.GnomadDirectory);
         mPonCache = new PonCache(mConfig.PonFilename, true);
+
+        if(mConfig.RefGenVersion.is37())
+            mPonCache.loadFilters(PON_FILTERS_V37);
+        else
+            mPonCache.loadFilters(PON_FILTERS_V38);
 
         if(Files.exists(Paths.get(mConfig.InputVcf)))
         {
@@ -170,20 +178,6 @@ public class VariantCache
 
         if(mConfig.WriteFitVariants)
             writeFitVariants();
-    }
-
-    private enum FilterReason
-    {
-        NONE,
-        INDEL,
-        FILTERED,
-        GNOMAD,
-        PON,
-        LOW_ABQ,
-        GERMLINE_AF,
-        MQF,
-        NEAR_INDEL,
-        REF_DEPTH;
     }
 
     private void downsampleFittingVariants()
@@ -310,15 +304,6 @@ public class VariantCache
 
             for(VariantContext variantContext : vcfFileReader.regionIterator(chrRegion))
             {
-                /*
-                if(!mConfig.SpecificRegions.isEmpty())
-                {
-                    if(mConfig.SpecificRegions.stream()
-                            .noneMatch(x -> x.containsPosition(variantContext.getContig(), variantContext.getStart())))
-                        continue;
-                }
-                */
-
                 processVariant(variantContext);
                 ++variantCount;
 
@@ -341,6 +326,8 @@ public class VariantCache
             VariantData variant = new VariantData(variantContext, mGenotypeIds);
             mVariants.add(variant);
 
+            setPonData(variant);
+
             FilterReason filterReason = checkFilters(variant);
 
             if(filterReason == FilterReason.NONE)
@@ -349,7 +336,8 @@ public class VariantCache
                 ++mFilterCounts[filterReason.ordinal()];
         }
 
-        private FilterReason checkFilters(final VariantData variant)
+        @VisibleForTesting
+        public static FilterReason checkFilters(final VariantData variant)
         {
             // annotate and evaluate for use as a fitting variant
             FilterReason filterReason = FilterReason.NONE;
@@ -380,8 +368,6 @@ public class VariantCache
                 else if(variant.Context.hasAttribute(NEARBY_INDEL_FLAG))
                     filterReason = FilterReason.NEAR_INDEL;
             }
-
-            setPonData(variant);
 
             // check the PON for variants not otherwise filtered
             if(filterReason == FilterReason.NONE)

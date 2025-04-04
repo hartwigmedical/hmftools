@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.TaskQueue;
 
@@ -65,6 +66,12 @@ public class PartitionThread extends Thread
         mPartitionChecker = new PartitionChecker(config, fragmentCache, mSamReader, mBamWriter);
     }
 
+    public static List<ChrBaseRegion> splitRegionsIntoPartitions(final CheckConfig config)
+    {
+        return PartitionTask.splitRegionsIntoPartitions(
+                config.BamFile, config.RefGenomeFile, config.Threads, config.SpecificChrRegions, config.PartitionSize);
+    }
+
     public FragmentStats stats() { return mPartitionChecker.stats(); }
     public String bamFilename() { return mBamFilename; }
 
@@ -111,62 +118,5 @@ public class PartitionThread extends Thread
     {
         if(mBamWriter != null)
             mBamWriter.close();
-    }
-
-    public static List<ChrBaseRegion> splitRegionsIntoPartitions(final CheckConfig config)
-    {
-        List<ChrBaseRegion> partitionRegions = Lists.newArrayList();
-
-        if(!config.SpecificChrRegions.Regions.isEmpty())
-        {
-            // only split by thread count if can be done simply
-            if(config.SpecificChrRegions.Regions.size() == 1)
-            {
-                if(config.Threads > 1)
-                {
-                    ChrBaseRegion specificRegion = config.SpecificChrRegions.Regions.get(0);
-                    int intervalLength = (int)ceil(specificRegion.baseLength() / (double)config.Threads);
-                    int regionStart = specificRegion.start();
-
-                    for(int i = 0 ; i < config.Threads; ++i)
-                    {
-                        int regionEnd = min(regionStart + intervalLength - 1, specificRegion.end());
-                        partitionRegions.add(new ChrBaseRegion(specificRegion.Chromosome, regionStart, regionEnd));
-                        regionStart = regionEnd + 1;
-                    }
-                }
-                else
-                {
-                    partitionRegions.add(config.SpecificChrRegions.Regions.get(0));
-                }
-            }
-            else
-            {
-                for(int i = 0 ; i < config.Threads; ++i)
-                {
-                    partitionRegions.add(config.SpecificChrRegions.Regions.get(i));
-                }
-            }
-
-            return partitionRegions;
-        }
-
-        SamReader samReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(config.RefGenomeFile))
-                .open(new File(config.BamFile));
-
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-
-        for(final SAMSequenceRecord sequenceRecord : fileHeader.getSequenceDictionary().getSequences())
-        {
-            String chromosome = sequenceRecord.getSequenceName();
-
-            if(config.SpecificChrRegions != null && config.SpecificChrRegions.excludeChromosome(chromosome))
-                continue;
-
-            partitionRegions.addAll(buildPartitions(chromosome, sequenceRecord.getEnd(), config.PartitionSize));
-        }
-
-        return partitionRegions;
     }
 }

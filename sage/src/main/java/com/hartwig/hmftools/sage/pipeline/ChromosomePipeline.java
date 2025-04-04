@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.pipeline;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
@@ -27,7 +26,6 @@ import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
@@ -44,7 +42,6 @@ public class ChromosomePipeline implements AutoCloseable
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
-    private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
     private final VcfWriter mVcfWriter;
@@ -61,14 +58,13 @@ public class ChromosomePipeline implements AutoCloseable
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
             final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
-            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengthWriter fragmentLengths)
+            final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengthWriter fragmentLengths)
     {
         mChromosome = chromosome;
         mConfig = config;
         mRefGenome = loadRefGenome(config.Common.RefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
-        mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
 
         mVcfWriter = vcfWriter;
@@ -120,7 +116,7 @@ public class ChromosomePipeline implements AutoCloseable
         for(int i = 0; i < min(mPartitions.size(), mConfig.Common.Threads); ++i)
         {
             workers.add(new RegionThread(
-                    mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mCoverage, mPhaseSetCounter,
+                    mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
                     mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths));
         }
 

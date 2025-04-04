@@ -71,31 +71,31 @@ public class CuppaDataFactoryTest
     {
         CuppaPrediction expectedPredictionMelanoma = ImmutableCuppaPrediction.builder()
                 .cancerType("Skin: Melanoma")
-                .likelihood(0.999967105970805)
-                .genomicPositionClassifier(0.9997492462021321)
-                .snvPairwiseClassifier(0.9999879275632831)
-                .featureClassifier(0.8507700206082773)
+                .likelihood(0.9999710902284965)
+                .genomicPositionClassifier(0.9997621099072876)
+                .snvPairwiseClassifier(0.9999910153956342)
+                .featureClassifier(0.8991388522282147)
                 .build();
         CuppaPrediction expectedPredictionSkinOther = ImmutableCuppaPrediction.builder()
                 .cancerType("Skin: Other")
                 .likelihood(0.0)
-                .genomicPositionClassifier(3.579993902723519e-05)
-                .snvPairwiseClassifier(8.659757942846464e-06)
-                .featureClassifier(0.0016623945660413253)
+                .genomicPositionClassifier(3.159853588544685E-5)
+                .snvPairwiseClassifier(5.697607828154083E-6)
+                .featureClassifier(5.889241560947043E-4)
                 .build();
         CuppaPrediction expectedPredictionProstate = ImmutableCuppaPrediction.builder()
                 .cancerType("Prostate")
                 .likelihood(0.0)
-                .genomicPositionClassifier(3.1091986550511897e-06)
+                .genomicPositionClassifier(2.8698904215136434E-6)
                 .snvPairwiseClassifier(9.922426122823756e-16)
-                .featureClassifier(0.00012385594573787126)
+                .featureClassifier(3.744164257376693E-5)
                 .build();
         CuppaPrediction expectedPredictionCartilaginousNeoplasm = ImmutableCuppaPrediction.builder()
                 .cancerType("Bone/Soft tissue: Cartilaginous neoplasm")
-                .likelihood(3.289402919513386e-05)
+                .likelihood(2.8909771503514605E-5)
                 .genomicPositionClassifier(4.107161442240924e-10)
                 .snvPairwiseClassifier(4.414947168645547e-16)
-                .featureClassifier(1.4125023004735242e-09)
+                .featureClassifier(7.756820351850527E-10)
                 .build();
 
         Map<String, CuppaPrediction> expectedPredictionsByCancerType = new HashMap<>();

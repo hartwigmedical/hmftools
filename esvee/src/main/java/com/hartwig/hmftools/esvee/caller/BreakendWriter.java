@@ -61,8 +61,15 @@ public class BreakendWriter
     public void writeBreakends(final SvDataCache svDataCache)
     {
         String esveeInputDir = pathFromFile(mConfig.VcfFile);
+
         String initialBreakendTsv = formEsveeInputFilename(
                 esveeInputDir, mConfig.fileSampleId(), WriteType.BREAKEND.fileId(), mConfig.OutputId);
+
+        if(!Files.exists(Paths.get(initialBreakendTsv)) && mConfig.OutputId != null)
+        {
+            initialBreakendTsv = formEsveeInputFilename(
+                    esveeInputDir, mConfig.fileSampleId(), WriteType.BREAKEND.fileId(), null);
+        }
 
         if(!Files.exists(Paths.get(initialBreakendTsv)))
         {

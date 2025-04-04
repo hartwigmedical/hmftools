@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;

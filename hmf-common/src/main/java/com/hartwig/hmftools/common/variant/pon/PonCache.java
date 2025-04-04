@@ -62,6 +62,10 @@ public class PonCache
     public static final int PON_FILTER_OTHER_TIER_SAMPLE_COUNT = 6;
     public static final int PON_FILTER_OTHER_TIER_MAX_READS = 0;
 
+    // PON filters relating to PON generated from 1000 and 98 samples, prior to the hg38 re-run
+    public static final String PON_FILTERS_V37 = "HOTSPOT:10:5;PANEL:6:5;UNKNOWN:6:0";
+    public static final String PON_FILTERS_V38 = "HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0";
+
     protected static final Logger LOGGER = LogManager.getLogger(PonCache.class);
 
     public PonCache(final String filename, boolean loadOnDemand)

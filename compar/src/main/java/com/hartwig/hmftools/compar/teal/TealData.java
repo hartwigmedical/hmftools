@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.teal;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.TELOMERE_LENGTH;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
@@ -60,7 +61,8 @@ public class TealData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final TelomereLength otherTelomereLength = ((TealData) other).TelomereLength;
 
@@ -68,7 +70,7 @@ public class TealData implements ComparableItem
 
         checkDiff(diffs, FLD_TELOMERE_LENGTH, TelomereLength.finalTelomereLength(), otherTelomereLength.finalTelomereLength(), thresholds);
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 
     public String toString()

@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.common.variant;
 
+import static java.lang.String.format;
+
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
+
 public final class SageVcfTags
 {
     public static final String TIER = "TIER";
@@ -62,4 +67,27 @@ public final class SageVcfTags
     public static final String TINC_RECOVERED_DESC = "Variant recovered from germline filters by TINC detection";
 
     public static final String LIST_SEPARATOR = ",";
+
+    public static void writeTincLevel(final VCFHeader vcfHeader, final double tincLevel)
+    {
+        if(tincLevel > 0)
+            vcfHeader.addMetaDataLine(new VCFHeaderLine(TINC_LEVEL, format("%.3f", tincLevel)));
+    }
+
+    public static double parseTincLevel(final VCFHeader vcfHeader)
+    {
+        VCFHeaderLine tincHeader = vcfHeader.getMetaDataLine(TINC_LEVEL);
+
+        if(tincHeader == null)
+            return 0;
+
+        try
+        {
+            return Double.parseDouble(tincHeader.getValue());
+        }
+        catch(Exception e)
+        {
+            return 0;
+        }
+    }
 }

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.PSEUDOGENE;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,7 +73,7 @@ public class CircosDataWriter
     public Object write() throws IOException
     {
         final Map<String, String> geneColorMap = Maps.newHashMap();
-        data.genes().forEach(x ->
+        data.Genes.forEach(x ->
         {
             switch (x.type())
             {
@@ -88,68 +90,68 @@ public class CircosDataWriter
             }
         });
 
-        data.upstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_BLUE));
-        data.downstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_RED));
+        data.UpstreamGenes.forEach(x -> geneColorMap.put(x, SINGLE_BLUE));
+        data.DownstreamGenes.forEach(x -> geneColorMap.put(x, SINGLE_RED));
 
         int totalContigLength = data.totalContigLength();
 
-        final List<VisSegment> segments = data.segments();
-        final List<VisSvData> links = data.links();
-        final List<VisCopyNumber> alterations = data.copyNumbers();
-        final List<GenomeRegion> fragileSites = data.fragileSites();
-        final List<GenomeRegion> lineElements = data.lineElements();
-        final List<VisGeneExon> exons = data.exons();
+        List<VisSegment> segments = data.Segments;
+        List<VisSvData> links = data.SvData;
+        List<VisCopyNumber> alterations = data.CopyNumbers;
+        List<GenomeRegion> fragileSites = data.FragileSites;
+        List<GenomeRegion> lineElements = data.LineElements;
+        List<VisGeneExon> exons = data.Exons;
 
-        final String exonPath = filePrefix + ".exon.circos";
-        Files.write(new File(exonPath).toPath(), exons(geneColorMap, data.disruptedGeneRegions(), exons));
+        String exonPath = filePrefix + ".exon.circos";
+        Files.write(new File(exonPath).toPath(), exons(geneColorMap, data.DisruptedGeneRegions, exons));
 
-        final String exonRankPath = filePrefix + ".exon.rank.circos";
+        String exonRankPath = filePrefix + ".exon.rank.circos";
         Files.write(new File(exonRankPath).toPath(), exonRank(totalContigLength, exons));
 
-        final String genePath = filePrefix + ".gene.circos";
-        Files.write(new File(genePath).toPath(), genes(geneColorMap, data.genes()));
+        String genePath = filePrefix + ".gene.circos";
+        Files.write(new File(genePath).toPath(), genes(geneColorMap, data.Genes));
 
-        final String geneNamePath = filePrefix + ".gene.name.circos";
-        Files.write(new File(geneNamePath).toPath(), geneName(data.genes()));
+        String geneNamePath = filePrefix + ".gene.name.circos";
+        Files.write(new File(geneNamePath).toPath(), geneName(data.Genes));
 
-        final String textPath = filePrefix + ".position.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(data.unadjustedLinks(), links));
+        String textPath = filePrefix + ".position.circos";
+        Files.write(new File(textPath).toPath(), createPositionText(data.UnadjustedLinks, links));
 
-        final String histogramPath = filePrefix + ".segment.circos";
+        String histogramPath = filePrefix + ".segment.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(segments));
 
-        final String karyotypePath = filePrefix + ".karyotype.circos";
-        Files.write(new File(karyotypePath).toPath(), createKaryotypes(data.contigLengths()));
+        String karyotypePath = filePrefix + ".karyotype.circos";
+        Files.write(new File(karyotypePath).toPath(), createKaryotypes(data.ContigLengths));
 
-        final String connectorPath = filePrefix + ".connector.circos";
+        String connectorPath = filePrefix + ".connector.circos";
         Files.write(new File(connectorPath).toPath(), createConnectors(data.connectors()));
 
-        final String linkPath = filePrefix + ".link.circos";
+        String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
 
-        final String scatterPath = filePrefix + ".scatter.circos";
+        String scatterPath = filePrefix + ".scatter.circos";
         Files.write(new File(scatterPath).toPath(), createScatter(segments, links));
 
-        final String scatterSglPath = filePrefix + ".scatter.sgl.circos";
+        String scatterSglPath = filePrefix + ".scatter.sgl.circos";
         Files.write(new File(scatterSglPath).toPath(), createSglScatter(links));
 
-        final String cnaPath = filePrefix + ".cna.circos";
+        String cnaPath = filePrefix + ".cna.circos";
         Files.write(new File(cnaPath).toPath(), createCNA(alterations));
 
-        final String mapPath = filePrefix + ".map.circos";
+        String mapPath = filePrefix + ".map.circos";
         Files.write(new File(mapPath).toPath(), createMinorAllelePloidy(alterations));
 
-        final String fragile = filePrefix + ".fragile.circos";
+        String fragile = filePrefix + ".fragile.circos";
         Files.write(new File(fragile).toPath(), highlights(fragileSites));
 
-        final String line = filePrefix + ".line_element.circos";
+        String line = filePrefix + ".line_element.circos";
         Files.write(new File(line).toPath(), highlights(lineElements));
 
-        final String distances = filePrefix + ".distance.circos";
-        Files.write(new File(distances).toPath(), createDistances(data.unadjustedAlterations(), alterations));
+        String distances = filePrefix + ".distance.circos";
+        Files.write(new File(distances).toPath(), createDistances(data.UnadjustedCopyNumbers, alterations));
 
-        final String chromosomeBandPath = filePrefix + ".chromosome.circos";
-        Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.unadjustedAlterations()));
+        String chromosomeBandPath = filePrefix + ".chromosome.circos";
+        Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.UnadjustedCopyNumbers));
 
         return this;
     }
@@ -161,7 +163,7 @@ public class CircosDataWriter
         List<GenomeRegion> regions = Span.spanRegions(unadjustedAlterations);
         for(GenomeRegion region : regions)
         {
-            final String bandString = new StringJoiner(DELIMITER).add(region.chromosome())
+            String bandString = new StringJoiner(DELIMITER).add(region.chromosome())
                     .add(String.valueOf(region.start()))
                     .add(String.valueOf(region.end()))
                     .add(ColorPicker.hexContigColor(region.chromosome()))
@@ -175,15 +177,15 @@ public class CircosDataWriter
     @NotNull
     private List<String> genes(final Map<String, String> geneColours, final List<Gene> genes)
     {
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         if(!data.displayGenes())
         {
             return result;
         }
 
-        for(final Gene gene : genes)
+        for(Gene gene : genes)
         {
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
+            String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.start()))
                     .add(String.valueOf(gene.end()))
                     .add(String.valueOf(1))
@@ -199,7 +201,7 @@ public class CircosDataWriter
     @NotNull
     private List<String> exonRank(int totalContigLength, final List<VisGeneExon> exons)
     {
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         if(!data.displayGenes())
         {
             return result;
@@ -207,11 +209,11 @@ public class CircosDataWriter
 
         if(totalContigLength <= MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK)
         {
-            for(final VisGeneExon exon : exons)
+            for(VisGeneExon exon : exons)
             {
                 int position = exon.start() + (exon.end() - exon.start()) / 2;
 
-                final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
+                String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
                         .add(String.valueOf(position))
                         .add(String.valueOf(position))
                         .add(String.valueOf(exon.ExonRank))
@@ -227,15 +229,15 @@ public class CircosDataWriter
     @NotNull
     private List<String> geneName(final List<Gene> genes)
     {
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         if(!data.displayGenes())
         {
             return result;
         }
 
-        for(final Gene gene : genes)
+        for(Gene gene : genes)
         {
-            final StringJoiner exonStringJoiner = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
+            StringJoiner exonStringJoiner = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(gene.name())
@@ -249,15 +251,15 @@ public class CircosDataWriter
 
     private List<String> exons(final Map<String, String> geneColours, final List<GenomeRegion> disruptedRegions, final List<VisGeneExon> exons)
     {
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         if(!data.displayGenes())
         {
             return result;
         }
 
-        for(final VisGeneExon exon : exons)
+        for(VisGeneExon exon : exons)
         {
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
+            String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
                     .add(String.valueOf(exon.start()))
                     .add(String.valueOf(exon.end()))
                     .add(String.valueOf(1))
@@ -266,9 +268,9 @@ public class CircosDataWriter
             result.add(exonString);
         }
 
-        for(final GenomeRegion disruptedRegion : disruptedRegions)
+        for(GenomeRegion disruptedRegion : disruptedRegions)
         {
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(disruptedRegion.chromosome()))
+            String exonString = new StringJoiner(DELIMITER).add(circosContig(disruptedRegion.chromosome()))
                     .add(String.valueOf(disruptedRegion.start()))
                     .add(String.valueOf(disruptedRegion.end()))
                     .add(String.valueOf(1))
@@ -292,17 +294,17 @@ public class CircosDataWriter
 
     private List<String> createDistances(final List<VisCopyNumber> unadjustedSegment, final List<VisCopyNumber> segments)
     {
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         int unadjustedSegments = (int)segments.stream().filter(x -> !x.Truncated).count();
         if(unadjustedSegments <= circosConfig.MaxNumberOfDistanceLabels)
         {
             for(int i = 0; i < unadjustedSegment.size(); i++)
             {
-                final VisCopyNumber adjusted = segments.get(i);
-                final VisCopyNumber unadjusted = unadjustedSegment.get(i);
+                VisCopyNumber adjusted = segments.get(i);
+                VisCopyNumber unadjusted = unadjustedSegment.get(i);
                 if(!adjusted.Truncated)
                 {
-                    final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
+                    String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
                             .add(String.valueOf(adjusted.start()))
                             .add(String.valueOf(adjusted.end()))
                             .add(shorthand(unadjusted.bases()))
@@ -319,10 +321,10 @@ public class CircosDataWriter
     @NotNull
     private List<String> createCNA(final List<VisCopyNumber> alterations)
     {
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         for(VisCopyNumber alteration : alterations)
         {
-            final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
+            String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))
                     .add(String.valueOf(alteration.end()))
                     .add(String.valueOf(alteration.CopyNumber - 2))
@@ -335,10 +337,10 @@ public class CircosDataWriter
 
     private List<String> createMinorAllelePloidy(final List<VisCopyNumber> alterations)
     {
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         for(VisCopyNumber alteration : alterations)
         {
-            final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
+            String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))
                     .add(String.valueOf(alteration.end()))
                     .add(String.valueOf(alteration.minorAlleleCopyNumber() - 1))
@@ -354,7 +356,7 @@ public class CircosDataWriter
         int glyphSize = circosConfig.GlyphSize;
         int glyphSizeInner = (int) Math.floor(circosConfig.GlyphSize * 14d / 20d);
 
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
         for(VisSegment segment : segments)
         {
 
@@ -363,15 +365,15 @@ public class CircosDataWriter
                 continue;
             }
 
-            final String colorOption = colorPicker.transparentColor(segment.ClusterId, segment.ChainId);
-            final String startGlyph = scatterGlyph(true, segment, links);
+            String colorOption = colorPicker.transparentColor(segment.ClusterId, segment.ChainId);
+            String startGlyph = scatterGlyph(true, segment, links);
             result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize, segment.Frame));
             if(segment.startTerminal() == SegmentTerminal.CENTROMERE)
             {
                 result.add(scatterEntry(true, segment, "color=white", startGlyph, glyphSizeInner, 0));
             }
 
-            final String endGlyph = scatterGlyph(false, segment, links);
+            String endGlyph = scatterGlyph(false, segment, links);
             result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize, segment.Frame));
             if(segment.endTerminal() == SegmentTerminal.CENTROMERE)
             {
@@ -387,14 +389,14 @@ public class CircosDataWriter
         int glyphSize = circosConfig.GlyphSize;
         int glyphSizeInner = (int) Math.floor(circosConfig.GlyphSize * 14d / 20d);
 
-        final List<String> result = Lists.newArrayList();
+        List<String> result = Lists.newArrayList();
 
         // Draw open circles at SGL ends
-        for(final VisSvData link : links)
+        for(VisSvData link : links)
         {
             if(link.isValidStart() && !link.isValidEnd())
             {
-                final String colorOption = colorPicker.transparentColor(link.ClusterId, link.ChainId);
+                String colorOption = colorPicker.transparentColor(link.ClusterId, link.ChainId);
                 result.add(scatterSGLEntry(link, colorOption, glyphSize));
                 result.add(scatterSGLEntry(link, "color=white", glyphSizeInner));
             }
@@ -406,15 +408,15 @@ public class CircosDataWriter
     private String scatterGlyph(boolean isStart, final VisSegment segment, final List<VisSvData> links)
     {
         int location = isStart ? segment.start() : segment.end();
-        final SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
+        SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
         if(terminal != SegmentTerminal.NONE)
         {
             return "square";
         }
 
-        final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), location);
+        GenomePosition startPosition = GenomePositions.create(segment.chromosome(), location);
 
-        final boolean isFoldback =
+        boolean isFoldback =
                 VisLinks.findStartLink(startPosition, links).filter(x -> x.InfoStart.equals("FOLDBACK")).isPresent() || VisLinks.findEndLink(
                         startPosition,
                         links).filter(x -> x.InfoEnd.equals("FOLDBACK")).isPresent();
@@ -422,8 +424,8 @@ public class CircosDataWriter
         return isFoldback ? "triangle" : "circle";
     }
 
-    private String scatterEntry(boolean isStart, final VisSegment segment, final String color, final String glyph,
-            int glyph_size, int frame)
+    private String scatterEntry(
+            boolean isStart, final VisSegment segment, final String color, final String glyph, int glyphSize, int frame)
     {
 
         int location = isStart ? segment.start() : segment.end();
@@ -432,17 +434,17 @@ public class CircosDataWriter
                 .add(String.valueOf(location))
                 .add(String.valueOf(location))
                 .add(String.valueOf(segment.Track))
-                .add(color + "," + "glyph=" + glyph + ",glyph_size=" + glyph_size + ",frame=" + frame)
+                .add(color + "," + "glyph=" + glyph + ",glyph_size=" + glyphSize + ",frame=" + frame)
                 .toString();
     }
 
-    private String scatterSGLEntry(final VisSvData link, final String color, int glyph_size)
+    private String scatterSGLEntry(final VisSvData link, final String color, int glyphSize)
     {
         return new StringJoiner(DELIMITER).add(circosContig(link.ChrStart))
                 .add(String.valueOf(link.PosStart))
                 .add(String.valueOf(link.PosStart))
                 .add(String.valueOf(0))
-                .add(color + "," + "glyph=circle,glyph_size=" + glyph_size)
+                .add(color + "," + "glyph=circle,glyph_size=" + glyphSize)
                 .toString();
     }
 

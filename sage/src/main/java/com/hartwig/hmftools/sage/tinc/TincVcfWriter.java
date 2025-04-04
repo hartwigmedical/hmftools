@@ -7,18 +7,22 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_LEVEL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.writeTincLevel;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_AVG_READS;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.filtersMatch;
 import static com.hartwig.hmftools.sage.tinc.TincAnalyser.filterOutVariant;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.pon.GnomadCache;
 import com.hartwig.hmftools.common.variant.pon.PonCache;
+import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -46,10 +50,7 @@ public class TincVcfWriter
 
         VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
-        if(tincLevel > 0)
-        {
-            vcfHeader.addMetaDataLine(new VCFHeaderLine(TINC_LEVEL, format("%.3f", tincLevel)));
-        }
+        writeTincLevel(vcfHeader, tincLevel);
 
         if(!vcfHeader.hasFormatLine(TINC_RECOVERED_FLAG))
         {
@@ -79,7 +80,7 @@ public class TincVcfWriter
                 variant.Context.getCommonInfo().putAttribute(PON_AVG_READS, variant.ponMeanReadCount());
             }
 
-            if(variant.newFilters() != null && variant.newFilters().size() != variant.Context.getFilters().size())
+            if(variant.newFilters() != null && !filtersMatch(variant.newFilters(), variant.Context.getFilters()))
             {
                 VariantContext newContext = new VariantContextBuilder(variant.Context)
                         .filters(Collections.emptySet())
@@ -105,4 +106,13 @@ public class TincVcfWriter
 
         vcfFile.close();
     }
+
+    public static boolean filtersMatch(final Set<SoftFilter> filters, final Set<String> filterStrings)
+    {
+        if(filters.size() != filterStrings.size())
+            return false;
+
+        return filters.stream().allMatch(x -> filterStrings.contains(x.filterName()));
+    }
+
 }

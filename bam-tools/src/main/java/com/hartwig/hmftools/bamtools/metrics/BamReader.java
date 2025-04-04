@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.GeneCoverage.GENE_COVERAGE_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
@@ -54,6 +55,8 @@ public class BamReader
     private final OffTargetFragments mOffTargetFragments;
     private final ChrBaseRegion mExcludedRegion;
 
+    private final List<ExonCoverage> mExonCoverage;
+
     private final PerformanceCounter mPerfCounter;
     private boolean mLogReadIds;
     private long mLastFragmentMapReadCountCheck;
@@ -92,6 +95,8 @@ public class BamReader
         mFlagStats = new FlagStats();
         mFragmentLengths = new FragmentLengths();
         mPartitionStats = new PartitionStats();
+
+        mExonCoverage = mConfig.GeneRegionCoverage.getGeneRegions(mRegion);
 
         mPerfCounter = new PerformanceCounter("Slice");
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
@@ -195,6 +200,8 @@ public class BamReader
         }
 
         updateBaseCoverage(read, isConsensusRead, readGroup);
+
+        checkGeneCoverage(read);
     }
 
     private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand, int readMateEnd)
@@ -346,6 +353,29 @@ public class BamReader
 
                 default:
                     break;
+            }
+        }
+    }
+
+    private void checkGeneCoverage(final SAMRecord read)
+    {
+        if(read.getSupplementaryAlignmentFlag() || read.getDuplicateReadFlag() || read.getReadUnmappedFlag())
+            return;
+
+        if(read.getMappingQuality() < GENE_COVERAGE_MIN_MAP_QUALITY)
+            return;
+
+        int readStartPos = read.getAlignmentStart();
+        int readEndPos = read.getAlignmentEnd();
+
+        for(ExonCoverage exonCoverage : mExonCoverage)
+        {
+            if(exonCoverage.start() > readEndPos)
+                break;
+
+            if(positionsOverlap(readStartPos, readEndPos, exonCoverage.start(), exonCoverage.end()))
+            {
+                exonCoverage.processRead(readStartPos, readEndPos);
             }
         }
     }

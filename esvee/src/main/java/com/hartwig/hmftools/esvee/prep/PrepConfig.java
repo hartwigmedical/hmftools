@@ -187,7 +187,7 @@ public class PrepConfig
         MaxFragmentLengthOverride = configBuilder.getInteger(MAX_FRAG_LENGTH_OVERRIDE);
 
         // optimisations and debug
-        TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters();
+        TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters() && BamFiles.size() == 1;
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);

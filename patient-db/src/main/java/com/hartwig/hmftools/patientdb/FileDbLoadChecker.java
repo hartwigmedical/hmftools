@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
@@ -30,8 +30,8 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;

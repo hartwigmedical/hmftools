@@ -2,8 +2,8 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.Category.FUSION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -80,7 +80,8 @@ public class FusionData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final FusionData otherFusion = (FusionData)other;
 
@@ -100,6 +101,6 @@ public class FusionData implements ComparableItem
         checkDiff(diffs, FLD_DOMAINS_LOST, Fusion.domainsLost(), otherFusion.Fusion.domainsLost());
         checkDiff(diffs, FLD_JUNCTION_COPY_NUMBER, Fusion.junctionCopyNumber(), otherFusion.Fusion.junctionCopyNumber(), thresholds);
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }

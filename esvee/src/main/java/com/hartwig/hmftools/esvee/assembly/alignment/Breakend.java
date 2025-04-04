@@ -46,6 +46,7 @@ public class Breakend implements Comparable<Breakend>
     private int mFragmentLengthTotal;
     private int mFragmentLengthCount;
     private int mIncompleteFragmentCount;
+    private int mNonPrimaryAssemblyFragmentCount;
 
     private Set<Integer> mPositionsStart;
     private Set<Integer> mPositionsEnd;
@@ -75,6 +76,7 @@ public class Breakend implements Comparable<Breakend>
         mFragmentLengthTotal = 0;
         mFragmentLengthCount = 0;
         mIncompleteFragmentCount = 0;
+        mNonPrimaryAssemblyFragmentCount = 0;
     }
 
     public int id() { return mId; }
@@ -161,6 +163,9 @@ public class Breakend implements Comparable<Breakend>
             ++mIncompleteFragmentCount;
         }
     }
+
+    public void addNonPrimaryAssemblyFragmentCount() { ++mNonPrimaryAssemblyFragmentCount; }
+    public int nonPrimaryAssemblyFragmentCount() { return mNonPrimaryAssemblyFragmentCount; }
 
     public boolean isSingle() { return mOtherBreakend == null; }
 

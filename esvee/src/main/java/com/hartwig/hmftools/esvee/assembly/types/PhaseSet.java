@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_IN
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,14 +77,26 @@ public class PhaseSet
             return mAssemblies;
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(mAssemblies);
+        assemblies.addAll(secondaryAssemblies());
+        return assemblies;
+    }
+
+    public List<JunctionAssembly> secondaryAssemblies()
+    {
+        if(mSecondaryLinks.isEmpty())
+            return Collections.emptyList();
+
+        List<JunctionAssembly> assemblies = Lists.newArrayList();
 
         for(AssemblyLink secondaryLink : mSecondaryLinks)
         {
-            if(!assemblies.contains(secondaryLink.first()))
-                assemblies.add(secondaryLink.first());
+            JunctionAssembly firstAssembly = secondaryLink.first();
+            if(!assemblies.contains(firstAssembly) && !mAssemblies.contains(firstAssembly))
+                assemblies.add(firstAssembly);
 
-            if(!assemblies.contains(secondaryLink.second()))
-                assemblies.add(secondaryLink.second());
+            JunctionAssembly secondAssembly = secondaryLink.second();
+            if(!assemblies.contains(secondAssembly) && !mAssemblies.contains(secondAssembly))
+                assemblies.add(secondAssembly);
         }
 
         return assemblies;

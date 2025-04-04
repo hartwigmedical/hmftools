@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.ANY;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.NONE;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 

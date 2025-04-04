@@ -31,6 +31,9 @@ import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_RECOVERY_MIN;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 
+import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadSupportCounts;
@@ -62,7 +65,7 @@ public class TincAnalyser
 
         if(filterConfig != null && mCalculatedTincLevel > 0)
         {
-            recoverVariants(filterConfig);
+            recoverVariants(filterConfig, mVariantCache.variants(), mCalculatedTincLevel);
         }
     }
 
@@ -89,7 +92,8 @@ public class TincAnalyser
         return true;
     }
 
-    private void recoverVariants(final FilterConfig filterConfig)
+    @VisibleForTesting
+    public static void recoverVariants(final FilterConfig filterConfig, final List<VariantData> variants, final double tincLevel)
     {
         /*
         - If a TINC > 0% is found, calculate a recoveryTinc = 2.5 * TINC + 3%. For example if TINC = 10%, then recoveryTinc = 28%. If TINC = 2% then recoveryTinc = 8%
@@ -106,11 +110,11 @@ public class TincAnalyser
         We do the same thing with the 4% maxGermlineRelRawQual threshold
          */
 
-        double recoveryTinc = TINC_RECOVERY_MIN + mCalculatedTincLevel * TINC_RECOVERY_FACTOR;
+        double recoveryTinc = TINC_RECOVERY_MIN + tincLevel * TINC_RECOVERY_FACTOR;
 
         int recoveredCount = 0;
 
-        for(VariantData variant : mVariantCache.variants())
+        for(VariantData variant : variants)
         {
             if(variant.isPassing())
                 continue;

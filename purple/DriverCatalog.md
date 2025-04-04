@@ -30,7 +30,8 @@ Up to 3 individual driver catalog records may be added per gene per sample if mo
 * Copy number or disruption events (DEL,AMP,HOM_DISRUPTION) 
 * Somatic point mutations (MUTATION).
 
-The Hartwig Medical Foundation curated gene panel is available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl) and is updated periodically. 
+The Hartwig Medical Foundation curated gene panel is available from the [HMF Resource page](../pipeline/README_RESOURCES.md)
+
 A detailed description of our gene discovery and initial construction of our gene panel is available in the [supplementary information](https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-019-1689-y/MediaObjects/41586_2019_1689_MOESM1_ESM.pdf) of our ["Pan-cancer whole genome analyses of metastatic solid tumors"](https://www.nature.com/articles/s41586-019-1689-y) paper.
 
 ## Gene Driver Likelihood

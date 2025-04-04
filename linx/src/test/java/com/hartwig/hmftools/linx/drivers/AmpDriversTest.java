@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.drivers;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
+import static com.hartwig.hmftools.common.driver.DriverType.AMP;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;

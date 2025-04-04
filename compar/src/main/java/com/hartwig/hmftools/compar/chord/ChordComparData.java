@@ -3,8 +3,8 @@ package com.hartwig.hmftools.compar.chord;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.CHORD;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -63,7 +63,8 @@ public class ChordComparData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final ChordComparData otherData = (ChordComparData)other;
 
@@ -75,6 +76,6 @@ public class ChordComparData implements ComparableItem
         checkDiff(diffs, FLD_TYPE, Chord.hrdType(), otherData.Chord.hrdType());
         checkDiff(diffs, FLD_STATUS, Chord.hrStatus().toString(), otherData.Chord.hrStatus().toString());
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }
