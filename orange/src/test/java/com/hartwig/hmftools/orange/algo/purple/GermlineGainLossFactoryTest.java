@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
 import org.jetbrains.annotations.NotNull;
@@ -50,8 +50,8 @@ public class GermlineGainLossFactoryTest
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
 
-        Map<PurpleGainLoss, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
-        PurpleGainLoss gainLoss = map.keySet().iterator().next();
+        Map<PurpleGainDel, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
+        PurpleGainDel gainLoss = map.keySet().iterator().next();
 
         assertEquals(1, map.keySet().size());
         assertTrue(map.get(gainLoss));
@@ -71,8 +71,8 @@ public class GermlineGainLossFactoryTest
                 GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
         GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(1D).build();
 
-        Map<PurpleGainLoss, Boolean> map = factory.getReportabilityMap(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
-        PurpleGainLoss gainLoss = map.keySet().iterator().next();
+        Map<PurpleGainDel, Boolean> map = factory.getReportabilityMap(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
+        PurpleGainDel gainLoss = map.keySet().iterator().next();
 
         assertEquals(1, map.keySet().size());
         assertFalse(map.get(gainLoss));
@@ -102,8 +102,8 @@ public class GermlineGainLossFactoryTest
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
 
-        Map<PurpleGainLoss, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
-        PurpleGainLoss gainLoss = map.keySet().iterator().next();
+        Map<PurpleGainDel, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
+        PurpleGainDel gainLoss = map.keySet().iterator().next();
 
         assertEquals(1, map.keySet().size());
         assertTrue(map.get(gainLoss));

@@ -25,7 +25,7 @@ import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -350,7 +350,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return copyNumberDriverString(report.purple().reportableSomaticGainsLosses());
+        return copyNumberDriverString(report.purple().reportableSomaticGainsDels());
     }
 
     @NotNull
@@ -361,28 +361,28 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleGainLoss> germlineGainsLosses = report.purple().reportableGermlineFullLosses();
-        if(germlineGainsLosses == null)
+        List<PurpleGainDel> germlineGainsDels = report.purple().reportableGermlineFullDels();
+        if(germlineGainsDels == null)
         {
             return ReportResources.NOT_AVAILABLE;
         }
-        return copyNumberDriverString(germlineGainsLosses);
+        return copyNumberDriverString(germlineGainsDels);
     }
 
     @NotNull
-    private static String copyNumberDriverString(@NotNull List<PurpleGainLoss> gainsLosses)
+    private static String copyNumberDriverString(@NotNull List<PurpleGainDel> gainsDels)
     {
-        if(gainsLosses.isEmpty())
+        if(gainsDels.isEmpty())
         {
             return NONE;
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(PurpleGainLoss gainLoss : gainsLosses)
+        for(PurpleGainDel gainDel : gainsDels)
         {
-            genes.add(gainLoss.gene());
+            genes.add(gainDel.gene());
         }
-        return gainsLosses.size() + " (" + concat(genes) + ")";
+        return gainsDels.size() + " (" + concat(genes) + ")";
     }
 
     @NotNull

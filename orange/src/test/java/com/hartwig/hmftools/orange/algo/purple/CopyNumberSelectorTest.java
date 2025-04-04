@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class CopyNumberSelectorTest
                 GeneCopyNumberTestFactory.builder().geneName(driver3.gene()).minCopyNumber(11D).maxCopyNumber(11D).build();
         List<GeneCopyNumber> allGeneCopyNumbers = Lists.newArrayList(match, tooLowCN, tooHighCN, noReportAmp);
 
-        List<PurpleGainLoss> nearReportableGains =
+        List<PurpleGainDel> nearReportableGains =
                 CopyNumberSelector.selectNearReportableSomaticGains(allGeneCopyNumbers, 4D, Lists.newArrayList(), driverGenes);
 
         assertEquals(1, nearReportableGains.size());
@@ -49,7 +49,7 @@ public class CopyNumberSelectorTest
 
         GeneCopyNumber match = GeneCopyNumberTestFactory.builder().geneName(driver.gene()).minCopyNumber(11D).build();
 
-        PurpleGainLoss reportable = TestPurpleGainLossFactory.builder().gene(match.geneName()).build();
+        PurpleGainDel reportable = TestPurpleGainLossFactory.builder().gene(match.geneName()).build();
 
         assertNotNull(CopyNumberSelector.selectNearReportableSomaticGains(Lists.newArrayList(match),
                 4D,
@@ -60,7 +60,7 @@ public class CopyNumberSelectorTest
     @Test
     public void canSelectPotentiallyInterestingGains()
     {
-        PurpleGainLoss gain = TestPurpleGainLossFactory.builder()
+        PurpleGainDel gain = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 1")
                 .gene("gene 1")
@@ -68,7 +68,7 @@ public class CopyNumberSelectorTest
                 .minCopies(12.1)
                 .maxCopies(12.1)
                 .build();
-        PurpleGainLoss lowerGainSameBand = TestPurpleGainLossFactory.builder()
+        PurpleGainDel lowerGainSameBand = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 1")
                 .gene("gene 2")
@@ -76,7 +76,7 @@ public class CopyNumberSelectorTest
                 .minCopies(11.1)
                 .maxCopies(11.1)
                 .build();
-        PurpleGainLoss lowestGainOtherBand = TestPurpleGainLossFactory.builder()
+        PurpleGainDel lowestGainOtherBand = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 2")
                 .gene("gene 3")
@@ -84,7 +84,7 @@ public class CopyNumberSelectorTest
                 .minCopies(10.1)
                 .maxCopies(10.1)
                 .build();
-        PurpleGainLoss partialGain = TestPurpleGainLossFactory.builder()
+        PurpleGainDel partialGain = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 3")
                 .gene("gene 4")
@@ -93,9 +93,9 @@ public class CopyNumberSelectorTest
                 .maxCopies(15.1)
                 .build();
 
-        List<PurpleGainLoss> allGains = Lists.newArrayList(gain, lowerGainSameBand, lowestGainOtherBand, partialGain);
+        List<PurpleGainDel> allGains = Lists.newArrayList(gain, lowerGainSameBand, lowestGainOtherBand, partialGain);
 
-        List<PurpleGainLoss> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allGains, Lists.newArrayList());
+        List<PurpleGainDel> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allGains, Lists.newArrayList());
 
         assertEquals(2, interesting.size());
         assertTrue(interesting.contains(gain));
@@ -108,16 +108,16 @@ public class CopyNumberSelectorTest
         ImmutablePurpleGainLoss.Builder lossBuilder =
                 TestPurpleGainLossFactory.builder().interpretation(CopyNumberInterpretation.FULL_DEL).minCopies(0).maxCopies(0);
 
-        PurpleGainLoss interestingLoss = lossBuilder.chromosome("chr2").chromosomeBand("band 1").gene("gene 2").build();
-        PurpleGainLoss lossWithReportable = lossBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 3").build();
-        PurpleGainLoss reportableLossSameBand = lossBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 4").build();
-        PurpleGainLoss lossAllosome = lossBuilder.chromosome("chrX").chromosomeBand("band 1").gene("gene 5").build();
-        PurpleGainLoss reportableLossOtherBand = lossBuilder.chromosome("chr2").chromosomeBand("band 3").gene("gene 6").build();
+        PurpleGainDel interestingLoss = lossBuilder.chromosome("chr2").chromosomeBand("band 1").gene("gene 2").build();
+        PurpleGainDel lossWithReportable = lossBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 3").build();
+        PurpleGainDel reportableLossSameBand = lossBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 4").build();
+        PurpleGainDel lossAllosome = lossBuilder.chromosome("chrX").chromosomeBand("band 1").gene("gene 5").build();
+        PurpleGainDel reportableLossOtherBand = lossBuilder.chromosome("chr2").chromosomeBand("band 3").gene("gene 6").build();
 
-        List<PurpleGainLoss> allLosses =
+        List<PurpleGainDel> allLosses =
                 Lists.newArrayList(interestingLoss, lossWithReportable, reportableLossOtherBand, lossAllosome, reportableLossOtherBand);
 
-        List<PurpleGainLoss> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allLosses,
+        List<PurpleGainDel> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allLosses,
                 Lists.newArrayList(reportableLossOtherBand, reportableLossSameBand));
 
         assertEquals(1, interesting.size());

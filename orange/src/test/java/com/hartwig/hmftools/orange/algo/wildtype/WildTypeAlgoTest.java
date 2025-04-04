@@ -15,7 +15,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
@@ -38,7 +38,7 @@ public class WildTypeAlgoTest
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList(variantSomatic);
         List<PurpleVariant> reportableGermlineVariants = null;
 
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
         List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
@@ -63,7 +63,7 @@ public class WildTypeAlgoTest
                 TestPurpleVariantFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableGermlineVariants = Lists.newArrayList(variantGermline);
 
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
         List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
@@ -85,9 +85,9 @@ public class WildTypeAlgoTest
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
-        PurpleGainLoss reportableAmp = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_GAIN);
-        PurpleGainLoss reportableDel = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_DEL);
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
+        PurpleGainDel reportableAmp = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_GAIN);
+        PurpleGainDel reportableDel = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_DEL);
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
         List<LinxFusion> reportableFusions = Lists.newArrayList();
         List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
@@ -109,7 +109,7 @@ public class WildTypeAlgoTest
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList();
         LinxFusion reportedFusionMatch = createFusion("BAG4", "EGFR");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
         List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
@@ -132,7 +132,7 @@ public class WildTypeAlgoTest
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList();
         LinxFusion reportedFusionMatch = createFusion("EGFR", "BAG4");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
         List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
@@ -155,7 +155,7 @@ public class WildTypeAlgoTest
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
         LinxHomozygousDisruption homozygousDisruption = createHomDisruption("NRAS");
         List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
@@ -179,7 +179,7 @@ public class WildTypeAlgoTest
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
         List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
 
@@ -210,9 +210,9 @@ public class WildTypeAlgoTest
                 TestPurpleVariantFactory.builder().gene("BRCA1").chromosome("1").position(56412).ref("A").alt("C").build();
         List<PurpleVariant> reportableGermlineVariants = Lists.newArrayList(variantGermline);
 
-        PurpleGainLoss reportableAmp = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
-        PurpleGainLoss reportableDel = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_DEL);
-        List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
+        PurpleGainDel reportableAmp = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_GAIN);
+        PurpleGainDel reportableDel = TestPurpleGainLossFactory.createGainLoss("KRAS", CopyNumberInterpretation.FULL_DEL);
+        List<PurpleGainDel> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
 
         LinxFusion reportedFusionMatch = createFusion("BAG4", "FGFR1");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);

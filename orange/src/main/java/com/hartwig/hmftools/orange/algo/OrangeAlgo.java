@@ -240,7 +240,7 @@ public class OrangeAlgo
             wildTypeGenes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                     purple.reportableSomaticVariants(),
                     purple.reportableGermlineVariants(),
-                    purple.reportableSomaticGainsLosses(),
+                    purple.reportableSomaticGainsDels(),
                     linx.reportableSomaticFusions(),
                     linx.somaticHomozygousDisruptions(),
                     linx.reportableSomaticBreakends());

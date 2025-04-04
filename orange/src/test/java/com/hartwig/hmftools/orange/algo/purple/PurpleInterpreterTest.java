@@ -57,8 +57,8 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullLosses().size());
-        assertEquals(1, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineFullDels().size());
+        assertEquals(1, interpreted.reportableGermlineFullDels().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
         assertEquals(1, interpreted.reportableGermlineLossOfHeterozygosities().size());
     }
@@ -74,8 +74,8 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullLosses().size());
-        assertEquals(1, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineFullDels().size());
+        assertEquals(1, interpreted.reportableGermlineFullDels().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
         assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
     }
@@ -91,8 +91,8 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullLosses().size());
-        assertEquals(0, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineFullDels().size());
+        assertEquals(0, interpreted.reportableGermlineFullDels().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
         assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
     }

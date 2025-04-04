@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
@@ -21,13 +21,13 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class GainLossTable
+public final class GainDelTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainLoss> gainsLosses,
+    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainDel> gainsDels,
             @Nullable IsofoxRecord isofox, @NotNull ReportResources reportResources)
     {
-        if(gainsLosses.isEmpty())
+        if(gainsDels.isEmpty())
         {
             return new Tables(reportResources).createEmpty(title, width);
         }
@@ -39,14 +39,14 @@ public final class GainLossTable
                         cells.createHeader("Type"), cells.createHeader("CN"), cells.createHeader("TPM"), cells.createHeader("Perc (Type)"),
                         cells.createHeader("FC (Type)"), cells.createHeader("Perc (DB)"), cells.createHeader("FC (DB)") });
 
-        for(PurpleGainLoss gainLoss : sort(gainsLosses))
+        for(PurpleGainDel gainDel : sort(gainsDels))
         {
-            table.addCell(cells.createContent(gainLoss.chromosome() + gainLoss.chromosomeBand()));
-            table.addCell(cells.createContent(displayGene(gainLoss)));
-            table.addCell(cells.createContent(display(gainLoss.interpretation())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainLoss.minCopies())));
+            table.addCell(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
+            table.addCell(cells.createContent(displayGene(gainDel)));
+            table.addCell(cells.createContent(display(gainDel.interpretation())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.minCopies())));
 
-            GeneExpression expression = findExpressionForGene(isofox, gainLoss.gene());
+            GeneExpression expression = findExpressionForGene(isofox, gainDel.gene());
             if(expression != null)
             {
                 table.addCell(cells.createContent(Expressions.tpm(expression)));
@@ -80,16 +80,16 @@ public final class GainLossTable
     }
 
     @NotNull
-    private static List<PurpleGainLoss> sort(@NotNull List<PurpleGainLoss> gainsAndLosses)
+    private static List<PurpleGainDel> sort(@NotNull List<PurpleGainDel> gainsAndDels)
     {
-        return gainsAndLosses.stream().sorted((gainLoss1, gainLoss2) ->
+        return gainsAndDels.stream().sorted((gainDel1, gainDel2) ->
         {
-            String location1 = Chromosomes.zeroPrefixed(gainLoss1.chromosome() + gainLoss1.chromosomeBand());
-            String location2 = Chromosomes.zeroPrefixed(gainLoss2.chromosome() + gainLoss2.chromosomeBand());
+            String location1 = Chromosomes.zeroPrefixed(gainDel1.chromosome() + gainDel1.chromosomeBand());
+            String location2 = Chromosomes.zeroPrefixed(gainDel2.chromosome() + gainDel2.chromosomeBand());
 
             if(location1.equals(location2))
             {
-                return gainLoss1.gene().compareTo(gainLoss2.gene());
+                return gainDel1.gene().compareTo(gainDel2.gene());
             }
             else
             {
@@ -99,13 +99,13 @@ public final class GainLossTable
     }
 
     @NotNull
-    private static String displayGene(@NotNull PurpleGainLoss gainLoss)
+    private static String displayGene(@NotNull PurpleGainDel gainDel)
     {
         String addon = Strings.EMPTY;
-        if(!gainLoss.isCanonical())
+        if(!gainDel.isCanonical())
         {
             addon = " (alt)";
         }
-        return gainLoss.gene() + addon;
+        return gainDel.gene() + addon;
     }
 }

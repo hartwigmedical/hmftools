@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.wildtype.ImmutableWildTypeGene;
@@ -27,7 +27,7 @@ public final class WildTypeAlgo
     @NotNull
     public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<DriverGene> driverGenes,
             @NotNull List<PurpleVariant> reportableSomaticVariants, @Nullable List<PurpleVariant> reportableGermlineVariants,
-            @NotNull List<PurpleGainLoss> reportableSomaticGainsLosses, @NotNull List<LinxFusion> reportableFusions,
+            @NotNull List<PurpleGainDel> reportableSomaticGainsLosses, @NotNull List<LinxFusion> reportableFusions,
             @NotNull List<LinxHomozygousDisruption> homozygousDisruptions, @NotNull List<LinxBreakend> reportableBreakends)
     {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
@@ -56,7 +56,7 @@ public final class WildTypeAlgo
             }
 
             boolean hasSomaticGainLoss = false;
-            for(PurpleGainLoss gainLoss : reportableSomaticGainsLosses)
+            for(PurpleGainDel gainLoss : reportableSomaticGainsLosses)
             {
                 if(driverGene.gene().equals(gainLoss.gene()))
                 {

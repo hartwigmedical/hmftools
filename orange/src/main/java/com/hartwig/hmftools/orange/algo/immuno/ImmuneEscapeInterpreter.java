@@ -10,7 +10,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -76,7 +76,7 @@ public final class ImmuneEscapeInterpreter
         for(String geneToCheck : genesToCheck)
         {
             boolean hasInactivationVariant = hasAnyInactivationVariant(purple.allSomaticVariants(), geneToCheck);
-            boolean hasGeneDeletion = isDeleted(purple.allSomaticGainsLosses(), geneToCheck);
+            boolean hasGeneDeletion = isDeleted(purple.allSomaticGainsDels(), geneToCheck);
             boolean hasHomozygousDisruption = isHomozygouslyDisrupted(linx.somaticHomozygousDisruptions(), geneToCheck);
 
             if(hasInactivationVariant || hasGeneDeletion || hasHomozygousDisruption)
@@ -108,9 +108,9 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isDeleted(@NotNull List<PurpleGainLoss> allSomaticGainLosses, @NotNull String geneToCheck)
+    private static boolean isDeleted(@NotNull List<PurpleGainDel> allSomaticGainLosses, @NotNull String geneToCheck)
     {
-        for(PurpleGainLoss somaticGainLoss : allSomaticGainLosses)
+        for(PurpleGainDel somaticGainLoss : allSomaticGainLosses)
         {
             if(somaticGainLoss.gene().equals(geneToCheck) && somaticGainLoss.isCanonical())
             {
@@ -139,7 +139,7 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            if(isAmplified(purple.allSomaticGainsLosses(), geneToCheck))
+            if(isAmplified(purple.allSomaticGainsDels(), geneToCheck))
             {
                 return true;
             }
@@ -147,9 +147,9 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isAmplified(@NotNull List<PurpleGainLoss> somaticGainLosses, @NotNull String geneToCheck)
+    private static boolean isAmplified(@NotNull List<PurpleGainDel> somaticGainLosses, @NotNull String geneToCheck)
     {
-        for(PurpleGainLoss somaticGainLoss : somaticGainLosses)
+        for(PurpleGainDel somaticGainLoss : somaticGainLosses)
         {
             if(somaticGainLoss.gene().equals(geneToCheck) && somaticGainLoss.isCanonical())
             {

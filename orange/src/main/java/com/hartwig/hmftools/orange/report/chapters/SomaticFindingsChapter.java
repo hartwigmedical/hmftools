@@ -9,7 +9,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.ChromosomalRearrangements;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -26,7 +26,7 @@ import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.ChromosomalRearrangementsTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
-import com.hartwig.hmftools.orange.report.tables.GainLossTable;
+import com.hartwig.hmftools.orange.report.tables.GainDelTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
@@ -156,10 +156,10 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addSomaticAmpDels(@NotNull Document document)
     {
-        String driverAmpsDelsTitle = "Driver amps/dels";
+        String driverAmpsDelsTitle = "Driver amps/hom dels";
         String nearDriverGainsTitle = "Potentially interesting near-driver amps";
         String suspectGainsTitle = "Other regions with amps";
-        String suspectLossesTitle = "Regions with deletions in genes in other autosomal regions";
+        String suspectDelsTitle = "Regions with deletions in genes in other autosomal regions";
         String chromosomalRearrangementsTitle = "Potentially interesting chromosomal rearrangements";
 
         if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
@@ -168,32 +168,32 @@ public class SomaticFindingsChapter implements ReportChapter
             document.add(tables.createNotAvailable(driverAmpsDelsTitle, contentWidth()));
             document.add(tables.createNotAvailable(nearDriverGainsTitle, contentWidth()));
             document.add(tables.createNotAvailable(suspectGainsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(suspectLossesTitle, contentWidth()));
+            document.add(tables.createNotAvailable(suspectDelsTitle, contentWidth()));
             document.add(tables.createNotAvailable(chromosomalRearrangementsTitle, contentWidth()));
         }
         else
         {
-            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().reportableSomaticGainsLosses().size() + ")";
-            document.add(GainLossTable.build(titleDrivers,
+            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().reportableSomaticGainsDels().size() + ")";
+            document.add(GainDelTable.build(titleDrivers,
                     contentWidth(),
-                    report.purple().reportableSomaticGainsLosses(),
+                    report.purple().reportableSomaticGainsDels(),
                     report.isofox(),
                     reportResources));
 
             String titleNearDriverGains = nearDriverGainsTitle + " (" + report.purple().nearReportableSomaticGains().size() + ")";
-            document.add(GainLossTable.build(titleNearDriverGains,
+            document.add(GainDelTable.build(titleNearDriverGains,
                     contentWidth(),
                     report.purple().nearReportableSomaticGains(),
                     report.isofox(),
                     reportResources));
 
-            List<PurpleGainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
+            List<PurpleGainDel> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsDels());
             String titleSuspectGains = suspectGainsTitle + " (" + suspectGains.size() + ")";
-            document.add(GainLossTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox(), reportResources));
+            document.add(GainDelTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox(), reportResources));
 
-            List<PurpleGainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
-            String titleSuspectLosses = suspectLossesTitle + " (" + suspectLosses.size() + ")";
-            document.add(GainLossTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox(), reportResources));
+            List<PurpleGainDel> suspectDels = selectDels(report.purple().additionalSuspectSomaticGainsDels());
+            String titleSuspectDelss = suspectDelsTitle + " (" + suspectDels.size() + ")";
+            document.add(GainDelTable.build(titleSuspectDelss, contentWidth(), max10(suspectDels), report.isofox(), reportResources));
 
             ChromosomalRearrangements chromosomalRearrangements = report.purple().chromosomalRearrangements();
             document.add(ChromosomalRearrangementsTable.build(chromosomalRearrangementsTitle, contentWidth(), chromosomalRearrangements, reportResources));
@@ -201,33 +201,33 @@ public class SomaticFindingsChapter implements ReportChapter
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectGains(@NotNull List<PurpleGainLoss> gainsLosses)
+    private static List<PurpleGainDel> selectGains(@NotNull List<PurpleGainDel> gainsDels)
     {
-        List<PurpleGainLoss> gains = Lists.newArrayList();
-        for(PurpleGainLoss gainLoss : gainsLosses)
+        List<PurpleGainDel> gains = Lists.newArrayList();
+        for(PurpleGainDel gainDel : gainsDels)
         {
-            if(gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
-                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
+            if(gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
+                    || gainDel.interpretation() == CopyNumberInterpretation.FULL_GAIN)
             {
-                gains.add(gainLoss);
+                gains.add(gainDel);
             }
         }
         return gains;
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectLosses(@NotNull List<PurpleGainLoss> gainsLosses)
+    private static List<PurpleGainDel> selectDels(@NotNull List<PurpleGainDel> gainsDels)
     {
-        List<PurpleGainLoss> losses = Lists.newArrayList();
-        for(PurpleGainLoss gainLoss : gainsLosses)
+        List<PurpleGainDel> dels = Lists.newArrayList();
+        for(PurpleGainDel gainDel : gainsDels)
         {
-            if(gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
-                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL)
+            if(gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
+                    || gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL)
             {
-                losses.add(gainLoss);
+                dels.add(gainDel);
             }
         }
-        return losses;
+        return dels;
     }
 
     private void addFusions(@NotNull Document document)
