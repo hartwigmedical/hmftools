@@ -26,8 +26,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -214,18 +214,18 @@ public class OrangeJsonTest
         assertEquals(0.4, geneCopyNumber.minMinorAlleleCopyNumber(), EPSILON);
 
         assertEquals(1, purple.allSomaticGainsDels().size());
-        PurpleGainDel gainLoss = purple.allSomaticGainsDels().iterator().next();
-        assertEquals("5", gainLoss.chromosome());
-        assertEquals("q2.2", gainLoss.chromosomeBand());
-        assertEquals("SMAD4", gainLoss.gene());
-        assertEquals("ENST00000591126", gainLoss.transcript());
-        assertFalse(gainLoss.isCanonical());
-        assertEquals(CopyNumberInterpretation.FULL_DEL, gainLoss.interpretation());
-        assertEquals(0.1, gainLoss.minCopies(), EPSILON);
-        assertEquals(1.2, gainLoss.maxCopies(), EPSILON);
+        PurpleGainDel gainDel = purple.allSomaticGainsDels().iterator().next();
+        assertEquals("5", gainDel.chromosome());
+        assertEquals("q2.2", gainDel.chromosomeBand());
+        assertEquals("SMAD4", gainDel.gene());
+        assertEquals("ENST00000591126", gainDel.transcript());
+        assertFalse(gainDel.isCanonical());
+        assertEquals(CopyNumberInterpretation.FULL_DEL, gainDel.interpretation());
+        assertEquals(0.1, gainDel.minCopies(), EPSILON);
+        assertEquals(1.2, gainDel.maxCopies(), EPSILON);
 
         assertEquals(1, purple.reportableSomaticGainsDels().size());
-        assertEquals(gainLoss, purple.reportableSomaticGainsDels().iterator().next());
+        assertEquals(gainDel, purple.reportableSomaticGainsDels().iterator().next());
     }
 
     @NotNull
