@@ -192,8 +192,8 @@ public class SomaticFindingsChapter implements ReportChapter
             document.add(GainDeletionTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox(), reportResources));
 
             List<PurpleGainDeletion> suspectDels = selectDels(report.purple().additionalSuspectSomaticGainsDels());
-            String titleSuspectDelss = suspectDelsTitle + " (" + suspectDels.size() + ")";
-            document.add(GainDeletionTable.build(titleSuspectDelss, contentWidth(), max10(suspectDels), report.isofox(), reportResources));
+            String titleSuspectDels = suspectDelsTitle + " (" + suspectDels.size() + ")";
+            document.add(GainDeletionTable.build(titleSuspectDels, contentWidth(), max10(suspectDels), report.isofox(), reportResources));
 
             ChromosomalRearrangements chromosomalRearrangements = report.purple().chromosomalRearrangements();
             document.add(ChromosomalRearrangementsTable.build(chromosomalRearrangementsTitle, contentWidth(), chromosomalRearrangements, reportResources));
