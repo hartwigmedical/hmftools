@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 

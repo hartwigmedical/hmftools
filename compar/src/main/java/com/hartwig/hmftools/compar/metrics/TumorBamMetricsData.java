@@ -3,8 +3,8 @@ package com.hartwig.hmftools.compar.metrics;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.TUMOR_BAM_METRICS;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PERCENTAGE;
 
 import java.util.List;
@@ -65,7 +65,8 @@ public class TumorBamMetricsData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final TumorBamMetricsData otherData = (TumorBamMetricsData) other;
 
@@ -75,6 +76,6 @@ public class TumorBamMetricsData implements ComparableItem
         checkDiff(diffs, FLD_PERCENTAGE_30X, Metrics.coveragePercent(30), otherData.Metrics.coveragePercent(30), thresholds);
         checkDiff(diffs, FLD_PERCENTAGE_60X, Metrics.coveragePercent(60), otherData.Metrics.coveragePercent(60), thresholds);
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }

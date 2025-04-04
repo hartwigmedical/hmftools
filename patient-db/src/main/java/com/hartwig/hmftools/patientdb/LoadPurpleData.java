@@ -23,8 +23,8 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;

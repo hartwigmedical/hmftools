@@ -7,8 +7,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 

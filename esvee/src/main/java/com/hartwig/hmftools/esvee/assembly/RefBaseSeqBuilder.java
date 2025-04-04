@@ -263,7 +263,7 @@ public class RefBaseSeqBuilder
                     }
                 }
 
-                consensusBase = DNA_BASE_BYTES[maxBaseIndex];
+                consensusBase = maxBaseIndex < DNA_BASE_BYTES.length ? DNA_BASE_BYTES[maxBaseIndex] : DNA_N_BYTE;
                 consensusMaxQual = (byte)maxQuals[maxBaseIndex];
             }
 

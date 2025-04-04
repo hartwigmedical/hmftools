@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.linx.drivers;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
+import static com.hartwig.hmftools.common.driver.DriverType.AMP;
+import static com.hartwig.hmftools.common.driver.DriverType.DEL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;

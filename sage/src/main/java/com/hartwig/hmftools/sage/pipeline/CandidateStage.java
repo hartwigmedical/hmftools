@@ -15,7 +15,6 @@ import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
@@ -30,7 +29,7 @@ public class CandidateStage
 
     public CandidateStage(
             final SageCallConfig config, final List<SimpleVariant> hotspots,
-            final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions, final Coverage coverage,
+            final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions,
             final SamSlicerFactory samSlicerFactory)
     {
         mConfig = config;
@@ -39,7 +38,7 @@ public class CandidateStage
         mHighConfidenceRegions = highConfidenceRegions;
         mSamSlicerFactory = samSlicerFactory;
 
-        mCandidateEvidence = new CandidateEvidence(config.Common, hotspots, panelRegions, coverage);
+        mCandidateEvidence = new CandidateEvidence(config.Common, hotspots, panelRegions);
     }
 
     public int totalReadsProcessed() { return mCandidateEvidence.totalReadsProcessed(); }

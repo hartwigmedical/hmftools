@@ -19,8 +19,8 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;

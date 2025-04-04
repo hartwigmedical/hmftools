@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.loadDriverGenes;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.loadDriverGenes;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
@@ -13,7 +12,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
@@ -28,14 +26,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.linx.WriteType.STANDARD_TYPES;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -260,7 +257,7 @@ public class LinxConfig
         addRefGenomeVersion(configBuilder);
 
         configBuilder.addConfigItem(VCF_FILE, "Path to the PURPLE structural variant VCF file");
-        configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, false, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
         configBuilder.addPath(LINE_ELEMENT_FILE, false, "Line elements file");
         configBuilder.addPath(FRAGILE_SITE_FILE, false, "Fragile site file");
         configBuilder.addFlag(GERMLINE, "Process germline SVs");

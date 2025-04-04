@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
+import com.hartwig.hmftools.common.driver.DriverImpact;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;

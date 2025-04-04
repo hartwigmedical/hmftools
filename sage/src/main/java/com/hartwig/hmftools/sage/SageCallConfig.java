@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.tinc.TincConfig;
 
@@ -26,7 +27,6 @@ public class SageCallConfig
     public final List<String> TumorIds;
     public final List<String> TumorBams;
     public final String HighConfidenceBed;
-    public final String CoverageBed;
     public final String PanelBed;
     public final String Hotspots;
     public final boolean PanelOnly;
@@ -34,7 +34,6 @@ public class SageCallConfig
 
     private final String mResourceDir;
 
-    private static final String COVERAGE_BED = "coverage_bed";
     private static final String RESOURCE_DIR = "resource_dir";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String PANEL_BED = "panel_bed";
@@ -63,12 +62,13 @@ public class SageCallConfig
 
         mResourceDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_DIR, ""));
         PanelBed = getReferenceFile(configBuilder, PANEL_BED);
-        CoverageBed = getReferenceFile(configBuilder, COVERAGE_BED);
         HighConfidenceBed = getReferenceFile(configBuilder, HIGH_CONFIDENCE_BED);
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
-        RunTinc = configBuilder.hasFlag(RUN_TINC);
+
+        // TINC can only run with a single germline sample
+        RunTinc = configBuilder.hasFlag(RUN_TINC) && Common.ReferenceIds.size() == 1;
     }
 
     public boolean isValid()
@@ -121,7 +121,7 @@ public class SageCallConfig
         configBuilder.addPrefixedPath(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file", RESOURCE_DIR);
         configBuilder.addPrefixedPath(PANEL_BED, false, "Panel regions bed file", RESOURCE_DIR);
         configBuilder.addPrefixedPath(HOTSPOTS, false, "Hotspots", RESOURCE_DIR);
-        configBuilder.addPrefixedPath(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed", RESOURCE_DIR);
+        DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
         configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
 
         configBuilder.addFlag(RUN_TINC, "Run TINC routine");
@@ -136,7 +136,6 @@ public class SageCallConfig
         TumorIds = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
         HighConfidenceBed = "highConf";
-        CoverageBed = "coverage";
         PanelBed = "panel";
         Hotspots = "hotspots";
         PanelOnly = false;

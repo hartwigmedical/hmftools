@@ -12,11 +12,11 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCategory;
+import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;

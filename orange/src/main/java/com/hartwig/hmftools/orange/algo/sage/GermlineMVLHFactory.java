@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.sage.GeneDepthFile;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

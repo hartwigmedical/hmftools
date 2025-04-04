@@ -27,7 +27,6 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
@@ -71,7 +70,7 @@ public class RegionTask
             final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter,
-            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths)
+            final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -80,7 +79,7 @@ public class RegionTask
         mRefGenome = refGenome;
         mFragmentLengths = fragmentLengths;
 
-        mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
+        mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, samSlicerFactory);
 
         mVariantPhaser = new CandidateVariantPhaser(phaseSetCounter, mConfig.Common.LogLpsData);
 

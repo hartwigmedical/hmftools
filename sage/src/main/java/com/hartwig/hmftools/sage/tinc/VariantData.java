@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.tinc.TincConstants.RECOVERY_FILTERS;
 import java.util.Arrays;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -117,6 +118,9 @@ public class VariantData
 
     public boolean isPassing()
     {
+        if(Context == null)
+            return true; // loaded from file, ignore existing filter status
+
         return !Context.isFiltered() || Context.getFilters().size() == 1 && Context.getFilters().contains(PASS);
     }
 
@@ -144,8 +148,18 @@ public class VariantData
 
     public void setReferenceAltFragReduction(double perc) { mReferenceAltFragsReduction = perc; }
 
-    public int calcReducedAltCount(int altCount) { return (int)round(altCount * (1 - mReferenceAltFragsReduction)); }
-    public double calcReducedAltValue(double altValue) { return altValue * (1 - mReferenceAltFragsReduction); }
+    public int calcReducedAltCount(int altCount) { return (int)round(calcReducedAltValue(altCount)); }
+
+    public double calcReducedAltValue(double altValue)
+    {
+        double referenceAf = referenceAf();
+        if(referenceAf <= 0)
+            return 0;
+
+        double reducedAf = max(referenceAf - mReferenceAltFragsReduction, 0.0);
+        double reducedRefAfPercent = reducedAf / referenceAf;
+        return altValue * reducedRefAfPercent;
+    }
 
     public void buildNewFilters()
     {
@@ -156,7 +170,6 @@ public class VariantData
             SoftFilter filter = Arrays.stream(SoftFilter.values()).filter(x -> x.filterName().equals(filterStr)).findFirst().orElse(null);
             if(filter != null)
                 mNewFilters.add(filter);
-
         }
     }
 

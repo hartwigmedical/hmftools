@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;

@@ -19,4 +19,12 @@ public enum SequencingType
                 SEQUENCING_TYPE_CFG, false, enumValuesAsStr(SequencingType.values(), "Sequencing types"),
                 ILLUMINA.toString());
     }
+
+        public static SequencingType parseConfig(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasValue(SEQUENCING_TYPE_CFG))
+            return SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        return ILLUMINA;
+    }
 }

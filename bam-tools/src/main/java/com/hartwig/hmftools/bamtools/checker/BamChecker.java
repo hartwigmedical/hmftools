@@ -1,18 +1,12 @@
 package com.hartwig.hmftools.bamtools.checker;
 
-import static java.lang.Math.abs;
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.SORTED_BAM_ID;
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.UNSORTED_BAM_ID;
-import static com.hartwig.hmftools.bamtools.checker.PartitionThread.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.common.PartitionTask.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
-import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
@@ -38,7 +32,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.TaskQueue;
@@ -46,7 +39,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReaderFactory;
 
 public class BamChecker
@@ -119,7 +111,7 @@ public class BamChecker
     {
         List<PartitionThread> partitionThreads = Lists.newArrayListWithCapacity(mConfig.Threads);
 
-        List<ChrBaseRegion> partitionRegions = splitRegionsIntoPartitions(mConfig);
+        List<ChrBaseRegion> partitionRegions = PartitionThread.splitRegionsIntoPartitions(mConfig);
 
         if(partitionRegions.isEmpty())
             return Collections.emptyList();
@@ -308,7 +300,7 @@ public class BamChecker
 
         configBuilder.checkAndParseCommandLine(args);
 
-        BamChecker reduxApplication = new BamChecker(configBuilder);
-        reduxApplication.run();
+        BamChecker bamChecker = new BamChecker(configBuilder);
+        bamChecker.run();
     }
 }

@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;

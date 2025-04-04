@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave.annotation;
 
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -38,7 +38,7 @@ public class ReferenceData
     {
         GeneDataCache = new GeneDataCache(
                 configBuilder.getValue(ENSEMBL_DATA_DIR), config.RefGenVersion,
-                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION));
+                configBuilder.getValue(DRIVER_GENE_PANEL));
 
         if(!GeneDataCache.loadCache(config.OnlyCanonical, false))
         {

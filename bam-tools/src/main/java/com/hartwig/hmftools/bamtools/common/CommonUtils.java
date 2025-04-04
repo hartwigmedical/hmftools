@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.hartwig.hmftools.bamtools.metrics.MetricsConfig;
-import com.hartwig.hmftools.common.genome.bed.BedFileReader;
+import com.hartwig.hmftools.common.region.BedFileReader;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

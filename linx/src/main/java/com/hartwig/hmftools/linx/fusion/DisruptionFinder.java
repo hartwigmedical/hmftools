@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DEL_DISRUPTION;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DUP_DISRUPTION;
+import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.driver.DriverType.HOM_DEL_DISRUPTION;
+import static com.hartwig.hmftools.common.driver.DriverType.HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.driver.LikelihoodMethod;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;

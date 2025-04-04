@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
 
 public class DriverSourceData
 {

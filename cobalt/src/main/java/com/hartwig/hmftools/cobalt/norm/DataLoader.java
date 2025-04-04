@@ -13,7 +13,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;

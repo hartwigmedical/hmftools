@@ -31,8 +31,8 @@ public final class CommonUtils
 
     public static final String RESOURCE_REPO_DIR = "resource_repo_dir";
     public static final String RESOURCE_REPO_DIR_DESC = "The directory holding the public HMF resources repo";
+
     public static final String ENSEMBL_DIR = "ensembl_data_cache";
-    public static final String DRIVER_GENE_PANEL_TSV = "driver_gene_panel";
 
     public static String getEnsemblDirectory(final RefGenomeVersion refGenomeVersion, final String resourceRepoDir)
     {

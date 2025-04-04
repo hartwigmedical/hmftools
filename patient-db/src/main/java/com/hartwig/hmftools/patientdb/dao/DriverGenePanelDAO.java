@@ -7,9 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep16;
 
