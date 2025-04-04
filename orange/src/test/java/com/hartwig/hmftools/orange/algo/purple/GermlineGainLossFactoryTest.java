@@ -29,7 +29,7 @@ public class GermlineGainLossFactoryTest
     @Test
     public void canFilterHetDeletion()
     {
-        GermlineGainLossFactory factory = createTestFactory();
+        GermlineGainDelFactory factory = createTestFactory();
 
         GermlineDeletion reportableHet = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION);
         assertTrue(factory.getReportabilityMap(Lists.newArrayList(reportableHet), Lists.newArrayList()).isEmpty());
@@ -38,7 +38,7 @@ public class GermlineGainLossFactoryTest
     @Test
     public void canTransformReportableHomDeletionsToPartial()
     {
-        GermlineGainLossFactory factory = createTestFactory();
+        GermlineGainDelFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
@@ -64,7 +64,7 @@ public class GermlineGainLossFactoryTest
     @Test
     public void canTransformNonReportableHomDeletionToFull()
     {
-        GermlineGainLossFactory factory = createTestFactory();
+        GermlineGainDelFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         GermlineDeletion reportableFullHom =
@@ -85,7 +85,7 @@ public class GermlineGainLossFactoryTest
     @Test
     public void canTransformReportablePartialHomDeletionsToFullGeneLoss()
     {
-        GermlineGainLossFactory factory = createTestFactory();
+        GermlineGainDelFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
@@ -114,9 +114,9 @@ public class GermlineGainLossFactoryTest
     }
 
     @NotNull
-    private static GermlineGainLossFactory createTestFactory()
+    private static GermlineGainDelFactory createTestFactory()
     {
         EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.loadTestCache();
-        return new GermlineGainLossFactory(ensemblDataCache);
+        return new GermlineGainDelFactory(ensemblDataCache);
     }
 }

@@ -78,8 +78,8 @@ public final class GermlineConversion
         TumorStats mergedTumorStats;
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
-        List<PurpleGainDel> mergedAllSomaticGainsLosses;
-        List<PurpleGainDel> mergedReportableSomaticGainsLosses;
+        List<PurpleGainDel> mergedAllSomaticGainsDels;
+        List<PurpleGainDel> mergedReportableSomaticGainsDels;
         List<PurpleGeneCopyNumber> mergedSuspectGeneCopyNumbersWithLOH;
         if(containsTumorCells)
         {
@@ -88,9 +88,9 @@ public final class GermlineConversion
                     mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers(),
                             purple.reportableGermlineFullDels());
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
-            mergedAllSomaticGainsLosses = mergeGermlineFullLosses(purple.reportableGermlineFullDels(), purple.allSomaticGainsDels());
-            mergedReportableSomaticGainsLosses =
-                    mergeGermlineFullLosses(purple.reportableGermlineFullDels(), purple.reportableSomaticGainsDels());
+            mergedAllSomaticGainsDels = mergeGermlineFullDels(purple.reportableGermlineFullDels(), purple.allSomaticGainsDels());
+            mergedReportableSomaticGainsDels =
+                    mergeGermlineFullDels(purple.reportableGermlineFullDels(), purple.reportableSomaticGainsDels());
             mergedSuspectGeneCopyNumbersWithLOH = mergeSuspectGeneCopyNumberWithLOH(purple);
         }
         else
@@ -98,8 +98,8 @@ public final class GermlineConversion
             mergedTumorStats = purple.tumorStats();
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
-            mergedAllSomaticGainsLosses = purple.allSomaticGainsDels();
-            mergedReportableSomaticGainsLosses = purple.reportableSomaticGainsDels();
+            mergedAllSomaticGainsDels = purple.allSomaticGainsDels();
+            mergedReportableSomaticGainsDels = purple.reportableSomaticGainsDels();
             mergedSuspectGeneCopyNumbersWithLOH = purple.suspectGeneCopyNumbersWithLOH();
         }
 
@@ -114,8 +114,8 @@ public final class GermlineConversion
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
                 .additionalSuspectGermlineVariants(null)
-                .allSomaticGainsLosses(mergedAllSomaticGainsLosses)
-                .reportableSomaticGainsLosses(mergedReportableSomaticGainsLosses)
+                .allSomaticGainsLosses(mergedAllSomaticGainsDels)
+                .reportableSomaticGainsLosses(mergedReportableSomaticGainsDels)
                 .allGermlineDeletions(null)
                 .allGermlineFullLosses(null)
                 .reportableGermlineFullLosses(null)
@@ -159,7 +159,7 @@ public final class GermlineConversion
     @NotNull
     @VisibleForTesting
     static List<PurpleDriver> mergeGermlineDriversIntoSomatic(@NotNull List<PurpleDriver> somaticDrivers,
-            @Nullable List<PurpleDriver> germlineDrivers, @Nullable List<PurpleGainDel> reportableGermlineFullLosses)
+            @Nullable List<PurpleDriver> germlineDrivers, @Nullable List<PurpleGainDel> reportableGermlineFullDels)
     {
         List<PurpleDriver> merged = Lists.newArrayList();
         for(PurpleDriver somaticDriver : somaticDrivers)
@@ -187,7 +187,7 @@ public final class GermlineConversion
 
                 if(germlineDriver.type() == PurpleDriverType.GERMLINE_DELETION
                         && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.DEL) == null
-                        && reportableGermlineFullLosses != null && reportableGermlineFullLosses.stream()
+                        && reportableGermlineFullDels != null && reportableGermlineFullDels.stream()
                         .anyMatch(l -> l.gene().equals(germlineDriver.gene())))
                 {
                     merged.add(convertToSomaticDeletionDriver(germlineDriver));
@@ -210,114 +210,114 @@ public final class GermlineConversion
     }
 
     @NotNull
-    private static List<PurpleGainDel> mergeGermlineFullLosses(@Nullable List<PurpleGainDel> reportableGermlineFullLosses,
-            @NotNull List<PurpleGainDel> somaticGainLosses)
+    private static List<PurpleGainDel> mergeGermlineFullDels(@Nullable List<PurpleGainDel> reportableGermlineFullDels,
+            @NotNull List<PurpleGainDel> somaticGainDels)
     {
-        if(reportableGermlineFullLosses == null)
+        if(reportableGermlineFullDels == null)
         {
-            return somaticGainLosses;
+            return somaticGainDels;
         }
 
-        List<PurpleGainDel> mergedGainLosses = Lists.newArrayList();
-        for(PurpleGainDel somaticGainLoss : somaticGainLosses)
+        List<PurpleGainDel> mergedGainDels = Lists.newArrayList();
+        for(PurpleGainDel somaticGainDel : somaticGainDels)
         {
-            mergedGainLosses.add(getGermlineCorrectedGainLoss(somaticGainLoss, reportableGermlineFullLosses));
+            mergedGainDels.add(getGermlineCorrectedGainDel(somaticGainDel, reportableGermlineFullDels));
         }
 
-        for(PurpleGainDel germlineLoss : reportableGermlineFullLosses)
+        for(PurpleGainDel germlineDel : reportableGermlineFullDels)
         {
-            boolean hasMatchingSomaticLoss = somaticGainLosses.stream().anyMatch(s -> lossesMatch(germlineLoss, s));
-            if(!hasMatchingSomaticLoss)
+            boolean hasMatchingSomaticDel = somaticGainDels.stream().anyMatch(s -> DelsMatch(germlineDel, s));
+            if(!hasMatchingSomaticDel)
             {
-                mergedGainLosses.add(germlineLoss);
+                mergedGainDels.add(germlineDel);
             }
         }
 
-        return mergedGainLosses;
+        return mergedGainDels;
     }
 
     @NotNull
-    private static PurpleGainDel getGermlineCorrectedGainLoss(@NotNull PurpleGainDel somaticGainLoss,
-            @NotNull List<PurpleGainDel> reportableGermlineFullLosses)
+    private static PurpleGainDel getGermlineCorrectedGainDel(@NotNull PurpleGainDel somaticGainDel,
+            @NotNull List<PurpleGainDel> reportableGermlineFullDels)
     {
-        if(!isLoss(somaticGainLoss))
+        if(!isDel(somaticGainDel))
         {
-            return somaticGainLoss;
+            return somaticGainDel;
         }
 
-        List<PurpleGainDel> matchingGermlineLosses =
-                reportableGermlineFullLosses.stream().filter(l -> lossesMatch(l, somaticGainLoss)).collect(Collectors.toList());
-        if(matchingGermlineLosses.isEmpty())
+        List<PurpleGainDel> matchingGermlineDels =
+                reportableGermlineFullDels.stream().filter(l -> DelsMatch(l, somaticGainDel)).collect(Collectors.toList());
+        if(matchingGermlineDels.isEmpty())
         {
-            return somaticGainLoss;
+            return somaticGainDel;
         }
-        else if(matchingGermlineLosses.size() == 1)
+        else if(matchingGermlineDels.size() == 1)
         {
-            return mergeLosses(somaticGainLoss, matchingGermlineLosses.get(0));
+            return mergeDels(somaticGainDel, matchingGermlineDels.get(0));
         }
         else
         {
             throw new IllegalStateException(
-                    "More than one reportable germline loss for transcript " + somaticGainLoss.transcript() + " of gene "
-                            + somaticGainLoss.gene());
+                    "More than one reportable germline del for transcript " + somaticGainDel.transcript() + " of gene "
+                            + somaticGainDel.gene());
         }
     }
 
-    private static boolean lossesMatch(@NotNull PurpleGainDel germlineLoss, @NotNull PurpleGainDel somaticGainLoss)
+    private static boolean DelsMatch(@NotNull PurpleGainDel germlineDel, @NotNull PurpleGainDel somaticGainDel)
     {
-        return isLoss(somaticGainLoss) && germlineLoss.gene().equals(somaticGainLoss.gene()) && germlineLoss.transcript()
-                .equals(somaticGainLoss.transcript());
+        return isDel(somaticGainDel) && germlineDel.gene().equals(somaticGainDel.gene()) && germlineDel.transcript()
+                .equals(somaticGainDel.transcript());
     }
 
     @NotNull
-    private static PurpleGainDel mergeLosses(@NotNull PurpleGainDel somaticLoss, @NotNull PurpleGainDel germlineLoss)
+    private static PurpleGainDel mergeDels(@NotNull PurpleGainDel somaticDel, @NotNull PurpleGainDel germlineDel)
     {
-        double minCopies = Math.min(somaticLoss.minCopies(), germlineLoss.minCopies());
+        double minCopies = Math.min(somaticDel.minCopies(), germlineDel.minCopies());
 
         CopyNumberInterpretation interpretation;
         double maxCopies;
-        if(somaticLoss.interpretation() == germlineLoss.interpretation())
+        if(somaticDel.interpretation() == germlineDel.interpretation())
         {
-            interpretation = somaticLoss.interpretation();
-            maxCopies = Math.max(somaticLoss.maxCopies(), germlineLoss.maxCopies());
+            interpretation = somaticDel.interpretation();
+            maxCopies = Math.max(somaticDel.maxCopies(), germlineDel.maxCopies());
         }
-        else if(isFullLoss(somaticLoss))
+        else if(isFullDel(somaticDel))
         {
             interpretation = CopyNumberInterpretation.FULL_DEL;
-            maxCopies = somaticLoss.maxCopies();
+            maxCopies = somaticDel.maxCopies();
         }
         else
         {
-            // germline full loss and somatic partial loss
+            // germline full del and somatic partial del
             interpretation = CopyNumberInterpretation.FULL_DEL;
-            maxCopies = germlineLoss.maxCopies();
+            maxCopies = germlineDel.maxCopies();
         }
 
         return ImmutablePurpleGainLoss.builder()
                 .interpretation(interpretation)
-                .chromosome(somaticLoss.chromosome())
-                .chromosomeBand(somaticLoss.chromosomeBand())
-                .gene(somaticLoss.gene())
-                .transcript(somaticLoss.transcript())
-                .isCanonical(somaticLoss.isCanonical())
+                .chromosome(somaticDel.chromosome())
+                .chromosomeBand(somaticDel.chromosomeBand())
+                .gene(somaticDel.gene())
+                .transcript(somaticDel.transcript())
+                .isCanonical(somaticDel.isCanonical())
                 .minCopies(minCopies)
                 .maxCopies(maxCopies)
                 .build();
     }
 
-    private static boolean isLoss(@NotNull PurpleGainDel gainLoss)
+    private static boolean isDel(@NotNull PurpleGainDel gainDel)
     {
-        return isFullLoss(gainLoss) || isPartialLoss(gainLoss);
+        return isFullDel(gainDel) || isPartialDel(gainDel);
     }
 
-    private static boolean isFullLoss(@NotNull PurpleGainDel gainLoss)
+    private static boolean isFullDel(@NotNull PurpleGainDel gainDel)
     {
-        return gainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL;
+        return gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL;
     }
 
-    private static boolean isPartialLoss(final @NotNull PurpleGainDel gainLoss)
+    private static boolean isPartialDel(final @NotNull PurpleGainDel gainDel)
     {
-        return gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
+        return gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
     }
 
     @NotNull
@@ -366,16 +366,16 @@ public final class GermlineConversion
     }
 
     private static boolean shouldAddSuspectGeneCopyNumberWithLOH(@NotNull PurpleGeneCopyNumber candidateSuspectGeneCopyNumber,
-            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH, @Nullable List<PurpleGainDel> reportableGermlineFullLosses)
+            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH, @Nullable List<PurpleGainDel> reportableGermlineFullDels)
     {
         String gene = candidateSuspectGeneCopyNumber.gene();
 
         boolean alreadySuspectGeneCopyNumberWithLOH = findMatchingGeneCopyNumber(gene, suspectGeneCopyNumbersWithLOH) != null;
-        boolean hasReportableGermlineFullLoss =
-                reportableGermlineFullLosses != null && reportableGermlineFullLosses.stream().anyMatch(l -> l.gene().equals(gene));
+        boolean hasReportableGermlineFullDels =
+                reportableGermlineFullDels != null && reportableGermlineFullDels.stream().anyMatch(l -> l.gene().equals(gene));
         boolean fullyLostInTumor = candidateSuspectGeneCopyNumber.minCopyNumber() < 0.5;
 
-        return !alreadySuspectGeneCopyNumberWithLOH && !hasReportableGermlineFullLoss && !fullyLostInTumor;
+        return !alreadySuspectGeneCopyNumberWithLOH && !hasReportableGermlineFullDels && !fullyLostInTumor;
     }
 
     @Nullable

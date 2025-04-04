@@ -17,12 +17,12 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GermlineGainLossFactory
+public class GermlineGainDelFactory
 {
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
-    public GermlineGainLossFactory(@NotNull final EnsemblDataCache ensemblDataCache)
+    public GermlineGainDelFactory(@NotNull final EnsemblDataCache ensemblDataCache)
     {
         this.ensemblDataCache = ensemblDataCache;
     }
@@ -42,7 +42,7 @@ public class GermlineGainLossFactory
                     germlineDeletionsHomozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
             GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
-            PurpleGainDel loss = toGainLoss(geneName, deletionsForGene, somaticGeneCopyNumber);
+            PurpleGainDel loss = toGainDel(geneName, deletionsForGene, somaticGeneCopyNumber);
             boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported);
             lossToReportability.put(loss, reported);
         }
@@ -50,7 +50,7 @@ public class GermlineGainLossFactory
     }
 
     @NotNull
-    private PurpleGainDel toGainLoss(@NotNull String geneName, @NotNull List<GermlineDeletion> deletionsForGene,
+    private PurpleGainDel toGainDel(@NotNull String geneName, @NotNull List<GermlineDeletion> deletionsForGene,
             @NotNull GeneCopyNumber somaticGeneCopyNumber)
     {
         TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);

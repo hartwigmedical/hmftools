@@ -63,7 +63,7 @@ public class PurpleInterpreter
     @NotNull
     private final PurpleVariantFactory purpleVariantFactory;
     @NotNull
-    private final GermlineGainLossFactory germlineGainLossFactory;
+    private final GermlineGainDelFactory germlineGainLossFactory;
     @NotNull
     private final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory;
     @NotNull
@@ -77,7 +77,7 @@ public class PurpleInterpreter
     boolean convertGermlineToSomatic;
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
-            @NotNull final GermlineGainLossFactory germlineGainLossFactory,
+            @NotNull final GermlineGainDelFactory germlineGainLossFactory,
             @NotNull final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
             @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx,
             @NotNull ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer,
