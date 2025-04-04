@@ -29,10 +29,10 @@ public class CopyNumberInterpretationTest
         assertEquals(CopyNumberInterpretation.PARTIAL_GAIN, CopyNumberInterpretationUtil.fromCNADriver(partialAmp));
 
         DriverCatalog fullLoss = DriverCatalogTestFactory.builder().driver(DriverType.DEL).maxCopyNumber(0).build();
-        assertEquals(CopyNumberInterpretation.FULL_LOSS, CopyNumberInterpretationUtil.fromCNADriver(fullLoss));
+        assertEquals(CopyNumberInterpretation.FULL_DEL, CopyNumberInterpretationUtil.fromCNADriver(fullLoss));
 
         DriverCatalog partialLoss = DriverCatalogTestFactory.builder().driver(DriverType.DEL).maxCopyNumber(2).build();
-        assertEquals(CopyNumberInterpretation.PARTIAL_LOSS, CopyNumberInterpretationUtil.fromCNADriver(partialLoss));
+        assertEquals(CopyNumberInterpretation.PARTIAL_DEL, CopyNumberInterpretationUtil.fromCNADriver(partialLoss));
     }
 
     @Test(expected = IllegalStateException.class)

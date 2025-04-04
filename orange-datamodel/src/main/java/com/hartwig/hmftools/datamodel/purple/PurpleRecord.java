@@ -58,25 +58,25 @@ public interface PurpleRecord
     List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH();
 
     @NotNull
-    List<PurpleGainLoss> allSomaticGainsLosses();
+    List<PurpleGainDeletion> allSomaticGainsDels();
 
     @NotNull
-    List<PurpleGainLoss> reportableSomaticGainsLosses();
+    List<PurpleGainDeletion> reportableSomaticGainsDels();
 
     @NotNull
-    List<PurpleGainLoss> nearReportableSomaticGains();
+    List<PurpleGainDeletion> nearReportableSomaticGains();
 
     @NotNull
-    List<PurpleGainLoss> additionalSuspectSomaticGainsLosses();
+    List<PurpleGainDeletion> additionalSuspectSomaticGainsDels();
 
     @Nullable
     List<PurpleGermlineDeletion> allGermlineDeletions();
 
     @Nullable
-    List<PurpleGainLoss> allGermlineFullLosses();
+    List<PurpleGainDeletion> allGermlineFullDels();
 
     @Nullable
-    List<PurpleGainLoss> reportableGermlineFullLosses();
+    List<PurpleGainDeletion> reportableGermlineFullDels();
 
     @Nullable
     List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities();

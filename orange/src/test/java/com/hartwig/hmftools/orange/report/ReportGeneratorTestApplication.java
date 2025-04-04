@@ -154,9 +154,9 @@ public class ReportGeneratorTestApplication
                         .allSomaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().allSomaticGeneCopyNumbers(),
                                 report.purple().somaticDrivers()))
                         .suspectGeneCopyNumbersWithLOH(Lists.newArrayList())
-                        .allSomaticGainsLosses(report.purple().reportableSomaticGainsLosses())
+                        .allSomaticGainsDels(report.purple().reportableSomaticGainsDels())
                         .nearReportableSomaticGains(Lists.newArrayList())
-                        .additionalSuspectSomaticGainsLosses(Lists.newArrayList())
+                        .additionalSuspectSomaticGainsDels(Lists.newArrayList())
                         .build())
                 .linx(ImmutableLinxRecord.builder()
                         .from(report.linx())
