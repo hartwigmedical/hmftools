@@ -2,14 +2,15 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_DISTINCT_FRAGS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
@@ -107,18 +108,8 @@ public class JunctionAssembler
                     }
                 }
 
-                if((mJunction.isForward() && read.indelImpliedAlignmentEnd() > 0)
-                || (mJunction.isReverse() && read.indelImpliedAlignmentStart() > 0))
-                {
-                    buildIndelFrequencies(indelLengthReads, read);
-                }
-
                 junctionReads.add(read);
             }
-
-            List<Read> dominantIndelReads = findMaxFrequencyIndelReads(indelLengthReads);
-
-            extensionReads.addAll(dominantIndelReads);
         }
 
         if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))
@@ -133,7 +124,7 @@ public class JunctionAssembler
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
-        if(!aboveMinSupportThreshold(assemblySupport))
+        if(!meetsMinSupportThreshold(assemblySupport))
             return Collections.emptyList();
 
         JunctionAssembly firstAssembly = new JunctionAssembly(
@@ -152,9 +143,6 @@ public class JunctionAssembler
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
-
-        //if(!passUnpairedReadFilter(firstAssembly.support()))
-        //     return Collections.emptyList();
 
         // test for a second well-supported, alternative assembly at the same junction
         JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
@@ -341,6 +329,9 @@ public class JunctionAssembler
         if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
             return null;
 
+        if(!passDistinctFragmentsFilter(assemblySupport))
+            return null;
+
         JunctionAssembly newAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
                 extensionSeqBuilder.repeatInfo());
@@ -360,9 +351,6 @@ public class JunctionAssembler
         newAssembly.setExtBaseBuildInfo(extensionSeqBuilder.buildInformation());
 
         addJunctionReads(newAssembly, extensionSeqBuilder, junctionReads);
-
-        // if(!passUnpairedReadFilter(firstAssembly.support()))
-        //    return null;
 
         return newAssembly;
     }
@@ -399,16 +387,24 @@ public class JunctionAssembler
         return true;
     }
 
-    private boolean aboveMinSupportThreshold(final List<SupportRead> assemblySupport)
+    private boolean meetsMinSupportThreshold(final List<SupportRead> support)
+    {
+        if(!aboveMinSupportThreshold(support))
+            return false;
+
+        return passDistinctFragmentsFilter(support);
+    }
+
+    private boolean aboveMinSupportThreshold(final List<SupportRead> support)
     {
         int minRequiredReadCount = minReadThreshold(mJunction);
 
         // account for overlapping fragments
-        if(assemblySupport.size() >= minRequiredReadCount * 2)
+        if(support.size() >= minRequiredReadCount * 2)
             return true;
 
         Set<String> uniqueReadIds = Sets.newHashSet();
-        assemblySupport.forEach(x -> uniqueReadIds.add(x.id()));
+        support.forEach(x -> uniqueReadIds.add(x.id()));
 
         return uniqueReadIds.size() >= minRequiredReadCount;
     }
@@ -431,24 +427,31 @@ public class JunctionAssembler
         return junction.Hotspot ? MIN_HOTSPOT_JUNCTION_SUPPORT : ASSEMBLY_MIN_READ_SUPPORT;
     }
 
-    private boolean passUnpairedReadFilter(final List<SupportRead> reads)
+    private boolean passDistinctFragmentsFilter(final List<SupportRead> support)
     {
-        if(reads.isEmpty() || reads.get(0).isPairedRead())
-            return true;
+        Set<Integer> readPositions = Sets.newHashSet();
+        Set<Integer> readEndPositions = null;
 
-        Set<Integer> startPositions = Sets.newHashSet();
-        Set<Integer> endPositions = Sets.newHashSet();
-
-        for(SupportRead read : reads)
+        for(SupportRead read : support)
         {
             if(read.isPairedRead())
-                return true;
+            {
+                readPositions.add(read.cachedRead().fragmentEnd());
 
-            startPositions.add(read.unclippedStart());
-            endPositions.add(read.unclippedEnd());
+                if(readPositions.size() >= ASSEMBLY_MIN_DISTINCT_FRAGS)
+                    return true;
+            }
+            else
+            {
+                if(readEndPositions == null)
+                    readEndPositions = Sets.newHashSet();
 
-            if(startPositions.size() >= ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS && endPositions.size() >= ASSEMBLY_UNPAIRED_DISTINCT_POSITIONS)
-                return true;
+                readPositions.add(read.unclippedStart());
+                readEndPositions.add(read.unclippedEnd());
+
+                if(readPositions.size() >= ASSEMBLY_MIN_DISTINCT_FRAGS && readEndPositions.size() >= ASSEMBLY_MIN_DISTINCT_FRAGS)
+                    return true;
+            }
         }
 
         return false;

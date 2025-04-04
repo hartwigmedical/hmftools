@@ -76,11 +76,6 @@ public final class SamRecordTestUtils
 
         byte[] qualities = buildDefaultBaseQuals(readBases.length());
 
-        for(int i = 0; i < readBases.length(); ++i)
-        {
-            qualities[i] = DEFAULT_BASE_QUAL;
-        }
-
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
         record.setReferenceIndex(chrIndex); // need to override since no header is present

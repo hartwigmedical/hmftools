@@ -3,8 +3,8 @@ package com.hartwig.hmftools.compar.metrics;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.TUMOR_FLAGSTAT;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
 
 import java.util.List;
@@ -60,7 +60,8 @@ public class TumorFlagstatData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final TumorFlagstatData otherData = (TumorFlagstatData) other;
 
@@ -68,6 +69,6 @@ public class TumorFlagstatData implements ComparableItem
 
         checkDiff(diffs, FLD_MAPPED_PROPORTION, mFlagstat.mappedProportion(), otherData.mFlagstat.mappedProportion(), thresholds);
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }

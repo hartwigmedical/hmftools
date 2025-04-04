@@ -346,5 +346,23 @@ public class ReadAdjustmentsTest
         assertEquals(109, read.indelImpliedAlignmentEnd());
         assertEquals(100, read.minUnclippedStart());
         assertEquals(130, read.maxUnclippedEnd());
+
+        cigar = "70M20D10M";
+        readBases = REF_BASES_RANDOM_100.substring(0, 80);
+        read = createRead(TEST_READ_ID, 101, readBases, cigar);
+        assertEquals(200, read.alignmentEnd());
+        assertEquals(200, read.unclippedEnd());
+        assertTrue(ReadAdjustments.convertEdgeIndelsToSoftClip(read));
+        // assertEquals(100, read.alignmentStart());
+        //assertEquals(100, read.unclippedStart());
+
+        // unch
+        assertEquals(200, read.alignmentEnd());
+        assertEquals(200, read.unclippedEnd());
+
+        // assertEquals(116, read.indelImpliedAlignmentStart());
+        assertEquals(170, read.indelImpliedAlignmentEnd());
+        //assertEquals(100, read.minUnclippedStart());
+        assertEquals(200, read.maxUnclippedEnd());
     }
 }

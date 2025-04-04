@@ -4,8 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.Category.VIRUS;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
@@ -66,7 +66,8 @@ public class VirusData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches)
     {
         final VirusData otherData = (VirusData) other;
 
@@ -77,6 +78,6 @@ public class VirusData implements ComparableItem
         checkDiff(diffs, FLD_MEAN_COVERAGE, Virus.meanCoverage(), otherData.Virus.meanCoverage(), thresholds);
         checkDiff(diffs, FLD_DRIVER_LIKELIHOOD, String.valueOf(Virus.virusDriverLikelihoodType()), String.valueOf(otherData.Virus.virusDriverLikelihoodType()));
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        return createMismatchFromDiffs(this, other, diffs, includeMatches);
     }
 }

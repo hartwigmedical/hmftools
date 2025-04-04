@@ -81,7 +81,7 @@ public class ExtensionSeqBuilder
 
         for(Read read : reads)
         {
-            int readJunctionIndex = getReadIndexAtReferencePosition(read, junction.Position, true);
+            int readJunctionIndex = getReadIndexAtReferencePosition(read, junction, true);
 
             if(readJunctionIndex == INVALID_INDEX)
                 continue;
@@ -784,7 +784,7 @@ public class ExtensionSeqBuilder
 
     public ExtReadParseState checkAddJunctionRead(final Read read)
     {
-        int readJunctionIndex = getReadIndexAtReferencePosition(read, mJunction.Position, true);
+        int readJunctionIndex = getReadIndexAtReferencePosition(read, mJunction, true);
 
         if(readJunctionIndex == INVALID_INDEX)
             return null;

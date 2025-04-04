@@ -24,9 +24,6 @@ Whilst Linx is designed primarily for somatic SV, it can also be run in a more l
 * [Visualisation](#visualisation)  
 * [Version History](#version-history)
 
-## Installation
-The latest version of Linx can be downloaded from the [Hartwig releases page](https://github.com/hartwigmedical/hmftools/releases/)
-
 ## Configuration
 ### Core configuration
 All values are optional unless otherwise specified.
@@ -43,11 +40,7 @@ fragile_site_file | Linx has in-built default set of known fragile sites, but ov
 line_element_file | Linx has in-built default set of LINE source regions, but override as required (format: Chromosome,PosStart,PosEnd)
 ensembl_data_dir | Directory for Ensembl reference files
 
-Reference files are available for ref genome 37 and 38 [HMFTools-Resources > DNA Pipeline](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/):
-- DriverGenePanel: HMF driver genes (in resources 'common')
-- KnownFusions: HMF known fusion data (in resources 'sv')
-- Linx: fragile sites and LINE source regions (in resources 'sv')
-- Ensembl: cached Ensembl files (in resources 'common')
+All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
  
 ### Example Usage
 This is a typical command to run LINX for a single sample from PURPLE output.

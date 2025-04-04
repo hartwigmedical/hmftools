@@ -25,6 +25,7 @@ public class RemoteRegion extends ChrBaseRegion
 
     private final int[] mReadTypeCount;
     private int mSoftClipMapQualTotal; // from reads with supplementaries
+    private boolean mHasHighQualDiscordantRead;
 
     public RemoteRegion(final ChrBaseRegion region, final String readId, final RemoteReadType readType)
     {
@@ -36,6 +37,7 @@ public class RemoteRegion extends ChrBaseRegion
         ++mReadTypeCount[readType.ordinal()];
 
         mSoftClipMapQualTotal = 0;
+        mHasHighQualDiscordantRead = false;
     }
 
     public void addReadDetails(final String readId, final int posStart, final int posEnd, final RemoteReadType readType)
@@ -57,6 +59,12 @@ public class RemoteRegion extends ChrBaseRegion
         return mReadTypeCount[JUNCTION_MATE.ordinal()] + mReadTypeCount[DISCORDANT.ordinal()];
     }
     public boolean hasDiscordantReads() { return mReadTypeCount[DISCORDANT.ordinal()] > 0; }
+
+    public void setHasHighQualDiscordantRead()
+    {
+        mHasHighQualDiscordantRead = true;
+    }
+    public boolean hasHighQualDiscordantRead() { return mHasHighQualDiscordantRead; }
 
     public boolean isSuppOnlyRegion() { return nonSuppReadCount() == 0; }
 
@@ -161,6 +169,26 @@ public class RemoteRegion extends ChrBaseRegion
                     regions.remove(index);
                     continue;
                 }
+            }
+
+            ++index;
+        }
+    }
+
+    public static void purgeLowQualDiscordantOnlyRegions(final List<RemoteRegion> regions)
+    {
+        int index = 0;
+        while(index < regions.size())
+        {
+            RemoteRegion region = regions.get(index);
+
+            boolean isDiscordantOnly = region.readTypeCounts()[JUNCTION_MATE.ordinal()] == 0
+                    && region.readTypeCounts()[SUPPLEMENTARY.ordinal()] == 0;
+
+            if(isDiscordantOnly && !region.hasHighQualDiscordantRead())
+            {
+                regions.remove(index);
+                continue;
             }
 
             ++index;

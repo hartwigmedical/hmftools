@@ -19,8 +19,10 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
@@ -100,14 +102,16 @@ public class UnmappedBaseExtender
 
     public void processReads(final List<Read> reads)
     {
+        int iteration = 0;
+
         while(true)
         {
-            if(!tryAddReads(reads))
+            if(!tryAddReads(reads, iteration++))
                 break;
         }
     }
 
-    public boolean tryAddReads(final List<Read> reads)
+    public boolean tryAddReads(final List<Read> reads, int iteration)
     {
         mExtensionBases = new String(mBases);
 
@@ -143,6 +147,11 @@ public class UnmappedBaseExtender
         if(readSequenceMatches.isEmpty())
             return false;
 
+        if(iteration == 0 && AssemblyConfig.AssemblyBuildDebug)
+        {
+            SV_LOGGER.debug("junc({}) initial sequence {}", mJunctionAssembly.junction().coords(), new String(mBases));
+        }
+
         // build out extension bases from these overlapping reads
         int newExtensionLength = readSequenceMatches.stream().mapToInt(x -> x.maxReadExtension()).max().orElse(0);
 
@@ -173,8 +182,8 @@ public class UnmappedBaseExtender
 
         if(addedReads > 0 && AssemblyConfig.AssemblyBuildDebug)
         {
-            SV_LOGGER.debug("junc({}) added {} unmapped reads, new sequence {}",
-                    mJunctionAssembly.junction().coords(), addedReads, new String(mBases));
+            SV_LOGGER.debug("junc({}) iteration({}) added {} unmapped reads, new sequence {}",
+                    mJunctionAssembly.junction().coords(), iteration, addedReads, new String(mBases));
         }
 
         return addedReads > 0;
@@ -455,49 +464,76 @@ public class UnmappedBaseExtender
 
         byte[] readBaseQuals = null;
 
+        ReadSequenceMatch readSequenceMatch = null;
+
+        Set<String> testedMatches = Sets.newHashSet();
+
         for(int readIndex = 0; readIndex + subsequenceLength < read.basesLength(); readIndex += subsequenceLength)
         {
             String readSeqBases = new String(readBases, readIndex, subsequenceLength);
             int extBaseMatchIndex = mExtensionBases.indexOf(readSeqBases);
 
-            if(extBaseMatchIndex < 0)
-                continue;
+            while(extBaseMatchIndex >= 0)
+            {
+                if(readBaseQuals == null)
+                    readBaseQuals = reverseBases ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
 
-            // try to build out a longer sequence match from this point
-            int readLowerBaseCount = readIndex;
-            int readUpperBaseCount = readBaseCount - readIndex;
-            int extBaseLowerBaseCount = extBaseMatchIndex;
-            int extBaseUpperBaseCount = mBases.length - extBaseMatchIndex;
+                ReadSequenceMatch newReadSequenceMatch = findReadSequenceMatch(
+                        read, readBases, readBaseQuals, readIndex, readBaseCount, extBaseMatchIndex, testedMatches);
 
-            int lowerOverlap = min(readLowerBaseCount, extBaseLowerBaseCount);
-            int upperOverlap = min(readUpperBaseCount, extBaseUpperBaseCount);
+                if(newReadSequenceMatch != null)
+                {
+                    // rule out this read if it can be added at more than 1 location
+                    if(readSequenceMatch != null)
+                        return null;
 
-            int totalOverlap = lowerOverlap + upperOverlap;
+                    readSequenceMatch = newReadSequenceMatch;
+                }
 
-            if(totalOverlap < ASSEMBLY_LINK_OVERLAP_BASES)
-                continue;
-
-            int readIndexStart = readIndex - lowerOverlap;
-            int readIndexEnd = readIndex + upperOverlap - 1;
-            int extBaseIndexStart = extBaseMatchIndex - lowerOverlap;
-            int extBaseIndexEnd = extBaseMatchIndex + upperOverlap - 1;
-
-            int permittedMismatches = permittedReadMismatches(totalOverlap);
-
-            if(readBaseQuals == null)
-                readBaseQuals = reverseBases ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
-
-            int mismatchCount = compareSequences(
-                    mBases, mBaseQuals, extBaseIndexStart, extBaseIndexEnd, mRepeats,
-                    readBases, readBaseQuals, readIndexStart, readIndexEnd, Collections.emptyList(), permittedMismatches);
-
-            if(mismatchCount > permittedMismatches)
-                continue;
-
-            return new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap, mismatchCount);
+                extBaseMatchIndex = mExtensionBases.indexOf(readSeqBases, extBaseMatchIndex + subsequenceLength);
+            }
         }
 
-        return null;
+        return readSequenceMatch;
+    }
+
+    private ReadSequenceMatch findReadSequenceMatch(
+            final Read read, final byte[] readBases, final byte[] readBaseQuals,
+            int readIndex, int readBaseCount, int extBaseMatchIndex, final Set<String> testedMatches)
+    {
+        int readLowerBaseCount = readIndex;
+        int readUpperBaseCount = readBaseCount - readIndex;
+        int extBaseLowerBaseCount = extBaseMatchIndex;
+        int extBaseUpperBaseCount = mBases.length - extBaseMatchIndex;
+
+        int lowerOverlap = min(readLowerBaseCount, extBaseLowerBaseCount);
+        int upperOverlap = min(readUpperBaseCount, extBaseUpperBaseCount);
+
+        int totalOverlap = lowerOverlap + upperOverlap;
+
+        if(totalOverlap < ASSEMBLY_LINK_OVERLAP_BASES)
+            return null;
+
+        int readIndexStart = readIndex - lowerOverlap;
+        int readIndexEnd = readIndex + upperOverlap - 1;
+        int extBaseIndexStart = extBaseMatchIndex - lowerOverlap;
+        int extBaseIndexEnd = extBaseMatchIndex + upperOverlap - 1;
+
+        String testedMatch = format("%d_%d_%d", readIndexStart, extBaseIndexStart, totalOverlap);
+
+        if(testedMatches.contains(testedMatch))
+            return null;
+
+        testedMatches.add(testedMatch);
+
+        int permittedMismatches = permittedReadMismatches(totalOverlap);
+
+        int mismatchCount = compareSequences(
+                mBases, mBaseQuals, extBaseIndexStart, extBaseIndexEnd, mRepeats,
+                readBases, readBaseQuals, readIndexStart, readIndexEnd, Collections.emptyList(), permittedMismatches);
+
+        return mismatchCount <= permittedMismatches ?
+                new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap, mismatchCount) : null;
     }
 
     private int permittedReadMismatches(int readBaseOverlap)

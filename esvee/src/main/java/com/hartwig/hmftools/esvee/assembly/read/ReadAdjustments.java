@@ -74,6 +74,7 @@ public final class ReadAdjustments
 
     public static boolean trimPolyGSequences(final Read read)
     {
+        // poly-G may be trimmed from the 3' read end
         int trailingGCount = 0;
 
         if(read.positiveStrand())

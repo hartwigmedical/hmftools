@@ -1,9 +1,9 @@
 {
   "sampleId": "Test",
   "samplingDate": {
-    "year": 2024,
-    "month": 9,
-    "day": 24
+    "year": 2025,
+    "month": 4,
+    "day": 2
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -13,49 +13,49 @@
     }
   ],
   "refGenomeVersion": "V37",
-  "platinumVersion": "5.34",
+  "platinumVersion": "6.0",
   "refSample": {
     "metrics": {
-      "meanCoverage": 108.05,
-      "sdCoverage": 35.036,
-      "medianCoverage": 109,
-      "madCoverage": 24,
+      "meanCoverage": 31.256,
+      "sdCoverage": 9.43,
+      "medianCoverage": 32,
+      "madCoverage": 5,
       "pctExcAdapter": 0.0,
-      "pctExcMapQ": 0.04574,
-      "pctExcDupe": 0.15016,
-      "pctExcUnpaired": 0.00055,
-      "pctExcBaseQ": 0.000040,
-      "pctExcOverlap": 0.00751,
-      "pctExcCapped": 0.01275,
-      "pctExcTotal": 0.21675
+      "pctExcMapQ": 0.01978,
+      "pctExcDupe": 0.10657,
+      "pctExcUnpaired": 0.00284,
+      "pctExcBaseQ": 1.3E-4,
+      "pctExcOverlap": 0.00498,
+      "pctExcCapped": 1.7E-4,
+      "pctExcTotal": 0.13447
     },
     "flagstat": {
-      "uniqueReadCount": 740406212,
+      "uniqueReadCount": 691880238,
       "secondaryCount": 0,
-      "supplementaryCount": 5742696,
-      "mappedProportion": 0.993296
+      "supplementaryCount": 871753,
+      "mappedProportion": 0.995733
     }
   },
   "tumorSample": {
     "metrics": {
-      "meanCoverage": 108.05,
-      "sdCoverage": 35.036,
+      "meanCoverage": 107.641,
+      "sdCoverage": 34.909,
       "medianCoverage": 109,
-      "madCoverage": 24,
+      "madCoverage": 23,
       "pctExcAdapter": 0.0,
-      "pctExcMapQ": 0.04574,
-      "pctExcDupe": 0.15016,
-      "pctExcUnpaired": 0.00055,
-      "pctExcBaseQ": 0.000040,
-      "pctExcOverlap": 0.00751,
-      "pctExcCapped": 0.01275,
-      "pctExcTotal": 0.21675
+      "pctExcMapQ": 0.0191,
+      "pctExcDupe": 0.1461,
+      "pctExcUnpaired": 0.00296,
+      "pctExcBaseQ": 1.4E-4,
+      "pctExcOverlap": 0.00743,
+      "pctExcCapped": 0.00328,
+      "pctExcTotal": 0.17901
     },
     "flagstat": {
-      "uniqueReadCount": 2671674230,
+      "uniqueReadCount": 2513301754,
       "secondaryCount": 0,
-      "supplementaryCount": 21477075,
-      "mappedProportion": 0.99683
+      "supplementaryCount": 3179178,
+      "mappedProportion": 0.995531
     }
   },
   "germlineMVLHPerGene": {},
@@ -70,7 +70,7 @@
         ],
         "amberMeanDepth": 111,
         "contamination": 0.0,
-        "totalCopyNumberSegments": 210,
+        "totalCopyNumberSegments": 222,
         "unsupportedCopyNumberSegments": 0,
         "deletedGenes": 4
       },
@@ -86,19 +86,19 @@
       "maxDiploidProportion": 0.0211,
       "hotspotMutationCount": 3,
       "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 2273196,
-      "structuralVariantTumorFragmentCount": 4908,
-      "bafCount": 675344
+      "smallVariantAlleleReadCount": 2287733,
+      "structuralVariantTumorFragmentCount": 6408,
+      "bafCount": 682755
     },
     "characteristics": {
       "wholeGenomeDuplication": true,
-      "microsatelliteIndelsPerMb": 0.1207,
+      "microsatelliteIndelsPerMb": 0.0951,
       "microsatelliteStatus": "MSS",
-      "tumorMutationalBurdenPerMb": 13.7188,
+      "tumorMutationalBurdenPerMb": 13.7219,
       "tumorMutationalBurdenStatus": "HIGH",
       "tumorMutationalLoad": 184,
       "tumorMutationalLoadStatus": "HIGH",
-      "svTumorMutationalBurden": 75
+      "svTumorMutationalBurden": 86
     },
     "chromosomalRearrangements": {
       "hasTrisomy1q": false,
@@ -120,9 +120,9 @@
         "type": "SNP",
         "gene": "",
         "chromosome": "1",
-        "position": 696644,
-        "ref": "G",
-        "alt": "A",
+        "position": 572085,
+        "ref": "C",
+        "alt": "T",
         "worstCodingEffect": "UNDEFINED",
         "canonicalImpact": {
           "transcript": "",
@@ -140,18 +140,18 @@
         "otherImpacts": [],
         "hotspot": "NON_HOTSPOT",
         "tumorDepth": {
-          "totalReadCount": 102,
-          "alleleReadCount": 81
+          "totalReadCount": 48,
+          "alleleReadCount": 12
         },
         "rnaDepth": null,
         "adjustedCopyNumber": 2.81,
-        "adjustedVAF": 0.7998,
+        "adjustedVAF": 0.2518,
         "minorAlleleCopyNumber": 0.811,
-        "variantCopyNumber": 2.25,
+        "variantCopyNumber": 0.709,
         "biallelic": false,
-        "biallelicProbability": 0.0,
+        "biallelicProbability": 0.0196,
         "genotypeStatus": "HOM_REF",
-        "repeatCount": 3,
+        "repeatCount": 0,
         "subclonalLikelihood": 0.0,
         "localPhaseSets": null,
         "reported": false
@@ -209,18 +209,18 @@
         ],
         "hotspot": "NON_HOTSPOT",
         "tumorDepth": {
-          "totalReadCount": 106,
+          "totalReadCount": 107,
           "alleleReadCount": 70
         },
         "rnaDepth": null,
         "adjustedCopyNumber": 3.03,
-        "adjustedVAF": 0.6648,
+        "adjustedVAF": 0.6586,
         "minorAlleleCopyNumber": 1.0,
-        "variantCopyNumber": 2.01,
+        "variantCopyNumber": 1.99,
         "biallelic": false,
-        "biallelicProbability": 0.0,
+        "biallelicProbability": 0.0231,
         "genotypeStatus": "HOM_REF",
-        "repeatCount": 2,
+        "repeatCount": 0,
         "subclonalLikelihood": 0.0,
         "localPhaseSets": null,
         "reported": true
@@ -369,16 +369,16 @@
         ],
         "hotspot": "NON_HOTSPOT",
         "tumorDepth": {
-          "totalReadCount": 146,
-          "alleleReadCount": 69
+          "totalReadCount": 147,
+          "alleleReadCount": 70
         },
         "rnaDepth": null,
-        "adjustedCopyNumber": 3.85,
-        "adjustedVAF": 0.4751,
-        "minorAlleleCopyNumber": 1.85,
-        "variantCopyNumber": 1.83,
+        "adjustedCopyNumber": 3.86,
+        "adjustedVAF": 0.4787,
+        "minorAlleleCopyNumber": 1.86,
+        "variantCopyNumber": 1.85,
         "biallelic": false,
-        "biallelicProbability": 0.0,
+        "biallelicProbability": 0.0196,
         "genotypeStatus": "HOM_REF",
         "repeatCount": 6,
         "subclonalLikelihood": 0.0,
@@ -581,8 +581,8 @@
         ],
         "hotspot": "NON_HOTSPOT",
         "tumorDepth": {
-          "totalReadCount": 123,
-          "alleleReadCount": 123
+          "totalReadCount": 125,
+          "alleleReadCount": 124
         },
         "rnaDepth": null,
         "adjustedCopyNumber": 2.81,
@@ -592,7 +592,7 @@
         "biallelic": true,
         "biallelicProbability": 1.0,
         "genotypeStatus": "HOM_ALT",
-        "repeatCount": 4,
+        "repeatCount": 0,
         "subclonalLikelihood": 0.0,
         "localPhaseSets": null,
         "reported": false
@@ -638,14 +638,14 @@
         ],
         "hotspot": "HOTSPOT",
         "tumorDepth": {
-          "totalReadCount": 116,
-          "alleleReadCount": 70
+          "totalReadCount": 121,
+          "alleleReadCount": 72
         },
         "rnaDepth": null,
         "adjustedCopyNumber": 4.01,
-        "adjustedVAF": 0.604,
+        "adjustedVAF": 0.5955,
         "minorAlleleCopyNumber": 1.97,
-        "variantCopyNumber": 2.42,
+        "variantCopyNumber": 2.39,
         "biallelic": false,
         "biallelicProbability": 0.0,
         "genotypeStatus": "HET",
@@ -660,7 +660,7 @@
         "chromosome": "1",
         "start": 1,
         "end": 87337011,
-        "averageTumorCopyNumber": 2.8143
+        "averageTumorCopyNumber": 2.8141
       }
     ],
     "allSomaticGeneCopyNumbers": [
@@ -670,9 +670,9 @@
         "chromosomeBand": "p36.33",
         "transcript": "ENST00000456328",
         "isCanonical": true,
-        "minCopyNumber": 2.8143,
-        "maxCopyNumber": 2.8143,
-        "minMinorAlleleCopyNumber": 0.8114
+        "minCopyNumber": 2.8141,
+        "maxCopyNumber": 2.8141,
+        "minMinorAlleleCopyNumber": 0.8112
       }
     ],
     "suspectGeneCopyNumbersWithLOH": [],
@@ -697,7 +697,7 @@
         "transcript": "ENST00000371953",
         "isCanonical": true,
         "minCopies": 0.0,
-        "maxCopies": 2.0163
+        "maxCopies": 2.0158
       }
     ],
     "nearReportableSomaticGains": [],
@@ -709,8 +709,8 @@
         "chromosomeBand": "p24.2",
         "transcript": "ENST00000424759",
         "isCanonical": true,
-        "minCopies": 12.1304,
-        "maxCopies": 12.1304
+        "minCopies": 12.1324,
+        "maxCopies": 12.1324
       }
     ],
     "allGermlineDeletions": [
@@ -736,17 +736,28 @@
     "allGermlineFullLosses": [
       {
         "interpretation": "PARTIAL_DEL",
-        "gene": "BTNL3",
-        "chromosome": "5",
-        "chromosomeBand": "q35.3",
+        "gene": "RNVU1-17",
+        "chromosome": "1",
+        "chromosomeBand": "q21.2",
         "transcript": "trans",
         "isCanonical": true,
         "minCopies": 0.0,
-        "maxCopies": 1.9906
+        "maxCopies": 3.9314
       }
     ],
     "reportableGermlineFullLosses": [],
-    "allGermlineLossOfHeterozygosities": [],
+    "allGermlineLossOfHeterozygosities": [
+      {
+        "geneProportion": "PARTIAL_GENE",
+        "chromosome": "15",
+        "chromosomeBand": "q11.2",
+        "gene": "OR11J2P",
+        "transcript": "trans",
+        "isCanonical": true,
+        "minCopies": 2.15,
+        "maxCopies": 3.7412
+      }
+    ],
     "reportableGermlineLossOfHeterozygosities": []
   },
   "linx": {
@@ -758,9 +769,9 @@
     ],
     "allSomaticStructuralVariants": [
       {
-        "vcfId": "gridss47fb_59o",
-        "svId": 2,
-        "clusterId": 24,
+        "vcfId": "2194",
+        "svId": 4,
+        "clusterId": 28,
         "clusterReason": "",
         "fragileSiteStart": false,
         "fragileSiteEnd": false,
@@ -779,17 +790,17 @@
         "localTICountEnd": 0
       },
       {
-        "vcfId": "gridss708fb_131o",
-        "svId": 105,
-        "clusterId": 68,
+        "vcfId": "29005",
+        "svId": 174,
+        "clusterId": 73,
         "clusterReason": "",
         "fragileSiteStart": false,
         "fragileSiteEnd": false,
         "isFoldback": false,
         "lineTypeStart": "NONE",
         "lineTypeEnd": "NONE",
-        "junctionCopyNumberMin": 1.7785,
-        "junctionCopyNumberMax": 2.2411,
+        "junctionCopyNumberMin": 1.7786,
+        "junctionCopyNumberMax": 2.2389,
         "geneStart": "PTEN;RPL11P3",
         "geneEnd": "PTEN",
         "localTopologyIdStart": 0,
@@ -802,22 +813,22 @@
     ],
     "allGermlineStructuralVariants": [
       {
-        "vcfId": "gridss8f_186b",
+        "vcfId": "4",
         "svId": 0,
-        "clusterId": 12,
-        "clusterReason": "",
+        "clusterId": 5313,
+        "clusterReason": "PROXIMITY-2",
         "fragileSiteStart": false,
         "fragileSiteEnd": false,
         "isFoldback": false,
         "lineTypeStart": "NONE",
         "lineTypeEnd": "NONE",
-        "junctionCopyNumberMin": 0.209,
-        "junctionCopyNumberMax": 0.209,
-        "geneStart": "MUL1",
+        "junctionCopyNumberMin": 0.182,
+        "junctionCopyNumberMax": 0.182,
+        "geneStart": "",
         "geneEnd": "",
         "localTopologyIdStart": 0,
         "localTopologyIdEnd": -1,
-        "localTopologyStart": "ISOLATED_BE",
+        "localTopologyStart": "COMPLEX_OTHER",
         "localTopologyEnd": "",
         "localTICountStart": 0,
         "localTICountEnd": 0
@@ -844,7 +855,7 @@
         "chainTerminated": false,
         "domainsKept": "",
         "domainsLost": "",
-        "junctionCopyNumber": 0.9625
+        "junctionCopyNumber": 0.9643
       }
     ],
     "reportableSomaticFusions": [],
@@ -870,15 +881,15 @@
         "chainTerminated": false,
         "domainsKept": "",
         "domainsLost": "",
-        "junctionCopyNumber": 0.9625
+        "junctionCopyNumber": 0.9643
       }
     ],
     "allSomaticBreakends": [
       {
         "id": 0,
-        "svId": 2,
+        "svId": 4,
         "gene": "GDAP2",
-        "chromosome": "",
+        "chromosome": "1",
         "chromosomeBand": "",
         "transcript": "ENST00000369443",
         "isCanonical": true,
@@ -886,45 +897,45 @@
         "disruptive": false,
         "reported": false,
         "undisruptedCopyNumber": 1.191,
-        "type": "BND",
+        "type": "DEL",
         "regionType": "UPSTREAM",
         "codingType": "UTR_5P",
         "nextSpliceExonRank": 2,
-        "orientation": 0,
+        "orientation": 1,
         "exonUp": 0,
         "exonDown": 2,
-        "junctionCopyNumber": 0.0
+        "junctionCopyNumber": 0.83085
       }
     ],
     "allGermlineBreakends": [
       {
         "id": 0,
-        "svId": 17,
-        "gene": "CASP8",
-        "chromosome": "",
+        "svId": 13277,
+        "gene": "ATR",
+        "chromosome": "3",
         "chromosomeBand": "",
-        "transcript": "ENST00000358485",
+        "transcript": "ENST00000350721",
         "isCanonical": true,
         "geneOrientation": "Upstream",
         "disruptive": true,
         "reported": false,
-        "undisruptedCopyNumber": 3.03,
+        "undisruptedCopyNumber": 1.88,
         "type": "BND",
         "regionType": "INTRONIC",
         "codingType": "CODING",
-        "nextSpliceExonRank": 7,
-        "orientation": 0,
-        "exonUp": 7,
-        "exonDown": 8,
-        "junctionCopyNumber": 0.0
+        "nextSpliceExonRank": 3,
+        "orientation": -1,
+        "exonUp": 3,
+        "exonDown": 4,
+        "junctionCopyNumber": 2.13
       }
     ],
     "reportableSomaticBreakends": [
       {
-        "id": 154,
-        "svId": 105,
+        "id": 190,
+        "svId": 174,
         "gene": "PTEN",
-        "chromosome": "",
+        "chromosome": "10",
         "chromosomeBand": "",
         "transcript": "ENST00000371953",
         "isCanonical": true,
@@ -932,14 +943,14 @@
         "disruptive": true,
         "reported": true,
         "undisruptedCopyNumber": 0.0,
-        "type": "BND",
+        "type": "DEL",
         "regionType": "INTRONIC",
         "codingType": "CODING",
         "nextSpliceExonRank": 5,
-        "orientation": 0,
+        "orientation": 1,
         "exonUp": 5,
         "exonDown": 6,
-        "junctionCopyNumber": 0.0
+        "junctionCopyNumber": 2.00875
       }
     ],
     "reportableGermlineBreakends": [],
@@ -963,7 +974,7 @@
         "allele": "A*01:01",
         "tumorCopyNumber": 2.0,
         "refFragments": 210,
-        "tumorFragments": 1602,
+        "tumorFragments": 1609,
         "rnaFragments": null,
         "somaticMissense": 0.0,
         "somaticNonsenseOrFrameshift": 0.0,
@@ -975,7 +986,7 @@
         "allele": "A*01:01",
         "tumorCopyNumber": 1.83,
         "refFragments": 211,
-        "tumorFragments": 1602,
+        "tumorFragments": 1609,
         "rnaFragments": null,
         "somaticMissense": 0.0,
         "somaticNonsenseOrFrameshift": 0.0,
@@ -986,8 +997,8 @@
       {
         "allele": "B*08:01",
         "tumorCopyNumber": 1.83,
-        "refFragments": 216,
-        "tumorFragments": 750,
+        "refFragments": 217,
+        "tumorFragments": 753,
         "rnaFragments": null,
         "somaticMissense": 0.0,
         "somaticNonsenseOrFrameshift": 0.0,
@@ -999,7 +1010,7 @@
         "allele": "B*40:02",
         "tumorCopyNumber": 2.0,
         "refFragments": 196,
-        "tumorFragments": 721,
+        "tumorFragments": 726,
         "rnaFragments": null,
         "somaticMissense": 0.0,
         "somaticNonsenseOrFrameshift": 0.0,
@@ -1011,7 +1022,7 @@
         "allele": "C*03:04",
         "tumorCopyNumber": 2.0,
         "refFragments": 213,
-        "tumorFragments": 768,
+        "tumorFragments": 772,
         "rnaFragments": null,
         "somaticMissense": 0.0,
         "somaticNonsenseOrFrameshift": 0.0,
@@ -1023,7 +1034,7 @@
         "allele": "C*07:01",
         "tumorCopyNumber": 1.83,
         "refFragments": 225,
-        "tumorFragments": 767,
+        "tumorFragments": 772,
         "rnaFragments": null,
         "somaticMissense": 0.0,
         "somaticNonsenseOrFrameshift": 0.0,
@@ -1056,378 +1067,378 @@
     "predictions": [
       {
         "cancerType": "Skin: Melanoma",
-        "likelihood": 0.999967105970805,
-        "snvPairwiseClassifier": 0.9999879275632831,
-        "genomicPositionClassifier": 0.9997492462021321,
-        "featureClassifier": 0.8507700206082773,
+        "likelihood": 0.9999710902284965,
+        "snvPairwiseClassifier": 0.9999910153956342,
+        "genomicPositionClassifier": 0.9997621099072876,
+        "featureClassifier": 0.8991388522282147,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: Cartilaginous neoplasm",
-        "likelihood": 0.00003289402919513386,
-        "snvPairwiseClassifier": 4.414947168645547E-16,
-        "genomicPositionClassifier": 4.107161442240924E-10,
-        "featureClassifier": 1.4125023004735242E-9,
+        "likelihood": 2.8909771503514605E-5,
+        "snvPairwiseClassifier": 3.818383983669506E-16,
+        "genomicPositionClassifier": 3.912132551093825E-10,
+        "featureClassifier": 7.756820351850527E-10,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Anogenital",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 3.666888492499506E-7,
-        "genomicPositionClassifier": 0.0000012359767029327873,
-        "featureClassifier": 0.0002689821830476709,
+        "snvPairwiseClassifier": 2.9392891038301824E-7,
+        "genomicPositionClassifier": 1.3279338509830588E-6,
+        "featureClassifier": 7.484794545762348E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: GIST",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.6734107379273122E-14,
-        "genomicPositionClassifier": 0.0000018597524501371796,
-        "featureClassifier": 0.0000548189422898019,
+        "snvPairwiseClassifier": 1.643996216639453E-14,
+        "genomicPositionClassifier": 1.8152886027481698E-6,
+        "featureClassifier": 9.982974405938635E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: Leiomyosarcoma",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 2.4142203046786397E-12,
-        "genomicPositionClassifier": 0.000015459416917780073,
-        "featureClassifier": 0.0000713118733120476,
+        "snvPairwiseClassifier": 1.9340254792169908E-12,
+        "genomicPositionClassifier": 1.5115150868086141E-5,
+        "featureClassifier": 7.751650980387131E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: Liposarcoma",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.0857897682322421E-14,
-        "genomicPositionClassifier": 0.000002187330589389845,
-        "featureClassifier": 7.770431973517799E-7,
+        "snvPairwiseClassifier": 7.251536509809295E-15,
+        "genomicPositionClassifier": 1.939440770372089E-6,
+        "featureClassifier": 4.993422613114529E-7,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: Osteosarcoma",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 5.1890324962943245E-12,
-        "genomicPositionClassifier": 0.000017194510022122722,
-        "featureClassifier": 0.00004244579028356508,
+        "snvPairwiseClassifier": 5.491632670375552E-12,
+        "genomicPositionClassifier": 1.729520312147315E-5,
+        "featureClassifier": 3.4161032547003E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: Undiff. sarcoma",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 2.713778664159602E-9,
-        "genomicPositionClassifier": 0.000019339798665244923,
-        "featureClassifier": 0.00010872378016077757,
+        "snvPairwiseClassifier": 2.181307761212762E-9,
+        "genomicPositionClassifier": 1.7153941447350043E-5,
+        "featureClassifier": 8.555639508314992E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: Other",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 9.816288651836024E-8,
-        "genomicPositionClassifier": 0.00009699511173850296,
-        "featureClassifier": 0.0013446243276870088,
+        "snvPairwiseClassifier": 6.793450682198323E-8,
+        "genomicPositionClassifier": 9.199262852584612E-5,
+        "featureClassifier": 9.340850632824651E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Breast: Triple negative",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 3.0638441288085024E-11,
-        "genomicPositionClassifier": 0.0000021364272145122913,
-        "featureClassifier": 2.2427975324851772E-7,
+        "snvPairwiseClassifier": 2.6868593461983237E-11,
+        "genomicPositionClassifier": 2.082987577037298E-6,
+        "featureClassifier": 1.9384754388288651E-7,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Breast: Other",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.0165546529140088E-9,
-        "genomicPositionClassifier": 0.000001103786031764686,
-        "featureClassifier": 0.0000052884349762167116,
+        "snvPairwiseClassifier": 9.298645544739451E-10,
+        "genomicPositionClassifier": 1.0984001610223538E-6,
+        "featureClassifier": 3.3931515706352157E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "CNS: Glioma",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 6.0549350990658954E-15,
-        "genomicPositionClassifier": 0.000007120928810462389,
-        "featureClassifier": 0.001859160227703123,
+        "snvPairwiseClassifier": 6.020501388607517E-15,
+        "genomicPositionClassifier": 6.2146607569427734E-6,
+        "featureClassifier": 0.002404073225292083,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "CNS: Medulloblastoma",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 9.45382378694596E-19,
-        "genomicPositionClassifier": 0.000002189629471608415,
-        "featureClassifier": 2.523320705048407E-7,
+        "snvPairwiseClassifier": 8.108837118075514E-19,
+        "genomicPositionClassifier": 2.0975430492914776E-6,
+        "featureClassifier": 1.673111292754504E-7,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "CNS: Pilocytic astrocytoma",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 8.12700987275367E-18,
-        "genomicPositionClassifier": 0.000006442842709295199,
-        "featureClassifier": 4.3063436126308947E-7,
+        "snvPairwiseClassifier": 5.65059651154491E-18,
+        "genomicPositionClassifier": 7.117333936463319E-6,
+        "featureClassifier": 2.7331065497605067E-7,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Colorectum/Small intestine/Appendix",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.1358186079341116E-13,
-        "genomicPositionClassifier": 0.000001095737032558822,
-        "featureClassifier": 0.0000416517770194943,
+        "snvPairwiseClassifier": 1.302122158232328E-13,
+        "genomicPositionClassifier": 1.1433388403418623E-6,
+        "featureClassifier": 9.993538208313578E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Esophagus/Stomach",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.5648401300326665E-9,
-        "genomicPositionClassifier": 0.0000015139312268680275,
-        "featureClassifier": 0.00002327390870025543,
+        "snvPairwiseClassifier": 1.489901224881039E-9,
+        "genomicPositionClassifier": 1.63189142049761E-6,
+        "featureClassifier": 4.28324395655963E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Gynecologic: Endometrium",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 7.681938162188531E-12,
-        "genomicPositionClassifier": 9.548341073547644E-7,
-        "featureClassifier": 0.000001545340612411498,
+        "snvPairwiseClassifier": 7.913802022461231E-12,
+        "genomicPositionClassifier": 1.030001632519114E-6,
+        "featureClassifier": 7.578692822643318E-7,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Gynecologic: Ovary/Fallopian tube",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 5.210682850979339E-13,
-        "genomicPositionClassifier": 0.000003910183815945103,
-        "featureClassifier": 0.000005699206453870683,
+        "snvPairwiseClassifier": 4.889995714702101E-13,
+        "genomicPositionClassifier": 3.779584744359183E-6,
+        "featureClassifier": 2.539693867669155E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "HPB: Bile duct/Gallbladder",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.7350476244097772E-8,
-        "genomicPositionClassifier": 0.0000025401592055703797,
-        "featureClassifier": 0.01638118321384976,
+        "snvPairwiseClassifier": 1.4358108735882839E-8,
+        "genomicPositionClassifier": 2.892805215194013E-6,
+        "featureClassifier": 0.009909935476536841,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "HPB: Liver",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 2.725412683859692E-13,
-        "genomicPositionClassifier": 6.795699225337618E-7,
-        "featureClassifier": 0.11879973620809639,
+        "snvPairwiseClassifier": 2.310253660518777E-13,
+        "genomicPositionClassifier": 7.676862854449901E-7,
+        "featureClassifier": 0.08234867339173717,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "HPB: Pancreas",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.2749574513961878E-12,
-        "genomicPositionClassifier": 9.625548712466132E-7,
-        "featureClassifier": 0.00004102860222916434,
+        "snvPairwiseClassifier": 1.121315782432425E-12,
+        "genomicPositionClassifier": 9.595131746345418E-7,
+        "featureClassifier": 2.0819952441893988E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Head and neck: Adenoid cystic",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 4.673860695770034E-10,
-        "genomicPositionClassifier": 2.244559136431098E-9,
-        "featureClassifier": 0.000005355135368796433,
+        "snvPairwiseClassifier": 6.462593233484156E-10,
+        "genomicPositionClassifier": 2.2035664177475093E-9,
+        "featureClassifier": 3.4411514477765547E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Head and neck: Salivary gland",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 0.0000024503960141348244,
-        "genomicPositionClassifier": 0.000010318617577297046,
-        "featureClassifier": 0.0009795309800937322,
+        "snvPairwiseClassifier": 2.547110408149312E-6,
+        "genomicPositionClassifier": 9.827479465616282E-6,
+        "featureClassifier": 6.293332679106013E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Head and neck: Other",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 4.43234783712611E-7,
-        "genomicPositionClassifier": 0.0000019252999220201263,
-        "featureClassifier": 0.0003860036688492292,
+        "snvPairwiseClassifier": 3.286993096683806E-7,
+        "genomicPositionClassifier": 1.9995449429773094E-6,
+        "featureClassifier": 9.194908325962363E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Kidney: Chromophobe",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 5.1774688311439275E-15,
-        "genomicPositionClassifier": 2.4385781969448135E-7,
-        "featureClassifier": 0.0000108865745973233,
+        "snvPairwiseClassifier": 5.638679255258532E-15,
+        "genomicPositionClassifier": 2.3940510912492846E-7,
+        "featureClassifier": 4.485979988072262E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Kidney: Other",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 9.10202805696003E-10,
-        "genomicPositionClassifier": 3.9608506325416217E-7,
-        "featureClassifier": 0.0013945364913027372,
+        "snvPairwiseClassifier": 9.014609040384467E-10,
+        "genomicPositionClassifier": 4.507852924469359E-7,
+        "featureClassifier": 8.603241690914684E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lung: Non-small cell: LUAD",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 4.366815115644441E-12,
-        "genomicPositionClassifier": 0.0000019504741500148182,
-        "featureClassifier": 0.0015119184796082074,
+        "snvPairwiseClassifier": 3.4229553879510125E-12,
+        "genomicPositionClassifier": 1.8256486656664504E-6,
+        "featureClassifier": 9.472498165799427E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lung: Non-small cell: LUSC",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 9.327576286640537E-11,
-        "genomicPositionClassifier": 4.0890131886567427E-7,
-        "featureClassifier": 0.000014318491330210215,
+        "snvPairwiseClassifier": 7.856933371012328E-11,
+        "genomicPositionClassifier": 3.801813881272093E-7,
+        "featureClassifier": 3.4221082145762773E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lung: Small cell",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 2.4991260497492058E-12,
-        "genomicPositionClassifier": 5.024812415514167E-7,
-        "featureClassifier": 0.000001372470103234201,
+        "snvPairwiseClassifier": 2.156673483944002E-12,
+        "genomicPositionClassifier": 3.970729718303413E-7,
+        "featureClassifier": 8.212149160494871E-7,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lymphoid tissue",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.4988176373471124E-11,
-        "genomicPositionClassifier": 5.9226723834300984E-9,
-        "featureClassifier": 0.00004337595567850992,
+        "snvPairwiseClassifier": 1.1475373292654373E-11,
+        "genomicPositionClassifier": 6.361138981194829E-9,
+        "featureClassifier": 5.247286188460151E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Mesothelium",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 2.910395168949462E-12,
-        "genomicPositionClassifier": 7.896428297993253E-7,
-        "featureClassifier": 0.0001385720618335418,
+        "snvPairwiseClassifier": 3.1115460039938272E-12,
+        "genomicPositionClassifier": 7.138397469394035E-7,
+        "featureClassifier": 1.4566556531886367E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Myeloid: Acute myeloid leukemia",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 5.831658903881904E-15,
-        "genomicPositionClassifier": 2.1479793108172332E-8,
-        "featureClassifier": 0.00000414517542025284,
+        "snvPairwiseClassifier": 4.4975614227622984E-15,
+        "genomicPositionClassifier": 2.3137408123305708E-8,
+        "featureClassifier": 2.3837420240382996E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Myeloid: Myeloproliferative neoplasm",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.209591622314118E-18,
-        "genomicPositionClassifier": 3.504016180120666E-7,
-        "featureClassifier": 1.4717862261469723E-8,
+        "snvPairwiseClassifier": 8.082811415503957E-19,
+        "genomicPositionClassifier": 3.207959515611487E-7,
+        "featureClassifier": 3.918837463544322E-8,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "NET: Colorectum/Small intestine",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.5001577911789319E-12,
-        "genomicPositionClassifier": 6.799587258987057E-7,
-        "featureClassifier": 0.000007424167364554202,
+        "snvPairwiseClassifier": 1.4357647975637595E-12,
+        "genomicPositionClassifier": 5.86432090671755E-7,
+        "featureClassifier": 7.4375626224251266E-6,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "NET: Lung",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.3488300403273769E-11,
-        "genomicPositionClassifier": 6.614917593264422E-7,
-        "featureClassifier": 0.0005642316817644228,
+        "snvPairwiseClassifier": 1.2079224534192023E-11,
+        "genomicPositionClassifier": 5.50567736596246E-7,
+        "featureClassifier": 3.3994283361098133E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "NET: Pancreas",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.143650826760426E-10,
-        "genomicPositionClassifier": 0.00000400043570388755,
-        "featureClassifier": 0.0001211655818806122,
+        "snvPairwiseClassifier": 9.765331614434335E-11,
+        "genomicPositionClassifier": 4.05886655814325E-6,
+        "featureClassifier": 6.518004333939335E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Prostate",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 9.922426122823756E-16,
-        "genomicPositionClassifier": 0.0000031091986550511897,
-        "featureClassifier": 0.00012385594573787126,
+        "snvPairwiseClassifier": 1.0456618383245491E-15,
+        "genomicPositionClassifier": 2.8698904215136434E-6,
+        "featureClassifier": 3.744164257376693E-5,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Skin: Other",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 0.000008659757942846448,
-        "genomicPositionClassifier": 0.00003579993902723519,
-        "featureClassifier": 0.0016623945660413253,
+        "snvPairwiseClassifier": 5.697607828154083E-6,
+        "genomicPositionClassifier": 3.159853588544685E-5,
+        "featureClassifier": 5.889241560947043E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Thyroid gland",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.1383061746205303E-8,
-        "genomicPositionClassifier": 0.0000027318048130770883,
-        "featureClassifier": 0.0007995957918250728,
+        "snvPairwiseClassifier": 1.0495205582104699E-8,
+        "genomicPositionClassifier": 2.5643657768586304E-6,
+        "featureClassifier": 4.7598540245400274E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Urothelial tract",
         "likelihood": 0.0,
-        "snvPairwiseClassifier": 1.849439426148268E-8,
-        "genomicPositionClassifier": 0.000001932668396172361,
-        "featureClassifier": 0.002410121936754762,
+        "snvPairwiseClassifier": 1.8067169739389644E-8,
+        "genomicPositionClassifier": 2.0192534013282563E-6,
+        "featureClassifier": 5.930471616814036E-4,
         "altSjCohortClassifier": null,
         "expressionPairwiseClassifier": null
       }
     ],
     "bestPrediction": {
       "cancerType": "Skin: Melanoma",
-      "likelihood": 0.999967105970805,
-      "snvPairwiseClassifier": 0.9999879275632831,
-      "genomicPositionClassifier": 0.9997492462021321,
-      "featureClassifier": 0.8507700206082773,
+      "likelihood": 0.9999710902284965,
+      "snvPairwiseClassifier": 0.9999910153956342,
+      "genomicPositionClassifier": 0.9997621099072876,
+      "featureClassifier": 0.8991388522282147,
       "altSjCohortClassifier": null,
       "expressionPairwiseClassifier": null
     },
-    "simpleDups32To200B": 20,
+    "simpleDups32To200B": 22,
     "maxComplexSize": 8,
     "telomericSGLs": 0,
-    "LINECount": 3
+    "LINECount": 0
   },
   "peach": [
     {
@@ -1438,8 +1449,8 @@
       "function": "Normal Function",
       "linkedDrugs": "5-Fluorouracil;Capecitabine;Tegafur",
       "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104939;https://www.pharmgkb.org/guidelineAnnotation/PA166104963;https://www.pharmgkb.org/guidelineAnnotation/PA166104944",
-      "panelVersion": "peach_prod_v1.3",
-      "repoVersion": "1.7"
+      "panelVersion": "",
+      "repoVersion": ""
     },
     {
       "gene": "UGT1A1",
@@ -1449,82 +1460,82 @@
       "function": "Normal Function",
       "linkedDrugs": "Irinotecan",
       "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104951",
-      "panelVersion": "peach_prod_v1.3",
-      "repoVersion": "1.7"
+      "panelVersion": "",
+      "repoVersion": ""
     }
   ],
   "sigAllocations": [
     {
       "signature": "Sig2",
       "etiology": "APOBEC activity",
-      "allocation": 3702.746,
-      "percent": 0.09832
+      "allocation": 3749.465,
+      "percent": 0.09932
     },
     {
       "signature": "Sig4",
       "etiology": "Tobacco smoking",
-      "allocation": 2038.759,
-      "percent": 0.05414
+      "allocation": 2011.828,
+      "percent": 0.05329
     },
     {
       "signature": "Sig7",
       "etiology": "Ultraviolet light exposure",
-      "allocation": 23286.311,
-      "percent": 0.61833
+      "allocation": 23350.74,
+      "percent": 0.61851
     },
     {
       "signature": "Sig8",
       "etiology": "Unknown",
-      "allocation": 1984.845,
-      "percent": 0.0527
+      "allocation": 2056.216,
+      "percent": 0.05446
     },
     {
       "signature": "Sig11",
       "etiology": "Temozolomide treatment",
-      "allocation": 1313.281,
-      "percent": 0.03487
+      "allocation": 1263.195,
+      "percent": 0.03346
     },
     {
       "signature": "Sig12",
       "etiology": "Unknown",
-      "allocation": 1137.124,
-      "percent": 0.03019
+      "allocation": 1121.772,
+      "percent": 0.02971
     },
     {
       "signature": "Sig17",
       "etiology": "Unknown",
-      "allocation": 1083.158,
-      "percent": 0.02876
+      "allocation": 1109.873,
+      "percent": 0.0294
     },
     {
       "signature": "Sig18",
       "etiology": "Reactive oxygen species",
-      "allocation": 2057.316,
-      "percent": 0.05463
+      "allocation": 2012.602,
+      "percent": 0.05331
     },
     {
       "signature": "Sig20",
       "etiology": "Unknown",
-      "allocation": 253.052,
-      "percent": 0.00672
+      "allocation": 241.708,
+      "percent": 0.0064
     },
     {
       "signature": "Sig24",
       "etiology": "Aflatoxin exposure",
-      "allocation": 288.967,
-      "percent": 0.00767
+      "allocation": 309.003,
+      "percent": 0.00818
     },
     {
       "signature": "Sig28",
       "etiology": "Unknown",
-      "allocation": 514.441,
-      "percent": 0.01366
+      "allocation": 526.598,
+      "percent": 0.01395
     },
     {
       "signature": "MISALLOC",
       "etiology": "-",
-      "allocation": 4611.476,
-      "percent": 0.12245
+      "allocation": 4610.482,
+      "percent": 0.12212
     }
   ],
   "cohortEvaluations": {

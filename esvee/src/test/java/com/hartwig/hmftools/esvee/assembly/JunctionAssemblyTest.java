@@ -59,7 +59,8 @@ public class JunctionAssemblyTest
         String readBases = REF_BASES_400.substring(51, 101) + extBases;
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases, makeCigarString(readBases, 0, extBases.length()));
 
-        Read read2 = cloneRead(read1, READ_ID_GENERATOR.nextId());
+        String readBases2 = readBases.substring(1);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 52, readBases, makeCigarString(readBases2, 0, extBases.length()));
 
         // the 3rd read doesn't overlap the junction enough to count as a junction read
         readBases = REF_BASES_400.substring(21, 101) + extBases.substring(0, 2);
@@ -461,6 +462,12 @@ public class JunctionAssemblyTest
             junctionReads.add(cloneRead(juncRead1, READ_ID_GENERATOR.nextId()));
         }
 
+        Read juncRead1b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 52, juncReadBases1.substring(1), "49M50S", CHR_1,
+                1, false);
+
+        junctionReads.add(juncRead1b);
+
         String juncReadBases2 = refSequence.substring(51, 101) + refSequence.substring(270, 320);
 
         Read juncRead2 = createRead(
@@ -473,14 +480,20 @@ public class JunctionAssemblyTest
             junctionReads.add(cloneRead(juncRead2, READ_ID_GENERATOR.nextId()));
         }
 
+        Read juncRead2b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 52, juncReadBases2.substring(1), "49M50S", CHR_1,
+                1, false);
+
+        junctionReads.add(juncRead2b);
+
         JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
         List<JunctionAssembly> assemblies = junctionAssembler.processJunction(junctionReads);
 
         assertEquals(2, assemblies.size());
         JunctionAssembly assembly = assemblies.get(0);
-        assertEquals(10, assembly.supportCount());
+        assertEquals(11, assembly.supportCount());
 
         assembly = assemblies.get(1);
-        assertEquals(5, assembly.supportCount());
+        assertEquals(6, assembly.supportCount());
     }
 }

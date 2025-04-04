@@ -7,11 +7,13 @@ import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -201,7 +203,7 @@ public class CommonUtils
         if(sourceItems.containsKey(REF_SOURCE) && sourceItems.containsKey(NEW_SOURCE))
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
-            CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
+            CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, config.IncludeMatches, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
             return true;
         }
 
@@ -218,7 +220,7 @@ public class CommonUtils
     }
 
     public static void compareItems(
-            final List<Mismatch> mismatches, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches,
             final List<ComparableItem> items1, final List<ComparableItem> items2)
     {
         int index1 = 0;
@@ -244,7 +246,7 @@ public class CommonUtils
 
                     if(matchLevel != REPORTABLE || eitherReportable)
                     {
-                        Mismatch mismatch = item1.findMismatch(item2, matchLevel, thresholds);
+                        Mismatch mismatch = item1.findMismatch(item2, matchLevel, thresholds, includeMatches);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -307,5 +309,22 @@ public class CommonUtils
     public static boolean fileExists(final String filename)
     {
         return Files.exists(new File(filename).toPath());
+    }
+
+    public static Mismatch createMismatchFromDiffs(final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
+            final boolean includeMatches)
+    {
+        if(!diffs.isEmpty())
+        {
+            return new Mismatch(refItem, newItem, VALUE, diffs);
+        }
+        else if(includeMatches)
+        {
+            return new Mismatch(refItem, newItem, FULL_MATCH, diffs);
+        }
+        else
+        {
+            return null;
+        }
     }
 }

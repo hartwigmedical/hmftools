@@ -15,7 +15,8 @@ public interface ComparableItem
 
     boolean reportable();
 
-    Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds);
+    Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+            final boolean includeMatches);
 
     String key();
 
