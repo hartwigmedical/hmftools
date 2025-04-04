@@ -38,7 +38,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
@@ -214,7 +214,7 @@ public class OrangeJsonTest
         assertEquals(0.4, geneCopyNumber.minMinorAlleleCopyNumber(), EPSILON);
 
         assertEquals(1, purple.allSomaticGainsDels().size());
-        PurpleGainDel gainDel = purple.allSomaticGainsDels().iterator().next();
+        PurpleGainDeletion gainDel = purple.allSomaticGainsDels().iterator().next();
         assertEquals("5", gainDel.chromosome());
         assertEquals("q2.2", gainDel.chromosomeBand());
         assertEquals("SMAD4", gainDel.gene());

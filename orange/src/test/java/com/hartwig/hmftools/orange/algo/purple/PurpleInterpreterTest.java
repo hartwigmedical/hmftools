@@ -47,7 +47,7 @@ public class PurpleInterpreterTest
     }
 
     @Test
-    public void canCreateReportableGermlineFullLosses()
+    public void canCreateReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1);
@@ -64,7 +64,7 @@ public class PurpleInterpreterTest
     }
 
     @Test
-    public void canHandleHalfReportableGermlineFullLosses()
+    public void canHandleHalfReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
@@ -81,7 +81,7 @@ public class PurpleInterpreterTest
     }
 
     @Test
-    public void canCreateNonReportableGermlineFullLosses()
+    public void canCreateNonReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
@@ -364,14 +364,13 @@ public class PurpleInterpreterTest
     {
         PaveAlgo pave = new PaveAlgo(ensemblDataCache, false);
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
-        GermlineGainDelFactory germlineGainLossFactory = new GermlineGainDelFactory(ensemblDataCache);
+        GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(ensemblDataCache);
         GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
         ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer =
                 ChromosomalRearrangementsDeterminer.createForRefGenomeVersion(OrangeRefGenomeVersion.V37);
 
         return new PurpleInterpreter(
-                purpleVariantFactory,
-                germlineGainLossFactory,
+                purpleVariantFactory, germlineGainDeletionFactory,
                 germlineLossOfHeterozygosityFactory,
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),

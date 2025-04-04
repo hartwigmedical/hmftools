@@ -10,7 +10,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -108,14 +108,14 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isDeleted(@NotNull List<PurpleGainDel> allSomaticGainLosses, @NotNull String geneToCheck)
+    private static boolean isDeleted(@NotNull List<PurpleGainDeletion> allSomaticGainDels, @NotNull String geneToCheck)
     {
-        for(PurpleGainDel somaticGainLoss : allSomaticGainLosses)
+        for(PurpleGainDeletion somaticGainDel : allSomaticGainDels)
         {
-            if(somaticGainLoss.gene().equals(geneToCheck) && somaticGainLoss.isCanonical())
+            if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainLoss.interpretation() == CopyNumberInterpretation.FULL_DEL
-                        || somaticGainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
+                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_DEL
+                        || somaticGainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
             }
         }
 
@@ -147,13 +147,13 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isAmplified(@NotNull List<PurpleGainDel> somaticGainLosses, @NotNull String geneToCheck)
+    private static boolean isAmplified(@NotNull List<PurpleGainDeletion> somaticGainDels, @NotNull String geneToCheck)
     {
-        for(PurpleGainDel somaticGainLoss : somaticGainLosses)
+        for(PurpleGainDeletion somaticGainDel : somaticGainDels)
         {
-            if(somaticGainLoss.gene().equals(geneToCheck) && somaticGainLoss.isCanonical())
+            if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN;
+                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_GAIN;
             }
         }
         return false;

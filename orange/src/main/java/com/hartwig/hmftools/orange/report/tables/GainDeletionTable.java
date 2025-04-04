@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
@@ -21,10 +21,10 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class GainDelTable
+public final class GainDeletionTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainDel> gainsDels,
+    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainDeletion> gainsDels,
             @Nullable IsofoxRecord isofox, @NotNull ReportResources reportResources)
     {
         if(gainsDels.isEmpty())
@@ -39,7 +39,7 @@ public final class GainDelTable
                         cells.createHeader("Type"), cells.createHeader("CN"), cells.createHeader("TPM"), cells.createHeader("Perc (Type)"),
                         cells.createHeader("FC (Type)"), cells.createHeader("Perc (DB)"), cells.createHeader("FC (DB)") });
 
-        for(PurpleGainDel gainDel : sort(gainsDels))
+        for(PurpleGainDeletion gainDel : sort(gainsDels))
         {
             table.addCell(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
             table.addCell(cells.createContent(displayGene(gainDel)));
@@ -80,7 +80,7 @@ public final class GainDelTable
     }
 
     @NotNull
-    private static List<PurpleGainDel> sort(@NotNull List<PurpleGainDel> gainsAndDels)
+    private static List<PurpleGainDeletion> sort(@NotNull List<PurpleGainDeletion> gainsAndDels)
     {
         return gainsAndDels.stream().sorted((gainDel1, gainDel2) ->
         {
@@ -99,7 +99,7 @@ public final class GainDelTable
     }
 
     @NotNull
-    private static String displayGene(@NotNull PurpleGainDel gainDel)
+    private static String displayGene(@NotNull PurpleGainDeletion gainDel)
     {
         String addon = Strings.EMPTY;
         if(!gainDel.isCanonical())

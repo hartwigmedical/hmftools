@@ -297,7 +297,7 @@
         "minMinorAlleleCopyNumber": 0.4
       }
     ],
-    "allSomaticGainsLosses": [
+    "allSomaticGainsDels": [
       {
         "interpretation": "FULL_DEL",
         "chromosome": 5,
@@ -309,7 +309,7 @@
         "maxCopies": 1.2
       }
     ],
-    "reportableSomaticGainsLosses": [
+    "reportableSomaticGainsDels": [
       {
         "interpretation": "FULL_DEL",
         "chromosome": "5",

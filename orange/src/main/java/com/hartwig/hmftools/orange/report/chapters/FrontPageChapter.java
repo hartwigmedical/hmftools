@@ -25,7 +25,7 @@ import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -361,7 +361,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleGainDel> germlineGainsDels = report.purple().reportableGermlineFullDels();
+        List<PurpleGainDeletion> germlineGainsDels = report.purple().reportableGermlineFullDels();
         if(germlineGainsDels == null)
         {
             return ReportResources.NOT_AVAILABLE;
@@ -370,7 +370,7 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String copyNumberDriverString(@NotNull List<PurpleGainDel> gainsDels)
+    private static String copyNumberDriverString(@NotNull List<PurpleGainDeletion> gainsDels)
     {
         if(gainsDels.isEmpty())
         {
@@ -378,7 +378,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(PurpleGainDel gainDel : gainsDels)
+        for(PurpleGainDeletion gainDel : gainsDels)
         {
             genes.add(gainDel.gene());
         }

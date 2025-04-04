@@ -28,7 +28,7 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
@@ -38,7 +38,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
@@ -78,8 +78,8 @@ public final class GermlineConversion
         TumorStats mergedTumorStats;
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
-        List<PurpleGainDel> mergedAllSomaticGainsDels;
-        List<PurpleGainDel> mergedReportableSomaticGainsDels;
+        List<PurpleGainDeletion> mergedAllSomaticGainsDels;
+        List<PurpleGainDeletion> mergedReportableSomaticGainsDels;
         List<PurpleGeneCopyNumber> mergedSuspectGeneCopyNumbersWithLOH;
         if(containsTumorCells)
         {
@@ -114,11 +114,11 @@ public final class GermlineConversion
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
                 .additionalSuspectGermlineVariants(null)
-                .allSomaticGainsLosses(mergedAllSomaticGainsDels)
-                .reportableSomaticGainsLosses(mergedReportableSomaticGainsDels)
+                .allSomaticGainsDels(mergedAllSomaticGainsDels)
+                .reportableSomaticGainsDels(mergedReportableSomaticGainsDels)
                 .allGermlineDeletions(null)
-                .allGermlineFullLosses(null)
-                .reportableGermlineFullLosses(null)
+                .allGermlineFullDels(null)
+                .reportableGermlineFullDels(null)
                 .suspectGeneCopyNumbersWithLOH(mergedSuspectGeneCopyNumbersWithLOH)
                 .allGermlineLossOfHeterozygosities(null)
                 .reportableGermlineLossOfHeterozygosities(null)
@@ -159,7 +159,7 @@ public final class GermlineConversion
     @NotNull
     @VisibleForTesting
     static List<PurpleDriver> mergeGermlineDriversIntoSomatic(@NotNull List<PurpleDriver> somaticDrivers,
-            @Nullable List<PurpleDriver> germlineDrivers, @Nullable List<PurpleGainDel> reportableGermlineFullDels)
+            @Nullable List<PurpleDriver> germlineDrivers, @Nullable List<PurpleGainDeletion> reportableGermlineFullDels)
     {
         List<PurpleDriver> merged = Lists.newArrayList();
         for(PurpleDriver somaticDriver : somaticDrivers)
@@ -210,21 +210,21 @@ public final class GermlineConversion
     }
 
     @NotNull
-    private static List<PurpleGainDel> mergeGermlineFullDels(@Nullable List<PurpleGainDel> reportableGermlineFullDels,
-            @NotNull List<PurpleGainDel> somaticGainDels)
+    private static List<PurpleGainDeletion> mergeGermlineFullDels(@Nullable List<PurpleGainDeletion> reportableGermlineFullDels,
+            @NotNull List<PurpleGainDeletion> somaticGainDels)
     {
         if(reportableGermlineFullDels == null)
         {
             return somaticGainDels;
         }
 
-        List<PurpleGainDel> mergedGainDels = Lists.newArrayList();
-        for(PurpleGainDel somaticGainDel : somaticGainDels)
+        List<PurpleGainDeletion> mergedGainDels = Lists.newArrayList();
+        for(PurpleGainDeletion somaticGainDel : somaticGainDels)
         {
             mergedGainDels.add(getGermlineCorrectedGainDel(somaticGainDel, reportableGermlineFullDels));
         }
 
-        for(PurpleGainDel germlineDel : reportableGermlineFullDels)
+        for(PurpleGainDeletion germlineDel : reportableGermlineFullDels)
         {
             boolean hasMatchingSomaticDel = somaticGainDels.stream().anyMatch(s -> DelsMatch(germlineDel, s));
             if(!hasMatchingSomaticDel)
@@ -237,15 +237,15 @@ public final class GermlineConversion
     }
 
     @NotNull
-    private static PurpleGainDel getGermlineCorrectedGainDel(@NotNull PurpleGainDel somaticGainDel,
-            @NotNull List<PurpleGainDel> reportableGermlineFullDels)
+    private static PurpleGainDeletion getGermlineCorrectedGainDel(@NotNull PurpleGainDeletion somaticGainDel,
+            @NotNull List<PurpleGainDeletion> reportableGermlineFullDels)
     {
         if(!isDel(somaticGainDel))
         {
             return somaticGainDel;
         }
 
-        List<PurpleGainDel> matchingGermlineDels =
+        List<PurpleGainDeletion> matchingGermlineDels =
                 reportableGermlineFullDels.stream().filter(l -> DelsMatch(l, somaticGainDel)).collect(Collectors.toList());
         if(matchingGermlineDels.isEmpty())
         {
@@ -263,14 +263,14 @@ public final class GermlineConversion
         }
     }
 
-    private static boolean DelsMatch(@NotNull PurpleGainDel germlineDel, @NotNull PurpleGainDel somaticGainDel)
+    private static boolean DelsMatch(@NotNull PurpleGainDeletion germlineDel, @NotNull PurpleGainDeletion somaticGainDel)
     {
         return isDel(somaticGainDel) && germlineDel.gene().equals(somaticGainDel.gene()) && germlineDel.transcript()
                 .equals(somaticGainDel.transcript());
     }
 
     @NotNull
-    private static PurpleGainDel mergeDels(@NotNull PurpleGainDel somaticDel, @NotNull PurpleGainDel germlineDel)
+    private static PurpleGainDeletion mergeDels(@NotNull PurpleGainDeletion somaticDel, @NotNull PurpleGainDeletion germlineDel)
     {
         double minCopies = Math.min(somaticDel.minCopies(), germlineDel.minCopies());
 
@@ -293,7 +293,7 @@ public final class GermlineConversion
             maxCopies = germlineDel.maxCopies();
         }
 
-        return ImmutablePurpleGainLoss.builder()
+        return ImmutablePurpleGainDeletion.builder()
                 .interpretation(interpretation)
                 .chromosome(somaticDel.chromosome())
                 .chromosomeBand(somaticDel.chromosomeBand())
@@ -305,17 +305,17 @@ public final class GermlineConversion
                 .build();
     }
 
-    private static boolean isDel(@NotNull PurpleGainDel gainDel)
+    private static boolean isDel(@NotNull PurpleGainDeletion gainDel)
     {
         return isFullDel(gainDel) || isPartialDel(gainDel);
     }
 
-    private static boolean isFullDel(@NotNull PurpleGainDel gainDel)
+    private static boolean isFullDel(@NotNull PurpleGainDeletion gainDel)
     {
         return gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL;
     }
 
-    private static boolean isPartialDel(final @NotNull PurpleGainDel gainDel)
+    private static boolean isPartialDel(final @NotNull PurpleGainDeletion gainDel)
     {
         return gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
     }
@@ -366,7 +366,7 @@ public final class GermlineConversion
     }
 
     private static boolean shouldAddSuspectGeneCopyNumberWithLOH(@NotNull PurpleGeneCopyNumber candidateSuspectGeneCopyNumber,
-            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH, @Nullable List<PurpleGainDel> reportableGermlineFullDels)
+            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH, @Nullable List<PurpleGainDeletion> reportableGermlineFullDels)
     {
         String gene = candidateSuspectGeneCopyNumber.gene();
 

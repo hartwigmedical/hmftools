@@ -15,13 +15,13 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDel;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class GermlineGainLossFactoryTest
+public class GermlineGainDeletionFactoryTest
 {
     private static final String TEST_GENE = "gene";
     private static final double EPSILON = 1.0E-2;
@@ -29,7 +29,7 @@ public class GermlineGainLossFactoryTest
     @Test
     public void canFilterHetDeletion()
     {
-        GermlineGainDelFactory factory = createTestFactory();
+        GermlineGainDeletionFactory factory = createTestFactory();
 
         GermlineDeletion reportableHet = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION);
         assertTrue(factory.getReportabilityMap(Lists.newArrayList(reportableHet), Lists.newArrayList()).isEmpty());
@@ -38,7 +38,7 @@ public class GermlineGainLossFactoryTest
     @Test
     public void canTransformReportableHomDeletionsToPartial()
     {
-        GermlineGainDelFactory factory = createTestFactory();
+        GermlineGainDeletionFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
@@ -50,42 +50,42 @@ public class GermlineGainLossFactoryTest
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
 
-        Map<PurpleGainDel, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
-        PurpleGainDel gainLoss = map.keySet().iterator().next();
+        Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
+        PurpleGainDeletion gainDel = map.keySet().iterator().next();
 
         assertEquals(1, map.keySet().size());
-        assertTrue(map.get(gainLoss));
-        assertEquals(CopyNumberInterpretation.PARTIAL_DEL, gainLoss.interpretation());
-        assertEquals(TEST_GENE, gainLoss.gene());
-        assertEquals(0, gainLoss.minCopies(), EPSILON);
-        assertEquals(4, gainLoss.maxCopies(), EPSILON);
+        assertTrue(map.get(gainDel));
+        assertEquals(CopyNumberInterpretation.PARTIAL_DEL, gainDel.interpretation());
+        assertEquals(TEST_GENE, gainDel.gene());
+        assertEquals(0, gainDel.minCopies(), EPSILON);
+        assertEquals(4, gainDel.maxCopies(), EPSILON);
     }
 
     @Test
     public void canTransformNonReportableHomDeletionToFull()
     {
-        GermlineGainDelFactory factory = createTestFactory();
+        GermlineGainDeletionFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         GermlineDeletion reportableFullHom =
                 GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
         GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(1D).build();
 
-        Map<PurpleGainDel, Boolean> map = factory.getReportabilityMap(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
-        PurpleGainDel gainLoss = map.keySet().iterator().next();
+        Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
+        PurpleGainDeletion gainDel = map.keySet().iterator().next();
 
         assertEquals(1, map.keySet().size());
-        assertFalse(map.get(gainLoss));
-        assertEquals(CopyNumberInterpretation.FULL_DEL, gainLoss.interpretation());
-        assertEquals(TEST_GENE, gainLoss.gene());
-        assertEquals(0, gainLoss.minCopies(), EPSILON);
-        assertEquals(0, gainLoss.maxCopies(), EPSILON);
+        assertFalse(map.get(gainDel));
+        assertEquals(CopyNumberInterpretation.FULL_DEL, gainDel.interpretation());
+        assertEquals(TEST_GENE, gainDel.gene());
+        assertEquals(0, gainDel.minCopies(), EPSILON);
+        assertEquals(0, gainDel.maxCopies(), EPSILON);
     }
 
     @Test
     public void canTransformReportablePartialHomDeletionsToFullGeneLoss()
     {
-        GermlineGainDelFactory factory = createTestFactory();
+        GermlineGainDeletionFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
@@ -102,21 +102,21 @@ public class GermlineGainLossFactoryTest
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
 
-        Map<PurpleGainDel, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
-        PurpleGainDel gainLoss = map.keySet().iterator().next();
+        Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
+        PurpleGainDeletion gainDel = map.keySet().iterator().next();
 
         assertEquals(1, map.keySet().size());
-        assertTrue(map.get(gainLoss));
-        assertEquals(CopyNumberInterpretation.FULL_DEL, gainLoss.interpretation());
-        assertEquals(TEST_GENE, gainLoss.gene());
-        assertEquals(0, gainLoss.minCopies(), EPSILON);
-        assertEquals(0.2, gainLoss.maxCopies(), EPSILON);
+        assertTrue(map.get(gainDel));
+        assertEquals(CopyNumberInterpretation.FULL_DEL, gainDel.interpretation());
+        assertEquals(TEST_GENE, gainDel.gene());
+        assertEquals(0, gainDel.minCopies(), EPSILON);
+        assertEquals(0.2, gainDel.maxCopies(), EPSILON);
     }
 
     @NotNull
-    private static GermlineGainDelFactory createTestFactory()
+    private static GermlineGainDeletionFactory createTestFactory()
     {
         EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.loadTestCache();
-        return new GermlineGainDelFactory(ensemblDataCache);
+        return new GermlineGainDeletionFactory(ensemblDataCache);
     }
 }
