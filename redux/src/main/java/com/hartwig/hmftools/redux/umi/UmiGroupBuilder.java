@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BAS
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_UMI_BASE_DIFF_JITTER_COLLAPSE;
 import static com.hartwig.hmftools.redux.common.Constants.MIN_POLYG_UMI_TAIL_LENGTH;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.DUPLICATE_GROUP_COMPARATOR;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
@@ -490,9 +491,7 @@ public class UmiGroupBuilder
             final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
         if(umiGroups.isEmpty() && singleFragments.isEmpty())
-        {
             return;
-        }
 
         if(sequencingType != ILLUMINA)
             return;
@@ -540,7 +539,7 @@ public class UmiGroupBuilder
             unmappedMateGroupsIndices.get(position).add(i);
         }
 
-        // merge other umi groups into the above umi groups with unmapped mate
+        // merge the above umi groups with unmapped mates into other umi groups
         for(int i = 0; i < umiGroups.size(); i++)
         {
             DuplicateGroup duplicateGroup = umiGroups.get(i);
@@ -577,8 +576,8 @@ public class UmiGroupBuilder
 
         // reconstitute umiGroups and singleFragments based on the merged groups
         Comparator<DuplicateGroup> baseGroupComparator = Comparator
-                .comparingInt((final DuplicateGroup x) -> x.fragmentCoordinates().PositionUpper == NO_POSITION ? 0 : 1)
-                .thenComparingInt((final DuplicateGroup x) -> x.readCount());
+                .comparingInt((final DuplicateGroup x) -> x.fragmentCoordinates().PositionUpper == NO_POSITION ? 1 : 0)
+                .thenComparing(DUPLICATE_GROUP_COMPARATOR);
 
         Collection<Set<Integer>> partitions = umiGroupMerger.getPartitions();
         List<DuplicateGroup> mergedUmiGroups = Lists.newArrayList();
@@ -591,7 +590,7 @@ public class UmiGroupBuilder
                 continue;
             }
 
-            DuplicateGroup baseGroup = Collections.max(partitionGroups, baseGroupComparator);
+            DuplicateGroup baseGroup = Collections.min(partitionGroups, baseGroupComparator);
             mergedUmiGroups.add(baseGroup);
             for(int i = 0; i < partitionGroups.size(); i++)
             {
@@ -662,23 +661,17 @@ public class UmiGroupBuilder
             final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
         if(umiGroups.isEmpty() && singleFragments.isEmpty())
-        {
             return;
-        }
 
         if(sequencingType != ILLUMINA)
-        {
             return;
-        }
 
         boolean isUnpaired = Stream.concat(
                         umiGroups.stream().map(DuplicateGroup::fragmentCoordinates),
                         singleFragments.stream().map(ReadInfo::coordinates))
                 .anyMatch(x -> x.Unpaired);
         if(isUnpaired)
-        {
             return;
-        }
 
         for(ReadInfo readInfo : singleFragments)
         {
@@ -723,7 +716,7 @@ public class UmiGroupBuilder
             }
 
             List<DuplicateGroup> mergedGroups = clusterMerger(
-                    elements, (x, y) -> x.canMerge(umiConfig, y), DuplicateGroup::readCount, UmiGroupBuilder::jitterMergeFn);
+                    elements, (x, y) -> x.canMerge(umiConfig, y), DUPLICATE_GROUP_COMPARATOR, UmiGroupBuilder::jitterMergeFn);
             finalUmiGroups.addAll(mergedGroups);
         }
 
