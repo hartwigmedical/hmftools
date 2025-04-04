@@ -309,7 +309,7 @@ public class HgvsCodingAddressesTest
 
         // exon6
         checkDup(140, 2, "c.*13_*14dupAT");
-//        checkDelAt(140, 2, "c.*13_*14delAT");
+//        checkDel(140, 2, "c.*13_*14delAT");
         checkIns(141, "CC",  "c.*13_*14insCC");
         checkSnv(141, "A", "T", "c.*13A>T");
 
@@ -351,10 +351,10 @@ public class HgvsCodingAddressesTest
     }
 
     @Test
-    public void downnstreamIntronExonBoundary()
+    public void downstreamIntronExonBoundary()
     {
         checkDup(115, 2, "c.*1-1_*1-0dupTG");
-        //        checkDelAt(115, 2, "c.*1-1_*1delTG");
+//        checkDel(115, 2, "c.*1-1_*1delTG");
         //        checkInsAt(116, "CC", "c.*1-1_*1insCC");
     }
 
@@ -389,7 +389,7 @@ public class HgvsCodingAddressesTest
     public void secondCodingExon()
     {
         checkDup(102, 2, "c.23_24dupCT");
-        //        checkDelAt(102, 2, "c.23_24delCT");
+//                checkDel(102, 2, "c.23_24delCT");
         checkIns(103, "A", "c.23_24insA");
         checkSnv(103, "C", "G", "c.23C>G");
 
@@ -419,8 +419,8 @@ public class HgvsCodingAddressesTest
         checkIns(91, "AC", "c.13-2_13-1insAC");
         checkSnv(92, "T", "A", "c.13-1T>A");
 
-        //        checkDupAt(86, 3, "c.13-6_13-4dupCCC");
-        //        checkDelAt(86, 3, "c.13-6_13-4delCCC");
+//        checkDup(86, 3, "c.13-6_13-4dupCCC");
+//        checkDel(86, 3, "c.13-6_13-4delCCC");
         checkIns(87, "TT", "c.13-6_13-5insTT");
         checkSnv(87, "C", "T", "c.13-6C>T");
 
@@ -498,20 +498,20 @@ public class HgvsCodingAddressesTest
         checkDel(58, 1, "c.-1+3delG");
         checkDel(57, 1, "c.-1+2delG");
         checkDel(56, 1, "c.-1+1delG");
+        //        checkDupAt(62, 3, "c.-1+6_-1+8dupAAA"); // -1+6_1-4 ??
+        checkDel(62, 3, "c.-1+7_-1+9delAAA");
+        //        checkDupAt(59, 3, "c.-1+3_-1+5dupCCC");
+        checkDel(59, 3, "c.-1+4_-1+6delCCC");
+        //        checkDupAt(57, 3, "c.-1+1_-1+3dupGGC");
+        checkDel(57, 3, "c.-1+2_-1+4delGGC");
     }
 
     @Test
     public void firstUpstreamExon()
     {
         checkDel(55, 1, "c.-1delA");
-        //        checkDupAt(62, 3, "c.-1+6_-1+8dupAAA"); // -1+6_1-4 ??
-        //        checkDelAt(62, 3, "c.-1+6_-1+8delAAA");
-        //        checkDupAt(59, 3, "c.-1+3_-1+5dupCCC");
-        //        checkDelAt(59, 3, "c.-1+3_-1+5delCCC");
-        //        checkDupAt(57, 3, "c.-1+1_-1+3dupGGC");
-        //        checkDelAt(57, 3, "c.-1+1_-1+3delGGC");
         //        checkDupAt(56, 3, "c.-1+0_-1+2dupGGG");
-        //        checkDelAt(56, 3, "c.-1_-1+2delGGG");
+        checkDel(56, 3, "c.-1+1_-1+3delGGG");
         //        checkDupAt(55, 2, "c.-2_-1dupAA");
         checkDel(55, 1, "c.-1delA");
         checkDel(55, 2, "c.-1_-1+1delAG");
@@ -522,7 +522,6 @@ public class HgvsCodingAddressesTest
         //        checkDupAt(45, 2, "c.-12_-11dupAC");
         checkDel(45, 2, "c.-11_-10delGA");
         checkDel(45, 1, "c.-11delG");
-        //        checkDelAt(44, 1, "c.-12delC");
     }
 
     @Test
@@ -541,7 +540,6 @@ public class HgvsCodingAddressesTest
         checkDel(27, 3, "c.-17_-15delACG");
         checkDel(23, 3, "c.-21_-19delGGA");
         checkDel(21, 1, "c.-23delT");
-        //        checkDelAt(20, 1, "c.-24delC");
     }
 
     private void checkDup(int position, int length, String expected)
