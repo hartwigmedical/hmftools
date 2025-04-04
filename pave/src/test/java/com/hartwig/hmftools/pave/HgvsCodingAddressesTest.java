@@ -50,7 +50,7 @@ public class HgvsCodingAddressesTest
         // random 20  CTAGGACACGAG CGAGGGCCCAAA CGACACGAGTAA GGGCCCAAATTT ATGAAGGAACCT AAAGGGCCCTTT AAGATGGAACCT AACCGGTTACGT GTACACAAGCCT CACCGGTTACGT ATACACAAGCCT random 20
         //            |                         |          |              |                         |                         |                         |
         //  +         -24                       -12        -1             1                         13                        *1                        *13
-        //  -         *24        *13            *12        *1             24         13             12         1              *1                        *13
+        //  -         *24        *13            *12        *1             24         13             12         1              -1                        -13
         transcriptData = createTransExons(GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 21, 45, 69, 93, 117, 141 }, 11, 69, 104, false, "");
         transcriptDataRS = createTransExons(GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] { 21, 45, 69, 93, 117, 141 }, 11, 69, 104, false, "");
     }
@@ -189,6 +189,98 @@ public class HgvsCodingAddressesTest
         checkDelRS(102,  2, "c.1_2delAG");
         checkInsRS(103,  "C", "c.1_2insG");
         checkSnvRS(103, "C", "G", "c.2G>C");
+    }
+
+    @Test
+    public void firstUpstreamIntronRS()
+    {
+//        checkDupRS(114,  2, "c.-1+1_-1+2dupAC");
+        checkDelRS(114,  2, "c.-1+1_-1+2delAC");
+        checkInsRS(115,  "AA", "c.-1+1_-1+2insTT");
+        checkSnvRS(116, "T", "G", "c.-1+1A>C");
+
+//        checkDupRS(109,  2, "c.-1+6_1-6dupAC");
+        checkDelRS(109,  2, "c.-1+6_-1+7delAC"); // c.-1+6_1-6delAC
+        checkInsRS(110,  "AA", "c.-1+6_-1+7insTT");
+        checkSnvRS(111, "T", "G", "c.-1+6A>C");
+
+//        checkDupRS(107,  2, "c.1-5_1-4dupCG");
+        checkDelRS(107,  2, "c.1-5_1-4delCG"); // c.-1+6_1-6delAC
+        checkInsRS(108,  "AA", "c.1-5_1-4insTT");
+        checkSnvRS(108, "C", "G", "c.1-4G>C");
+
+//        checkDupRS(105,  2, "c.1-3_1-2dupGT");
+        checkDelRS(105,  2, "c.1-3_1-2delGT");
+        checkInsRS(106,  "G", "c.1-3_1-2insC");
+        checkSnvRS(103, "C", "G", "c.2G>C");
+
+        checkSnvRS(105, "A", "G", "c.1-1T>C");
+    }
+
+    @Test
+    public void firstUpstreamExonIntronBoundaryRS()
+    {
+//        checkDupRS(115,  2, "c.-1_-1+1dupCA");
+        checkDelRS(115,  2, "c.-1_-1+1delCA");
+        checkInsRS(116,  "CC", "c.-1-0_-1+1insGG"); // c.-1_-1+1insGG
+        checkSnvRS(117, "G", "A", "c.-1C>T");
+    }
+
+    @Test
+    public void firstUpstreamExonRS()
+    {
+        checkDupRS(120,  2, "c.-6_-5dupGT");
+        checkDelRS(120,  2, "c.-6_-5delGT");
+        checkInsRS(120,  "G", "c.-5_-4insC");
+        checkSnvRS(120, "C", "A", "c.-4G>T");
+    }
+
+    @Test
+    public void secondUpstreamExonIntronBoundaryRS()
+    {
+//        checkDupRS(127,  2, "c.-12-1_-12dupGA");
+        checkDelRS(127,  2, "c.-12-1_-12delGA");
+//        checkInsRS(128,  "A", "c.-12-1_-12insT");
+        checkInsRS(127,  "A", "c.-12_-11insT");
+        checkSnvRS(128, "T", "A", "c.-12A>T");
+    }
+
+    @Test
+    public void secondUpstreamIntronRS()
+    {
+//        checkDupRS(137,  2, "c.-13+2_-13+3dupCG");
+        checkDelRS(137,  2, "c.-13+2_-13+3delCG");
+        checkInsRS(137,  "G", "c.-13+3_-13+4insC");
+        checkSnvRS(137, "A", "G", "c.-13+4T>C");
+
+//        checkDupRS(132,  2, "c.-12-6_-12-5dupCC");
+//        checkDelRS(132,  2, "c.-12-6_-12-5delCC");
+        checkInsRS(132,  "AA", "c.-12-5_-12-4insTT");
+        checkSnvRS(132, "C", "A", "c.-12-4G>T");
+
+        checkSnvRS(129, "C", "A", "c.-12-1G>T");
+    }
+
+    @Test
+    public void thirdUpstreamBoundaryRS()
+    {
+//        checkDupRS(139,  2, "c.-13_-13+1dupTA");
+        checkDelRS(139,  2, "c.-13_-13+1delTA"); // c.-13_-13+1delTA ?
+        checkInsRS(140,  "G", "c.-13-0_-13+1insC"); // ?
+    }
+
+    @Test
+    public void secondUpstreamExonRS()
+    {
+        checkDupRS(150,  2, "c.-24_-23dupAG");
+//        checkDelRS(150,  2, "c.-24_-23delAG");
+        checkInsRS(150,  "A", "c.-23_-22insT");
+        checkSnvRS(150, "C", "G", "c.-22G>C");
+
+        checkDupRS(141,  2, "c.-15_-14dupTA");
+        checkDelRS(141,  2, "c.-15_-14delTA");
+        checkInsRS(141,  "G", "c.-14_-13insC");
+        checkSnvRS(141, "A", "G", "c.-13T>C");
     }
 
     @Test
