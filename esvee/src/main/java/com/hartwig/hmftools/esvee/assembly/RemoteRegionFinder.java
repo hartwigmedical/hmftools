@@ -1,13 +1,19 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_DISC_READ_BASE_MIN_AS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_DISC_READ_BASE_MIN_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.SUPPLEMENTARY;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.purgeLowQualDiscordantOnlyRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.purgeWeakSupplementaryRegions;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.filterLowQualRead;
 
 import java.util.List;
 
@@ -52,6 +58,7 @@ public final class RemoteRegionFinder
 
         // purge regions with only weak supplementary support
         purgeWeakSupplementaryRegions(remoteRegions);
+        purgeLowQualDiscordantOnlyRegions(remoteRegions);
 
         // remove regions which overlap the assembly
         int index = 0;
@@ -107,20 +114,37 @@ public final class RemoteRegionFinder
             final List<RemoteRegion> remoteRegions, final Read read, final RemoteReadType readType,
             final String remoteChr, final int remotePosStart, final int remotePosEnd)
     {
-        RemoteRegion matchedRegion = remoteRegions.stream()
+        RemoteRegion remoteRegion = remoteRegions.stream()
                 .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd)).findFirst().orElse(null);
 
-        if(matchedRegion != null)
+
+        if(remoteRegion == null)
         {
-            matchedRegion.addReadDetails(read.id(), remotePosStart, remotePosEnd, readType);
-            return matchedRegion;
+            remoteRegion = new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.id(), readType);
+            remoteRegions.add(remoteRegion);
         }
         else
         {
-            RemoteRegion newRegion = new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.id(), readType);
-            remoteRegions.add(newRegion);
-            return newRegion;
+            remoteRegion.addReadDetails(read.id(), remotePosStart, remotePosEnd, readType);
         }
+
+        if(readType == DISCORDANT && !remoteRegion.hasHighQualDiscordantRead() && isHighQualityDiscordantRead(read))
+        {
+            remoteRegion.setHasHighQualDiscordantRead();
+        }
+
+        return remoteRegion;
+    }
+
+    private static boolean isHighQualityDiscordantRead(final Read read)
+    {
+        int alignmentScore = read.bamRecord().hasAttribute(ALIGNMENT_SCORE_ATTRIBUTE)
+                ? read.bamRecord().getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE).intValue() : 0;
+
+        if(alignmentScore < REMOTE_REGION_DISC_READ_BASE_MIN_AS)
+            return false;
+
+        return !filterLowQualRead(read.bamRecord(), REMOTE_REGION_DISC_READ_BASE_MIN_QUAL_PERC);
     }
 
     private static void addOrCreateSupplementaryRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, int readScLength)

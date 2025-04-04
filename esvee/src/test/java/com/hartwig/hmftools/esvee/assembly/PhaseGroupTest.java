@@ -1,17 +1,24 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_GENOME;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.esvee.TestUtils.createConcordantRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.TestUtils.setMateCigar;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
+import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
 
@@ -26,11 +33,14 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.TestUtils;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor;
@@ -49,6 +59,80 @@ import org.junit.Test;
 
 public class PhaseGroupTest
 {
+    @Test
+    public void testRemoteRegionBuilding()
+    {
+        // REF_GENOME.RefGenomeMap.put(CHR_1, REF_BASES_200);
+
+        Junction posJunction = new Junction(CHR_1, 150, FORWARD);
+
+        String refBases = REF_BASES_200.substring(101, 151);
+        String assemblyBases = refBases + REF_BASES_200.substring(0, 50);
+        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblyBases.length());
+
+        JunctionAssembly assembly = new JunctionAssembly(posJunction, assemblyBases.getBytes(), baseQuals, refBases.length() - 1);
+
+        String juncCigar = "50M50S";
+
+        Read mate1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 101, assemblyBases, juncCigar, CHR_2, 1000, false);
+
+        Read mate2 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 101, assemblyBases, juncCigar, CHR_2, 2000, false);
+
+        List<Read> remoteJunctionMates = Lists.newArrayList(mate1, mate2);
+
+        Read disc1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 50, REF_BASES_200.substring(50, 100), "50M", CHR_2, 2100, false);
+
+        // low base-qual disc read
+        Read disc2 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 50, REF_BASES_200.substring(50, 100), "50M", CHR_2, 3000, false);
+        byte[] lowBaseQuals = buildBaseQuals(disc2.bamRecord().getBaseQualities().length, 10);
+        disc2.bamRecord().setBaseQualities(lowBaseQuals);
+
+        // low alignment score
+        Read disc3 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 50, REF_BASES_200.substring(50, 100), "50M", CHR_2, 4000, false);
+        disc3.bamRecord().setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 50);
+
+        List<Read> discordantReads = Lists.newArrayList(disc1, disc2, disc3);
+
+        // test region merging
+        Read juncSupp1 = new Read(SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 50, assemblyBases, juncCigar, CHR_1, 50, false, false,
+                new SupplementaryReadData(CHR_3, 1000, SUPP_POS_STRAND, "100M", 0)));
+
+        Read juncSupp2 = new Read(SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 50, assemblyBases, juncCigar, CHR_1, 50, false, false,
+                new SupplementaryReadData(CHR_3, 1500, SUPP_POS_STRAND, "100M", 0)));
+
+        List<Read> suppJunctionReads = Lists.newArrayList(juncSupp1, juncSupp2);
+
+        findRemoteRegions(assembly, discordantReads, remoteJunctionMates, suppJunctionReads);
+
+        assertEquals(3, assembly.remoteRegions().size());
+
+        RemoteRegion region = assembly.remoteRegions().get(0);
+        assertEquals(CHR_2, region.Chromosome);
+        assertEquals(1000, region.start());
+        assertEquals(1099, region.end());
+        assertEquals(1, region.readCount());
+
+        region = assembly.remoteRegions().get(1);
+        assertEquals(CHR_2, region.Chromosome);
+        assertEquals(2000, region.start());
+        assertEquals(2149, region.end());
+        assertEquals(2, region.readCount());
+
+        region = assembly.remoteRegions().get(2);
+        assertEquals(CHR_3, region.Chromosome);
+        assertEquals(1000, region.start());
+        assertEquals(1599, region.end());
+        assertEquals(2, region.readCount());
+    }
+
+
     @Test
     public void testLocalPhaseGroupBuilding()
     {

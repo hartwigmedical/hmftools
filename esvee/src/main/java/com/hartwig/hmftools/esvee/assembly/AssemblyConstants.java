@@ -73,6 +73,8 @@ public final class AssemblyConstants
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
     public static final int PROXIMATE_DEL_LENGTH = 1000;
     public static final int PROXIMATE_DUP_LENGTH = 500;
+    public static final double REMOTE_REGION_DISC_READ_BASE_MIN_QUAL_PERC = 0.25;
+    public static final int REMOTE_REGION_DISC_READ_BASE_MIN_AS = 75;
 
     // output
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact

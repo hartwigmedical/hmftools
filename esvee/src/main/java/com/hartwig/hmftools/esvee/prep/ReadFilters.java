@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
@@ -84,9 +86,14 @@ public class ReadFilters
 
     public static boolean filterLowQualRead(final SAMRecord read)
     {
+        return filterLowQualRead(read, 0.5);
+    }
+
+    public static boolean filterLowQualRead(final SAMRecord read, double maxPermittedLowPercent)
+    {
         // filter any read with 50% + bases classified as low qual or any invalid base
         int baseLength = read.getReadBases().length;
-        int qualCountThreshold = baseLength / 2 + 1;
+        int qualCountThreshold = (int)floor(baseLength * maxPermittedLowPercent) + 1;
         int lowQualCount = 0;
 
         for(int i = 0; i < baseLength; ++i)
