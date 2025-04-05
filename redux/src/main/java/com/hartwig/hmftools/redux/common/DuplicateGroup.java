@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.getReadNam
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class DuplicateGroup
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
 
+    private SAMRecord mTemplateRead;
     private int mPCRClusterCount;
 
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
@@ -67,11 +69,12 @@ public class DuplicateGroup
         mPrimaryRead = null;
         mDualStrand = false;
 
+        mTemplateRead = null;
         mPCRClusterCount = UNSET_COUNT;
     }
 
-    public void addRead(final SAMRecord read) { mReads.add(read); }
-    public void addReads(final List<SAMRecord> reads) { mReads.addAll(reads); }
+    public void addRead(final SAMRecord read) { mReads.add(read); mTemplateRead = null; }
+    public void addReads(final List<SAMRecord> reads) { mReads.addAll(reads); mTemplateRead = null; }
     public void addNonConsensusReads(final List<SAMRecord> reads) { mNonConsensusReads.addAll(reads); }
 
     public List<SAMRecord> reads() { return mReads; }
@@ -80,6 +83,18 @@ public class DuplicateGroup
     public int readCount() { return mReads.size() + mNonConsensusReads.size(); }
 
     public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
+
+    public SAMRecord templateRead()
+    {
+        if(mReads.size() == 1)
+            return mReads.get(0);
+
+        if(mTemplateRead != null)
+            return mTemplateRead;
+
+        mTemplateRead = selectTemplateRead(mReads, mFragmentCoords);
+        return mTemplateRead;
+    }
 
     public List<SAMRecord> duplicate() { return mReads; }
     public SAMRecord consensusRead() { return mConsensusRead; }
@@ -97,7 +112,7 @@ public class DuplicateGroup
     {
         try
         {
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmiId);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(this);
 
             // set consensus read attributes
             int firstInPairCount = (int) Stream.concat(mReads.stream(), mNonConsensusReads.stream())

@@ -121,7 +121,7 @@ public interface DuplicateGroupCollapser
     }
 
     int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
-    static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount).reversed();
+    Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount).reversed();
 
     class UltimaCollapser
     {

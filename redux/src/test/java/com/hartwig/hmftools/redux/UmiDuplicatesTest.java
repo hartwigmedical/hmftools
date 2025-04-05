@@ -876,7 +876,7 @@ public class UmiDuplicatesTest
 
         final Function<List<SAMRecord>, Set<String>> readsToReadNameSet =
                 xs -> xs.stream().map(SAMRecord::getReadName).collect(Collectors.toCollection(Sets::newHashSet));
-        
+
         Set<Pair<Set<String>, Set<String>>> chr1UmiGroupsSet = chr1UmiGroups.stream()
                 .map(x -> Pair.of(readsToReadNameSet.apply(x.reads()), readsToReadNameSet.apply(x.nonConsensusReads())))
                 .collect(Collectors.toCollection(Sets::newHashSet));

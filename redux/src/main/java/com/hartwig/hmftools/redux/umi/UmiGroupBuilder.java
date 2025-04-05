@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.redux.common.Constants.MAX_UMI_BASE_DIFF_JITT
 import static com.hartwig.hmftools.redux.common.Constants.MIN_POLYG_UMI_TAIL_LENGTH;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
-import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.polyGTailLength;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.trimPolyGTail;
@@ -661,7 +660,7 @@ public class UmiGroupBuilder
 
     private static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount)
             .reversed()
-            .thenComparing(x -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName());
+            .thenComparing(x -> x.templateRead().getReadName());
 
     private record JitterCollapseElementKey(long keyId, FragmentCoords coords, String umiId)
     {
