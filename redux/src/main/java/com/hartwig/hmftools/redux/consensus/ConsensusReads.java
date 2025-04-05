@@ -29,6 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
@@ -81,13 +82,21 @@ public class ConsensusReads
         mValidateConsensusReads = validateConsensusReads;
     }
 
+    @VisibleForTesting
     public ConsensusReadInfo createConsensusRead(
             final List<SAMRecord> reads, final FragmentCoords fragmentCoords, @Nullable final String umiId)
     {
-        String consensusReadId  = "";
+        DuplicateGroup duplicateGroup = new DuplicateGroup(umiId, reads, fragmentCoords);
+        return createConsensusRead(duplicateGroup);
+    }
 
-        SAMRecord templateRead = TemplateReads.selectTemplateRead(reads, fragmentCoords);
-        consensusReadId = formConsensusReadId(templateRead, umiId);
+    public ConsensusReadInfo createConsensusRead(final DuplicateGroup duplicateGroup)
+    {
+        List<SAMRecord> reads = duplicateGroup.reads();
+        String umiId = duplicateGroup.umiId();
+        SAMRecord templateRead = duplicateGroup.templateRead();
+
+        String consensusReadId = formConsensusReadId(templateRead, umiId);
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {

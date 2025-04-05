@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
-import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -124,7 +123,7 @@ public interface DuplicateGroupCollapser
     int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
     Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator
             .comparingInt(DuplicateGroup::readCount).reversed()
-            .thenComparing((final DuplicateGroup x) -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName());
+            .thenComparing((final DuplicateGroup x) -> x.templateRead().getReadName());
 
     class UltimaCollapser
     {
