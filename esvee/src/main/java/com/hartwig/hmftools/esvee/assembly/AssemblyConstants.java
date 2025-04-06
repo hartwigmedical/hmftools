@@ -60,7 +60,7 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES = ASSEMBLY_READ_OVERLAP_BASES;
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int ASSEMBLY_REF_BASE_MAX_GAP = 200;
-    public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
+    public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
     public static final int LOCAL_ASSEMBLY_MATCH_DISTANCE = 500;
     public static final int MATCH_SUBSEQUENCE_LENGTH = 20;

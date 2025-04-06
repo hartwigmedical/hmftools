@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -20,9 +19,9 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportC
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices.getRefReadIndices;
+import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.checkAddRefSideSoftClip;
 import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.purgeRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
@@ -41,6 +40,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.ReadAssemblyIndices;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -51,6 +51,53 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 public class RefBaseExtender
 {
     public RefBaseExtender() { }
+
+    public static void checkRefSideSoftClips(final JunctionAssembly assembly)
+    {
+        // purge any junction support which extends beyond a consensus ref-side soft-clip
+        List<RefSideSoftClip> refSideSoftClips = Lists.newArrayList();
+
+        for(SupportRead read : assembly.support())
+        {
+            checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), read.cachedRead());
+        }
+
+        if(refSideSoftClips.isEmpty())
+            return;
+
+        Collections.sort(refSideSoftClips, Comparator.comparingInt(x -> -x.readCount()));
+
+        RefSideSoftClip refSideSoftClip = refSideSoftClips.get(0);
+
+        if(refSideSoftClip.readCount() < ASSEMBLY_MIN_READ_SUPPORT)
+            return;
+
+        int mainSoftClipCount = refSideSoftClip.readCount();
+        int totalSoftClipCount = refSideSoftClips.stream().mapToInt(x -> x.readCount()).sum();
+        int nonSoftClipCount = assembly.supportCount() - totalSoftClipCount;
+
+        if(nonSoftClipCount > 0 && nonSoftClipCount < mainSoftClipCount && nonSoftClipCount < ASSEMBLY_SPLIT_MIN_READ_SUPPORT)
+        {
+            // as per the branching routine run during linking, require a minimum number of reads to keep both reads which soft-clip and
+            // those which run past that point
+            List<SupportRead> support = assembly.support();
+            int index = 0;
+
+            while(index < support.size())
+            {
+                SupportRead read = support.get(index);
+
+                if(refSideSoftClips.stream().noneMatch(x -> x.readIds().contains(read.id())))
+                {
+                    support.remove(index);
+                }
+                else
+                {
+                    ++index;
+                }
+            }
+        }
+    }
 
     public void findAssemblyCandidateExtensions(final JunctionAssembly assembly, final List<Read> unfilteredNonJunctionReads)
     {
@@ -93,8 +140,6 @@ public class RefBaseExtender
         {
             if(read.cachedRead().hasSupplementary())
                 suppJunctionReads.add(read.cachedRead());
-
-            assembly.checkAddRefSideSoftClip(read.cachedRead()); // a junction read can be soft-clipped on both sides
 
             if(!isIndelJunction && read.isDiscordant())
             {
@@ -181,7 +226,7 @@ public class RefBaseExtender
             findRemoteRegions(assembly, discordantReads, remoteJunctionMates, suppJunctionReads);
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
-        purgeRefSideSoftClips(assembly.refSideSoftClips(), ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, newRefBasePosition);
+        purgeRefSideSoftClips(assembly.refSideSoftClips(), newRefBasePosition);
     }
 
     private static boolean isConcordantRead(final Read read)
@@ -299,7 +344,7 @@ public class RefBaseExtender
             nonJunctionSupport.add(read);
 
             if(considerRefSideSoftClips)
-                RefSideSoftClip.checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), read);
+                checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), read);
         }
 
         if(nonJunctionSupport.isEmpty())
@@ -308,7 +353,7 @@ public class RefBaseExtender
         int nonSoftClipRefPosition = newRefBasePosition;
 
         if(considerRefSideSoftClips)
-            purgeRefSideSoftClips(refSideSoftClips, ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
+            purgeRefSideSoftClips(refSideSoftClips, nonSoftClipRefPosition);
 
         if(!considerRefSideSoftClips || refSideSoftClips.isEmpty())
         {

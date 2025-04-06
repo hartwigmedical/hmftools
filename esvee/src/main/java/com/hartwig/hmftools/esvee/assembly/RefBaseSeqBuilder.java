@@ -147,8 +147,6 @@ public class RefBaseSeqBuilder
 
         List<RefReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
 
-        // boolean isIndelJunction = mAssembly.junction().indelBased();
-
         while(!activeReads.isEmpty())
         {
             if(currentElementType == M || currentElementType == I)

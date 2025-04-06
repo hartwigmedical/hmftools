@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequen
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findMaxFrequencyIndelReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
+import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
@@ -152,6 +153,11 @@ public class JunctionAssembler
 
         for(JunctionAssembly assembly : assemblies)
         {
+            // call routine to purge reads likely add to multiple assemblies and breaching a dominant RSSC
+            // NOTE: this could be done for all assemblies, not just split ones
+            if(assemblies.size() > 1)
+                checkRefSideSoftClips(assembly);
+
             RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
             assembly.setRefBases(refBaseSeqBuilder);
 
