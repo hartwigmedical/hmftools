@@ -21,7 +21,7 @@ public final class ImmuneEscapeTable
                 new float[] { 2, 1, 3 },
                 new Cell[] { cells.createHeader("Escape Mechanism"), cells.createHeader("Detected?"), cells.createHeader(Strings.EMPTY) });
 
-        table.addCell(cells.createContent("HLA-1 loss-of-function"));
+        table.addCell(cells.createContent("HLA-1 =loss-of-function"));
         table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasHlaEscape(), isTumorFail)));
         table.addCell(cells.createContent(Strings.EMPTY));
 

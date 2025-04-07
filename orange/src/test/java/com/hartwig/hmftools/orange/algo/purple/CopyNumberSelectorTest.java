@@ -95,7 +95,7 @@ public class CopyNumberSelectorTest
 
         List<PurpleGainDeletion> allGains = Lists.newArrayList(gain, lowerGainSameBand, lowestGainOtherBand, partialGain);
 
-        List<PurpleGainDeletion> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allGains, Lists.newArrayList());
+        List<PurpleGainDeletion> interesting = CopyNumberSelector.selectInterestingUnreportedGainsDels(allGains, Lists.newArrayList());
 
         assertEquals(2, interesting.size());
         assertTrue(interesting.contains(gain));
@@ -103,24 +103,24 @@ public class CopyNumberSelectorTest
     }
 
     @Test
-    public void canSelectPotentiallyInterestingLosses()
+    public void canSelectPotentiallyInterestingDels()
     {
-        ImmutablePurpleGainDeletion.Builder lossBuilder =
+        ImmutablePurpleGainDeletion.Builder delBuilder =
                 TestPurpleGainDeletionFactory.builder().interpretation(CopyNumberInterpretation.FULL_DEL).minCopies(0).maxCopies(0);
 
-        PurpleGainDeletion interestingLoss = lossBuilder.chromosome("chr2").chromosomeBand("band 1").gene("gene 2").build();
-        PurpleGainDeletion lossWithReportable = lossBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 3").build();
-        PurpleGainDeletion reportableLossSameBand = lossBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 4").build();
-        PurpleGainDeletion lossAllosome = lossBuilder.chromosome("chrX").chromosomeBand("band 1").gene("gene 5").build();
-        PurpleGainDeletion reportableLossOtherBand = lossBuilder.chromosome("chr2").chromosomeBand("band 3").gene("gene 6").build();
+        PurpleGainDeletion interestingDel = delBuilder.chromosome("chr2").chromosomeBand("band 1").gene("gene 2").build();
+        PurpleGainDeletion delWithReportable = delBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 3").build();
+        PurpleGainDeletion reportableDelSameBand = delBuilder.chromosome("chr2").chromosomeBand("band 2").gene("gene 4").build();
+        PurpleGainDeletion delAllosome = delBuilder.chromosome("chrX").chromosomeBand("band 1").gene("gene 5").build();
+        PurpleGainDeletion reportableDelOtherBand = delBuilder.chromosome("chr2").chromosomeBand("band 3").gene("gene 6").build();
 
-        List<PurpleGainDeletion> allLosses =
-                Lists.newArrayList(interestingLoss, lossWithReportable, reportableLossOtherBand, lossAllosome, reportableLossOtherBand);
+        List<PurpleGainDeletion> allDels =
+                Lists.newArrayList(interestingDel, delWithReportable, reportableDelOtherBand, delAllosome, reportableDelOtherBand);
 
-        List<PurpleGainDeletion> interesting = CopyNumberSelector.selectInterestingUnreportedGainsLosses(allLosses,
-                Lists.newArrayList(reportableLossOtherBand, reportableLossSameBand));
+        List<PurpleGainDeletion> interesting = CopyNumberSelector.selectInterestingUnreportedGainsDels(allDels,
+                Lists.newArrayList(reportableDelOtherBand, reportableDelSameBand));
 
         assertEquals(1, interesting.size());
-        assertTrue(interesting.contains(interestingLoss));
+        assertTrue(interesting.contains(interestingDel));
     }
 }

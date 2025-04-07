@@ -117,10 +117,10 @@ public class PurpleInterpreter
         }
 
         List<PurpleGainDeletion> allSomaticGainsDels =
-                extractAllGainsLosses(purple.purityContext().qc().status(), purple.purityContext().gender(), purple.purityContext()
+                extractAllGainsDels(purple.purityContext().qc().status(), purple.purityContext().gender(), purple.purityContext()
                         .bestFit()
                         .ploidy(), purple.purityContext().targeted(), purple.allSomaticGeneCopyNumbers());
-        List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsLossesFromDrivers(purple.somaticDrivers());
+        List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
         List<PurpleGainDeletion> nearReportableSomaticGains =
                 CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(), purple.purityContext()
@@ -130,8 +130,8 @@ public class PurpleInterpreter
                 nearReportableSomaticGains.size());
 
         List<PurpleGainDeletion> additionalSuspectSomaticGainsDels =
-                CopyNumberSelector.selectInterestingUnreportedGainsLosses(allSomaticGainsDels, reportableSomaticGainsDels);
-        LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
+                CopyNumberSelector.selectInterestingUnreportedGainsDels(allSomaticGainsDels, reportableSomaticGainsDels);
+        LOGGER.info(" Found an additional {} somatic gains/deletions that are potentially interesting",
                 additionalSuspectSomaticGainsDels.size());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
@@ -155,13 +155,13 @@ public class PurpleInterpreter
             mergedGermlineDeletions.addAll(allGermlineDeletions);
             mergedGermlineDeletions.addAll(impliedDeletions);
 
-            Map<PurpleGainDeletion, Boolean> fullLossToReportability =
+            Map<PurpleGainDeletion, Boolean> fullDelToReportability =
                     germlineGainDelFactory.getReportabilityMap(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
 
-            allGermlineFullDels = Lists.newArrayList(fullLossToReportability.keySet());
-            reportableGermlineFullDels = selectReportablegainDels(fullLossToReportability);
+            allGermlineFullDels = Lists.newArrayList(fullDelToReportability.keySet());
+            reportableGermlineFullDels = selectReportablegainDels(fullDelToReportability);
 
-            LOGGER.info(" Resolved {} germline losses of which {} are reportable",
+            LOGGER.info(" Resolved {} germline deletions of which {} are reportable",
                     allGermlineFullDels.size(), reportableGermlineFullDels.size());
 
             Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability =
@@ -324,10 +324,10 @@ public class PurpleInterpreter
     }
 
     @NotNull
-    private static List<PurpleGainDeletion> selectReportablegainDels(@NotNull Map<PurpleGainDeletion, Boolean> fullLossToReportability)
+    private static List<PurpleGainDeletion> selectReportablegainDels(@NotNull Map<PurpleGainDeletion, Boolean> fullDelToReportability)
     {
         List<PurpleGainDeletion> reportable = Lists.newArrayList();
-        for(Map.Entry<PurpleGainDeletion, Boolean> entry : fullLossToReportability.entrySet())
+        for(Map.Entry<PurpleGainDeletion, Boolean> entry : fullDelToReportability.entrySet())
         {
             PurpleGainDeletion gainDel = entry.getKey();
             boolean reported = entry.getValue();
@@ -357,7 +357,7 @@ public class PurpleInterpreter
     }
 
     @NotNull
-    private static List<PurpleGainDeletion> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, @NotNull Gender gender, double ploidy,
+    private static List<PurpleGainDeletion> extractAllGainsDels(@NotNull Set<PurpleQCStatus> qcStatus, @NotNull Gender gender, double ploidy,
             boolean isTargetRegions, @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
     {
         List<DriverGene> allGenes = Lists.newArrayList();
@@ -391,11 +391,11 @@ public class PurpleInterpreter
 
         allGainDels.addAll(delDrivers.deletions(allGeneCopyNumbers, isTargetRegions));
 
-        return somaticGainsLossesFromDrivers(allGainDels);
+        return somaticGainsDelsFromDrivers(allGainDels);
     }
 
     @NotNull
-    private static List<PurpleGainDeletion> somaticGainsLossesFromDrivers(@NotNull List<DriverCatalog> drivers)
+    private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(@NotNull List<DriverCatalog> drivers)
     {
         List<PurpleGainDeletion> gainsDels = Lists.newArrayList();
 
