@@ -278,15 +278,6 @@ Purple
 -target_regions_bed Target Regions BED file
 -target_regions_ratios Target Regions Ratios file
 -target_regions_msi_indels Target Regions MSI Indels file
--min_diploid_tumor_ratio_count 3
--min_diploid_tumor_ratio_count_centromere 3
--ploidy_penalty_standard_derviation = 0.1
--ploid_penalty_factor = 0.4
--ploidy_penalty_min 0.2
--ploidy_penalty_min_standard_deviation_per_ploidy 1.5
--ploidy_penalty_sub_one_major_allele_multiplier 3
--deviation_penalty_gc_min_adjust 0.25
--gc_ratio_exponent 3.0
 ```
 
 ## Future improvements
