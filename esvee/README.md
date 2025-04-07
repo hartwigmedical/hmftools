@@ -324,7 +324,7 @@ Finally each assembly within the phase group are compared to each other.  If the
 ### STEP 2D: Alignment & variant calling 
 
 #### Alignment 
-Esvee now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter whic hhas the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100).  The mismatch penalty is also raised from 4 to 6 to 
+Esvee now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter which has the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100).  The gap open and mismatch penalties are also raised from 4 to 6 to incentise producing softclips where edges of an alignment are very marginal.
 
 BWA may return one primary alignment as well as one or more supplementary alignments. Since BWA can assign an unreliable MAPQ to supplementary alignments, any supplementary alignments are realigned again using BWA with the primary alignment of the re-query kept and any further supplementaries dropped 
 
