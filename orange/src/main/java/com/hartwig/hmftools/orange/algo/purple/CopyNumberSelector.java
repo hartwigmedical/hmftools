@@ -156,20 +156,20 @@ final class CopyNumberSelector
                         || gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL)
                 .collect(Collectors.toList());
 
-        List<PurpleGainDeletion> DelsAutosomes = Lists.newArrayList();
+        List<PurpleGainDeletion> delsAutosomes = Lists.newArrayList();
         for(PurpleGainDeletion del : unreportedDels)
         {
             if(HumanChromosome.fromString(del.chromosome()).isAutosome())
             {
                 if(!locusPresent(reportableDels, del.chromosome(), del.chromosomeBand()))
                 {
-                    DelsAutosomes.add(del);
+                    delsAutosomes.add(del);
                 }
             }
         }
 
         Map<CopyNumberKey, PurpleGainDeletion> bestDelPerLocation = Maps.newHashMap();
-        for(PurpleGainDeletion del : DelsAutosomes)
+        for(PurpleGainDeletion del : delsAutosomes)
         {
             CopyNumberKey key = new CopyNumberKey(del.chromosome(), del.chromosomeBand());
             PurpleGainDeletion bestDel = bestDelPerLocation.get(key);

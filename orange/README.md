@@ -141,7 +141,7 @@ interesting and added to the report:
     5. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
 - Other regions with amps, or with deletions in other autosomal regions:
     1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy.
-    2. Any chromosomal band location with at least one gene deletedc or fully amplified is considered potentially interesting.
+    2. Any chromosomal band location with at least one gene deleted or fully amplified is considered potentially interesting.
        A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional deletions are reported as potentially interesting:
         - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
         - For a band with a deletion that has no deletions reported in this band already, an arbitrary gene is picked.
