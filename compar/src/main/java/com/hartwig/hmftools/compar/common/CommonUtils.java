@@ -242,7 +242,7 @@ public class CommonUtils
                     matched = true;
 
                     // skip checking for diffs if the items are not reportable
-                    boolean eitherReportable = item2.reportable() || item2.reportable();
+                    boolean eitherReportable = item1.reportable() || item2.reportable();
 
                     if(matchLevel != REPORTABLE || eitherReportable)
                     {
