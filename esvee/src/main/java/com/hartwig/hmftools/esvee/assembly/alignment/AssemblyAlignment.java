@@ -46,8 +46,11 @@ public class AssemblyAlignment
     private String mSequenceCigar;
 
     private final List<Breakend> mBreakends;
-    private final List<Integer> mLinkIndices; // indices within the full sequence of each break junction
 
+    // indices within the full sequence of each break junction
+    private final List<Integer> mLinkIndices;
+
+    // local map to ensure reads from same fragment get the same assembly coords
     private final Map<String,List<SupportRead>> mFragmentReadsMap;
 
     public AssemblyAlignment(final JunctionAssembly assembly) { this(assembly, null); }

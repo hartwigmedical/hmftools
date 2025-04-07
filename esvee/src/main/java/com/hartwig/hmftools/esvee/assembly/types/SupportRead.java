@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
@@ -232,7 +233,18 @@ public class SupportRead
 
     public int fullAssemblyIndexStart() { return mFullAssemblyIndex; }
     public int fullAssemblyIndexEnd() { return mFullAssemblyIndex + mBaseLength - 1; }
-    public Orientation fullAssemblyOrientation() { return mFullAssemblyOrientation; }
+
+    public Orientation fullAssemblyOrientation()
+    {
+        // TEMP: to find circumstances for accessing this when uninitialised
+        if(mFullAssemblyOrientation == null)
+        {
+            SV_LOGGER.warn("read({}) accessing full assembly orientation uninitialised", toString());
+            return FORWARD;
+        }
+
+        return mFullAssemblyOrientation;
+    }
 
     public int inferredFragmentLength() { return mInferredFragmentLength; }
     public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
