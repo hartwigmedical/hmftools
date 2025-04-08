@@ -90,6 +90,7 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH = 50000;
     public static final int ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST = 15;
     public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;
+    public static final int ALIGNMENT_PROXIMATE_DISTANCE = 1000;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 
