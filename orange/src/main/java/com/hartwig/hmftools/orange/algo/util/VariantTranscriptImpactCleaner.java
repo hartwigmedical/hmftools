@@ -28,7 +28,7 @@ public final class VariantTranscriptImpactCleaner
                 cleanedEffects,
                 impact.SpliceRegion,
                 cleanedHgvsCoding,
-                cleanedHgvsProtein, "");
+                cleanedHgvsProtein, "", null, null);
     }
 
     @Nullable

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.codonForBase;
 
 import java.io.File;
 import java.util.List;
@@ -141,10 +142,13 @@ public class VcfWriter
 
                 for(VariantTransImpact transImpact : geneImpacts)
                 {
+                    int affectedExon = transImpact.codingContext().ExonRank;
+                    int affectedCodon = codonForBase(transImpact.codingContext().CodingBase);
+                    String refSeqId = transImpact.TransData.RefSeqId == null ? "" : transImpact.TransData.RefSeqId;
                     transImpacts.add(new VariantTranscriptImpact(
                             transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
                             transImpact.effectsStr(), transImpact.inSpliceRegion(),
-                            transImpact.hgvsCoding(), transImpact.hgvsProtein(), ""));
+                            transImpact.hgvsCoding(), transImpact.hgvsProtein(), refSeqId, affectedExon, affectedCodon));
                 }
             }
 

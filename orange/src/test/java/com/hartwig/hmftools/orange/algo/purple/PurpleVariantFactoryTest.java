@@ -45,7 +45,7 @@ public class PurpleVariantFactoryTest
                         false,
                         "c.2187C>T",
                         "p.Ser729=",
-                        ""));
+                        "", null, null));
 
         PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
                 .chromosome("chromosome")
@@ -209,6 +209,6 @@ public class PurpleVariantFactoryTest
                 false,
                 Strings.EMPTY,
                 Strings.EMPTY,
-                "");
+                "", null, null);
     }
 }
