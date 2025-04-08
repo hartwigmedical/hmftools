@@ -370,7 +370,8 @@ public class PurpleInterpreterTest
                 ChromosomalRearrangementsDeterminer.createForRefGenomeVersion(OrangeRefGenomeVersion.V37);
 
         return new PurpleInterpreter(
-                purpleVariantFactory, germlineGainDeletionFactory,
+                purpleVariantFactory,
+                germlineGainDeletionFactory,
                 germlineLossOfHeterozygosityFactory,
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),

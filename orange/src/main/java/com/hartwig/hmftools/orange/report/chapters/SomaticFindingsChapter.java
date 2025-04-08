@@ -156,7 +156,7 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addSomaticAmpDels(@NotNull Document document)
     {
-        String driverAmpsDelsTitle = "Driver amplifications/homologous deletions";
+        String driverAmpsDelsTitle = "Driver amplifications and homozygous deletions";
         String nearDriverGainsTitle = "Potentially interesting near-driver amplifications";
         String suspectGainsTitle = "Other regions with amplifications";
         String suspectDelsTitle = "Regions with deletions in genes in other autosomal regions";
