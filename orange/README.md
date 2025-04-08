@@ -265,6 +265,7 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming:
+    - copy number "Loss" has been renamed to "Del" and is made more clear in the report. 
     - Add presence of tumor stats to quality control page and to orange-datamodel
     - Ensure only exonic variants that are phased with reported variants are shown in 'potentially interesting' section
     - Add potentially interesting chromosomal rearrangements (1q trisomy and 1p19q co-deletion) to report
