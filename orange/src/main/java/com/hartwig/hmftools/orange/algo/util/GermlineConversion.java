@@ -366,16 +366,17 @@ public final class GermlineConversion
     }
 
     private static boolean shouldAddSuspectGeneCopyNumberWithLOH(@NotNull PurpleGeneCopyNumber candidateSuspectGeneCopyNumber,
-            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH, @Nullable List<PurpleGainDeletion> reportableGermlineFullDels)
+            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH,
+            @Nullable List<PurpleGainDeletion> reportableGermlineFullDels)
     {
         String gene = candidateSuspectGeneCopyNumber.gene();
 
         boolean alreadySuspectGeneCopyNumberWithLOH = findMatchingGeneCopyNumber(gene, suspectGeneCopyNumbersWithLOH) != null;
         boolean hasReportableGermlineFullDels =
                 reportableGermlineFullDels != null && reportableGermlineFullDels.stream().anyMatch(l -> l.gene().equals(gene));
-        boolean fullyLostInTumor = candidateSuspectGeneCopyNumber.minCopyNumber() < 0.5;
+        boolean fullyDeletedInTumor = candidateSuspectGeneCopyNumber.minCopyNumber() < 0.5;
 
-        return !alreadySuspectGeneCopyNumberWithLOH && !hasReportableGermlineFullDels && !fullyLostInTumor;
+        return !alreadySuspectGeneCopyNumberWithLOH && !hasReportableGermlineFullDels && !fullyDeletedInTumor;
     }
 
     @Nullable
