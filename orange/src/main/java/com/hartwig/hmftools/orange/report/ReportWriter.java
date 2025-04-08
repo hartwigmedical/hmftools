@@ -84,8 +84,8 @@ public class ReportWriter
 
         chapters.add(new QualityControlChapter(report, plotPathResolver, reportResources));
 
-        String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
-        writePdfChapters(report.sampleId(), platinumVersion, chapters, reportResources);
+        String pipelineVersion = report.pipelineVersion() != null ? report.pipelineVersion() : ReportResources.NOT_AVAILABLE;
+        writePdfChapters(report.sampleId(), pipelineVersion, chapters, reportResources);
     }
 
     private void writeJson(@NotNull OrangeRecord report) throws IOException
@@ -104,13 +104,13 @@ public class ReportWriter
         }
     }
 
-    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull List<ReportChapter> chapters,
+    private void writePdfChapters(@NotNull String sampleId, @NotNull String pipelineVersion, @NotNull List<ReportChapter> chapters,
             @NotNull ReportResources reportResources) throws IOException
     {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources, addDisclaimer);
+        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, pipelineVersion, reportResources, addDisclaimer);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for(int i = 0; i < chapters.size(); i++)

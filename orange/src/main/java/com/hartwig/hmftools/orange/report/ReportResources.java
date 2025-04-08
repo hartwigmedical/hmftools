@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public class ReportResources
 {
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
-    static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
+    static final String METADATA_AUTHOR = "Hartwig Pipeline Pipeline";
 
     public static final String NOT_AVAILABLE = "NA";
     public static final String NONE = "NONE";
