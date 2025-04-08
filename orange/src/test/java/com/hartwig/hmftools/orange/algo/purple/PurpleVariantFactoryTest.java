@@ -44,8 +44,8 @@ public class PurpleVariantFactoryTest
                         "synonymous_variant",
                         false,
                         "c.2187C>T",
-                        "p.Ser729="
-                ));
+                        "p.Ser729=",
+                        ""));
 
         PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
                 .chromosome("chromosome")
@@ -208,7 +208,7 @@ public class PurpleVariantFactoryTest
                 Strings.EMPTY,
                 false,
                 Strings.EMPTY,
-                Strings.EMPTY
-        );
+                Strings.EMPTY,
+                "");
     }
 }

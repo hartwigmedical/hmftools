@@ -22,11 +22,12 @@ public class TranscriptData
     public final Integer CodingStart;
     public final Integer CodingEnd;
     public final String BioType;
+    public final String RefSeqId;
 
     private List<ExonData> mExons;
 
     public TranscriptData(final int transId, final String transName, final String geneId, final boolean isCanonical, final byte strand,
-            int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType)
+            int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType, final String refSeqId)
     {
         TransId = transId;
         TransName = transName;
@@ -39,6 +40,7 @@ public class TranscriptData
         CodingEnd = codingEnd;
         BioType = bioType;
         mExons = Lists.newArrayList();
+        RefSeqId = refSeqId;
     }
 
     public void setExons(final List<ExonData> exons) { mExons = exons; }

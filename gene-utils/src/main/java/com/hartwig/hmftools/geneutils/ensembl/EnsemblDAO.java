@@ -454,6 +454,7 @@ public class EnsemblDAO
 
     private void writeTranscriptExonData(final String outputFile)
     {
+        Map<String, String> ensembleIdToRefSeqId = GenerateRefSeq.getRefSeqMapping(mDbContext);
         GU_LOGGER.info("retrieving transcript & exon data");
 
         try
@@ -461,7 +462,7 @@ public class EnsemblDAO
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write("GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd");
-            writer.write(",ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd");
+            writer.write(",ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd,RefSeqId");
             writer.newLine();
 
             final String queryStr = readQueryString(Resources.getResource("ensembl_sql/ensembl_transcript.sql"));
@@ -516,7 +517,7 @@ public class EnsemblDAO
                     currentTrans = new TranscriptData(
                             transId.intValue(), transName, geneId, isCanonical, strand, transStart.intValue(), transEnd.intValue(),
                             codingStart != null ? codingStart.intValue() : null, codingEnd != null ? codingEnd.intValue() : null,
-                            bioType);
+                            bioType, null);
 
                     currentTransDataList.add(currentTrans);
                 }
@@ -549,16 +550,19 @@ public class EnsemblDAO
 
                 for(TranscriptData transData : transDataList)
                 {
+                    String refSeqId = ensembleIdToRefSeqId.get(transData.TransName);
+                    if(refSeqId == null) refSeqId = "NULL";
                     for(ExonData exon : transData.exons())
                     {
                         writer.write(String.format("%s,%d,%d,%d,%s,%s,%d,%d",
                                 geneId, canonicalTransId, transData.Strand, transData.TransId,
                                 transData.TransName, transData.BioType, transData.TransStart, transData.TransEnd));
 
-                        writer.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
+                        writer.write(String.format(",%d,%d,%d,%d,%d,%s,%s,%s",
                                 exon.Rank, exon.Start, exon.End, exon.PhaseStart, exon.PhaseEnd,
                                 transData.CodingStart != null ? transData.CodingStart : "NULL",
-                                transData.CodingEnd != null ? transData.CodingEnd : "NULL"));
+                                transData.CodingEnd != null ? transData.CodingEnd : "NULL",
+                                refSeqId));
 
                         writer.newLine();
                     }

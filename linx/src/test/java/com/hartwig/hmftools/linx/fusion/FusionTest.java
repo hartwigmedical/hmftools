@@ -275,7 +275,7 @@ public class FusionTest
         int codingEnd = 1900;
 
         TranscriptData transData = new TranscriptData(transId1, transName1, geneId1, isCanonical, POS_STRAND, transStart, transEnd,
-                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         List<ExonData> exons = Lists.newArrayList();
 
@@ -306,7 +306,7 @@ public class FusionTest
         codingEnd = 11980;
 
         transData = new TranscriptData(transId2, transName2, geneId2, isCanonical, POS_STRAND, transStart, transEnd,
-                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         exons = Lists.newArrayList();
 
@@ -554,7 +554,7 @@ public class FusionTest
         int codingEnd = 1900;
 
         TranscriptData transData = new TranscriptData(transId1, transName1, GENE_ID_1, isCanonical, POS_STRAND, transStart, transEnd,
-                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         List<ExonData> exons = Lists.newArrayList();
 
@@ -585,7 +585,7 @@ public class FusionTest
         codingEnd = 11980;
 
         transData = new TranscriptData(transId2, transName2, geneId2, isCanonical, POS_STRAND, transStart, transEnd,
-                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         exons = Lists.newArrayList();
 

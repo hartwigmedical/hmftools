@@ -144,7 +144,7 @@ public class VcfWriter
                     transImpacts.add(new VariantTranscriptImpact(
                             transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
                             transImpact.effectsStr(), transImpact.inSpliceRegion(),
-                            transImpact.hgvsCoding(), transImpact.hgvsProtein()));
+                            transImpact.hgvsCoding(), transImpact.hgvsProtein(), ""));
                 }
             }
 

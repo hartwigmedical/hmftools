@@ -187,6 +187,7 @@ public final class EnsemblDataLoader
             int exonEndPhaseIndex = fieldsIndexMap.get("ExonEndPhase");
             int codingStartIndex = fieldsIndexMap.get("CodingStart");
             int codingEndIndex = fieldsIndexMap.get("CodingEnd");
+            int refSeqIdIndex = fieldsIndexMap.getOrDefault("RefSeqId", -1);
 
             int exonCount = 0;
             int transcriptCount = 0;
@@ -240,11 +241,14 @@ public final class EnsemblDataLoader
 
                     Integer codingStart = !items[codingStartIndex].equalsIgnoreCase("NULL") ? Integer.parseInt(items[codingStartIndex]) : null;
                     Integer codingEnd = !items[codingEndIndex].equalsIgnoreCase("NULL") ? Integer.parseInt(items[codingEndIndex]) : null;
-
+                    String refSeqId = refSeqIdIndex > 0 ? items[refSeqIdIndex] : null;
+                    if("NULL".equals(refSeqId)) {
+                        refSeqId = null;
+                    }
                     currentTrans = new TranscriptData(
                             transId, transName, geneId, isCanonical, Byte.parseByte(items[strandIndex]),
                             Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
-                            codingStart, codingEnd, items[biotypeIndex]);
+                            codingStart, codingEnd, items[biotypeIndex], refSeqId);
 
                     ++transcriptCount;
 

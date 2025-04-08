@@ -21,9 +21,10 @@ public class VariantTranscriptImpact
     public final boolean SpliceRegion;
     public final String HgvsCoding;
     public final String HgvsProtein;
+    public final String RefSeqId;
 
     public VariantTranscriptImpact(final String geneId, final String geneName, final String transcript, final String effects,
-            final boolean spliceRegion, final String hgvsCoding, final String hgvsProtein)
+            final boolean spliceRegion, final String hgvsCoding, final String hgvsProtein, final String refSeqId)
     {
         GeneId = geneId;
         GeneName = geneName;
@@ -32,6 +33,7 @@ public class VariantTranscriptImpact
         SpliceRegion = spliceRegion;
         HgvsCoding = hgvsCoding;
         HgvsProtein = hgvsProtein;
+        RefSeqId = refSeqId;
     }
 
     // serialisation
@@ -45,11 +47,11 @@ public class VariantTranscriptImpact
     {
         StringJoiner fields = new StringJoiner("|");
         List<String> fieldItems = Lists.newArrayList("Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p");
-        fieldItems.forEach(x -> fields.add(x));
+        fieldItems.forEach(fields::add);
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 VAR_TRANS_IMPACT_ANNOTATION, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String,
-                String.format("Transcript impact [%s]", fields.toString())));
+                String.format("Transcript impact [%s]", fields)));
     }
 
     public static void writeVcfData(final VariantContext context, final List<VariantTranscriptImpact> transImpacts)
@@ -79,8 +81,9 @@ public class VariantTranscriptImpact
     public static VariantTranscriptImpact fromVcfData(final String data)
     {
         String[] items = data.split("\\" + VAR_TRANS_IMPACT_ITEM_DELIM, -1);
+        String refSeqId = items.length > 7 ? items[7] : "";
         return new VariantTranscriptImpact(
-                items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6]);
+                items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6], refSeqId);
     }
 
     private String toVcfData()
@@ -93,6 +96,7 @@ public class VariantTranscriptImpact
         sj.add(String.valueOf(SpliceRegion));
         sj.add(HgvsCoding);
         sj.add(HgvsProtein);
+        sj.add(RefSeqId);
         return sj.toString();
     }
 

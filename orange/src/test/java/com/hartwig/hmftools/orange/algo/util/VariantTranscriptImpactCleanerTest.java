@@ -21,7 +21,7 @@ public class VariantTranscriptImpactCleanerTest
                 "synonymous_variant",
                 false,
                 "c.2187C>T",
-                "p.Ser729=]"); // this bracket needs to be removed
+                "p.Ser729=]", ""); // this bracket needs to be removed
 
         VariantTranscriptImpact cleanedImpact = VariantTranscriptImpactCleaner.cleanFields(impact);
 
@@ -44,7 +44,7 @@ public class VariantTranscriptImpactCleanerTest
                 "synonymous_variant",
                 false,
                 "c.2187C>T",
-                "p.Ser729=]"); // this bracket needs to be removed
+                "p.Ser729=]", ""); // this bracket needs to be removed
 
         VariantTranscriptImpact cleanedImpact = VariantTranscriptImpactCleaner.cleanFields(impact);
 
@@ -67,7 +67,7 @@ public class VariantTranscriptImpactCleanerTest
                 null,
                 true,
                 null,
-                null);
+                null, "");
 
         VariantTranscriptImpact cleanedImpact = VariantTranscriptImpactCleaner.cleanFields(impact);
 

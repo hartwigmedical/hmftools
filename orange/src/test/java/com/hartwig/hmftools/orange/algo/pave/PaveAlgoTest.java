@@ -129,7 +129,7 @@ public class PaveAlgoTest
     {
         byte strandEnum = strand == Strand.FORWARD ? Strand.POS_STRAND : Strand.NEG_STRAND;
         TranscriptData transcript =
-                new TranscriptData(-1, Strings.EMPTY, Strings.EMPTY, false, strandEnum, -1, -1, codingStart, codingEnd, Strings.EMPTY);
+                new TranscriptData(-1, Strings.EMPTY, Strings.EMPTY, false, strandEnum, -1, -1, codingStart, codingEnd, Strings.EMPTY, null);
         transcript.setExons(exons);
         return transcript;
     }

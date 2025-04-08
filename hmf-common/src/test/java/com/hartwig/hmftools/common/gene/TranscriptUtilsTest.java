@@ -66,7 +66,7 @@ public class TranscriptUtilsTest
 
         TranscriptData transData = new TranscriptData(
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, POS_STRAND,
-                10, 40, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                10, 40, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, -1, -1));
         transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, -1, -1));
@@ -82,7 +82,7 @@ public class TranscriptUtilsTest
 
         transData = new TranscriptData(
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, POS_STRAND,
-                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, PHASE_NONE, PHASE_NONE));
         transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_NONE, PHASE_0));
@@ -128,7 +128,7 @@ public class TranscriptUtilsTest
         // test negative strand
         transData = new TranscriptData(
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, NEG_STRAND,
-                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 4, PHASE_NONE, PHASE_NONE));
         transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 3, PHASE_2, PHASE_NONE));
@@ -171,7 +171,7 @@ public class TranscriptUtilsTest
         codingEnd = 50;
         transData = new TranscriptData(
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, POS_STRAND,
-                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, PHASE_2, PHASE_1));
         transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_1, PHASE_0));
@@ -192,7 +192,7 @@ public class TranscriptUtilsTest
         codingEnd = 60;
         transData = new TranscriptData(
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, NEG_STRAND,
-                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 3, PHASE_NONE, PHASE_NONE));
         transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_1, PHASE_2));
@@ -273,7 +273,7 @@ public class TranscriptUtilsTest
 
         TranscriptData transData = new TranscriptData(
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, POS_STRAND,
-                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING, null);
 
         transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, PHASE_NONE, PHASE_NONE));
         transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_NONE, PHASE_0));
