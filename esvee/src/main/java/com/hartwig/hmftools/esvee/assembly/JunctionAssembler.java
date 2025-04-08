@@ -281,6 +281,18 @@ public class JunctionAssembler
             if(read.alignmentStart() < minReadPosStart || read.alignmentEnd() > maxReadPosEnd)
                 continue;
 
+            // skip indels supporting discordant-only junctions
+            if(mJunction.isForward())
+            {
+                if(read.hasIndelImpliedUnclippedEnd())
+                    continue;
+            }
+            else
+            {
+                if(read.hasIndelImpliedUnclippedStart())
+                    continue;
+            }
+
             if(!candidateReadIds.contains(read.id()) || read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
             {
                 mNonJunctionReads.add(read);

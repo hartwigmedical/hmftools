@@ -27,6 +27,8 @@ import static htsjdk.samtools.util.StringUtil.bytesToString;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -503,7 +505,7 @@ public class Read
     public void markLowQualTrimmed() { mLowQualTrimmed = true; }
     public boolean lowQualTrimmed() { return mLowQualTrimmed; }
 
-    public void setIndelInferredUnclippedPositions(int inferredStart, int inferredEnd)
+    public void setIndelInferredUnclippedPositions(@Nullable final Integer inferredStart, @Nullable final Integer inferredEnd)
     {
         mIndelInferredUnclippedStart = inferredStart;
         mIndelInferredUnclippedEnd = inferredEnd;
