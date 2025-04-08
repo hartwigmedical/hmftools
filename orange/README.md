@@ -486,6 +486,6 @@ investigate potential causes for QC failure.
       regardless of whether they occurred in germline or not.
     - Many technical and param changes described in linked release notes
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.1)
-    - Add JSON output of comprehensive pipeline output
+    - Add JSON output of comprehensive platinum output
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.0)
     - Initial release
