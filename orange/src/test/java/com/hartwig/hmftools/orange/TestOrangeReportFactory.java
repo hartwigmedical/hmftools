@@ -96,7 +96,7 @@ public final class TestOrangeReportFactory
     {
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
-                .pipelineVersion("v5.35")
+                .pipelineVersion("v6.1")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
                 .purple(createTestPurpleData())
