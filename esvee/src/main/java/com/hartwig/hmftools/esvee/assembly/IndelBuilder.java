@@ -44,7 +44,7 @@ public final class IndelBuilder
 
             if(indelCoords != null)
             {
-                // must match junction exactly to be considered for support
+                // must match junction exactly on that side to be considered for support
                 if(!indelCoords.matchesJunction(junction.Position, junction.Orient))
                     continue;
 
@@ -55,13 +55,36 @@ public final class IndelBuilder
             }
             else
             {
-                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, junction))
+                // testing shorter indel and soft-clipped reads
+                boolean crossesJunction = false;
+
+                if(junction.isForward())
                 {
-                    nonJunctionReads.add(read);
-                    continue;
+                    if(read.hasIndelImpliedUnclippedEnd() && read.maxUnclippedEnd() > junction.Position)
+                    {
+                        crossesJunction = true;
+                    }
+                    else if(read.isRightClipped() && read.unclippedEnd() > junction.Position)
+                    {
+                        crossesJunction = true;
+                    }
+                }
+                else
+                {
+                    if(read.hasIndelImpliedUnclippedStart() && read.minUnclippedStart() < junction.Position)
+                    {
+                        crossesJunction = true;
+                    }
+                    else if(read.isLeftClipped() && read.unclippedStart() < junction.Position)
+                    {
+                        crossesJunction = true;
+                    }
                 }
 
-                junctionReads.add(read);
+                if(crossesJunction)
+                    junctionReads.add(read);
+                else
+                    nonJunctionReads.add(read);
             }
         }
     }

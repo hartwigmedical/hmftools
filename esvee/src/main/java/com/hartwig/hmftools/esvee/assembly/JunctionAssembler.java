@@ -85,8 +85,6 @@ public class JunctionAssembler
         }
         else
         {
-            Map<Integer,List<Read>> indelLengthReads = Maps.newHashMap();
-
             // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
             for(Read read : rawReads)
             {

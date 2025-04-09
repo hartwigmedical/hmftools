@@ -163,17 +163,20 @@ public class IndelsTest
         readBases = REF_BASES_200.substring(21, 51) + REF_BASES_200.substring(100, 150);
         Read read2 = createRead(READ_ID_GENERATOR.nextId(), 21, readBases, "30M49D50M");
 
-        // other reads will soft-clip at the junctions
+        // other reads will soft-clip at or near the junctions
         readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 120);
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "40M20S");
 
-        List<Read> reads = List.of(read1, read2, read3);
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "45M15S");
+        Read read5 = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "35M25S");
+
+        List<Read> reads = List.of(read1, read2, read3, read4, read5);
 
         JunctionAssembler junctionAssembler = new JunctionAssembler(posJunction);
         List<JunctionAssembly> assemblies = junctionAssembler.processJunction(reads);
         assertEquals(1, assemblies.size());
         JunctionAssembly assembly = assemblies.get(0);
-        assertEquals(3, assembly.supportCount());
+        assertEquals(5, assembly.supportCount());
         assertEquals(0, assembly.mismatchReadCount());
 
         // test the other side
@@ -181,13 +184,14 @@ public class IndelsTest
 
         readBases = REF_BASES_200.substring(31, 51) + REF_BASES_200.substring(100, 160);
         read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases, "20S60M");
+        read4 = createRead(READ_ID_GENERATOR.nextId(), 105, readBases, "25S55M");
 
-        reads = List.of(read1, read2, read3);
+        reads = List.of(read1, read2, read3, read4);
 
         junctionAssembler = new JunctionAssembler(negJunction);
         assemblies = junctionAssembler.processJunction(reads);
         assertEquals(1, assemblies.size());
         assembly = assemblies.get(0);
-        assertEquals(3, assembly.supportCount());
+        assertEquals(4, assembly.supportCount());
     }
 }
