@@ -5,6 +5,9 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasDominantIndelReadAssembly;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
 import java.util.ArrayList;
@@ -22,6 +25,7 @@ import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.common.utils.TaskQueue;
 
@@ -52,6 +56,12 @@ public class Alignment
         {
             // since identical to or associated with other links
             return true;
+        }
+
+        if(!assembly.junction().indelBased() && (assembly.outcome() == UNSET || assembly.outcome() == NO_LINK))
+        {
+            if(hasDominantIndelReadAssembly(assembly))
+                return true;
         }
 
         return false;

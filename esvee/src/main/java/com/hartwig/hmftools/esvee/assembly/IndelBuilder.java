@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -244,4 +247,20 @@ public final class IndelBuilder
         return inside.getOperator() != D ? edge.getLength() + inside.getLength() : edge.getLength();
     }
 
+    public static boolean hasDominantIndelReadAssembly(final JunctionAssembly assembly)
+    {
+        int indelReads = 0;
+        int totalJuncReads = 0;
+
+        for(SupportRead read : assembly.support())
+        {
+            if(read.type().isSplitSupport())
+                ++totalJuncReads;
+
+            if(read.type() == SupportType.INDEL)
+                ++indelReads;
+        }
+
+        return indelReads >= 0.5 * totalJuncReads;
+    }
 }

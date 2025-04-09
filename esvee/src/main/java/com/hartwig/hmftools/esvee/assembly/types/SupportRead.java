@@ -135,7 +135,7 @@ public class SupportRead
 
         mJunctionReadStartDistance = junctReadStartDistance;
         mFullAssemblyIndex = -1;
-        mFullAssemblyOrientation = null;
+        mFullAssemblyOrientation = FORWARD;
         mInferredFragmentLength = -1;
         mBreakendType = null;
 
@@ -233,18 +233,7 @@ public class SupportRead
 
     public int fullAssemblyIndexStart() { return mFullAssemblyIndex; }
     public int fullAssemblyIndexEnd() { return mFullAssemblyIndex + mBaseLength - 1; }
-
-    public Orientation fullAssemblyOrientation()
-    {
-        // TEMP: to find circumstances for accessing this when uninitialised
-        if(mFullAssemblyOrientation == null)
-        {
-            SV_LOGGER.warn("read({}) accessing full assembly orientation uninitialised", toString());
-            return FORWARD;
-        }
-
-        return mFullAssemblyOrientation;
-    }
+    public Orientation fullAssemblyOrientation() { return mFullAssemblyOrientation; }
 
     public int inferredFragmentLength() { return mInferredFragmentLength; }
     public void setInferredFragmentLength(int length) { mInferredFragmentLength = length; }
