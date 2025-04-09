@@ -102,22 +102,22 @@ CoverageCodingPanel.<genome_version>.bed.gz
 ### SV (structural variant) annotations
 
 ```shell
-sgl_pon.<genome_version>.bed.gz # PON single breakends from Hartwig cohort frequencies are used to identify and filter likely germline variants or artefacts
-sv_pon.<genome_version>.bedpe.gz # PON breakpoints from Hartwig cohort frequencies are used to identify and filter likely germline variants or artefacts
+sgl_pon.<genome_version>.bed.gz         # PON single breakends from Hartwig cohort frequencies are used to identify and filter likely germline variants or artefacts
+sv_pon.<genome_version>.bedpe.gz        # PON breakpoints from Hartwig cohort frequencies are used to identify and filter likely germline variants or artefacts
 known_fusion_data.<genome_version>.csv  # Manually curated set of known pathogenic fusions used by LINX
-known_fusions.<genome_version>.bedpe # Bed file of known hotspot regions which are called with additional sensitivity in ESVEE
-sv_prep_blacklist.<genome_version>.bed # Regions not called in ESVEE
-repeat_mask_data.<genome_version>.fa.gz  # Repeat masker derived data used to annotate the type of regions for unmappable insert sequence. 
-hg38_decoys.fa.img # Decoys sequences are used by ESVEE for additional filtering when not used in ref genome (hg19 only)
+known_fusions.<genome_version>.bedpe    # Bed file of known hotspot regions which are called with additional sensitivity in ESVEE
+sv_prep_blacklist.<genome_version>.bed  # Regions not called in ESVEE
+repeat_mask_data.<genome_version>.fa.gz # Repeat masker derived data used to annotate the type of regions for unmappable insert sequence. 
+hg38_decoys.fa.img                      # Decoys sequences are used by ESVEE for additional filtering when not used in ref genome (hg19 only)
 ```
 
 ### CNV (copy number variant) annotations
 
 ```shell
 cohort_germline_del_freq.<genome_version>.csv # Hartwig cohort frequency for germline DELs. Used by PURPLE to avoid reporting common germline DEL
-AmberGermlineSites.<genome_version>.tsv.gz # List of high confidence common heterozygous sites used to assess BAF.
-DiploidRegions.<genome_version>.bed.gz # Hartwig cohort derived set of regions that are normally diploid and easy to fit for tumor only fitting in PURPLE
-GC_profile.1000bp.<genome_version>.cnp # GC content and average 150 base mappability per 1kb region in the genome.
+AmberGermlineSites.<genome_version>.tsv.gz    # List of high confidence common heterozygous sites used to assess BAF.
+DiploidRegions.<genome_version>.bed.gz        # Hartwig cohort derived set of regions that are normally diploid and easy to fit for tumor only fitting in PURPLE
+GC_profile.1000bp.<genome_version>.cnp        # GC content and average 150 base mappability per 1kb region in the genome.
 ```
 
 ## Tool specific
