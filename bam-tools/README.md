@@ -6,7 +6,7 @@ Various routines to run on a BAM file:
 * [Bam to Fastq](#bamtofastq)
 * [Bam Compare](#bamcompare)
 * [Bam Checker](#bamchecker)
-* [Alt-Contig Reampper](#altcontigremapper)
+* [Alt-Contig Remapper](#altcontigremapper)
 
 
 ## BamMetrics
