@@ -32,7 +32,7 @@ The files themselves are available for download [here](https://console.cloud.goo
 
 Genome version prefixes:
 - GRCh37: `Homo_sapiens.GRCh37.GATK.illumina`
-- GRCh38: `GCA_000001405.15_GRCh38_no_alt_analysis_set`
+- GRCh38: `GRCh38_masked_exclusions_alts_hlas`
 
 ```shell
 <prefix>.fasta       # Genome sequence
