@@ -18,6 +18,7 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -64,6 +65,8 @@ import org.jetbrains.annotations.Nullable;
  *      }
  *  }
  */
+
+@SuppressWarnings("unused")
 public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoCloseable
 {
     private String mDelim = TSV_DELIM;
@@ -176,6 +179,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         }
     }
 
+    @NotNull
     @Override
     public Iterator<Row> iterator()
     {
@@ -278,16 +282,15 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return v == null ? null : Integer.parseInt(v);
         }
 
-        // store boolean as 1 and 0
         public boolean getBoolean(final String column)
         {
-            return getInt(column) != 0;
+            return Boolean.parseBoolean(get(column));
         }
 
         public @Nullable Boolean getBooleanOrNull(final String column)
         {
-            Integer v = getIntOrNull(column);
-            return v == null ? null : v != 0;
+            String v = getOrNull(column);
+            return v == null ? null : Boolean.parseBoolean(v);
         }
 
         public char getChar(final String column)

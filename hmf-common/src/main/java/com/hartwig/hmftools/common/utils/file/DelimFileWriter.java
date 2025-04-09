@@ -23,9 +23,7 @@ import org.apache.logging.log4j.util.BiConsumer;
 
 /**
  * Write delimited files such as CSV / TSV.
- *
  * Example usage:
- *
  *    try(DelimFileWriter<Ratio> writer = new DelimFileWriter<>(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT), ",",
  *           (ratio, row) -> {
  *               row.set(CHROMOSOME, ratio.chromosome());
@@ -37,15 +35,14 @@ import org.apache.logging.log4j.util.BiConsumer;
  *            writer.writeRow(d);
  *        }
  *    }
- *
  *  There is also a convenience overload to write a file from a collection / iterable of objects:
- *
  *    DelimFileWriter.write(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT), ratios,
  *           (ratio, row) -> {
  *               row.set(CHROMOSOME, ratio.chromosome());
  *               row.set(MEDIAN_RATIO, ratio.medianRatio(), FORMAT);
  *               row.set(COUNT, ratio.count()); });
  */
+@SuppressWarnings("unused")
 public class DelimFileWriter<T> implements AutoCloseable
 {
     // by default, use 4 decimal places for doubles
@@ -240,8 +237,7 @@ public class DelimFileWriter<T> implements AutoCloseable
         }
         public void set(String key, int value) { set(key, Integer.toString(value)); }
 
-        // store bool as 1 and 0
-        public void set(String key, boolean value) { set(key, value ? 1 : 0); }
+        public void set(String key, boolean value) { set(key, Boolean.toString(value)); }
 
         public void set(String key, char value) { set(key, String.valueOf(value)); }
 
