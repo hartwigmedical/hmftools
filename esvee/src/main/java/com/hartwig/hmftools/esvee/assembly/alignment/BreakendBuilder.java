@@ -151,10 +151,31 @@ public class BreakendBuilder
         int indelPosStart = indelCoords.PosStart;
         int indelPosEnd = indelCoords.PosEnd;
 
+        Orientation lowerOrient = FORWARD;
+        Orientation upperOrient = REVERSE;
+
         if(indelCoords.isInsert())
         {
             if(indelSeqStart >= 0 && indelSeqEnd < mAssemblyAlignment.fullSequenceLength())
+            {
                 insertedBases = mAssemblyAlignment.fullSequence().substring(indelSeqStart + 1, indelSeqEnd + 1);
+                String basesStart = insertedBases;
+
+                int homPosEnd = indelPosEnd;
+                String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + insertedBases.length() - 1);
+
+                homology = HomologyData.determineIndelHomology(basesStart, basesEnd, insertedBases.length());
+
+                if(!homology.Homology.isEmpty())
+                {
+                    int totalInexactHomology = homology.InexactEnd - homology.InexactStart;
+                    insertedBases = insertedBases.substring(totalInexactHomology);
+                    indelSeqStart += totalInexactHomology;
+                    indelPosEnd += totalInexactHomology;
+                    lowerOrient = REVERSE;
+                    upperOrient = FORWARD;
+                }
+            }
         }
         else
         {
@@ -182,7 +203,7 @@ public class BreakendBuilder
         }
 
         Breakend lowerBreakend = new Breakend(
-                mAssemblyAlignment, alignment.chromosome(), indelPosStart, FORWARD, insertedBases, homology);
+                mAssemblyAlignment, alignment.chromosome(), indelPosStart, lowerOrient, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(lowerBreakend);
 
@@ -191,7 +212,7 @@ public class BreakendBuilder
 
         lowerBreakend.addSegment(segment);
 
-        Breakend upperBreakend = new Breakend(mAssemblyAlignment, alignment.chromosome(), indelPosEnd, REVERSE, insertedBases, homology);
+        Breakend upperBreakend = new Breakend(mAssemblyAlignment, alignment.chromosome(), indelPosEnd, upperOrient, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(upperBreakend);
 

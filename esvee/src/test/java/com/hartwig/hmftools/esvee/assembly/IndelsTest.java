@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -118,72 +117,6 @@ public class IndelsTest
         assertEquals(139, read.indelImpliedUnclippedEnd());
         assertEquals(130, read.indelImpliedUnclippedStart());
     }
-
-    /*
-    private static boolean convertEdgeIndelsToSoftClip(final Read read, boolean allowDoubleConversion)
-    {
-        return ReadAdjustments.convertEdgeIndelsToSoftClip(read, 6, 15);
-    }
-
-    @Test
-    public void testImpliedEdgeIndelsToSoftClip()
-    {
-        // the cigar remains unch but the implied new alignments are calculated and the unclipped alignments stored
-
-        // converts both sides of the insert
-        String cigar = "18M6I17M";
-        String readBases = REF_BASES_RANDOM_100.substring(0, 40);
-        Read read = createRead(TEST_READ_ID, 100, readBases, cigar);
-        assertTrue(convertEdgeIndelsToSoftClip(read, true));
-        assertEquals(100, read.alignmentStart());
-        assertEquals(134, read.alignmentEnd());
-        assertEquals(100, read.unclippedStart());
-        assertEquals(134, read.unclippedEnd());
-        assertEquals(118, read.indelImpliedAlignmentStart());
-        assertEquals(117, read.indelImpliedAlignmentEnd());
-        assertEquals(94, read.minUnclippedStart());
-        assertEquals(140, read.maxUnclippedEnd());
-
-        // indel too short
-        cigar = "10M5I10M";
-        readBases = REF_BASES_RANDOM_100.substring(0, 25);
-        read = createRead(TEST_READ_ID, 100, readBases, cigar);
-        assertFalse(convertEdgeIndelsToSoftClip(read, true));
-
-        // converts both sides of the delete
-        cigar = "10M6D15M";
-        readBases = REF_BASES_RANDOM_100.substring(0, 31);
-        read = createRead(TEST_READ_ID, 100, readBases, cigar);
-        assertEquals(130, read.alignmentEnd());
-        assertTrue(convertEdgeIndelsToSoftClip(read, true));
-        assertEquals(100, read.alignmentStart());
-        assertEquals(130, read.alignmentEnd());
-        assertEquals(100, read.unclippedStart());
-        assertEquals(130, read.unclippedEnd());
-        assertEquals(116, read.indelImpliedAlignmentStart());
-        assertEquals(109, read.indelImpliedAlignmentEnd());
-        assertEquals(100, read.minUnclippedStart());
-        assertEquals(130, read.maxUnclippedEnd());
-
-        cigar = "70M20D10M";
-        readBases = REF_BASES_RANDOM_100.substring(0, 80);
-        read = createRead(TEST_READ_ID, 101, readBases, cigar);
-        assertEquals(200, read.alignmentEnd());
-        assertEquals(200, read.unclippedEnd());
-        assertTrue(ReadAdjustments.convertEdgeIndelsToSoftClip(read));
-        // assertEquals(100, read.alignmentStart());
-        //assertEquals(100, read.unclippedStart());
-
-        // unch
-        assertEquals(200, read.alignmentEnd());
-        assertEquals(200, read.unclippedEnd());
-
-        // assertEquals(116, read.indelImpliedAlignmentStart());
-        assertEquals(170, read.indelImpliedAlignmentEnd());
-        //assertEquals(100, read.minUnclippedStart());
-        assertEquals(200, read.maxUnclippedEnd());
-    }
-    */
 
     @Test
     public void testIndelReadsSupportingSplitJunctions()
