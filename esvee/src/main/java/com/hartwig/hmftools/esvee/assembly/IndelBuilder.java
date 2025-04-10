@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
@@ -38,6 +39,10 @@ public final class IndelBuilder
             final Junction junction, final List<Read> rawReads,
             final List<Read> extensionReads, final List<Read> junctionReads, final List<Read> nonJunctionReads)
     {
+        Map<Integer,Integer> indelCoordsCount = Maps.newHashMap();
+        IndelCoords dominantIndel = null;
+        int dominantIndelFreq = 0;
+
         for(Read read : rawReads)
         {
             IndelCoords indelCoords = read.indelCoords();
@@ -49,9 +54,22 @@ public final class IndelBuilder
                     continue;
 
                 if(indelCoords.Length >= MIN_INDEL_LENGTH)
+                {
                     extensionReads.add(read);
+
+                    int indelLengthFreq = indelCoordsCount.getOrDefault(indelCoords.Length, 0) + 1;
+                    indelCoordsCount.put(indelCoords.Length, indelLengthFreq);
+
+                    if(indelLengthFreq > dominantIndelFreq)
+                    {
+                        dominantIndel = indelCoords;
+                        dominantIndelFreq = indelLengthFreq;
+                    }
+                }
                 else
+                {
                     junctionReads.add(read);
+                }
             }
             else
             {
@@ -87,6 +105,9 @@ public final class IndelBuilder
                     nonJunctionReads.add(read);
             }
         }
+
+        if(dominantIndel != null)
+            junction.setIndelCoords(dominantIndel);
     }
 
     public static boolean calcIndelInferredUnclippedPositions(final Read read)
@@ -219,55 +240,6 @@ public final class IndelBuilder
         }
 
         return indelLengthReads.get(indelLength);
-    }
-
-    // OLD indel adjustment methods
-    public static boolean convertEdgeIndelsToSoftClip(final Read read)
-    {
-        return convertEdgeIndelsToSoftClip(read, INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
-    }
-
-    public static boolean convertEdgeIndelsToSoftClip(final Read read, final int minIndelLength, final int maxIndelLength)
-    {
-        if(read.cigarElements().size() < 3)
-            return false;
-
-        int leftSoftClipLength = calcIndelToSoftClipLength(
-                read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2),
-                minIndelLength, maxIndelLength);
-
-        int lastIndex = read.cigarElements().size() - 1;
-
-        int rightSoftClipLength = calcIndelToSoftClipLength(
-                read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
-                minIndelLength, maxIndelLength);
-
-        if(leftSoftClipLength > 0 || rightSoftClipLength > 0)
-        {
-            // read.setIndelUnclippedBounds(leftSoftClipLength, rightSoftClipLength);
-            return true;
-        }
-
-        return false;
-    }
-
-    private static int calcIndelToSoftClipLength(
-            final CigarElement edge, final CigarElement inside, final CigarElement next,
-            final int minIndelLength, final int maxIndelLength)
-    {
-        if(edge.getOperator() != M)
-            return 0;
-
-        if(!inside.getOperator().isIndel())
-            return 0;
-
-        if(next.getOperator() != M)
-            return 0;
-
-        if(inside.getLength() < minIndelLength || inside.getLength() > maxIndelLength)
-            return 0;
-
-        return inside.getOperator() != D ? edge.getLength() + inside.getLength() : edge.getLength();
     }
 
     public static boolean hasDominantIndelReadAssembly(final JunctionAssembly assembly)

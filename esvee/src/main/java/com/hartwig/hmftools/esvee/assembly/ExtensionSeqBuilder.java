@@ -817,6 +817,15 @@ public class ExtensionSeqBuilder
             if(readRepeatCount != READ_REPEAT_COUNT_INVALID && abs(readRepeatCount - mMaxRepeat.Count) <= permittedCountDiff)
                 repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.baseLength();
         }
+        else if(mJunction.indelCoords() != null && read.indelCoords() != null && mJunction.indelCoords().isDelete())
+        {
+            if(mJunction.indelCoords().Length != read.indelCoords().Length)
+            {
+                // a shorter delete means more ref bases need to be skipped
+                repeatSkipCount = mJunction.indelCoords().Length - read.indelCoords().Length;
+                repeatIndexStart = extensionIndex + (mJunction.isForward() ? 1 : -1); // first base after the delete
+            }
+        }
 
         checkReadMismatches(readParseState, extensionIndex, repeatIndexStart, repeatSkipCount);
 
