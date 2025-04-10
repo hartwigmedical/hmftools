@@ -347,9 +347,10 @@ public class SequenceTest
         byte[] baseQuals = buildDefaultBaseQuals(assemblySequence.length());
 
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 37, assemblySequence, "24M32S");
-        Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
 
-        JunctionAssembly assembly = new JunctionAssembler(posJunction).processJunction(List.of(read1, read1b)).get(0);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 38, assemblySequence.substring(1), "23M32S");
+
+        JunctionAssembly assembly = new JunctionAssembler(posJunction).processJunction(List.of(read1, read2)).get(0);
 
         assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
         assertEquals(18, assembly.refBaseTrimLength());

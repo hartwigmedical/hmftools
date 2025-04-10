@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
@@ -8,6 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LO
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_PROXIMATE_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
@@ -93,39 +95,10 @@ public final class AlignmentFilters
         }
 
         // remove any alignments with short adjusted alignment lengths
-        int index = 0;
-        while(index < candidateAlignments.size())
-        {
-            AlignData alignment = candidateAlignments.get(index);
-
-            // inner alignments must exceed min aligned length
-            if(alignment.adjustedAlignment() < ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH)
-            {
-                candidateAlignments.remove(index);
-                lowQualAlignments.add(alignment);
-            }
-            else
-            {
-                ++index;
-            }
-        }
+        removeShortAdjustedAlignments(candidateAlignments, lowQualAlignments);
 
         // check modified map quals
-        index = 0;
-        while(index < candidateAlignments.size())
-        {
-            AlignData alignment = candidateAlignments.get(index);
-
-            if(!exceedsNoAltsModMapQualThreshold(alignment) && !alignment.hasAltAlignments())
-            {
-                candidateAlignments.remove(index);
-                lowQualAlignments.add(alignment);
-            }
-            else
-            {
-                ++index;
-            }
-        }
+        removeLowModifiedMapQuals(candidateAlignments, lowQualAlignments);
 
         checkSpecificLowMapPairings(candidateAlignments);
 
@@ -160,6 +133,75 @@ public final class AlignmentFilters
     {
         double mapQual = useModified ? alignment.modifiedMapQual() : alignment.mapQual();
         return mapQual >= threshold;
+    }
+
+    private static void removeShortAdjustedAlignments(final List<AlignData> candidateAlignments, final List<AlignData> lowQualAlignments)
+    {
+        // remove any alignments with short adjusted alignment lengths
+        int index = 0;
+        while(index < candidateAlignments.size())
+        {
+            AlignData alignment = candidateAlignments.get(index);
+
+            boolean keepAlignment = alignment.adjustedAlignment() >= ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
+
+            if(!keepAlignment)
+            {
+                if(index > 0)
+                {
+                    AlignData prevAlignment = candidateAlignments.get(index - 1);
+
+                    if(areCloseAlignments(prevAlignment, alignment))
+                        keepAlignment = true;
+                }
+
+                if(!keepAlignment && index < candidateAlignments.size() - 1)
+                {
+                    AlignData nextAlignment = candidateAlignments.get(index + 1);
+
+                    if(nextAlignment.adjustedAlignment() >= ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH && areCloseAlignments(nextAlignment, alignment))
+                        keepAlignment = true;
+                }
+            }
+
+            if(!keepAlignment)
+            {
+                candidateAlignments.remove(index);
+                lowQualAlignments.add(alignment);
+            }
+            else
+            {
+                ++index;
+            }
+        }
+    }
+
+    private static boolean areCloseAlignments(final AlignData first, final AlignData second)
+    {
+        if(!first.chromosome().equals(second.chromosome()))
+            return false;
+
+        int minDistance = min(abs(first.positionStart() - second.positionEnd()), abs(first.positionEnd() - second.positionStart()));
+        return minDistance <= ALIGNMENT_PROXIMATE_DISTANCE;
+    }
+
+    private static void removeLowModifiedMapQuals(final List<AlignData> candidateAlignments, final List<AlignData> lowQualAlignments)
+    {
+        int index = 0;
+        while(index < candidateAlignments.size())
+        {
+            AlignData alignment = candidateAlignments.get(index);
+
+            if(!exceedsNoAltsModMapQualThreshold(alignment) && !alignment.hasAltAlignments())
+            {
+                candidateAlignments.remove(index);
+                lowQualAlignments.add(alignment);
+            }
+            else
+            {
+                ++index;
+            }
+        }
     }
 
     private static class AlignmentOrderComparator implements Comparator<AlignData>

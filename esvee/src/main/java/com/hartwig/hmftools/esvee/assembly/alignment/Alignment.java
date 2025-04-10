@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasDominantIndelReadAssembly;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
 import java.util.ArrayList;
@@ -16,16 +21,22 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.common.utils.TaskQueue;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.checkerframework.checker.units.qual.A;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 public class Alignment
 {
@@ -48,11 +59,16 @@ public class Alignment
         // apply filters on what to run alignment on
         if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
         || assembly.outcome() == AssemblyOutcome.SECONDARY
-        || assembly.outcome() == AssemblyOutcome.SUPP_ONLY
-        || assembly.outcome() == AssemblyOutcome.REMOTE_REGION)
+        || assembly.outcome() == AssemblyOutcome.SUPP_ONLY)
         {
             // since identical to or associated with other links
             return true;
+        }
+
+        if(!assembly.junction().indelBased() && (assembly.outcome() == UNSET || assembly.outcome() == NO_LINK))
+        {
+            if(hasDominantIndelReadAssembly(assembly))
+                return true;
         }
 
         return false;
@@ -89,11 +105,12 @@ public class Alignment
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        int requeriedCount = alignerTasks.stream().mapToInt(x -> x.requeriedSuppCount()).sum();
+        int requeriedSuppCount = alignerTasks.stream().mapToInt(x -> x.requeriedSuppCount()).sum();
+        int requeriedSoftClipCount = alignerTasks.stream().mapToInt(x -> x.requeriedSoftClipCount()).sum();
 
-        if(requeriedCount > 0)
+        if(requeriedSuppCount > 0 || requeriedSoftClipCount > 0)
         {
-            SV_LOGGER.debug("requeried supp alignments({})", requeriedCount);
+            SV_LOGGER.debug("requeried supp alignments({}) soft-clips({})", requeriedSuppCount, requeriedSoftClipCount);
         }
 
         SV_LOGGER.info("alignment complete");
@@ -105,15 +122,18 @@ public class Alignment
     {
         private final TaskQueue mAssemblyAlignments;
         private int mRequeriedSuppCount;
+        private int mRequeriedSoftClipCount;
 
         public AssemblerAlignerTask(final TaskQueue assemblyAlignments)
         {
             super("AssemblerAlignment");
             mAssemblyAlignments = assemblyAlignments;
             mRequeriedSuppCount = 0;
+            mRequeriedSoftClipCount = 0;
         }
 
         public int requeriedSuppCount() { return mRequeriedSuppCount; }
+        public int requeriedSoftClipCount() { return mRequeriedSoftClipCount; }
 
         @Override
         public void run()
@@ -166,7 +186,10 @@ public class Alignment
                     .filter(x -> x != null).collect(Collectors.toList());
 
             List<AlignData> requeriedAlignments = Lists.newArrayList();
+
             alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
+
+            alignments = requerySoftClipAlignments(assemblyAlignment, alignments, requeriedAlignments);
 
             processAlignmentResults(assemblyAlignment, alignments);
 
@@ -174,6 +197,64 @@ public class Alignment
             alignmentFragments.allocateBreakendSupport();
 
             writeAssemblyData(assemblyAlignment, alignments, requeriedAlignments);
+        }
+
+        private List<AlignData> requerySoftClipAlignments(
+                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
+        {
+            // re-align supplementaries to get a more reliable map quality
+            if(alignments.size() > 1)
+                return alignments;
+
+            AlignData alignment = alignments.get(0);
+
+            int softClipLength = max(alignment.leftSoftClipLength(), alignment.rightSoftClipLength());
+
+            if(softClipLength <= ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH)
+                return alignments;
+
+            String softClipBases = "";
+            String newCigar = "";
+            boolean isLeftClip = false;
+
+            if(alignment.leftSoftClipLength() > alignment.rightSoftClipLength())
+            {
+                softClipBases = assemblyAlignment.fullSequence().substring(0, alignment.leftSoftClipLength());
+                newCigar = alignment.cigar().substring(alignment.cigar().indexOf(CigarOperator.S.toString()) + 1);
+                isLeftClip = true;
+            }
+            else
+            {
+                int fullLength = assemblyAlignment.fullSequenceLength();
+                softClipBases = assemblyAlignment.fullSequence().substring(fullLength - alignment.rightSoftClipLength());
+                newCigar = alignment.cigar().substring(0, alignment.cigar().lastIndexOf(CigarOperator.M.toString()) + 1);
+            }
+
+            ++mRequeriedSoftClipCount;
+
+            List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(softClipBases.getBytes());
+
+            List<AlignData> newAlignments = requeryBwaAlignments.stream()
+                    .map(x -> AlignData.from(x, mConfig.RefGenVersion))
+                    .filter(x -> x != null).collect(Collectors.toList());
+
+            if(newAlignments.isEmpty())
+                return alignments;
+
+            requeriedAlignments.add(alignment);
+
+            SV_LOGGER.trace("assembly({}) requeried single alignment({}) with long soft-clip", assemblyAlignment, alignment);
+
+            AlignData refAlignment = new AlignData(
+                    alignment.refLocation(), alignment.rawSequenceStart(), alignment.rawSequenceEnd(),
+                    alignment.mapQual(), alignment.score(), alignment.flags(), newCigar, alignment.nMatches(), alignment.xaTag(), alignment.mdTag());
+
+            if(isLeftClip)
+                newAlignments.add(refAlignment);
+            else
+                newAlignments.add(0, refAlignment);
+
+            return newAlignments;
         }
 
         private List<AlignData> requerySupplementaryAlignments(

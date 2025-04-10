@@ -136,7 +136,6 @@ public class JunctionAssembly
         mExtBaseBuildInfo = null;
 
         mStats = new AssemblyStats();
-        assemblySupport.forEach(x -> mStats.addRead(x, mJunction, x.cachedRead()));
     }
 
     public void setId(int id) { mAssemblyId = id; }
@@ -277,7 +276,6 @@ public class JunctionAssembly
         SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matches, mismatches);
 
         mSupport.add(support);
-        mStats.addRead(support, mJunction, read);
     }
 
     public void setRefBases(final RefBaseSeqBuilder refBaseSeqBuilder)
@@ -522,7 +520,6 @@ public class JunctionAssembly
         for(SupportRead support : supportReads)
         {
             mSupport.add(support);
-            mStats.addRead(support, mJunction, support.cachedRead());
         }
     }
 
@@ -574,7 +571,18 @@ public class JunctionAssembly
         return read != null && mSupport.stream().anyMatch(x -> x.cachedRead() == read);
     }
 
-    public void clearSupportCachedReads() { mSupport.forEach(x -> x.clearCachedRead()); }
+    public void clearSupportCachedReads()
+    {
+        for(SupportRead read : mSupport)
+        {
+            if(read.cachedRead() != null)
+            {
+                // register stats info while still has access to raw read
+                mStats.addRead(read, mJunction, read.cachedRead());
+                read.clearCachedRead();
+            }
+        }
+    }
 
     // caching repeat info needs careful consideration since any extension of ref bases invalidates the values,
     // at least for +ve orientation assemblies
@@ -708,7 +716,7 @@ public class JunctionAssembly
         {
             mSupport.add(support);
 
-            mStats.addRead(support, mJunction, null);
+            mStats.addRead(support, mJunction, support.cachedRead());
 
             if(support.id().equals(initialAssembly.initialReadId()))
                 initialRead = support;
@@ -844,7 +852,7 @@ public class JunctionAssembly
         SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, read.basesLength(), 0);
         support.setReferenceMismatches(0);
         mSupport.add(support);
-        mStats.addRead(support, mJunction, read);
+        // mStats.addRead(support, mJunction, read); // add through standard clearing routine
     }
 
     @VisibleForTesting

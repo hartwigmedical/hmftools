@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferredUnclippedPositions;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertFalse;
@@ -41,7 +42,7 @@ public class ReadFiltersTest
 
         // any realigned indel that crosses the junction is permitted
         read = createRead(readId, 10, readBases, "10M10I10M");
-        assertTrue(ReadAdjustments.convertEdgeIndelsToSoftClip(read));
+        assertTrue(calcIndelInferredUnclippedPositions(read));
         assertTrue(recordSoftClipsAndCrossesJunction(read, posJunction));
 
         // a read with a low count of SNVs
@@ -66,7 +67,7 @@ public class ReadFiltersTest
 
         // any realigned indel that crosses the junction is permitted
         read = createRead(readId, 10, readBases, "10M10I10M");
-        assertTrue(ReadAdjustments.convertEdgeIndelsToSoftClip(read));
+        assertTrue(calcIndelInferredUnclippedPositions(read));
         assertTrue(recordSoftClipsAndCrossesJunction(read, negJunction));
 
         // a read with a low count of SNVs

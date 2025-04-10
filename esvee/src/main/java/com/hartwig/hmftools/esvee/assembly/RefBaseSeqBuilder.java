@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadUtils;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
@@ -60,7 +61,7 @@ public class RefBaseSeqBuilder
         for(SupportRead support : assembly.support())
         {
             Read read = support.cachedRead();
-            int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunctionPosition, true);
+            int readJunctionIndex = ReadUtils.getReadIndexAtJunction(read, mAssembly.junction(), true);
 
             boolean hasValidJunctionOverlap;
 
@@ -145,8 +146,6 @@ public class RefBaseSeqBuilder
         int currentElementLength = 0;
 
         List<RefReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
-
-        // boolean isIndelJunction = mAssembly.junction().indelBased();
 
         while(!activeReads.isEmpty())
         {

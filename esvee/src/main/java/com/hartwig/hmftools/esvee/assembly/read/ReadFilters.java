@@ -16,7 +16,7 @@ public final class ReadFilters
         if(junction.isForward())
         {
             // first check indel-inferred soft-clips
-            if(read.indelImpliedAlignmentEnd() > 0)
+            if(read.hasIndelImpliedUnclippedEnd())
                 return read.maxUnclippedEnd() > junction.Position;
 
             // soft-clip must be close enough to the junction
@@ -28,7 +28,7 @@ public final class ReadFilters
         }
         else
         {
-            if(read.indelImpliedAlignmentStart() > 0)
+            if(read.hasIndelImpliedUnclippedStart())
                 return read.minUnclippedStart() < junction.Position;
 
             if(read.isLeftClipped())

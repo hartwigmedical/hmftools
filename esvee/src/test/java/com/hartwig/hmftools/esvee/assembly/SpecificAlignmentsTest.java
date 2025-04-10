@@ -796,7 +796,7 @@ public class SpecificAlignmentsTest
         hasAssemblyLink(phaseSet.assemblyLinks(), assembly1, assembly3, LinkType.FACING);
         hasAssemblyLink(phaseSet.assemblyLinks(), branchedAssembly, assembly2, LinkType.FACING);
 
-        assertEquals(20, assembly1.supportCount());
+        assertEquals(21, assembly1.supportCount());
         assertEquals(14, assembly2.supportCount());
         assertEquals(5, assembly3.supportCount());
         assertEquals(0, getSupportTypeCount(assembly1, DISCORDANT));

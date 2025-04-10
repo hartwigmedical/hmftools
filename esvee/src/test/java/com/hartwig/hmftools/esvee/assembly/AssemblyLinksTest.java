@@ -376,7 +376,8 @@ public class AssemblyLinksTest
         Read juncRead1 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_1, 51, juncReadBases, "50M50S", CHR_1, 1, false);
 
-        Read juncRead2 = cloneRead(juncRead1, READ_ID_GENERATOR.nextId());
+        Read juncRead2 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 52, juncReadBases.substring(1), "49M50S", CHR_1, 1, false);
 
         JunctionAssembler junctionAssembler = new JunctionAssembler(firstJunction);
         JunctionAssembly firstAssembly = junctionAssembler.processJunction(List.of(juncRead1, juncRead2)).get(0);
@@ -386,7 +387,8 @@ public class AssemblyLinksTest
         Read juncRead3 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_1, 151, juncReadBases2, "50M50S", CHR_1, 1, false);
 
-        Read juncRead4 = cloneRead(juncRead3, READ_ID_GENERATOR.nextId());
+        Read juncRead4 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 152, juncReadBases2.substring(1), "49M50S", CHR_1, 1, false);
 
         junctionAssembler = new JunctionAssembler(secondJunction);
         JunctionAssembly secondAssembly = junctionAssembler.processJunction(List.of(juncRead3, juncRead4)).get(0);

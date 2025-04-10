@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIB
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
@@ -59,7 +60,8 @@ public class JunctionAssemblyTest
         String readBases = REF_BASES_400.substring(51, 101) + extBases;
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases, makeCigarString(readBases, 0, extBases.length()));
 
-        Read read2 = cloneRead(read1, READ_ID_GENERATOR.nextId());
+        String readBases2 = readBases.substring(1);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 52, readBases, makeCigarString(readBases2, 0, extBases.length()));
 
         // the 3rd read doesn't overlap the junction enough to count as a junction read
         readBases = REF_BASES_400.substring(21, 101) + extBases.substring(0, 2);
@@ -461,6 +463,12 @@ public class JunctionAssemblyTest
             junctionReads.add(cloneRead(juncRead1, READ_ID_GENERATOR.nextId()));
         }
 
+        Read juncRead1b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 52, juncReadBases1.substring(1), "49M50S", CHR_1,
+                1, false);
+
+        junctionReads.add(juncRead1b);
+
         String juncReadBases2 = refSequence.substring(51, 101) + refSequence.substring(270, 320);
 
         Read juncRead2 = createRead(
@@ -473,14 +481,89 @@ public class JunctionAssemblyTest
             junctionReads.add(cloneRead(juncRead2, READ_ID_GENERATOR.nextId()));
         }
 
+        Read juncRead2b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 52, juncReadBases2.substring(1), "49M50S", CHR_1,
+                1, false);
+
+        junctionReads.add(juncRead2b);
+
         JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
         List<JunctionAssembly> assemblies = junctionAssembler.processJunction(junctionReads);
 
         assertEquals(2, assemblies.size());
         JunctionAssembly assembly = assemblies.get(0);
-        assertEquals(10, assembly.supportCount());
+        assertEquals(11, assembly.supportCount());
 
         assembly = assemblies.get(1);
-        assertEquals(5, assembly.supportCount());
+        assertEquals(6, assembly.supportCount());
+    }
+
+    @Test
+    public void testJunctionAssemblyRefSideSoftClipReadAssignment()
+    {
+        // reads which cross the dominant ref-side soft clip are removed from junction support
+        Junction junction = new Junction(CHR_1, 200, FORWARD);
+
+        String extBasesShared = "AAGGCCTTAA";
+        String extBases1 = extBasesShared + REF_BASES_400.substring(300, 340);
+        String extBases2 = extBasesShared + REF_BASES_400.substring(350, 390);
+
+        // reads which support the first assembly and which soft-clip to the left
+        String otherSoftClipBases = REF_BASES_400.substring(0, 50);
+        String juncReadBases1 = otherSoftClipBases + REF_BASES_400.substring(151, 201) + extBases1;
+
+        Read juncRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 151, juncReadBases1, "50S50M50S", CHR_2, 100, false);
+
+        Read juncRead1b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 152, juncReadBases1.substring(1), "50S49M50S", CHR_2,
+                100, false);
+
+        List<Read> junctionReads = Lists.newArrayList(juncRead1, juncRead1b);
+
+        for(int i = 0; i < 5; ++i)
+        {
+            Read juncRead1c = cloneRead(juncRead1, READ_ID_GENERATOR.nextId());
+            junctionReads.add(juncRead1c);
+        }
+
+        String juncReadBases2 = REF_BASES_400.substring(101, 201) + extBases2;
+        Read juncRead2 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 101, juncReadBases2, "100M50S", CHR_2,
+                100, false);
+
+        Read juncRead2b = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 102, juncReadBases2.substring(1), "99M50S", CHR_2,
+                100, false);
+
+        junctionReads.add(juncRead2);
+        junctionReads.add(juncRead2b);
+
+        for(int i = 0; i < 5; ++i)
+        {
+            Read juncRead2c = cloneRead(juncRead2, READ_ID_GENERATOR.nextId());
+            junctionReads.add(juncRead2c);
+        }
+
+        // then some reads which could support either extension but which go past the soft-clip and will be removed from the first assembly
+        String juncReadBases3 = REF_BASES_400.substring(100, 201) + extBasesShared;
+        Read juncRead3 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 100, juncReadBases3, "101M10S", CHR_2,
+                100, false);
+
+        junctionReads.add(juncRead3);
+
+        JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
+        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(junctionReads);
+
+        assertEquals(2, assemblies.size());
+
+        JunctionAssembly assembly = assemblies.get(0);
+        assertEquals(8, assembly.supportCount());
+        assertEquals(100, assembly.refBasePosition());
+
+        assembly = assemblies.get(1);
+        assertEquals(7, assembly.supportCount());
+        assertEquals(151, assembly.refBasePosition());
     }
 }

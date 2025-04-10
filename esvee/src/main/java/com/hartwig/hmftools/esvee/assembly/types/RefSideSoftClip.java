@@ -5,8 +5,10 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
 
 import java.util.List;
 
@@ -97,6 +99,11 @@ public class RefSideSoftClip
     public boolean hasProximateMatch(int otherRefPosition)
     {
         return abs(Position - otherRefPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
+    }
+
+    public static void purgeRefSideSoftClips(final List<RefSideSoftClip> refSideSoftClips, int nonSoftClipRefPosition)
+    {
+        purgeRefSideSoftClips(refSideSoftClips, ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
     }
 
     public static void purgeRefSideSoftClips(

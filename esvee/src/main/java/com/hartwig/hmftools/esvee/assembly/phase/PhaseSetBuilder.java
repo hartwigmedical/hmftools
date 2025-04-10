@@ -155,16 +155,13 @@ public class PhaseSetBuilder
 
             AssemblyLink assemblyLink = extensionCandidate.Link;
 
-            boolean allowBranching = !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH) && mAssemblies.size() > 2;
-            boolean allowDiscordantReads = !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
-
             extensionCandidate.markSelected();
-            applySplitLinkSupport(extensionCandidate.Assembly, extensionCandidate.SecondAssembly, allowBranching, allowDiscordantReads);
 
-            extensionCandidate.Assembly.setOutcome(LINKED);
-            extensionCandidate.SecondAssembly.setOutcome(LINKED);
+            boolean isPrimaryLink = !mLocallyLinkedAssemblies.contains(extensionCandidate.Assembly)
+                    && !mLocallyLinkedAssemblies.contains(extensionCandidate.SecondAssembly);
 
-            mSplitLinks.add(assemblyLink);
+            applySplitLink(assemblyLink, isPrimaryLink);
+
             mLocallyLinkedAssemblies.add(extensionCandidate.Assembly);
             mLocallyLinkedAssemblies.add(extensionCandidate.SecondAssembly);
         }
@@ -370,6 +367,16 @@ public class PhaseSetBuilder
 
         checkLogPerfTime("findUnmappedExtensions");
 
+        boolean addedExtensions = applyOtherLinksAndExtensions();
+
+        if(addedExtensions)
+            applyOtherLinksAndExtensions();
+
+        checkLogPerfTime("findOtherLinks");
+    }
+
+    private boolean applyOtherLinksAndExtensions()
+    {
         findSplitLinkCandidates(false); // since local candidate links have already been found and applied
 
         // prioritise and select from all remaining candidates
@@ -379,11 +386,13 @@ public class PhaseSetBuilder
                 .collect(Collectors.toList());
 
         if(remainingCandidates.isEmpty())
-            return;
+            return false;
 
         Collections.sort(remainingCandidates, new ExtensionCandidate.StandardComparator());
 
         Set<JunctionAssembly> primaryLinkedAssemblies = Sets.newHashSet(mLocallyLinkedAssemblies);
+
+        boolean addedExtensions = false;
 
         for(ExtensionCandidate extensionCandidate : remainingCandidates)
         {
@@ -415,11 +424,12 @@ public class PhaseSetBuilder
                 {
                     extensionCandidate.markSelected();
                     applyUnmappedReadExtension(extensionCandidate);
+                    addedExtensions = true;
                 }
             }
         }
 
-        checkLogPerfTime("findOtherLinks");
+        return addedExtensions;
     }
 
     private void findUnmappedExtensions()

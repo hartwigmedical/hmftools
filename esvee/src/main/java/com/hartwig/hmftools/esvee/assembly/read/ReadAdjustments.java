@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.POLY_G_TRIM_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferredUnclippedPositions;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findBaseRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
@@ -17,6 +18,8 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_REPEAT
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 
 import htsjdk.samtools.CigarElement;
@@ -24,56 +27,9 @@ import htsjdk.samtools.CigarOperator;
 
 public final class ReadAdjustments
 {
-    public static boolean convertEdgeIndelsToSoftClip(final Read read)
-    {
-        return convertEdgeIndelsToSoftClip(read, INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
-    }
-
-    public static boolean convertEdgeIndelsToSoftClip(final Read read, final int minIndelLength, final int maxIndelLength)
-    {
-        if(read.cigarElements().size() < 3)
-            return false;
-
-        int leftSoftClipLength = calcIndelToSoftClipLength(
-                read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2),
-                minIndelLength, maxIndelLength);
-
-        int lastIndex = read.cigarElements().size() - 1;
-
-        int rightSoftClipLength = calcIndelToSoftClipLength(
-                read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
-                minIndelLength, maxIndelLength);
-
-        if(leftSoftClipLength > 0 || rightSoftClipLength > 0)
-        {
-            read.setIndelUnclippedBounds(leftSoftClipLength, rightSoftClipLength);
-            return true;
-        }
-
-        return false;
-    }
-
-    private static int calcIndelToSoftClipLength(
-            final CigarElement edge, final CigarElement inside, final CigarElement next,
-            final int minIndelLength, final int maxIndelLength)
-    {
-        if(edge.getOperator() != M)
-            return 0;
-
-        if(!inside.getOperator().isIndel())
-            return 0;
-
-        if(next.getOperator() != M)
-            return 0;
-
-        if(inside.getLength() < minIndelLength || inside.getLength() > maxIndelLength)
-            return 0;
-
-        return inside.getOperator() != CigarOperator.D ? edge.getLength() + inside.getLength() : edge.getLength();
-    }
-
     public static boolean trimPolyGSequences(final Read read)
     {
+        // poly-G may be trimmed from the 3' read end
         int trailingGCount = 0;
 
         if(read.positiveStrand())

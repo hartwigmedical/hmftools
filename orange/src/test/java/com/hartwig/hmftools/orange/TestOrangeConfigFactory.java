@@ -38,7 +38,7 @@ public final class TestOrangeConfigFactory
             RUN_DIRECTORY + "/tumor_sample/bam_metrics/tumor_sample.bam_metric.summary.tsv";
     private static final String TUMOR_SAMPLE_FLAGSTAT_FILE =
             RUN_DIRECTORY + "/tumor_sample/bam_metrics/tumor_sample.bam_metric.flag_counts.tsv";
-    private static final String SAGE_GERMLINE_GENE_COVERAGE = RUN_DIRECTORY + "/sage_germline/ref_sample.sage.gene.coverage.tsv";
+    private static final String SAGE_GERMLINE_GENE_COVERAGE = RUN_DIRECTORY + "/ref_sample/bam_metrics/ref_sample.bam_metric.gene_coverage.tsv";
     private static final String SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT = RUN_DIRECTORY + "/sage_somatic/ref_sample.sage.bqr.png";
     private static final String SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT = RUN_DIRECTORY + "/sage_somatic/tumor_sample.sage.bqr.png";
     private static final String PURPLE_DATA_DIRECTORY = RUN_DIRECTORY + "/purple";

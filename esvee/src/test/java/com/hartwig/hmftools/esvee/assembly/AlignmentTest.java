@@ -418,7 +418,7 @@ public class AlignmentTest
                 100, 80, 0, "100M", DEFAULT_NM, "", "");
 
         AlignData alignment3 = new AlignData(
-                new ChrBaseRegion(CHR_2, 1, 100), 130, 200,
+                new ChrBaseRegion(CHR_3, 1, 100), 130, 200,
                 60, 70, 0, "100M", DEFAULT_NM, "", "");
 
         alignments = Lists.newArrayList(zeroAlign, alignment1, zeroAlign, alignment2, zeroAlign, alignment3);
@@ -453,7 +453,7 @@ public class AlignmentTest
                 60, 20, 0, "20M", DEFAULT_NM, altAlignment, "");
 
         AlignData alignment3 = new AlignData(
-                new ChrBaseRegion(CHR_2, 1, 100), 100, 200,
+                new ChrBaseRegion(CHR_3, 1, 100), 100, 200,
                 60, 100, 0, "100M", DEFAULT_NM, "", "");
 
         List<AlignData> validAlignments = Lists.newArrayList();
@@ -488,7 +488,6 @@ public class AlignmentTest
 
         assertEquals(3, validAlignments.size());
     }
-
 
     @Test
     public void testAlignmentLowMapQualFilters()
@@ -580,6 +579,83 @@ public class AlignmentTest
         assertTrue(alignment3.hasLowMapQualShortSvLink());
         assertTrue(alignment4.hasLowMapQualShortSvLink());
    }
+
+    @Test
+    public void testKeepChainedLocalShortAdjustedAlignments()
+    {
+        AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(
+                mRefGenome, CHR_1, 300, FORWARD, CHR_1, 350, REVERSE, "", "",
+                50, 200);
+
+        // scenario 1: based on chr7-comp 1c:
+        String cigar = "100M";
+
+        AlignData alignment1 = new AlignData(
+                new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
+                60, 100, 0, cigar, DEFAULT_NM, null, "");
+
+        AlignData alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_1, 1101, 1150), 101, 150,
+                60, 40, 0, cigar, DEFAULT_NM, null, "");
+
+        AlignData alignment3 = new AlignData(
+                new ChrBaseRegion(CHR_1, 20000, 20100), 201, 300,
+                60, 100, 0, cigar, DEFAULT_NM, null, "");
+
+        List<AlignData> alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
+
+        List<AlignData> validAlignments = Lists.newArrayList();
+        List<AlignData> lowQualAlignments = Lists.newArrayList();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(0, lowQualAlignments.size());
+        assertEquals(3, validAlignments.size());
+
+        // rescued by upper alignment
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_1, 19101, 19150), 101, 150,
+                60, 40, 0, cigar, DEFAULT_NM, null, "");
+
+        alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(0, lowQualAlignments.size());
+        assertEquals(3, validAlignments.size());
+
+        // no longer rescued if remote or too far away
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_2, 1101, 1150), 101, 150,
+                60, 40, 0, cigar, DEFAULT_NM, null, "");
+
+        alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(1, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_1, 10000, 10049), 101, 150,
+                60, 40, 0, cigar, DEFAULT_NM, null, "");
+
+        alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(1, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+    }
 
     @Test
     public void testSpecificAlignmentHandling()

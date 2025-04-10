@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder.isLocalA
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
@@ -128,7 +130,7 @@ public final class AssemblyLinker
 
                 boolean matched = false;
 
-                // require a shared split read in either of the assemblies
+                // require a shared split, concordant read in either of the assemblies
                 for(int i = 0; i <= 0; ++i)
                 {
                     List<SupportRead> splitSupport = (i == 0) ? first.support() : second.support();
@@ -139,12 +141,20 @@ public final class AssemblyLinker
                         if(!support.type().isSplitSupport())
                             continue;
 
-                        if(otherSupport
-                                .stream().filter(x -> x.type() == SupportType.JUNCTION || x.type() == SupportType.DISCORDANT)
-                                .anyMatch(x -> x.matchesFragment(support, true)))
+                        for(SupportRead other : otherSupport)
                         {
-                            matched = true;
-                            break;
+                            if(other.type() != JUNCTION && other.type() != DISCORDANT)
+                                continue;
+
+                            // must be a concordant pair unless the same read is both
+                            if(!other.id().equals(support.id()))
+                                continue;
+
+                            if(other.flags() == support.flags() || other.orientation() != support.orientation())
+                            {
+                                matched = true;
+                                break;
+                            }
                         }
                     }
                 }
