@@ -2,8 +2,8 @@ package com.hartwig.hmftools.compar;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
@@ -44,8 +44,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.Category;
@@ -79,6 +79,7 @@ public class ComparConfig
     public final String OutputId;
 
     public final boolean WriteDetailed;
+    public final boolean IncludeMatches;
     public final int Threads;
 
     public final GenomeLiftoverCache LiftoverCache;
@@ -95,6 +96,7 @@ public class ComparConfig
     public static final String THRESHOLDS = "thresholds";
 
     public static final String WRITE_DETAILED_FILES = "write_detailed";
+    public static final String INCLUDE_MATCHES = "include_matches";
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
@@ -146,6 +148,7 @@ public class ComparConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED_FILES);
+        IncludeMatches = configBuilder.hasFlag(INCLUDE_MATCHES);
         Threads = parseThreads(configBuilder);
 
         SourceNames = Lists.newArrayList(REF_SOURCE, NEW_SOURCE);
@@ -175,11 +178,11 @@ public class ComparConfig
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
 
-        if(configBuilder.hasValue(DRIVER_GENE_PANEL_OPTION))
+        if(configBuilder.hasValue(DRIVER_GENE_PANEL))
         {
             try
             {
-                List<DriverGene> driverGenes = DriverGeneFile.read(configBuilder.getValue(DRIVER_GENE_PANEL_OPTION));
+                List<DriverGene> driverGenes = DriverGeneFile.read(configBuilder.getValue(DRIVER_GENE_PANEL));
 
                 for(DriverGene driverGene : driverGenes)
                 {
@@ -426,7 +429,7 @@ public class ComparConfig
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(GERMLINE_SAMPLE, false, "Sample ID of germline sample if tumor-normal run");
         addSampleIdFile(configBuilder, false);
-        configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addConfigItem(DRIVER_GENE_PANEL, DRIVER_GENE_PANEL_DESC);
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
 
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
@@ -435,6 +438,7 @@ public class ComparConfig
         registerConfig(configBuilder);
 
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
+        configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
 
@@ -453,6 +457,7 @@ public class ComparConfig
         OutputDir = null;
         OutputId = "";
         WriteDetailed = false;
+        IncludeMatches = false;
         Threads = 0;
 
         DbConnections = Maps.newHashMap();

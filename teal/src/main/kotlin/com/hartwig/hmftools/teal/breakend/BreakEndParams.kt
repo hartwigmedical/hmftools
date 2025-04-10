@@ -3,10 +3,10 @@ package com.hartwig.hmftools.teal.breakend
 import com.beust.jcommander.IStringConverter
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.ParameterException
-import com.hartwig.hmftools.common.genome.bed.NamedBedFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 
 private const val DEFAULT_BREAK_POINT_MARK_DUP_DISTANCE = 60
 private const val DEFAULT_SPLIT_TELOMERE_MATCH_THRESHOLD = 0.9
@@ -75,7 +75,17 @@ class BreakEndParams
                 val bytes = ByteArray(bedStream.available())
                 java.io.DataInputStream(bedStream).readFully(bytes)
                 tempFile.writeBytes(bytes)
-                return NamedBedFile.readBedFile(tempFile.path)
+
+                var regions = ChrBaseRegion.loadChrBaseRegionList(tempFile.path);
+
+                val genomeRegions = ArrayList<GenomeRegion>()
+
+                for(region in genomeRegions)
+                {
+                    genomeRegions.add(GenomeRegions.create(region.chromosome(), region.start(), region.end()))
+                }
+
+                return genomeRegions;
             }
             return emptyList()
         }

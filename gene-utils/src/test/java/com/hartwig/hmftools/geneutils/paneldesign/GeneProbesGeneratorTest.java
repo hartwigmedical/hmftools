@@ -34,7 +34,7 @@ public class GeneProbesGeneratorTest
 
         TranscriptData transData = new TranscriptData(
                 transId, transName, geneId, true, Strand.POS_STRAND,
-                11000, 19000 - 1, 13500, 18000 - 1, "");
+                11000, 19000 - 1, 13500, 18000 - 1, "", null);
 
         // first exon is not coding
         transData.exons().add(new ExonData(transId, 11000, 12000 - 1, 1, -1, -1));
@@ -100,7 +100,7 @@ public class GeneProbesGeneratorTest
 
         TranscriptData transData = new TranscriptData(
                 transId, transName, geneId, true, Strand.POS_STRAND,
-                11000, 25000 - 1, 13500, 24000 - 1, "");
+                11000, 25000 - 1, 13500, 24000 - 1, "", null);
 
         // first exon is not coding
         transData.exons().add(new ExonData(transId, 11000, 12000 - 1, 1, -1, -1));
@@ -189,7 +189,7 @@ public class GeneProbesGeneratorTest
         String transName = "TRANS01";
 
         TranscriptData transData = new TranscriptData(
-                transId, transName, geneId, true, Strand.POS_STRAND, 1, 1000, 1, 1000, "");
+                transId, transName, geneId, true, Strand.POS_STRAND, 1, 1000, 1, 1000, "", null);
 
         // create a targeted gene
         TargetedGene targetedGene = new TargetedGene(geneData, transData);

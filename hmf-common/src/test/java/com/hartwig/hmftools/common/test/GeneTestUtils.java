@@ -203,7 +203,7 @@ public final class GeneTestUtils
         }
 
         TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
-                codingStart, codingEnd, biotype);
+                codingStart, codingEnd, biotype, null);
 
         transData.setExons(exons);
 

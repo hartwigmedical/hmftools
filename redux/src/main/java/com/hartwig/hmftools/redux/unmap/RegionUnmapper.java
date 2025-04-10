@@ -96,8 +96,6 @@ public class RegionUnmapper extends Thread
                 // build a buffer into the slice regions to account for unmapped mates starting earlier
                 int regionStart = max(region.start() - (UNMAP_MAX_NON_OVERLAPPING_BASES * 2), 1);
 
-                // unmappingRegions.add(new UnmapRegion(chromosome, regionStart, region.end(), region));
-
                 if(currentRegion == null || currentRegion.end() < regionStart - REGION_PROXIMITY_BUFFER)
                 {
                     currentRegion = new UnmapRegion(chromosome, regionStart, region.end(), region);
@@ -175,11 +173,13 @@ public class RegionUnmapper extends Thread
     {
         if(region == UNMAPPED_READS)
         {
+            RD_LOGGER.trace("extracting fully-unmapped region");
             processFullyUnmappedReads();
             return;
         }
 
         mCurrentRegion = region;
+        RD_LOGGER.trace("unmapping region({})", region);
 
         mUnmapRegionState = new UnmapRegionState(mCurrentRegion, mCurrentRegion.Regions);
         mUnmapRegionState.LastMatchedIndex = 0;

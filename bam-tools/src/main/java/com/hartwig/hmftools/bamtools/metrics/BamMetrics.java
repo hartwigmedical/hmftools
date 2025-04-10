@@ -130,6 +130,8 @@ public class BamMetrics
 
         BT_LOGGER.info("totalReads({}) stats: {}", combinedStats.readCounts().Total, combinedStats.coverageMetrics());
 
+        mConfig.GeneRegionCoverage.writeResults(mConfig.OutputDir, mConfig.SampleId);
+
         if(mConfig.PerfDebug)
         {
             combinedStats.perfCounter().logIntervalStats(10);

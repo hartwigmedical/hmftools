@@ -15,15 +15,4 @@ public final class SageCommon
     {
         return checkAddDirSeparator(basePath) + sample + SAGE_FILE_ID + ".bqr.png";
     }
-
-    public static String generateGeneCoverageFilename(final String basePath, final String sample)
-    {
-        return checkAddDirSeparator(basePath) + sample + SAGE_FILE_ID + ".gene.coverage.tsv";
-    }
-
-    public static String generateExonMediansFilename(final String basePath, final String sample)
-    {
-        return checkAddDirSeparator(basePath) + sample + SAGE_FILE_ID + ".exon.medians.tsv";
-    }
-
 }

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.linx.utils;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
+import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
@@ -15,9 +14,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -192,7 +191,7 @@ public class GeneTestUtils
     {
         final String transName = String.format("TRANS%03d", transId);
         TranscriptData transData = new TranscriptData(
-                transId, transName, gene.geneId(), isCanonical, gene.strand(), transStart, transEnd, codingStart, codingEnd, bioType);
+                transId, transName, gene.geneId(), isCanonical, gene.strand(), transStart, transEnd, codingStart, codingEnd, bioType, null);
 
         return new BreakendTransData(gene, transData, exonUpstream, exonDownstream, phase, exonicPhase, codingBases, totalCodingBases);
     }

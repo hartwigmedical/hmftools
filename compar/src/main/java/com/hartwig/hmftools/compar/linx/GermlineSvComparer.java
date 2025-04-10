@@ -77,12 +77,9 @@ public class GermlineSvComparer implements ItemComparer
 
             String germlineBreakendFile = LinxBreakend.generateFilename(fileSources.LinxGermline, sampleId, true);
 
-            List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile).stream()
-                    .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
-
             boolean reportedOnly = matchLevel == MatchLevel.REPORTABLE;
 
-            for(LinxBreakend breakend : germlineBreakends)
+            for(LinxBreakend breakend : LinxBreakend.read(germlineBreakendFile))
             {
                 if(reportedOnly && !breakend.reportedDisruption())
                     continue;

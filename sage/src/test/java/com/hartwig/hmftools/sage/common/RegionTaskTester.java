@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageCallConfig;
-import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.RegionResults;
@@ -32,7 +31,6 @@ public class RegionTaskTester
     public final Map<String, BqrRecordMap> QualityRecalibrationMap;
     public final MsiJitterCalcs JitterCalcs;
     public final PhaseSetCounter PhaseSetCounter;
-    public final Coverage Coverage;
     public final SamSlicerFactory SamSlicerFactory;
 
     public final MockSamSlicer TumorSamSlicer;
@@ -53,7 +51,6 @@ public class RegionTaskTester
         QualityRecalibrationMap = Maps.newHashMap();
         JitterCalcs = new MsiJitterCalcs();
         PhaseSetCounter = new PhaseSetCounter();
-        Coverage = new Coverage(Lists.newArrayList(), Collections.EMPTY_LIST, Config.Common);
 
         SamSlicerFactory = new SamSlicerFactory();
 
@@ -67,6 +64,6 @@ public class RegionTaskTester
     {
         return new RegionTask(
                 0, region, Results, Config, RefGenome, Hotspots, PanelRegions, Transcripts, HighConfidenceRegions,
-                QualityRecalibrationMap, JitterCalcs, PhaseSetCounter, Coverage, SamSlicerFactory, new FragmentLengthWriter(Config.Common));
+                QualityRecalibrationMap, JitterCalcs, PhaseSetCounter, SamSlicerFactory, new FragmentLengthWriter(Config.Common));
     }
 }

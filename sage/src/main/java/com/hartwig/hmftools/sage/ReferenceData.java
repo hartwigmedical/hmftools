@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.loadActionableGenes;
+import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -13,11 +15,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
@@ -32,12 +34,12 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class ReferenceData
 {
-    public final ListMultimap<Chromosome,NamedBed> CoveragePanel;
     public final Map<Chromosome,List<BaseRegion>> PanelWithHotspots;
     public final ListMultimap<Chromosome,SimpleVariant> Hotspots;
     public final Map<Chromosome,List<BaseRegion>> HighConfidence;
 
     public final EnsemblDataCache GeneDataCache;
+    public final List<DriverGene> DriverGenes;
 
     public final Map<String,List<TranscriptData>> ChromosomeTranscripts;
 
@@ -49,7 +51,6 @@ public class ReferenceData
     {
         mConfig = config;
 
-        CoveragePanel = ArrayListMultimap.create();
         PanelWithHotspots = Maps.newHashMap();
         Hotspots = ArrayListMultimap.create();
         HighConfidence = Maps.newHashMap();
@@ -59,6 +60,15 @@ public class ReferenceData
 
         GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
+
+        if(configBuilder.hasValue(DriverGenePanelConfig.DRIVER_GENE_PANEL))
+        {
+            DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
+        }
+        else
+        {
+            DriverGenes = null;
+        }
 
         HlaCommon.populateGeneData(GeneDataCache.getChrGeneDataMap().get(hlaChromosome(config.Common.RefGenVersion)));
     }
@@ -120,13 +130,20 @@ public class ReferenceData
 
         try
         {
-            if(!mConfig.CoverageBed.isEmpty())
+            if(DriverGenes != null)
             {
-                CoveragePanel.putAll(readNamedBedFile(mConfig.CoverageBed));
-                SG_LOGGER.info("read {} coverage entries from bed file: {}", CoveragePanel.size(), mConfig.CoverageBed);
-            }
+                List<String> driverGeneNames = loadActionableGenes(DriverGenes);
 
-            if(!mConfig.PanelBed.isEmpty())
+                Map<String,List<BaseRegion>> driverGeneRegions = buildDriverGeneBaseRegions(
+                        GeneDataCache, driverGeneNames, true, true);
+
+                for(Map.Entry<String,List<BaseRegion>> entry : driverGeneRegions.entrySet())
+                {
+                    Chromosome chromosome = HumanChromosome.fromString(entry.getKey());
+                    PanelWithHotspots.put(chromosome, entry.getValue());
+                }
+            }
+            else if(!mConfig.PanelBed.isEmpty())
             {
                 Map<Chromosome,List<BaseRegion>> panelBed = loadBedFileChrMap(mConfig.PanelBed, true);
 
@@ -239,22 +256,5 @@ public class ReferenceData
                 }
             }
         }
-    }
-
-    private static ListMultimap<Chromosome,NamedBed> readNamedBedFile(final String panelBed) throws IOException
-    {
-        final ListMultimap<Chromosome,NamedBed> panel = ArrayListMultimap.create();
-        if(!panelBed.isEmpty())
-        {
-            for(NamedBed bed : NamedBedFile.readBedFile(panelBed))
-            {
-                if(HumanChromosome.contains(bed.chromosome()))
-                {
-                    panel.put(HumanChromosome.fromString(bed.chromosome()), bed);
-                }
-            }
-        }
-
-        return panel;
     }
 }

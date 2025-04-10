@@ -127,7 +127,6 @@ public class ReduxConfig
 
     // config strings
     private static final String INPUT_BAM = "input_bam";
-    private static final String BAM_FILE = "bam_file";
     private static final String OUTPUT_BAM = "output_bam";
     private static final String READ_OUTPUTS = "read_output";
     private static final String FORM_CONSENSUS = "form_consensus";
@@ -138,8 +137,8 @@ public class ReduxConfig
     private static final String JITTER_MSI_ONLY = "jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
-    private static final String SKIP_FULL_UNAMPPED_READS = "skip_fully_unmapped";
-    private static final String SKIP_UNAMPPING = "skip_unmapping";
+    private static final String SKIP_FULL_UNMAPPED_READS = "skip_fully_unmapped";
+    private static final String SKIP_UNMAPPING = "skip_unmapping";
     private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
 
     // dev and options
@@ -211,7 +210,7 @@ public class ReduxConfig
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
-        SkipFullyUnmappedReads = configBuilder.hasFlag(SKIP_FULL_UNAMPPED_READS);
+        SkipFullyUnmappedReads = configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
         FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
 
         UMIs = UmiConfig.from(configBuilder);
@@ -224,7 +223,7 @@ public class ReduxConfig
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
 
-        SkipUnmapping = configBuilder.hasFlag(SKIP_UNAMPPING);
+        SkipUnmapping = configBuilder.hasFlag(SKIP_UNMAPPING);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
@@ -343,8 +342,8 @@ public class ReduxConfig
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
-        configBuilder.addFlag(SKIP_FULL_UNAMPPED_READS, "Skip processing existing fully unmapped reads");
-        configBuilder.addFlag(SKIP_UNAMPPING, "Skip unmapping routine, including excluded regions");
+        configBuilder.addFlag(SKIP_FULL_UNMAPPED_READS, "Skip processing existing fully unmapped reads");
+        configBuilder.addFlag(SKIP_UNMAPPING, "Skip unmapping routine, including excluded regions");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

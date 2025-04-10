@@ -37,6 +37,7 @@ public class ReadIdTrimmer
         if(mReadIdTrimIndex >= readId.length() || readId.charAt(mReadIdTrimIndex - 1) != READ_ID_DELIM)
         {
             // disable if any reads don't match the established pattern
+            // SV_LOGGER.warn("disabling read trimmer: readId({}) trimIndex({}) trimBases({})", readId, mReadIdTrimIndex, mTrimmedBases);
             mEnabled = false;
             return readId;
         }
@@ -47,6 +48,7 @@ public class ReadIdTrimmer
     public String restore(final String trimmedReadId) { return mEnabled ? mTrimmedBases + trimmedReadId : trimmedReadId; }
 
     private static final char READ_ID_DELIM = ':';
+    private static final int READ_ID_DELIM_COUNT = 3;
 
     private static int findReadIdTrimIndex(final String readId)
     {
@@ -57,7 +59,7 @@ public class ReadIdTrimmer
             if(readId.charAt(i) == READ_ID_DELIM)
                 ++delimCount;
 
-            if(delimCount == 3)
+            if(delimCount == READ_ID_DELIM_COUNT)
                 return i + 1;
         }
 

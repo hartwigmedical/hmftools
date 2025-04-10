@@ -378,6 +378,14 @@ public final class JunctionUtils
                             markNextAsDuplicate ? nextFrag : firstFrag, markNextAsDuplicate ? firstFrag : nextFrag);
 
                     ReadGroup duplicateGroup = readGroupMap.get(duplicateReadId);
+
+                    if(duplicateGroup == null)
+                    {
+                        SV_LOGGER.error("duplicateReadId({}) group not found from read({}), trimmerEnabled({})",
+                                duplicateReadId, markNextAsDuplicate ? nextFrag.Read.id() : firstFrag.Read.id(), readIdTrimmer.enabled());
+                        return duplicateFragmentCount;
+                    }
+
                     duplicateGroup.setGroupState(DUPLICATE);
                     ++duplicateFragmentCount;
                 }
