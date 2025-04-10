@@ -203,7 +203,7 @@ public class Alignment
                 final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
         {
             // re-align supplementaries to get a more reliable map quality
-            if(alignments.size() > 1)
+            if(alignments.size() != 1)
                 return alignments;
 
             AlignData alignment = alignments.get(0);
