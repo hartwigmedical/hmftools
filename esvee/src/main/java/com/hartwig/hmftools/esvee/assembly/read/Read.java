@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
-import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
@@ -66,6 +65,7 @@ public class Read
     private boolean mCheckedIndelCoords;
 
     private IndelCoords mIndelCoords;
+    private boolean mInvalidIndel;
 
     // for reads with indels >= min-length, the inferred unclipped adjustment from converting them all
     private Integer mIndelInferredUnclippedStart;
@@ -103,6 +103,7 @@ public class Read
         mIndelCoords = null;
         mIndelInferredUnclippedStart = null;
         mIndelInferredUnclippedEnd = null;
+        mInvalidIndel = false;
 
         mHasLineTail = false;
         mTrimCount = 0;
@@ -346,7 +347,7 @@ public class Read
 
     public IndelCoords indelCoords()
     {
-        if(!mCheckedIndelCoords)
+        if(!mCheckedIndelCoords && !mInvalidIndel)
         {
             mCheckedIndelCoords = true;
             mIndelCoords = findIndelCoords(mAlignmentStart, mCigarElements, MIN_INDEL_SUPPORT_LENGTH);
@@ -354,6 +355,9 @@ public class Read
 
         return mIndelCoords;
     }
+
+    public void markInvalidIndel() { mInvalidIndel = true; }
+    public boolean invalidIndel() { return mInvalidIndel; }
 
     public boolean matchesFragment(final Read other, boolean allowReadMatch)
     {

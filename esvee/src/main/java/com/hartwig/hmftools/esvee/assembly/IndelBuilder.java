@@ -2,11 +2,9 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
-import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -22,7 +20,6 @@ import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.assembly.read.ReadFilters;
 
 import htsjdk.samtools.CigarElement;
 
@@ -45,6 +42,9 @@ public final class IndelBuilder
 
         for(Read read : rawReads)
         {
+            if(read.invalidIndel())
+                continue;
+
             IndelCoords indelCoords = read.indelCoords();
 
             if(indelCoords != null)
@@ -119,25 +119,35 @@ public final class IndelBuilder
         int alignedTotal = 0;
 
         boolean hasMinLengthIndel = false;
+        int lastIndex = read.cigarElements().size() - 1;
 
         for(int i = 0; i < read.cigarElements().size(); ++i)
         {
             CigarElement element = read.cigarElements().get(i);
 
-            switch(element.getOperator())
+            if(element.getOperator().isIndel())
             {
-                case D:
-                    hasMinLengthIndel |= element.getLength() >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
-                    break;
+                hasMinLengthIndel |= element.getLength() >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 
-                case I:
+                // must be straddled by aligned bases
+                if(i == 0 || (i == 1 && read.cigarElements().get(0).getOperator() != M))
+                {
+                    read.markInvalidIndel();
+                    return false;
+                }
+
+                if(i == lastIndex || (i == lastIndex - 1 && read.cigarElements().get(lastIndex).getOperator() != M))
+                {
+                    read.markInvalidIndel();
+                    return false;
+                }
+
+                if(element.getOperator() == I)
                     insertTotal += element.getLength();
-                    hasMinLengthIndel |= element.getLength() >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
-                    break;
-
-                case M:
-                    alignedTotal += element.getLength();
-                    break;
+            }
+            else if(element.getOperator() == M)
+            {
+                alignedTotal += element.getLength();
             }
         }
 
