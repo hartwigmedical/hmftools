@@ -22,12 +22,13 @@ public class VariantTranscriptImpact
     public final String HgvsCoding;
     public final String HgvsProtein;
     public final String RefSeqId;
-    public final Integer AffectedExon;
-    public final Integer AffectedCodon;
+    public final int AffectedExon;
+    public final int AffectedCodon;
 
-    public VariantTranscriptImpact(final String geneId, final String geneName, final String transcript, final String effects,
+    public VariantTranscriptImpact(
+            final String geneId, final String geneName, final String transcript, final String effects,
             final boolean spliceRegion, final String hgvsCoding, final String hgvsProtein, final String refSeqId,
-            final Integer affectedExon, final Integer affectedCodon)
+            final int affectedExon, final int affectedCodon)
     {
         GeneId = geneId;
         GeneName = geneName;
@@ -51,7 +52,8 @@ public class VariantTranscriptImpact
     public static void writeHeader(final VCFHeader header)
     {
         StringJoiner fields = new StringJoiner("|");
-        List<String> fieldItems = Lists.newArrayList("Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p");
+        List<String> fieldItems = Lists.newArrayList(
+                "Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p", "Exon", "Codon");
         fieldItems.forEach(fields::add);
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
@@ -86,9 +88,19 @@ public class VariantTranscriptImpact
     public static VariantTranscriptImpact fromVcfData(final String data)
     {
         String[] items = data.split("\\" + VAR_TRANS_IMPACT_ITEM_DELIM, -1);
-        String refSeqId = items.length > 7 ? items[7] : "";
-        Integer affectedExon = items.length > 8 ? Integer.parseInt(items[8]) : null;
-        Integer affectedCodon = items.length > 9 ? Integer.parseInt(items[9]) : null;
+
+        // RefSeqId and affect codon and exon added in v1.8
+        String refSeqId = "";
+        int affectedExon = 0;
+        int affectedCodon = 0;
+
+        if(items.length >= 10)
+        {
+            refSeqId = items[7];
+            affectedExon = Integer.parseInt(items[8]);
+            affectedCodon = Integer.parseInt(items[9]);
+        }
+
         return new VariantTranscriptImpact(
                 items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6], refSeqId, affectedExon, affectedCodon);
     }
@@ -104,8 +116,8 @@ public class VariantTranscriptImpact
         sj.add(HgvsCoding);
         sj.add(HgvsProtein);
         sj.add(RefSeqId);
-        sj.add(AffectedExon != null ? AffectedExon.toString() : "");
-        sj.add(AffectedCodon != null ? AffectedCodon.toString() : "");
+        sj.add(String.valueOf(AffectedExon));
+        sj.add(String.valueOf(AffectedCodon));
         return sj.toString();
     }
 

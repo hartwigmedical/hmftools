@@ -241,10 +241,8 @@ public final class EnsemblDataLoader
 
                     Integer codingStart = !items[codingStartIndex].equalsIgnoreCase("NULL") ? Integer.parseInt(items[codingStartIndex]) : null;
                     Integer codingEnd = !items[codingEndIndex].equalsIgnoreCase("NULL") ? Integer.parseInt(items[codingEndIndex]) : null;
-                    String refSeqId = refSeqIdIndex > 0 ? items[refSeqIdIndex] : null;
-                    if("NULL".equals(refSeqId)) {
-                        refSeqId = null;
-                    }
+                    String refSeqId = refSeqIdIndex > 0 && !items[refSeqIdIndex].equalsIgnoreCase("NULL")? items[refSeqIdIndex] : null;
+
                     currentTrans = new TranscriptData(
                             transId, transName, geneId, isCanonical, Byte.parseByte(items[strandIndex]),
                             Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
