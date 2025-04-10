@@ -4,6 +4,20 @@ import org.junit.Test;
 
 public final class DnaVariantsTest extends ReversePaveTestBase
 {
+//    @Test
+    public void firstCodingBaseIsNotAtCodingStart()
+    {
+        // First exon for this transcript has phase 2 - it's a weird transcript where the actual coding start
+        // is not at the start of coding. Transcript says coding starts at 4789837
+        // Exon1: 789837-4789929
+        // initial phase = 2, so coding really starts at 4789838
+        // BTW amino acids are DGSLIN... - doesn't start with M
+        BaseSequenceChange bsc = reversePave.calculateDnaVariant("AP5Z1", "ENST00000648237", "c.4G>T");
+        check(bsc, "G", "T", "chr7", 4789841);
+        bsc = reversePave.calculateDnaVariant("AP5Z1", "ENST00000648237", "c.TG>A");
+        check(bsc, "T", "A", "chr7", 4789844);
+    }
+
     @Test
     public void baseIsUpstreamOfFirstUtrExonReverseStrand()
     {

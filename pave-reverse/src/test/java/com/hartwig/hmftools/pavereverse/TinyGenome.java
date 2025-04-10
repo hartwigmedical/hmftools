@@ -17,13 +17,14 @@ public class TinyGenome extends SimpleTestGenome
         super();
         data.add( new ChromosomeSnippet("chr1", 10_000_000, 3_000_000, "tinygenome/chr1_part.txt"));
         data.add( new ChromosomeSnippet("chr1", 26_000_000, 1_000_000, "tinygenome/chr1_part_26.txt"));
-        data.add( new ChromosomeSnippet("chr3", 10_000_000, 3_000_000, "tinygenome/chr3_part.txt"));
+        data.add( new ChromosomeSnippet("chr3", 10_000_000, 3_000_000, "tinygenome/chr3_part_10.txt"));
         data.add( new ChromosomeSnippet("chr4", 54_000_000, 1_000_000, "tinygenome/chr4_part_54.txt"));
-        data.add( new ChromosomeSnippet("chr4", 105_000_000, 3_000_000, "tinygenome/chr4_part.txt"));
+        data.add( new ChromosomeSnippet("chr4", 105_000_000, 3_000_000, "tinygenome/chr4_part_105.txt"));
         data.add( new ChromosomeSnippet("chr5", 1_000_000, 1_000_000, "tinygenome/chr5_part_1.txt"));
         data.add( new ChromosomeSnippet("chr5", 68_000_000, 1_000_000, "tinygenome/chr5_part_68.txt"));
-        data.add( new ChromosomeSnippet("chr7", 140_000_000, 10_000_000, "tinygenome/chr7_part.txt"));
+        data.add( new ChromosomeSnippet("chr7", 4_000_000, 1_000_000, "tinygenome/chr7_part_4.txt"));
         data.add( new ChromosomeSnippet("chr7", 55_000_000, 3_000_000, "tinygenome/chr7_part_55.txt"));
+        data.add( new ChromosomeSnippet("chr7", 140_000_000, 10_000_000, "tinygenome/chr7_part140.txt"));
         data.add( new ChromosomeSnippet("chr17", 43_000_000, 1_000_000, "tinygenome/chr17_part_43.txt"));
         data.add( new ChromosomeSnippet("chr21", 37_000_000, 1_000_000, "tinygenome/chr21_part_37.txt"));
     }
