@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.COMPLEX_PERMS_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_ALLELE_GROUP_UNIQUE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_GROUP_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
@@ -63,7 +64,7 @@ public class ComplexBuilder
         List<AlleleCoverage> uniqueGroups = findUnique(groupCoverage, Lists.newArrayList(), totalFragCount);
 
         List<AlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
-                .filter(x -> x.UniqueCoverage > 0 && !uniqueGroups.contains(x)).collect(Collectors.toList());
+                .filter(x -> x.UniqueCoverage > MIN_CONF_ALLELE_GROUP_UNIQUE_COVERAGE && !uniqueGroups.contains(x)).collect(Collectors.toList());
 
         Collections.sort(discardedGroups, Collections.reverseOrder());
 
