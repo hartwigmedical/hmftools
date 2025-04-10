@@ -59,13 +59,18 @@ public class GenerateRefSeq
     static Map<String, String> getRefSeqMapping(final DSLContext context)
     {
         Map<String, String> result = new HashMap<>();
-        final Result<Record> refseqMappingResult = context.fetch(readQueryString(Resources.getResource("ensembl_sql/ensembl_refseq_mapping.sql")));
+
+        final Result<Record> refseqMappingResult = context.fetch(
+                readQueryString(Resources.getResource("ensembl_sql/ensembl_refseq_mapping.sql")));
+
         GU_LOGGER.debug("RefSeq mapping query returned {} entries", refseqMappingResult.size());
+
         refseqMappingResult.forEach(record -> {
             String refSeqId = (String) record.get("refSeqId");
             String transcriptId = (String) record.get("transcriptId");
             result.put(transcriptId, refSeqId);
         });
+
         return result;
     }
 
