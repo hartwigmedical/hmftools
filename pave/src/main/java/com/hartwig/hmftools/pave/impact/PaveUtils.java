@@ -82,7 +82,7 @@ public final class PaveUtils
 
     public static VariantData createRightAlignedVariant(final VariantData variant, final RefGenomeInterface refGenome)
     {
-        if(variant.isBaseChange()) // to be confirmed
+        if(variant.isBaseChange())
             return null;
 
         if(variant.microhomology().isEmpty() || variant.microhomology().equals("."))

@@ -275,8 +275,6 @@ public class HgvsCodingTest
         String alt = refBases.substring(pos, pos + 7);
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
-        VariantData realigned = createRightAlignedVariant( var, refGenome);
-
         String altBases = alt.substring(1);
         var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
 
