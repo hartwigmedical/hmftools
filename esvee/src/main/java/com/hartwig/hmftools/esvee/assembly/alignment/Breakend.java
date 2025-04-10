@@ -48,8 +48,7 @@ public class Breakend implements Comparable<Breakend>
     private int mIncompleteFragmentCount;
     private int mNonPrimaryAssemblyFragmentCount;
 
-    private Set<Integer> mPositionsStart;
-    private Set<Integer> mPositionsEnd;
+    private Set<Integer> mFragmentPositions;
 
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
@@ -77,6 +76,8 @@ public class Breakend implements Comparable<Breakend>
         mFragmentLengthCount = 0;
         mIncompleteFragmentCount = 0;
         mNonPrimaryAssemblyFragmentCount = 0;
+
+        mFragmentPositions = null;
     }
 
     public int id() { return mId; }
@@ -93,23 +94,15 @@ public class Breakend implements Comparable<Breakend>
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
 
-    public void addFragmentPositions(int posStart, int posEnd)
+    public void addFragmentPosition(int position)
     {
-        if(mPositionsStart == null)
-        {
-            mPositionsStart = Sets.newHashSet();
-            mPositionsEnd = Sets.newHashSet();
-        }
+        if(mFragmentPositions == null)
+            mFragmentPositions = Sets.newHashSet();
 
-        mPositionsStart.add(posStart);
-        mPositionsEnd.add(posEnd);
+        mFragmentPositions.add(position);
     }
 
-    public int[] uniqueFragmentPositionCounts()
-    {
-        // unclipped fragment positions as used for duplicate logic, or unclipped ends for an unpaired read
-        return mPositionsStart != null ? new int[] { mPositionsStart.size(), mPositionsEnd.size() } : null;
-    }
+    public int uniqueFragmentPositionCount() { return mFragmentPositions != null ? mFragmentPositions.size() : 0; }
 
     public List<AlternativeAlignment> alternativeAlignments()
     {
