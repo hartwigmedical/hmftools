@@ -13,32 +13,31 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.AmberData;
-import com.hartwig.hmftools.purple.CobaltData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 public class ChimerismDetection
 {
     private final AmberData mAmberData;
-    private final CobaltData mCobaltData;
+    private List<ObservedRegion> mObservedRegions;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    private final List<AmberPcfRegion> mAmberPcfRegions;
+    private final List<RegionBafData> mRegionBafData;
 
     // results
     private boolean mIsDetected;
 
-    public ChimerismDetection(final AmberData amberData, final CobaltData cobaltData, final RefGenomeVersion refGenomeVersion)
+    public ChimerismDetection(final AmberData amberData, List<ObservedRegion> observedRegions, final RefGenomeVersion refGenomeVersion)
     {
         mAmberData = amberData;
-        mCobaltData = cobaltData;
+        mObservedRegions = observedRegions;
         mRefGenomeVersion = refGenomeVersion;
 
-        mAmberPcfRegions = Lists.newArrayList();
+        mRegionBafData = Lists.newArrayList();
         mIsDetected = false;
     }
 
@@ -51,40 +50,62 @@ public class ChimerismDetection
 
     private void detectChrimerism()
     {
+        Map<String,List<ObservedRegion>> chrFilteredRegions = Maps.newHashMap();
+
+        for(ObservedRegion region : mObservedRegions)
+        {
+            if(region.germlineStatus() != GermlineStatus.DIPLOID)
+                continue;
+
+            if(region.bafCount() < 2)
+                continue;
+
+            List<ObservedRegion> regions = chrFilteredRegions.get(region.chromosome());
+
+            if(regions == null)
+            {
+                regions = Lists.newArrayList();
+                chrFilteredRegions.put(region.chromosome(), regions);
+            }
+
+            regions.add(region);
+        }
+
         for(Chromosome chromosome : mAmberData.TumorSegments.keySet())
         {
             String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
-            List<BaseRegion> pcfRegions = mAmberData.PcfRegions.get(chrStr);
+
+            List<ObservedRegion> filteredRegions = chrFilteredRegions.get(chrStr);
+
+            if(filteredRegions == null)
+                continue;
 
             List<AmberBAF> amberBAFs = mAmberData.ChromosomeBafs.get(chromosome).stream().collect(Collectors.toList());
 
             int amberBafIndex = 0;
 
-            for(BaseRegion pcfRegion : pcfRegions)
+            for(ObservedRegion region : filteredRegions)
             {
-                if(pcfRegion.baseLength() <= 1)
-                    continue;
-
-                AmberPcfRegion amberPcfRegion = new AmberPcfRegion(chrStr, pcfRegion.start(), pcfRegion.end());
+                RegionBafData regionBafData = new RegionBafData(region);
 
                 while(amberBafIndex < amberBAFs.size())
                 {
                     AmberBAF amberBAF = amberBAFs.get(amberBafIndex);
 
-                    if(amberBAF.Position > pcfRegion.end())
+                    if(amberBAF.Position > regionBafData.end())
                         break;
 
-                    if(amberBAF.Position >= pcfRegion.start())
+                    if(amberBAF.Position >= regionBafData.start())
                     {
-                        amberPcfRegion.AmberBAFs.add(amberBAF);
+                        regionBafData.AmberBAFs.add(amberBAF);
                     }
 
                     ++amberBafIndex;
                 }
 
-                if(amberPcfRegion.bafCount() >= 2)
+                if(regionBafData.bafCount() >= 2)
                 {
-                    mAmberPcfRegions.add(amberPcfRegion);
+                    mRegionBafData.add(regionBafData);
                 }
             }
         }
@@ -93,7 +114,7 @@ public class ChimerismDetection
         double weightedBafTotal = 0;
         double countsTotal = 0;
 
-        for(AmberPcfRegion pcfRegion : mAmberPcfRegions)
+        for(RegionBafData pcfRegion : mRegionBafData)
         {
             weightedBafTotal += pcfRegion.bafStandardDeviation() * pcfRegion.bafCount();
             countsTotal += pcfRegion.bafCount();
@@ -104,15 +125,18 @@ public class ChimerismDetection
         mIsDetected = sampleAverage > CHIMERISM_SAMPLE_CUTOFF;
     }
 
-    private class AmberPcfRegion extends ChrBaseRegion
+    private class RegionBafData extends ChrBaseRegion
     {
+        public final ObservedRegion Region;
         public final List<AmberBAF> AmberBAFs;
 
         private Double mStandardDeviation;
 
-        public AmberPcfRegion(final String chromosome, final int posStart, final int posEnd)
+        public RegionBafData(final ObservedRegion region)
         {
-            super(chromosome, posStart, posEnd);
+            super(region.chromosome(), region.start(), region.end());
+            Region = region;
+
             AmberBAFs = Lists.newArrayList();
             mStandardDeviation = null;
         }
