@@ -187,7 +187,7 @@ public class OrangeAlgo
     public OrangeRecord run(@NotNull OrangeConfig config) throws Exception
     {
         Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
-        String platinumVersion = determinePlatinumVersion(config);
+        String pipelineVersion = determinePipelineVersion(config);
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
@@ -258,7 +258,7 @@ public class OrangeAlgo
                 .experimentType(config.experimentType())
                 .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
                 .refGenomeVersion(config.refGenomeVersion())
-                .platinumVersion(platinumVersion)
+                .pipelineVersion(pipelineVersion)
                 .refSample(refSample)
                 .tumorSample(tumorSample)
                 .germlineMVLHPerGene(mvlhPerGene)
@@ -327,25 +327,25 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static String determinePlatinumVersion(@NotNull OrangeConfig config) throws IOException
+    private static String determinePipelineVersion(@NotNull OrangeConfig config) throws IOException
     {
         String pipelineVersionFile = config.pipelineVersionFile();
         if(pipelineVersionFile == null)
         {
-            LOGGER.warn("No platinum version could be determined as pipeline version file was not passed");
+            LOGGER.warn("No pipeline version could be determined as pipeline version file was not passed");
             return null;
         }
 
-        String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-        if(platinumVersion != null)
+        String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+        if(pipelineVersion != null)
         {
-            LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
+            LOGGER.info("Determined pipeline version to be 'v{}'", pipelineVersion);
         }
         else
         {
-            LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
+            LOGGER.warn("No pipeline version could be determined as version could not be resolved from {}", pipelineVersionFile);
         }
-        return platinumVersion;
+        return pipelineVersion;
     }
 
     @Nullable

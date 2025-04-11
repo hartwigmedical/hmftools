@@ -44,7 +44,7 @@ public interface OrangeRecord
     OrangeRefGenomeVersion refGenomeVersion();
 
     @Nullable
-    String platinumVersion();
+    String pipelineVersion();
 
     @Nullable
     OrangeSample refSample();

@@ -13,7 +13,7 @@
     }
   ],
   "refGenomeVersion": "V37",
-  "platinumVersion": "6.0",
+  "pipelineVersion": "6.0",
   "refSample": {
     "metrics": {
       "meanCoverage": 31.256,

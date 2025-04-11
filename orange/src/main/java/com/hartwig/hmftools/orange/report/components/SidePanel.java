@@ -23,14 +23,14 @@ public class SidePanel
     @NotNull
     private final String sampleId;
     @NotNull
-    private final String platinumVersion;
+    private final String pipelineVersion;
     @NotNull
     private final ReportResources reportResources;
 
-    public SidePanel(@NotNull final String sampleId, @NotNull final String platinumVersion, @NotNull ReportResources reportResources)
+    public SidePanel(@NotNull final String sampleId, @NotNull final String pipelineVersion, @NotNull ReportResources reportResources)
     {
         this.sampleId = sampleId;
-        this.platinumVersion = platinumVersion;
+        this.pipelineVersion = pipelineVersion;
         this.reportResources = reportResources;
     }
 
@@ -46,7 +46,7 @@ public class SidePanel
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
         cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Sample", sampleId));
-        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Platinum version", platinumVersion));
+        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Pipeline version", pipelineVersion));
 
         canvas.release();
     }
