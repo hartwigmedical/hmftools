@@ -87,7 +87,7 @@ public class LineLinkWriter
         {
             String fileName = mConfig.formFilename("line");
 
-            SV_LOGGER.debug("rriting LINE comparison file: {}", fileName);
+            SV_LOGGER.debug("writing LINE comparison file: {}", fileName);
 
             BufferedWriter writer = FileWriterUtils.createBufferedWriter(fileName, false);
             writer.write(header());
