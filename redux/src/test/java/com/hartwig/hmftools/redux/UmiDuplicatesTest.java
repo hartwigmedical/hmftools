@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
 import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER_DISABLED;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
@@ -656,6 +657,43 @@ public class UmiDuplicatesTest
 
         assertEquals(2, writer.nonConsensusWriteCount());
         assertEquals(0, writer.consensusWriteCount());
+    }
+
+    @Test
+    public void testSamePositionSameOrientationReverseFragmentOrientationDuplexUmiCollapse()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
+
+        String umidIdPart1 = "TCCTATG";
+        String umidIdPart2 = "CGGGGGA";
+        String umiId1 = umidIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umidIdPart2;
+        String umiId2 = umidIdPart2 + DEFAULT_DUPLEX_UMI_DELIM + umidIdPart1;
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(nextReadId(umiId1), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100, false, false, null, false, TEST_READ_CIGAR);
+        SAMRecord mate1 = read1.deepCopy();
+        flipFirstInPair(mate1);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(nextReadId(umiId2), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 100, false, false, null, false, TEST_READ_CIGAR);
+        SAMRecord mate2 = read2.deepCopy();
+        flipFirstInPair(read2);
+
+        partitionReader.processRead(read1);
+        partitionReader.processRead(mate1);
+        partitionReader.processRead(read2);
+        partitionReader.processRead(mate2);
+
+        partitionReader.postProcessRegion();
+
+        assertEquals(4, writer.nonConsensusWriteCount());
+        assertEquals(2, writer.consensusWriteCount());
     }
 
     private String nextReadId(final String umiId)
