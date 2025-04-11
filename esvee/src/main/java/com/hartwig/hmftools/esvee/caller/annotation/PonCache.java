@@ -186,6 +186,7 @@ public class PonCache
             final List<PonSvRegion> regions, final Variant var, final BaseRegion svStart, final ChrBaseRegion svEnd, int startIndex)
     {
         // search and up and down from this entry point for a PON match
+        int maxPonCount = 0;
         for(int i = 0; i <= 1; ++i)
         {
             boolean searchUp = (i == 0);
@@ -201,8 +202,8 @@ public class PonCache
                 if(!searchUp && region.RegionStart.end() < svStart.start())
                     break;
 
-                if(region.matches(svStart, svEnd, var.orientStart(), var.orientEnd()))
-                    return region.PonCount;
+                if(region.matches(svStart, svEnd, var.orientStart(), var.orientEnd()) && region.PonCount > maxPonCount)
+                    maxPonCount = region.PonCount;
 
                 if(searchUp)
                     ++currentIndex;
@@ -211,7 +212,7 @@ public class PonCache
             }
         }
 
-        return 0;
+        return maxPonCount;
     }
 
     private int findSglPonMatch(final List<PonSglRegion> regions, final Variant var)
@@ -252,6 +253,7 @@ public class PonCache
     {
         // search and up and down from this entry point for a PON match
 
+        int maxPonCount = 0;
         for(int i = 0; i <= 1; ++i)
         {
             boolean searchUp = (i == 0);
@@ -267,8 +269,8 @@ public class PonCache
                 if(!searchUp && region.Region.end() < svStart.start())
                     break;
 
-                if(region.matches(svStart, var.orientStart()))
-                    return region.PonCount;
+                if(region.matches(svStart, var.orientStart()) && region.PonCount > maxPonCount)
+                    maxPonCount = region.PonCount;
 
                 if(searchUp)
                     ++currentIndex;
@@ -277,7 +279,7 @@ public class PonCache
             }
         }
 
-        return 0;
+        return maxPonCount;
     }
 
     private int findSvPonMatchBasic(final List<PonSvRegion> regions, final Variant var)
