@@ -283,13 +283,13 @@ public class AlignmentFragments
         firstRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
         secondRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
-        int[] fragCoords = firstRead.fragmentCoords();
+        updateBreakendFragmentPositions(firstBreakendMatches, firstRead);
+        updateBreakendFragmentPositions(secondBreakendMatches, secondRead);
 
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength, true);
-            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!inPrimaryAssembly)
                 breakend.addNonPrimaryAssemblyFragmentCount();
@@ -299,11 +299,38 @@ public class AlignmentFragments
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(fragmentLength, true);
-                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
                 if(!inPrimaryAssembly)
                     otherBreakend.addNonPrimaryAssemblyFragmentCount();
             }
+        }
+    }
+
+    private static void updateBreakendFragmentPositions(final List<ReadBreakendMatch> breakendMatches, final SupportRead read)
+    {
+        // only add to one breakend and only to the the one which the read is local to
+        int fragmentPosition = read.fragmentEnd();
+
+        for(ReadBreakendMatch breakendMatch : breakendMatches)
+        {
+            Breakend breakend = breakendMatch.Breakend;
+
+            if(!breakend.Chromosome.equals(read.chromosome()))
+                continue;
+
+            if(read.type().isSplitSupport())
+            {
+                if(!positionWithin(breakend.Position, read.unclippedStart(), read.unclippedEnd()))
+                    continue;
+            }
+            else
+            {
+                if(read.orientation() != breakend.Orient || abs(fragmentPosition - breakend.Position) >= DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
+                    continue;
+            }
+
+            breakend.addFragmentPosition(fragmentPosition);
+            return;
         }
     }
 
@@ -385,13 +412,12 @@ public class AlignmentFragments
 
         read.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
-        int[] fragCoords = read.fragmentCoords();
+        updateBreakendFragmentPositions(readBreakendMatches, read);
 
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!inPrimaryAssembly)
                 breakend.addNonPrimaryAssemblyFragmentCount();
@@ -401,7 +427,6 @@ public class AlignmentFragments
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
                 if(!inPrimaryAssembly)
                     otherBreakend.addNonPrimaryAssemblyFragmentCount();

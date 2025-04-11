@@ -41,7 +41,7 @@ public class QualityCalculator
             final RefGenomeInterface refGenome, final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config.Quality;
-        mSequencingType = config.Sequencing.Type;
+        mSequencingType = config.Sequencing;
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
 

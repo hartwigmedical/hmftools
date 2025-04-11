@@ -152,4 +152,6 @@ public class PurpleConstants
 
     // chimerism
     public static final double CHIMERISM_SAMPLE_CUTOFF = 0.05;
+    public static final int CHIMERISM_MIN_BAF_COUNT = 2;
+    public static final double CHIMERISM_KDE_BANDWIDTH = 0.01;
 }

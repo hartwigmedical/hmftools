@@ -255,7 +255,7 @@ public class JunctionGroupAssembler extends ThreadTask
         if(ReadAdjustments.trimLowQualSoftClipBases(read))
             ++mReadStats.LowBaseQualTrimmed;
 
-        if(ReadAdjustments.convertEdgeIndelsToSoftClip(read))
+        if(IndelBuilder.calcIndelInferredUnclippedPositions(read))
             ++mReadStats.IndelSoftClipConverted;
 
         mCurrentJunctionGroup.addCandidateRead(read);

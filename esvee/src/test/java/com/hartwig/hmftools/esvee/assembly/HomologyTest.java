@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
@@ -456,5 +457,48 @@ public class HomologyTest
 
         sequenceMatches = mdTag.extractSubSequence(0, 243, false);
         assertEquals(244, sequenceMatches.length);
+    }
+
+    @Test
+    public void testIndelInsertHomology()
+    {
+        MockRefGenome refGenome = new MockRefGenome();
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_400);
+
+        // bases 50-90: TCAAATCGTCTAGTGGCTAATGCTCGATCGATATGGCTTGA
+
+        // 4:187995667-187996969:1 654M61I649M seq(0-1364 adj=0-1363) score(1227) flags(0) mapQual(60 adj=47) aligned(1303 adj=1153) md(995A307)
+
+        // an insert with a duplicated sequence
+        String insertedBases = "TGCCCTGTAGCTGATTGGCTAGCTGTAGCTGATCGATGCA";
+        AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
+                refGenome, CHR_1, 190, FORWARD, CHR_1, 150, REVERSE, insertedBases, "");
+
+        BreakendBuilder breakendBuilder = new BreakendBuilder(refGenome, assemblyAlignment);
+
+        AlignData alignment = createAlignment(
+                CHR_1, 51, 289, false, DEFAULT_MAP_QUAL, 200, 0, 240,
+                "100M40I100M", "", "");
+
+        List<AlignData> alignments = Lists.newArrayList(alignment);
+
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(2, assemblyAlignment.breakends().size());
+
+        Breakend first = assemblyAlignment.breakends().get(0);
+        assertEquals(DUP, first.svType());
+        assertEquals(150, first.Position);
+        assertEquals(REVERSE, first.Orient);
+        assertNotNull(first.Homology);
+        assertEquals(insertedBases, first.Homology.Homology);
+        assertEquals(-20, first.Homology.ExactStart);
+        assertEquals(20, first.Homology.ExactEnd);
+
+        Breakend second = assemblyAlignment.breakends().get(1);
+        assertEquals(191, second.Position);
+        assertEquals(FORWARD, second.Orient);
+        assertEquals(-20, second.Homology.ExactStart);
+        assertEquals(20, second.Homology.ExactEnd);
     }
 }

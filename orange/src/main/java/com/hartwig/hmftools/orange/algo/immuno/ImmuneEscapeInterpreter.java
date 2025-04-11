@@ -10,7 +10,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -76,7 +76,7 @@ public final class ImmuneEscapeInterpreter
         for(String geneToCheck : genesToCheck)
         {
             boolean hasInactivationVariant = hasAnyInactivationVariant(purple.allSomaticVariants(), geneToCheck);
-            boolean hasGeneDeletion = isDeleted(purple.allSomaticGainsLosses(), geneToCheck);
+            boolean hasGeneDeletion = isDeleted(purple.allSomaticGainsDels(), geneToCheck);
             boolean hasHomozygousDisruption = isHomozygouslyDisrupted(linx.somaticHomozygousDisruptions(), geneToCheck);
 
             if(hasInactivationVariant || hasGeneDeletion || hasHomozygousDisruption)
@@ -108,14 +108,14 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isDeleted(@NotNull List<PurpleGainLoss> allSomaticGainLosses, @NotNull String geneToCheck)
+    private static boolean isDeleted(@NotNull List<PurpleGainDeletion> allSomaticGainDels, @NotNull String geneToCheck)
     {
-        for(PurpleGainLoss somaticGainLoss : allSomaticGainLosses)
+        for(PurpleGainDeletion somaticGainDel : allSomaticGainDels)
         {
-            if(somaticGainLoss.gene().equals(geneToCheck) && somaticGainLoss.isCanonical())
+            if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
-                        || somaticGainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
+                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_DEL
+                        || somaticGainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
             }
         }
 
@@ -139,7 +139,7 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            if(isAmplified(purple.allSomaticGainsLosses(), geneToCheck))
+            if(isAmplified(purple.allSomaticGainsDels(), geneToCheck))
             {
                 return true;
             }
@@ -147,13 +147,13 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isAmplified(@NotNull List<PurpleGainLoss> somaticGainLosses, @NotNull String geneToCheck)
+    private static boolean isAmplified(@NotNull List<PurpleGainDeletion> somaticGainDels, @NotNull String geneToCheck)
     {
-        for(PurpleGainLoss somaticGainLoss : somaticGainLosses)
+        for(PurpleGainDeletion somaticGainDel : somaticGainDels)
         {
-            if(somaticGainLoss.gene().equals(geneToCheck) && somaticGainLoss.isCanonical())
+            if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN;
+                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_GAIN;
             }
         }
         return false;

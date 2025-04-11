@@ -61,7 +61,7 @@ public class RefBaseSeqBuilder
         for(SupportRead support : assembly.support())
         {
             Read read = support.cachedRead();
-            int readJunctionIndex = ReadUtils.getReadIndexAtReferencePosition(read, mAssembly.junction(), true);
+            int readJunctionIndex = ReadUtils.getReadIndexAtJunction(read, mAssembly.junction(), true);
 
             boolean hasValidJunctionOverlap;
 

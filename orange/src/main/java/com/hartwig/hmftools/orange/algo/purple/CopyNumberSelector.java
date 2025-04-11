@@ -11,8 +11,8 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
@@ -22,10 +22,10 @@ import org.jetbrains.annotations.NotNull;
 final class CopyNumberSelector
 {
     @NotNull
-    public static List<PurpleGainLoss> selectNearReportableSomaticGains(@NotNull List<GeneCopyNumber> allGeneCopyNumbers, double ploidy,
-            @NotNull List<PurpleGainLoss> reportableGainsLosses, @NotNull List<DriverGene> driverGenes)
+    public static List<PurpleGainDeletion> selectNearReportableSomaticGains(@NotNull List<GeneCopyNumber> allGeneCopyNumbers, double ploidy,
+            @NotNull List<PurpleGainDeletion> reportableGainsDels, @NotNull List<DriverGene> driverGenes)
     {
-        List<PurpleGainLoss> nearReportableSomaticGains = Lists.newArrayList();
+        List<PurpleGainDeletion> nearReportableSomaticGains = Lists.newArrayList();
         Set<String> ampDriverGenes = selectAmpDriverGenes(driverGenes);
         for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
         {
@@ -42,12 +42,12 @@ final class CopyNumberSelector
 
         // Check in case official amp have changed.
         Set<String> reportableGenes = Sets.newHashSet();
-        for(PurpleGainLoss reportable : reportableGainsLosses)
+        for(PurpleGainDeletion reportable : reportableGainsDels)
         {
             reportableGenes.add(reportable.gene());
         }
 
-        for(PurpleGainLoss gain : nearReportableSomaticGains)
+        for(PurpleGainDeletion gain : nearReportableSomaticGains)
         {
             if(reportableGenes.contains(gain.gene()))
             {
@@ -59,15 +59,15 @@ final class CopyNumberSelector
     }
 
     @NotNull
-    public static List<PurpleGainLoss> selectInterestingUnreportedGainsLosses(@NotNull List<PurpleGainLoss> allGainsLosses,
-            @NotNull List<PurpleGainLoss> reportableGainsLosses)
+    public static List<PurpleGainDeletion> selectInterestingUnreportedGainsDels(@NotNull List<PurpleGainDeletion> allGainsDels,
+            @NotNull List<PurpleGainDeletion> reportableGainsDels)
     {
-        List<PurpleGainLoss> unreportedGainLosses = selectUnreportedGainsLosses(allGainsLosses, reportableGainsLosses);
+        List<PurpleGainDeletion> unreportedGainDels = selectUnreportedGainsDels(allGainsDels, reportableGainsDels);
 
-        List<PurpleGainLoss> interestingUnreportedGainsLosses = Lists.newArrayList();
-        interestingUnreportedGainsLosses.addAll(selectInterestingGains(unreportedGainLosses));
-        interestingUnreportedGainsLosses.addAll(selectInterestingLosses(unreportedGainLosses, reportableGainsLosses));
-        return interestingUnreportedGainsLosses;
+        List<PurpleGainDeletion> interestingUnreportedGainsDels = Lists.newArrayList();
+        interestingUnreportedGainsDels.addAll(selectInterestingGains(unreportedGainDels));
+        interestingUnreportedGainsDels.addAll(selectInterestingDels(unreportedGainDels, reportableGainsDels));
+        return interestingUnreportedGainsDels;
     }
 
     @NotNull
@@ -85,9 +85,9 @@ final class CopyNumberSelector
     }
 
     @NotNull
-    private static PurpleGainLoss toFullGain(@NotNull GeneCopyNumber geneCopyNumber)
+    private static PurpleGainDeletion toFullGain(@NotNull GeneCopyNumber geneCopyNumber)
     {
-        return ImmutablePurpleGainLoss.builder()
+        return ImmutablePurpleGainDeletion.builder()
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
                 .gene(geneCopyNumber.geneName())
@@ -100,32 +100,32 @@ final class CopyNumberSelector
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectUnreportedGainsLosses(@NotNull List<PurpleGainLoss> allGainsLosses,
-            @NotNull List<PurpleGainLoss> reportableGainsLosses)
+    private static List<PurpleGainDeletion> selectUnreportedGainsDels(@NotNull List<PurpleGainDeletion> allGainsDels,
+            @NotNull List<PurpleGainDeletion> reportableGainsDels)
     {
-        List<PurpleGainLoss> unreportedGainsLosses = Lists.newArrayList();
-        for(PurpleGainLoss gainLoss : allGainsLosses)
+        List<PurpleGainDeletion> unreportedGainsDels = Lists.newArrayList();
+        for(PurpleGainDeletion gainDel : allGainsDels)
         {
-            if(!reportableGainsLosses.contains(gainLoss))
+            if(!reportableGainsDels.contains(gainDel))
             {
-                unreportedGainsLosses.add(gainLoss);
+                unreportedGainsDels.add(gainDel);
             }
         }
-        return unreportedGainsLosses;
+        return unreportedGainsDels;
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectInterestingGains(@NotNull List<PurpleGainLoss> unreportedGainLosses)
+    private static List<PurpleGainDeletion> selectInterestingGains(@NotNull List<PurpleGainDeletion> unreportedgainDels)
     {
-        List<PurpleGainLoss> unreportedFullGains = unreportedGainLosses.stream()
-                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
+        List<PurpleGainDeletion> unreportedFullGains = unreportedgainDels.stream()
+                .filter(gainDel -> gainDel.interpretation() == CopyNumberInterpretation.FULL_GAIN)
                 .collect(Collectors.toList());
 
-        Map<CopyNumberKey, PurpleGainLoss> bestGainPerLocation = Maps.newHashMap();
-        for(PurpleGainLoss gain : unreportedFullGains)
+        Map<CopyNumberKey, PurpleGainDeletion> bestGainPerLocation = Maps.newHashMap();
+        for(PurpleGainDeletion gain : unreportedFullGains)
         {
             CopyNumberKey key = new CopyNumberKey(gain.chromosome(), gain.chromosomeBand());
-            PurpleGainLoss bestGain = bestGainPerLocation.get(key);
+            PurpleGainDeletion bestGain = bestGainPerLocation.get(key);
             if(bestGain == null)
             {
                 bestGainPerLocation.put(key, gain);
@@ -143,59 +143,59 @@ final class CopyNumberSelector
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectInterestingLosses(@NotNull List<PurpleGainLoss> unreportedGainsLosses,
-            @NotNull List<PurpleGainLoss> reportableGainsLosses)
+    private static List<PurpleGainDeletion> selectInterestingDels(@NotNull List<PurpleGainDeletion> unreportedGainsDels,
+            @NotNull List<PurpleGainDeletion> reportableGainsDels)
     {
-        List<PurpleGainLoss> unreportedLosses = unreportedGainsLosses.stream()
-                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
-                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+        List<PurpleGainDeletion> unreportedDels = unreportedGainsDels.stream()
+                .filter(gainDel -> gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
+                        || gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL)
                 .collect(Collectors.toList());
 
-        List<PurpleGainLoss> reportableLosses = reportableGainsLosses.stream()
-                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
-                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+        List<PurpleGainDeletion> reportableDels = reportableGainsDels.stream()
+                .filter(gainDel -> gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
+                        || gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL)
                 .collect(Collectors.toList());
 
-        List<PurpleGainLoss> lossesAutosomes = Lists.newArrayList();
-        for(PurpleGainLoss loss : unreportedLosses)
+        List<PurpleGainDeletion> delsAutosomes = Lists.newArrayList();
+        for(PurpleGainDeletion del : unreportedDels)
         {
-            if(HumanChromosome.fromString(loss.chromosome()).isAutosome())
+            if(HumanChromosome.fromString(del.chromosome()).isAutosome())
             {
-                if(!locusPresent(reportableLosses, loss.chromosome(), loss.chromosomeBand()))
+                if(!locusPresent(reportableDels, del.chromosome(), del.chromosomeBand()))
                 {
-                    lossesAutosomes.add(loss);
+                    delsAutosomes.add(del);
                 }
             }
         }
 
-        Map<CopyNumberKey, PurpleGainLoss> bestLossPerLocation = Maps.newHashMap();
-        for(PurpleGainLoss loss : lossesAutosomes)
+        Map<CopyNumberKey, PurpleGainDeletion> bestDelPerLocation = Maps.newHashMap();
+        for(PurpleGainDeletion del : delsAutosomes)
         {
-            CopyNumberKey key = new CopyNumberKey(loss.chromosome(), loss.chromosomeBand());
-            PurpleGainLoss bestLoss = bestLossPerLocation.get(key);
-            if(bestLoss == null)
+            CopyNumberKey key = new CopyNumberKey(del.chromosome(), del.chromosomeBand());
+            PurpleGainDeletion bestDel = bestDelPerLocation.get(key);
+            if(bestDel == null)
             {
-                bestLossPerLocation.put(key, loss);
+                bestDelPerLocation.put(key, del);
             }
             else
             {
-                boolean pickOtherWhenEqual = bestLoss.gene().compareTo(loss.gene()) <= 0;
+                boolean pickOtherWhenEqual = bestDel.gene().compareTo(del.gene()) <= 0;
                 if(pickOtherWhenEqual)
                 {
-                    bestLossPerLocation.put(key, loss);
+                    bestDelPerLocation.put(key, del);
                 }
             }
         }
 
-        return Lists.newArrayList(bestLossPerLocation.values().iterator());
+        return Lists.newArrayList(bestDelPerLocation.values().iterator());
     }
 
-    private static boolean locusPresent(@NotNull List<PurpleGainLoss> gainsLosses, @NotNull String chromosome,
+    private static boolean locusPresent(@NotNull List<PurpleGainDeletion> gainsDels, @NotNull String chromosome,
             @NotNull String chromosomeBand)
     {
-        for(PurpleGainLoss gainLoss : gainsLosses)
+        for(PurpleGainDeletion gainDel : gainsDels)
         {
-            if(gainLoss.chromosome().equals(chromosome) && gainLoss.chromosomeBand().equals(chromosomeBand))
+            if(gainDel.chromosome().equals(chromosome) && gainDel.chromosomeBand().equals(chromosomeBand))
             {
                 return true;
             }

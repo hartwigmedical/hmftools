@@ -81,7 +81,7 @@ public class BqrRegionReader implements CigarHandler
         mWritePositionData = mConfig.BQR.WritePositions;
 
         mCurrentReadType = BqrReadType.NONE;
-        mSequencingType = mConfig.Sequencing.Type;
+        mSequencingType = mConfig.Sequencing;
 
         mBaseQualityData = null;
         mQualityCounts = Sets.newHashSet();

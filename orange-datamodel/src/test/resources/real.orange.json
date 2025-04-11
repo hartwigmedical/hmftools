@@ -676,9 +676,9 @@
       }
     ],
     "suspectGeneCopyNumbersWithLOH": [],
-    "allSomaticGainsLosses": [
+    "allSomaticGainsDels": [
       {
-        "interpretation": "FULL_LOSS",
+        "interpretation": "FULL_DEL",
         "gene": "DLGAP5P1",
         "chromosome": "Y",
         "chromosomeBand": "p11.2",
@@ -688,9 +688,9 @@
         "maxCopies": 0.0
       }
     ],
-    "reportableSomaticGainsLosses": [
+    "reportableSomaticGainsDels": [
       {
-        "interpretation": "PARTIAL_LOSS",
+        "interpretation": "PARTIAL_DEL",
         "gene": "PTEN",
         "chromosome": "10",
         "chromosomeBand": "q23.31",
@@ -701,7 +701,7 @@
       }
     ],
     "nearReportableSomaticGains": [],
-    "additionalSuspectSomaticGainsLosses": [
+    "additionalSuspectSomaticGainsDels": [
       {
         "interpretation": "FULL_GAIN",
         "gene": "CFL1P7",
@@ -733,9 +733,9 @@
         "reported": false
       }
     ],
-    "allGermlineFullLosses": [
+    "allGermlineFullDels": [
       {
-        "interpretation": "PARTIAL_LOSS",
+        "interpretation": "PARTIAL_DEL",
         "gene": "RNVU1-17",
         "chromosome": "1",
         "chromosomeBand": "q21.2",
@@ -745,7 +745,7 @@
         "maxCopies": 3.9314
       }
     ],
-    "reportableGermlineFullLosses": [],
+    "reportableGermlineFullDels": [],
     "allGermlineLossOfHeterozygosities": [
       {
         "geneProportion": "PARTIAL_GENE",

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferredUnclippedPositions;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder.readRefBaseLength;
 
 import static org.junit.Assert.assertEquals;
@@ -517,15 +518,15 @@ public class RefBaseSequenceTest
         supportReads.add(new SupportRead(read1, SupportType.JUNCTION, 30, 0, 0));
         supportReads.add(new SupportRead(read2, SupportType.JUNCTION, 30, 0, 0));
 
-        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 71, readBases, "20M10I40M");
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 61, readBases, "20M10I40M");
         Read read4 = cloneRead(read3, READ_ID_GENERATOR.nextId());
         Read read5 = cloneRead(read3, READ_ID_GENERATOR.nextId());
 
-        List<Read> reads = List.of(read1, read2, read3, read4, read5);
+        // List<Read> reads = List.of(read1, read2, read3, read4, read5);
 
-        ReadAdjustments.convertEdgeIndelsToSoftClip(read3);
-        ReadAdjustments.convertEdgeIndelsToSoftClip(read4);
-        ReadAdjustments.convertEdgeIndelsToSoftClip(read5);
+        calcIndelInferredUnclippedPositions(read3);
+        calcIndelInferredUnclippedPositions(read4);
+        calcIndelInferredUnclippedPositions(read5);
 
         supportReads.add(new SupportRead(read3, SupportType.JUNCTION, 30, 0, 0));
         supportReads.add(new SupportRead(read4, SupportType.JUNCTION, 30, 0, 0));
@@ -537,7 +538,7 @@ public class RefBaseSequenceTest
         RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
 
         assertEquals(refBases, refBaseSeqBuilder.refBaseSequence());
-        assertEquals(71, refBaseSeqBuilder.refBasePosition());
+        assertEquals(61, refBaseSeqBuilder.refBasePosition());
         assertEquals(30, refBaseSeqBuilder.refBaseLength());
         assertEquals("20M9I1M", refBaseSeqBuilder.cigarStr());
 

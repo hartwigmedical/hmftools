@@ -85,8 +85,6 @@ public class JunctionAssembler
         }
         else
         {
-            Map<Integer,List<Read>> indelLengthReads = Maps.newHashMap();
-
             // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
             for(Read read : rawReads)
             {
@@ -280,6 +278,18 @@ public class JunctionAssembler
         {
             if(read.alignmentStart() < minReadPosStart || read.alignmentEnd() > maxReadPosEnd)
                 continue;
+
+            // skip indels supporting discordant-only junctions
+            if(mJunction.isForward())
+            {
+                if(read.hasIndelImpliedUnclippedEnd())
+                    continue;
+            }
+            else
+            {
+                if(read.hasIndelImpliedUnclippedStart())
+                    continue;
+            }
 
             if(!candidateReadIds.contains(read.id()) || read.mappingQuality() < ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY)
             {

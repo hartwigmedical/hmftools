@@ -84,8 +84,8 @@
     "reportableGermlineVariants": null,
     "allSomaticCopyNumbers": [],
     "allSomaticGeneCopyNumbers": [],
-    "allSomaticGainsLosses": [],
-    "reportableSomaticGainsLosses": [],
+    "allSomaticGainsDels": [],
+    "reportableSomaticGainsDels": [],
     "suspectGeneCopyNumbersWithLOH": [],
     "chromosomalRearrangements": {
       "hasTrisomy1q": false,

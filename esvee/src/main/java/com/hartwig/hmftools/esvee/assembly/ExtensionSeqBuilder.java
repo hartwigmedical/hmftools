@@ -42,6 +42,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.esvee.assembly.read.ReadUtils;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -81,7 +82,7 @@ public class ExtensionSeqBuilder
 
         for(Read read : reads)
         {
-            int readJunctionIndex = getReadIndexAtReferencePosition(read, junction, true);
+            int readJunctionIndex = ReadUtils.getReadIndexAtJunction(read, junction, true);
 
             if(readJunctionIndex == INVALID_INDEX)
                 continue;
@@ -784,7 +785,7 @@ public class ExtensionSeqBuilder
 
     public ExtReadParseState checkAddJunctionRead(final Read read)
     {
-        int readJunctionIndex = getReadIndexAtReferencePosition(read, mJunction, true);
+        int readJunctionIndex = ReadUtils.getReadIndexAtJunction(read, mJunction, true);
 
         if(readJunctionIndex == INVALID_INDEX)
             return null;
@@ -815,6 +816,15 @@ public class ExtensionSeqBuilder
 
             if(readRepeatCount != READ_REPEAT_COUNT_INVALID && abs(readRepeatCount - mMaxRepeat.Count) <= permittedCountDiff)
                 repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.baseLength();
+        }
+        else if(mJunction.indelCoords() != null && read.indelCoords() != null && mJunction.indelCoords().isDelete())
+        {
+            if(mJunction.indelCoords().Length != read.indelCoords().Length)
+            {
+                // a shorter delete means more ref bases need to be skipped
+                repeatSkipCount = mJunction.indelCoords().Length - read.indelCoords().Length;
+                repeatIndexStart = extensionIndex + (mJunction.isForward() ? 1 : -1); // first base after the delete
+            }
         }
 
         checkReadMismatches(readParseState, extensionIndex, repeatIndexStart, repeatSkipCount);

@@ -20,12 +20,13 @@ import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
-import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -64,10 +65,11 @@ public class Read
     private boolean mCheckedIndelCoords;
 
     private IndelCoords mIndelCoords;
-    private Integer mIndelImpliedAlignmentStart;
-    private Integer mIndelImpliedAlignmentEnd;
-    private Integer mIndelImpliedUnclippedStart;
-    private Integer mIndelImpliedUnclippedEnd;
+    private boolean mInvalidIndel;
+
+    // for reads with indels >= min-length, the inferred unclipped adjustment from converting them all
+    private Integer mIndelInferredUnclippedStart;
+    private Integer mIndelInferredUnclippedEnd;
 
     private boolean mIsReference;
     private boolean mHasLineTail;
@@ -99,10 +101,9 @@ public class Read
 
         // only set for adjusted indel reads
         mIndelCoords = null;
-        mIndelImpliedAlignmentStart = null;
-        mIndelImpliedAlignmentEnd = null;
-        mIndelImpliedUnclippedStart = null;
-        mIndelImpliedUnclippedEnd = null;
+        mIndelInferredUnclippedStart = null;
+        mIndelInferredUnclippedEnd = null;
+        mInvalidIndel = false;
 
         mHasLineTail = false;
         mTrimCount = 0;
@@ -178,9 +179,9 @@ public class Read
 
     public int fragmentEnd() { return positiveStrand() ? mUnclippedStart : mUnclippedEnd; }
 
-        // convenience
-    public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart || mIndelImpliedUnclippedStart != null; }
-    public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd || mIndelImpliedUnclippedEnd != null; }
+    // convenience
+    public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart || mIndelInferredUnclippedStart != null; }
+    public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd || mIndelInferredUnclippedEnd != null; }
 
     public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); } // no known need to use the indel-implied SC value
     public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
@@ -346,7 +347,7 @@ public class Read
 
     public IndelCoords indelCoords()
     {
-        if(!mCheckedIndelCoords)
+        if(!mCheckedIndelCoords && !mInvalidIndel)
         {
             mCheckedIndelCoords = true;
             mIndelCoords = findIndelCoords(mAlignmentStart, mCigarElements, MIN_INDEL_SUPPORT_LENGTH);
@@ -354,6 +355,9 @@ public class Read
 
         return mIndelCoords;
     }
+
+    public void markInvalidIndel() { mInvalidIndel = true; }
+    public boolean invalidIndel() { return mInvalidIndel; }
 
     public boolean matchesFragment(final Read other, boolean allowReadMatch)
     {
@@ -505,6 +509,31 @@ public class Read
     public void markLowQualTrimmed() { mLowQualTrimmed = true; }
     public boolean lowQualTrimmed() { return mLowQualTrimmed; }
 
+    public void setIndelInferredUnclippedPositions(@Nullable final Integer inferredStart, @Nullable final Integer inferredEnd)
+    {
+        mIndelInferredUnclippedStart = inferredStart;
+        mIndelInferredUnclippedEnd = inferredEnd;
+    }
+
+    public boolean hasIndelImpliedUnclippedStart() { return mIndelInferredUnclippedStart != null; }
+    public boolean hasIndelImpliedUnclippedEnd() { return mIndelInferredUnclippedEnd != null; }
+
+    public int indelImpliedUnclippedStart() { return mIndelInferredUnclippedStart != null ? mIndelInferredUnclippedStart : 0; }
+    public int indelImpliedUnclippedEnd() { return mIndelInferredUnclippedEnd != null ? mIndelInferredUnclippedEnd : 0; }
+
+    // take indel implied read ends into consideration for methods requiring the maximum possible read soft-clip extension
+    // note: converted INDELs from deletes may have their unclipped position inside the alignment
+    public int minUnclippedStart()
+    {
+        return mIndelInferredUnclippedStart == null ? mUnclippedStart : min(mUnclippedStart, mIndelInferredUnclippedStart);
+    }
+
+    public int maxUnclippedEnd()
+    {
+        return mIndelInferredUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelInferredUnclippedEnd);
+    }
+
+    /*
     public void setIndelUnclippedBounds(int leftSoftClipBases, int rightSoftClipBases)
     {
         // expand the potential soft-clipped bounds from the internal indel but leave alignment and the CIGAR unch
@@ -553,5 +582,6 @@ public class Read
     {
         return mIndelImpliedUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelImpliedUnclippedEnd);
     }
+    */
 
 }

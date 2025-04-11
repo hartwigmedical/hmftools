@@ -200,7 +200,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(SEG_SCORE, 1, VCFHeaderLineType.Integer, SEG_SCORE_DESC));
         metaData.add(new VCFInfoHeaderLine(SEG_REPEAT_LENGTH, 1, VCFHeaderLineType.Integer, SEG_REPEAT_LENGTH_DESC));
 
-        metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 2, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
+        metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 1, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
 
         for(FilterType filter : FilterType.values())
         {
@@ -340,10 +340,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SEG_SCORE, segments.stream().mapToInt(x -> x.Alignment.score()).max().orElse(0));
         builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
-        int[] uniqueFragmentPositions = breakend.uniqueFragmentPositionCounts();
-
-        if(uniqueFragmentPositions != null)
-            builder.attribute(UNIQUE_FRAG_POSITIONS, new int[] { uniqueFragmentPositions[0], uniqueFragmentPositions[1] });
+        builder.attribute(UNIQUE_FRAG_POSITIONS, breakend.uniqueFragmentPositionCount());
 
         VariantContext variantContext = builder.make();
 

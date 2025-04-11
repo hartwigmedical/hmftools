@@ -50,8 +50,13 @@ public final class ReadUtils
         return getReadIndexAtReferencePosition(read, refPosition, allowExtrapolation, null);
     }
 
-    public static int getReadIndexAtReferencePosition(final Read read, final Junction junction, boolean allowExtrapolation)
+    public static int getReadIndexAtJunction(final Read read, final Junction junction, boolean allowExtrapolation)
     {
+        if(junction.indelBased() && read.indelCoords() != null)
+        {
+            return readIndexFromPosition(read, junction.Position);
+        }
+
         return getReadIndexAtReferencePosition(read, junction.Position, allowExtrapolation, junction.Orient);
     }
 
@@ -64,20 +69,30 @@ public final class ReadUtils
         int alignmentEnd = read.alignmentEnd();
 
         // for indel reads, use the implied alignment and unclipped positions for the applicable direction
-        if((requiredOrientation == null || requiredOrientation.isReverse()) && allowExtrapolation && read.indelImpliedAlignmentStart() > 0)
-            alignmentStart = read.indelImpliedAlignmentStart();
+        if((requiredOrientation == null || requiredOrientation.isReverse()) && read.hasIndelImpliedUnclippedStart())
+        {
+            if(read.indelImpliedUnclippedStart() > refPosition)
+                return INVALID_INDEX;
 
-        if((requiredOrientation == null || requiredOrientation.isForward()) && allowExtrapolation && read.indelImpliedAlignmentEnd() > 0)
-            alignmentEnd = read.indelImpliedAlignmentEnd();
+            return refPosition - read.indelImpliedUnclippedStart();
+        }
 
+        if((requiredOrientation == null || requiredOrientation.isForward()) && read.hasIndelImpliedUnclippedEnd())
+        {
+            if(read.indelImpliedUnclippedEnd() < refPosition)
+                return INVALID_INDEX;
+
+            return read.indelImpliedUnclippedEnd() - refPosition - 1;
+        }
+
+        // use the unclipped position to determine how far back from the start or end of the read the junction index is
         if(refPosition <= alignmentStart)
         {
             if(!allowExtrapolation && refPosition < alignmentStart)
                 return INVALID_INDEX;
 
             int baseDiff = alignmentStart - refPosition;
-            int unclippedStart = read.indelImpliedAlignmentStart() > 0 ? read.indelImpliedUnclippedStart() : read.unclippedStart();
-            int softClipBases = alignmentStart - unclippedStart;
+            int softClipBases = alignmentStart - read.unclippedStart();
             return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
         }
         else if(refPosition >= alignmentEnd)
@@ -86,12 +101,17 @@ public final class ReadUtils
                 return INVALID_INDEX;
 
             int baseDiff = refPosition - alignmentEnd;
-            int unclippedEnd = read.indelImpliedAlignmentEnd() > 0 ? read.indelImpliedUnclippedEnd() : read.unclippedEnd();
-            int softClipBases = unclippedEnd - alignmentEnd;
+            int softClipBases = read.unclippedEnd() - alignmentEnd;
             return baseDiff <= softClipBases ? read.basesLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
         }
 
         // cannot use standard method since CIGAR and coords may have been adjusted
+        return readIndexFromPosition(read, refPosition);
+    }
+
+    private static int readIndexFromPosition(final Read read, final int refPosition)
+    {
+        // could replace this with a standard method if as efficient
         int readIndex = 0;
         int currentPos = read.alignmentStart();
         for(CigarElement element : read.cigarElements())

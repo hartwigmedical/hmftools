@@ -7,6 +7,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
@@ -401,7 +402,7 @@ public class ReadContextCounter
             {
                 VariantReadSupport readSupport = matchType.toReadSupport();
 
-                registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
+                registerReadSupport(record, readSupport, modifiedQuality);
 
                 mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
@@ -446,7 +447,7 @@ public class ReadContextCounter
                 if(realignedType == EXACT)
                 {
                     matchType = ReadContextMatch.REALIGNED;
-                    registerReadSupport(record, REALIGNED, modifiedQuality, readVarIndex);
+                    registerReadSupport(record, REALIGNED, modifiedQuality);
 
                     mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
@@ -498,7 +499,7 @@ public class ReadContextCounter
         mNonAltFragmentStrandBias.registerFragment(record);
         mNonAltReadStrandBias.registerRead(record, fragmentData, this);
 
-        registerReadSupport(record, readSupport, modifiedQuality, readVarIndex);
+        registerReadSupport(record, readSupport, modifiedQuality);
         mReadEdgeDistance.update(record, fragmentData, false);
         mFragmentLengths.processRead(record, false);
 
@@ -533,7 +534,7 @@ public class ReadContextCounter
         return !mQualCache.usesMsiIndelErrorQual() && mConfig.Quality.HighDepthMode && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
     }
 
-    private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, double quality, int readVarIndex)
+    private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, double quality)
     {
         mCounts.addSupport(support, 1);
         mQualities.addSupport(support, (int) quality);
@@ -541,10 +542,7 @@ public class ReadContextCounter
         boolean supportsVariant = support != null
                 && (support == FULL || support == VariantReadSupport.PARTIAL_CORE || support == CORE || support == REALIGNED);
 
-        if(mConfig.Sequencing.HasUMIs)
-        {
-            countUmiType(record, supportsVariant);
-        }
+        countUmiType(record, supportsVariant);
 
         if(mFragmentLengthData != null && (support == REF || supportsVariant))
         {
@@ -562,6 +560,9 @@ public class ReadContextCounter
     {
         if(mUmiTypeCounts == null)
         {
+            if(!record.hasAttribute(UMI_TYPE_ATTRIBUTE))
+                return;
+
             // 3 total depth values followed by the 3 variant support values
             mUmiTypeCounts = new int[UMI_TYPE_COUNT];
         }

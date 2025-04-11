@@ -232,7 +232,7 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            ChimerismDetection chimerismDetection = new ChimerismDetection(amberData, cobaltData, mReferenceData.RefGenVersion);
+            ChimerismDetection chimerismDetection = new ChimerismDetection(amberData, cobaltData, observedRegions, mReferenceData.RefGenVersion);
             chimerismDetection.run();
 
             PPL_LOGGER.info("fitting purity");

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
@@ -134,7 +135,7 @@ public class SupportRead
 
         mJunctionReadStartDistance = junctReadStartDistance;
         mFullAssemblyIndex = -1;
-        mFullAssemblyOrientation = null;
+        mFullAssemblyOrientation = FORWARD;
         mInferredFragmentLength = -1;
         mBreakendType = null;
 
@@ -180,30 +181,7 @@ public class SupportRead
     public boolean isMateUnmapped() { return isFlagSet(MATE_UNMAPPED); }
     public boolean isMateMapped() { return isFlagSet(READ_PAIRED) && !isFlagSet(MATE_UNMAPPED); }
 
-    public int[] fragmentCoords()
-    {
-        if(isPairedRead() && isMateMapped())
-        {
-            int fragmentEnd = orientation().isForward() ? unclippedStart() : unclippedEnd();
-            int mateFragmentEnd = mMateFragmentEnd;
-
-            boolean readIsLower;
-            if(mChromosome.equals(mMateChromosome))
-            {
-                readIsLower = fragmentEnd <= mateFragmentEnd;
-            }
-            else
-            {
-                readIsLower = HumanChromosome.lowerChromosome(mChromosome, mMateChromosome);
-            }
-
-            return readIsLower ? new int[] { fragmentEnd, mateFragmentEnd } : new int[] { mateFragmentEnd, fragmentEnd };
-        }
-        else
-        {
-            return new int[] { unclippedStart(), unclippedEnd() };
-        }
-    }
+    public int fragmentEnd() { return orientation().isForward() ? mUnclippedStart : mUnclippedEnd; }
 
     public boolean isDiscordant() { return mIsDiscordant; }
 
