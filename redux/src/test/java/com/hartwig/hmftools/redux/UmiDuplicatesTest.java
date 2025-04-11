@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
 import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER_DISABLED;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
@@ -23,7 +24,9 @@ import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.collapsePolyGDuplex
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -32,8 +35,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -881,6 +886,176 @@ public class UmiDuplicatesTest
                 .collect(Collectors.toCollection(Sets::newHashSet));
 
         assertEquals(chr1UmiGroupsSet, chr2UmiGroupsSet);
+    }
+
+    @Test
+    public void testIlluminaJitterUmiGroupCollapseReadCacheInconsistentPops()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 2_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 2_000));
+
+        String umiId1 = "CATGATC";
+        String umiId2 = "TCCTATC";
+
+        record Fragment(String readName, int lowerPos, int upperPos)
+        {
+            private Collection<SAMRecord> samRecords()
+            {
+                SAMRecord lowerRead = SamRecordTestUtils.createSamRecord(readName, CHR_1, lowerPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, upperPos - TEST_READ_BASES.length() + 1, false, false, null, true, TEST_READ_CIGAR);
+                SAMRecord upperRead = SamRecordTestUtils.createSamRecord(readName, CHR_1, upperPos - TEST_READ_BASES.length() + 1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, lowerPos, true, false, null, false, TEST_READ_CIGAR);
+                flipFirstInPair(upperRead);
+
+                return List.of(lowerRead, upperRead);
+            }
+
+            public static Collection<SAMRecord> createSamRecords(final String readName, int lowerPos, int upperPos)
+            {
+                Fragment fragment = new Fragment(readName, lowerPos, upperPos);
+                return fragment.samRecords();
+            }
+        }
+
+        List<SAMRecord> reads = Lists.newArrayList();
+        reads.addAll(Fragment.createSamRecords("READ_001:" + umiId1, 100, 700));
+        reads.addAll(Fragment.createSamRecords("READ_002:" + umiId1, 101, 700));
+        reads.addAll(Fragment.createSamRecords("READ_003:" + umiId2, 100 + ReadCache.DEFAULT_MAX_SOFT_CLIP, 1_000));
+
+        reads.sort(Comparator.comparingInt(SAMRecord::getAlignmentStart));
+        reads.forEach(read -> partitionReader.processRead(read));
+
+        partitionReader.postProcessRegion();
+
+        assertEquals(6, writer.nonConsensusWriteCount());
+        assertEquals(2, writer.consensusWriteCount());
+
+        Multiset<String> readNames = writer.WrittenRecords.stream().map(SAMRecord::getReadName).collect(Collectors.toCollection(HashMultiset::create));
+
+        assertEquals(8, readNames.size());
+        assertEquals(0, (int) readNames.entrySet().stream().mapToInt(Multiset.Entry::getCount).filter(x -> x != 2).count());
+
+        // TODO: remove me
+        fail();
+    }
+
+    @Test
+    public void testIlluminaJitterUmiGroupCollapseReadCacheInconsistentPopsNotFixedByIncreasingMaxSoftClip()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 2_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 2_000));
+
+        String umiId1 = "CATGATC";
+        String umiId2 = "TCCTATC";
+
+        record Fragment(String readName, int lowerPos, int upperPos)
+        {
+            private Collection<SAMRecord> samRecords()
+            {
+                SAMRecord lowerRead = SamRecordTestUtils.createSamRecord(readName, CHR_1, lowerPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, upperPos - TEST_READ_BASES.length() + 1, false, false, null, true, TEST_READ_CIGAR);
+                SAMRecord upperRead = SamRecordTestUtils.createSamRecord(readName, CHR_1, upperPos - TEST_READ_BASES.length() + 1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, lowerPos, true, false, null, false, TEST_READ_CIGAR);
+                flipFirstInPair(upperRead);
+
+                return List.of(lowerRead, upperRead);
+            }
+
+            public static Collection<SAMRecord> createSamRecords(final String readName, int lowerPos, int upperPos)
+            {
+                Fragment fragment = new Fragment(readName, lowerPos, upperPos);
+                return fragment.samRecords();
+            }
+        }
+
+        List<SAMRecord> reads = Lists.newArrayList();
+        reads.addAll(Fragment.createSamRecords("READ_001:" + umiId1, 100, 700));
+        reads.addAll(Fragment.createSamRecords("READ_002:" + umiId1, 101, 700));
+        reads.addAll(Fragment.createSamRecords("READ_003:" + umiId2, 100 + ReadCache.DEFAULT_MAX_SOFT_CLIP + SINGLE_END_JITTER_COLLAPSE_DISTANCE, 1_000));
+
+        reads.sort(Comparator.comparingInt(SAMRecord::getAlignmentStart));
+        reads.forEach(read -> partitionReader.processRead(read));
+
+        partitionReader.postProcessRegion();
+
+        assertEquals(6, writer.nonConsensusWriteCount());
+        assertEquals(2, writer.consensusWriteCount());
+
+        Multiset<String> readNames = writer.WrittenRecords.stream().map(SAMRecord::getReadName).collect(Collectors.toCollection(HashMultiset::create));
+
+        assertEquals(8, readNames.size());
+        assertEquals(0, (int) readNames.entrySet().stream().mapToInt(Multiset.Entry::getCount).filter(x -> x != 2).count());
+
+        // TODO: remove me
+        fail();
+    }
+
+    @Test
+    public void testIlluminaJitterUmiGroupCollapseReadCacheInconsistentPopsNotFixedByIncreasingMaxSoftClipAsAnInitialFilter()
+    {
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 2_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        TestBamWriter writer = new TestBamWriter(config);
+        PartitionReader partitionReader = createPartitionRead(config, writer);
+
+        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 2_000));
+
+        String umiId1 = "CATGATC";
+        String umiId2 = "TCCTATC";
+
+        record Fragment(String readName, int lowerPos, int upperPos)
+        {
+            private Collection<SAMRecord> samRecords()
+            {
+                SAMRecord lowerRead = SamRecordTestUtils.createSamRecord(readName, CHR_1, lowerPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, upperPos - TEST_READ_BASES.length() + 1, false, false, null, true, TEST_READ_CIGAR);
+                SAMRecord upperRead = SamRecordTestUtils.createSamRecord(readName, CHR_1, upperPos - TEST_READ_BASES.length() + 1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, lowerPos, true, false, null, false, TEST_READ_CIGAR);
+                flipFirstInPair(upperRead);
+
+                return List.of(lowerRead, upperRead);
+            }
+
+            public static Collection<SAMRecord> createSamRecords(final String readName, int lowerPos, int upperPos)
+            {
+                Fragment fragment = new Fragment(readName, lowerPos, upperPos);
+                return fragment.samRecords();
+            }
+        }
+
+        List<SAMRecord> reads = Lists.newArrayList();
+        reads.addAll(Fragment.createSamRecords("READ_001:" + umiId1, 100, 700));
+        reads.addAll(Fragment.createSamRecords("READ_002:" + umiId1, 110, 700));
+        reads.addAll(Fragment.createSamRecords("READ_003:" + umiId1, 111, 700));
+        reads.addAll(Fragment.createSamRecords("READ_004:" + umiId1, 111, 700));
+        reads.addAll(Fragment.createSamRecords("READ_005:" + umiId2, 100 + ReadCache.DEFAULT_MAX_SOFT_CLIP + SINGLE_END_JITTER_COLLAPSE_DISTANCE, 1_000));
+
+        reads.sort(Comparator.comparingInt(SAMRecord::getAlignmentStart));
+        reads.forEach(read -> partitionReader.processRead(read));
+
+        partitionReader.postProcessRegion();
+
+        assertEquals(10, writer.nonConsensusWriteCount());
+        assertEquals(2, writer.consensusWriteCount());
+
+        Multiset<String> readNames = writer.WrittenRecords.stream().map(SAMRecord::getReadName).collect(Collectors.toCollection(HashMultiset::create));
+
+        assertEquals(12, readNames.size());
+        assertEquals(0, (int) readNames.entrySet().stream().mapToInt(Multiset.Entry::getCount).filter(x -> x != 2).count());
+
+        // TODO: remove me
+        fail();
     }
 
     @Test
