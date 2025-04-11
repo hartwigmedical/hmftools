@@ -11,6 +11,10 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_ALLELE_GROUP_UN
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_GROUP_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_GROUP_COVERAGE;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_PROTEIN_COVERAGE;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_UNIQUE_GROUP_TOTAL_COVERAGE;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_UNIQUE_GROUP_UNIQUE_COVERAGE;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUnsupportedWildcardFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
@@ -38,6 +42,8 @@ public class ComplexBuilder
     private final List<HlaAllele> mUniqueProteinAlleles;
     private final List<HlaAllele> mConfirmedRecoveredAlleles;
 
+    private static final int DIPLOID_ALLELE_COUNT = 2;
+
     public ComplexBuilder(final LilacConfig config, final ReferenceData refData)
     {
         mConfig = config;
@@ -61,12 +67,17 @@ public class ComplexBuilder
         ComplexCoverage groupCoverage = calcGroupCoverage(refFragAlleles, candidateAlleles);
 
         int totalFragCount = refFragAlleles.size();
+
         List<AlleleCoverage> uniqueGroups = findUnique(groupCoverage, Lists.newArrayList(), totalFragCount);
 
-        List<AlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
-                .filter(x -> x.UniqueCoverage > 0 && !uniqueGroups.contains(x)).collect(Collectors.toList());
+        List<AlleleCoverage> insufficientlyUniqueGroups = groupCoverage.getAlleleCoverage().stream()
+                .filter(x -> !uniqueGroups.contains(x) &&
+                        (x.UniqueCoverage >= totalFragCount * MIN_LOW_CONF_UNIQUE_GROUP_UNIQUE_COVERAGE ||
+                         x.TotalCoverage  >= totalFragCount * MIN_LOW_CONF_UNIQUE_GROUP_TOTAL_COVERAGE)
+                )
+                .collect(Collectors.toList());
 
-        Collections.sort(discardedGroups, Collections.reverseOrder());
+        Collections.sort(insufficientlyUniqueGroups, Collections.reverseOrder());
 
         if(!uniqueGroups.isEmpty())
         {
@@ -77,27 +88,27 @@ public class ComplexBuilder
             LL_LOGGER.info("  confirmed 0 unique groups");
         }
 
-        if(!discardedGroups.isEmpty())
+        if(!insufficientlyUniqueGroups.isEmpty())
         {
             LL_LOGGER.info("  found {} insufficiently unique groups: {}",
-                    discardedGroups.size(), AlleleCoverage.toString(discardedGroups));
+                    insufficientlyUniqueGroups.size(), AlleleCoverage.toString(insufficientlyUniqueGroups));
         }
 
         List<HlaAllele> uniqueGroupAlleles = coverageAlleles(uniqueGroups);
 
         final List<HlaAllele> candidatesAfterUniqueGroups = filterWithUniqueGroups(candidateAlleles, uniqueGroupAlleles, recoveredAlleles);
 
-        // ensure common alleles in unique groups are kept
-        List<HlaAllele> discardedUniqueGroupAlleles = coverageAlleles(discardedGroups);
-        List<HlaAllele> commonAllelesInDiscardedUniqueGroups = mRefData.CommonAlleles.stream()
+        // keep common alleles in insufficiently unique groups
+        List<HlaAllele> topInsufficientlyUniqueGroups = getTopInsufficientlyUniqueGroups(uniqueGroups, insufficientlyUniqueGroups);
+        List<HlaAllele> commonAllelesInInsufficientlyUniqueGroups = mRefData.CommonAlleles.stream()
                 .filter(x -> !candidatesAfterUniqueGroups.contains(x))
-                .filter(x -> discardedUniqueGroupAlleles.contains(x.asAlleleGroup()))
+                .filter(x -> topInsufficientlyUniqueGroups.contains(x.asAlleleGroup()))
                 .collect(Collectors.toList());
 
-        candidatesAfterUniqueGroups.addAll(commonAllelesInDiscardedUniqueGroups);
+        candidatesAfterUniqueGroups.addAll(commonAllelesInInsufficientlyUniqueGroups);
 
-        LL_LOGGER.debug("  keeping {} common allele(s) in discarded unique groups: {}",
-                commonAllelesInDiscardedUniqueGroups.size(), HlaAllele.toString(commonAllelesInDiscardedUniqueGroups));
+        LL_LOGGER.debug("  keeping {} common allele(s) in insufficiently unique groups: {}",
+                commonAllelesInInsufficientlyUniqueGroups.size(), HlaAllele.toString(commonAllelesInInsufficientlyUniqueGroups));
 
         // ensure that common alleles from the same 2-digit group as alleles with wildcards are kept
         Set<HlaAllele> wilcardAlleleGroups = candidatesAfterUniqueGroups.stream()
@@ -149,9 +160,9 @@ public class ComplexBuilder
         List<AlleleCoverage> uniqueProteins = findUnique(proteinCoverage, uniqueGroupAlleles, totalFragCount).stream()
                 .filter(x -> !recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
-        List<AlleleCoverage> discardedProtein = proteinCoverage.getAlleleCoverage().stream()
+        List<AlleleCoverage> insufficientlyUniqueProteins = proteinCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !uniqueProteins.contains(x)).collect(Collectors.toList());
-        Collections.sort(discardedProtein, Collections.reverseOrder());
+        Collections.sort(insufficientlyUniqueProteins, Collections.reverseOrder());
 
         if(!uniqueProteins.isEmpty())
         {
@@ -162,9 +173,10 @@ public class ComplexBuilder
             LL_LOGGER.info("  confirmed 0 unique proteins");
         }
 
-        if(!discardedProtein.isEmpty())
+        if(!insufficientlyUniqueProteins.isEmpty())
         {
-            LL_LOGGER.info("  found {} insufficiently unique proteins: {}", discardedProtein.size(), AlleleCoverage.toString(discardedProtein));
+            LL_LOGGER.info("  found {} insufficiently unique proteins: {}",
+                    insufficientlyUniqueProteins.size(), AlleleCoverage.toString(insufficientlyUniqueProteins));
         }
 
         // unique protein filtering is no longer applied
@@ -370,9 +382,31 @@ public class ComplexBuilder
         return results;
     }
 
+    private static List<HlaAllele> getTopInsufficientlyUniqueGroups(
+            List<AlleleCoverage> uniqueGroups, List<AlleleCoverage> insufficientlyUniqueGroups)
+    {
+        Map<String, Integer> groupCountsPerGene = Maps.newHashMap();
+        for(AlleleCoverage alleleCoverage : uniqueGroups)
+            groupCountsPerGene.merge(alleleCoverage.Allele.Gene, 1, Integer::sum);
+
+        List<AlleleCoverage> topInsufficientlyUniqueGroups = Lists.newArrayList();
+        for(AlleleCoverage alleleCoverage : insufficientlyUniqueGroups)
+        {
+            String gene = alleleCoverage.Allele.Gene;
+            groupCountsPerGene.putIfAbsent(gene, 0);
+
+            if(groupCountsPerGene.get(gene) < DIPLOID_ALLELE_COUNT)
+                topInsufficientlyUniqueGroups.add(alleleCoverage);
+
+            groupCountsPerGene.put(gene, groupCountsPerGene.get(gene) + 1);
+        }
+
+        return coverageAlleles(topInsufficientlyUniqueGroups);
+    }
+
     private static double requiredUniqueGroupCoverage(double totalCoverage, boolean isGroup)
     {
-        return isGroup ? totalCoverage * MIN_CONF_UNIQUE_GROUP_COVERAGE : totalCoverage * MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
+        return isGroup ? totalCoverage * MIN_HI_CONF_UNIQUE_GROUP_COVERAGE : totalCoverage * MIN_HI_CONF_UNIQUE_PROTEIN_COVERAGE;
     }
 
     private List<AlleleCoverage> findUnique(
@@ -414,7 +448,7 @@ public class ComplexBuilder
 
                 ++geneCount;
 
-                if(geneCount >= 2)
+                if(geneCount >= DIPLOID_ALLELE_COUNT)
                     break;
             }
         }

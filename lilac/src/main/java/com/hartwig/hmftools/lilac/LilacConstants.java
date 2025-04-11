@@ -22,13 +22,17 @@ public class LilacConstants
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;
 
-    // values applied as percentages
-    public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
-    public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
-    public static final double MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
     public static final double DEFAULT_HLA_Y_FRAGMENT_THRESHOLD = 0.01;
+    public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
+
+    // candidate filtering
+    public static final double MIN_HI_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
+    public static final double MIN_HI_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
+    public static final double MIN_LOW_CONF_UNIQUE_GROUP_UNIQUE_COVERAGE = 0.001;
+    public static final double MIN_LOW_CONF_UNIQUE_GROUP_TOTAL_COVERAGE = 0.02;
     public static final int MIN_WILDCARD_FRAGMENTS = 2;
 
+    // scoring of allele combinations
     public static final double MIN_POPULATION_FREQUENCY = 0.0001;
     public static final double FREQUENCY_SCORE_PENALTY = 0.0018;
     public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0036;
