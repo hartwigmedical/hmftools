@@ -46,10 +46,10 @@ final class LossOfHeterozygositySelector
         {
             boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
             boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
-            boolean hasReportedGermlineLoss = hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(),
+            boolean hasReportedGermlineDel = hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(),
                     GermlineStatus.HOM_DELETION, allGermlineDeletions);
-            boolean fullyLostInTumor = geneCopyNumber.minCopyNumber() < 0.5;
-            if((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineLoss && !fullyLostInTumor)
+            boolean fullyDeletedInTumor = geneCopyNumber.minCopyNumber() < 0.5;
+            if((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineDel && !fullyDeletedInTumor)
             {
                 if(geneCopyNumber.minMinorAlleleCopyNumber() < 0.5)
                 {

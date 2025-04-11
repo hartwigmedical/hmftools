@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PurpleGainLoss
+public interface PurpleGainDeletion
 {
     @NotNull
     CopyNumberInterpretation interpretation();

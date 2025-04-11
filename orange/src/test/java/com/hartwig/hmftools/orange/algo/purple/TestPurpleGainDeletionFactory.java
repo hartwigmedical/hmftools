@@ -1,24 +1,24 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class TestPurpleGainLossFactory
+public final class TestPurpleGainDeletionFactory
 {
     @NotNull
-    public static PurpleGainLoss createGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation)
+    public static PurpleGainDeletion createGainDel(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation)
     {
         return builder().gene(gene).interpretation(interpretation).build();
     }
 
     @NotNull
-    public static ImmutablePurpleGainLoss.Builder builder()
+    public static ImmutablePurpleGainDeletion.Builder builder()
     {
-        return ImmutablePurpleGainLoss.builder()
+        return ImmutablePurpleGainDeletion.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(Strings.EMPTY)

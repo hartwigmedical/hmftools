@@ -42,7 +42,7 @@ public class GermlineLossOfHeterozygosityFactory
                     germlineDeletionsHeterozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
             GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
-            PurpleLossOfHeterozygosity lossOfHeterozygosity =
+            PurpleLossOfHeterozygosity  lossOfHeterozygosity =
                     toPurpleLossOfHeterozygosity(geneName, deletionsForGene, somaticGeneCopyNumber);
             boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported);
             lohToReportability.put(lossOfHeterozygosity, reported);

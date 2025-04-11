@@ -47,7 +47,7 @@ public class PurpleInterpreterTest
     }
 
     @Test
-    public void canCreateReportableGermlineFullLosses()
+    public void canCreateReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1);
@@ -57,14 +57,14 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullLosses().size());
-        assertEquals(1, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineFullDels().size());
+        assertEquals(1, interpreted.reportableGermlineFullDels().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
         assertEquals(1, interpreted.reportableGermlineLossOfHeterozygosities().size());
     }
 
     @Test
-    public void canHandleHalfReportableGermlineFullLosses()
+    public void canHandleHalfReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
@@ -74,14 +74,14 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullLosses().size());
-        assertEquals(1, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineFullDels().size());
+        assertEquals(1, interpreted.reportableGermlineFullDels().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
         assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
     }
 
     @Test
-    public void canCreateNonReportableGermlineFullLosses()
+    public void canCreateNonReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
@@ -91,8 +91,8 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullLosses().size());
-        assertEquals(0, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineFullDels().size());
+        assertEquals(0, interpreted.reportableGermlineFullDels().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
         assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
     }
@@ -364,14 +364,14 @@ public class PurpleInterpreterTest
     {
         PaveAlgo pave = new PaveAlgo(ensemblDataCache, false);
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
-        GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
+        GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(ensemblDataCache);
         GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
         ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer =
                 ChromosomalRearrangementsDeterminer.createForRefGenomeVersion(OrangeRefGenomeVersion.V37);
 
         return new PurpleInterpreter(
                 purpleVariantFactory,
-                germlineGainLossFactory,
+                germlineGainDeletionFactory,
                 germlineLossOfHeterozygosityFactory,
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),
