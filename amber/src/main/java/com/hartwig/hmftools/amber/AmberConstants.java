@@ -7,7 +7,7 @@ public class AmberConstants
     public static final int DEFAULT_MIN_BASE_QUALITY = 13;
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
     public static final int DEFAULT_TUMOR_ONLY_MIN_SUPPORT = 2;
-    public static final double DEFAULT_TUMOR_ONLY_MIN_VAF = 0.05;
+    public static final double DEFAULT_TUMOR_ONLY_MIN_VAF = 0.025;
 
     public static final int DEFAULT_TUMOR_ONLY_MIN_DEPTH = 25;
     public static final int DEFAULT_TUMOR_MIN_DEPTH = 8;
