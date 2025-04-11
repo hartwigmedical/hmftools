@@ -2,14 +2,23 @@ package com.hartwig.hmftools.redux.write;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
@@ -115,8 +124,31 @@ public abstract class BamWriter
     protected abstract void writeRecord(final SAMRecord read);
     public abstract long unsortedWriteCount();
 
+    public static final boolean DEBUG_BUILD = true;
+
+    public static final Map<String, Long> READNAMES_COUNTER = Maps.newHashMap();
+
+    public static synchronized void validateReadName(final SAMRecord read)
+    {
+        if(!read.hasAttribute(CONSENSUS_READ_ATTRIBUTE) || read.isSecondaryOrSupplementary() || ((read.getReadUnmappedFlag() || read.getMateUnmappedFlag()) && !read.getProperPairFlag()))
+        {
+            return;
+        }
+
+        String readName = read.getReadName();
+        READNAMES_COUNTER.merge(readName, read.getFirstOfPairFlag() ? 1L : -1L, Long::sum);
+        if(READNAMES_COUNTER.get(readName) == 0L)
+        {
+            READNAMES_COUNTER.remove(readName);
+        }
+    }
+
+
     protected final void processRecord(final SAMRecord read)
     {
+        // TODO:
+        validateReadName(read);
+
         processJitterRead(read);
         writeRecord(read);
     }

@@ -12,12 +12,12 @@ import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.JITTER_COLLAPSE_PCS;
 import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.POLYG_UMI_COLLAPSE_PCS;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
+import static com.hartwig.hmftools.redux.write.BamWriter.READNAMES_COUNTER;
 import static com.hartwig.hmftools.redux.write.PartitionInfo.partitionInfoStr;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
@@ -26,10 +26,10 @@ import com.hartwig.hmftools.common.bamops.BamSampler;
 import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.TaskQueue;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
-import com.hartwig.hmftools.common.utils.TaskQueue;
 import com.hartwig.hmftools.redux.unmap.UnmapStats;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.FinalBamWriter;
@@ -196,6 +196,11 @@ public class ReduxApplication
         for(PerformanceCounter pc : POLYG_UMI_COLLAPSE_PCS.values())
         {
             pc.logStats();
+        }
+
+        if(!READNAMES_COUNTER.isEmpty())
+        {
+            RD_LOGGER.error("READNAMES_COUNTER is not empty at end: {}", READNAMES_COUNTER.toString());
         }
 
         RD_LOGGER.info("Redux complete, mins({})", runTimeMinsStr(startTimeMs));

@@ -52,7 +52,7 @@ public class UmiGroupBuilder
         POLYG_UMI_COLLAPSE
     }
 
-    public static final REDUX_VERSION CURRENT_REDUX_VERSION = REDUX_VERSION.POLYG_UMI_COLLAPSE;
+    public static final REDUX_VERSION CURRENT_REDUX_VERSION = REDUX_VERSION.ORIG;
 
     public static final ConcurrentHashMap<Long, PerformanceCounter> POLYG_UMI_COLLAPSE_PCS = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Long, PerformanceCounter> JITTER_COLLAPSE_PCS = new ConcurrentHashMap<>();
