@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
@@ -82,7 +83,7 @@ public class SageConfig
     public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
-    public final SequencingConfig Sequencing;
+    public final SequencingType Sequencing;
 
     public final VisConfig Visualiser;
 
@@ -203,7 +204,7 @@ public class SageConfig
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
-        Sequencing = SequencingConfig.from(configBuilder);
+        Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 
@@ -371,7 +372,7 @@ public class SageConfig
         FilterConfig.registerConfig(configBuilder);
         QualityConfig.registerConfig(configBuilder);
         BqrConfig.registerConfig(configBuilder);
-        SequencingConfig.registerConfig(configBuilder);
+        SequencingType.registerConfig(configBuilder);
 
         configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
         configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");
@@ -422,7 +423,7 @@ public class SageConfig
         PerfWarnTime = 0;
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
-        Sequencing = new SequencingConfig(false, SequencingType.ILLUMINA);
+        Sequencing = SequencingType.ILLUMINA;
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;
