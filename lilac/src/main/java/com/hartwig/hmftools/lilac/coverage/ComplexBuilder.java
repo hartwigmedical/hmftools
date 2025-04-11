@@ -64,7 +64,7 @@ public class ComplexBuilder
         List<AlleleCoverage> uniqueGroups = findUnique(groupCoverage, Lists.newArrayList(), totalFragCount);
 
         List<AlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
-                .filter(x -> x.UniqueCoverage > MIN_CONF_ALLELE_GROUP_UNIQUE_COVERAGE && !uniqueGroups.contains(x)).collect(Collectors.toList());
+                .filter(x -> x.UniqueCoverage > 0 && !uniqueGroups.contains(x)).collect(Collectors.toList());
 
         Collections.sort(discardedGroups, Collections.reverseOrder());
 
@@ -352,7 +352,7 @@ public class ComplexBuilder
     {
         Map<String,List<HlaAllele>> map = Maps.newHashMap();
 
-        GENE_CACHE.GeneIds.forEach(x -> map.put(x, confirmedGroups.stream().filter(y -> y.Gene.equals(x)).collect(Collectors.toList())));
+        GENE_IDS.forEach(x -> map.put(x, confirmedGroups.stream().filter(y -> y.Gene.equals(x)).collect(Collectors.toList())));
 
         List<HlaAllele> results = Lists.newArrayList();
         for(HlaAllele allele : alleles)
@@ -387,7 +387,7 @@ public class ComplexBuilder
         List<AlleleCoverage> results = Lists.newArrayList();
 
         // take at most 2 alleles for each gene, and at most 1 unique protein if more than 1 unique group is provided
-        for(String gene : GENE_CACHE.GeneIds)
+        for(String gene : GENE_IDS)
         {
             List<AlleleCoverage> geneCoverage = unique.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
 

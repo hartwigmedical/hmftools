@@ -22,14 +22,11 @@ public class LilacConstants
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;
 
-    // Thresholds applied as percentages
+    // values applied as percentages
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
     public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
     public static final double MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
     public static final double DEFAULT_HLA_Y_FRAGMENT_THRESHOLD = 0.01;
-
-    // Thresholds applied as absolute values
-    public static final int MIN_CONF_ALLELE_GROUP_UNIQUE_COVERAGE = 0;
     public static final int MIN_WILDCARD_FRAGMENTS = 2;
 
     public static final double MIN_POPULATION_FREQUENCY = 0.0001;
