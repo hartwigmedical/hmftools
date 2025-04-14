@@ -31,8 +31,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MAX_REF_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
@@ -273,9 +273,9 @@ public class LilacConfig
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
-        MinEvidenceFactor = DEFAULT_MIN_EVIDENCE_FACTOR;
+        MinEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
-        MinHighQualEvidenceFactor = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
+        MinHighQualEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
 
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
@@ -311,8 +311,8 @@ public class LilacConfig
         configBuilder.addInteger(MIN_BASE_QUAL,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
         configBuilder.addInteger(MIN_EVIDENCE, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
-        configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
-        configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence factor", DEFAULT_MIN_EVIDENCE_FACTOR);
+        configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
+        configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence factor", DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
         configBuilder.addInteger(MIN_FRAGMENTS_PER_ALLELE,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
         configBuilder.addInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE,"Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
 

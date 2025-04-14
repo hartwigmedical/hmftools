@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -97,7 +96,7 @@ public final class Candidates
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
-            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(locus);
+            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(locus, DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR);
 
             if(expectedSequences.isEmpty())
                 continue;
