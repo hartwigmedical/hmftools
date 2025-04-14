@@ -265,6 +265,7 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming:
+    - "platinum version" has been renamed to "pipeline version" both in report and in the datamodel
     - copy number "Loss" has been renamed to "Del" and is made more clear in the report. 
     - Add presence of tumor stats to quality control page and to orange-datamodel
     - Ensure only exonic variants that are phased with reported variants are shown in 'potentially interesting' section
