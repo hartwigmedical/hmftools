@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.redux.TestUtils.READ_UNMAPPER_DISABLED;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_REPEAT_40;
@@ -12,15 +13,24 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
+import static com.hartwig.hmftools.redux.consensus.ConsensusReads.formConsensusReadId;
+import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.buildUmiGroups;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.redux.common.DuplicateGroup;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.consensus.TemplateReads;
 import com.hartwig.hmftools.redux.umi.PositionFragmentCounts;
+import com.hartwig.hmftools.redux.umi.UmiConfig;
 
 import org.junit.jupiter.api.Test;
 
@@ -421,6 +431,46 @@ public class UmiDuplicatesTest
 
         assertEquals(13, mWriter.nonConsensusWriteCount());
         assertEquals(4, mWriter.consensusWriteCount());
+    }
+
+    @Test
+    public void testConsistentReadPairsAfterUmiCollapsing()
+    {
+        ReduxConfig config = new ReduxConfig(null, true, true, false, READ_UNMAPPER_DISABLED);
+        UmiConfig umiConfig = config.UMIs;
+
+        String umiId1 = "GTCACTC" + DEFAULT_DUPLEX_UMI_DELIM + "TAAGATA";
+        String umiId2 = "GTCACTC" + DEFAULT_DUPLEX_UMI_DELIM + "TACGATC";
+
+        SAMRecord read1 = createSamRecord(
+                "READ_001:" + umiId1, CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 200, false, false, null, true, TEST_READ_CIGAR);
+        SAMRecord mate1 = createSamRecord(
+                "READ_001:" + umiId1, CHR_2, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200, true, false, null, false, TEST_READ_CIGAR);
+
+        SAMRecord read2 = createSamRecord(
+                "READ_002:" + umiId2, CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 200, false, false, null, true, TEST_READ_CIGAR);
+        SAMRecord mate2 = createSamRecord(
+                "READ_002:" + umiId2, CHR_2, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200, true, false, null, false, TEST_READ_CIGAR);
+
+        DuplicateGroup readGroup = new DuplicateGroup(Lists.newArrayList(read1, read2), FragmentCoords.fromRead(read1, true));
+        DuplicateGroup mateGroup = new DuplicateGroup(Lists.newArrayList(mate2, mate1), FragmentCoords.fromRead(mate1, true));
+
+        List<DuplicateGroup> readUmiGroups = buildUmiGroups(readGroup.fragmentCoordinates(), readGroup.reads(), umiConfig);
+        List<DuplicateGroup> mateUmiGroups = buildUmiGroups(mateGroup.fragmentCoordinates(), mateGroup.reads(), umiConfig);
+
+        assertEquals(1, readUmiGroups.size());
+        assertEquals(1, mateUmiGroups.size());
+
+        DuplicateGroup readUmiGroup = readUmiGroups.get(0);
+        DuplicateGroup mateUmiGroup = mateUmiGroups.get(0);
+
+        SAMRecord readTemplate = TemplateReads.selectTemplateRead(readUmiGroup.reads(), readUmiGroup.fragmentCoordinates());
+        String readConsensusReadName = formConsensusReadId(readTemplate, readUmiGroup.umiId());
+
+        SAMRecord mateTemplate = TemplateReads.selectTemplateRead(mateUmiGroup.reads(), mateUmiGroup.fragmentCoordinates());
+        String mateConsensusReadName = formConsensusReadId(mateTemplate, mateUmiGroup.umiId());
+
+        assertEquals(readConsensusReadName, mateConsensusReadName);
     }
 
     private String nextReadId(final String umiId)

@@ -161,7 +161,10 @@ public class UmiGroupBuilder
         }
 
         // order groups by descending number of fragments
-        List<DuplicateGroup> orderedGroups = groups.values().stream().sorted(new UmiUtils.SizeComparator()).collect(Collectors.toList());
+        List<DuplicateGroup> orderedGroups = groups.values()
+                .stream()
+                .sorted((new UmiUtils.SizeComparator()).thenComparing(DuplicateGroup::umiId))
+                .collect(Collectors.toList());
 
         // then apply the directional model, where smaller groups are merged into larger ones
         int i = 0;
