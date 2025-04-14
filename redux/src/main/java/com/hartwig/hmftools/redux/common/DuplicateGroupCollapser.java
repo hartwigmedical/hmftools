@@ -14,14 +14,12 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.collect.Heap;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -123,6 +121,7 @@ public interface DuplicateGroupCollapser
     }
 
     int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
+    static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount).reversed();
 
     class UltimaCollapser
     {
@@ -158,72 +157,11 @@ public interface DuplicateGroupCollapser
             List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
             for(TreeMap<Integer, DuplicateGroup> fivePrimeGroup : mFivePrimeGroups.values())
             {
-                Heap<Map.Entry<Integer, DuplicateGroup>> dupGroupHeap = new Heap<>(FIVE_PRIME_GROUP_ENTRY_COMPARATOR);
-                dupGroupHeap.addAll(fivePrimeGroup.entrySet());
-                while(!dupGroupHeap.isEmpty())
-                {
-                    Map.Entry<Integer, DuplicateGroup> entry = dupGroupHeap.pop();
-                    if(!fivePrimeGroup.containsKey(entry.getKey()))
-                        continue;
-
-                    int baseKey = entry.getKey();
-                    int minKey = baseKey;
-                    int maxKey = baseKey;
-                    DuplicateGroup collapsedGroup = entry.getValue();
-                    fivePrimeGroup.remove(baseKey);
-                    NavigableMap<Integer, DuplicateGroup> beforeBase = fivePrimeGroup.headMap(baseKey, false).descendingMap();
-                    NavigableMap<Integer, DuplicateGroup> afterBase = fivePrimeGroup.tailMap(baseKey, false);
-                    while(!beforeBase.isEmpty() || !afterBase.isEmpty())
-                    {
-                        Map.Entry<Integer, DuplicateGroup> beforeEntry = beforeBase.firstEntry();
-                        Map.Entry<Integer, DuplicateGroup> afterEntry = afterBase.firstEntry();
-                        if(beforeEntry == null)
-                        {
-                            int distance = afterEntry.getKey() - minKey;
-                            if(distance > SINGLE_END_JITTER_COLLAPSE_DISTANCE)
-                                break;
-
-                            maxKey = afterEntry.getKey();
-                            collapsedGroup.addReads(afterEntry.getValue().reads());
-                            afterBase.pollFirstEntry();
-                            continue;
-                        }
-
-                        if(afterEntry == null)
-                        {
-                            int distance = maxKey - beforeEntry.getKey();
-                            if(distance > SINGLE_END_JITTER_COLLAPSE_DISTANCE)
-                                break;
-
-                            minKey = beforeEntry.getKey();
-                            collapsedGroup.addReads(beforeEntry.getValue().reads());
-                            beforeBase.pollFirstEntry();
-                            continue;
-                        }
-
-                        int afterDistance = afterEntry.getKey() - minKey;
-                        int beforeDistance = maxKey - beforeEntry.getKey();
-                        if(afterDistance > SINGLE_END_JITTER_COLLAPSE_DISTANCE && beforeDistance > SINGLE_END_JITTER_COLLAPSE_DISTANCE)
-                            break;
-
-                        boolean useBeforeEntry = beforeDistance <= SINGLE_END_JITTER_COLLAPSE_DISTANCE && (
-                                afterDistance > SINGLE_END_JITTER_COLLAPSE_DISTANCE
-                                        || beforeEntry.getValue().readCount() >= afterEntry.getValue().readCount());
-                        if(useBeforeEntry)
-                        {
-                            minKey = beforeEntry.getKey();
-                            collapsedGroup.addReads(beforeEntry.getValue().reads());
-                            beforeBase.pollFirstEntry();
-                            continue;
-                        }
-
-                        maxKey = afterEntry.getKey();
-                        collapsedGroup.addReads(afterEntry.getValue().reads());
-                        afterBase.pollFirstEntry();
-                    }
-
-                    collapsedGroups.add(collapsedGroup);
-                }
+                collapsedGroups.addAll(clusterMerger(
+                        fivePrimeGroup,
+                        (x, y) -> abs(x - y) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE,
+                        DUPLICATE_GROUP_COMPARATOR,
+                        DUPLICATE_GROUP_MERGER));
             }
 
             return getFragmentCoordReads(collapsedGroups);
@@ -335,7 +273,7 @@ public interface DuplicateGroupCollapser
             BiPredicate<FragStartEnd, FragStartEnd> canMergeFn = (x, y) -> x.distance(y) <= mMaxDuplicateDistance;
             List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
             for(Map<FragStartEnd, DuplicateGroup> keyGroup : mKeyGroups.values())
-                collapsedGroups.addAll(clusterMerger(keyGroup, canMergeFn, DuplicateGroup::readCount, DUPLICATE_GROUP_MERGER));
+                collapsedGroups.addAll(clusterMerger(keyGroup, canMergeFn, DUPLICATE_GROUP_COMPARATOR, DUPLICATE_GROUP_MERGER));
 
             return getFragmentCoordReads(collapsedGroups);
         }

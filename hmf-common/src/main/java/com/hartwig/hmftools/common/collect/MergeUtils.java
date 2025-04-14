@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
-import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -17,14 +16,17 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class MergeUtils
 {
-    public static <K, V> List<V> clusterMerger(
-            final Map<K, V> elements, final BiPredicate<K, K> canMergeFn, final ToIntFunction<V> sizeFn, final BinaryOperator<V> mergeFn)
+    public static <K, V> List<V> clusterMerger(final Map<K, V> elements, final BiPredicate<K, K> canMergeFn,
+            final Comparator<V> valueComparator, final BinaryOperator<V> mergeFn)
     {
         if(elements.isEmpty())
             return Lists.newArrayList();
 
         if(elements.size() == 1)
             return Lists.newArrayList(elements.values());
+
+        Comparator<Map.Entry<K, V>> heapComparator = (final Map.Entry<K, V> x, final Map.Entry<K, V> y) ->
+                valueComparator.compare(x.getValue(), y.getValue());
 
         List<K> allKeys = Lists.newArrayList(elements.keySet());
         Map<K, Set<K>> keyAdjacency = Maps.newHashMap();
@@ -47,8 +49,6 @@ public class MergeUtils
 
         List<V> mergedValues = Lists.newArrayList();
         Set<K> unprocessedKeys = Sets.newHashSet(allKeys);
-        Comparator<Map.Entry<K, V>> heapComparator = Comparator.comparingInt(
-                (Map.Entry<K, V> x) -> sizeFn.applyAsInt(x.getValue())).reversed();
 
         Heap<Map.Entry<K, V>> entryHeap = new Heap<>(heapComparator);
         entryHeap.addAll(elements.entrySet());

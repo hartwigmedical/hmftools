@@ -19,17 +19,24 @@ import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusReads.formConsensusReadId;
+import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.buildUmiGroups;
 import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.collapsePolyGDuplexUmis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -37,6 +44,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
+import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.consensus.TemplateReads;
@@ -45,6 +53,8 @@ import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 import com.hartwig.hmftools.redux.umi.UmiStatistics;
 
+import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -722,6 +732,112 @@ public class UmiDuplicatesTest
 
         assertEquals(1, umiGroup.reads().size());
         assertEquals(1, umiGroup.nonConsensusReads().size());
+    }
+
+    @Test
+    public void testConsistentConsensusReadPairAfterIlluminaJitterUmiGroupCollapse()
+    {
+        String umiIdPart1 = "A".repeat(6);
+        String umiIdPart2 = "C".repeat(6);
+        String forwardUmiId = umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiIdPart2;
+        String reverseUmiId = umiIdPart2 + DEFAULT_DUPLEX_UMI_DELIM + umiIdPart1;
+
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord("READ_001:" + forwardUmiId, CHR_1, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 200, false, false, null, true, TEST_READ_CIGAR);
+        read1.setFirstOfPairFlag(true);
+        read1.setSecondOfPairFlag(false);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord("READ_002:" + reverseUmiId, CHR_1, 201, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, 200, false, false, null, true, TEST_READ_CIGAR);
+        read2.setFirstOfPairFlag(false);
+        read2.setSecondOfPairFlag(true);
+
+        List<SAMRecord> chr1Reads = Lists.newArrayList(read1, read2);
+
+        SAMRecord mate1 = SamRecordTestUtils.createSamRecord("READ_001:" + forwardUmiId, CHR_2, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 200, true, false, null, false, TEST_READ_CIGAR);
+        mate1.setFirstOfPairFlag(false);
+        mate1.setSecondOfPairFlag(true);
+
+        SAMRecord mate2 = SamRecordTestUtils.createSamRecord("READ_002:" + reverseUmiId, CHR_2, 200, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 201, true, false, null, false, TEST_READ_CIGAR);
+        mate2.setFirstOfPairFlag(true);
+        mate2.setSecondOfPairFlag(false);
+
+        List<SAMRecord> chr2Reads = Lists.newArrayList(mate1, mate2);
+
+        Collections.sort(chr1Reads, Comparator.comparingInt(SAMRecord::getAlignmentStart));
+        Collections.sort(chr2Reads, Comparator.comparingInt(SAMRecord::getAlignmentStart));
+
+        // duplicate group forming
+        ReadCache readCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, true, ILLUMINA);
+
+        chr1Reads.forEach(readCache::processRead);
+        FragmentCoordReads chr1FragmentCoordsReads = readCache.evictAll();
+        readCache.clear();
+
+        chr2Reads.forEach(readCache::processRead);
+        FragmentCoordReads chr2FragmentCoordsReads = readCache.evictAll();
+        readCache.clear();
+
+        assertEquals(0, chr1FragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(2, chr1FragmentCoordsReads.SingleReads.size());
+        assertEquals(2, chr1FragmentCoordsReads.totalReadCount());
+
+        assertEquals(0, chr2FragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(2, chr2FragmentCoordsReads.SingleReads.size());
+        assertEquals(2, chr2FragmentCoordsReads.totalReadCount());
+
+        // umi group forming
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
+        refGenome.RefGenomeMap.put(CHR_2, "A".repeat(1_000));
+        refGenome.ChromosomeLengths.put(CHR_2, 1_000);
+
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
+        UmiConfig umiConfig = config.UMIs;
+        UmiGroupBuilder umiGroupBuilder = new UmiGroupBuilder(ILLUMINA, umiConfig, new UmiStatistics());
+
+        List<ReadInfo> chr1SingleReads = chr1FragmentCoordsReads.SingleReads;
+        List<DuplicateGroup> chr1UmiGroups = umiGroupBuilder.processUmiGroups(
+                chr1FragmentCoordsReads.DuplicateGroups, chr1SingleReads, true);
+
+        List<ReadInfo> chr2SingleReads = chr2FragmentCoordsReads.SingleReads;
+        List<DuplicateGroup> chr2UmiGroups = umiGroupBuilder.processUmiGroups(
+                chr2FragmentCoordsReads.DuplicateGroups, chr2SingleReads, true);
+
+        assertEquals(1, chr1UmiGroups.size());
+        assertEquals(0, chr1SingleReads.size());
+
+        assertEquals(1, chr2UmiGroups.size());
+        assertEquals(0, chr2SingleReads.size());
+
+        List<String> chr1SingleReadNames = chr1SingleReads.stream().map(x -> x.read().getReadName()).sorted().collect(Collectors.toList());
+        List<String> chr2SingleReadNames = chr2SingleReads.stream().map(x -> x.read().getReadName()).sorted().collect(Collectors.toList());
+        assertEquals(chr1SingleReadNames, chr2SingleReadNames);
+
+        List<String> chr1TemplateReadNames = chr1UmiGroups.stream()
+                .map(x -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName())
+                .sorted()
+                .collect(Collectors.toList());
+
+        List<String> chr2TemplateReadNames = chr2UmiGroups.stream()
+                .map(x -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName())
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals(chr1TemplateReadNames, chr2TemplateReadNames);
+
+        final Function<List<SAMRecord>, Set<String>> readsToReadNameSet =
+                xs -> xs.stream().map(SAMRecord::getReadName).collect(Collectors.toCollection(Sets::newHashSet));
+
+        Set<Pair<Set<String>, Set<String>>> chr1UmiGroupsSet = chr1UmiGroups.stream()
+                .map(x -> Pair.of(readsToReadNameSet.apply(x.reads()), readsToReadNameSet.apply(x.nonConsensusReads())))
+                .collect(Collectors.toCollection(Sets::newHashSet));
+
+        Set<Pair<Set<String>, Set<String>>> chr2UmiGroupsSet = chr2UmiGroups.stream()
+                .map(x -> Pair.of(readsToReadNameSet.apply(x.reads()), readsToReadNameSet.apply(x.nonConsensusReads())))
+                .collect(Collectors.toCollection(Sets::newHashSet));
+
+        assertEquals(chr1UmiGroupsSet, chr2UmiGroupsSet);
     }
 
     @Test
