@@ -23,6 +23,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.Pair;
+import org.jetbrains.annotations.Nullable;
 
 public final class SequenceCount
 {
@@ -136,16 +137,35 @@ public final class SequenceCount
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() > 1;
     }
 
-    public List<String> getMinCountSequences(int index)
+    public List<String> getMinCountSequences(int index, @Nullable Double minLocalVAF)
     {
         if(index >= mSeqCountsList.length)
             return Lists.newArrayList();
 
         Map<String,Integer> seqCounts = get(index);
 
+        double minCount;
+        if(minLocalVAF == null)
+        {
+            minCount = mMinCount;
+        }
+        else
+        {
+            int coverageAtCurrentPosition = 0;
+            for(int fragCount : seqCounts.values())
+                coverageAtCurrentPosition += fragCount;
+
+            minCount = coverageAtCurrentPosition * minLocalVAF;
+        }
+
         return seqCounts.entrySet().stream()
-                .filter(x -> x.getValue() >= mMinCount)
+                .filter(x -> x.getValue() >= minCount)
                 .map(x -> x.getKey()).collect(Collectors.toList());
+    }
+
+    public List<String> getMinCountSequences(int index)
+    {
+        return getMinCountSequences(index, null);
     }
 
     public String getMaxCountSequence(int index)
