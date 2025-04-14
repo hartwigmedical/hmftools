@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.umccr.java.hellbender.utils.bwa.BwaMemIndex;
 
 import htsjdk.samtools.SAMFileHeader;
 

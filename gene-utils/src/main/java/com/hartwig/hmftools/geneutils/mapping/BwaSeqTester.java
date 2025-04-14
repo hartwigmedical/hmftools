@@ -21,9 +21,9 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAligner;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemIndex;
 
 public class BwaSeqTester
 {

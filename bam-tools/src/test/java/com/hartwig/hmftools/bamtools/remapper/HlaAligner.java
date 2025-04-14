@@ -10,7 +10,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Assert;
 
 import htsjdk.samtools.SAMRecord;

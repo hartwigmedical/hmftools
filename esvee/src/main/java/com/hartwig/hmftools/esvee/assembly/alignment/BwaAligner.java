@@ -9,9 +9,9 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAligner;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemIndex;
 
 public class BwaAligner implements Aligner
 {
