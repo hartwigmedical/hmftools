@@ -26,6 +26,8 @@ public interface CuppaData
 
     int telomericSGLs();
 
+    CuppaMode cuppaMode();
+
     @SerializedName("LINECount")
     int lineCount();
 }
