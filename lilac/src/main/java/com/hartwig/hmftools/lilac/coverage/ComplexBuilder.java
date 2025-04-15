@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_PROTEIN_
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_GROUP_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_PROTEIN_COVERAGE;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_UNIQUE_GROUP_TOTAL_COVERAGE;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_UNIQUE_GROUP_UNIQUE_COVERAGE;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_GROUP_TOTAL_COVERAGE;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_GROUP_UNIQUE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.RARE_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUnsupportedWildcardFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
@@ -71,15 +71,18 @@ public class ComplexBuilder
 
         List<AlleleCoverage> uniqueGroups = findUnique(groupCoverage, Lists.newArrayList(), totalFragCount);
 
-        List<AlleleCoverage> insufficientlyUniqueGroups = groupCoverage.getAlleleCoverage().stream()
+        double lowConfGroupMinUniqueFrags = totalFragCount * MIN_LOW_CONF_GROUP_UNIQUE_COVERAGE;
+        double lowConfGroupMinTotalFrags = totalFragCount * MIN_LOW_CONF_GROUP_TOTAL_COVERAGE;
+
+        List<AlleleCoverage> lowConfGroups = groupCoverage.getAlleleCoverage().stream()
                 .filter(x -> !uniqueGroups.contains(x) &&
-                        (x.UniqueCoverage >= totalFragCount * MIN_LOW_CONF_UNIQUE_GROUP_UNIQUE_COVERAGE ||
-                         x.TotalCoverage  >= totalFragCount * MIN_LOW_CONF_UNIQUE_GROUP_TOTAL_COVERAGE)
+                        (x.UniqueCoverage >= lowConfGroupMinUniqueFrags ||
+                         x.TotalCoverage  >= lowConfGroupMinTotalFrags)
                 )
                 .collect(Collectors.toList());
 
         List<AlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
-                .filter(x -> !uniqueGroups.contains(x) && !insufficientlyUniqueGroups.contains(x))
+                .filter(x -> !uniqueGroups.contains(x) && !lowConfGroups.contains(x))
                 .collect(Collectors.toList());
 
         LL_LOGGER.info("  confirmed {} unique allele groups{}{}",
@@ -89,9 +92,9 @@ public class ComplexBuilder
         );
 
         LL_LOGGER.info("  found {} insufficiently unique allele groups{}{}",
-                insufficientlyUniqueGroups.size(),
-                insufficientlyUniqueGroups.isEmpty() ? "" : ": ",
-                AlleleCoverage.toString(insufficientlyUniqueGroups)
+                lowConfGroups.size(),
+                lowConfGroups.isEmpty() ? "" : ": ",
+                AlleleCoverage.toString(lowConfGroups)
         );
 
         LL_LOGGER.debug("  discarded {} allele groups{}{}",
@@ -105,18 +108,18 @@ public class ComplexBuilder
         final List<HlaAllele> candidatesAfterUniqueGroups = filterWithUniqueGroups(candidateAlleles, uniqueGroupAlleles, recoveredAlleles);
 
         // keep common alleles in insufficiently unique groups
-        List<HlaAllele> topInsufficientlyUniqueGroups = getTopInsufficientlyUniqueGroups(uniqueGroups, insufficientlyUniqueGroups);
-        List<HlaAllele> commonAllelesInInsufficientlyUniqueGroups = mRefData.CommonAlleles.stream()
+        List<HlaAllele> topLowConfGroups = getTopLowConfGroups(uniqueGroups, lowConfGroups);
+        List<HlaAllele> commonAllelesInLowConfGroups = mRefData.CommonAlleles.stream()
                 .filter(x -> !candidatesAfterUniqueGroups.contains(x))
-                .filter(x -> topInsufficientlyUniqueGroups.contains(x.asAlleleGroup()))
+                .filter(x -> topLowConfGroups.contains(x.asAlleleGroup()))
                 .collect(Collectors.toList());
 
-        candidatesAfterUniqueGroups.addAll(commonAllelesInInsufficientlyUniqueGroups);
+        candidatesAfterUniqueGroups.addAll(commonAllelesInLowConfGroups);
 
         LL_LOGGER.debug("  keeping {} common allele(s) from insufficiently unique allele groups{}{}",
-                commonAllelesInInsufficientlyUniqueGroups.size(),
-                commonAllelesInInsufficientlyUniqueGroups.isEmpty() ? "" : ": ",
-                HlaAllele.toString(commonAllelesInInsufficientlyUniqueGroups)
+                commonAllelesInLowConfGroups.size(),
+                commonAllelesInLowConfGroups.isEmpty() ? "" : ": ",
+                HlaAllele.toString(commonAllelesInLowConfGroups)
         );
 
         // keep common alleles from the same 2-digit group as rare alleles or alleles with wildcards
@@ -398,26 +401,26 @@ public class ComplexBuilder
         return results;
     }
 
-    private static List<HlaAllele> getTopInsufficientlyUniqueGroups(
-            List<AlleleCoverage> uniqueGroups, List<AlleleCoverage> insufficientlyUniqueGroups)
+    private static List<HlaAllele> getTopLowConfGroups(
+            List<AlleleCoverage> uniqueGroups, List<AlleleCoverage> lowConfGroups)
     {
         Map<String, Integer> groupCountsPerGene = Maps.newHashMap();
         for(AlleleCoverage alleleCoverage : uniqueGroups)
             groupCountsPerGene.merge(alleleCoverage.Allele.Gene, 1, Integer::sum);
 
-        List<AlleleCoverage> topInsufficientlyUniqueGroups = Lists.newArrayList();
-        for(AlleleCoverage alleleCoverage : insufficientlyUniqueGroups)
+        List<AlleleCoverage> topLowConfGroups = Lists.newArrayList();
+        for(AlleleCoverage alleleCoverage : lowConfGroups)
         {
             String gene = alleleCoverage.Allele.Gene;
             groupCountsPerGene.putIfAbsent(gene, 0);
 
             if(groupCountsPerGene.get(gene) < DIPLOID_ALLELE_COUNT)
-                topInsufficientlyUniqueGroups.add(alleleCoverage);
+                topLowConfGroups.add(alleleCoverage);
 
             groupCountsPerGene.put(gene, groupCountsPerGene.get(gene) + 1);
         }
 
-        return coverageAlleles(topInsufficientlyUniqueGroups);
+        return coverageAlleles(topLowConfGroups);
     }
 
     private static double requiredUniqueGroupCoverage(double totalCoverage, boolean isGroup)
