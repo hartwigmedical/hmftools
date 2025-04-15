@@ -24,6 +24,7 @@ public class LilacConstants
 
     public static final double DEFAULT_HLA_Y_FRAGMENT_THRESHOLD = 0.01;
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
+    public static final double RARE_ALLELES_FREQ_CUTOFF = 0.0001;
 
     // candidate filtering
     public static final double MIN_HI_CONF_UNIQUE_GROUP_COVERAGE = 0.02;

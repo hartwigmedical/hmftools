@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_GROUP
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_PROTEIN_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_UNIQUE_GROUP_TOTAL_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_UNIQUE_GROUP_UNIQUE_COVERAGE;
+import static com.hartwig.hmftools.lilac.LilacConstants.RARE_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUnsupportedWildcardFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
@@ -118,26 +119,30 @@ public class ComplexBuilder
                 HlaAllele.toString(commonAllelesInInsufficientlyUniqueGroups)
         );
 
-        // ensure that common alleles from the same 2-digit group as alleles with wildcards are kept
-        Set<HlaAllele> wilcardAlleleGroups = candidatesAfterUniqueGroups.stream()
-                .filter(x -> x.hasWildcards())
+        // keep common alleles from the same 2-digit group as rare alleles or alleles with wildcards
+        List<HlaAllele> rareAlleles = candidatesAfterUniqueGroups.stream()
+                .filter(x -> mRefData.getAlleleFrequencies().getAlleleFrequency(x) <= RARE_ALLELES_FREQ_CUTOFF)
+                .toList();
+
+        Set<HlaAllele> alleleGroupsOfDubiousAlleles = candidatesAfterUniqueGroups.stream()
+                .filter(x -> x.hasWildcards() || rareAlleles.contains(x))
                 .map(x -> x.asAlleleGroup())
                 .collect(Collectors.toSet());
 
-        List<HlaAllele> commonAllelesFromSameGroupAsWildcardAlleles = mRefData.CommonAlleles.stream()
+        List<HlaAllele> commonAllelesFromSameGroupAsDubiousAlleles = mRefData.CommonAlleles.stream()
                 .filter(x -> !candidatesAfterUniqueGroups.contains(x))
-                .filter(x -> wilcardAlleleGroups.contains(x.asAlleleGroup()))
+                .filter(x -> alleleGroupsOfDubiousAlleles.contains(x.asAlleleGroup()))
                 .collect(Collectors.toList());
 
-        candidatesAfterUniqueGroups.addAll(commonAllelesFromSameGroupAsWildcardAlleles);
+        candidatesAfterUniqueGroups.addAll(commonAllelesFromSameGroupAsDubiousAlleles);
 
-        LL_LOGGER.debug("  keeping {} common allele(s) in the same 2-digit group as wildcard allele candidates{}{}",
-                commonAllelesFromSameGroupAsWildcardAlleles.size(),
-                commonAllelesFromSameGroupAsWildcardAlleles.isEmpty() ? "" : ": ",
-                HlaAllele.toString(commonAllelesFromSameGroupAsWildcardAlleles)
+        LL_LOGGER.debug("  keeping {} common allele(s) in the same 2-digit group as wildcard or rare allele candidates{}{}",
+                commonAllelesFromSameGroupAsDubiousAlleles.size(),
+                commonAllelesFromSameGroupAsDubiousAlleles.isEmpty() ? "" : ": ",
+                HlaAllele.toString(commonAllelesFromSameGroupAsDubiousAlleles)
         );
 
-        // ensure known stop-loss alleles are kept
+        // keep known stop-loss alleles
         List<HlaAllele> allelesWithStopLossIndel = recoveredAlleles.stream()
                 .filter(x -> mRefData.KnownStopLossIndelAlleles.containsValue(x))
                 .filter(x -> !candidatesAfterUniqueGroups.contains(x))
@@ -154,7 +159,7 @@ public class ComplexBuilder
         mConfirmedRecoveredAlleles.addAll(
                 recoveredAlleles.stream()
                 .filter(x -> candidatesAfterUniqueGroups.contains(x))
-                .collect(Collectors.toList())
+                .toList()
         );
 
         if(!mConfirmedRecoveredAlleles.isEmpty())
