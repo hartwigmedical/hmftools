@@ -111,8 +111,12 @@ public final class FileCommon
             return parseSampleBamLists(configBuilder, SAMPLE);
 
         List<String> sampleIds = Lists.newArrayList();
+
         sampleIds.addAll(parseSampleBamLists(configBuilder, TUMOR));
-        sampleIds.addAll(parseSampleBamLists(configBuilder, REFERENCE));
+
+        if(configBuilder.hasValue(REFERENCE))
+            sampleIds.addAll(parseSampleBamLists(configBuilder, REFERENCE));
+
         return sampleIds;
     }
 
@@ -122,8 +126,12 @@ public final class FileCommon
             return parseSampleBamLists(configBuilder, BAM_FILE);
 
         List<String> sampleIds = Lists.newArrayList();
+
         sampleIds.addAll(parseSampleBamLists(configBuilder, TUMOR_BAM));
-        sampleIds.addAll(parseSampleBamLists(configBuilder, REFERENCE_BAM));
+
+        if(configBuilder.hasValue(REFERENCE_BAM))
+            sampleIds.addAll(parseSampleBamLists(configBuilder, REFERENCE_BAM));
+
         return sampleIds;
     }
 
