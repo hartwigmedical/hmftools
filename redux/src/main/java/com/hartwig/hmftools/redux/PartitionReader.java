@@ -51,7 +51,7 @@ public class PartitionReader
     private final ReduxConfig mConfig;
 
     private final BamReader mBamReader;
-    private final ReadCache mReadCache;
+    private final IReadCache mReadCache;
     private final ReadUnmapper mReadUnmapper;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
@@ -77,7 +77,12 @@ public class PartitionReader
         mBamReader = bamReader;
         mReadUnmapper = mConfig.UnmapRegions;
 
-        if(config.Sequencing == ILLUMINA)
+        if(config.Sequencing == ILLUMINA && mConfig.UMIs.Enabled)
+        {
+            mReadCache = new ReadCachePairedReadJitterAdaptor(new ReadCache(
+                    ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse));
+        }
+        else if(config.Sequencing == ILLUMINA)
         {
             mReadCache = new ReadCache(
                     ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);

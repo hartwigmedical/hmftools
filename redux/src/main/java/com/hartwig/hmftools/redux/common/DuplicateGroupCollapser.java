@@ -64,7 +64,7 @@ public interface DuplicateGroupCollapser
         return acc;
     };
 
-    private static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
+    static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
     {
         List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
         List<ReadInfo> singleReads = Lists.newArrayList();
