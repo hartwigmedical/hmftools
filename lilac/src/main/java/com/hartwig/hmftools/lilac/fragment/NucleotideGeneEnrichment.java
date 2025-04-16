@@ -22,21 +22,19 @@ public class NucleotideGeneEnrichment
     public NucleotideGeneEnrichment(final List<Integer> aBoundaries, final List<Integer> bBoundaries, final List<Integer> cBoundaries)
     {
         // determine the minimum unique exon boundary for each pair
-        Set<Integer> abUnique = Sets.newHashSet();
-        Set<Integer> acUnique = Sets.newHashSet();
-        Set<Integer> bcUnique = Sets.newHashSet();
+        mAbMinBoundary = getMinUniqueBoundary(aBoundaries, bBoundaries);
+        mAcMinBoundary = getMinUniqueBoundary(aBoundaries, cBoundaries);
+        mBcMinBoundary = getMinUniqueBoundary(bBoundaries, cBoundaries);
+    }
 
-        aBoundaries.stream().filter(x -> !bBoundaries.contains(x)).forEach(x -> abUnique.add(x));
-        bBoundaries.stream().filter(x -> !aBoundaries.contains(x)).forEach(x -> abUnique.add(x));
-        mAbMinBoundary = abUnique.stream().mapToInt(x -> x).min().orElse(0);
+    private static int getMinUniqueBoundary(List<Integer> boundariesGene1, List<Integer> boundariesGene2)
+    {
+        Set<Integer> uniqueBoundaries = Sets.newHashSet();
 
-        aBoundaries.stream().filter(x -> !cBoundaries.contains(x)).forEach(x -> acUnique.add(x));
-        cBoundaries.stream().filter(x -> !aBoundaries.contains(x)).forEach(x -> acUnique.add(x));
-        mAcMinBoundary = acUnique.stream().mapToInt(x -> x).min().orElse(0);
+        boundariesGene1.stream().filter(x -> !boundariesGene2.contains(x)).forEach(x -> uniqueBoundaries.add(x));
+        boundariesGene2.stream().filter(x -> !boundariesGene1.contains(x)).forEach(x -> uniqueBoundaries.add(x));
 
-        bBoundaries.stream().filter(x -> !cBoundaries.contains(x)).forEach(x -> bcUnique.add(x));
-        cBoundaries.stream().filter(x -> !bBoundaries.contains(x)).forEach(x -> bcUnique.add(x));
-        mBcMinBoundary = bcUnique.stream().mapToInt(x -> x).min().orElse(0);
+        return uniqueBoundaries.stream().mapToInt(x -> x).min().orElse(0);
     }
 
     public final int getAFilterB() { return mAbMinBoundary; }
