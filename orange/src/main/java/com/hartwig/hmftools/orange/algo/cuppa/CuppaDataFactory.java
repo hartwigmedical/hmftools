@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.cuppa.DataType;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
@@ -40,6 +41,7 @@ public final class CuppaDataFactory
         int simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
         int maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
         int telomericSGLs = getSvFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL");
+        CuppaMode cuppaMode = getCuppaMode(cuppaPredictions);
         int lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
 
         return ImmutableCuppaData.builder()
@@ -48,6 +50,7 @@ public final class CuppaDataFactory
                 .simpleDups32To200B(simpleDups32To200B)
                 .maxComplexSize(maxComplexSize)
                 .telomericSGLs(telomericSGLs)
+                .cuppaMode(cuppaMode)
                 .lineCount(lineCount)
                 .build();
     }
@@ -99,5 +102,14 @@ public final class CuppaDataFactory
                 .orElseThrow(() -> new Exception("Input CuppaPredictions is empty"));
 
         return (int) Math.round(predictionEntry.FeatureValue);
+    }
+    static CuppaMode getCuppaMode(@NotNull CuppaPredictions cuppaPredictions) {
+        if (cuppaPredictions.ClassifierNames.contains(ClassifierName.COMBINED)) {
+            return CuppaMode.WGTS;
+        } else if (cuppaPredictions.ClassifierNames.contains(ClassifierName.DNA_COMBINED)) {
+            return CuppaMode.WGS;
+        } else {
+            return null;
+        }
     }
 }
