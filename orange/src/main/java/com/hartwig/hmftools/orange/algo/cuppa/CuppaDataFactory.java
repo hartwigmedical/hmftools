@@ -109,7 +109,7 @@ public final class CuppaDataFactory
         } else if (cuppaPredictions.ClassifierNames.contains(ClassifierName.DNA_COMBINED)) {
             return CuppaMode.WGS;
         } else {
-            return null;
+            return CuppaMode.UNKNOWN;
         }
     }
 }
