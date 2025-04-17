@@ -63,7 +63,7 @@
 
         <amber.version>4.1</amber.version>
         <bam-tools.version>1.3</bam-tools.version>
-        <chord.version>2.1.0</chord.version>
+        <chord.version>2.1.1</chord.version>
         <cuppa.version>2.2.1</cuppa.version>
         <cider.version>1.0.2</cider.version>
         <cobalt.version>2.0</cobalt.version>
