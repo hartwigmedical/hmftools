@@ -33,9 +33,13 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
 
     private static final String SNV_DETAILS_FILE_SUFFIX = ".chord.snv.details.tsv";
 
-    private static final Set<Character> AMBIGUOUS_NUCLEOTIDES = Set.of('R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N');
-    private static final Set<Character> VALID_NUCLEOTIDES =
-            Set.of('A', 'C', 'G', 'T', 'R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N');
+    private static final Set<Character> VALID_NUCLEOTIDES = Set.of(
+            'A', 'C', 'G', 'T',
+            'R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N');
+
+    private static final Set<Character> AMBIGUOUS_NUCLEOTIDES = Set.of(
+            'R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N');
+
     private static final float MAX_AMBIGUOUS_TRI_NUCLEOTIDE_CONTEXT_FRACTION = 0.1f;
 
     public SnvPrep(ChordConfig config)
@@ -187,8 +191,14 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
     private boolean isAmbiguousTriNucContext(SnvDetails snvDetails)
     {
         String triNucSequence = snvDetails.mTriNucSequence;
-        List<Character> relevantBases =
-                List.of(snvDetails.mAltBases.charAt(0), triNucSequence.charAt(0), triNucSequence.charAt(1), triNucSequence.charAt(2));
+
+        List<Character> relevantBases = List.of(
+                snvDetails.mAltBases.charAt(0),
+                triNucSequence.charAt(0),
+                triNucSequence.charAt(1),
+                triNucSequence.charAt(2)
+        );
+
         return VALID_NUCLEOTIDES.containsAll(relevantBases) && relevantBases.stream().anyMatch(AMBIGUOUS_NUCLEOTIDES::contains);
     }
 }
