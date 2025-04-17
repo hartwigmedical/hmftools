@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.chord;
 
-import static com.hartwig.hmftools.chord.ChordTestUtils.DUMMY_GENOME_FASTA;
-import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
-import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE_SNV_INDEL_VCF;
-import static com.hartwig.hmftools.chord.ChordTestUtils.NON_STANDARD_NUC_GENOME_FASTA;
-import static com.hartwig.hmftools.chord.ChordTestUtils.NON_STANDARD_NUC_GENOME_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.DUMMY_GENOME_FASTA;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.MINIMAL_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.INPUT_VCF_DIR;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.NON_STANDARD_NUC_GENOME_FASTA;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.NON_STANDARD_NUC_GENOME_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.TMP_OUTPUT_DIR;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -47,7 +48,7 @@ public class SnvPrepTest
         Configurator.setRootLevel(Level.DEBUG);
 
         ChordConfig config = new ChordConfig.Builder()
-                .snvIndelVcfFile(MINIMAL_SAMPLE_SNV_INDEL_VCF)
+                .snvIndelVcfFile(INPUT_VCF_DIR + MINIMAL_SAMPLE + PURPLE_SOMATIC_VCF_SUFFIX)
                 .refGenomeFile(DUMMY_GENOME_FASTA)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
@@ -96,7 +97,7 @@ public class SnvPrepTest
         Configurator.setRootLevel(Level.DEBUG);
 
         ChordConfig config = new ChordConfig.Builder()
-                .snvIndelVcfFile(INPUT_VCF_DIR + NON_STANDARD_NUC_GENOME_SAMPLE + ".purple.somatic.vcf.gz")
+                .snvIndelVcfFile(INPUT_VCF_DIR + NON_STANDARD_NUC_GENOME_SAMPLE + PURPLE_SOMATIC_VCF_SUFFIX)
                 .refGenomeFile(NON_STANDARD_NUC_GENOME_FASTA)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
@@ -113,7 +114,7 @@ public class SnvPrepTest
     {
         ChordConfig config = new ChordConfig.Builder()
                 .sampleIds(MINIMAL_SAMPLE)
-                .snvIndelVcfFile(INPUT_VCF_DIR + MINIMAL_SAMPLE + ".purple.sv.vcf.gz")
+                .snvIndelVcfFile(INPUT_VCF_DIR + MINIMAL_SAMPLE + PURPLE_SV_VCF_SUFFIX)
                 .build();
 
         new SnvPrep(config).loadVariants(MINIMAL_SAMPLE);
