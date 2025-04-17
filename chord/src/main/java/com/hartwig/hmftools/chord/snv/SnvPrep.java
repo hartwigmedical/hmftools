@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.prep.LoggingOptions;
@@ -31,6 +32,15 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
     List<SnvDetails> mSnvDetailsList = new ArrayList<>();
 
     private static final String SNV_DETAILS_FILE_SUFFIX = ".chord.snv.details.tsv";
+
+    private static final Set<Character> VALID_NUCLEOTIDES = Set.of(
+            'A', 'C', 'G', 'T',
+            'R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N');
+
+    private static final Set<Character> AMBIGUOUS_NUCLEOTIDES = Set.of(
+            'R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N');
+
+    private static final float MAX_AMBIGUOUS_TRI_NUCLEOTIDE_CONTEXT_FRACTION = 0.1f;
 
     public SnvPrep(ChordConfig config)
     {
@@ -102,6 +112,7 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
             CHORD_LOGGER.debug("{}Found {} SNVs", mLogPrefix, snvs.size());
 
             Map<String,Integer> triNucNameCountsMap = initializeCounts();
+            int ambiguousTriNucContextCount = 0;
 
             for(SmallVariant snv : snvs)
             {
@@ -110,16 +121,26 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
                 if(mConfig.WriteDetailedFiles)
                     mSnvDetailsList.add(snvDetails);
 
-                if(!triNucNameCountsMap.containsKey(snvDetails.mTriNucContext))
+                if(triNucNameCountsMap.containsKey(snvDetails.mTriNucContext))
                 {
-                    CHORD_LOGGER.error("Found invalid trinucleotide context '{}' for variant '{}:{}:{}:{}'",
-                            snvDetails.mTriNucContext,
+                    triNucNameCountsMap.compute(snvDetails.mTriNucContext, (k, v) -> v + 1);
+                }
+                else if(isAmbiguousTriNucContext(snvDetails))
+                {
+                    CHORD_LOGGER.warn("{}Found ambiguous nucleotide in trinucleotide context '{}' for variant '{}:{}:{}:{}'",
+                            mLogPrefix, snvDetails.mTriNucContext,
+                            snvDetails.mChromosome, snvDetails.mPosition, snvDetails.mRefBases, snv.AltBases
+                    );
+                    ambiguousTriNucContextCount += 1;
+                }
+                else
+                {
+                    CHORD_LOGGER.error("{}Found invalid trinucleotide context '{}' for variant '{}:{}:{}:{}'",
+                            mLogPrefix, snvDetails.mTriNucContext,
                             snvDetails.mChromosome, snvDetails.mPosition, snvDetails.mRefBases, snv.AltBases
                     );
                     return null;
                 }
-
-                triNucNameCountsMap.compute(snvDetails.mTriNucContext, (k,v) -> v + 1);
             }
 
             if(mConfig.WriteDetailedFiles)
@@ -127,6 +148,16 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
                 String snvDetailsPath = mConfig.OutputDir + "/" + sampleId + SNV_DETAILS_FILE_SUFFIX;
                 CHORD_LOGGER.debug("{}Writing SNV details to: {}", mLogPrefix, snvDetailsPath);
                 writeDetails(snvDetailsPath, mSnvDetailsList);
+            }
+
+            if(ambiguousTriNucContextCount > MAX_AMBIGUOUS_TRI_NUCLEOTIDE_CONTEXT_FRACTION * snvs.size())
+            {
+                CHORD_LOGGER.error("{}Fraction of trinucleotide contexts with ambiguous bases '{}' exceeds maximum '{}'",
+                        mLogPrefix,
+                        String.format("%.2f", ambiguousTriNucContextCount / (float) snvs.size()),
+                        String.format("%.2f", MAX_AMBIGUOUS_TRI_NUCLEOTIDE_CONTEXT_FRACTION)
+                );
+                return null;
             }
 
             List<MutContextCount> triNucCountsList = new ArrayList<>();
@@ -162,5 +193,19 @@ public class SnvPrep implements VariantTypePrep<SmallVariant>, LoggingOptions
             snvDetails.writeLine(writer);
 
         writer.close();
+    }
+
+    private boolean isAmbiguousTriNucContext(SnvDetails snvDetails)
+    {
+        String triNucSequence = snvDetails.mTriNucSequence;
+
+        List<Character> relevantBases = List.of(
+                snvDetails.mAltBases.charAt(0),
+                triNucSequence.charAt(0),
+                triNucSequence.charAt(1),
+                triNucSequence.charAt(2)
+        );
+
+        return VALID_NUCLEOTIDES.containsAll(relevantBases) && relevantBases.stream().anyMatch(AMBIGUOUS_NUCLEOTIDES::contains);
     }
 }
