@@ -1064,6 +1064,7 @@
     "hrdType": "none"
   },
   "cuppa": {
+    "mode" : "WGS",
     "predictions": [
       {
         "cancerType": "Skin: Melanoma",

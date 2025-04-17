@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.cuppa.DataType;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
@@ -36,6 +37,7 @@ public final class CuppaDataFactory
             throw new IllegalStateException("`CuppaPredictions` must contain a non-empty list of predictions");
         }
 
+        CuppaMode mode = getCuppaMode(cuppaPredictions.MainCombinedClassifierName);
         CuppaPrediction bestPrediction = predictions.get(0);
         int simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
         int maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
@@ -43,6 +45,7 @@ public final class CuppaDataFactory
         int lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
 
         return ImmutableCuppaData.builder()
+                .mode(mode)
                 .predictions(predictions)
                 .bestPrediction(bestPrediction)
                 .simpleDups32To200B(simpleDups32To200B)
@@ -99,5 +102,15 @@ public final class CuppaDataFactory
                 .orElseThrow(() -> new Exception("Input CuppaPredictions is empty"));
 
         return (int) Math.round(predictionEntry.FeatureValue);
+    }
+    static CuppaMode getCuppaMode(ClassifierName mainCombinedClassifierName) throws IllegalArgumentException
+    {
+        if (mainCombinedClassifierName == ClassifierName.COMBINED) {
+            return CuppaMode.WGTS;
+        } else if (mainCombinedClassifierName == ClassifierName.DNA_COMBINED) {
+            return CuppaMode.WGS;
+        } else {
+            throw new IllegalArgumentException("MainCombinedClassifierName should only be COMBINED or DNA_COMBINED");
+        }
     }
 }
