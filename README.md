@@ -66,5 +66,16 @@ The following external tools are also used in the pipeline:
 | [Orange](./orange/README.md)                                                       | PDF summary report and JSON file of all WGS output                   | [3.7.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.1-rc.1)        |
 | Patient-reporter                                                                   | PDF summary report and JSON file of all clinical relevant WGS output | 7.25.1                                                                                |
 
+### Building locally
 
+Developers can build all the tools locally via the `hmftools-build.py` script, providing a semver-compliant release tag and arguments, i.e:
 
+```sh
+$ git clone https://github.com/hartwigmedical/hmftools/
+$ python3 -mvenv ./venv && source ./venv/bin/activate
+(.venv) $ pip install requests jwt
+(.venv) $ ./hmftools-build.py lilac-v1.0.0 no_github_key no_github_client_id no_github_installation_id --no-deploy --no-docker
+(...)
+2025-04-15 05:34:06 [ INFO] - Skipping Github release creation as 1.0.0 is an internal-only version
+2025-04-15 05:34:06 [ INFO] - Complete build and release
+```
