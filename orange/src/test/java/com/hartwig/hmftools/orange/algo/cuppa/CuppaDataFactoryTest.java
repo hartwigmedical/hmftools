@@ -127,7 +127,7 @@ public class CuppaDataFactoryTest
     }
 
     @Test
-    public void assignsCuppaModeCorrectly() throws Exception
+    public void canAssignCuppaModeFromFileWithoutRna() throws Exception
     {
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_WITHOUT_RNA_TSV);
         CuppaMode featureValue = CuppaDataFactory.getCuppaMode(cuppaPredictions);

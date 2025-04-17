@@ -14,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface CuppaData
 {
+    CuppaMode cuppaMode();
+
     @NotNull
     List<CuppaPrediction> predictions();
 
@@ -25,8 +27,6 @@ public interface CuppaData
     int maxComplexSize();
 
     int telomericSGLs();
-
-    CuppaMode cuppaMode();
 
     @SerializedName("LINECount")
     int lineCount();

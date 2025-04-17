@@ -1064,6 +1064,7 @@
     "hrdType": "none"
   },
   "cuppa": {
+    "cuppaMode" : "WGS",
     "predictions": [
       {
         "cancerType": "Skin: Melanoma",
@@ -1438,7 +1439,6 @@
     "simpleDups32To200B": 22,
     "maxComplexSize": 8,
     "telomericSGLs": 0,
-    "cuppaMode" : "WGS",
     "LINECount": 0
   },
   "peach": [

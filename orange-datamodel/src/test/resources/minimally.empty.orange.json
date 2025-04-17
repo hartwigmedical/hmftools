@@ -116,16 +116,16 @@
   },
   "peach": [],
   "cuppa": {
+    "cuppaMode" : "WGS",
+    "predictions": [
+    ],
     "bestPrediction": {
       "cancerType": "cancer",
       "likelihood": 0
     },
-    "predictions": [
-    ],
     "simpleDups32To200B": 0,
     "maxComplexSize": 0,
     "telomericSGLs": 0,
-    "cuppaMode" : "WGS",
     "LINECount": 0
   },
   "lilac": {

@@ -37,20 +37,20 @@ public final class CuppaDataFactory
             throw new IllegalStateException("`CuppaPredictions` must contain a non-empty list of predictions");
         }
 
+        CuppaMode cuppaMode = getCuppaMode(cuppaPredictions);
         CuppaPrediction bestPrediction = predictions.get(0);
         int simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
         int maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
         int telomericSGLs = getSvFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL");
-        CuppaMode cuppaMode = getCuppaMode(cuppaPredictions);
         int lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
 
         return ImmutableCuppaData.builder()
+                .cuppaMode(cuppaMode)
                 .predictions(predictions)
                 .bestPrediction(bestPrediction)
                 .simpleDups32To200B(simpleDups32To200B)
                 .maxComplexSize(maxComplexSize)
                 .telomericSGLs(telomericSGLs)
-                .cuppaMode(cuppaMode)
                 .lineCount(lineCount)
                 .build();
     }
@@ -104,7 +104,7 @@ public final class CuppaDataFactory
         return (int) Math.round(predictionEntry.FeatureValue);
     }
     static CuppaMode getCuppaMode(@NotNull CuppaPredictions cuppaPredictions) {
-        if (cuppaPredictions.ClassifierNames.contains(ClassifierName.COMBINED)) {
+        if (cuppaPredictions.MainCombinedClassifierName == ClassifierName.COMBINED) {
             return CuppaMode.WGTS;
         } else if (cuppaPredictions.ClassifierNames.contains(ClassifierName.DNA_COMBINED)) {
             return CuppaMode.WGS;

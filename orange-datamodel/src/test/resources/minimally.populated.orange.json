@@ -556,15 +556,7 @@
     }
   ],
   "cuppa": {
-    "bestPrediction": {
-      "cancerType": "Melanoma",
-      "likelihood": 0.996,
-      "snvPairwiseClassifier": 0.979,
-      "genomicPositionClassifier": 0.990,
-      "featureClassifier": 0.972,
-      "altSjCohortClassifier": null,
-      "expressionPairwiseClassifier": null
-    },
+    "cuppaMode" : "WGS",
     "predictions": [
       {
         "cancerType": "Melanoma",
@@ -576,10 +568,18 @@
         "expressionPairwiseClassifier": null
       }
     ],
+    "bestPrediction": {
+      "cancerType": "Melanoma",
+      "likelihood": 0.996,
+      "snvPairwiseClassifier": 0.979,
+      "genomicPositionClassifier": 0.990,
+      "featureClassifier": 0.972,
+      "altSjCohortClassifier": null,
+      "expressionPairwiseClassifier": null
+    },
     "simpleDups32To200B": 0,
     "maxComplexSize": 0,
     "telomericSGLs": 0,
-    "cuppaMode" : "WGS",
     "LINECount": 0
   },
   "lilac": {
