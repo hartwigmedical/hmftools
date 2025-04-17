@@ -41,6 +41,7 @@
         <module>teal</module>
         <module>virus-interpreter</module>
         <module>v-chord</module>
+        <module>v-cuppa</module>
         <module>wisp</module>
     </modules>
 
@@ -91,6 +92,7 @@
         <teal.version>1.3.3</teal.version>
         <virus-interpreter.version>1.7.1</virus-interpreter.version>
         <v-chord.version>1.0</v-chord.version>
+        <v-cuppa.version>0.1</v-cuppa.version>
         <wisp.version>1.2</wisp.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
