@@ -16,15 +16,24 @@ import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_M
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.write.BamWriter.DEBUG_BUILD;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
@@ -41,6 +50,7 @@ import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -222,12 +232,101 @@ public class PartitionReader
             fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
     }
 
+    // TODO:
+//    private static final ConcurrentLinkedQueue<SAMRecord> WINDOW_READS = new ConcurrentLinkedQueue<>();
+//    private static final AtomicBoolean FINISHED_WINDOW = new AtomicBoolean();
+//
+//    private static void debugWindowReads()
+//    {
+//        List<SAMRecord> reads = Lists.newArrayList(WINDOW_READS);
+//        reads.sort(Comparator.comparingInt(SAMRecord::getAlignmentStart));
+//        Validate.isTrue(!testDebugReads(reads));
+//        while(true)
+//        {
+//            Validate.isTrue(!testDebugReads(reads));
+//            boolean shrunk = false;
+//            for(int i = 0; i < reads.size(); i++)
+//            {
+//                final int idx = i;
+//                List<SAMRecord> subReads = IntStream.range(0, reads.size()).filter(j -> j != idx).mapToObj(reads::get).collect(Collectors.toList());
+//                if(!testDebugReads(subReads))
+//                {
+//                    shrunk = true;
+//                    reads = subReads;
+//                    break;
+//                }
+//            }
+//
+//            if(shrunk)
+//                continue;
+//
+//            break;
+//        }
+//
+//        Validate.isTrue(!testDebugReads(reads));
+//        reads.forEach(x -> System.out.println(x.getSAMString()));
+//    }
+//
+//    private static boolean testDebugReads(final List<SAMRecord> reads)
+//    {
+//        final Set<String> DBG_READ_NAMES = Sets.newHashSet(
+//                "A01524:289:HFJLTDRX3:1:2104:14479:3615:CGAATCT_TACGATC",
+//                "A01524:289:HFJLTDRX3:2:2159:9353:12868:CGAATCT_TACGATC",
+//                "A01524:289:HFJLTDRX3:2:2219:20989:17581:CGAATCT_TACGATC"
+//        );
+//
+//        final int dbg_flags = 163;
+//        int dbg_pops = 0;
+//
+//        IReadCache readCache = new ReadCachePairedReadJitterAdaptor(new ReadCache(
+//                ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, true, ILLUMINA));
+//
+//        for(SAMRecord read : reads)
+//        {
+//            readCache.processRead(read);
+//            FragmentCoordReads fragmentCoordReads = readCache.popReads();
+//            if(fragmentCoordReads == null)
+//                continue;
+//
+//            if(fragmentCoordReads.readStream().anyMatch(x -> (DBG_READ_NAMES.contains(x.getReadName()) && x.getFlags() == dbg_flags)))
+//                dbg_pops++;
+//        }
+//
+//        FragmentCoordReads fragmentCoordReads = readCache.evictAll();
+//        if(fragmentCoordReads != null)
+//        {
+//            if(fragmentCoordReads.readStream().anyMatch(x -> (DBG_READ_NAMES.contains(x.getReadName()) && x.getFlags() == dbg_flags)))
+//                dbg_pops++;
+//        }
+//
+//        return dbg_pops < 2;
+//    }
+
     private void processSamRecord(final SAMRecord read)
     {
         int readStart = read.getAlignmentStart();
 
         if(!mCurrentRegion.containsPosition(readStart)) // to avoid processing reads from the prior region again
             return;
+
+        // TODO:
+//        if(!read.getReferenceName().equals("17"))
+//            return;
+//
+//        final int windowSize = 1 << 8;
+//        if(read.getAlignmentStart() < 29_575_849 || read.getAlignmentStart() > 29_575_849 + windowSize)
+//        {
+//            if(read.getAlignmentStart() > 29_575_849 + windowSize && !FINISHED_WINDOW.getAndSet(true))
+//            {
+//                debugWindowReads();
+//            }
+//
+//            return;
+//        }
+//
+//        SAMRecord readCopy = read.deepCopy();
+//        readCopy.setDuplicateReadFlag(false);
+//        WINDOW_READS.add(readCopy);
 
         ++mProcessedReads;
 
@@ -336,6 +435,48 @@ public class PartitionReader
         if(fragmentCoordReads == null)
             return;
 
+        // TODO:
+        final Set<String> DBG_READ_NAMES = Sets.newHashSet();
+
+        // TODO:
+        List<SAMRecord> allReads = Stream.concat(
+                fragmentCoordReads.SingleReads.stream().map(ReadInfo::read),
+                fragmentCoordReads.DuplicateGroups.stream().flatMap(x -> x.reads().stream())).collect(Collectors.toList());
+
+        if(DEBUG_BUILD && allReads.stream().filter(x -> DBG_READ_NAMES.contains(x.getReadName())).anyMatch(x -> x.getFlags() == 163))
+        {
+            System.out.println("\n!!!\n");
+            System.out.println("minCachedReadStart = " + mReadCache.minCachedReadStart() + "\n");
+
+            for(DuplicateGroup duplicateGroup : fragmentCoordReads.DuplicateGroups)
+            {
+                if(duplicateGroup.allReads().stream().map(SAMRecord::getReadName).anyMatch(x -> DBG_READ_NAMES.contains(x)))
+                {
+                    System.out.println("\n***\n");
+                    for(SAMRecord read : duplicateGroup.allReads())
+                    {
+                        System.out.println("\n" + read.getSAMString() + "\n");
+                    }
+
+                    System.out.println("\n# " + duplicateGroup.consensusRead().getSAMString() + "\n");
+                    System.out.println("\n# " + mCurrentRegion + "\n");
+                    System.out.println("\n***\n");
+                }
+            }
+
+            for(ReadInfo readInfo : fragmentCoordReads.SingleReads)
+            {
+                if(!DBG_READ_NAMES.contains(readInfo.read().getReadName()))
+                    continue;
+
+                System.out.println("\n" + readInfo.read().getSAMString() + "\n");
+                System.out.println("\n# " + mCurrentRegion + "\n");
+                System.out.println("\n***\n");
+            }
+
+            System.out.println("\n!!!\n");
+        }
+
         mPcProcessDuplicates.resume();
 
         int readCount = fragmentCoordReads.totalReadCount();
@@ -386,8 +527,53 @@ public class PartitionReader
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
 
+            // TODO:
+            if(DEBUG_BUILD)
+            {
+                if(duplicateGroup.allReads().stream().map(SAMRecord::getReadName).anyMatch(x -> DBG_READ_NAMES.contains(x)))
+                {
+                    System.out.println("\n***\n");
+                    for(SAMRecord read : duplicateGroup.allReads())
+                    {
+                        System.out.println("\n" + read.getSAMString() + "\n");
+                    }
+
+                    System.out.println("\n# " + duplicateGroup.consensusRead().getSAMString() + "\n");
+                    System.out.println("\n# " + mCurrentRegion + "\n");
+                    System.out.println("\n***\n");
+                }
+
+                if(DBG_READ_NAMES.contains(duplicateGroup.consensusRead().getReadName()))
+                {
+                    System.out.println("\n***\n");
+                    for(SAMRecord read : duplicateGroup.allReads())
+                    {
+                        System.out.println("\n" + read.getSAMString() + "\n");
+                    }
+
+                    System.out.println("\n# " + duplicateGroup.consensusRead().getSAMString() + "\n");
+                    System.out.println("\n# " + mCurrentRegion + "\n");
+                    System.out.println("\n***\n");
+                }
+            }
+
             postProcessPrimaryRead(duplicateGroup.primaryRead());
             mBamWriter.writeDuplicateGroup(duplicateGroup);
+        }
+
+        // TODO:
+        if(DEBUG_BUILD)
+        {
+            for(ReadInfo readInfo : fragmentCoordReads.SingleReads)
+            {
+                if(!DBG_READ_NAMES.contains(readInfo.read().getReadName()))
+                    continue;
+
+                System.out.println("\n***\n");
+                System.out.println("\n" + readInfo.read().getSAMString() + "\n");
+                System.out.println("\n# " + mCurrentRegion + "\n");
+                System.out.println("\n***\n");
+            }
         }
 
         postProcessSingleReads(fragmentCoordReads.SingleReads);

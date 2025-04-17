@@ -4,8 +4,11 @@ import static java.lang.String.format;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+
+import htsjdk.samtools.SAMRecord;
 
 public class FragmentCoordReads
 {
@@ -43,5 +46,14 @@ public class FragmentCoordReads
     public String toString()
     {
         return format("duplicateGroups(%d) singles(%d) totalReads(%d)",     DuplicateGroups.size(), SingleReads.size(), totalReadCount());
+    }
+
+    // TODO: remove
+    public Stream<SAMRecord> readStream()
+    {
+        return Stream.concat(
+                DuplicateGroups.stream().flatMap(x -> x.reads().stream()),
+                SingleReads.stream().map(ReadInfo::read)
+        );
     }
 }

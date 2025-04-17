@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,6 +37,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.collect.UnionFind;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
@@ -44,6 +46,15 @@ import htsjdk.samtools.SAMRecord;
 
 public class UmiGroupBuilder
 {
+    public enum REDUX_VERSION
+    {
+        ORIG,
+        JITTER_COLLAPSE,
+        POLYG_UMI_COLLAPSE
+    }
+
+    public static final REDUX_VERSION CURRENT_REDUX_VERSION = REDUX_VERSION.JITTER_COLLAPSE;
+
     private final SequencingType mSequencing;
     private final UmiConfig mUmiConfig;
     private final UmiStatistics mStats;
@@ -83,7 +94,10 @@ public class UmiGroupBuilder
             allUmiGroups.addAll(umiGroups);
         }
 
-        collapsePolyGDuplexUmis(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+        if(CURRENT_REDUX_VERSION == REDUX_VERSION.POLYG_UMI_COLLAPSE)
+        {
+            collapsePolyGDuplexUmis(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+        }
 
         if(formCoordGroups)
         {
@@ -121,9 +135,12 @@ public class UmiGroupBuilder
             }
         }
 
-        if(mJitterCollapsingEnabled)
+        if(CURRENT_REDUX_VERSION != REDUX_VERSION.ORIG)
         {
-            jitterCollapseUmiGroups(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+            if(mJitterCollapsingEnabled)
+            {
+                jitterCollapseUmiGroups(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+            }
         }
 
         List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
