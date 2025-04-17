@@ -26,12 +26,12 @@ public final class TestCuppaFactory
         predictions.add(prediction);
 
         return ImmutableCuppaData.builder()
-                .bestPrediction(prediction)
+                .cuppaMode(CuppaMode.WGS)
                 .predictions(predictions)
+                .bestPrediction(prediction)
                 .simpleDups32To200B(0)
                 .maxComplexSize(0)
                 .telomericSGLs(0)
-                .cuppaMode(CuppaMode.WGTS)
                 .lineCount(0)
                 .build();
     }

@@ -130,9 +130,18 @@ public class CuppaDataFactoryTest
     public void canAssignCuppaModeFromFileWithoutRna() throws Exception
     {
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_WITHOUT_RNA_TSV);
-        CuppaMode featureValue = CuppaDataFactory.getCuppaMode(cuppaPredictions);
-        CuppaMode expectedFeatureValue = CuppaMode.WGS;
-        assertEquals(expectedFeatureValue, featureValue);
+        CuppaMode mode = CuppaDataFactory.getCuppaMode(cuppaPredictions);
+        CuppaMode expectedMode = CuppaMode.WGS;
+        assertEquals(expectedMode, mode);
+    }
+
+    @Test
+    public void canAssignCuppaModeFromFileWithRna() throws Exception
+    {
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_WITH_RNA_TSV);
+        CuppaMode mode = CuppaDataFactory.getCuppaMode(cuppaPredictions);
+        CuppaMode expectedMode = CuppaMode.WGTS;
+        assertEquals(expectedMode, mode);
     }
 
     private static void assertCuppaPredictions(@NotNull String inputFileName,
