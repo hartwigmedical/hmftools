@@ -3,9 +3,12 @@ package com.hartwig.hmftools.chord;
 import static com.hartwig.hmftools.chord.ChordTestUtils.DUMMY_GENOME_FASTA;
 import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
+import static com.hartwig.hmftools.chord.ChordTestUtils.NON_STANDARD_NUC_GENOME_FASTA;
+import static com.hartwig.hmftools.chord.ChordTestUtils.NON_STANDARD_NUC_GENOME_SAMPLE;
 import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,5 +86,23 @@ public class SnvPrepTest
         }
 
         assertEquals(firstExpectedContextCounts, firstActualContextCounts);
+    }
+
+    @Test
+    public void canPrepSnvsWithNonStandardNucleotides()
+    {
+        Configurator.setRootLevel(Level.DEBUG);
+
+        ChordConfig config = new ChordConfig.Builder()
+                .snvIndelVcfFile(INPUT_VCF_DIR + NON_STANDARD_NUC_GENOME_SAMPLE + ".purple.somatic.vcf.gz")
+                .refGenomeFile(NON_STANDARD_NUC_GENOME_FASTA)
+                .outputDir(TMP_OUTPUT_DIR)
+                .build();
+
+        SnvPrep prep = new SnvPrep(config);
+
+        List<MutContextCount> actualContextCounts = prep.countMutationContexts(MINIMAL_SAMPLE);
+
+        assertTrue(actualContextCounts.stream().mapToInt(x -> x.mCount).sum() > 0);
     }
 }
