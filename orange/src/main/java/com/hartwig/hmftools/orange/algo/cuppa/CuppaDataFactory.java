@@ -37,7 +37,7 @@ public final class CuppaDataFactory
             throw new IllegalStateException("`CuppaPredictions` must contain a non-empty list of predictions");
         }
 
-        CuppaMode mode = getCuppaMode(cuppaPredictions);
+        CuppaMode mode = getCuppaMode(cuppaPredictions.MainCombinedClassifierName);
         CuppaPrediction bestPrediction = predictions.get(0);
         int simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
         int maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
@@ -103,13 +103,14 @@ public final class CuppaDataFactory
 
         return (int) Math.round(predictionEntry.FeatureValue);
     }
-    static CuppaMode getCuppaMode(@NotNull CuppaPredictions cuppaPredictions) {
-        if (cuppaPredictions.MainCombinedClassifierName == ClassifierName.COMBINED) {
+    static CuppaMode getCuppaMode(ClassifierName mainCombinedClassifierName)  throws IllegalArgumentException
+    {
+        if (mainCombinedClassifierName == ClassifierName.COMBINED) {
             return CuppaMode.WGTS;
-        } else if (cuppaPredictions.MainCombinedClassifierName == ClassifierName.DNA_COMBINED) {
+        } else if (mainCombinedClassifierName == ClassifierName.DNA_COMBINED) {
             return CuppaMode.WGS;
         } else {
-            return CuppaMode.UNKNOWN;
+            throw new IllegalArgumentException("MainCombinedClassifierName should only be COMBINED or DNA_COMBINED");
         }
     }
 }
