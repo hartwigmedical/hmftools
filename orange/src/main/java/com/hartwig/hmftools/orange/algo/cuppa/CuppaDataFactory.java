@@ -103,7 +103,7 @@ public final class CuppaDataFactory
 
         return (int) Math.round(predictionEntry.FeatureValue);
     }
-    static CuppaMode getCuppaMode(ClassifierName mainCombinedClassifierName)  throws IllegalArgumentException
+    static CuppaMode getCuppaMode(ClassifierName mainCombinedClassifierName) throws IllegalArgumentException
     {
         if (mainCombinedClassifierName == ClassifierName.COMBINED) {
             return CuppaMode.WGTS;
