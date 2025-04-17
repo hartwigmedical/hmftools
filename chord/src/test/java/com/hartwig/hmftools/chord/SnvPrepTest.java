@@ -63,7 +63,7 @@ public class SnvPrepTest
             new MutContextCount("A[C>A]A", 10),
             new MutContextCount("A[C>A]C", 6),
             new MutContextCount("A[C>A]G", 8),
-            new MutContextCount("A[C>A]T", 3),
+            new MutContextCount("A[C>A]T", 2),
             new MutContextCount("C[C>A]A", 4),
             new MutContextCount("C[C>A]C", 4),
             new MutContextCount("C[C>A]G", 6),
