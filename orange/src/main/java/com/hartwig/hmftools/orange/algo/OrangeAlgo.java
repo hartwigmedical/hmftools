@@ -252,6 +252,7 @@ public class OrangeAlgo
         }
 
         boolean hasRefSample = config.wgsRefConfig() != null && config.wgsRefConfig().referenceSampleId() != null;
+        assert peach != null;
         OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
                 .samplingDate(config.samplingDate())
@@ -271,7 +272,7 @@ public class OrangeAlgo
                 .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
-                .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
+                .peach(ConversionUtil.mapToIterable(peach.stream().filter(genotype -> !genotype.gene().equals("UGT1A1")).toList(), OrangeConversion::convert))
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
