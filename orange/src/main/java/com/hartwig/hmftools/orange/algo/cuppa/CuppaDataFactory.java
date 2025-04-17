@@ -37,7 +37,7 @@ public final class CuppaDataFactory
             throw new IllegalStateException("`CuppaPredictions` must contain a non-empty list of predictions");
         }
 
-        CuppaMode cuppaMode = getCuppaMode(cuppaPredictions);
+        CuppaMode mode = getCuppaMode(cuppaPredictions);
         CuppaPrediction bestPrediction = predictions.get(0);
         int simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
         int maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
@@ -45,7 +45,7 @@ public final class CuppaDataFactory
         int lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
 
         return ImmutableCuppaData.builder()
-                .cuppaMode(cuppaMode)
+                .mode(mode)
                 .predictions(predictions)
                 .bestPrediction(bestPrediction)
                 .simpleDups32To200B(simpleDups32To200B)
@@ -106,7 +106,7 @@ public final class CuppaDataFactory
     static CuppaMode getCuppaMode(@NotNull CuppaPredictions cuppaPredictions) {
         if (cuppaPredictions.MainCombinedClassifierName == ClassifierName.COMBINED) {
             return CuppaMode.WGTS;
-        } else if (cuppaPredictions.ClassifierNames.contains(ClassifierName.DNA_COMBINED)) {
+        } else if (cuppaPredictions.MainCombinedClassifierName == ClassifierName.DNA_COMBINED) {
             return CuppaMode.WGS;
         } else {
             return CuppaMode.UNKNOWN;

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface CuppaData
 {
-    CuppaMode cuppaMode();
+    CuppaMode mode();
 
     @NotNull
     List<CuppaPrediction> predictions();

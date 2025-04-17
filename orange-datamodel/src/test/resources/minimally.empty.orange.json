@@ -116,7 +116,7 @@
   },
   "peach": [],
   "cuppa": {
-    "cuppaMode" : "WGS",
+    "mode" : "WGS",
     "predictions": [
     ],
     "bestPrediction": {
