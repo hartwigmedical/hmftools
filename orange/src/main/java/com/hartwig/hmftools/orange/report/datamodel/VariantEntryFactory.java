@@ -26,8 +26,11 @@ public final class VariantEntryFactory
         List<VariantEntry> entries = Lists.newArrayList();
         for(PurpleVariant variant : variants)
         {
-            PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
-            entries.add(toVariantEntry(variant, driver));
+            if(hasCanonicalImpact(variant))
+            {
+                PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
+                entries.add(toVariantEntry(variant, driver));
+            }
         }
 
         for(PurpleDriver nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers))
@@ -157,5 +160,10 @@ public final class VariantEntryFactory
             joiner.add(VariantEffect.valueOf(effect.name()).effect());
         }
         return joiner.toString();
+    }
+
+    private static boolean hasCanonicalImpact(@NotNull PurpleVariant variant)
+    {
+        return !variant.canonicalImpact().transcript().isEmpty();
     }
 }
