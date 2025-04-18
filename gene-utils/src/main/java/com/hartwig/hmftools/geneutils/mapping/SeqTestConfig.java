@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
 import static com.hartwig.hmftools.common.blastn.BlastnRunner.registerBlastn;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
@@ -47,7 +45,6 @@ public class SeqTestConfig
     {
         configBuilder.addPath(INPUT_FILE, true, "Input regions and sequences");
 
-        configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         registerBlastn(configBuilder, false);
 
         addOutputOptions(configBuilder, false);
