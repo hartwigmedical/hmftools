@@ -252,31 +252,62 @@ public class OrangeAlgo
         }
 
         boolean hasRefSample = config.wgsRefConfig() != null && config.wgsRefConfig().referenceSampleId() != null;
-        assert peach != null;
-        OrangeRecord report = ImmutableOrangeRecord.builder()
-                .sampleId(config.tumorSampleId())
-                .samplingDate(config.samplingDate())
-                .experimentType(config.experimentType())
-                .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
-                .refGenomeVersion(config.refGenomeVersion())
-                .pipelineVersion(pipelineVersion)
-                .refSample(refSample)
-                .tumorSample(tumorSample)
-                .germlineMVLHPerGene(mvlhPerGene)
-                .purple(purple)
-                .linx(linx)
-                .wildTypeGenes(wildTypeGenes)
-                .isofox(isofox)
-                .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null) : null)
-                .immuneEscape(immuneEscape)
-                .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
-                .chord(chord != null ? OrangeConversion.convert(chord) : null)
-                .cuppa(cuppa)
-                .peach(ConversionUtil.mapToIterable(peach.stream().filter(genotype -> !genotype.gene().equals("UGT1A1")).toList(), OrangeConversion::convert))
-                .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
-                .cohortEvaluations(evaluateCohortPercentiles(config, purple))
-                .plots(buildPlots(config))
-                .build();
+        OrangeRecord report;
+        if (peach != null)
+        {
+            report = ImmutableOrangeRecord.builder()
+                    .sampleId(config.tumorSampleId())
+                    .samplingDate(config.samplingDate())
+                    .experimentType(config.experimentType())
+                    .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
+                    .refGenomeVersion(config.refGenomeVersion())
+                    .pipelineVersion(pipelineVersion)
+                    .refSample(refSample)
+                    .tumorSample(tumorSample)
+                    .germlineMVLHPerGene(mvlhPerGene)
+                    .purple(purple)
+                    .linx(linx)
+                    .wildTypeGenes(wildTypeGenes)
+                    .isofox(isofox)
+                    .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null) : null)
+                    .immuneEscape(immuneEscape)
+                    .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
+                    .chord(chord != null ? OrangeConversion.convert(chord) : null)
+                    .cuppa(cuppa)
+                    .peach(ConversionUtil.mapToIterable(peach.stream().filter(genotype -> !genotype.gene().equals("UGT1A1")).toList(), OrangeConversion::convert))
+                    .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
+                    .cohortEvaluations(evaluateCohortPercentiles(config, purple))
+                    .plots(buildPlots(config))
+                    .build();
+        }
+        else
+        {
+            report = ImmutableOrangeRecord.builder()
+                    .sampleId(config.tumorSampleId())
+                    .samplingDate(config.samplingDate())
+                    .experimentType(config.experimentType())
+                    .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
+                    .refGenomeVersion(config.refGenomeVersion())
+                    .pipelineVersion(pipelineVersion)
+                    .refSample(refSample)
+                    .tumorSample(tumorSample)
+                    .germlineMVLHPerGene(mvlhPerGene)
+                    .purple(purple)
+                    .linx(linx)
+                    .wildTypeGenes(wildTypeGenes)
+                    .isofox(isofox)
+                    .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null) : null)
+                    .immuneEscape(immuneEscape)
+                    .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
+                    .chord(chord != null ? OrangeConversion.convert(chord) : null)
+                    .cuppa(cuppa)
+                    .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
+                    .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
+                    .cohortEvaluations(evaluateCohortPercentiles(config, purple))
+                    .plots(buildPlots(config))
+                    .build();
+        }
+
 
         verifyPlots(report.plots(), linxData);
 
