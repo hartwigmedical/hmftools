@@ -35,8 +35,7 @@ public final class PaveUtils
             // analyse against each of the genes and their transcripts
             for(GeneData geneData : geneCandidates)
             {
-                List<TranscriptData> transDataList =
-                        geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
+                List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
 
                 // non-coding transcripts are skipped for now
                 if(transDataList.isEmpty())
@@ -45,6 +44,7 @@ public final class PaveUtils
                 for(TranscriptData transData : transDataList)
                 {
                     VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+                    VariantTransImpact selectedTransImpact = transImpact;
                     processed = true;
 
                     // check right-alignment if the variant has microhomology
@@ -55,12 +55,18 @@ public final class PaveUtils
                         if(raTransImpact != null)
                         {
                             variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
-                            transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+                            selectedTransImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+
+                            if(selectedTransImpact == transImpact)
+                            {
+                                // use the right-aligned coding string regardless of which variant is prioritised
+                                transImpact.codingContext().Hgvs = raTransImpact.codingContext().Hgvs;
+                            }
                         }
                     }
 
-                    if(transImpact != null)
-                        variant.addImpact(geneData.GeneName, transImpact);
+                    if(selectedTransImpact != null)
+                        variant.addImpact(geneData.GeneName, selectedTransImpact);
                 }
             }
         }
