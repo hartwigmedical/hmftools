@@ -350,7 +350,7 @@ public class ReferenceData
                 currentTrans = new TranscriptData(
                         transId, items[transNameIndex], geneId, true, Byte.parseByte(items[strandIndex]),
                         Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
-                        codingStart, codingEnd, items[biotypeIndex]);
+                        codingStart, codingEnd, items[biotypeIndex], null);
 
                 hlaTranscriptMap.put(geneName, currentTrans);
 

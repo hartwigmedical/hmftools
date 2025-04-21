@@ -83,7 +83,7 @@ public class GenerateEnsemblDataCache
             writer.newLine();
 
             // for each gene, collect up any gene which overlaps it or is within the specified distance upstream from it
-            for (Map.Entry<String, List<GeneData>> entry : chrGeneDataMap.entrySet())
+            for(Map.Entry<String, List<GeneData>> entry : chrGeneDataMap.entrySet())
             {
                 final String chromosome = entry.getKey();
 
@@ -91,14 +91,14 @@ public class GenerateEnsemblDataCache
 
                 final List<GeneData> geneList = entry.getValue();
 
-                for (final GeneData gene : geneList)
+                for(final GeneData gene : geneList)
                 {
                     List<String> proximateGenes = Lists.newArrayList();
 
                     int geneRangeStart;
                     int geneRangeEnd;
 
-                    if (gene.Strand == POS_STRAND)
+                    if(gene.Strand == POS_STRAND)
                     {
                         geneRangeStart = gene.GeneStart - preGenePromotorDistance;
                         geneRangeEnd = gene.GeneEnd;
@@ -109,12 +109,12 @@ public class GenerateEnsemblDataCache
                         geneRangeEnd = gene.GeneEnd + preGenePromotorDistance;
                     }
 
-                    for (final GeneData otherGene : geneList)
+                    for(final GeneData otherGene : geneList)
                     {
-                        if (otherGene.Strand != gene.Strand)
+                        if(otherGene.Strand != gene.Strand)
                             continue;
 
-                        //if (otherGene.GeneId.equals(gene.GeneId)) // skip same gene
+                        //if(otherGene.GeneId.equals(gene.GeneId)) // skip same gene
                         //    continue;
 
                         if(positionsOverlap(geneRangeStart, geneRangeEnd, otherGene.GeneStart, otherGene.GeneEnd))
@@ -129,7 +129,7 @@ public class GenerateEnsemblDataCache
                     // now set the preceding splice acceptor position for each transcript in this gene
                     final List<TranscriptData> transDataList = transcriptDataMap.get(gene.GeneId);
 
-                    if (transDataList == null || transDataList.isEmpty())
+                    if(transDataList == null || transDataList.isEmpty())
                         continue;
 
                     for(final TranscriptData transData : transDataList)
@@ -189,12 +189,12 @@ public class GenerateEnsemblDataCache
 
                     if(strand == POS_STRAND && exon.Start < transStartPos)
                     {
-                        if (closestPosition == -1 || exon.Start > closestPosition)
+                        if(closestPosition == -1 || exon.Start > closestPosition)
                             closestPosition = exon.Start;
                     }
                     else if(strand == NEG_STRAND && exon.End > transStartPos)
                     {
-                        if (closestPosition == -1 || exon.End < closestPosition)
+                        if(closestPosition == -1 || exon.End < closestPosition)
                             closestPosition = exon.End;
                     }
                 }

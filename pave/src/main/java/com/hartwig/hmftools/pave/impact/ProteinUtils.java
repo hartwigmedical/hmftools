@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.codonForBase;
 
 import java.util.List;
 
@@ -40,9 +41,7 @@ public final class ProteinUtils
         // MNVs will have the coding range set exactly over their ref/alt bases (minus non-coding bases), whereas
         // DELs will cover the first ref base either side of the DEL, and inserts will be just to upstream ref base
 
-        // both coding base and amino acid position start at 1, so eg coding base of 1-3 = amino acid 1, 4-6 = 2 etc
-        // this CodonIndex may precede the first alt-base for INDELs for the reason described above
-        pc.CodonIndex = (cc.CodingBase - 1) / 3 + 1;
+        pc.CodonIndex = codonForBase(cc.CodingBase);
 
         String refCodingBases = refGenome.getBaseString(variant.Chromosome, cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END]);
         pc.RefCodonBases = refCodingBases;

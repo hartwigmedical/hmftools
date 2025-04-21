@@ -159,13 +159,6 @@ public class EnsemblDAO
                 configBuilder.getValue(DB_USER), configBuilder.getValue(DB_PASS,""), configBuilder.getValue(DB_URL));
     }
 
-    /*
-    public static DSLContext createEnsemblDbConnection(final CommandLine cmd)
-    {
-        return createEnsemblDbConnection(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS, ""), cmd.getOptionValue(DB_URL));
-    }
-    */
-
     public static DSLContext createEnsemblDbConnection(final String dbUser, final String dbPassword, final String dbUrl)
     {
         try
@@ -456,12 +449,14 @@ public class EnsemblDAO
     {
         GU_LOGGER.info("retrieving transcript & exon data");
 
+        Map<String,String> ensembleIdToRefSeqId = GenerateRefSeq.getRefSeqMapping(mDbContext);
+
         try
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write("GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd");
-            writer.write(",ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd");
+            writer.write(",ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd,RefSeqId");
             writer.newLine();
 
             final String queryStr = readQueryString(Resources.getResource("ensembl_sql/ensembl_transcript.sql"));
@@ -470,7 +465,7 @@ public class EnsemblDAO
 
             GU_LOGGER.debug("transcript query return {} records", results.size());
 
-            final Map<String,List<TranscriptData>> transcriptDataMap = Maps.newHashMap();
+            Map<String,List<TranscriptData>> transcriptDataMap = Maps.newHashMap();
             String currentGeneId = "";
             TranscriptData currentTrans = null;
             List<TranscriptData> currentTransDataList = null;
@@ -516,7 +511,7 @@ public class EnsemblDAO
                     currentTrans = new TranscriptData(
                             transId.intValue(), transName, geneId, isCanonical, strand, transStart.intValue(), transEnd.intValue(),
                             codingStart != null ? codingStart.intValue() : null, codingEnd != null ? codingEnd.intValue() : null,
-                            bioType);
+                            bioType, null);
 
                     currentTransDataList.add(currentTrans);
                 }
@@ -549,16 +544,22 @@ public class EnsemblDAO
 
                 for(TranscriptData transData : transDataList)
                 {
+                    String refSeqId = ensembleIdToRefSeqId.get(transData.TransName);
+
+                    if(refSeqId == null)
+                        refSeqId = "NULL";
+
                     for(ExonData exon : transData.exons())
                     {
                         writer.write(String.format("%s,%d,%d,%d,%s,%s,%d,%d",
                                 geneId, canonicalTransId, transData.Strand, transData.TransId,
                                 transData.TransName, transData.BioType, transData.TransStart, transData.TransEnd));
 
-                        writer.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
+                        writer.write(String.format(",%d,%d,%d,%d,%d,%s,%s,%s",
                                 exon.Rank, exon.Start, exon.End, exon.PhaseStart, exon.PhaseEnd,
                                 transData.CodingStart != null ? transData.CodingStart : "NULL",
-                                transData.CodingEnd != null ? transData.CodingEnd : "NULL"));
+                                transData.CodingEnd != null ? transData.CodingEnd : "NULL",
+                                refSeqId));
 
                         writer.newLine();
                     }
@@ -571,115 +572,6 @@ public class EnsemblDAO
         {
             GU_LOGGER.error("error writing Ensembl trans-exon data file: {}", e.toString());
         }
-    }
-
-    private TranscriptData findCanonicalTranscript(final String geneId, final List<TranscriptData> transDataList)
-    {
-        TranscriptData canonicalTrans = transDataList.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
-
-        if(mReferenceTranscriptMap.isEmpty())
-            return canonicalTrans;
-
-        // assigment logging: GeneId,SelectedTrans,Ref38Trans,CanonicalTrans,MatchType,CodingBases
-
-        // otherwise search for the canonical in the reference data or a match based on its exons
-        List<TranscriptData> refTransDataList = mReferenceTranscriptMap.get(geneId);
-
-        if(refTransDataList == null)
-        {
-            GeneData geneData = mGeneIdDataMap.get(geneId);
-
-            GeneData altGeneData = mReferenceGeneDataByName.get(geneData.GeneName);
-
-            if(altGeneData != null)
-                refTransDataList = mReferenceTranscriptMap.get(altGeneData.GeneId);
-
-            if(refTransDataList == null)
-            {
-                GU_LOGGER.debug("{},{},NONE,{},NoRefByGeneId,{},{},{}",
-                        geneId, canonicalTrans.TransName, canonicalTrans.TransName,
-                        codingBaseLength(canonicalTrans), -1, codingBaseLength(canonicalTrans));
-                return canonicalTrans;
-            }
-        }
-
-        final TranscriptData refCanonicalTrans = refTransDataList.get(0);
-
-        // prioritisation
-        // coding base + transcriptId match
-        // coding bases match + is 37 ensembl canonical
-        // coding bases match
-        // is 37 ensembl canonical
-
-        List<TranscriptData> matchingTrans = transDataList.stream().filter(x -> transcriptsMatch(x, refCanonicalTrans)).collect(Collectors.toList());
-
-        if(matchingTrans.isEmpty())
-        {
-            GU_LOGGER.debug("{},{},{},{},NoCodingMatch,{},{},{}",
-                    geneId, canonicalTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
-                    codingBaseLength(canonicalTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
-
-            return canonicalTrans;
-        }
-
-        TranscriptData matchedTrans = matchingTrans.stream().filter(x -> x.TransName.equals(refCanonicalTrans.TransName)).findFirst().orElse(null);
-
-        if(matchedTrans != null)
-        {
-            if(!matchedTrans.IsCanonical)
-            {
-                GU_LOGGER.debug("{},{},{},{},RefNameMatch,{},{},{}",
-                        geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
-                        codingBaseLength(matchedTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
-            }
-
-            // don't log for no change to canonical and name
-
-            //GU_LOGGER.debug("geneId({}) choosing trans({} matching ref name as canonical over designated canonical({})",
-            //        geneId, matchedTrans.TransName, canonicalTrans != null ? canonicalTrans.TransName : "none");
-
-            return matchedTrans;
-        }
-
-        matchedTrans = matchingTrans.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
-
-        if(matchedTrans != null)
-        {
-            GU_LOGGER.debug("{},{},{},{},RefCanonicalNameChange,{},{},{}",
-                    geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
-                    codingBaseLength(matchedTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
-
-            return matchedTrans;
-        }
-
-        // any match
-        matchedTrans = matchingTrans.get(0);
-
-        GU_LOGGER.debug("{},{},{},{},RefOtherMatch,{},{},{}",
-                geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
-                codingBaseLength(matchedTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
-
-        return matchedTrans;
-    }
-
-    private static boolean transcriptsMatch(final TranscriptData transData, final TranscriptData otherTransData)
-    {
-        if(transData.exons().size() != otherTransData.exons().size())
-            return false;
-
-        if(codingBaseLength(transData) != codingBaseLength(otherTransData))
-            return false;
-
-        for(int i = 0; i < otherTransData.exons().size(); ++i)
-        {
-            final ExonData exon = transData.exons().get(i);
-            final ExonData otherExon = otherTransData.exons().get(i);
-
-            if(exon.PhaseStart != otherExon.PhaseStart || exon.PhaseEnd != otherExon.PhaseEnd)
-                return false;
-        }
-
-        return true;
     }
 
     private void writeTranscriptProteinData(final String outputFile)
@@ -723,5 +615,4 @@ public class EnsemblDAO
             GU_LOGGER.error("error writing Ensembl trans-protein data file: {}", e.toString());
         }
     }
-
 }

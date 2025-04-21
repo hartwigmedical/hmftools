@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.genome.region.Strand.REVERSE;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Strand;
 
@@ -22,11 +24,14 @@ public class TranscriptData
     public final Integer CodingStart;
     public final Integer CodingEnd;
     public final String BioType;
+    public final String RefSeqId;
 
     private List<ExonData> mExons;
 
-    public TranscriptData(final int transId, final String transName, final String geneId, final boolean isCanonical, final byte strand,
-            int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType)
+    public TranscriptData(
+            final int transId, final String transName, final String geneId, final boolean isCanonical, final byte strand,
+            int transStart, int transEnd, @Nullable final Integer codingStart, @Nullable final Integer codingEnd,
+            final String bioType, final String refSeqId)
     {
         TransId = transId;
         TransName = transName;
@@ -39,6 +44,7 @@ public class TranscriptData
         CodingEnd = codingEnd;
         BioType = bioType;
         mExons = Lists.newArrayList();
+        RefSeqId = refSeqId;
     }
 
     public void setExons(final List<ExonData> exons) { mExons = exons; }
