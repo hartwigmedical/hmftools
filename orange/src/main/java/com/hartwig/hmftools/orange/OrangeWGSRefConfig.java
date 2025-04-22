@@ -157,13 +157,15 @@ public interface OrangeWGSRefConfig {
     @NotNull
     private static String backwardsCompatibleSageGermlineGeneConverage(String sageGermlineDir, String refSampleId) {
         try {
-            return mandatoryPath(generateGeneCoverageFilenameLegacySage(sageGermlineDir, refSampleId));
+            String sageLegacyPath = generateGeneCoverageFilenameLegacySage(sageGermlineDir, refSampleId);
+            LOGGER.info("Locating sage germline gene coverage [{}]", sageLegacyPath);
+            return mandatoryPath(sageLegacyPath);
         } catch (IllegalArgumentException e) {
             return mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId));
         }
     }
 
     private static String generateGeneCoverageFilenameLegacySage(final String basePath, final String sample) {
-        return checkAddDirSeparator(basePath) + sample + "sage.gene.coverage.tsv";
+        return checkAddDirSeparator(basePath) + sample + ".sage.gene.coverage.tsv";
     }
 }
