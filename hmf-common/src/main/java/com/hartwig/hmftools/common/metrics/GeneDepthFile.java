@@ -24,17 +24,12 @@ public final class GeneDepthFile
 
     public static String generateGeneCoverageFilename(final String basePath, final String sample)
     {
-        return generateGeneCoverageFilename(basePath, sample, BAM_METRICS_FILE_ID);
+        return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".gene_coverage.tsv";
     }
 
     public static String generateExonMediansFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".exon_medians.tsv";
-    }
-    
-    public static String generateGeneCoverageFilename(final String basePath, final String sample, final String fileId)
-    {
-        return checkAddDirSeparator(basePath) + sample + fileId + ".gene_coverage.tsv";
     }
 
     public static void write(final String filename, final List<GeneDepth> depths, final List<Integer> depthBuckets) throws IOException

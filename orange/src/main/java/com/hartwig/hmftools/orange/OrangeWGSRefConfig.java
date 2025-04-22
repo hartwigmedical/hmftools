@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
@@ -156,9 +157,13 @@ public interface OrangeWGSRefConfig {
     @NotNull
     private static String backwardsCompatibleSageGermlineGeneConverage(String sageGermlineDir, String refSampleId) {
         try {
-            return mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId, "sage"));
+            return mandatoryPath(generateGeneCoverageFilenameLegacySage(sageGermlineDir, refSampleId));
         } catch (IllegalArgumentException e) {
             return mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId));
         }
+    }
+
+    private static String generateGeneCoverageFilenameLegacySage(final String basePath, final String sample) {
+        return checkAddDirSeparator(basePath) + sample + "sage.gene.coverage.tsv";
     }
 }
