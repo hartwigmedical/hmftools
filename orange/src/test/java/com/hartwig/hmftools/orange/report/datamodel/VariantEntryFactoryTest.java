@@ -238,14 +238,14 @@ public class VariantEntryFactoryTest
         List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
 
         assertEquals(3, entries.size());
-        VariantEntry entry2 = findByGeneAndImpact(entries, "gene 1", "impact 2");
-        assertFalse(entry2.isCanonical());
+        VariantEntry entry1 = findByGeneAndImpact(entries, "gene 1", "impact 2");
+        assertFalse(entry1.isCanonical());
 
-        VariantEntry entry3 = findByGeneAndImpact(entries, "gene 1", "impact 3");
-        assertTrue(entry3.isCanonical());
+        VariantEntry entry2 = findByGeneAndImpact(entries, "gene 1", "impact 3");
+        assertTrue(entry2.isCanonical());
 
-        VariantEntry entry4 = findByGeneAndImpact(entries, "gene 1", "impact 4");
-        assertFalse(entry4.isCanonical());
+        VariantEntry entry3 = findByGeneAndImpact(entries, "gene 1", "impact 4");
+        assertFalse(entry3.isCanonical());
     }
 
     @NotNull
