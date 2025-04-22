@@ -133,7 +133,7 @@ public interface OrangeWGSRefConfig
             builder.sageSomaticRefSampleBQRPlot(mandatoryPath(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
 
             String sageGermlineDir = pathResolver.resolveMandatoryToolDirectory(SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-            builder.sageGermlineGeneCoverageTsv(mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
+            builder.sageGermlineGeneCoverageTsv(mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId, "sage")));
 
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
