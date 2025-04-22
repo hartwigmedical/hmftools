@@ -271,8 +271,6 @@ public class OrangeAlgo
                 .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
-                //.peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
-                //Replace line below with this line after UGT1A1
                 .peach(ConversionUtil.mapToIterable(peachFilterOutUGT1A1(peach), OrangeConversion::convert))
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
