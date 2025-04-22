@@ -277,7 +277,6 @@ public class OrangeAlgo
                 .plots(buildPlots(config))
                 .build();
 
-
         verifyPlots(report.plots(), linxData);
 
         if(config.limitJsonOutput())
