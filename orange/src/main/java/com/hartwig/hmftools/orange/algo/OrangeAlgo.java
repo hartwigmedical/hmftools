@@ -271,7 +271,7 @@ public class OrangeAlgo
                 .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
-                .peach(ConversionUtil.mapToIterable(peachFilterOutUGT1A1(peach), OrangeConversion::convert))
+                .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, etiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
@@ -629,8 +629,8 @@ public class OrangeAlgo
         LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.wgsRefConfig().peachGenotypeTsv());
-
-        return peachGenotypes;
+        List<PeachGenotype> filterUGT1A1FromPeachGenotypes = peachGenotypes.stream().filter(genotype -> !genotype.gene().equals("UGT1A1")).toList();
+        return filterUGT1A1FromPeachGenotypes;
     }
 
     @Nullable
@@ -756,18 +756,6 @@ public class OrangeAlgo
         if(linxVisualizedClusters.size() != orangePlots.linxDriverPlots().size())
         {
             LOGGER.warn("Expected {} linx plots, but found {}", linxVisualizedClusters.size(), orangePlots.linxDriverPlots().size());
-        }
-    }
-
-    private static List<PeachGenotype> peachFilterOutUGT1A1(List<PeachGenotype> peach)
-    {
-        if(peach == null)
-        {
-            return null;
-        }
-        else
-        {
-            return peach.stream().filter(genotype -> !genotype.gene().equals("UGT1A1")).toList();
         }
     }
 
