@@ -331,7 +331,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
                     // test for a simple non-match with the alt, for negative phasing
                     Boolean simpleMatch = isSimpleAltMatch(readCounter.variant(), record);
 
-                    if(simpleMatch == false)
+                    if(simpleMatch == Boolean.FALSE)
                         negPhasedCounters.add(readCounter);
                 }
             }

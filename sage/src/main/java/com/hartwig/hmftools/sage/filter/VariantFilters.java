@@ -359,7 +359,11 @@ public class VariantFilters
         {
             BinomialDistribution distribution = new BinomialDistribution(readStrandBiasAlt.depth(), 0.5);
             double probability = 2 * distribution.cumulativeProbability((int)round(readStrandBiasAlt.depth() * readStrandBiasAlt.minBias()));
-            readStrandBiasPenalty = -10 * log10(probability);
+
+            if(probability > 0)
+                readStrandBiasPenalty = -10 * log10(probability);
+            else
+                readStrandBiasPenalty = 50; // fall-back to apply a penalty for extreme bias
         }
 
         double avgEdgeDistance = primaryTumor.readEdgeDistance().avgDistanceFromEdge();
@@ -402,6 +406,9 @@ public class VariantFilters
         int supportCount = primaryTumor.strongAltSupport();
 
         double altBaseQualAvg = primaryTumor.averageAltRecalibratedBaseQuality();
+
+        if(boostNovelIndel(primaryTumor.tier(), primaryTumor))
+            altBaseQualAvg += DEFAULT_BASE_QUAL_FIXED_PENALTY;
 
         // SupportCount * min(AvgBQ[ALT] / AvgBQ[DP], 1)
         int adjustedAltSupportCount = supportCount * (int)round(min(altBaseQualAvg / baseQualAvg, 1));
