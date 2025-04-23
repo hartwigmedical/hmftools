@@ -78,8 +78,8 @@
         <lilac.version>1.7</lilac.version>
         <linx.version>2.1</linx.version>
         <neo.version>1.2</neo.version>
-        <orange.version>3.8.0</orange.version>
-        <orange-datamodel.version>2.7.0</orange-datamodel.version>
+        <orange.version>3.9.0</orange.version>
+        <orange-datamodel.version>3.0.0</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <patient-db.version>6.0</patient-db.version>
         <pave.version>1.8</pave.version>
