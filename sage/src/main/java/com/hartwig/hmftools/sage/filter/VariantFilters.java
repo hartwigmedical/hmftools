@@ -643,7 +643,7 @@ public class VariantFilters
 
         if(isMnv || isLongInsert)
         {
-            double altSupportPerc = refDepth > 0 ? refAltSupport / refDepth : 0;
+            double altSupportPerc = refDepth > 0 ? refAltSupport / (double)refDepth : 0;
             return altSupportPerc >= MAX_INDEL_GERMLINE_ALT_SUPPORT;
         }
 

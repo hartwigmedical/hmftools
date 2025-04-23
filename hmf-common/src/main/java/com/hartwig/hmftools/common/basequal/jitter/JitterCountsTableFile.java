@@ -105,10 +105,15 @@ public class JitterCountsTableFile
 
 		DelimFileReader reader = new DelimFileReader(filename);
 
+		boolean hasConsensusType = reader.hasColumn(JitterModelParamsFile.Column.consensusType);
+
 		for(DelimFileReader.Row row : reader)
 		{
 			String unit = row.get(JitterModelParamsFile.Column.unit);
-            ConsensusType consensusType = ConsensusType.valueOf(row.get(JitterModelParamsFile.Column.consensusType));
+
+			ConsensusType consensusType = hasConsensusType ?
+					ConsensusType.valueOf(row.get(JitterModelParamsFile.Column.consensusType)) : ConsensusType.IGNORE;
+
 			JitterCountsTable unitConsensusData = null;
 			for(JitterCountsTable perUnitConsensusData : jitterCountData)
 			{
