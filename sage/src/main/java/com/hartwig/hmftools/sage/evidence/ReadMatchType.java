@@ -16,7 +16,8 @@ public enum ReadMatchType
     BASE_QUAL,
     NON_CORE,
     IN_SPLIT,
-    UNRELATED;
+    UNRELATED,
+    NO_ALT_REF_MATCH;
 
     public static String countsToString(final long[] counts)
     {

@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatcher.isSimpleAltMatch;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT_EXACT;
@@ -31,6 +32,7 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.IN_SPLIT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.MAP_QUAL;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.MAX_COVERAGE;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NON_CORE;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_ALT_REF_MATCH;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SOFT_CLIP;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
@@ -516,7 +518,16 @@ public class ReadContextCounter
         logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
         mNonAltNmCountTotal += numberOfEvents;
 
-        return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
+        if(matchType == ReadContextMatch.REF)
+            return REF_SUPPORT;
+
+        // test for a simple non-match with the alt, for negative phasing
+        Boolean simpleMatch = isSimpleAltMatch(mVariant, record, readVarIndex);
+
+        if(simpleMatch == Boolean.FALSE)
+            return NO_ALT_REF_MATCH;
+
+        return UNRELATED;
     }
 
     private boolean coversVariant(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)

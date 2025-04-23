@@ -487,19 +487,7 @@ public class ReadContextMatcher
         return mismatchCount == 0 ? BaseMatchType.MATCH : BaseMatchType.LOW_QUAL_MISMATCHES;
     }
 
-    public static Boolean isSimpleAltMatch(final SimpleVariant variant, final SAMRecord record)
-    {
-        RawContext rawContext = RawContext.createFromRead(variant, record);
-
-        if(rawContext.ReadVariantIndex >= 0)
-        {
-            return isSimpleAltMatch(variant, record, rawContext.ReadVariantIndex);
-        }
-
-        return null;
-    }
-
-    private static boolean isSimpleAltMatch(final SimpleVariant variant, final SAMRecord record, final int readVarIndex)
+    public static boolean isSimpleAltMatch(final SimpleVariant variant, final SAMRecord record, final int readVarIndex)
     {
         if(variant.isIndel())
         {

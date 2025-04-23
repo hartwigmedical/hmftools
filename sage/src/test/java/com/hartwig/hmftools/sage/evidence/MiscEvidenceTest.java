@@ -250,7 +250,7 @@ public class MiscEvidenceTest
         assertEquals(ReadContextMatch.FULL, matchInfo.MatchType);
         assertFalse(matchInfo.ExactMatch);
 
-        Boolean simpleMatch = isSimpleAltMatch(readContext.variant(), altRead);
+        Boolean simpleMatch = isSimpleAltMatch(readContext.variant(), altRead, readVarIndex);
         assertNotNull(simpleMatch);
         assertTrue(simpleMatch);
 

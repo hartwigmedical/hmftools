@@ -8,10 +8,9 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.common.ReadContextMatcher.isSimpleAltMatch;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_ALT_REF_MATCH;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT_EXACT;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 
 import java.util.Collections;
 import java.util.List;
@@ -322,17 +321,9 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
                 {
                     posPhasedCounters.add(readCounter);
                 }
-                else if(matchType == REF_SUPPORT)
+                else if(matchType == REF_SUPPORT || matchType == NO_ALT_REF_MATCH)
                 {
                     negPhasedCounters.add(readCounter);
-                }
-                else if(matchType == UNRELATED)
-                {
-                    // test for a simple non-match with the alt, for negative phasing
-                    Boolean simpleMatch = isSimpleAltMatch(readCounter.variant(), record);
-
-                    if(simpleMatch == Boolean.FALSE)
-                        negPhasedCounters.add(readCounter);
                 }
             }
         }
