@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
@@ -48,12 +49,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeWGSRefConfig
-{
+public interface OrangeWGSRefConfig {
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
 
-    static void registerConfig(@NotNull ConfigBuilder configBuilder)
-    {
+    static void registerConfig(@NotNull ConfigBuilder configBuilder) {
         configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
                 false,
                 "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
@@ -107,8 +106,7 @@ public interface OrangeWGSRefConfig
     String refSampleFlagstatFile();
 
     @NotNull
-    static OrangeWGSRefConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver)
-    {
+    static OrangeWGSRefConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver) {
         ImmutableOrangeWGSRefConfig.Builder builder = ImmutableOrangeWGSRefConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 
@@ -124,8 +122,7 @@ public interface OrangeWGSRefConfig
 
         // optionally required for WGS, adding Reference
         String refSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
-        if(refSampleId != null)
-        {
+        if (refSampleId != null) {
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
             builder.referenceSampleId(refSampleId);
 
@@ -133,7 +130,7 @@ public interface OrangeWGSRefConfig
             builder.sageSomaticRefSampleBQRPlot(mandatoryPath(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
 
             String sageGermlineDir = pathResolver.resolveMandatoryToolDirectory(SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-            builder.sageGermlineGeneCoverageTsv(mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
+            builder.sageGermlineGeneCoverageTsv(backwardsCompatibleSageGermlineGeneConverage(sageGermlineDir, refSampleId));
 
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
@@ -144,8 +141,7 @@ public interface OrangeWGSRefConfig
 
             // PEACH optional so that skipping it in oncoanalyser still generates an ORANGE report
             String peachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
-            if(peachDir != null)
-            {
+            if (peachDir != null) {
                 String peachGenotypeTsv = mandatoryPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
                 builder.peachGenotypeTsv(peachGenotypeTsv);
             }
@@ -156,5 +152,23 @@ public interface OrangeWGSRefConfig
         }
 
         return builder.build();
+    }
+
+    @NotNull
+    private static String backwardsCompatibleSageGermlineGeneConverage(String sageGermlineDir, String refSampleId) {
+        String sageGermlineGeneCoverageLegacyPath = generateGeneCoverageFilenameLegacySage(sageGermlineDir, refSampleId);
+        try {
+            return mandatoryPath(sageGermlineGeneCoverageLegacyPath);
+        } catch (IllegalArgumentException e) {
+            String sageGermlineGeneCoverageNewPath = generateGeneCoverageFilename(sageGermlineDir, refSampleId);
+            LOGGER.info("Could not find sage germline gene coverage in [{}] using new path [{}]",
+                    sageGermlineGeneCoverageLegacyPath,
+                    sageGermlineGeneCoverageNewPath);
+            return mandatoryPath(sageGermlineGeneCoverageNewPath);
+        }
+    }
+
+    private static String generateGeneCoverageFilenameLegacySage(final String basePath, final String sample) {
+        return checkAddDirSeparator(basePath) + sample + ".sage.gene.coverage.tsv";
     }
 }
