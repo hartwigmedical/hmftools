@@ -274,7 +274,11 @@ investigate potential causes for QC failure.
     - Make PurpleGeneCopyNumber transcript-aware in orange-datamodel
     - Upgraded DOID datamodel to version of Dec 2024 release
     - Add CUPPA mode to ORANGE using mainCombinedClassifierName
-    - Remove UGT1A1 from PEACH genotypes when running OrangeAlgo 
+    - Remove UGT1A1 from PEACH genotypes when running OrangeAlgo
+    - Functional:
+- [3.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.8.0):
+   - Make compatible with new doid.json format
+   - support Purple QC status for TINC
 - [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
     - Add unreported reason to fusions in ORANGE
     - Add etiology information to signatures and sort by allocation
