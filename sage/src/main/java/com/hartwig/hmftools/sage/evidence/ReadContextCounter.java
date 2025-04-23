@@ -24,7 +24,8 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT_EXACT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT_LOW_QUAL_MISMATCHES;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.CHIMERIC;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.IN_SPLIT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.MAP_QUAL;
@@ -35,6 +36,7 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SOFT_CLIP;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.LOW_QUAL_MISMATCHES;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.evidence.Realignment.INVALID_INDEX;
 import static com.hartwig.hmftools.sage.evidence.Realignment.checkRealignment;
@@ -59,6 +61,7 @@ import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
+import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -364,6 +367,7 @@ public class ReadContextCounter
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
+        ReadMatchInfo readMatchInfo = ReadMatchInfo.NO_MATCH;
         ReadContextMatch matchType = NONE;
         double calcBaseQuality = 0;
         double modifiedQuality = 0;
@@ -380,7 +384,8 @@ public class ReadContextCounter
             {
                 if(rawContext.PositionType != DELETED)
                 {
-                    matchType = determineReadContextMatch(record, readVarIndex, splitReadSegment);
+                    readMatchInfo = determineReadContextMatch(record, readVarIndex, splitReadSegment);
+                    matchType = readMatchInfo.MatchType;
 
                     if(matchType.SupportsAlt)
                     {
@@ -396,7 +401,11 @@ public class ReadContextCounter
             modifiedQuality = qualityScores.ModifiedQuality;
 
             // check for alt support (full, partial core or core)
-            matchType = rawContext.PositionType != DELETED ? determineReadContextMatch(record, readVarIndex, splitReadSegment) : NONE;
+            if(rawContext.PositionType != DELETED)
+            {
+                readMatchInfo = determineReadContextMatch(record, readVarIndex, splitReadSegment);
+                matchType = readMatchInfo.MatchType;
+            }
 
             if(matchType.SupportsAlt)
             {
@@ -412,7 +421,7 @@ public class ReadContextCounter
                 logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
                 countAltSupportMetrics(record, fragmentData);
 
-                return ALT_SUPPORT;
+                return readMatchInfo.ExactMatch ? ALT_SUPPORT_EXACT : ALT_SUPPORT_LOW_QUAL_MISMATCHES;
             }
         }
 
@@ -444,7 +453,7 @@ public class ReadContextCounter
                     return UNRELATED;
                 }
 
-                if(realignedType == EXACT)
+                if(realignedType == EXACT || realignedType == LOW_QUAL_MISMATCHES)
                 {
                     matchType = ReadContextMatch.REALIGNED;
                     registerReadSupport(record, REALIGNED, modifiedQuality);
@@ -457,7 +466,7 @@ public class ReadContextCounter
                     logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
                     countAltSupportMetrics(record, fragmentData);
 
-                    return ALT_SUPPORT;
+                    return realignedType == EXACT ? ALT_SUPPORT_EXACT : ALT_SUPPORT_LOW_QUAL_MISMATCHES;
                 }
 
                 if(realignedType == SHORTENED)
@@ -518,15 +527,15 @@ public class ReadContextCounter
         return mMatcher.coversVariant(record.getReadBases(), readIndex);
     }
 
-    private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
+    private ReadMatchInfo determineReadContextMatch(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
     {
         if(splitReadSegment != null)
         {
-            return mMatcher.determineReadMatch(
+            return mMatcher.determineReadMatchInfo(
                     splitReadSegment.ReadBases, splitReadSegment.ReadQuals, splitReadSegment.ReadVarIndex, false);
         }
 
-        return mMatcher.determineReadMatch(record, readIndex);
+        return mMatcher.determineReadMatchInfo(record, readIndex);
     }
 
     private boolean belowQualThreshold(double calcBaseQuality)

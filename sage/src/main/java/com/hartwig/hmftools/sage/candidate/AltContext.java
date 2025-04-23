@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
 import javax.annotation.Nullable;
 
@@ -16,10 +15,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
+import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 
@@ -93,10 +92,10 @@ public class AltContext extends SimpleVariant
         for(ReadContextCandidate candidate : mReadContextCandidates)
         {
             // compare the core and flanks for the 2 contexts, not allowing for mismatches
-            ReadContextMatch match = candidate.matcher().determineReadMatch(
+            ReadMatchInfo matchInfo = candidate.matcher().determineReadMatchInfo(
                     read.getReadBases(), null, variantReadIndex, true);
 
-            switch(match)
+            switch(matchInfo.MatchType)
             {
                 case FULL:
                     candidate.incrementFull(1, numberOfEvents);

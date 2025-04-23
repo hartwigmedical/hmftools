@@ -4,10 +4,10 @@ import static java.lang.String.format;
 
 import java.util.StringJoiner;
 
-// purely used for statistics
 public enum ReadMatchType
 {
-    ALT_SUPPORT,
+    ALT_SUPPORT_EXACT,
+    ALT_SUPPORT_LOW_QUAL_MISMATCHES,
     REF_SUPPORT,
     SOFT_CLIP,
     CHIMERIC,
