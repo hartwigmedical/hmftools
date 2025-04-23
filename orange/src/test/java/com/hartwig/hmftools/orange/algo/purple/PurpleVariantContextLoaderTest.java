@@ -59,7 +59,7 @@ public class PurpleVariantContextLoaderTest
                         "synonymous_variant",
                         false,
                         "c.2187C>T",
-                        "p.Ser729=", "", null, null),
+                        "p.Ser729=", "", 1, 1),
                 new VariantTranscriptImpact(
                         "ENSG00000109265",
                         "CRACD",
@@ -68,7 +68,7 @@ public class PurpleVariantContextLoaderTest
                         true,
                         "",
                         "",
-                        "", null, null));
+                        "", 1, 1));
 
         for(int i = 0; i < otherImpacts.size(); i++)
         {
