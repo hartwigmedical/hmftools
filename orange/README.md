@@ -264,7 +264,7 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming:
+- [4.0.1] (https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.1):
     - Change UGT1A1 status from None to NA on Front page
 - [4.0.0] (https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.0):
     - "platinum version" has been renamed to "pipeline version" both in report and in the datamodel
