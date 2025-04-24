@@ -265,8 +265,10 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming:
+    - Change UGT1A1 status from None to NA on Front page
+- [4.0.0] (https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.0):
     - "platinum version" has been renamed to "pipeline version" both in report and in the datamodel
-    - copy number "Loss" has been renamed to "Del" and is made more clear in the report. 
+  - Copy number "Loss" has been renamed to "Del" and is made more clear in the report.
     - Add presence of tumor stats to quality control page and to orange-datamodel
     - Ensure only exonic variants that are phased with reported variants are shown in 'potentially interesting' section
     - Add potentially interesting chromosomal rearrangements (1q trisomy and 1p19q co-deletion) to report
@@ -275,10 +277,9 @@ investigate potential causes for QC failure.
     - Upgraded DOID datamodel to version of Dec 2024 release
     - Add CUPPA mode to ORANGE using mainCombinedClassifierName
     - Remove UGT1A1 from PEACH genotypes when running OrangeAlgo
-    - Functional:
 - [3.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.8.0):
    - Make compatible with new doid.json format
-   - support Purple QC status for TINC
+  - Support Purple QC status for TINC
 - [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
     - Add unreported reason to fusions in ORANGE
     - Add etiology information to signatures and sort by allocation
