@@ -294,10 +294,10 @@ public class ReadContextMatcher
         BaseMatchType rightMatch = determineFlankMatch(readBases, readQuals, readVarIndex, false);
 
         if(rightMatch == BaseMatchType.MISMATCH || leftMatch == BaseMatchType.MISMATCH)
-            return coreMatch;
+            return new ReadMatchInfo(CORE, coreMatch.ExactMatch);
 
         if(!validMatch(leftMatch) && !validMatch(rightMatch)) // incomplete flanks results in a core-only match
-            return coreMatch;
+            return new ReadMatchInfo(CORE, coreMatch.ExactMatch);
 
         // flanks either matched or were incomplete
         boolean exactBaseMatch = coreMatch.ExactMatch
