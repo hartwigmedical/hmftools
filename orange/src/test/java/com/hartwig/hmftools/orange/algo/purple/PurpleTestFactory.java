@@ -90,6 +90,7 @@ public final class PurpleTestFactory
                 .amberGender(Gender.FEMALE)
                 .lohPercent(0)
                 .tincLevel(0)
+                .chimerismPresent(false)
                 .build();
     }
 }

@@ -311,7 +311,7 @@ There are 12 key steps in the PURPLE pipeline described in detail below:
 
 We examine both the AMBER and COBALT data to independently determine and validate the sex of the patient. This includes detecting the presence of Klinefelter syndrome: a chromosomal disorder resulting in 2 or more X chromosome in a male and which we have found to affect 0.2% of the male samples in our cohort.
 
-To determine the sex of a sample with AMBER, we examine the number of heterozygous loci in our provided BED file of ommon germline SNPs on the X chromosome, outside the pseudoautosomal region.   If the X chromosome contains < 1% of total heterozygous loci for the sample, then it is considered male. 
+To determine the sex of a sample with AMBER, we examine the number of heterozygous loci in our provided BED file of common germline SNPs on the X chromosome, outside the pseudoautosomal region.   If the X chromosome contains < 1% of total heterozygous loci for the sample, then it is considered male. 
 
 To determine sex using COBALT, we first use the reference ratio to determine the number of copies of the X chromosome. A median X ratio greater than 0.65 is interpreted as 2 copies (note that nearly all female samples are very close to a ratio of 1, but a handful are significantly lower with mosaic X loss). If there is only one copy of the X chromosome the sample is male. Otherwise, we check for the presence of the Y chromosome as determined by at least 1000 data points with a median ratio > 0.05. If the Y chromosome is present (in addition to the 2 copies of the X chromosome), then the sample is male with Klinefelter syndrome. In the absence of the Y chromosome the sample is female.
 
@@ -412,7 +412,7 @@ If any of the candidate solutions are highly diploid (>= 0.97), PURPLE checks fi
 - Tumor has one or more HOTSPOT SV or point mutation
 - SNV sum(allele read count) > 1000
 - SV sum(startTumorVariantFragmentSupport) > 1000 (excluding SGL breakends)
-- Tumor has 3000 BAF points in germline DIPLOID regions regions with tumor ratio < 0.8 OR > 1.2 (ie. evidence of at least some aneuploidy)
+- Tumor has 3000 BAF points in germline DIPLOID regions with tumor ratio < 0.8 OR > 1.2 (ie. evidence of at least some aneuploidy)
 
 If a tumor is detected, and there is a wide range (>= 0.15) of valid purities in the candidate solutions and a somatic point mutation vcf has been supplied then a somatic mode of fitting is triggered, since there may be insufficient copy number events to resolve a purity.   In this case, PURPLE fits somatic peaks in VAF space. 
 
