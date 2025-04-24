@@ -237,23 +237,23 @@ public class PurpleApplication
         RegionFitCalculator regionFitCalculator =
                 createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
 
-        boolean chimerismPresent = false;
         Double chimerismPercentage = null;
+
         if(mConfig.runTumor())
         {
-            ChimerismDetection chimerismDetection =
-                    new ChimerismDetection(amberData, cobaltData, observedRegions, mReferenceData.RefGenVersion);
+            ChimerismDetection chimerismDetection = new ChimerismDetection(
+                    amberData, cobaltData, observedRegions, mReferenceData.RefGenVersion);
+
             chimerismDetection.run();
-            chimerismPresent = chimerismDetection.isDetected();
-            if(chimerismPresent)
-            {
+
+            if(chimerismDetection.isDetected())
                 chimerismPercentage = chimerismDetection.chimerismLevel();
-            }
 
             PPL_LOGGER.info("fitting purity");
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender);
+                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender,
+                    chimerismPercentage != null);
 
             purityPloidyFitter.run();
 
@@ -303,11 +303,10 @@ public class PurpleApplication
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
                 mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES,
-                somaticCache != null ? somaticCache.tincLevel() : 0,
-                chimerismPresent, chimerismPercentage);
+                somaticCache != null ? somaticCache.tincLevel() : 0, chimerismPercentage);
 
-        final PurityContext purityContext =
-                createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
+        final PurityContext purityContext = createPurity(
+                bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
         PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), fittedRegions);

@@ -38,6 +38,7 @@ public class ChimerismDetection
     private final List<RegionBafData> mRegionBafData;
 
     // results
+    private double mWeightedAverage;
     private double mChimerismLevel;
 
     public ChimerismDetection(
@@ -55,14 +56,14 @@ public class ChimerismDetection
                 .filter(x -> x.bafCount() >= CHIMERISM_MIN_BAF_COUNT)
                 .collect(Collectors.toList());
 
+        mWeightedAverage = 0;
         mChimerismLevel = 0;
     }
 
     public boolean isDetected()
     {
-        return mChimerismLevel > CHIMERISM_SAMPLE_CUTOFF;
+        return mWeightedAverage > CHIMERISM_SAMPLE_CUTOFF;
     }
-
     public double chimerismLevel()
     {
         return mChimerismLevel;
@@ -72,7 +73,12 @@ public class ChimerismDetection
     {
         detectChimerism();
 
+        if(!isDetected())
+            return;
+
         applyFit();
+
+        PPL_LOGGER.info(format("chimerism detected: weighted-mean(%.3f) chimerism level(%.3f)", mWeightedAverage, mChimerismLevel));
     }
 
     private void detectChimerism()
@@ -145,7 +151,7 @@ public class ChimerismDetection
             countsTotal += pcfRegion.bafCount();
         }
 
-        mChimerismLevel = weightedBafTotal / countsTotal;
+        mWeightedAverage = weightedBafTotal / countsTotal;
     }
 
     private void applyFit()
@@ -153,12 +159,15 @@ public class ChimerismDetection
         final KernelEstimator estimator = new KernelEstimator(0.001, CHIMERISM_KDE_BANDWIDTH);
         List<Double> bafValues = Lists.newArrayList();
 
-        mRegionBafData.forEach(regionBafData ->
-                regionBafData.AmberBAFs.forEach(amberBAF ->
-                {
-                    bafValues.add(amberBAF.tumorModifiedBAF());
-                    estimator.addValue(amberBAF.tumorModifiedBAF(), 1.0);
-                }));
+        for(RegionBafData regionBafData : mRegionBafData)
+        {
+            for(AmberBAF amberBAF : regionBafData.AmberBAFs)
+            {
+                bafValues.add(amberBAF.tumorModifiedBAF());
+                estimator.addValue(amberBAF.tumorModifiedBAF(), 1.0);
+            }
+        }
+
         double[] bafs = IntStream.rangeClosed(50, 100).mapToDouble(x -> x / 100d).toArray();
         double[] densities = DoubleStream.of(bafs).map(estimator::getProbability).toArray();
 
@@ -173,12 +182,12 @@ public class ChimerismDetection
                 int peakCount = count(baf, bafValues);
 
                 PPL_LOGGER.debug(format("discovered peak: count(%d) baf(%.3f)", peakCount, baf));
+
                 if(baf > max)
-                {
                     max = baf;
-                }
             }
         }
+
         mChimerismLevel = 2 * (1 - max);
     }
 
