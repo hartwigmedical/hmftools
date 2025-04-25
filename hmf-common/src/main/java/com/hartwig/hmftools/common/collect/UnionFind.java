@@ -29,8 +29,6 @@ public class UnionFind<T>
 
     public T getRepresentative(final T x)
     {
-        add(x);
-
         T node = x;
         List<T> path = Lists.newArrayList();
         while(node != null)
@@ -49,9 +47,6 @@ public class UnionFind<T>
 
     public void merge(final T x, final T y)
     {
-        add(x);
-        add(y);
-
         T xRep = getRepresentative(x);
         T yRep = getRepresentative(y);
         if(xRep.equals(yRep))

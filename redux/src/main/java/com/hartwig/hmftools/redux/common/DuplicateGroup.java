@@ -33,15 +33,14 @@ public class DuplicateGroup
 {
     private final String mUmiId; // the UMI if enabled
 
-    // with duplicate group collapsing reads in mReads may not have mFragmentCoords FragmentCoords, see mPreCollapsedFragmentCoords
-    private FragmentCoords mFragmentCoords;
+    // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
+    private final FragmentCoords mFragmentCoords;
     private final List<SAMRecord> mReads;
 
     private SAMRecord mConsensusRead;
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
 
-    private Set<FragmentCoords> mPreCollapsedFragmentCoords;
     private int mPCRClusterCount;
 
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
@@ -64,7 +63,6 @@ public class DuplicateGroup
         mPrimaryRead = null;
         mDualStrand = false;
 
-        mPreCollapsedFragmentCoords = null;
         mPCRClusterCount = UNSET_COUNT;
     }
 
@@ -75,31 +73,6 @@ public class DuplicateGroup
     public int readCount() { return mReads.size(); }
 
     public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
-
-    public Set<FragmentCoords> preCollapsedFragmentCoordinates()
-    {
-        if(mPreCollapsedFragmentCoords == null)
-        {
-            mPreCollapsedFragmentCoords = Sets.newHashSet();
-            mPreCollapsedFragmentCoords.add(mFragmentCoords);
-        }
-
-        return mPreCollapsedFragmentCoords;
-    }
-
-    public void updateFragmentCoordinates(final FragmentCoords coords)
-    {
-        if(mFragmentCoords.equals(coords))
-            return;
-
-        if(mPreCollapsedFragmentCoords == null)
-        {
-            mPreCollapsedFragmentCoords = Sets.newHashSet();
-            mPreCollapsedFragmentCoords.add(mFragmentCoords);
-        }
-
-        mFragmentCoords = coords;
-    }
 
     public List<SAMRecord> duplicate() { return mReads; }
     public SAMRecord consensusRead() { return mConsensusRead; }
@@ -212,20 +185,6 @@ public class DuplicateGroup
 
             mPCRClusterCount += clusterCount(tileCoords, TileCoord::distance, OPTICAL_DUPLICATE_DISTANCE_THRESHOLD);
         }
-    }
-
-    public DuplicateGroup merge(final DuplicateGroup otherGroup)
-    {
-        if(mPreCollapsedFragmentCoords == null)
-        {
-            mPreCollapsedFragmentCoords = Sets.newHashSet();
-            mPreCollapsedFragmentCoords.add(mFragmentCoords);
-        }
-
-        mPreCollapsedFragmentCoords.addAll(otherGroup.preCollapsedFragmentCoordinates());
-        mReads.addAll(otherGroup.reads());
-
-        return this;
     }
 
     public String toString()
