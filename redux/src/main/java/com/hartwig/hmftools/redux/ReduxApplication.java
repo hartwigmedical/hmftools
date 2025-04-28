@@ -171,10 +171,9 @@ public class ReduxApplication
             }
         }
 
+        combinedStats.writeDuplicateStats(mConfig);
         if(mConfig.WriteStats)
         {
-            combinedStats.writeDuplicateStats(mConfig);
-
             if(mConfig.UMIs.Enabled)
             {
                 combinedStats.UmiStats.writePositionFragmentsData(mConfig);

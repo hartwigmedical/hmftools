@@ -48,6 +48,15 @@ import htsjdk.samtools.SAMRecord;
 
 public class UmiGroupBuilder
 {
+    public enum REDUX_MODE
+    {
+        ORIG,
+        JITTER_COLLAPSE,
+        POLYG_UMI_COLLAPSE
+    }
+
+    public static final REDUX_MODE CURRENT_REDUX_MODE = REDUX_MODE.POLYG_UMI_COLLAPSE;
+
     private final SequencingType mSequencing;
     private final UmiConfig mUmiConfig;
     private final UmiStatistics mStats;
@@ -84,7 +93,10 @@ public class UmiGroupBuilder
             allUmiGroups.addAll(umiGroups);
         }
 
-        collapsePolyGDuplexUmis(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+        if(CURRENT_REDUX_MODE == REDUX_MODE.POLYG_UMI_COLLAPSE)
+        {
+            collapsePolyGDuplexUmis(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+        }
 
         if(formCoordGroups)
         {
@@ -122,7 +134,10 @@ public class UmiGroupBuilder
             }
         }
 
-        jitterCollapseUmiGroups(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+        if(CURRENT_REDUX_MODE != REDUX_MODE.ORIG)
+        {
+            jitterCollapseUmiGroups(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+        }
 
         List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
 
