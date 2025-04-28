@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -16,13 +17,16 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public final class Candidates
 {
+    private final LilacConfig mConfig;
     private final double mMinEvidence;
     private final List<HlaSequenceLoci> mNucleotideSequences;
     private final List<HlaSequenceLoci> mAminoAcidSequences;
 
     public Candidates(
+            LilacConfig config,
             double minEvidence, final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
     {
+        mConfig = config;
         mMinEvidence = minEvidence;
         mNucleotideSequences = nucleotideSequences;
         mAminoAcidSequences = aminoAcidSequences;
@@ -96,7 +100,7 @@ public final class Candidates
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
-            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(locus, DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR);
+            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(locus, mConfig.MinAminoAcidEvidenceFactor);
 
             if(expectedSequences.isEmpty())
                 continue;

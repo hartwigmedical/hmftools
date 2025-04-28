@@ -108,7 +108,7 @@ public class AminoAcidFragmentPipeline
         return refAminoAcids;
     }
 
-    public List<Fragment> referencePhasingFragments(final HlaContext context)
+    public List<Fragment> referencePhasingFragments(final LilacConfig config, final HlaContext context)
     {
         // filter and enrich fragments for phasing - all per gene
 
@@ -142,7 +142,7 @@ public class AminoAcidFragmentPipeline
         NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(mMinBaseQuality, mMinEvidence, aminoAcidBoundaries);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
-        List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(spliceEnrichedNucFrags, mMinEvidence);
+        List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(config, spliceEnrichedNucFrags, mMinEvidence);
 
         // cache support at each base and amino acid for later writing and recovery of low-qual support
         SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, enrichedAminoAcidFrags);

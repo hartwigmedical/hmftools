@@ -44,7 +44,7 @@ public class GeneTask implements Callable
         mHlaContext = hlaContext;
 
         // extract fragments relevant for this gene, copying fragment data in the process to avoid concurrent access as they are filtered
-        mCandidateFrags = Lists.newArrayList(mAminoAcidPipeline.referencePhasingFragments(mHlaContext));
+        mCandidateFrags = Lists.newArrayList(mAminoAcidPipeline.referencePhasingFragments(mConfig, mHlaContext));
         mCandidatesAlleles = Lists.newArrayList();
         mPhasedEvidence = Lists.newArrayList();
     }
