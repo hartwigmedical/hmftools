@@ -38,7 +38,7 @@ public final class TestOrangeConfigFactory
             RUN_DIRECTORY + "/tumor_sample/bam_metrics/tumor_sample.bam_metric.summary.tsv";
     private static final String TUMOR_SAMPLE_FLAGSTAT_FILE =
             RUN_DIRECTORY + "/tumor_sample/bam_metrics/tumor_sample.bam_metric.flag_counts.tsv";
-    private static final String SAGE_GERMLINE_GENE_COVERAGE = RUN_DIRECTORY + "/ref_sample/bam_metrics/ref_sample.bam_metric.gene_coverage.tsv";
+    private static final String GERMLINE_GENE_COVERAGE = RUN_DIRECTORY + "/ref_sample/bam_metrics/ref_sample.bam_metric.gene_coverage.tsv";
     private static final String SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT = RUN_DIRECTORY + "/sage_somatic/ref_sample.sage.bqr.png";
     private static final String SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT = RUN_DIRECTORY + "/sage_somatic/tumor_sample.sage.bqr.png";
     private static final String PURPLE_DATA_DIRECTORY = RUN_DIRECTORY + "/purple";
@@ -130,7 +130,7 @@ public final class TestOrangeConfigFactory
                         .referenceSampleId(REFERENCE_SAMPLE_ID)
                         .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
                         .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
-                        .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
+                        .germlineGeneCoverageTsv(GERMLINE_GENE_COVERAGE)
                         .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
                         .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
                         .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
