@@ -43,8 +43,8 @@ public class AminoAcidFragmentPipeline
 
         int fragmentCount = mHighQualRefAminoAcidFragments.size();
 
-        mMinEvidence = max(config.MinEvidence, fragmentCount * config.MinEvidenceFactor);
-        mMinHighQualEvidence = fragmentCount * config.MinHighQualEvidenceFactor;
+        mMinEvidence = max(config.MinEvidence, fragmentCount * config.MinNucleotideEvidenceFactor);
+        mMinHighQualEvidence = fragmentCount * config.MinNucleotideHighQualEvidenceFactor;
 
         mRefNucleotideCounts = Maps.newHashMap();
         mRefAminoAcidCounts = Maps.newHashMap();

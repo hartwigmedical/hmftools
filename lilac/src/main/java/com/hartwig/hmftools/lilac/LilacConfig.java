@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MAX_REF_FRAGMENTS;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
@@ -74,8 +75,9 @@ public class LilacConfig
 
     public int MinBaseQual;
     public final int MinEvidence;
-    public final double MinEvidenceFactor;
-    public final double MinHighQualEvidenceFactor;
+    public final double MinNucleotideHighQualEvidenceFactor;
+    public final double MinNucleotideEvidenceFactor;
+    public final double MinAminoAcidEvidenceFactor;
     public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
@@ -113,8 +115,9 @@ public class LilacConfig
     private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MIN_EVIDENCE = "min_evidence";
     private static final String MAX_REF_FRAGMENTS = "max_ref_fragments";
-    private static final String MIN_EVIDENCE_FACTOR = "min_evidence_factor";
-    private static final String MIN_HIGH_QUAL_EVIDENCE_FACTOR = "min_high_qual_evidence_factor";
+    private static final String MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR = "min_nucleotide_high_qual_evidence_factor";
+    private static final String MIN_NUCLEOTIDE_EVIDENCE_FACTOR = "min_nucleotide_evidence_factor";
+    private static final String MIN_AMINO_ACID_EVIDENCE_FACTOR = "min_amino_acid_evidence_factor";
     private static final String MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele";
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
     private static final String TOP_SCORE_THRESHOLD = "top_score_threshold";
@@ -193,8 +196,9 @@ public class LilacConfig
         MinBaseQual = configBuilder.getInteger(MIN_BASE_QUAL);
         MinEvidence = configBuilder.getInteger(MIN_EVIDENCE);
         MaxRefFragments = configBuilder.getInteger(MAX_REF_FRAGMENTS);
-        MinEvidenceFactor = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
-        MinHighQualEvidenceFactor = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        MinNucleotideHighQualEvidenceFactor = configBuilder.getDecimal(MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
+        MinNucleotideEvidenceFactor = configBuilder.getDecimal(MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
+        MinAminoAcidEvidenceFactor = configBuilder.getDecimal(MIN_AMINO_ACID_EVIDENCE_FACTOR);
         HlaYPercentThreshold = configBuilder.getDecimal(HLA_Y_THRESHOLD);
 
         MinFragmentsPerAllele = configBuilder.getInteger(MIN_FRAGMENTS_PER_ALLELE);
@@ -273,9 +277,10 @@ public class LilacConfig
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
-        MinEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
+        MinNucleotideHighQualEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
+        MinNucleotideEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
+        MinAminoAcidEvidenceFactor = DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR;
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
-        MinHighQualEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
 
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
@@ -311,8 +316,9 @@ public class LilacConfig
         configBuilder.addInteger(MIN_BASE_QUAL,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
         configBuilder.addInteger(MIN_EVIDENCE, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
-        configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
-        configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence factor", DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
+        configBuilder.addDecimal(MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor per nucleotide position", DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
+        configBuilder.addDecimal(MIN_NUCLEOTIDE_EVIDENCE_FACTOR, "Min fragment evidence factor per nucleotide position", DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
+        configBuilder.addDecimal(MIN_AMINO_ACID_EVIDENCE_FACTOR, "Min fragment evidence factor per amino acid position", DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR);
         configBuilder.addInteger(MIN_FRAGMENTS_PER_ALLELE,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
         configBuilder.addInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE,"Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
 
