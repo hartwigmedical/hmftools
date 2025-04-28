@@ -22,9 +22,12 @@ import static org.apache.logging.log4j.Level.TRACE;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -222,8 +225,17 @@ public class PartitionReader
             fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
     }
 
+    private static final Set<String> FILTER_READ_NAMES = Sets.newHashSet(
+            "A01524:289:HFJLTDRX3:2:2131:26594:20149:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2157:7898:21590:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2109:27010:32393:GTGAGAT_GGGGGGG"
+    );
+
     private void processSamRecord(final SAMRecord read)
     {
+        if(FILTER_READ_NAMES != null && !FILTER_READ_NAMES.isEmpty() && !FILTER_READ_NAMES.contains(read.getReadName()))
+            return;
+
         int readStart = read.getAlignmentStart();
 
         if(!mCurrentRegion.containsPosition(readStart)) // to avoid processing reads from the prior region again
@@ -331,6 +343,28 @@ public class PartitionReader
     private static final double LOG_PERF_TIME_SEC = 1;
     private static final int LOG_PERF_FRAG_COUNT = 3000;
 
+    private static final Set<String> DBG_READ_NAMES = Sets.newHashSet(
+            "A01524:289:HFJLTDRX3:1:2101:27453:25394:CNS_GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2248:24605:31548:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2157:7898:21590:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2174:3459:7513:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2277:11595:32377:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2139:2700:27492:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2226:28727:36401:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2131:26594:20149:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2211:25509:28729:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2148:17571:33520:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2174:2401:3865:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2173:2926:2769:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:2:2159:6379:18020:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2169:31232:22200:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2101:27453:25394:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2178:20048:19210:GTGAGAT_GGGGGGG",
+            "A01524:289:HFJLTDRX3:1:2109:27010:32393:GTGAGAT_GGGGGGG"
+    );
+
+    public static final ConcurrentHashMap<String, Boolean> NEW_READ_NAMES = new ConcurrentHashMap<>();
+
     private void processReadGroups(final FragmentCoordReads fragmentCoordReads)
     {
         if(fragmentCoordReads == null)
@@ -387,8 +421,35 @@ public class PartitionReader
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
 
+            boolean dumpGroup = (duplicateGroup.consensusRead() != null && DBG_READ_NAMES.contains(duplicateGroup.consensusRead().getReadName()))
+                    || duplicateGroup.allReads().stream().map(SAMRecord::getReadName).anyMatch(x -> DBG_READ_NAMES.contains(x));
+            if(dumpGroup)
+            {
+                System.out.println("***\n");
+
+                for(SAMRecord read : duplicateGroup.allReads())
+                {
+                    System.out.println(read.getSAMString());
+                    if(!DBG_READ_NAMES.contains(read.getReadName()))
+                        NEW_READ_NAMES.put(read.getReadName(), true);
+                }
+
+                System.out.println("consensusRead = " + (duplicateGroup.consensusRead() == null ? "null" : duplicateGroup.consensusRead().getSAMString()));
+                System.out.println("***\n");
+
+                if(duplicateGroup.consensusRead() != null && !DBG_READ_NAMES.contains(duplicateGroup.consensusRead().getReadName()))
+                {
+                    NEW_READ_NAMES.put(duplicateGroup.consensusRead().getReadName(), true);
+                }
+            }
+
             postProcessPrimaryRead(duplicateGroup.primaryRead());
             mBamWriter.writeDuplicateGroup(duplicateGroup);
+        }
+
+        for(SAMRecord read : fragmentCoordReads.SingleReads.stream().map(ReadInfo::read).filter(x -> DBG_READ_NAMES.contains(x.getReadName())).toList())
+        {
+            System.out.println("! " + read.getSAMString());
         }
 
         postProcessSingleReads(fragmentCoordReads.SingleReads);
