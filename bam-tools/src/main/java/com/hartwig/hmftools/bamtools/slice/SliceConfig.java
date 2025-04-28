@@ -2,7 +2,6 @@ package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_DESC;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.READ_LENGTH;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.REGIONS_FILE;
@@ -183,8 +182,6 @@ public class SliceConfig
 
         addRefGenomeFile(configBuilder, true);;
         configBuilder.addConfigItem(OUTPUT_PREFIX, "File prefix for BAM and read TSV");
-
-        configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAX_PARTITION_READS, "Max partition reads (perf-only)", 0);
