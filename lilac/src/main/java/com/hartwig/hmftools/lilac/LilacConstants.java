@@ -32,7 +32,7 @@ public class LilacConstants
     public static final double MIN_HI_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
     public static final double MIN_HI_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
     public static final double MIN_LOW_CONF_GROUP_UNIQUE_COVERAGE = 0.001;
-    public static final double MIN_LOW_CONF_GROUP_TOTAL_COVERAGE = 0.02;
+    public static final double MIN_LOW_CONF_GROUP_TOTAL_COVERAGE = 0.035;
     public static final int MIN_WILDCARD_FRAGMENTS = 2;
 
     // scoring of allele combinations
