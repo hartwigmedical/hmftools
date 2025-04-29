@@ -138,7 +138,21 @@ public class PhasedVariantClassifier
                     }
                 }
 
-                reclassifyImpacts(phasedVariants.LocalPhaseId, variants, transImpacts, refGenome);
+                try
+                {
+                    reclassifyImpacts(phasedVariants.LocalPhaseId, variants, transImpacts, refGenome);
+                }
+                catch(Exception e)
+                {
+                    String variantsInfo = variants.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+                    PV_LOGGER.error("failed to phase variants({}): {}", variantsInfo, e.toString());
+
+                    for(VariantTransImpact vtImpact : transImpacts)
+                    {
+                        PV_LOGGER.error("transImpact({}) coding({}) protein({})",
+                                vtImpact.toString(), vtImpact.codingContext(), vtImpact.proteinContext());
+                    }
+                }
             }
         }
     }

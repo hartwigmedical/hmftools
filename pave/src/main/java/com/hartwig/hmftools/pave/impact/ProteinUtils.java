@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.codon.Codons.aminoAcidFromBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -207,10 +208,15 @@ public final class ProteinUtils
         // extend the range of up and downstream codons for INDELs to help determine the net differences in amino acids
         extendIndelCodonBases(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
 
+        // extendRefDuplicatedBases(variant, pc, transData, exon, refGenome);
+
         trimAminoAcids(variant, pc);
 
         // check for a duplication of AAs
         checkInsertDuplication(variant, cc, pc, transData, exon, refGenome);
+
+        // check requirement to right-align amino acids (only relevant for genes on the positive strand)
+        // checkAminoAcidRightAlignment(variant, pc, transData);
 
         return pc;
     }
@@ -319,6 +325,54 @@ public final class ProteinUtils
         }
     }
 
+    private static void extendRefDuplicatedBases(
+            final VariantData variant, final ProteinContext pc, final TranscriptData transData, final ExonData exon,
+            final RefGenomeInterface refGenome)
+    {
+        if(transData.Strand == NEG_STRAND)
+            return;
+
+        int currentPos = pc.refCodingBaseEnd();
+        int extraBases = 3;
+
+        String lastAminoAcid = pc.RefAminoAcids.substring(pc.RefAminoAcids.length() - 1);
+
+        String extendedRefBases = "";
+
+        while(true)
+        {
+            String downstreamBases = getExtraBases(
+                    transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, true);
+
+            if(downstreamBases == null)
+                break;
+
+            String extendedAminoAcids = aminoAcidFromBases(downstreamBases);
+            String newLastAminoAcid = extendedAminoAcids.substring(extendedAminoAcids.length() - 1);
+
+            if(!newLastAminoAcid.equals(lastAminoAcid))
+                break;
+
+            extendedRefBases = downstreamBases;
+
+            boolean codingRegionEnded = downstreamBases.length() < extraBases;
+
+            if(codingRegionEnded)
+                break;
+
+            extraBases += 3;
+        }
+
+        if(!extendedRefBases.isEmpty())
+        {
+            pc.RefCodonBasesExtended = pc.RefCodonBases + extendedRefBases;
+            pc.AltCodonBasesComplete = pc.AltCodonBasesComplete + extendedRefBases;
+            pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBasesExtended);
+            pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
+        }
+
+    }
+
     private static void trimAminoAcids(final VariantData variant, final ProteinContext proteinContext)
     {
         // trim matching amino acids from the start and end to align any differences to the most 3'UTR end in protein space
@@ -345,7 +399,7 @@ public final class ProteinUtils
         String netRefAminoAcids = proteinContext.RefAminoAcids;
         String netAltAminoAcids = proteinContext.AltAminoAcids;
 
-        // strip off the initial AA if it doesn't relate to any of the altered bases, as is the case for a DEL with the reference
+        // strip off the initial AA if it doesn't relate to any of the altered bases, as is the case for a DEL where the reference
         // is the last base of a codon
         if(canTrimStart)
         {
@@ -456,6 +510,30 @@ public final class ProteinUtils
         {
             pc.IsDuplication = true;
             pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START] + extendedRefAminoAcids.length() - 1;
+        }
+    }
+
+    public static void checkAminoAcidRightAlignment(final VariantData variant, final ProteinContext pc, final TranscriptData transData)
+    {
+        if(transData.Strand == NEG_STRAND)
+            return;
+
+        if(!pc.IsDuplication)
+            return;
+
+        int indexAdjust = 0;
+
+        int refIndex = 0;
+        int altIndex = 0;
+
+        while(refIndex < pc.RefAminoAcids.length() && altIndex < pc.AltAminoAcids.length())
+        {
+            if(pc.RefAminoAcids.charAt(refIndex) == pc.AltAminoAcids.charAt(altIndex))
+            {
+                ++refIndex;
+                ++altIndex;
+                ++indexAdjust;
+            }
         }
     }
 

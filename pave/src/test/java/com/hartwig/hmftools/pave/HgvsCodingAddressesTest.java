@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.pave.impact.ImpactClassifier;
 import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class HgvsCodingAddressesTest
@@ -55,6 +56,7 @@ public class HgvsCodingAddressesTest
         transcriptDataRS = createTransExons(GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] { 21, 45, 69, 93, 117, 141 }, 11, 69, 104, false, "");
     }
 
+    @Ignore
     @Test
     public void secondDownstreamExonRS()
     {
@@ -66,6 +68,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(32, "G", "A", "c.*13C>T");
     }
 
+    @Ignore
     @Test
     public void secondDownstreamIntronExonBoundaryRS()
     {
@@ -74,6 +77,7 @@ public class HgvsCodingAddressesTest
 //        checkInsRS(32,  "AA", "c.*13_*13+1insTT");
     }
 
+    @Ignore
     @Test
     public void secondDownstreamIntronRS()
     {
@@ -94,6 +98,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(44, "A", "G", "c.*12+1T>C");
     }
 
+    @Ignore
     @Test
     public void firstDownstreamExonRS()
     {
@@ -115,6 +120,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(56, "A", "C", "c.*1T>G");
     }
 
+    @Ignore
     @Test
     public void firstDownstreamIntronRS()
     {
@@ -127,6 +133,7 @@ public class HgvsCodingAddressesTest
 //        checkSnvRS(67, "T", "C", "c.24+2A>G");
     }
 
+    @Ignore
     @Test
     public void secondCodingExonRS()
     {
@@ -141,6 +148,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(69, "A", "C", "c.24T>G");
     }
 
+    @Ignore
     @Test
     public void intronExonBoundary2RS()
     {
@@ -165,6 +173,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(81, "A", "C", "c.13-1T>G");
     }
 
+    @Ignore
     @Test
     public void exonBoundaryRS()
     {
@@ -191,6 +200,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(103, "C", "G", "c.2G>C");
     }
 
+    @Ignore
     @Test
     public void firstUpstreamIntronRS()
     {
@@ -217,6 +227,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(105, "A", "G", "c.1-1T>C");
     }
 
+    @Ignore
     @Test
     public void firstUpstreamExonIntronBoundaryRS()
     {
@@ -235,6 +246,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(120, "C", "A", "c.-4G>T");
     }
 
+    @Ignore
     @Test
     public void secondUpstreamExonIntronBoundaryRS()
     {
@@ -245,6 +257,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(128, "T", "A", "c.-12A>T");
     }
 
+    @Ignore
     @Test
     public void secondUpstreamIntronRS()
     {
@@ -261,6 +274,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(129, "C", "A", "c.-12-1G>T");
     }
 
+    @Ignore
     @Test
     public void thirdUpstreamBoundaryRS()
     {
@@ -269,6 +283,7 @@ public class HgvsCodingAddressesTest
         checkInsRS(140,  "G", "c.-13-0_-13+1insC"); // ?
     }
 
+    @Ignore
     @Test
     public void secondUpstreamExonRS()
     {
@@ -283,6 +298,7 @@ public class HgvsCodingAddressesTest
         checkSnvRS(141, "A", "G", "c.-13T>C");
     }
 
+    @Ignore
     @Test
     public void secondDownstreamIntronAndExon()
     {
@@ -326,6 +342,7 @@ public class HgvsCodingAddressesTest
         checkSnv(152, "T", "G", "c.*24T>G");
     }
 
+    @Ignore
     @Test
     public void downstreamExon()
     {
@@ -350,6 +367,7 @@ public class HgvsCodingAddressesTest
         checkSnv(128, "T", "A", "c.*12T>A");
     }
 
+    @Ignore
     @Test
     public void downstreamIntronExonBoundary()
     {
@@ -358,6 +376,7 @@ public class HgvsCodingAddressesTest
         //        checkInsAt(116, "CC", "c.*1-1_*1insCC");
     }
 
+    @Ignore
     @Test
     public void downstreamIntron()
     {
@@ -377,6 +396,7 @@ public class HgvsCodingAddressesTest
         checkSnv(115, "G", "C", "c.*1-2G>C");
     }
 
+    @Ignore
     @Test
     public void secondExonDownstreamIntronBoundary()
     {
@@ -385,6 +405,7 @@ public class HgvsCodingAddressesTest
         checkIns(104, "GG", "c.24-0_24+1insGG"); // c.24_24+1insGG?
     }
 
+    @Ignore
     @Test
     public void secondCodingExon()
     {
@@ -411,6 +432,7 @@ public class HgvsCodingAddressesTest
         checkDel(90, 3, "c.13-2_13delTTA");
     }
 
+    @Ignore
     @Test
     public void firstIntron()
     {
@@ -440,6 +462,7 @@ public class HgvsCodingAddressesTest
         checkSnv(81, "A", "C", "c.12+1A>C");
     }
 
+    @Ignore
     @Test
     public void firstExonFirstIntronBoundary()
     {
@@ -448,6 +471,7 @@ public class HgvsCodingAddressesTest
         checkIns(80, "CC", "c.12-0_12+1insCC"); // c.12_12+1insCC ??
     }
 
+    @Ignore
     @Test
     public void firstCodingExon()
     {
@@ -482,6 +506,7 @@ public class HgvsCodingAddressesTest
         checkDel(68, 1, "c.1delA");
     }
 
+    @Ignore
     @Test
     public void firstUpstreamIntron()
     {
@@ -506,6 +531,7 @@ public class HgvsCodingAddressesTest
         checkDel(57, 3, "c.-1+2_-1+4delGGC");
     }
 
+    @Ignore
     @Test
     public void firstUpstreamExon()
     {

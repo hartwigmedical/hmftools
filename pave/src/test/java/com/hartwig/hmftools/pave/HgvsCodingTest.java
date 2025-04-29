@@ -250,6 +250,108 @@ public class HgvsCodingTest
 
     @Ignore
     @Test
+    public void testAminoAcidRightAlignment()
+    {
+        // while there is no homology, the amino acid impact is right aligned - only relevant for positive-strand genes
+
+        // amino acids:           M   A   P   P   P   P   Q
+        // AA index:              1   2   3   4   5   6   7
+        // exon 1:                20           30
+        // position:              012 345 678 901 234 567 890
+        // coding index:          123 456 789 012 345 678 901
+        String refCodingBases1 = "ATG GCT CCA CCC CCG CCT CAG".replace(" ", "");
+        String intronicBases = "TTTTGGGGCCCCAAA"; // as in previous test
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases1 + intronicBases;
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+
+        GeneDataCache geneDataCache = new GeneDataCache("", V37, null);
+
+        GeneData geneData = createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, FusionCommon.POS_STRAND, 20, 90);
+
+        geneDataCache.getEnsemblCache().getChrGeneDataMap().put(CHR_1, Lists.newArrayList(geneData));
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] { 10, 56 }, 30,
+                20, 70, false, "");
+
+        geneDataCache.getEnsemblCache().getTranscriptDataMap().put(GENE_ID_1, Lists.newArrayList(posTrans));
+
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        // duplication of first P should be converted to a right-aligned AA change
+        int pos = 25;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = refBases.substring(pos, pos + 4);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        String altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        PaveUtils.findVariantImpacts(var, classifier, geneDataCache, null);
+
+        assertTrue(var.getImpacts().containsKey(GENE_NAME_1));
+        VariantTransImpact impact = var.getImpacts().get(GENE_NAME_1).get(0);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("c.7_9dupCCA", impact.codingContext().Hgvs);
+        assertEquals("p.Pro6dup", impact.proteinContext().Hgvs);
+    }
+
+    @Test
+    public void testAminoAcidRightAlignment2()
+    {
+        // amino acids:           M   G   L   *
+        // AA index:              1   2   3   4
+        // exon 1:                20           30
+        // position:              012 345 678 901
+        // coding index:          123 456 789 012
+        String refCodingBases =  "ATG GGA CTA TGA".replace(" ", "");
+        String intronicBases = "TTTTGGGGCCCCAAA";
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases + intronicBases;
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+
+        GeneDataCache geneDataCache = new GeneDataCache("", V37, null);
+
+        GeneData geneData = createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, FusionCommon.POS_STRAND, 20, 90);
+
+        geneDataCache.getEnsemblCache().getChrGeneDataMap().put(CHR_1, Lists.newArrayList(geneData));
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] { 10, 56 }, 30,
+                20, 70, false, "");
+
+        geneDataCache.getEnsemblCache().getTranscriptDataMap().put(GENE_ID_1, Lists.newArrayList(posTrans));
+
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        // duplication of first P should be converted to a right-aligned AA change
+        int pos = 25;
+        String ref = refBases.substring(pos, pos + 2);
+        String alt = refBases.substring(pos, pos + 1);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        String altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        PaveUtils.findVariantImpacts(var, classifier, geneDataCache, null);
+
+        assertTrue(var.getImpacts().containsKey(GENE_NAME_1));
+        VariantTransImpact impact = var.getImpacts().get(GENE_NAME_1).get(0);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+
+        assertEquals("c.7delC", impact.codingContext().Hgvs);
+        assertEquals("p.Leu3fs", impact.proteinContext().Hgvs);
+    }
+
+
+    @Ignore
+    @Test
     public void testRightAlignmentOfCodingOfInFrameDuplication()
     {
         // pos codons: M 20-22, A 23-25, D 26-28, A 29-31, D 32-34, S 35-37, Q 38-40, L 41-43, G 44-46, H 47-49, E 50-52, stopX 47-49
@@ -325,61 +427,6 @@ public class HgvsCodingTest
 
         assertEquals("c.9_14dupGCTGAT", impact.codingContext().Hgvs);
         assertEquals("p.Ala4_Asp5dup", impact.proteinContext().Hgvs);
-    }
-
-    @Ignore
-    @Test
-    public void testRightAlignmentOfCodingOfInFrameDuplicationInRegionOfRepeatedAminoAcids()
-    {
-        // amino acids:           M   A   P   P   P   P   Q
-        // AA index:              1   2   3   4   5   6   7
-        // exon 1:                20           30
-        // position:              012 345 678 901 234 567 890
-        // coding index:          123 456 789 012 345 678 901
-        String refCodingBases1 = "ATG GCT CCA CCC CCG CCT CAG".replace(" ", "");
-        String intronicBases = "TTTTGGGGCCCCAAA"; // as in previous test
-        String refCodingBases2 = "TTAGGACACGAGTAA"; // "
-
-        MockRefGenome refGenome = new MockRefGenome();
-
-        String refBases = generateTestBases(20) + refCodingBases1 + intronicBases + refCodingBases2 + generateTestBases(20);
-        refGenome.RefGenomeMap.put(CHR_1, refBases);
-
-        GeneDataCache geneDataCache = new GeneDataCache("", V37, null);
-
-        GeneData geneData = createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, FusionCommon.POS_STRAND, 20, 90);
-
-        geneDataCache.getEnsemblCache().getChrGeneDataMap().put(CHR_1, Lists.newArrayList(geneData));
-
-        TranscriptData posTrans = createTransExons(
-                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] { 10, 56 }, 30,
-                20, 70, false, "");
-
-        geneDataCache.getEnsemblCache().getTranscriptDataMap().put(GENE_ID_1, Lists.newArrayList(posTrans));
-
-        ImpactClassifier classifier = new ImpactClassifier(refGenome);
-
-        // duplication of first P should be reported right-maximal
-        int pos = 25;
-        String ref = refBases.substring(pos, pos + 1);
-        String alt = refBases.substring(pos, pos + 4);
-        VariantData var = new VariantData(CHR_1, pos, ref, alt);
-
-        String altBases = alt.substring(1);
-        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
-
-        PaveUtils.findVariantImpacts(var, classifier, geneDataCache, null);
-
-        //VariantTransImpact impact = classifier.classifyVariant(var, posTrans);
-
-        assertTrue(var.getImpacts().containsKey(GENE_NAME_1));
-        VariantTransImpact impact = var.getImpacts().get(GENE_NAME_1).get(0);
-        assertEquals(INFRAME_INSERTION, impact.topEffect());
-
-        // [CCA]CCC -> [CCACCA]CCC = C[CACCAC]CC = CC[ACCACC]C
-        assertEquals("c.7_9dupCCA", impact.codingContext().Hgvs);
-        // assertEquals("c.9_11dupACC", impact.codingContext().Hgvs);
-        assertEquals("p.P6dup", impact.proteinContext().Hgvs);
     }
 
     @Ignore
