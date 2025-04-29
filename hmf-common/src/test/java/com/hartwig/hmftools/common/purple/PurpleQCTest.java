@@ -118,7 +118,6 @@ public class PurpleQCTest
                 .amberMeanDepth(91)
                 .lohPercent(0)
                 .tincLevel(0)
-                .chimerismPercentage(null)
-                .chimerismPresent(false);
+                .chimerismPercentage(0);
     }
 }

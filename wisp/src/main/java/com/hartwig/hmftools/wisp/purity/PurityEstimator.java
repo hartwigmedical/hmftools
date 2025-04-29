@@ -261,6 +261,7 @@ public class PurityEstimator
                         .deletedGenes(0).purity(purity).contamination(0D).cobaltGender(Gender.FEMALE).amberGender(Gender.FEMALE)
                         .lohPercent(0)
                         .tincLevel(0)
+                        .chimerismPercentage(0)
                         .build();
 
                 FittedPurityScore fittedPurityScore = ImmutableFittedPurityScore.builder()

@@ -237,7 +237,7 @@ public class PurpleApplication
         RegionFitCalculator regionFitCalculator =
                 createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
 
-        Double chimerismPercentage = null;
+        double chimerismPercentage = 0;
 
         if(mConfig.runTumor())
         {
@@ -253,7 +253,7 @@ public class PurpleApplication
 
             PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
                     mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender,
-                    chimerismPercentage != null);
+                    chimerismPercentage > 0);
 
             purityPloidyFitter.run();
 
@@ -468,7 +468,8 @@ public class PurpleApplication
             PurpleQC purpleQC = ImmutablePurpleQC.builder()
                     .method(FittedPurityMethod.NO_TUMOR).purity(0).contamination(0).cobaltGender(gender)
                     .unsupportedCopyNumberSegments(0).deletedGenes(0).amberGender(gender).lohPercent(0).copyNumberSegments(0)
-                    .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0).tincLevel(0).build();
+                    .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0)
+                    .tincLevel(0).chimerismPercentage(0).build();
 
             PurityContext purityContext = ImmutablePurityContext.builder()
                     .bestFit(fittedPurity)
