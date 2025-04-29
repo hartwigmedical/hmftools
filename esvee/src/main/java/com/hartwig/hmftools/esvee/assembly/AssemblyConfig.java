@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -216,8 +213,6 @@ public class AssemblyConfig
 
         WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
 
-        loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
-
         setSequencingType(configBuilder);
         setLowBaseQualThreshold(configBuilder);
 
@@ -328,8 +323,6 @@ public class AssemblyConfig
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
-
-        configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
         if(!configBuilder.isRegistered(WRITE_TYPES))
             configBuilder.addConfigItem(WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"));
