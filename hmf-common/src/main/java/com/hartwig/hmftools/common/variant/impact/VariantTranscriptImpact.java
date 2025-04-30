@@ -53,7 +53,7 @@ public class VariantTranscriptImpact
     {
         StringJoiner fields = new StringJoiner("|");
         List<String> fieldItems = Lists.newArrayList(
-                "Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p", "Exon", "Codon");
+                "Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p", "RefSeqId", "Exon", "Codon");
         fieldItems.forEach(fields::add);
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
@@ -73,13 +73,13 @@ public class VariantTranscriptImpact
         if(!variant.hasAttribute(VAR_TRANS_IMPACT_ANNOTATION))
             return Collections.EMPTY_LIST;
 
-        String[] impactsStr = variant.getAttributeAsString(VAR_TRANS_IMPACT_ANNOTATION, "").split(VAR_TRANS_IMPACT_DELIM, -1);
+        List<String> impactStrings = variant.getAttributeAsStringList(VAR_TRANS_IMPACT_ANNOTATION, "");
 
         List<VariantTranscriptImpact> transImpacts = Lists.newArrayList();
 
-        for(String impactStr : impactsStr)
+        for(String impactString : impactStrings)
         {
-            transImpacts.add(fromVcfData(impactStr));
+            transImpacts.add(fromVcfData(impactString));
         }
 
         return transImpacts;
