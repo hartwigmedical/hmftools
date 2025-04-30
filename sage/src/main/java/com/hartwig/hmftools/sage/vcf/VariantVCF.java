@@ -103,7 +103,8 @@ public class VariantVCF implements AutoCloseable
     private final VariantContextWriter mWriter;
 
     public VariantVCF(
-            final IndexedFastaSequenceFile reference, final String sageVersion, final List<String> sampleIds, final String outputVcf)
+            final IndexedFastaSequenceFile reference, final String sageVersion, final List<String> sampleIds, final String outputVcf,
+            boolean runTinc)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
@@ -113,7 +114,7 @@ public class VariantVCF implements AutoCloseable
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        VCFHeader vcfHeader = createHeader(sageVersion, sampleIds);
+        VCFHeader vcfHeader = createHeader(sageVersion, sampleIds, runTinc);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -151,7 +152,7 @@ public class VariantVCF implements AutoCloseable
         mWriter.add(context);
     }
 
-    public static VCFHeader createHeader(final String version, final List<String> allSamples)
+    public static VCFHeader createHeader(final String version, final List<String> allSamples, final boolean runTinc)
     {
         VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
 
@@ -233,8 +234,11 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
-        GnomadCache.addAnnotationHeader(header);
-        PonCache.addAnnotationHeader(header);
+        if(runTinc)
+        {
+            GnomadCache.addAnnotationHeader(header);
+            PonCache.addAnnotationHeader(header);
+        }
 
         return header;
     }

@@ -211,7 +211,7 @@ public class SyntheticVcfWriter
                 .build();
 
         VersionInfo version = fromAppName(APP_NAME);
-        VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId));
+        VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
 
         // CLEAN-UP: something needs to set the tri-nuc, MH and Repeat headers and values if necessary
         // mRefContextEnrichment.appendHeader(header);
