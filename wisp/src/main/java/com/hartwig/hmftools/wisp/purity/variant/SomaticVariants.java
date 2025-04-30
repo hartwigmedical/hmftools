@@ -62,6 +62,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -188,7 +189,7 @@ public class SomaticVariants
         {
             for(SomaticVariant variant : mVariants)
             {
-                if(mProbeVariants.stream().anyMatch(x -> x.matches(variant)))
+                if(mProbeVariants.stream().anyMatch(x -> variant.matches(x)))
                 {
                     ++matchedProbeCount;
                     variant.markProbeVariant();

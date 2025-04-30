@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -80,6 +81,11 @@ public class SomaticVariant
 
     public void setSequenceGcRatio(double ratio) { mSequenceGcRatio = ratio; }
     public double sequenceGcRatio() { return mSequenceGcRatio; }
+
+    public boolean matches(final SimpleVariant variant)
+    {
+        return Chromosome.matches(variant.Chromosome) && Position == variant.position() && Ref.equals(variant.Ref) && Alt.equals(variant.Alt);
+    }
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 }

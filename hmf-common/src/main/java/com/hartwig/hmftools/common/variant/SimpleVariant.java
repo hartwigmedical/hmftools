@@ -84,6 +84,12 @@ public class SimpleVariant extends BasePosition
         return Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt);
     }
 
+    public boolean matches(final VariantContextDecorator somaticVariant)
+    {
+        return somaticVariant.chromosome().equals(Chromosome) && somaticVariant.position() == Position
+                && somaticVariant.ref().equals(Ref) && somaticVariant.alt().equals(Alt);
+    }
+
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 
     private static final int VAR_ITEM_COUNT = 4;
