@@ -53,7 +53,7 @@ public class VariantTranscriptImpact
     {
         StringJoiner fields = new StringJoiner("|");
         List<String> fieldItems = Lists.newArrayList(
-                "Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p", "Exon", "Codon");
+                "Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p", "RefSeqId", "Exon", "Codon");
         fieldItems.forEach(fields::add);
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
