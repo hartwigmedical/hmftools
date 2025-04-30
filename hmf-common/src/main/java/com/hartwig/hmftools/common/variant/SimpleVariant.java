@@ -1,16 +1,23 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.common.variant;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 public class SimpleVariant extends BasePosition
 {
@@ -77,11 +84,6 @@ public class SimpleVariant extends BasePosition
         return Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt);
     }
 
-    public static boolean isLongInsert(final SimpleVariant variant)
-    {
-        return variant.isInsert() && variant.indelLength() >= LONG_INSERT_LENGTH;
-    }
-
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 
     private static final int VAR_ITEM_COUNT = 4;
@@ -104,5 +106,41 @@ public class SimpleVariant extends BasePosition
         }
 
         return variants;
+    }
+
+    public static List<SimpleVariant> loadSimpleVariants(final String filename) throws Exception
+    {
+        List<SimpleVariant> sampleVariants = Lists.newArrayList();
+
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            String header = lines.get(0);
+            lines.remove(0);
+
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
+
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posIndex = fieldsIndexMap.get(FLD_POSITION);
+            int refIndex = fieldsIndexMap.get(FLD_REF);
+            int altIndex = fieldsIndexMap.get(FLD_ALT);
+
+            for(String line : lines)
+            {
+                String[] values = line.split(CSV_DELIM, -1);
+
+                String ref = values[refIndex];
+                String alt = values[altIndex];
+
+                sampleVariants.add(new SimpleVariant(values[chrIndex], Integer.parseInt(values[posIndex]), ref, alt));
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            throw new Exception(format("failed to load variants file(%s)", filename));
+        }
+
+        return sampleVariants;
     }
 }

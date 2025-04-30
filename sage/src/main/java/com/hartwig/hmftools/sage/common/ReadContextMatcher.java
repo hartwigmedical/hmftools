@@ -11,11 +11,10 @@ import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_READ_
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
-import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.SIMPLE_ALT;
 import static com.hartwig.hmftools.sage.common.ReadMatchInfo.NO_MATCH;
-import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
+import static com.hartwig.hmftools.sage.common.SageVariant.isLongInsert;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -25,7 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.sage.evidence.RawContext;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.jetbrains.annotations.Nullable;
 

@@ -64,9 +64,10 @@ import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.ReadMatchInfo;
+import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.FragmentLengths;
@@ -193,7 +194,7 @@ public class ReadContextCounter
     public VariantTier tier() { return mTier; }
     public boolean isSnv() { return mVariant.isSNV(); }
     public boolean isIndel() { return mIsIndel; }
-    public boolean isLongInsert() { return SimpleVariant.isLongInsert(mVariant); }
+    public boolean isLongInsert() { return SageVariant.isLongInsert(mVariant); }
     public boolean isLongIndel() { return mVariant.indelLengthAbs() >= LONG_INSERT_LENGTH; }
     public boolean isInLongRepeat() { return mReadContext.maxRepeatCount() >= LONG_REPEAT_LENGTH; }
     public final ReadContextQualCache qualCache() { return mQualCache; }

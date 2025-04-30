@@ -13,7 +13,7 @@ import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 import com.hartwig.hmftools.sage.candidate.RefContextCache;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
 import htsjdk.samtools.SAMRecord;
