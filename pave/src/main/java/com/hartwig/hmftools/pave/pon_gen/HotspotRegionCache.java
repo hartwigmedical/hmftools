@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.pave.pon_gen;
 
+import static java.lang.String.format;
+
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 public class HotspotRegionCache
@@ -23,6 +26,10 @@ public class HotspotRegionCache
         if(mHotspots == null || mHotspots.isEmpty())
             return false;
 
+        // cannot search at earlier positions than the current index
+        if(mCurrentIndex < mHotspots.size() && position < mHotspots.get(mCurrentIndex).position())
+            return false;
+
         int firstPosMatchIndex = -1;
         boolean matched = false;
 
@@ -34,7 +41,21 @@ public class HotspotRegionCache
                 continue;
 
             if(hotspot.position() > position)
-                break;
+            {
+                if(firstPosMatchIndex == -1)
+                {
+                    // no match on position was found - move index back to prior hotspot
+                    if(mCurrentIndex > 0)
+                        --mCurrentIndex;
+                }
+                else
+                {
+                    // otherwise set to first match at this position ready for the next call / check
+                    mCurrentIndex = firstPosMatchIndex;
+                }
+
+                return false;
+            }
 
             if(firstPosMatchIndex == -1)
                 firstPosMatchIndex = mCurrentIndex;
@@ -49,10 +70,17 @@ public class HotspotRegionCache
         // move the index back to the prior position or the first at this position
         if(firstPosMatchIndex >= 0)
             mCurrentIndex = firstPosMatchIndex;
-        else if(mCurrentIndex > 0)
-            --mCurrentIndex;
 
         return matched;
+    }
+
+    @VisibleForTesting
+    public int currentIndex() { return mCurrentIndex; }
+
+    public String toString()
+    {
+        return format("size(%d) index(%d) currentPos(%d)",
+            mHotspots.size(), mCurrentIndex, mCurrentIndex < mHotspots.size() ? mHotspots.get(mCurrentIndex).position() : -1);
     }
 }
 

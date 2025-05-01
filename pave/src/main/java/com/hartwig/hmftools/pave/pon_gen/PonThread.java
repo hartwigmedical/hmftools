@@ -15,29 +15,25 @@ public class PonThread extends Thread
 {
     private final PonConfig mConfig;
     private final TaskQueue mRegions;
+    private final PonWriter mPonWriter;
 
     private final List<String> mSampleVcfs;
     private final ClinvarAnnotation mClinvarAnnotation;
     private final HotspotCache mHotspotCache;
     private final EnsemblDataCache mEnsemblDataCache;
 
-    private final List<VariantPonData> mFilteredVariants;
-
     public PonThread(
-            final PonConfig config, final List<String> sampleVcfs, final TaskQueue taskQueue,
+            final PonConfig config, final List<String> sampleVcfs, final TaskQueue taskQueue, final PonWriter ponWriter,
             final ClinvarAnnotation clinvarAnnotation, final HotspotCache hotspotCache, final EnsemblDataCache ensemblDataCache)
     {
         mRegions = taskQueue;
         mConfig = config;
+        mPonWriter = ponWriter;
         mSampleVcfs = sampleVcfs;
         mEnsemblDataCache = ensemblDataCache;
         mHotspotCache = hotspotCache;
         mClinvarAnnotation = clinvarAnnotation;
-
-        mFilteredVariants = Lists.newArrayList();
     }
-
-    public List<VariantPonData> filteredVariants() { return mFilteredVariants; }
 
     @Override
     public void run()
@@ -53,7 +49,7 @@ public class PonThread extends Thread
 
                 regionPonTask.run();
 
-                mFilteredVariants.addAll(regionPonTask.variants());
+                mPonWriter.onVariantsComplete(region, regionPonTask.variants());
             }
             catch(NoSuchElementException e)
             {

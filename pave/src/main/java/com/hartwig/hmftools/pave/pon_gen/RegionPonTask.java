@@ -29,13 +29,11 @@ public class RegionPonTask
     private final PonConfig mConfig;
     private final List<String> mSampleVcfs;
 
+    private final VariantCache mVariantCache;
     private final ClinvarChrCache mClinvarData;
     private final HotspotRegionCache mSomaticHotspots;
     private final HotspotRegionCache mGermlineHotspots;
     private final TranscriptRegionCache mTranscriptChrCache;
-
-    private final List<VariantPonData> mVariants;
-    private int mLastVariantIndex; // to speed up searching
 
     public RegionPonTask(
             final PonConfig config, final ChrBaseRegion region, final List<String> sampleVcfs,
@@ -44,6 +42,8 @@ public class RegionPonTask
         mConfig = config;
         mRegion = region;
         mSampleVcfs = sampleVcfs;
+
+        mVariantCache = new VariantCache();
 
         // extract annotation information just for this region
         mClinvarData = new ClinvarChrCache(mRegion.Chromosome, new StringCache());
@@ -79,18 +79,15 @@ public class RegionPonTask
             mGermlineHotspots = new HotspotRegionCache(Collections.emptyList());
         }
 
-        mTranscriptChrCache = new TranscriptRegionCache(ensemblDataCache, mRegion);
+        mTranscriptChrCache = TranscriptRegionCache.from(ensemblDataCache, mRegion);
 
         PV_LOGGER.debug("region({}) initialised: clinvarEntries({}) hotspots(somatic={} germline={}) exonicRegions({})",
                 mRegion, mClinvarData.entryCount(), mSomaticHotspots.entryCount(), mGermlineHotspots.entryCount(),
                 mTranscriptChrCache.entryCount());
-
-        mVariants = Lists.newArrayList();
-        mLastVariantIndex = 0;
     }
 
     public ChrBaseRegion region() { return mRegion; }
-    public List<VariantPonData> variants() { return mVariants; }
+    public List<VariantPonData> variants() { return mVariantCache.variants(); }
 
     private static final int SAMPLE_LOG_COUNT = 100;
     private static final int SAMPLE_VARIANT_LOG_COUNT = 1_000_000;
@@ -109,22 +106,29 @@ public class RegionPonTask
             }
         }
 
-        PV_LOGGER.debug("region({}) VCFs loaded and cached variants({})", mRegion, mVariants.size());
+        int cachedVariantCount = mVariantCache.variantCount();
 
         // filter & finalise variants
         filterVariants();
 
-        PV_LOGGER.debug("region({}) complete, filtered variants({})", mRegion, mVariants.size());
+        PV_LOGGER.debug("region({}) complete, variants(filter={} cached={}})", mRegion, mVariantCache.variantCount(), cachedVariantCount);
     }
 
-    private void loadSampleVariants(final String sampleVcf)
+    private void resetSearchIndices()
     {
+        mVariantCache.resetSearch();
+
         if(mClinvarData != null)
             mClinvarData.resetSearch();
 
         mSomaticHotspots.resetSearch();
         mGermlineHotspots.resetSearch();
         mTranscriptChrCache.resetSearch();
+    }
+
+    private void loadSampleVariants(final String sampleVcf)
+    {
+        resetSearchIndices();
 
         VcfFileReader vcfReader = new VcfFileReader(sampleVcf);
 
@@ -197,85 +201,48 @@ public class RegionPonTask
     private VariantPonData getOrCreateVariant(
             final VariantContext variantContext, final String chromosome, final int position, final String ref, final String alt)
     {
-        // start from the last inserted index since each VCF is ordered
-        int index = mLastVariantIndex;
-        while(index < mVariants.size())
+        VariantPonData variant = mVariantCache.getOrCreateVariant(chromosome, position, ref, alt);
+
+        if(variant.sampleCount() > 0)
+            return variant;
+
+        if((mVariantCache.variantCount() % VARIANT_LOG_COUNT) == 0)
         {
-            VariantPonData variant = mVariants.get(index);
-
-            if(position > variant.Position)
-            {
-                ++index;
-                continue;
-            }
-
-            if(position < variant.Position)
-                break;
-
-            if(variant.Ref.equals(ref) && variant.Alt.equals(alt))
-                return variant;
-
-            ++index;
-        }
-
-        VariantPonData newVariant = new VariantPonData(chromosome, position, ref, alt);
-        mVariants.add(index, newVariant);
-
-        if((mVariants.size() % VARIANT_LOG_COUNT) == 0)
-        {
-            PV_LOGGER.debug("region({}) cached {} variants", mRegion, mVariants.size());
+            PV_LOGGER.debug("region({}) cached {} variants", mRegion, mVariantCache.variantCount());
         }
 
         // annotate variant
         if(mClinvarData != null)
         {
-            Pathogenicity pathogenicity = mClinvarData.findPathogenicity(newVariant);
-            newVariant.setClinvarPathogenicity(pathogenicity != null ? pathogenicity : Pathogenicity.UNKNOWN );
+            Pathogenicity pathogenicity = mClinvarData.findPathogenicity(variant);
+            variant.setClinvarPathogenicity(pathogenicity != null ? pathogenicity : Pathogenicity.UNKNOWN );
         }
 
-        if(mSomaticHotspots.matchesHotspot(newVariant.Position, newVariant.Ref, newVariant.Alt))
+        if(mSomaticHotspots.matchesHotspot(variant.Position, variant.Ref, variant.Alt))
         {
-            newVariant.markSomaticHotspot();
+            variant.markSomaticHotspot();
         }
 
-        if(mGermlineHotspots.matchesHotspot(newVariant.Position, newVariant.Ref, newVariant.Alt))
+        if(mGermlineHotspots.matchesHotspot(variant.Position, variant.Ref, variant.Alt))
         {
-            newVariant.markGermlineHotspot();
+            variant.markGermlineHotspot();
         }
 
         // check proximity to coding a region
-        if(mTranscriptChrCache.inOrNearExonicRegion(newVariant.Position))
+        if(mTranscriptChrCache.inOrNearExonicRegion(variant.Position))
         {
-            newVariant.markInCodingRegion();
+            variant.markInCodingRegion();
         }
 
-        if(newVariant.isIndel())
-            newVariant.setRepeatCount(variantContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT, 0));
+        if(variant.isIndel())
+            variant.setRepeatCount(variantContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT, 0));
 
-        mLastVariantIndex = index;
-
-        return newVariant;
+        return variant;
     }
 
     private void filterVariants()
     {
-        List<VariantPonData> filteredVariants = mVariants.stream().filter(x -> x.sampleCount() >= mConfig.MinSamples).collect(Collectors.toList());
-        mVariants.clear();
-        mVariants.addAll(filteredVariants);
-
-        /*
-        // only min sample count for now
-        int index = 0;
-
-        while(index < mVariants.size())
-        {
-            VariantPonData variant = mVariants.get(index);
-
-            if(variant.sampleCount() < mConfig.MinSamples)
-                mVariants.remove(index);
-            else
-                ++index;
-        }
-        */
+        List<VariantPonData> filteredVariants = mVariantCache.variants().stream().filter(x -> x.sampleCount() >= mConfig.MinSamples).collect(Collectors.toList());
+        mVariantCache.replaceVariants(filteredVariants);
     }
 }

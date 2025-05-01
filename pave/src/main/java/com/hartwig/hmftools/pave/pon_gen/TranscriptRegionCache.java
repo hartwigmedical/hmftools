@@ -2,8 +2,10 @@ package com.hartwig.hmftools.pave.pon_gen;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
+import java.util.Collections;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -19,13 +21,18 @@ public class TranscriptRegionCache
 
     private static final int SPLICE_BUFFER = 10;
 
-    public TranscriptRegionCache(final EnsemblDataCache ensemblDataCache, final ChrBaseRegion region)
+    public TranscriptRegionCache(final List<BaseRegion> regions)
     {
-        mExonicRegions = Lists.newArrayList();
+        mExonicRegions = regions;
         mCurrentIndex = 0;
+    }
+
+    public static TranscriptRegionCache from(final EnsemblDataCache ensemblDataCache, final ChrBaseRegion region)
+    {
+        List<BaseRegion> exonicRegions = Lists.newArrayList();
 
         if(ensemblDataCache == null)
-            return;
+            return new TranscriptRegionCache(Collections.emptyList());
 
         List<GeneData> geneDataList = ensemblDataCache.getChrGeneDataMap().get(region.Chromosome);
 
@@ -45,12 +52,14 @@ public class TranscriptRegionCache
                         // add a splice region buffer
                         if(positionsOverlap(region.start(), region.end(), exonData.Start - SPLICE_BUFFER, exonData.End + SPLICE_BUFFER))
                         {
-                            mExonicRegions.add(new BaseRegion(exonData.Start - SPLICE_BUFFER, exonData.End + SPLICE_BUFFER));
+                            exonicRegions.add(new BaseRegion(exonData.Start - SPLICE_BUFFER, exonData.End + SPLICE_BUFFER));
                         }
                     }
                 }
             }
         }
+
+        return new TranscriptRegionCache(exonicRegions);
     }
 
     public void resetSearch() { mCurrentIndex = 0; }
@@ -58,10 +67,13 @@ public class TranscriptRegionCache
 
     public boolean inOrNearExonicRegion(int position)
     {
-        if(mExonicRegions == null || mExonicRegions.isEmpty())
+        if(mExonicRegions.isEmpty())
             return false;
 
-        int firstPosMatchIndex = -1;
+        // cannot search at earlier positions than the current index
+        if(mCurrentIndex < mExonicRegions.size() && position < mExonicRegions.get(mCurrentIndex).start())
+            return false;
+
         boolean matched = false;
 
         for(; mCurrentIndex < mExonicRegions.size(); ++mCurrentIndex)
@@ -72,21 +84,21 @@ public class TranscriptRegionCache
                 continue;
 
             if(exonRegion.start() > position)
-                break;
+            {
+                // move index back
+                if(mCurrentIndex > 0)
+                    --mCurrentIndex;
 
-            if(firstPosMatchIndex == -1)
-                firstPosMatchIndex = mCurrentIndex;
+                return false;
+            }
 
             matched = true;
             break;
         }
 
-        // move the index back to the prior position or the first at this position
-        if(firstPosMatchIndex >= 0)
-            mCurrentIndex = firstPosMatchIndex;
-        else if(mCurrentIndex > 0)
-            --mCurrentIndex;
-
         return matched;
     }
+
+    @VisibleForTesting
+    public int currentIndex() { return mCurrentIndex; }
 }

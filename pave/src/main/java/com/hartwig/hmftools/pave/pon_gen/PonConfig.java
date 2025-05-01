@@ -28,7 +28,6 @@ import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 public class PonConfig
 {
     public final String VcfPath;
-    public final String OutputDir;
     public final String OutputFilename;
     public final String ExistingPonFilename;
 
@@ -66,7 +65,6 @@ public class PonConfig
     public PonConfig(final ConfigBuilder configBuilder)
     {
         VcfPath = configBuilder.getValue(VCF_PATH);
-        OutputDir = parseOutputDir(configBuilder);
         OutputFilename = configBuilder.getValue(OUTPUT_PON_FILENAME);
 
         QualCutoff = configBuilder.getInteger(QUAL_CUTOFF);

@@ -72,6 +72,7 @@ public class VariantPonData extends SimpleVariant
 
     public static class VariantSorter implements Comparator<VariantPonData>
     {
+        // note does not include chromosome since assumes just sorting within the same region
         public int compare(final VariantPonData first, final VariantPonData second)
         {
             // sort on position and then ref and alt
@@ -84,5 +85,4 @@ public class VariantPonData extends SimpleVariant
             return first.Alt.compareTo(second.Alt);
         }
     }
-
 }

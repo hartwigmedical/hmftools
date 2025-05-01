@@ -1,33 +1,22 @@
 package com.hartwig.hmftools.pave.pon_gen;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 import static com.hartwig.hmftools.pave.pon_gen.PonConfig.MANUAL_ENTRIES;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
-import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
@@ -147,6 +136,8 @@ public class PonBuilder
             }
         }
 
+        PonWriter ponWriter = new PonWriter(mConfig, regions.stream().toList());
+
         List<PonThread> ponThreads = Lists.newArrayList();
         List<Thread> workers = new ArrayList<>();
 
@@ -154,7 +145,7 @@ public class PonBuilder
 
         for(int i = 0; i < min(regions.size(), mConfig.Threads); ++i)
         {
-            PonThread ponThread = new PonThread(mConfig, sampleVcfs, taskQueue, mClinvarAnnotation, mHotspotCache, mEnsemblDataCache);
+            PonThread ponThread = new PonThread(mConfig, sampleVcfs, taskQueue, ponWriter, mClinvarAnnotation, mHotspotCache, mEnsemblDataCache);
             ponThreads.add(ponThread);
 
             ponThread.start();
@@ -164,81 +155,9 @@ public class PonBuilder
         if(!runThreadTasks(workers))
             System.exit(1);
 
-        List<VariantPonData> finalFilteredVariants = Lists.newArrayList();
-        ponThreads.forEach(x -> finalFilteredVariants.addAll(x.filteredVariants()));
-
-        writePon(finalFilteredVariants);
+        ponWriter.close();
 
         PV_LOGGER.info("Pave PON building complete, mins({})", runTimeMinsStr(startTimeMs));
-    }
-
-    private void writePon(final List<VariantPonData> variants)
-    {
-        // TODO: check for duplicates
-        variants.addAll(mManualEntries);
-
-        Collections.sort(variants, new VariantPonData.VariantSorter());
-
-        try
-        {
-            String fileName = mConfig.OutputFilename != null ? mConfig.OutputFilename :
-                    format("%s/somatic_pon_%d_samples.%s.tsv", mConfig.OutputDir, mSampleIds.size(), mConfig.RefGenVersion.identifier());
-
-            PV_LOGGER.info("writing {} variants to PON file({})", variants.size(), fileName);
-
-            BufferedWriter writer = createBufferedWriter(fileName);
-
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_CHROMOSOME);
-            sj.add(FLD_POSITION);
-            sj.add(FLD_REF);
-            sj.add(FLD_ALT);
-
-            sj.add("SampleCount");
-            sj.add("MaxSampleReadCount");
-            sj.add("TotalReadCount");
-            sj.add("SomaticHotspot");
-            sj.add("GermlineHotspot");
-            sj.add("ClinvarPathogenic");
-            sj.add("InCodingRegion");
-            sj.add("RepeatCount");
-
-            writer.write(sj.toString());
-            writer.newLine();
-
-            for(VariantPonData variant : variants)
-            {
-                if(variant.sampleCount() < mConfig.MinSamples)
-                    continue;
-
-                if(mExistingPon.hasEntry(variant.Chromosome, variant.Position, variant.Ref, variant.Alt))
-                    continue;
-
-                sj = new StringJoiner(TSV_DELIM);
-                sj.add(variant.Chromosome);
-                sj.add(String.valueOf(variant.Position));
-                sj.add(variant.Ref);
-                sj.add(variant.Alt);
-                sj.add(String.valueOf(variant.sampleCount()));
-                sj.add(String.valueOf(variant.maxSampleReadCount()));
-                sj.add(String.valueOf(variant.totalReadCount()));
-
-                sj.add(String.valueOf(variant.isSomaticHotspot()));
-                sj.add(String.valueOf(variant.isGermlineHotspot()));
-                sj.add(String.valueOf(variant.isClinvarPathogenic()));
-                sj.add(String.valueOf(variant.inCodingRegion()));
-                sj.add(String.valueOf(variant.repeatCount()));
-
-                writer.write(sj.toString());
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to initialise output file: {}", e.toString());
-        }
     }
 
     public static void main(@NotNull final String[] args)

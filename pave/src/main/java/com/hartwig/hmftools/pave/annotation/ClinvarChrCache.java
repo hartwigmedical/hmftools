@@ -64,6 +64,9 @@ public class ClinvarChrCache
         if(mEntries.isEmpty() || mEntries.get(mEntries.size() - 1).Position < position)
             return null;
 
+        if(mCurrentIndex < mEntries.size() && position < mEntries.get(mCurrentIndex).Position)
+            return null;
+
         int firstPosMatchIndex = -1;
 
         ClinvarEntry matchedEntry = null;
@@ -76,7 +79,20 @@ public class ClinvarChrCache
                 continue;
 
             if(entry.Position > position)
-                break;
+            {
+                if(firstPosMatchIndex == -1)
+                {
+                    // no match on position was found - move index back to prior entry
+                    if(mCurrentIndex > 0)
+                        --mCurrentIndex;
+                }
+                else
+                {
+                    mCurrentIndex = firstPosMatchIndex;
+                }
+
+                return null;
+            }
 
             if(firstPosMatchIndex == -1)
                 firstPosMatchIndex = mCurrentIndex;
@@ -91,8 +107,6 @@ public class ClinvarChrCache
         // move the index back to the prior position or the first at this position
         if(firstPosMatchIndex >= 0)
             mCurrentIndex = firstPosMatchIndex;
-        else if(mCurrentIndex > 0)
-            --mCurrentIndex;
 
         return matchedEntry;
     }
