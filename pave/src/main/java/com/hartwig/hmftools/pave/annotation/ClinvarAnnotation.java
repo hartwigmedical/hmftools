@@ -10,8 +10,10 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -79,6 +81,8 @@ public class ClinvarAnnotation extends AnnotationData implements Callable
 
         return (long)0;
     }
+
+    public void loadData() { loadEntries(mFilename);}
 
     public static void addHeader(final VCFHeader header)
     {
