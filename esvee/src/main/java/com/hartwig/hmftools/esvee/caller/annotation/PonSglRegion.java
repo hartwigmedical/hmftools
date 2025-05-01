@@ -1,8 +1,15 @@
 package com.hartwig.hmftools.esvee.caller.annotation;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.FLD_PON_COUNT;
 import static com.hartwig.hmftools.esvee.caller.annotation.PonSvRegion.SPARE_FIELD;
+
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -40,15 +47,16 @@ public class PonSglRegion implements Comparable<PonSglRegion>
     @Override
     public int compareTo(final PonSglRegion other)
     {
-        if(Region.start() == other.Region.start())
-        {
-            if(Region.end() == other.Region.end())
-                return 0;
+        if(Region.start() != other.Region.start())
+            return Region.start() < other.Region.start() ? -1 : 1;
 
+        if(Region.end() != other.Region.end())
             return Region.end() < other.Region.end() ? -1 : 1;
-        }
 
-        return Region.start() < other.Region.start() ? -1 : 1;
+        if(Orient != other.Orient)
+            return Orient.isForward() ? -1 : 1;
+
+        return Integer.compare(PonCount, other.PonCount);
     }
 
     public static PonSglRegion fromBedRecord(final String data)
@@ -61,6 +69,21 @@ public class PonSglRegion implements Comparable<PonSglRegion>
         int ponCount = Integer.parseInt(items[4]);
 
         return new PonSglRegion(region, orient, ponCount);
+    }
+
+    public static String header()
+    {
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END).add(FLD_ORIENTATION).add(FLD_PON_COUNT);
+        return sj.toString();
+    }
+
+    public String toTsv()
+    {
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(Region.Chromosome).add(String.valueOf(Region.start())).add(String.valueOf(Region.end()));
+        sj.add(String.valueOf(Orient.asByte())).add(String.valueOf(PonCount));
+        return sj.toString();
     }
 
     public String toBedRecord()

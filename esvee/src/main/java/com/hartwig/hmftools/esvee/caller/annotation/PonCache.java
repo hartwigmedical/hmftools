@@ -38,8 +38,8 @@ import com.hartwig.hmftools.esvee.caller.Variant;
 
 public class PonCache
 {
-    private final Map<String,List<PonSvRegion>> mSvRegions;
-    private final Map<String,List<PonSglRegion>> mSglRegions;
+    private final Map<String,List<PonSvRegion>> mSvRegions; // SV entries keyed by starting/lower chromosome
+    private final Map<String,List<PonSglRegion>> mSglRegions; // SGL entries keyed by chromosome
     private final int mPositionMargin;
     private final boolean mAllowUnordered;
 
@@ -56,6 +56,8 @@ public class PonCache
 
     public static final String ARTEFACT_PON_BED_SV_FILE = "artefact_pon_sv_file";
     public static final String ARTEFACT_PON_BED_SGL_FILE = "artefact_pon_sgl_file";
+
+    public static final String FLD_PON_COUNT = "PonCount";
 
     private final List<ChrBaseRegion> mSpecificSglFusionRegions;
 
