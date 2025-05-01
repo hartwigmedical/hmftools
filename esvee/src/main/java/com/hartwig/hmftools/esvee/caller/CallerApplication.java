@@ -198,7 +198,7 @@ public class CallerApplication
         }
         else
         {
-            SV_LOGGER.warn("loaded {} breakeds with unmatched({}) complete({}) hardFiltered({})",
+            SV_LOGGER.warn("loaded {} breakends with unmatched({}) complete({}) hardFiltered({})",
                     mProcessedVariants, mSvDataCache.incompleteSVs(), mSvDataCache.getSvList().size(), mSvDataCache.hardFilteredCount());
         }
 
