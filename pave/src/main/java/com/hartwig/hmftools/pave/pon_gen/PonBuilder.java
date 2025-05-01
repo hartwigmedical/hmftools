@@ -136,7 +136,7 @@ public class PonBuilder
             }
         }
 
-        PonWriter ponWriter = new PonWriter(mConfig, regions.stream().toList());
+        PonWriter ponWriter = new PonWriter(mConfig, regions.stream().toList(), mManualEntries);
 
         List<PonThread> ponThreads = Lists.newArrayList();
         List<Thread> workers = new ArrayList<>();

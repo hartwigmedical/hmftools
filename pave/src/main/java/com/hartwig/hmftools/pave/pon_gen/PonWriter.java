@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave.pon_gen;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
@@ -27,13 +25,16 @@ public class PonWriter
     private final PonConfig mConfig;
 
     private final BufferedWriter mWriter;
+    private final List<VariantPonData> mManualEntries;
 
     private final List<ChrBaseRegion> mRemainingRegions;
     private final Map<ChrBaseRegion,List<VariantPonData>> mCachedRegionVariants;
 
-    public PonWriter(final PonConfig config, final List<ChrBaseRegion> regions)
+    public PonWriter(final PonConfig config, final List<ChrBaseRegion> regions, final List<VariantPonData> manualEntries)
     {
         mConfig = config;
+        mManualEntries = manualEntries;
+
         mWriter = initialiseWriter();
 
         mRemainingRegions = Lists.newArrayList(regions);
@@ -42,6 +43,9 @@ public class PonWriter
 
     public synchronized void onVariantsComplete(final ChrBaseRegion region, final List<VariantPonData> variants)
     {
+        // now include any manual entries from this region
+        mManualEntries.stream().filter(x -> region.containsPosition(x.Chromosome, x.Position)).forEach(x -> variants.add(x));
+
         Collections.sort(variants, new VariantPonData.VariantSorter());
 
         mCachedRegionVariants.put(region, variants);
@@ -127,9 +131,6 @@ public class PonWriter
         {
             for(VariantPonData variant : variants)
             {
-                if(variant.sampleCount() < mConfig.MinSamples)
-                    continue;
-
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
                 sj.add(variant.Chromosome);
                 sj.add(String.valueOf(variant.Position));
