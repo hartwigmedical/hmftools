@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
@@ -213,43 +212,6 @@ public final class IndelBuilder
         }
 
         return "";
-    }
-
-    public static void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
-    {
-        int maxIndelLength = read.indelCoords() != null ? read.indelCoords().Length : maxIndelLength(read.cigarElements());
-
-        if(maxIndelLength >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
-        {
-            List<Read> lengthReads = indelLengthReads.get(maxIndelLength);
-            if(lengthReads == null)
-            {
-                lengthReads = Lists.newArrayList();
-                indelLengthReads.put(maxIndelLength, lengthReads);
-            }
-
-            lengthReads.add(read);
-        }
-    }
-
-    public static List<Read> findMaxFrequencyIndelReads(final Map<Integer,List<Read>> indelLengthReads)
-    {
-        if(indelLengthReads.isEmpty())
-            return Collections.emptyList();
-
-        int maxFrequency = 0;
-        int indelLength = 0;
-
-        for(Map.Entry<Integer,List<Read>> entry : indelLengthReads.entrySet())
-        {
-            if(entry.getValue().size() > maxFrequency)
-            {
-                indelLength = entry.getKey();
-                maxFrequency = entry.getValue().size();
-            }
-        }
-
-        return indelLengthReads.get(indelLength);
     }
 
     public static boolean hasDominantIndelReadAssembly(final JunctionAssembly assembly)

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_600;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.getSupportTypeCount;
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
@@ -469,6 +471,90 @@ public class AssemblyLinksTest
         assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, assemblyExtBases2.length());
 
         link = AssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+        assertNull(link);
+    }
+
+    @Test
+    public void testFacingLinkConditions()
+    {
+        String assemblyRefBases = REF_BASES_400.substring(151, 251);
+        String assemblyExtBases = REF_BASES_600.substring(1, 50);
+        String assemblyBases = assemblyRefBases + assemblyExtBases;
+
+        JunctionAssembly assemblyPos = createAssembly(CHR_1, 250, FORWARD, assemblyBases, assemblyRefBases.length() - 1);
+
+        String assemblyRefBases2 = REF_BASES_400.substring(100, 200);
+        String assemblyExtBases2 = REF_BASES_600.substring(1, 50);
+        String assemblyBases2 = assemblyExtBases2 + assemblyRefBases2;
+
+        JunctionAssembly assemblyNeg = createAssembly(CHR_1, 100, REVERSE, assemblyBases2, assemblyExtBases2.length());
+
+        // no shared read
+        AssemblyLink link = AssemblyLinker.tryAssemblyFacing(assemblyNeg, assemblyPos, Collections.emptyList());
+        assertNull(link);
+
+        Read juncRead1a = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 151, assemblyBases, "100M50S", CHR_1, 100, false);
+        juncRead1a.bamRecord().setReadNegativeStrandFlag(true);
+
+        assemblyPos.addJunctionRead(juncRead1a);
+
+        Read juncRead1b = createRead(
+                juncRead1a.id(), CHR_1, 100, assemblyBases2, "50S100M", CHR_1, 151, true);
+
+        assemblyNeg.addJunctionRead(juncRead1b);
+
+        link = AssemblyLinker.tryAssemblyFacing(assemblyNeg, assemblyPos, Collections.emptyList());
+        assertNotNull(link);
+
+        // invalid if too close or far away
+        assemblyNeg = createAssembly(CHR_1, 225, REVERSE, assemblyBases2, assemblyExtBases2.length());
+
+        juncRead1b = createRead(
+                juncRead1a.id(), CHR_1, 225, assemblyBases2, "50S100M", CHR_1, 151, true);
+
+        assemblyNeg.addJunctionRead(juncRead1b);
+
+        link = AssemblyLinker.tryAssemblyFacing(assemblyNeg, assemblyPos, Collections.emptyList());
+        assertNull(link);
+
+        // different chromosome
+        assemblyNeg = createAssembly(CHR_2, 100, REVERSE, assemblyBases2, assemblyExtBases2.length());
+
+        juncRead1b = createRead(
+                juncRead1a.id(), CHR_2, 100, assemblyBases2, "50S100M", CHR_1, 151, true);
+
+        assemblyNeg.addJunctionRead(juncRead1b);
+
+        link = AssemblyLinker.tryAssemblyFacing(assemblyNeg, assemblyPos, Collections.emptyList());
+        assertNull(link);
+
+        // matched reads have incorrect orientation
+        assemblyNeg = createAssembly(CHR_1, 100, REVERSE, assemblyBases2, assemblyExtBases2.length());
+
+        juncRead1b = createRead(
+                juncRead1a.id(), CHR_1, 100, assemblyBases2, "50S100M", CHR_1, 151, true);
+
+        assemblyNeg.addJunctionRead(juncRead1b);
+
+        link = AssemblyLinker.tryAssemblyFacing(assemblyNeg, assemblyPos, Collections.emptyList());
+        assertNotNull(link);
+
+        assemblyNeg.support().clear();
+
+        juncRead1b.bamRecord().setReadNegativeStrandFlag(true);
+        assemblyNeg.addJunctionRead(juncRead1b);
+
+        link = AssemblyLinker.tryAssemblyFacing(assemblyNeg, assemblyPos, Collections.emptyList());
+        assertNull(link);
+
+        // or reads facing away
+        assemblyPos.support().clear();
+
+        juncRead1a.bamRecord().setReadNegativeStrandFlag(false);
+        assemblyPos.addJunctionRead(juncRead1a);
+
+        link = AssemblyLinker.tryAssemblyFacing(assemblyNeg, assemblyPos, Collections.emptyList());
         assertNull(link);
     }
 }

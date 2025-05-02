@@ -54,8 +54,7 @@ public class RefSideSoftClip
 
     public static boolean checkAddRefSideSoftClip(final List<RefSideSoftClip> refSideSoftClips, final Junction junction, final Read read)
     {
-        // add any which have soft-clips more than the junction buffer on the opposite side to the junction,
-        // with a minimum aligned length and accumulate matching reads
+        // collect reads which have soft-clips suggesting a short TI section ie a soft-clip on the other side the min TI length from the junction
         int refSideSoftClipPosition;
         int refSideSoftClipLength;
 

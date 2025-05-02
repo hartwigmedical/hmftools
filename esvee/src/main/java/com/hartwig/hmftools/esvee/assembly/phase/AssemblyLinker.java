@@ -150,11 +150,21 @@ public final class AssemblyLinker
                             if(!other.id().equals(support.id()))
                                 continue;
 
-                            if(other.flags() == support.flags() || other.orientation() != support.orientation())
+                            if(other.flags() == support.flags()) // the same read
                             {
                                 matched = true;
-                                break;
                             }
+                            else if(other.orientation() != support.orientation())
+                            {
+                                // reads must face each other
+                                if(other.orientation().isForward() && other.alignmentStart() < support.alignmentStart())
+                                    matched = true;
+                                else if(support.orientation().isForward() && support.alignmentStart() < other.alignmentStart())
+                                    matched = true;
+                            }
+
+                            if(matched)
+                                break;
                         }
                     }
                 }
