@@ -59,6 +59,19 @@ public class PonSglRegion implements Comparable<PonSglRegion>
         return Integer.compare(PonCount, other.PonCount);
     }
 
+    public static PonSglRegion fromTsv(final String data)
+    {
+        String[] items = data.split(TSV_DELIM, -1);
+
+        int index = 0;
+        ChrBaseRegion region = new ChrBaseRegion(items[index++], Integer.parseInt(items[index++]), Integer.parseInt(items[index++]));
+
+        Orientation orientation = Orientation.fromByteStr(items[index++]);
+        int ponCount = Integer.parseInt(items[index]);
+
+        return new PonSglRegion(region, orientation, ponCount);
+    }
+
     public static PonSglRegion fromBedRecord(final String data)
     {
         String[] items = data.split(TSV_DELIM, -1);

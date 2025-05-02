@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -424,15 +425,20 @@ public class PonCache
         {
             BufferedReader fileReader = createBufferedReader(filename);
 
+            boolean isTsvFormat = filename.endsWith(TSV_ZIP_EXTENSION);
+
             int itemCount = 0;
             String line = null;
             String currentChr = "";
             List<PonSvRegion> svRegions = null;
             ChrBaseRegion lastRegionStart = null;
 
+            if(isTsvFormat)
+                line = fileReader.readLine(); // skip header
+
             while((line = fileReader.readLine()) != null)
             {
-                PonSvRegion ponRegion = PonSvRegion.fromBedRecord(line);
+                PonSvRegion ponRegion = isTsvFormat ? PonSvRegion.fromTsv(line) : PonSvRegion.fromBedRecord(line);
 
                 if(!ponRegion.RegionStart.Chromosome.equals(currentChr))
                 {
@@ -482,15 +488,20 @@ public class PonCache
         {
             BufferedReader fileReader = createBufferedReader(filename);
 
+            boolean isTsvFormat = filename.endsWith(TSV_ZIP_EXTENSION);
+
             int itemCount = 0;
             String line = null;
             String currentChr = "";
             List<PonSglRegion> sglRegions = null;
             ChrBaseRegion lastRegion = null;
 
+            if(isTsvFormat)
+                line = fileReader.readLine(); // skip header
+
             while((line = fileReader.readLine()) != null)
             {
-                PonSglRegion ponRegion = PonSglRegion.fromBedRecord(line);
+                PonSglRegion ponRegion = isTsvFormat ? PonSglRegion.fromTsv(line) : PonSglRegion.fromBedRecord(line);
 
                 if(!ponRegion.Region.Chromosome.equals(currentChr))
                 {

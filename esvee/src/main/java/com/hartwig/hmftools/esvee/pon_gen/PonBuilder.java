@@ -65,8 +65,6 @@ public class PonBuilder
 
     public void run()
     {
-        SV_LOGGER.info("building PON from {} samples", mSampleIds.size());
-
         if(mSampleIds.isEmpty() || mConfig.VcfPath == null)
         {
             SV_LOGGER.error("missing sample IDs file or VCF path in config");
@@ -210,9 +208,17 @@ public class PonBuilder
         writeSvPonFile(chrPonMap);
     }
 
+    private String generateFilename(boolean isSv)
+    {
+        if(isSv)
+            return mConfig.OutputDir + format("sv_pon_%s.%s", mConfig.OutputFilenameSuffix, mConfig.WriteBedFiles ? "bedpe.gz" : "tsv.gz");
+        else
+            return mConfig.OutputDir + format("sgl_pon_%s.%s", mConfig.OutputFilenameSuffix, mConfig.WriteBedFiles ? "bed.gz" : "tsv.gz");
+    }
+
     private void writeSvPonFile(final Map<String,List<PonSvRegion>> chrPonMap)
     {
-        String filename = mConfig.OutputDir + format("sv_pon_%s.tsv", mConfig.OutputFilenameSuffix);
+        String filename = generateFilename(true);
 
         SV_LOGGER.info("writing SV PON file: {}", filename);
 
@@ -220,8 +226,11 @@ public class PonBuilder
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(PonSvRegion.header());
-            writer.newLine();
+            if(!mConfig.WriteBedFiles)
+            {
+                writer.write(PonSvRegion.header());
+                writer.newLine();
+            }
 
             RefGenomeVersion refGenomeVersion = chrPonMap.keySet().stream().anyMatch(x -> x.startsWith(CHR_PREFIX)) ? V38 : V37;
 
@@ -236,7 +245,11 @@ public class PonBuilder
 
                 for(PonSvRegion region : regions)
                 {
-                    writer.write(region.toTsv());
+                    if(mConfig.WriteBedFiles)
+                        writer.write(region.toBedRecord());
+                    else
+                        writer.write(region.toTsv());
+
                     writer.newLine();
                 }
             }
@@ -381,7 +394,7 @@ public class PonBuilder
 
     private void writeSglPonFile(final Map<String,List<PonSglRegion>> chrPonMap)
     {
-        String filename = mConfig.OutputDir + format("sgl_pon_%s.tsv", mConfig.OutputFilenameSuffix);
+        String filename = generateFilename(false);
 
         SV_LOGGER.info("writing SGL PON file: {}", filename);
 
@@ -389,8 +402,11 @@ public class PonBuilder
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(PonSglRegion.header());
-            writer.newLine();
+            if(!mConfig.WriteBedFiles)
+            {
+                writer.write(PonSglRegion.header());
+                writer.newLine();
+            }
 
             RefGenomeVersion refGenomeVersion = chrPonMap.keySet().stream().anyMatch(x -> x.startsWith(CHR_PREFIX)) ? V38 : V37;
 
@@ -405,7 +421,11 @@ public class PonBuilder
 
                 for(PonSglRegion region : regions)
                 {
-                    writer.write(region.toTsv());
+                    if(mConfig.WriteBedFiles)
+                        writer.write(region.toBedRecord());
+                    else
+                        writer.write(region.toTsv());
+
                     writer.newLine();
                 }
             }
