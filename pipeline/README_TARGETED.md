@@ -123,7 +123,7 @@ Note: Isofox requires the expected counts file to have been generated for the co
 
 Run the Cobalt normalisation file builder command described below on the training samples output.  This performs the following steps
 - for each 1K region covering any target region, extract each sample's tumor read count and the GC profile mappability and GC ratio bucket
-- calculate median and median read counts for each sample, and overall sample mean and median counts
+- calculate mean and median read counts for each sample, and overall sample mean and median counts
 - normalise each sample's tumor read counts per region
 - calculate a median read count from all samples per GC ratio bucket
 - write a relative enrichment for each region to the output file, with a min enrichment of 0.1
