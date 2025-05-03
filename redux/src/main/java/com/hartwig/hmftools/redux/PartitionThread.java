@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 

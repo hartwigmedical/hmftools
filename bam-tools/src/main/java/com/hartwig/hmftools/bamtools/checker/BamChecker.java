@@ -4,11 +4,10 @@ import static com.hartwig.hmftools.bamtools.checker.PartitionThread.SORTED_BAM_I
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.UNSORTED_BAM_ID;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.common.PartitionTask.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -33,8 +32,8 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMFileHeader;

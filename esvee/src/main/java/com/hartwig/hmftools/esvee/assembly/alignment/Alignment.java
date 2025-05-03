@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasDominantIndelReadAssembly;
@@ -21,21 +21,17 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.checkerframework.checker.units.qual.A;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
 public class Alignment

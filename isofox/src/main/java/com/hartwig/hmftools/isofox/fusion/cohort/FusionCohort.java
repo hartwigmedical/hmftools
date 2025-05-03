@@ -23,11 +23,9 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
-
-import org.apache.commons.cli.CommandLine;
 
 public class FusionCohort
 {

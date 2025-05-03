@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.StringCache;
+import com.hartwig.hmftools.common.perf.StringCache;
 
 public class PonChrCache
 {

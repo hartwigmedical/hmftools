@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.formFilename;
 import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.mergeFastqs;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.setDefaultThreadExceptionHandler;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.setDefaultThreadExceptionHandler;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -29,10 +29,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.logging.log4j.Level;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;

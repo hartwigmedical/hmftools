@@ -1,28 +1,24 @@
 package com.hartwig.hmftools.bamtools.checker;
 
-import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 
 import java.io.File;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 

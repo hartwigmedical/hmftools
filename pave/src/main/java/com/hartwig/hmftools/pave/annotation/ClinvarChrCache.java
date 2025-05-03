@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
-import com.hartwig.hmftools.common.utils.StringCache;
+import com.hartwig.hmftools.common.perf.StringCache;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.pave.VariantData;
 

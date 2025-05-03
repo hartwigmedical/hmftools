@@ -20,8 +20,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.KNOWN_HOTSPOT_FILE;
@@ -31,7 +31,6 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
@@ -46,7 +45,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_DISC_STATS_FILE
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_BAM;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_READ;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.parseConfigStr;
 

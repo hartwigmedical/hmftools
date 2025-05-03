@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
 public class CombinedStats
 {

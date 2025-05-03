@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentChecker;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;

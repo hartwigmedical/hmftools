@@ -3,13 +3,10 @@ package com.hartwig.hmftools.chord;
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS_DESC;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -22,9 +19,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;

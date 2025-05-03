@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
-import static com.hartwig.hmftools.esvee.TestUtils.REF_GENOME;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.esvee.TestUtils.createConcordantRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
@@ -40,7 +39,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.TestUtils;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.RemoteReadExtractor;
@@ -53,7 +51,7 @@ import com.hartwig.hmftools.esvee.assembly.phase.LocalGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 import org.junit.Test;
 

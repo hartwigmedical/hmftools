@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.blastn.BlastnMatch.calcSumBitScore;
 import static com.hartwig.hmftools.common.blastn.BlastnMatch.isPrimaryBlastnMatch;
 import static com.hartwig.hmftools.common.blastn.BlastnRunner.BLAST_DB;
 import static com.hartwig.hmftools.common.blastn.BlastnRunner.BLAST_TOOL;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;

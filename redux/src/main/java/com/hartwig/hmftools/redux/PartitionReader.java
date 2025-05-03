@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMis
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
@@ -28,7 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;

@@ -9,8 +9,8 @@ import java.util.NoSuchElementException;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;

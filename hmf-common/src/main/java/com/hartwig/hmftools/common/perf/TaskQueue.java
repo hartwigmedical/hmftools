@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.utils;
+package com.hartwig.hmftools.common.perf;
 
-import static com.hartwig.hmftools.common.utils.TaskExecutor.LOGGER;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.LOGGER;
 
 import java.util.Queue;
 

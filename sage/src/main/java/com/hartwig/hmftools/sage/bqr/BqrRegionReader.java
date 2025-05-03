@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.qual.BqrKey;
 import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RefSequence;

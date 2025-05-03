@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.perf;
 
 import static java.lang.Math.max;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import java.time.Duration;
@@ -93,4 +94,14 @@ public class HeapMonitor extends Thread
             throw new RuntimeException(e);
         }
     }
+
+    private static final long MEGABYTE = 1024L * 1024L;
+
+    public static int calcMemoryUsage()
+    {
+        Runtime runtime = Runtime.getRuntime();
+        long memory = runtime.totalMemory() - runtime.freeMemory();
+        return round(memory / MEGABYTE);
+    }
 }
+

@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.amber.AmberUtils.fromTumorBaf;
 import static com.hartwig.hmftools.amber.AmberUtils.isValid;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 
 import java.io.File;

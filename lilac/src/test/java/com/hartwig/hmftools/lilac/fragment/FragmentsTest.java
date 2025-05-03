@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_MILLISECOND;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_MILLISECOND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;

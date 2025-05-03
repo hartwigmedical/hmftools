@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 
 public class PonThread extends Thread

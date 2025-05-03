@@ -9,11 +9,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.StringCache;
+import com.hartwig.hmftools.common.perf.StringCache;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineSvFi
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_NO_TUMOR;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;

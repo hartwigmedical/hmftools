@@ -26,7 +26,7 @@ import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 public class RemoteGroupBuilder extends ThreadTask
 {

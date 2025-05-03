@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import com.hartwig.hmftools.common.bam.BamSlicer;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;

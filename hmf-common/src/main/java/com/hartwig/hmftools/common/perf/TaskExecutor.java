@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils;
+package com.hartwig.hmftools.common.perf;
 
 import static java.lang.Thread.State.NEW;
 

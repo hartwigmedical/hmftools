@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.writeDiscordantStats;
