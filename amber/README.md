@@ -34,7 +34,7 @@ This is the default and recommended mode.
 
 The loci file used by HMF for both 37 and 38 reference genomes is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). These loci are generated using GNOMAD v3 SNP sites (lifted over for GRCH37 version) from chr1-chrX with only a single ALT at that location and with populationAF > 0.05 and < 0.95.  These sites are further filtered to remove loci with frequently unclear zygosity in a set of 60 HMF samples, yielding around 6.3M sites overall.  
 
-Approximately 1000 sites scattered evenly through the VCF have been tagged with a SNPCHECK flag. 
+Approximately 100 sites scattered evenly through the VCF have been tagged with a SNPCHECK flag. 
 The allelic frequency of these sites in the reference bam are written to the `REFERENCE.amber.snp.vcf.gz` file without any filtering to be used downstream for sample matching. 
 
 AMBER supports both BAM and CRAM file formats. 
