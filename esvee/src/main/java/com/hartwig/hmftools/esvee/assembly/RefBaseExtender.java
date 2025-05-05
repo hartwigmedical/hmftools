@@ -278,7 +278,7 @@ public class RefBaseExtender
         if(!read.isUnmapped())
             return false;
 
-        ReadAdjustments.trimLowQualBases(read);
+        read.trimLowQualBases();
 
         if(isDiscordant && read.mateRead() != null && read.mateRead().mappingQuality() == 0)
             return true;

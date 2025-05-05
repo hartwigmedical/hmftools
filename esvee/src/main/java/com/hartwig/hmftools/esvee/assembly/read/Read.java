@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.READ_ID_TRIMMER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOW_BASE_TRIM_PERC;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.LOW_QUAL_SCORE;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -533,55 +536,49 @@ public class Read
         return mIndelInferredUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelInferredUnclippedEnd);
     }
 
-    /*
-    public void setIndelUnclippedBounds(int leftSoftClipBases, int rightSoftClipBases)
+    public synchronized void trimLowQualBases()
     {
-        // expand the potential soft-clipped bounds from the internal indel but leave alignment and the CIGAR unch
+        if(lowQualTrimmed())
+            return;
 
-        // inserted bases - unclipped start/end = -/+ inserted base length
-        // delete bases - implied alignment moves in by outer M and deleted base length, then add delete length back to unclipped pos
+        boolean fromStart = negativeStrand();
 
-        if(leftSoftClipBases > 0)
+        int baseLength = basesLength();
+        int baseIndex = fromStart ? 0 : baseLength - 1;
+
+        int checkedBases = 0;
+
+        double lowestScore = 0;
+        double currentScore = 0;
+        int lastLowestScoreIndex = 0;
+
+        while(baseIndex >= 0 && baseIndex < baseLength)
         {
-            boolean isDelete = mCigarElements.get(1).getOperator() == D;
-            mIndelImpliedAlignmentStart = mAlignmentStart + mCigarElements.get(0).getLength();
+            ++checkedBases;
 
-            if(isDelete)
-                mIndelImpliedAlignmentStart += mCigarElements.get(1).getLength();
+            if(belowMinQual(getBaseQuality()[baseIndex]))
+            {
+                currentScore -= LOW_QUAL_SCORE;
 
-            mIndelImpliedUnclippedStart = mIndelImpliedAlignmentStart - leftSoftClipBases;
+                if(currentScore < lowestScore)
+                    lastLowestScoreIndex = checkedBases;
+            }
+            else
+            {
+                ++currentScore;
+            }
+
+            if(fromStart)
+                ++baseIndex;
+            else
+                --baseIndex;
         }
 
-        if(rightSoftClipBases > 0)
+        if(lastLowestScoreIndex > 0)
         {
-            int lastIndex = mCigarElements.size() - 1;
-            boolean isDelete = mCigarElements.get(lastIndex - 1).getOperator() == D;
+            trimBases(lastLowestScoreIndex, fromStart);
+            markLowQualTrimmed();
 
-            mIndelImpliedAlignmentEnd = mAlignmentEnd - mCigarElements.get(lastIndex).getLength();
-
-            if(isDelete)
-                mIndelImpliedAlignmentEnd -= mCigarElements.get(lastIndex - 1).getLength();
-
-            mIndelImpliedUnclippedEnd = mIndelImpliedAlignmentEnd + rightSoftClipBases;
         }
     }
-
-    public int indelImpliedAlignmentStart() { return mIndelImpliedAlignmentStart != null ? mIndelImpliedAlignmentStart : 0; }
-    public int indelImpliedAlignmentEnd() { return mIndelImpliedAlignmentEnd != null ? mIndelImpliedAlignmentEnd : 0; }
-    public int indelImpliedUnclippedStart() { return mIndelImpliedUnclippedStart != null ? mIndelImpliedUnclippedStart : 0; }
-    public int indelImpliedUnclippedEnd() { return mIndelImpliedUnclippedEnd != null ? mIndelImpliedUnclippedEnd : 0; }
-
-    // take indel implied read ends into consideration for methods requiring the maximum possible read soft-clip extension
-    // note: converted INDELs from deletes may have their unclipped position inside the alignment
-    public int minUnclippedStart()
-    {
-        return mIndelImpliedUnclippedStart == null ? mUnclippedStart : min(mUnclippedStart, mIndelImpliedUnclippedStart);
-    }
-
-    public int maxUnclippedEnd()
-    {
-        return mIndelImpliedUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelImpliedUnclippedEnd);
-    }
-    */
-
 }

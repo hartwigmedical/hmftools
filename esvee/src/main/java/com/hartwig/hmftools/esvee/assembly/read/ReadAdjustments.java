@@ -151,18 +151,18 @@ public final class ReadAdjustments
 
         int baseIndex = fromStart ? 0 : read.basesLength() - 1;
 
-        int lowQualCount = 0;
-        int lastLowQualPercIndex = 0;
+        double lowestScore = 0;
+        double currentScore = 0;
+        int lastLowestScoreIndex = 0;
 
         for(int i = 1; i <= scBaseCount - lineExclusionLength; ++i)
         {
             if(belowMinQual(read.getBaseQuality()[baseIndex]))
             {
-                lowQualCount++;
+                currentScore -= LOW_QUAL_SCORE;
 
-                // avoid a check on very low counts of bases
-                if(lowQualCount / (double)i >= LOW_BASE_TRIM_PERC)
-                    lastLowQualPercIndex = i;
+                if(currentScore < lowestScore)
+                    lastLowestScoreIndex = i;
             }
 
             if(fromStart)
@@ -171,49 +171,12 @@ public final class ReadAdjustments
                 --baseIndex;
         }
 
-        if(lastLowQualPercIndex == 0)
+        if(lastLowestScoreIndex == 0)
             return false;
 
-        read.trimBases(lastLowQualPercIndex, fromStart);
+        read.trimBases(lastLowestScoreIndex, fromStart);
         return true;
     }
 
-    public synchronized static void trimLowQualBases(final Read read)
-    {
-        if(read.lowQualTrimmed())
-            return;
-
-        boolean fromStart = read.negativeStrand();
-
-        int baseLength = read.basesLength();
-        int baseIndex = fromStart ? 0 : baseLength - 1;
-
-        int lowQualCount = 0;
-        int lastLowQualPercIndex = 0;
-        int checkedBases = 0;
-
-        while(baseIndex >= 0 && baseIndex < baseLength)
-        {
-            ++checkedBases;
-
-            if(belowMinQual(read.getBaseQuality()[baseIndex]))
-            {
-                lowQualCount++;
-
-                if(lowQualCount / (double)checkedBases >= LOW_BASE_TRIM_PERC)
-                    lastLowQualPercIndex = checkedBases;
-            }
-
-            if(fromStart)
-                ++baseIndex;
-            else
-                --baseIndex;
-        }
-
-        if(lastLowQualPercIndex > 0)
-        {
-            read.trimBases(lastLowQualPercIndex, fromStart);
-            read.markLowQualTrimmed();
-        }
-    }
+    protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC;
 }

@@ -455,7 +455,7 @@ public class UnmappedBaseExtender
         int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
 
         // apply qual trimming before a read is used
-        ReadAdjustments.trimLowQualBases(read);
+        read.trimLowQualBases();
 
         int readBaseCount = read.getBases().length;
 
