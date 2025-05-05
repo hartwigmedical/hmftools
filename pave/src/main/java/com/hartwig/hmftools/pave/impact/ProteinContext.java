@@ -108,9 +108,9 @@ public class ProteinContext
 
     public String toString()
     {
-        return format("codon(ref=%s alt=%s refExt=%s altComplete=%s) codonIndex(%d netRange %d-%d) aa(ref=%s alt=%s refNet=%s altNet=%s)",
+        return format("codon(ref=%s alt=%s refExt=%s altComplete=%s) codonIndex(%d netRange %d-%d) aa(ref=%s alt=%s refNet=%s altNet=%s) %s %s",
                 RefCodonBases, AltCodonBases, RefCodonBasesExtended, AltCodonBasesComplete, CodonIndex,
-                NetCodonIndexRange[SE_START], NetCodonIndexRange[SE_END],
-                RefAminoAcids, AltAminoAcids, NetRefAminoAcids, NetAltAminoAcids);
+                NetCodonIndexRange[SE_START], NetCodonIndexRange[SE_END], RefAminoAcids, AltAminoAcids, NetRefAminoAcids, NetAltAminoAcids,
+                !Hgvs.isEmpty() ? Hgvs : "", IsDuplication ? "dup" : "");
     }
 }

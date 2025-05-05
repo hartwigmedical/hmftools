@@ -419,7 +419,7 @@ public class PhasedVariantClassifier
             combinedPc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseComplementBases(combinedAltCodons));
         }
 
-        trimAminoAcids(combinedPc, true, true, false);
+        trimAminoAcids(combinedPc, posStrand, true, true, false);
 
         if(indelBaseTotal == 0)
         {
