@@ -604,7 +604,7 @@ Regardless of the clinvar signals, a variant will be set to `BENIGN_BLACKLIST` i
 Valid values are `PATHOGENIC`, `LIKELY_PATHOGENIC`, `BENIGN`, `LIKELY_BENIGN`, `BENIGN_BLACKLIST`, `CONFLICTING`, `UNKNOWN`.
 
 #### Genotype
-The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF` or `LOW_TUMOR_VCN`. A variant is filtered as `LOW_VAF` if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002. A variant is filtered as `LOW_TUMOR_VCN` if the quality is below 120 for HOTSPOT or 200 for PANEL and the variant and the implied variant copy number (VCN) in the tumor is < 0.5.
+The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF` or `LOW_TUMOR_VCN`. A variant is filtered as `LOW_VAF` if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002. A variant is filtered as `LOW_TUMOR_VCN` if the quality is below 45 for HOTSPOT or 110 for PANEL and the variant and the implied variant copy number (VCN) in the tumor is < 0.5.
 
 Alternatively, the variant GT will be set to `1/1` (HOM)  if (totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005) in BOTH tumor and normal and `0/1` (HET) otherwise.  AdjustedVAF is set to 1 for Homozygous germline variants.
 
