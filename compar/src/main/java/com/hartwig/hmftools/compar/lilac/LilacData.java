@@ -77,6 +77,11 @@ public class LilacData implements ComparableItem
     public boolean reportable() { return true; }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample
@@ -144,7 +149,7 @@ public class LilacData implements ComparableItem
             }
         }
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     private static boolean hasAllele(final LilacAllele allele, final List<LilacAllele> alleles)

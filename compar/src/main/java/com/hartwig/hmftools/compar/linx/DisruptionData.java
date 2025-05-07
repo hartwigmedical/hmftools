@@ -62,6 +62,11 @@ public class DisruptionData implements ComparableItem
     public boolean reportable() { return Breakends.stream().anyMatch(x -> x.Breakend.reportedDisruption()); }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final DisruptionData otherDisruptionData = (DisruptionData)other;
@@ -125,7 +130,7 @@ public class DisruptionData implements ComparableItem
             diffs.add(format("unmatchedSv(/%s)", otherBreakendData.svInfoStr()));
         }
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     public BreakendData findMatchingBreakend(final BreakendData breakend, final List<BreakendData> otherBreakends)

@@ -64,6 +64,11 @@ public class DriverData implements ComparableItem
     public boolean reportable() { return true; }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final DriverData otherDriver = (DriverData)other;
@@ -104,6 +109,6 @@ public class DriverData implements ComparableItem
         checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDriver.mComparisonChromosome);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, DriverCatalog.chromosomeBand(), otherDriver.DriverCatalog.chromosomeBand());
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

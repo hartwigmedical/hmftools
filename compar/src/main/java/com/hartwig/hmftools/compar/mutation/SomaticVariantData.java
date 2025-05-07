@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
@@ -172,7 +173,15 @@ public class SomaticVariantData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return Reported; }
+    public boolean reportable() {
+        return !IsFromUnfilteredVcf && Reported;
+    }
+
+    @Override
+    public boolean isPass() {
+        // A reportable variant not in a gene should be impossible, but if it happens we want to see it
+        return !IsFromUnfilteredVcf && (Reported || !Gene.isEmpty());
+    }
 
     @Override
     public boolean matches(final ComparableItem other)
@@ -212,7 +221,7 @@ public class SomaticVariantData implements ComparableItem
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
         final List<String> diffs = findDiffs(otherVar, thresholds, nonPurpleVcfs);
-        return createMismatch(diffs, other, matchLevel, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     private List<String> findDiffs(final SomaticVariantData otherVar, final DiffThresholds thresholds, final boolean nonPurpleVcfs)
@@ -261,42 +270,6 @@ public class SomaticVariantData implements ComparableItem
                 diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS, "FILTERED"));
         }
         return diffs;
-    }
-
-    private Mismatch createMismatch(final List<String> diffs, final ComparableItem other, final MatchLevel matchLevel,
-            final boolean includeMatches)
-    {
-        if(diffs.isEmpty() && !includeMatches)
-            return null;
-
-        final SomaticVariantData otherVar = (SomaticVariantData) other;
-
-        boolean isRefCalled = isCalled(matchLevel);
-        boolean isNewCalled = otherVar.isCalled(matchLevel);
-
-        final MismatchType mismatchType;
-        if(diffs.isEmpty())
-            mismatchType = FULL_MATCH;
-        else if(isRefCalled && isNewCalled)
-            mismatchType = VALUE;
-        else if(!isRefCalled && isNewCalled)
-            mismatchType = NEW_ONLY;
-        else
-        {
-            // Has to be REF_ONLY, since we never compare uncalled variants with uncalled variants due to earlier filters
-            mismatchType = REF_ONLY;
-        }
-        return new Mismatch(this, other, mismatchType, diffs);
-    }
-
-    private boolean isCalled(final MatchLevel matchLevel)
-    {
-        if(matchLevel == MatchLevel.REPORTABLE)
-            return !IsFromUnfilteredVcf && reportable();
-        else if(matchLevel == MatchLevel.DETAILED)
-            return !IsFromUnfilteredVcf && (reportable() || !Gene.isEmpty());
-        else
-            throw new RuntimeException("Unrecognized match level: " + matchLevel.toString());
     }
 
     private boolean canComparePaveFields(final SomaticVariantData otherVar)

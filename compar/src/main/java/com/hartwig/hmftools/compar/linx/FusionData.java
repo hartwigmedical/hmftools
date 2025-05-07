@@ -72,6 +72,11 @@ public class FusionData implements ComparableItem
     public boolean reportable() { return Fusion.reported(); }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final FusionData otherFusion = (FusionData)other;
@@ -101,6 +106,6 @@ public class FusionData implements ComparableItem
         checkDiff(diffs, FLD_DOMAINS_LOST, Fusion.domainsLost(), otherFusion.Fusion.domainsLost());
         checkDiff(diffs, FLD_JUNCTION_COPY_NUMBER, Fusion.junctionCopyNumber(), otherFusion.Fusion.junctionCopyNumber(), thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

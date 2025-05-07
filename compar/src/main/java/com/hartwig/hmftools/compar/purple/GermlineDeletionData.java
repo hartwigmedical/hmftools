@@ -63,6 +63,11 @@ public class GermlineDeletionData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final GermlineDeletionData otherDeletion = (GermlineDeletionData)other;
@@ -85,6 +90,6 @@ public class GermlineDeletionData implements ComparableItem
         checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDeletion.mComparisonChromosome);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, Deletion.ChromosomeBand, otherDeletion.Deletion.ChromosomeBand);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }
