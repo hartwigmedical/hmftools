@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,10 +33,11 @@ public final class NucleotideFragmentQualEnrichment
 
         for(int i = 0; i < fragment.nucleotideLoci().size(); ++i)
         {
-            int lociIndex = fragment.nucleotideLoci().get(i);
+            int locusIndex = fragment.nucleotideLoci().get(i);
             String fragmentNucleotide = fragment.nucleotides().get(i);
-            List<String> highQualitySequences = highQualityCount.getMinCountSequences(lociIndex);
-            List<String> rawSequences = rawCount.getMinCountSequences(lociIndex);
+
+            List<String> highQualitySequences = highQualityCount.getMinCountSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
+            List<String> rawSequences = rawCount.getMinCountSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
             List<String> allowedSequences = highQualitySequences.stream().filter(x -> rawSequences.contains(x)).collect(Collectors.toList());
 
             if(allowedSequences.contains(fragmentNucleotide))
