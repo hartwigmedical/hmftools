@@ -7,15 +7,12 @@ import static com.hartwig.hmftools.lilac.LilacConstants.COMPLEX_PERMS_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_ALLELE_GROUP_UNIQUE_COVERAGE;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_GROUP_COVERAGE;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
-import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_GROUP_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HI_CONF_UNIQUE_PROTEIN_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_GROUP_TOTAL_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_GROUP_UNIQUE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.RARE_ALLELES_FREQ_CUTOFF;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUnsupportedWildcardFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
@@ -383,7 +380,7 @@ public class ComplexBuilder
     {
         Map<String,List<HlaAllele>> map = Maps.newHashMap();
 
-        GENE_IDS.forEach(x -> map.put(x, confirmedGroups.stream().filter(y -> y.Gene.equals(x)).collect(Collectors.toList())));
+        GENE_CACHE.GeneIds.forEach(x -> map.put(x, confirmedGroups.stream().filter(y -> y.Gene.equals(x)).collect(Collectors.toList())));
 
         List<HlaAllele> results = Lists.newArrayList();
         for(HlaAllele allele : alleles)
@@ -440,7 +437,7 @@ public class ComplexBuilder
         List<AlleleCoverage> results = Lists.newArrayList();
 
         // take at most 2 alleles for each gene, and at most 1 unique protein if more than 1 unique group is provided
-        for(String gene : GENE_IDS)
+        for(String gene : GENE_CACHE.GeneIds)
         {
             List<AlleleCoverage> geneCoverage = unique.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
 
