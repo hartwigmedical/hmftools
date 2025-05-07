@@ -54,6 +54,11 @@ public class CiderVdjData implements ComparableItem
     public boolean reportable() { return true; }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem o)
     {
         final Cdr3Sequence other = ((CiderVdjData) o).mCdr3Sequence;
@@ -73,7 +78,7 @@ public class CiderVdjData implements ComparableItem
         checkDiff(diffs, Cdr3SequenceFile.Column.filter.name(), mCdr3Sequence.filter(), other.filter());
         checkDiff(diffs, Cdr3SequenceFile.Column.locus.name(), mCdr3Sequence.locus(), other.locus());
 
-        return createMismatchFromDiffs(this, o, diffs, includeMatches);
+        return createMismatchFromDiffs(this, o, diffs, matchLevel, includeMatches);
     }
 
     public String toString()

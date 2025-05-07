@@ -58,6 +58,11 @@ public class GermlineBamMetricsData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample
@@ -76,6 +81,6 @@ public class GermlineBamMetricsData implements ComparableItem
         checkDiff(diffs, FLD_PERCENTAGE_10X, Metrics.coveragePercent(10), otherData.Metrics.coveragePercent(10), thresholds);
         checkDiff(diffs, FLD_PERCENTAGE_20X, Metrics.coveragePercent(20), otherData.Metrics.coveragePercent(20), thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

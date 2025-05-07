@@ -27,6 +27,12 @@ public class InvalidDataItem implements ComparableItem
     }
 
     @Override
+    public boolean isPass()
+    {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other) { return false; }
 
     @Override

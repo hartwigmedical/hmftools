@@ -57,6 +57,11 @@ public class GeneCopyNumberData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final GeneCopyNumberData otherCn = (GeneCopyNumberData)other;
@@ -75,6 +80,6 @@ public class GeneCopyNumberData implements ComparableItem
         checkDiff(diffs, FLD_MIN_COPY_NUMBER, CopyNumber.minCopyNumber(), otherCn.CopyNumber.minCopyNumber(), thresholds);
         checkDiff(diffs, FLD_MAX_COPY_NUMBER, CopyNumber.maxCopyNumber(), otherCn.CopyNumber.maxCopyNumber(), thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }
