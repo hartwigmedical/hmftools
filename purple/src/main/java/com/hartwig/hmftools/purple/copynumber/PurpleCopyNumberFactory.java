@@ -219,6 +219,7 @@ public class PurpleCopyNumberFactory
             if(chromosome == CDKN2A_CHR
             && positionsOverlap(copyNumber.start(), copyNumber.end(), CDKN2A_DELETION_REGION.start(), CDKN2A_DELETION_REGION.end()))
             {
+                // factor out any part of a copy number region which overlaps with CDKN2A
                 int baseOverlap = min(copyNumber.end(), CDKN2A_DELETION_REGION.end()) - max(copyNumber.start(), CDKN2A_DELETION_REGION.start());
                 double nonGeneDeletedFraction = (copyNumber.length() - baseOverlap) / (double)copyNumber.length();
                 deletedWindows = (int)round(nonGeneDeletedFraction * deletedWindows);
