@@ -377,6 +377,21 @@ chromosomes_display_default = yes
 		stroke_thickness = 0
 	</plot>
 
+	# -----------------------------------------------------------
+    # Cobalt ratios
+    <plot>
+        type             = scatter
+        file             = SUBSTITUTE_SAMPLE.cobalt.circos
+        r0               = SUBSTITUTE_COBALT_INNER_RADIUSr
+        r1               = SUBSTITUTE_COBALT_OUTER_RADIUSr
+        glyph            = circle
+        glyph_size       = 10
+        color            = black
+        stroke_color     = dred
+        stroke_thickness = 0
+
+    </plot>
+
 </plots>
 
 <links>
