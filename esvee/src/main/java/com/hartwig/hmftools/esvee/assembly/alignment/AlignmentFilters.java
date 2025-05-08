@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MI
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_PROXIMATE_DISTANCE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_RECOVERY_MAX_MD_ERRORS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
@@ -26,6 +27,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import htsjdk.samtools.CigarOperator;
 
 public final class AlignmentFilters
 {
@@ -151,7 +154,7 @@ public final class AlignmentFilters
                 {
                     AlignData prevAlignment = candidateAlignments.get(index - 1);
 
-                    if(areCloseAlignments(prevAlignment, alignment))
+                    if(prevAlignment.adjustedAlignment() >= ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH && areCloseAlignments(prevAlignment, alignment))
                         keepAlignment = true;
                 }
 
@@ -161,6 +164,16 @@ public final class AlignmentFilters
 
                     if(nextAlignment.adjustedAlignment() >= ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH && areCloseAlignments(nextAlignment, alignment))
                         keepAlignment = true;
+                }
+
+                if(keepAlignment)
+                {
+                    // cannot have excessive number of SNVs
+                    MdTag mdTag = new MdTag(alignment.mdTag());
+                    int insertCount = (int)alignment.cigarElements().stream().filter(x -> x.getOperator() == CigarOperator.I).count();
+
+                    if(mdTag.mismatchCount() + insertCount > ALIGNMENT_RECOVERY_MAX_MD_ERRORS)
+                        keepAlignment = false;
                 }
             }
 

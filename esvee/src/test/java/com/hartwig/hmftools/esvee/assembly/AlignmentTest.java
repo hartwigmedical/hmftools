@@ -581,7 +581,7 @@ public class AlignmentTest
    }
 
     @Test
-    public void testKeepChainedLocalShortAdjustedAlignments()
+    public void testKeepAdjacentLocalShortAdjustedAlignments()
     {
         AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(
                 mRefGenome, CHR_1, 300, FORWARD, CHR_1, 350, REVERSE, "", "",
@@ -589,6 +589,7 @@ public class AlignmentTest
 
         // scenario 1: based on chr7-comp 1c:
         String cigar = "100M";
+        String middleCigar = "50M";
 
         AlignData alignment1 = new AlignData(
                 new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
@@ -596,7 +597,7 @@ public class AlignmentTest
 
         AlignData alignment2 = new AlignData(
                 new ChrBaseRegion(CHR_1, 1101, 1150), 101, 150,
-                60, 40, 0, cigar, DEFAULT_NM, null, "");
+                60, 40, 0, middleCigar, DEFAULT_NM, null, "");
 
         AlignData alignment3 = new AlignData(
                 new ChrBaseRegion(CHR_1, 20000, 20100), 201, 300,
@@ -615,7 +616,7 @@ public class AlignmentTest
         // rescued by upper alignment
         alignment2 = new AlignData(
                 new ChrBaseRegion(CHR_1, 19101, 19150), 101, 150,
-                60, 40, 0, cigar, DEFAULT_NM, null, "");
+                60, 40, 0, middleCigar, DEFAULT_NM, null, "");
 
         alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
 
@@ -630,7 +631,7 @@ public class AlignmentTest
         // no longer rescued if remote or too far away
         alignment2 = new AlignData(
                 new ChrBaseRegion(CHR_2, 1101, 1150), 101, 150,
-                60, 40, 0, cigar, DEFAULT_NM, null, "");
+                60, 40, 0, middleCigar, DEFAULT_NM, null, "");
 
         alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
 
@@ -644,7 +645,7 @@ public class AlignmentTest
 
         alignment2 = new AlignData(
                 new ChrBaseRegion(CHR_1, 10000, 10049), 101, 150,
-                60, 40, 0, cigar, DEFAULT_NM, null, "");
+                60, 40, 0, middleCigar, DEFAULT_NM, null, "");
 
         alignments = Lists.newArrayList(alignment1, alignment2, alignment3);
 
@@ -655,6 +656,39 @@ public class AlignmentTest
 
         assertEquals(1, lowQualAlignments.size());
         assertEquals(2, validAlignments.size());
+
+        // only needs 1 anchoring high-qual alignment
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_1, 19101, 19150), 101, 150,
+                60, 40, 0, middleCigar, DEFAULT_NM, null, "");
+
+        alignments = Lists.newArrayList(alignment2, alignment3);
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(0, lowQualAlignments.size());
+        assertEquals(2, validAlignments.size());
+
+        // not rescued if has too many mismatches
+        middleCigar = "20M10I20M";
+        String mdTag = "10A10C10G10T10";
+
+        alignment2 = new AlignData(
+                new ChrBaseRegion(CHR_1, 19101, 19150), 101, 150,
+                60, 40, 0, middleCigar, DEFAULT_NM, null, mdTag);
+
+        alignments = Lists.newArrayList(alignment2, alignment3);
+
+        validAlignments.clear();
+        lowQualAlignments.clear();
+
+        filterAlignments(assemblyAlignment, alignments, validAlignments, lowQualAlignments);
+
+        assertEquals(1, lowQualAlignments.size());
+        assertEquals(1, validAlignments.size());
     }
 
     @Test

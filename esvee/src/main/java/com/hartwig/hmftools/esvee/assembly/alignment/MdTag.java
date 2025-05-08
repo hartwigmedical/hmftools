@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
+import static java.lang.String.format;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -36,6 +38,7 @@ public class MdTag
     }
 
     public boolean hasMismatches() { return mElements.stream().anyMatch(x -> x.Type != MdTagType.MATCH); }
+    public int mismatchCount() { return (int)mElements.stream().filter(x -> x.Type != MdTagType.MATCH).count(); }
 
     public static final byte MATCH_BYTE = (byte)MdTagType.MATCH.ordinal();
 
@@ -156,5 +159,11 @@ public class MdTag
     private static boolean isBase(char c)
     {
         return Nucleotides.baseIndex(c) >= 0;
+    }
+
+    public String toString()
+    {
+        return format("%s mismatches(snv=%d del=%d)",
+                mTag, mElements.stream().filter(x -> x.isSnv()).count(), mElements.stream().filter(x -> x.isIndel()).count());
     }
 }

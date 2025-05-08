@@ -92,6 +92,7 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;
     public static final int ALIGNMENT_PROXIMATE_DISTANCE = 1000;
     public static final int ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH = 50;
+    public static final int ALIGNMENT_RECOVERY_MAX_MD_ERRORS = 4;
 
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 
