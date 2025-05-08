@@ -18,11 +18,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
@@ -45,6 +49,8 @@ public class SampleData
     public final List<VisProteinDomain> ProteinDomains;
     public final List<VisFusion> Fusions;
     public final List<VisGeneExon> Exons;
+
+    public List<CobaltRatio> CobaltRatioData;
 
     private final VisualiserConfig mConfig;
 
@@ -82,6 +88,13 @@ public class SampleData
         List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
         boolean svDataFiltered = false;
+
+        if(mConfig.CobaltDir != null)
+        {
+            final String cobaltRatioFile = CobaltRatioFile.generateFilename(mConfig.CobaltDir, mConfig.Sample);
+            ListMultimap<Chromosome, CobaltRatio> cobaltRatioDataUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
+            CobaltRatioData = cobaltRatioDataUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).collect(toList());
+        }
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
