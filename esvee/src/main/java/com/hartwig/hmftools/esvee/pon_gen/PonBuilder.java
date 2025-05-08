@@ -97,7 +97,7 @@ public class PonBuilder
 
         for(int i = 0; i < threads; ++i)
         {
-            ponTasks.add(new PonSampleTask(mPonStore));
+            ponTasks.add(new PonSampleTask(mConfig, mPonStore));
         }
 
         int taskIndex = 0;
@@ -334,8 +334,13 @@ public class PonBuilder
 
             String chromosome = chromosome(locValues);
 
-            List<PonSglRegion> ponRegions = Lists.newArrayList();
-            chrPonMap.put(chromosome, ponRegions);
+            List<PonSglRegion> ponRegions = chrPonMap.get(chromosome);
+
+            if(ponRegions == null)
+            {
+                ponRegions = Lists.newArrayList();
+                chrPonMap.put(chromosome, ponRegions);
+            }
 
             Orientation orientation = orientation(locValues);
 

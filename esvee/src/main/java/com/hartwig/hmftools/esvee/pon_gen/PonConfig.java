@@ -2,10 +2,12 @@ package com.hartwig.hmftools.esvee.pon_gen;
 
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
@@ -20,6 +22,8 @@ public class PonConfig
     public final boolean WriteBedFiles;
 
     public final int Threads;
+
+    public final SpecificRegions SpecificChrRegions;
 
     private static final String VCF_PATH = "vcf_path";
     private static final String OUTPUT_PON_SUFFIX = "output_pon_suffix";
@@ -42,6 +46,8 @@ public class PonConfig
         WriteBedFiles = configBuilder.hasFlag(WRITE_BED_FILES);
 
         Threads = parseThreads(configBuilder);
+
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -58,5 +64,7 @@ public class PonConfig
         addThreadOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
+
+        addSpecificChromosomesRegionsConfig(configBuilder);
     }
 }

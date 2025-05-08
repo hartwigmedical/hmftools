@@ -22,6 +22,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class PonSampleTask implements Callable
 {
     private final List<String> mSampleVcfFiles;
+    private final PonConfig mConfig;
     private final PonStore mPonStore;
 
     private StructuralVariantFactory mSvFactory;
@@ -30,8 +31,9 @@ public class PonSampleTask implements Callable
     private final Set<String> mUniqueSVs;
     private final Set<String> mUniqueSGLs;
 
-    public PonSampleTask(final PonStore ponStore)
+    public PonSampleTask(final PonConfig config, final PonStore ponStore)
     {
+        mConfig = config;
         mPonStore = ponStore;
 
         mSampleVcfFiles = Lists.newArrayList();
@@ -129,6 +131,15 @@ public class PonSampleTask implements Callable
 
     private boolean checkAddNew(final StructuralVariant sv)
     {
+        if(mConfig.SpecificChrRegions.hasFilters())
+        {
+            if(mConfig.SpecificChrRegions.excludePosition(sv.chromosome(true), sv.position(true)))
+                return false;
+
+            if(sv.type() != SGL && mConfig.SpecificChrRegions.excludePosition(sv.chromosome(false), sv.position(false)))
+                return false;
+        }
+
         String id = format("%s_%d_%d", sv.chromosome(true), sv.position(true), sv.orientation(true));
 
         if(sv.type() == SGL)
