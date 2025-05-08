@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
@@ -190,11 +191,8 @@ public class SvVisualiser implements AutoCloseable
         List<VisProteinDomain> chromosomeProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        List<CobaltRatio> chromosomeCobaltRatios =
-                mSampleData.CobaltRatioData.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).toList();
-
         submitFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
-                Collections.emptyList(), chromosomeCobaltRatios, false);
+                Collections.emptyList(), false);
     }
 
     private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles)
@@ -275,8 +273,7 @@ public class SvVisualiser implements AutoCloseable
         List<VisFusion> clusterFusions = mSampleData.Fusions.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
 
         submitFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
-                fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions,
-                null,true);
+                fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
     }
 
     private void submitFiltered(final ColorPickerFactory colorPickerFactory,
@@ -286,7 +283,6 @@ public class SvVisualiser implements AutoCloseable
             final List<VisGeneExon> filteredExons,
             final List<VisProteinDomain> filteredProteinDomains,
             final List<VisFusion> filteredFusions,
-            final List<CobaltRatio> filteredCobaltRatios,
             boolean showSimpleSvSegments)
     {
         List<GenomePosition> positionsToCover = Lists.newArrayList();
@@ -297,6 +293,17 @@ public class SvVisualiser implements AutoCloseable
         // Limit copy numbers to within segments, links and exons (plus a little extra)
         List<VisCopyNumber> copyNumbers = VisCopyNumbers.copyNumbers(mSampleData.CopyNumbers, Span.spanPositions(positionsToCover));
         positionsToCover.addAll(Span.allPositions(copyNumbers));
+
+        List<GenomeRegion> regionsToCover = Span.spanPositions(positionsToCover);
+        List<CobaltRatio> cobaltRatios = Lists.newArrayList();
+        for(GenomeRegion region : regionsToCover)
+        {
+            List<CobaltRatio> cobaltRatiosInRegion = mSampleData.CobaltRatioData.stream()
+                    .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
+                    .toList();
+
+            cobaltRatios.addAll(cobaltRatiosInRegion);
+        }
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
         List<VisSegment> segments = VisSegments.extendTerminals(
@@ -313,7 +320,7 @@ public class SvVisualiser implements AutoCloseable
         ColorPicker color = colorPickerFactory.create(links);
 
         CircosData circosData = new CircosData(
-                showSimpleSvSegments, mCircosConfig, segments, links, copyNumbers, filteredExons, filteredFusions, filteredCobaltRatios);
+                showSimpleSvSegments, mCircosConfig, segments, links, copyNumbers, filteredExons, filteredFusions, cobaltRatios);
 
         CircosConfigWriter confWrite = new CircosConfigWriter(fileId, mConfig.OutputConfPath, circosData, mCircosConfig);
         FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
