@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -36,6 +37,8 @@ public class CircosData
     public final List<GenomeRegion> DisruptedGeneRegions;
     public final List<Connector> Connectors;
 
+    public final List<CobaltRatio> CobaltRatios;
+
     public final List<VisSvData> UnadjustedLinks;
     public final List<VisCopyNumber> UnadjustedCopyNumbers;
 
@@ -57,7 +60,10 @@ public class CircosData
     public CircosData(
             boolean showSimpleSvSegments, final CircosConfig config, final List<VisSegment> unadjustedSegments,
             final List<VisSvData> unadjustedLinks, final List<VisCopyNumber> unadjustedCopyNumbers,
-            final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions)
+            final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions,
+            final List<CobaltRatio> unadjustedCobaltRatios
+
+    )
     {
         UpstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
         DownstreamGenes = fusions.stream().map(x -> x.GeneNameDown).collect(toSet());
@@ -99,6 +105,8 @@ public class CircosData
         Genes = scalePosition.interpolateGene(unadjustedGenes);
         DisruptedGeneRegions = scalePosition.interpolateRegions(unadjustedDisruptedGeneRegions);
         Exons = scalePosition.interpolateExons(unadjustedGeneExons);
+
+        CobaltRatios = scalePosition.interpolateCobaltRatios(unadjustedCobaltRatios);
 
         MaxTracks = Segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
         MaxCopyNumber = CopyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);

@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -99,6 +101,33 @@ class ScalePosition
             newCnData.Start = positionMap.scale(cnData.start());
             newCnData.End = positionMap.scale(cnData.end());
             results.add(newCnData);
+        }
+
+        return results;
+    }
+
+    public List<CobaltRatio> interpolateCobaltRatios(final List<CobaltRatio> cobaltRatios)
+    {
+        List<CobaltRatio> results = Lists.newArrayList();
+
+        for(CobaltRatio cobaltRatio : cobaltRatios)
+        {
+            ScaleContig positionMap = mContigMap.get(cobaltRatio.chromosome());
+            int newPosition = positionMap.interpolate(cobaltRatio.position());
+
+            CobaltRatio newCobaltRatio = ImmutableCobaltRatio.builder()
+                    .chromosome(cobaltRatio.chromosome())
+                    .position(newPosition)
+                    .referenceReadDepth(cobaltRatio.referenceReadDepth())
+                    .tumorReadDepth(cobaltRatio.tumorReadDepth())
+                    .referenceGCRatio(cobaltRatio.referenceGCRatio())
+                    .tumorGCRatio(cobaltRatio.tumorGCRatio())
+                    .referenceGCDiploidRatio(cobaltRatio.referenceGCDiploidRatio())
+                    .referenceGcContent(cobaltRatio.referenceGcContent())
+                    .tumorGcContent(cobaltRatio.tumorGcContent())
+                    .build();
+
+            results.add(newCobaltRatio);
         }
 
         return results;
