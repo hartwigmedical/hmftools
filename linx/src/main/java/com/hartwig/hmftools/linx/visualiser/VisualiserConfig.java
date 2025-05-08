@@ -38,6 +38,9 @@ public class VisualiserConfig
 {
     public final String Sample;
     public final String SampleDataDir;
+
+    public final String CobaltDir;
+
     public final boolean UseCohortFiles;
     public final boolean IsGermline;
 
@@ -64,6 +67,7 @@ public class VisualiserConfig
     public final boolean RestrictClusterByGene;
 
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
+    private static final String COBALT_DIRECTORY = "cobalt_dir";
     private static final String LOAD_COHORT_FILES = "load_cohort_files";
     private static final String CLUSTER_IDS = "clusterId";
     private static final String CHAIN_IDS = "chainId";
@@ -85,6 +89,7 @@ public class VisualiserConfig
     {
         Sample = configBuilder.getValue(SAMPLE);
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(VIS_FILE_DIRECTORY));
+        CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIRECTORY));
 
         OutputPlotPath = checkAddDirSeparator(configBuilder.getValue(PLOT_OUT, SampleDataDir + "plot/"));
         OutputConfPath = checkAddDirSeparator(configBuilder.getValue(DATA_OUT, SampleDataDir + "data/"));
@@ -181,6 +186,8 @@ public class VisualiserConfig
 
         configBuilder.addPath(
                 VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
+
+        configBuilder.addPath(COBALT_DIRECTORY, false, "Path to directory containing COBALT output");
 
         configBuilder.addFlag(LOAD_COHORT_FILES, "Load Linx cohort rather than per-sample vis files");
         configBuilder.addFlag(GERMLINE, "Load Linx germline VIS files");

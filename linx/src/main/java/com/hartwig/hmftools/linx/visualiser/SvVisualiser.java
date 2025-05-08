@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.circos.CircosExecution;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
@@ -44,7 +45,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class SvVisualiser implements AutoCloseable
 {
@@ -190,8 +190,11 @@ public class SvVisualiser implements AutoCloseable
         List<VisProteinDomain> chromosomeProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
+        List<CobaltRatio> chromosomeCobaltRatios =
+                mSampleData.CobaltRatioData.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).toList();
+
         submitFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
-                Collections.emptyList(), false);
+                Collections.emptyList(), chromosomeCobaltRatios, false);
     }
 
     private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles)
@@ -272,7 +275,8 @@ public class SvVisualiser implements AutoCloseable
         List<VisFusion> clusterFusions = mSampleData.Fusions.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
 
         submitFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
-                fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
+                fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions,
+                null,true);
     }
 
     private void submitFiltered(final ColorPickerFactory colorPickerFactory,
@@ -282,6 +286,7 @@ public class SvVisualiser implements AutoCloseable
             final List<VisGeneExon> filteredExons,
             final List<VisProteinDomain> filteredProteinDomains,
             final List<VisFusion> filteredFusions,
+            final List<CobaltRatio> filteredCobaltRatios,
             boolean showSimpleSvSegments)
     {
         List<GenomePosition> positionsToCover = Lists.newArrayList();
