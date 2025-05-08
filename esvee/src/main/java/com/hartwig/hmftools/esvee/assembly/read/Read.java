@@ -578,7 +578,6 @@ public class Read
         {
             trimBases(lastLowestScoreIndex, fromStart);
             markLowQualTrimmed();
-
         }
     }
 }

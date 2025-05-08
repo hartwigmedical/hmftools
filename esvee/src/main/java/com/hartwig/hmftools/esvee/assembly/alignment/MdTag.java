@@ -157,47 +157,4 @@ public class MdTag
     {
         return Nucleotides.baseIndex(c) >= 0;
     }
-
-    @Deprecated
-    private byte[] extractSubSequenceOld(final int seqIndexStart, final int seqIndexEnd, boolean reverse)
-    {
-        // establish the sequence start of the MD tag
-        StringBuilder sb = new StringBuilder();
-
-        int seqIndex = 0;
-
-        List<MdTagElement> elements;
-
-        if(reverse)
-        {
-            elements = Lists.newArrayList(mElements);
-            Collections.reverse(elements);
-        }
-        else
-        {
-            elements = mElements;
-        }
-
-        for(MdTagElement element : elements)
-        {
-            for(int i = 0; i < element.Length; ++i)
-            {
-                if(element.Type != MdTagType.DEL)
-                {
-                    if(seqIndex >= seqIndexStart)
-                        sb.append(element.Base);
-
-                    ++seqIndex;
-                }
-
-                if(seqIndex > seqIndexEnd)
-                    break;
-            }
-
-            if(seqIndex > seqIndexEnd)
-                break;
-        }
-
-        return sb.toString().getBytes();
-    }
 }

@@ -472,9 +472,16 @@ public class UnmappedBaseExtender
         {
             String readSeqBases = new String(readBases, readIndex, subsequenceLength);
             int extBaseMatchIndex = mExtensionBases.indexOf(readSeqBases);
+            boolean hasMultipleSubsequenceMatches = false;
 
             while(extBaseMatchIndex >= 0)
             {
+                // rule out this read if it can be added at more than 1 location
+                if(hasMultipleSubsequenceMatches)
+                    return null;
+
+                hasMultipleSubsequenceMatches = true;
+
                 if(readBaseQuals == null)
                     readBaseQuals = reverseBases ? reverseArray(read.getBaseQuality()) : read.getBaseQuality();
 
@@ -483,7 +490,6 @@ public class UnmappedBaseExtender
 
                 if(newReadSequenceMatch != null)
                 {
-                    // rule out this read if it can be added at more than 1 location
                     if(readSequenceMatch != null)
                         return null;
 

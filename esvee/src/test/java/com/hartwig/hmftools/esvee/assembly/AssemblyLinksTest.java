@@ -221,7 +221,6 @@ public class AssemblyLinksTest
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
 
-
         // test 2: same again but with an insert sequence
         firstAssemblyBases = firstRefBases + INSERTED_BASES + firstExtensionBases;
         baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
