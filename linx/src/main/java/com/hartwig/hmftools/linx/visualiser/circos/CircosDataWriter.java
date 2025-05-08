@@ -2,8 +2,6 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.PSEUDOGENE;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +19,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
@@ -153,6 +152,9 @@ public class CircosDataWriter
         String chromosomeBandPath = filePrefix + ".chromosome.circos";
         Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.UnadjustedCopyNumbers));
 
+        String cobaltRatiosPath = filePrefix + ".cobalt.circos";
+        Files.write(new File(cobaltRatiosPath).toPath(), createCobaltRatios(data.CobaltRatios));
+
         return this;
     }
 
@@ -277,6 +279,24 @@ public class CircosDataWriter
                     .add("fill_color=(255,255,255,0.6)")
                     .toString();
             result.add(exonString);
+        }
+
+        return result;
+    }
+
+    private List<String> createCobaltRatios(List<CobaltRatio> cobaltRatios)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(CobaltRatio cobaltRatio : cobaltRatios)
+        {
+            String cobaltRatioString =  new StringJoiner(DELIMITER).add(circosContig(cobaltRatio.chromosome()))
+                    .add(String.valueOf(cobaltRatio.position()))
+                    .add(String.valueOf(cobaltRatio.position()))
+                    .add(String.valueOf(cobaltRatio.tumorGCRatio()))
+                    .toString();
+
+            result.add(cobaltRatioString);
         }
 
         return result;
