@@ -131,6 +131,9 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(geneInnerRadius))
                         .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(geneOuterRadius))
 
+                        .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(segmentInnerRadius))
+                        .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
+
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
 
