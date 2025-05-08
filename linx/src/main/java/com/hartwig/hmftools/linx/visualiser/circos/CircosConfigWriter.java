@@ -35,9 +35,13 @@ public class CircosConfigWriter
     private final double copyNumberMiddleRadius;
     private final double copyNumberInnerRadius;
 
+    private final double cobaltOuterRadius;
+    private final double cobaltInnerRadius;
+
     private final double mapOuterRadius;
     private final double mapMiddleRadius;
     private final double mapInnerRadius;
+
     private final double labelSize;
 
     public CircosConfigWriter(final String filename, final String outputDir, final CircosData data, final CircosConfig config)
@@ -63,7 +67,8 @@ public class CircosConfigWriter
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
         int cnaGainTracks = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
         int mapGainTracks = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
-        double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTracks + mapGainTracks);
+        int cobaltTracks = 1;
+        double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTracks + mapGainTracks + cobaltTracks);
 
         if(displayGenes)
         {
@@ -78,6 +83,7 @@ public class CircosConfigWriter
             segmentOuterRadius = 1 - gapSize;
         }
 
+        // Radius positions for each track are calculated starting from the outermost track
         double exonDistance = exonOuterRadius - exonInnerRadius;
         geneOuterRadius = exonOuterRadius - 9d / 20d * exonDistance;
         geneInnerRadius = exonInnerRadius + 9d / 20d * exonDistance;
@@ -88,9 +94,14 @@ public class CircosConfigWriter
         copyNumberMiddleRadius = copyNumberOuterRadius - cnaGainTracks * purpleTrackSize;
         copyNumberInnerRadius = copyNumberMiddleRadius - 2 * purpleTrackSize;
 
-        mapOuterRadius = copyNumberInnerRadius - gapSize;
+        cobaltOuterRadius = copyNumberInnerRadius - gapSize;
+        cobaltInnerRadius = cobaltOuterRadius - cobaltTracks * purpleTrackSize;
+
+        mapOuterRadius = cobaltInnerRadius - gapSize;
         mapMiddleRadius = mapOuterRadius - mapGainTracks * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
+
+        int test = 0;
     }
 
     public double svTrackRelative(int track)
@@ -131,8 +142,8 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(geneInnerRadius))
                         .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(geneOuterRadius))
 
-                        .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(segmentInnerRadius))
-                        .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
+                        .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(cobaltInnerRadius))
+                        .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(cobaltOuterRadius))
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
