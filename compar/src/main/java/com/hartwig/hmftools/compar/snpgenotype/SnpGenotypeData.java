@@ -78,6 +78,11 @@ public class SnpGenotypeData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final SnpGenotypeData otherVar = (SnpGenotypeData) other;
@@ -103,6 +108,6 @@ public class SnpGenotypeData implements ComparableItem
         checkDiff(diffs, FLD_GENOTYPE, Genotype, otherData.Genotype);
         checkDiff(diffs, FLD_VCF_SAMPLE_ID, VcfSampleId, otherData.VcfSampleId);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

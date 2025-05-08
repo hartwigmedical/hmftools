@@ -59,6 +59,11 @@ public class VirusData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final VirusData otherData = (VirusData) other;
@@ -78,6 +83,6 @@ public class VirusData implements ComparableItem
         checkDiff(diffs, FLD_MEAN_COVERAGE, Virus.meanCoverage(), otherData.Virus.meanCoverage(), thresholds);
         checkDiff(diffs, FLD_DRIVER_LIKELIHOOD, String.valueOf(Virus.virusDriverLikelihoodType()), String.valueOf(otherData.Virus.virusDriverLikelihoodType()));
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

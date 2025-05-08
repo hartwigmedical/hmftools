@@ -53,6 +53,11 @@ public class Cdr3LocusSummaryData implements ComparableItem
     public boolean reportable() { return true; }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem comparableItem)
     {
         final Cdr3LocusSummary other = ((Cdr3LocusSummaryData) comparableItem).Cdr3LocusSummary;
@@ -68,7 +73,7 @@ public class Cdr3LocusSummaryData implements ComparableItem
         final List<String> diffs = new ArrayList<>();
         checkDiff(diffs, Cdr3LocusSummaryFile.Column.passSequences.name(), Cdr3LocusSummary.passSequences(), other.passSequences(), thresholds);
 
-        return createMismatchFromDiffs(this, comparableItem, diffs, includeMatches);
+        return createMismatchFromDiffs(this, comparableItem, diffs, matchLevel, includeMatches);
     }
 
     public String toString()

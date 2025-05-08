@@ -79,6 +79,11 @@ public class GermlineVariantData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final GermlineVariantData otherVar = (GermlineVariantData) other;
@@ -105,7 +110,7 @@ public class GermlineVariantData implements ComparableItem
 
         checkFilterDiffs(Filters, otherVar.Filters, diffs);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     private static List<String> findVariantDiffs(

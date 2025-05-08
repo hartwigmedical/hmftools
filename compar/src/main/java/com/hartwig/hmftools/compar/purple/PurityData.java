@@ -86,6 +86,11 @@ public class PurityData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample
@@ -139,7 +144,7 @@ public class PurityData implements ComparableItem
 
         checkDiff(diffs, FLD_TINC_LEVEL, Purity.qc().tincLevel(), otherPurity.Purity.qc().tincLevel(), thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     private static String germlineAberrations(final Set<GermlineAberration> aberrations)

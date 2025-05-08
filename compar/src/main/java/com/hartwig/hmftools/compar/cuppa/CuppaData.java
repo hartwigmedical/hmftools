@@ -50,6 +50,11 @@ public class CuppaData implements ComparableItem
     public boolean reportable() { return true; }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final CuppaData otherCuppaData = (CuppaData) other;
@@ -71,7 +76,7 @@ public class CuppaData implements ComparableItem
         checkDiff(diffs, FLD_TOP_CANCER_TYPE, PredictionEntry.CancerType, otherCuppaData.PredictionEntry.CancerType);
         checkDiff(diffs, FLD_PROBABILITY, PredictionEntry.DataValue, otherCuppaData.PredictionEntry.DataValue, thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     public String toString()

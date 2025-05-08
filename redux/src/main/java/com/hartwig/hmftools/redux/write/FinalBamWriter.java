@@ -181,8 +181,11 @@ public class FinalBamWriter extends Thread
             if(mProcessedPartitions + partitions.size() >= mFileWriterCache.partitionCount())
             {
                 BamWriter fullyUnmappedBamWriter = mFileWriterCache.getFullUnmappedBamWriter();
-                fullyUnmappedBamWriter.close();
-                inputBams.add(fullyUnmappedBamWriter.filename());
+                if(fullyUnmappedBamWriter != null)
+                {
+                    fullyUnmappedBamWriter.close();
+                    inputBams.add(fullyUnmappedBamWriter.filename());
+                }
             }
 
             if(!BamOperations.concatenateBams(mFileWriterCache.bamToolName(), mConfig.BamToolPath, mFinalBamFilename, inputBams, 1))

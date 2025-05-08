@@ -203,7 +203,7 @@ public class UmiStatistics
         UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.readCount());
         ++umiGroupStats.GroupCount;
 
-        for(SAMRecord read : umiGroup.reads())
+        for(SAMRecord read : umiGroup.allReads())
         {
             int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId());
 
@@ -222,7 +222,7 @@ public class UmiStatistics
             DuplicateGroup testGroup = groupIndex == 0 ? group1 : group2;
             DuplicateGroup readsGroup = groupIndex == 0 ? group2 : group1;
 
-            for(SAMRecord read : readsGroup.reads())
+            for(SAMRecord read : readsGroup.allReads())
             {
                 int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umiId());
 

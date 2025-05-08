@@ -1,23 +1,31 @@
 package com.hartwig.hmftools.redux.umi;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.collect.MergeUtils.clusterMerger;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.common.Constants.MAX_IMBALANCED_UMI_COUNT;
+import static com.hartwig.hmftools.redux.common.Constants.MAX_UMI_BASE_DIFF_JITTER_COLLAPSE;
 import static com.hartwig.hmftools.redux.common.Constants.MIN_POLYG_UMI_TAIL_LENGTH;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.polyGTailLength;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.trimPolyGTail;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,11 +34,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.collect.Union;
 import com.hartwig.hmftools.common.collect.UnionFind;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -110,6 +122,8 @@ public class UmiGroupBuilder
             }
         }
 
+        jitterCollapseUmiGroups(mSequencing, mUmiConfig, allUmiGroups, singleFragments);
+
         List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
 
         for(DuplicateGroup umiGroup : allUmiGroups)
@@ -175,7 +189,10 @@ public class UmiGroupBuilder
         }
 
         // order groups by descending number of fragments
-        List<DuplicateGroup> orderedGroups = groups.values().stream().sorted(new UmiUtils.SizeComparator()).collect(Collectors.toList());
+        List<DuplicateGroup> orderedGroups = groups.values()
+                .stream()
+                .sorted((new UmiUtils.SizeComparator()).thenComparing(DuplicateGroup::umiId))
+                .collect(Collectors.toList());
 
         // then apply the directional model, where smaller groups are merged into larger ones
         int i = 0;
@@ -439,6 +456,7 @@ public class UmiGroupBuilder
                     if(secondGroup != null)
                     {
                         firstGroup.addReads(secondGroup.reads());
+                        firstGroup.addPolyGUmiReads(secondGroup.polyGUmiReads());
                     }
                     else
                     {
@@ -469,148 +487,212 @@ public class UmiGroupBuilder
         }
     }
 
+    private static class UnmappedPair
+    {
+        public DuplicateGroup MappedGroup = null;
+        public DuplicateGroup UnmappedGroup = null;
+    }
+
     @VisibleForTesting
     public static void collapsePolyGDuplexUmis(final SequencingType sequencingType, final UmiConfig umiConfig,
             final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
-        if(!(sequencingType == SequencingType.ILLUMINA || sequencingType == SequencingType.BIOMODAL))
+        if(umiGroups.isEmpty() && singleFragments.isEmpty())
+            return;
+
+        if(sequencingType != ILLUMINA)
             return;
 
         if(!umiConfig.Duplex)
             return;
 
-        // early exit: there are no fragments with unmapped mates
-        boolean hasUnmappedMateFragments = Stream.concat(
+        boolean hasPrimaryUnmappedMateFragments = Stream.concat(
                         umiGroups.stream().map(DuplicateGroup::fragmentCoordinates),
                         singleFragments.stream().map(ReadInfo::coordinates))
-                .anyMatch(x -> !x.UnmappedSourced && x.PositionUpper == NO_POSITION);
-        if(!hasUnmappedMateFragments)
+                .anyMatch(x -> !x.Unpaired && x.SuppReadInfo == null && x.PositionUpper == NO_POSITION);
+        if(!hasPrimaryUnmappedMateFragments)
             return;
 
-        // add single fragments as umiGroups
+        // add non-supp single fragments as umiGroups
+        List<ReadInfo> suppSingleFragments = Lists.newArrayList();
         for(ReadInfo readInfo : singleFragments)
         {
+            FragmentCoords coords = readInfo.coordinates();
+            if(coords.SuppReadInfo != null)
+            {
+                suppSingleFragments.add(readInfo);
+                continue;
+            }
+
             SAMRecord read = readInfo.read();
-            FragmentCoords currentCoords = readInfo.coordinates();
-            FragmentCoords preCollapsedCoords = readInfo.preCollapsedCoordinates();
             String umiId = umiConfig.extractUmiId(read.getReadName());
-            DuplicateGroup duplicateGroup = new DuplicateGroup(umiId, Lists.newArrayList(read), preCollapsedCoords);
-            duplicateGroup.updateFragmentCoordinates(currentCoords);
+            DuplicateGroup duplicateGroup = new DuplicateGroup(umiId, read, coords);
             umiGroups.add(duplicateGroup);
         }
 
         singleFragments.clear();
+        singleFragments.addAll(suppSingleFragments);
 
-        // find candidate umi groups with unmapped mate
+        Map<String, UnmappedPair> pairedUnmappedGroups = Maps.newHashMap();
+        List<DuplicateGroup> suppFragments = Lists.newArrayList();
+        List<Union<DuplicateGroup, UnmappedPair>> fragments = Lists.newArrayList();
         UnionFind<Integer> umiGroupMerger = new UnionFind<>();
-        SortedMap<Integer, SortedSet<Integer>> unmappedMateGroupsIndices = Maps.newTreeMap();
-        for(int i = 0; i < umiGroups.size(); i++)
+        for(DuplicateGroup group : umiGroups)
         {
-            DuplicateGroup duplicateGroup = umiGroups.get(i);
-            umiGroupMerger.add(i);
-            FragmentCoords coords = duplicateGroup.fragmentCoordinates();
-            if(coords.UnmappedSourced || coords.PositionUpper != NO_POSITION)
+            FragmentCoords coords = group.fragmentCoordinates();
+            if(coords.SuppReadInfo != null)
+            {
+                suppFragments.add(group);
                 continue;
+            }
 
-            String umiId = duplicateGroup.umiId();
+            if(coords.PositionUpper != NO_POSITION)
+            {
+                umiGroupMerger.add(fragments.size());
+                fragments.add(Union.createLeft(group));
+                continue;
+            }
+
+            String key = coords.lowerCoordinate() + ":" + group.umiId();
+            pairedUnmappedGroups.computeIfAbsent(key, k -> new UnmappedPair());
+            if(coords.UnmappedSourced)
+            {
+                pairedUnmappedGroups.get(key).UnmappedGroup = group;
+                continue;
+            }
+
+            pairedUnmappedGroups.get(key).MappedGroup = group;
+        }
+
+        umiGroups.clear();
+        umiGroups.addAll(suppFragments);
+
+        HashMap<Pair<Integer, Boolean>, SortedSet<Integer>> groupedPolyGUnmappedPairIndices = Maps.newHashMap();
+        for(UnmappedPair unmappedPair : pairedUnmappedGroups.values())
+        {
+            int i = fragments.size();
+            fragments.add(Union.createRight(unmappedPair));
+            umiGroupMerger.add(i);
+            String umiId = unmappedPair.MappedGroup.umiId();
             if(polyGTailLength(umiId) < MIN_POLYG_UMI_TAIL_LENGTH)
                 continue;
 
-            for(FragmentCoords preCollapsedCoords : duplicateGroup.preCollapsedFragmentCoordinates())
-            {
-                int position = preCollapsedCoords.ReadIsLower ? preCollapsedCoords.PositionLower : preCollapsedCoords.PositionUpper;
-                unmappedMateGroupsIndices.computeIfAbsent(position, key -> Sets.newTreeSet());
-                unmappedMateGroupsIndices.get(position).add(i);
-            }
+            FragmentCoords coords = unmappedPair.MappedGroup.fragmentCoordinates();
+            int pos = coords.PositionLower;
+            Orientation orient = coords.OrientLower;
+            Pair<Integer, Boolean> key = Pair.of(pos, orient.isForward());
+            groupedPolyGUnmappedPairIndices.computeIfAbsent(key, k -> Sets.newTreeSet());
+            groupedPolyGUnmappedPairIndices.get(key).add(i);
         }
 
-        // merge other umi groups into the above umi groups with unmapped mate
-        for(int i = 0; i < umiGroups.size(); i++)
+        // merge the above umi groups with unmapped mates into other umi groups
+        for(int i = 0; i < fragments.size(); i++)
         {
-            DuplicateGroup duplicateGroup = umiGroups.get(i);
-            if(duplicateGroup.fragmentCoordinates().UnmappedSourced)
+            Union<DuplicateGroup, UnmappedPair> fragment = fragments.get(i);
+            DuplicateGroup group = fragment.hasLeft() ? fragment.left() : fragment.right().MappedGroup;
+            String umiId = group.umiId();
+            FragmentCoords coords = group.fragmentCoordinates();
+            int position = coords.PositionUpper == NO_POSITION || coords.ReadIsLower ? coords.PositionLower : coords.PositionUpper;
+            Orientation orient = coords.PositionUpper == NO_POSITION || coords.ReadIsLower ? coords.OrientLower : coords.OrientUpper;
+            Pair<Integer, Boolean> key = Pair.of(position, orient.isForward());
+            SortedSet<Integer> polyGUnmappedPairIndices = groupedPolyGUnmappedPairIndices.get(key);
+            if(polyGUnmappedPairIndices == null)
                 continue;
 
-            String umiId = duplicateGroup.umiId();
-
-            for(FragmentCoords preCollapsedCoords : duplicateGroup.preCollapsedFragmentCoordinates())
+            for(int j : polyGUnmappedPairIndices)
             {
-                int position = preCollapsedCoords.ReadIsLower ? preCollapsedCoords.PositionLower : preCollapsedCoords.PositionUpper;
-                SortedSet<Integer> unmappedMateGroupIndices = unmappedMateGroupsIndices.get(position);
-                if(unmappedMateGroupIndices == null)
+                if(i == j)
                     continue;
 
-                for(int j : unmappedMateGroupIndices)
-                {
-                    if(i == j)
-                        continue;
+                UnmappedPair unmappedPair = fragments.get(j).right();
+                String unmappedUmiId = unmappedPair.MappedGroup.umiId();
+                String unmappedUmiIdPrefix = trimPolyGTail(unmappedUmiId);
+                String umiIdPrefix = trimPolyGTail(umiId);
 
-                    DuplicateGroup unmappedMateGroup = umiGroups.get(j);
-                    String unmappedMateUmiId = unmappedMateGroup.umiId();
-                    String unmappedMateUmiIdPrefix = trimPolyGTail(unmappedMateUmiId);
-                    String umiIdPrefix = trimPolyGTail(umiId);
-                    int trimmedLength = min(unmappedMateUmiIdPrefix.length(), umiIdPrefix.length());
-                    unmappedMateUmiIdPrefix = unmappedMateUmiIdPrefix.substring(0, trimmedLength);
-                    umiIdPrefix = umiIdPrefix.substring(0, trimmedLength);
-                    if(!umiIdPrefix.equals(unmappedMateUmiIdPrefix))
-                        continue;
+                int trimmedLength = min(unmappedUmiIdPrefix.length(), umiIdPrefix.length());
+                unmappedUmiIdPrefix = unmappedUmiIdPrefix.substring(0, trimmedLength);
+                umiIdPrefix = umiIdPrefix.substring(0, trimmedLength);
+                if(!umiIdPrefix.equals(unmappedUmiIdPrefix))
+                    continue;
 
-                    boolean merge = false;
-                    for(FragmentCoords unmappedMateCoords : unmappedMateGroup.preCollapsedFragmentCoordinates())
-                    {
-                        int unmappedMateReadPosition = unmappedMateCoords.ReadIsLower
-                                ? unmappedMateCoords.PositionLower
-                                : unmappedMateCoords.PositionUpper;
-
-                        if(unmappedMateReadPosition != position)
-                            continue;
-
-                        merge = true;
-                        break;
-                    }
-
-                    if(merge)
-                        umiGroupMerger.merge(i, j);
-                }
+                umiGroupMerger.merge(i, j);
             }
         }
 
         // reconstitute umiGroups and singleFragments based on the merged groups
+        Comparator<Union<DuplicateGroup, UnmappedPair>> baseFragmentComparator = Comparator
+                .comparingInt((final Union<DuplicateGroup, UnmappedPair> x) -> x.hasLeft() ? 0 : 1)
+                .thenComparing(Comparator.comparingInt((final Union<DuplicateGroup, UnmappedPair> x) ->
+                        x.hasLeft()
+                        ? x.left().readCount()
+                        : x.right().MappedGroup.readCount()).reversed())
+                .thenComparing((final Union<DuplicateGroup, UnmappedPair> x) -> selectTemplateRead(
+                        x.hasLeft()
+                        ? x.left().reads()
+                        : x.right().MappedGroup.reads(),
+                        x.hasLeft()
+                        ? x.left().fragmentCoordinates()
+                        : x.right().MappedGroup.fragmentCoordinates()).getReadName());
+
         Collection<Set<Integer>> partitions = umiGroupMerger.getPartitions();
         List<DuplicateGroup> mergedUmiGroups = Lists.newArrayList();
         for(Set<Integer> partition : partitions)
         {
-            List<DuplicateGroup> partitionGroups = partition.stream().map(umiGroups::get).toList();
-            if(partitionGroups.size() == 1)
+            List<Union<DuplicateGroup, UnmappedPair>> partitionFragments = partition.stream().map(fragments::get).toList();
+            if(partitionFragments.size() == 1)
             {
-                mergedUmiGroups.add(partitionGroups.get(0));
+                Union<DuplicateGroup, UnmappedPair> fragment = partitionFragments.get(0);
+                if(fragment.hasLeft())
+                {
+                    mergedUmiGroups.add(fragment.left());
+                    continue;
+                }
+
+                UnmappedPair unmappedPair = fragment.right();
+                mergedUmiGroups.add(unmappedPair.MappedGroup);
+                mergedUmiGroups.add(unmappedPair.UnmappedGroup);
                 continue;
             }
 
-            int firstFullyMappedGroupIdx = 0;
-            for(int i = 0; i < partitionGroups.size(); i++)
+            Union<DuplicateGroup, UnmappedPair> baseFragment = Collections.min(partitionFragments, baseFragmentComparator);
+            if(baseFragment.hasLeft())
             {
-                DuplicateGroup group = partitionGroups.get(i);
-                if(group.fragmentCoordinates().PositionUpper != NO_POSITION)
-                {
-                    firstFullyMappedGroupIdx = i;
-                    break;
-                }
+                mergedUmiGroups.add(baseFragment.left());
+            }
+            else
+            {
+                UnmappedPair unmappedPair = baseFragment.right();
+                mergedUmiGroups.add(unmappedPair.MappedGroup);
+                mergedUmiGroups.add(unmappedPair.UnmappedGroup);
             }
 
-            DuplicateGroup baseGroup = partitionGroups.get(firstFullyMappedGroupIdx);
-            for(int i = 0; i < partitionGroups.size(); i++)
+            for(int i = 0; i < partitionFragments.size(); i++)
             {
-                if(i == firstFullyMappedGroupIdx)
+                Union<DuplicateGroup, UnmappedPair> fragment = partitionFragments.get(i);
+                if(fragment == baseFragment)
                     continue;
 
-                baseGroup.addReads(partitionGroups.get(i).reads());
-            }
+                if(fragment.hasLeft())
+                {
+                    mergedUmiGroups.add(fragment.left());
+                    continue;
+                }
 
-            mergedUmiGroups.add(baseGroup);
+                if(baseFragment.hasLeft())
+                {
+                    DuplicateGroup baseGroup = baseFragment.left();
+                    baseGroup.addPolyGUmiReads(fragment.right().MappedGroup.reads());
+                    baseGroup.addPolyGUmiReads(fragment.right().UnmappedGroup.reads());
+                }
+                else
+                {
+                    UnmappedPair unmappedPair = baseFragment.right();
+                    unmappedPair.MappedGroup.addPolyGUmiReads(fragment.right().MappedGroup.reads());
+                    unmappedPair.UnmappedGroup.addPolyGUmiReads(fragment.right().UnmappedGroup.reads());
+                }
+            }
         }
 
-        umiGroups.clear();
         for(DuplicateGroup group : mergedUmiGroups)
         {
             if(group.readCount() == 1)
@@ -621,6 +703,114 @@ public class UmiGroupBuilder
 
             umiGroups.add(group);
         }
+    }
+
+    private static DuplicateGroup jitterMergeFn(final DuplicateGroup acc, final DuplicateGroup group)
+    {
+        acc.addNonConsensusReads(group.reads());
+        acc.addNonConsensusReads(group.nonConsensusReads());
+        acc.addPolyGUmiReads(group.polyGUmiReads());
+        return acc;
+    }
+
+    private static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount)
+            .reversed()
+            .thenComparing(x -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName());
+
+    private record JitterCollapseElementKey(long keyId, FragmentCoords coords, String umiId)
+    {
+        public boolean canMerge(final UmiConfig umiConfig, final JitterCollapseElementKey o)
+        {
+            int lowerDiff = abs(coords.PositionLower - o.coords.PositionLower);
+            int upperDiff = abs(coords.PositionUpper - o.coords.PositionUpper);
+            if(lowerDiff > 0 && upperDiff > 0)
+            {
+                return false;
+            }
+
+            if(lowerDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE || upperDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE)
+            {
+                return false;
+            }
+
+            if(coords.FragmentOrient == o.coords.FragmentOrient)
+            {
+                return !exceedsUmiIdDiff(umiId, o.umiId, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE);
+            }
+
+            if(!umiConfig.Duplex)
+            {
+                return false;
+            }
+
+            return hasDuplexUmiMatch(umiId, o.umiId, umiConfig.DuplexDelim, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE);
+        }
+    }
+
+    private static void jitterCollapseUmiGroups(final SequencingType sequencingType, final UmiConfig umiConfig,
+            final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
+    {
+        if(umiGroups.isEmpty() && singleFragments.isEmpty())
+            return;
+
+        if(sequencingType != ILLUMINA)
+            return;
+
+        boolean isUnpaired = Stream.concat(
+                        umiGroups.stream().map(DuplicateGroup::fragmentCoordinates),
+                        singleFragments.stream().map(ReadInfo::coordinates))
+                .anyMatch(x -> x.Unpaired);
+        if(isUnpaired)
+            return;
+
+        for(ReadInfo readInfo : singleFragments)
+        {
+            SAMRecord read = readInfo.read();
+            FragmentCoords coords = readInfo.coordinates();
+            String umiId = umiConfig.extractUmiId(read.getReadName());
+            DuplicateGroup duplicateGroup = new DuplicateGroup(umiId, read, coords);
+            umiGroups.add(duplicateGroup);
+        }
+
+        singleFragments.clear();
+
+        List<DuplicateGroup> finalUmiGroups = Lists.newArrayList();
+        Map<String, List<DuplicateGroup>> keyGroups = Maps.newHashMap();
+        for(DuplicateGroup group : umiGroups)
+        {
+            FragmentCoords coords = group.fragmentCoordinates();
+            if(coords.PositionUpper == NO_POSITION)
+            {
+                finalUmiGroups.add(group);
+                continue;
+            }
+
+            String collapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
+            keyGroups.computeIfAbsent(collapsedKey, key -> Lists.newArrayList());
+            keyGroups.get(collapsedKey).add(group);
+        }
+
+        umiGroups.clear();
+
+        long keyId = 0;
+        for(List<DuplicateGroup> keyGroup : keyGroups.values())
+        {
+            Map<JitterCollapseElementKey, DuplicateGroup> elements = Maps.newHashMap();
+            for(DuplicateGroup group : keyGroup)
+            {
+                FragmentCoords coords = group.fragmentCoordinates();
+                String umiId = group.umiId();
+                JitterCollapseElementKey key = new JitterCollapseElementKey(keyId, coords, umiId);
+                keyId++;
+                elements.put(key, group);
+            }
+
+            List<DuplicateGroup> mergedGroups = clusterMerger(
+                    elements, (x, y) -> x.canMerge(umiConfig, y), DUPLICATE_GROUP_COMPARATOR, UmiGroupBuilder::jitterMergeFn);
+            finalUmiGroups.addAll(mergedGroups);
+        }
+
+        umiGroups.addAll(finalUmiGroups);
     }
 
     @VisibleForTesting
