@@ -43,6 +43,7 @@ public class CircosConfigWriter
     private final double mapInnerRadius;
 
     private final double labelSize;
+    private final double labelPosition;
 
     public CircosConfigWriter(final String filename, final String outputDir, final CircosData data, final CircosConfig config)
     {
@@ -101,7 +102,7 @@ public class CircosConfigWriter
         mapMiddleRadius = mapOuterRadius - mapGainTracks * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
 
-        int test = 0;
+        labelPosition = copyNumberMiddleRadius + purpleTrackSize*0.05; // Add slight offset so that the label isn't flush with the axis
     }
 
     public double svTrackRelative(int track)
@@ -128,7 +129,6 @@ public class CircosConfigWriter
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.MaxCopyNumber - 2)));
 
         int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.MaxMinorAllelePloidy - 1)));
-        double distanceLabelOffset = Math.ceil(4 * labelSize);
 
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
@@ -159,7 +159,7 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", copyNumberOuterRadius + "r -" + distanceLabelOffset + "p")
+                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", labelPosition + "r")
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.MaxTracks))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.MaxTracks))
