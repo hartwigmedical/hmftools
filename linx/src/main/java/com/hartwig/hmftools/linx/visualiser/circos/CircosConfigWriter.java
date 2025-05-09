@@ -101,14 +101,14 @@ public class CircosConfigWriter
         copyNumberMiddleRadius = copyNumberOuterRadius - cnaGainTrackSize * purpleTrackSize;
         copyNumberInnerRadius = copyNumberMiddleRadius - 2 * purpleTrackSize;
 
-        cobaltOuterRadius = copyNumberInnerRadius - gapSize;
-        cobaltInnerRadius = cobaltOuterRadius - cobaltTrackSize * purpleTrackSize;
-
-        mapOuterRadius = cobaltInnerRadius - gapSize;
+        mapOuterRadius = copyNumberInnerRadius - gapSize;
         mapMiddleRadius = mapOuterRadius - mapGainTrackSize * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
 
-        amberOuterRadius = mapInnerRadius - gapSize;
+        cobaltOuterRadius = mapInnerRadius - gapSize;
+        cobaltInnerRadius = cobaltOuterRadius - cobaltTrackSize * purpleTrackSize;
+
+        amberOuterRadius = cobaltInnerRadius - gapSize;
         amberInnerRadius = amberOuterRadius - amberTrackSize * purpleTrackSize;
 
         labelPosition = copyNumberMiddleRadius + purpleTrackSize*0.05; // Add slight offset so that the label isn't flush with the axis
