@@ -26,9 +26,6 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
@@ -222,8 +219,6 @@ public class SampleData
                 }
             }
         }
-
-        Exons.addAll(additionalExons(mConfig, mConfig.Genes, Exons, mConfig.ClusterIds));
     }
 
     private boolean matchOnSampleId(final String sampleId)
@@ -278,47 +273,5 @@ public class SampleData
             return Lists.newArrayList();
 
         return VisFusion.read(fileName);
-    }
-
-    private static List<VisGeneExon> additionalExons(
-            final VisualiserConfig config, final Set<String> geneList, final List<VisGeneExon> currentExons, final List<Integer> clusterIds)
-    {
-        final List<VisGeneExon> exonList = Lists.newArrayList();
-
-        if(geneList.isEmpty())
-            return exonList;
-
-        if(config.EnsemblDataDir == null)
-            return exonList;
-
-        final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
-
-        EnsemblDataCache geneTransCache = new EnsemblDataCache(config.EnsemblDataDir, config.RefGenVersion);
-        geneTransCache.setRequiredData(true, false, false, true);
-        geneTransCache.load(false);
-
-        for(final String geneName : geneList)
-        {
-            if(currentExons.stream().anyMatch(x -> x.Gene.equals(geneName) && clusterIds.contains(x.ClusterId)))
-                continue;
-
-            VIS_LOGGER.info("loading exon data for additional gene({})", geneName);
-
-            GeneData geneData = geneTransCache.getGeneDataByName(geneName);
-            TranscriptData transcriptData = geneData != null ? geneTransCache.getCanonicalTranscriptData(geneData.GeneId) : null;
-
-            if(transcriptData == null)
-            {
-                VIS_LOGGER.warn("data not found for specified gene({})", geneName);
-                continue;
-            }
-
-            for(Integer clusterId : allClusterIds)
-            {
-                exonList.addAll(VisExons.extractExonList(config.Sample, clusterId, geneData, transcriptData));
-            }
-        }
-
-        return exonList;
     }
 }

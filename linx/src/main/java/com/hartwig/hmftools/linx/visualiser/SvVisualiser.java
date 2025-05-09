@@ -22,6 +22,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
@@ -36,6 +39,7 @@ import com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.FusionExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
+import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
@@ -47,6 +51,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class SvVisualiser implements AutoCloseable
 {
@@ -54,6 +59,10 @@ public class SvVisualiser implements AutoCloseable
 
     private final VisualiserConfig mConfig;
     private final SampleData mSampleData;
+
+    @Nullable
+    private final EnsemblDataCache mEnsemblDataCache;
+
     private final CircosConfig mCircosConfig;
     private final ExecutorService mExecutorService;
 
@@ -66,11 +75,24 @@ public class SvVisualiser implements AutoCloseable
 
         mCircosConfig = new CircosConfig(configBuilder);
         mConfig = new VisualiserConfig(configBuilder);
-        mSampleData = new SampleData(mConfig);
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
 
         mCallableImages = Lists.newArrayList();
         mCallableConfigs = Lists.newArrayList();
+
+        if(mConfig.Genes.isEmpty())
+        {
+            mEnsemblDataCache = null;
+        }
+        else
+        {
+            EnsemblDataCache ensemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
+            ensemblDataCache.setRequiredData(true, false, false, true);
+            ensemblDataCache.load(false);
+            mEnsemblDataCache = ensemblDataCache;
+        }
+
+        mSampleData = new SampleData(mConfig);
     }
 
     private void run() throws Exception
@@ -91,7 +113,7 @@ public class SvVisualiser implements AutoCloseable
                 submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
             }
         }
-        else if(!mConfig.ClusterIds.isEmpty() || !mConfig.Chromosomes.isEmpty())
+        else if(!mConfig.ClusterIds.isEmpty() || !mConfig.Chromosomes.isEmpty() || !mConfig.Genes.isEmpty())
         {
             if(!mConfig.ClusterIds.isEmpty())
             {
@@ -100,7 +122,16 @@ public class SvVisualiser implements AutoCloseable
 
             if(!mConfig.Chromosomes.isEmpty())
             {
-                submitChromosome(mConfig.Chromosomes);
+                submitChromosome(mConfig.Chromosomes, null);
+            }
+
+            if(!mConfig.Genes.isEmpty())
+            {
+                for(String geneName : mConfig.Genes)
+                {
+                    String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
+                    submitChromosome(Lists.newArrayList(geneChromosome), geneName);
+                }
             }
         }
         else
@@ -117,7 +148,7 @@ public class SvVisualiser implements AutoCloseable
             mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
             for(String chromosome : chromosomes)
             {
-                submitChromosome(Lists.newArrayList(chromosome));
+                submitChromosome(Lists.newArrayList(chromosome), null);
             }
         }
 
@@ -132,7 +163,7 @@ public class SvVisualiser implements AutoCloseable
         VIS_LOGGER.info("Linx Visualiser complete");
     }
 
-    private void submitChromosome(final List<String> chromosomes)
+    private void submitChromosome(List<String> chromosomes, @Nullable final String geneName)
     {
         if(chromosomes.stream().anyMatch(x -> !HumanChromosome.contains(x)))
         {
@@ -148,8 +179,6 @@ public class SvVisualiser implements AutoCloseable
         Predicate<VisSvData> chromosomePredicate = x -> chromosomes.contains(x.ChrStart) || chromosomes.contains(x.ChrEnd);
         Predicate<VisSvData> combinedPredicate = chromosomePredicate.and(linePredicate);
 
-        String sample = mConfig.Sample + ".chr" + chromosomesStr + (mConfig.Debug ? ".debug" : "");
-
         Set<Integer> clusterIds = mSampleData.SvData
                 .stream()
                 .filter(combinedPredicate)
@@ -157,7 +186,7 @@ public class SvVisualiser implements AutoCloseable
                 .collect(toSet());
 
         List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
-        if(chromosomeLinks.isEmpty())
+        if(mConfig.Chromosomes.isEmpty() && chromosomeLinks.isEmpty())
         {
             VIS_LOGGER.warn("chromosomes({}) not present in file", chromosomesStr);
             return;
@@ -186,14 +215,60 @@ public class SvVisualiser implements AutoCloseable
         });
         chromosomeSegments.forEach(x -> chromosomesOfInterest.add(x.chromosome()));
 
-        List<VisGeneExon> chromosomeExons =
-                mSampleData.Exons.stream().filter(x -> chromosomesOfInterest.contains(x.Chromosome)).collect(toList());
+        List<VisGeneExon> chromosomeExons;
+        if(geneName == null)
+        {
+            chromosomeExons = mSampleData.Exons.stream().filter(x -> chromosomesOfInterest.contains(x.Chromosome)).collect(toList());
+
+            if(!mConfig.Genes.isEmpty())
+                chromosomeExons.addAll(getExonDataFromCache(mConfig.Genes, mConfig.ClusterIds, chromosomeExons));
+        }
+        else
+        {
+            chromosomeExons = getExonDataFromCache(Set.of(geneName), mConfig.ClusterIds, Lists.newArrayList());
+        }
 
         List<VisProteinDomain> chromosomeProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        submitFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
+        String fileId = mConfig.Sample + ".";
+        fileId += geneName == null ? "chr" + chromosomesStr : geneName;
+        fileId += mConfig.Debug ? ".debug" : "";
+
+        submitFiltered(ColorPicker::clusterColors, fileId, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
                 Collections.emptyList(), false);
+    }
+
+    private List<VisGeneExon> getExonDataFromCache(
+            final Set<String> geneList, final List<Integer> clusterIds, final List<VisGeneExon> currentExons)
+    {
+        final List<VisGeneExon> exonList = Lists.newArrayList();
+
+        final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
+
+        for(final String geneName : geneList)
+        {
+            if(currentExons.stream().anyMatch(x -> x.Gene.equals(geneName) && clusterIds.contains(x.ClusterId)))
+                continue;
+
+            VIS_LOGGER.info("loading exon data for additional gene({})", geneName);
+
+            GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
+            TranscriptData transcriptData = geneData != null ? mEnsemblDataCache.getCanonicalTranscriptData(geneData.GeneId) : null;
+
+            if(transcriptData == null)
+            {
+                VIS_LOGGER.warn("data not found for specified gene({})", geneName);
+                continue;
+            }
+
+            for(Integer clusterId : allClusterIds)
+            {
+                exonList.addAll(VisExons.extractExonList(mConfig.Sample, clusterId, geneData, transcriptData));
+            }
+        }
+
+        return exonList;
     }
 
     private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles)
@@ -325,9 +400,14 @@ public class SvVisualiser implements AutoCloseable
 
         List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
 
-        if(copyNumbers.isEmpty() || segments.isEmpty() || links.isEmpty())
+        if(mConfig.Chromosomes.isEmpty() && (copyNumbers.isEmpty() || segments.isEmpty() || links.isEmpty()))
         {
-            VIS_LOGGER.warn("plot({}) missing required CN , segment or link info", fileId);
+            List<String> missingDataTypes = Lists.newArrayList();
+            if(copyNumbers.isEmpty()) missingDataTypes.add("copy numbers");
+            if(segments.isEmpty())    missingDataTypes.add("segments");
+            if(links.isEmpty())       missingDataTypes.add("links");
+
+            VIS_LOGGER.warn("plot({}) has missing required data: {}", fileId, String.join(", ", missingDataTypes));
             return;
         }
 
