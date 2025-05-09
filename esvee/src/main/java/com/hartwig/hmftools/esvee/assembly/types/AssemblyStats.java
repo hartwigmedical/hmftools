@@ -26,7 +26,6 @@ public class AssemblyStats
     public int IndelReads;
 
     // read qualities
-    public int NmCountTotal;
     public int IndelLengthTotal;
     public int BaseQualTotal;
     public int MapQualTotal;
@@ -54,7 +53,6 @@ public class AssemblyStats
         JuncMateUnmappedRefSide = 0;
         IndelReads = 0;
 
-        NmCountTotal = 0;
         IndelLengthTotal = 0;
         BaseQualTotal = 0;
         MapQualTotal = 0;
@@ -118,7 +116,6 @@ public class AssemblyStats
             }
         }
 
-        NmCountTotal += supportRead.numOfEvents();
         MapQualTotal += supportRead.mapQual();
         BaseTrimTotal += supportRead.trimCount();
 
@@ -179,7 +176,6 @@ public class AssemblyStats
         sj.add("RefBaseMismatches");
         sj.add("BaseTrimCount");
 
-        sj.add("AvgNmCount");
         sj.add("AvgIndelLength");
         sj.add("AvgBaseQual");
         sj.add("AvgMapQual");
@@ -193,7 +189,6 @@ public class AssemblyStats
         sj.add(String.valueOf(RefBaseMismatchTotal));
         sj.add(String.valueOf(BaseTrimTotal));
 
-        sj.add(statString(NmCountTotal, ReadCount));
         sj.add(statString(IndelLengthTotal, ReadCount));
         sj.add(statString(BaseQualTotal, ReadCount));
         sj.add(statString(MapQualTotal, ReadCount));

@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignment;
@@ -16,7 +15,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.READ_ID_TRIMMER;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.LOW_QUAL_SCORE;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
@@ -53,8 +51,6 @@ public class Read
     private int mAlignmentEnd;
     private int mUnclippedStart;
     private int mUnclippedEnd;
-    private Integer mSnvCount;
-    private Integer mTotalIndelBases;
     private Integer mMateAlignmentEnd;
     private byte[] mBases;
     private byte[] mBaseQuals;
@@ -90,8 +86,6 @@ public class Read
         mCigarElements = cigarElementsFromStr(mOrigCigarString);
 
         setBoundaries(mRecord.getAlignmentStart());
-        mSnvCount = null;
-        mTotalIndelBases = null;
         mBases = null;
         mBaseQuals = null;
         mMateAlignmentEnd = null;
@@ -313,39 +307,6 @@ public class Read
     public int getReadIndexAtReferencePosition(final int refPosition, boolean allowExtrapolation)
     {
         return ReadUtils.getReadIndexAtReferencePosition(this, refPosition, allowExtrapolation);
-    }
-
-    public int totalIndelBases()
-    {
-        if(mTotalIndelBases == null)
-            calcNumberOfEvents();
-
-        return mTotalIndelBases;
-    }
-
-    public int snvCount()
-    {
-        if(mSnvCount == null)
-            calcNumberOfEvents();
-
-        return mSnvCount;
-    }
-
-    public int numOfEvents() { return snvCount() + totalIndelBases(); }
-
-    private void calcNumberOfEvents()
-    {
-        Object numOfEvents = mRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE);
-
-        if(numOfEvents == null)
-        {
-            mTotalIndelBases = 0;
-            mSnvCount = 0;
-            return;
-        }
-
-        mTotalIndelBases = mCigarElements.stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
-        mSnvCount = max((int)numOfEvents - mTotalIndelBases, 0);
     }
 
     public IndelCoords indelCoords()

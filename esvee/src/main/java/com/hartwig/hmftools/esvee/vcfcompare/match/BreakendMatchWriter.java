@@ -73,7 +73,7 @@ public class BreakendMatchWriter
             BufferedWriter writer = FileWriterUtils.createBufferedWriter(fileName, false);
 
             String header = String.join(
-                    TSV_DELIM, "SampleId",
+                    TSV_DELIM,
                     "OldId", "NewId", "MatchType", "Diffs", "OldSvCoords", "NewSvCoords", "OldCoords", "NewCoords",
                     "OldCipos", "NewCipos", "OldIhompos",    "NewIhompos", "OldHomSeq", "NewHomSeq",
                     "OldInsSeq", "NewInsSeq", "OldSvType", "NewSvType", "OldFilter", "NewFilter", "OldVcfType", "NewVcfType",
@@ -186,7 +186,6 @@ public class BreakendMatchWriter
         {
             String line = String.join(
                     TSV_DELIM,
-                    mConfig.SampleId,
                     oldId, newId,
                     matchType.toString(),
                     diffs, oldSvCoords, newSvCoords, oldCoords, newCoords,

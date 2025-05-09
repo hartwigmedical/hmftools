@@ -26,8 +26,7 @@ public class BreakendMatcher
 
     public void matchBreakends(
             final Map<String, List<VariantBreakend>> oldChrBreakendMap, final Map<String,List<VariantBreakend>> newChrBreakendMap,
-            final MatchType matchType, boolean checkOtherSide
-    )
+            final MatchType matchType, boolean checkOtherSide)
     {
         MatchFunctions.MatchFunction breakendMatcher = MatchType.getMatcher(matchType);
 
@@ -58,7 +57,9 @@ public class BreakendMatcher
                         newBreakend.MatchedBreakend = oldBreakend;
 
                         if(mIncludeNonPass || oldBreakend.isPassVariant() || newBreakend.isPassVariant())
+                        {
                             mBreakendMatches.add(new BreakendMatch(oldBreakend, newBreakend, matchType));
+                        }
 
                         matchedCount++;
                     }

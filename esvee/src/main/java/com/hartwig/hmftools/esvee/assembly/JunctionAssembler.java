@@ -15,8 +15,10 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensio
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readMismatchesPastJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
@@ -28,23 +30,26 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.assembly.read.ReadFilters;
 
 public class JunctionAssembler
 {
     private Junction mJunction;
+    private final RefGenomeInterface mRefGenome;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome)
     {
         mJunction = junction;
+        mRefGenome = refGenome;
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -82,7 +87,7 @@ public class JunctionAssembler
             // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
             for(Read read : rawReads)
             {
-                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, mJunction))
+                if(!readSoftClipsAndCrossesJunction(read, mJunction, mRefGenome))
                 {
                     mNonJunctionReads.add(read);
                     continue;
@@ -468,5 +473,11 @@ public class JunctionAssembler
         }
 
         return false;
+    }
+
+    @VisibleForTesting
+    public JunctionAssembler(final Junction junction)
+    {
+        this(junction, null);
     }
 }

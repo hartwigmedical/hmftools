@@ -35,7 +35,6 @@ public class LineLinkWriter
     private static final String NEW_PREFIX = "New";
 
     private static final List<String> FIXED_HEADER_FIELDS = List.of(
-            "SampleId",
             "UnifiedPolyACoords",
             "UnifiedPolyACoordsCount",
             "PolyAMatchType",
@@ -366,8 +365,6 @@ public class LineLinkWriter
 
                 if(!isLineInsertSiteOfInterest(oldBreakend) && !isLineInsertSiteOfInterest(newBreakend))
                     continue;
-
-                rowStrings.add(mConfig.SampleId);
 
                 String unifiedPolyACoords = getUnifiedPolyACoords(oldBreakend, newBreakend);
                 rowStrings.add(unifiedPolyACoords);

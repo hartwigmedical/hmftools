@@ -7,11 +7,13 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.FileCommon.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
+import static com.hartwig.hmftools.esvee.vcfcompare.CompareTask.MATCH_BREAKENDS;
 
 import java.util.List;
 
@@ -19,6 +21,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -82,7 +85,9 @@ public class CompareConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(COMPARE_TASKS, false, "Comparisons to perform");
+        configBuilder.addConfigItem(
+                COMPARE_TASKS, false, enumValueSelectionAsStr(WriteType.values(), "Comparison types"),
+                MATCH_BREAKENDS.toString());
 
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);

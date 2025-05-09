@@ -63,7 +63,6 @@ public class SupportRead
     // fragment state
     private final SupplementaryReadData mSupplementaryData;
     private final int mMapQual;
-    private final int mNumOfEvents;
     private final int mInsertSize;
     private final int mTrimCount;
     private final boolean mHasIndel;
@@ -124,7 +123,6 @@ public class SupportRead
         mInsertSize = abs(inferredInsertSize(read.bamRecord()));
         mTrimCount = read.baseTrimCount();
         mMapQual = read.mappingQuality();
-        mNumOfEvents = read.numOfEvents();
         mHasIndel = read.indelCoords() != null;
         mIndelCoords = read.indelCoords() != null && read.indelCoords().Length >= MIN_INDEL_LENGTH ? read.indelCoords() : null;
         mHasLineTail = read.hasLineTail();
@@ -167,7 +165,6 @@ public class SupportRead
     public Orientation mateOrientation() { return isFlagSet(MATE_REVERSE_STRAND) ? REVERSE : FORWARD; }
     public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
     public int mapQual() { return mMapQual; }
-    public int numOfEvents() { return mNumOfEvents; }
     public boolean hasLineTail() { return mHasLineTail; }
 
     public boolean isReference() { return mIsReference; }

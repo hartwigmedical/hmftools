@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -16,7 +15,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAndCrossesJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -84,7 +83,7 @@ public class JunctionAssemblyTest
     @Test
     public void testPosJunctionExtensionSequence()
     {
-        String refBases = REF_BASES_200.substring(0, 20);
+        String refBases = REF_BASES_200.substring(10, 30);
         String extBases = REF_BASES_200.substring(100, 140);
 
         Junction junction = new Junction(CHR_1, 29, FORWARD);
@@ -102,13 +101,16 @@ public class JunctionAssemblyTest
         // a read without soft-clip but mismatches agreeing with the extension
         String alignedMatchingBases = readBases.substring(0, 22);
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), 10, alignedMatchingBases, makeCigarString(alignedMatchingBases, 0, 0));
-        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
-        assertTrue(recordSoftClipsAndCrossesJunction(read4, junction));
 
-        // similar but too long and matching the ref
-        readBases = REF_BASES_200.substring(0, 30);
+        MockRefGenome refGenome = new MockRefGenome();
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_200);
+
+        assertTrue(readSoftClipsAndCrossesJunction(read4, junction, refGenome));
+
+        // similar but matches the ref
+        readBases = REF_BASES_200.substring(10, 40);
         Read read5 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, 0));
-        assertFalse(recordSoftClipsAndCrossesJunction(read5, junction));
+        assertFalse(readSoftClipsAndCrossesJunction(read5, junction, refGenome));
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
@@ -167,8 +169,6 @@ public class JunctionAssemblyTest
 
         String alignedMatchingBases = readBases.substring(readBases.length() - 22);
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition - 2, alignedMatchingBases, makeCigarString(alignedMatchingBases, 0, 0));
-        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
-        assertTrue(recordSoftClipsAndCrossesJunction(read4, junction));
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
