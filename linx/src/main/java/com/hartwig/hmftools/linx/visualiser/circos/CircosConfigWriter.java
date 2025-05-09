@@ -71,11 +71,11 @@ public class CircosConfigWriter
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.InnerRadius;
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
-        int cnaGainTracks = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
-        int mapGainTracks = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
-        int amberTracks = !data.AmberBAFs.isEmpty() ? 1 : 0;
-        int cobaltTracks = !data.CobaltRatios.isEmpty() ? 1 : 0;
-        double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTracks + mapGainTracks + amberTracks + cobaltTracks);
+        int cnaGainTrackSize = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
+        int mapGainTrackSize = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
+        int amberTrackSize = !data.AmberBAFs.isEmpty() ? 2 : 0;
+        int cobaltTrackSize = !data.CobaltRatios.isEmpty() ? 2 : 0;
+        double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTrackSize + mapGainTrackSize + amberTrackSize + cobaltTrackSize);
 
         if(displayGenes)
         {
@@ -98,18 +98,18 @@ public class CircosConfigWriter
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 
         copyNumberOuterRadius = segmentInnerRadius - gapSize;
-        copyNumberMiddleRadius = copyNumberOuterRadius - cnaGainTracks * purpleTrackSize;
+        copyNumberMiddleRadius = copyNumberOuterRadius - cnaGainTrackSize * purpleTrackSize;
         copyNumberInnerRadius = copyNumberMiddleRadius - 2 * purpleTrackSize;
 
         cobaltOuterRadius = copyNumberInnerRadius - gapSize;
-        cobaltInnerRadius = cobaltOuterRadius - cobaltTracks * 2 * purpleTrackSize;
+        cobaltInnerRadius = cobaltOuterRadius - cobaltTrackSize * purpleTrackSize;
 
         mapOuterRadius = cobaltInnerRadius - gapSize;
-        mapMiddleRadius = mapOuterRadius - mapGainTracks * purpleTrackSize;
+        mapMiddleRadius = mapOuterRadius - mapGainTrackSize * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
 
         amberOuterRadius = mapInnerRadius - gapSize;
-        amberInnerRadius = amberOuterRadius - amberTracks * 2 * purpleTrackSize;
+        amberInnerRadius = amberOuterRadius - amberTrackSize * purpleTrackSize;
 
         labelPosition = copyNumberMiddleRadius + purpleTrackSize*0.05; // Add slight offset so that the label isn't flush with the axis
     }
