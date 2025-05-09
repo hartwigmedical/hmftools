@@ -60,11 +60,11 @@ public class CircosData
     public final int MaxFrame;
 
     public CircosData(
-            boolean showSimpleSvSegments, final CircosConfig config, final List<VisSegment> unadjustedSegments,
+            final CircosConfig config, final List<VisSegment> unadjustedSegments,
             final List<VisSvData> unadjustedLinks, final List<VisCopyNumber> unadjustedCopyNumbers,
             final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions,
-            final List<AmberBAF> unadjustedAmberBAFs, final List<CobaltRatio> unadjustedCobaltRatios
-
+            final List<AmberBAF> unadjustedAmberBAFs, final List<CobaltRatio> unadjustedCobaltRatios,
+            boolean showSimpleSvSegments, boolean showFragileSites, boolean showLineElements
     )
     {
         UpstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
@@ -91,11 +91,13 @@ public class CircosData
             positionsToScale.addAll(Span.allPositions(unadjustedGeneExonRegions));
         }
 
-        List<GenomeRegion> unadjustedFragileSites =
-                Highlights.limitHighlightsToRegions(Highlights.FRAGILE_SITES, Span.spanPositions(positionsToScale));
+        List<GenomeRegion> unadjustedFragileSites = !showFragileSites
+                ? Lists.newArrayList()
+                : Highlights.limitHighlightsToRegions(Highlights.FRAGILE_SITES, Span.spanPositions(positionsToScale));
 
-        List<GenomeRegion> unadjustedLineElements =
-                Highlights.limitHighlightsToRegions(Highlights.LINE_ELEMENTS, Span.spanPositions(positionsToScale));
+        List<GenomeRegion> unadjustedLineElements = !showLineElements
+                ? Lists.newArrayList()
+                : Highlights.limitHighlightsToRegions(Highlights.LINE_ELEMENTS, Span.spanPositions(positionsToScale));
 
         final ScalePosition scalePosition = new ScalePosition(positionsToScale);
         ContigLengths = scalePosition.contigLengths();

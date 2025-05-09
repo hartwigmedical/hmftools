@@ -334,7 +334,10 @@ public class SvVisualiser implements AutoCloseable
         ColorPicker color = colorPickerFactory.create(links);
 
         CircosData circosData = new CircosData(
-                showSimpleSvSegments, mCircosConfig, segments, links, copyNumbers, filteredExons, filteredFusions, amberBAFs, cobaltRatios);
+                mCircosConfig,
+                segments, links, copyNumbers, filteredExons, filteredFusions, amberBAFs, cobaltRatios,
+                showSimpleSvSegments,  mConfig.IncludeFragileSites, mConfig.IncludeLineElements
+        );
 
         CircosConfigWriter confWrite = new CircosConfigWriter(fileId, mConfig.OutputConfPath, circosData, mCircosConfig);
         FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
