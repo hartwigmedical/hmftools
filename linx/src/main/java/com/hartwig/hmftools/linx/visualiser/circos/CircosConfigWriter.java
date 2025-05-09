@@ -96,7 +96,7 @@ public class CircosConfigWriter
         copyNumberInnerRadius = copyNumberMiddleRadius - 2 * purpleTrackSize;
 
         cobaltOuterRadius = copyNumberInnerRadius - gapSize;
-        cobaltInnerRadius = cobaltOuterRadius - cobaltTracks * purpleTrackSize;
+        cobaltInnerRadius = cobaltOuterRadius - cobaltTracks * 2 * purpleTrackSize;
 
         mapOuterRadius = cobaltInnerRadius - gapSize;
         mapMiddleRadius = mapOuterRadius - mapGainTracks * purpleTrackSize;
