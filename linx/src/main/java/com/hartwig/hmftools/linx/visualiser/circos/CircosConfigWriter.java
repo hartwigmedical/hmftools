@@ -66,13 +66,15 @@ public class CircosConfigWriter
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
         int numberOfGaps = displayGenes ? 5 : 3;
+        if(!data.AmberBAFs.isEmpty()) numberOfGaps += 1;
+        if(!data.CobaltRatios.isEmpty()) numberOfGaps += 1;
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.InnerRadius;
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
         int cnaGainTracks = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
         int mapGainTracks = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
-        int amberTracks = 1;
-        int cobaltTracks = 1;
+        int amberTracks = !data.AmberBAFs.isEmpty() ? 1 : 0;
+        int cobaltTracks = !data.CobaltRatios.isEmpty() ? 1 : 0;
         double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTracks + mapGainTracks + amberTracks + cobaltTracks);
 
         if(displayGenes)
