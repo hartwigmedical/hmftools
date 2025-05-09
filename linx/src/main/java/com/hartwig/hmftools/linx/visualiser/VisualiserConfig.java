@@ -57,6 +57,7 @@ public class VisualiserConfig
     public final boolean Debug;
 
     // filters and plotting options
+    public final boolean IncludeFragileSites;
     public final boolean IncludeLineElements;
     public final List<Integer> ClusterIds;
     public final List<Integer> ChainIds;
@@ -83,6 +84,7 @@ public class VisualiserConfig
     public static final String RESTRICT_CLUSTERS_BY_GENE = "restrict_cluster_by_gene";
     public static final String PLOT_CLUSTER_GENES = "plot_cluster_genes";
 
+    private static final String INCLUDE_FRAGILE_SITES = "include_fragile_sites";
     private static final String INCLUDE_LINE_ELEMENTS = "include_line_elements";
 
     private static final String DELIM = ",";
@@ -134,6 +136,7 @@ public class VisualiserConfig
         Threads = parseThreads(configBuilder);
         Debug = configBuilder.hasFlag(DEBUG);
 
+        IncludeFragileSites = configBuilder.hasFlag(INCLUDE_FRAGILE_SITES);
         IncludeLineElements = configBuilder.hasFlag(INCLUDE_LINE_ELEMENTS);
         PlotReportableEvents = configBuilder.hasFlag(PLOT_REPORTABLE);
         RestrictClusterByGene = configBuilder.hasFlag(RESTRICT_CLUSTERS_BY_GENE);
@@ -212,6 +215,7 @@ public class VisualiserConfig
 
         // options
         configBuilder.addFlag(RESTRICT_CLUSTERS_BY_GENE, "Only plot clusters with breakends in configured 'gene' list");
+        configBuilder.addFlag(INCLUDE_FRAGILE_SITES, "Include fragile sites in chromosome plots");
         configBuilder.addFlag(INCLUDE_LINE_ELEMENTS, "Include line elements in chromosome plots");
         configBuilder.addFlag(PLOT_REPORTABLE, "Plot all clusters with a fusion, disruption, AMP or DEL");
 
