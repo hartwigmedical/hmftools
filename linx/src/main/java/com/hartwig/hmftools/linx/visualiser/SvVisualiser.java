@@ -300,17 +300,23 @@ public class SvVisualiser implements AutoCloseable
         List<CobaltRatio> cobaltRatios = Lists.newArrayList();
         for(GenomeRegion region : regionsToCover)
         {
-            List<AmberBAF> amberBAFsInRegion = mSampleData.AmberBAFs.stream()
-                    .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
-                    .toList();
+            if(mConfig.AmberDir != null)
+            {
+                List<AmberBAF> amberBAFsInRegion = mSampleData.AmberBAFs.stream()
+                        .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
+                        .toList();
 
-            amberBAFs.addAll(amberBAFsInRegion);
+                amberBAFs.addAll(amberBAFsInRegion);
+            }
 
-            List<CobaltRatio> cobaltRatiosInRegion = mSampleData.CobaltRatios.stream()
-                    .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
-                    .toList();
+            if(mConfig.CobaltDir != null)
+            {
+                List<CobaltRatio> cobaltRatiosInRegion = mSampleData.CobaltRatios.stream()
+                        .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
+                        .toList();
 
-            cobaltRatios.addAll(cobaltRatiosInRegion);
+                cobaltRatios.addAll(cobaltRatiosInRegion);
+            }
         }
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
