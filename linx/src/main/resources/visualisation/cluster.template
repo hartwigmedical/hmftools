@@ -296,7 +296,7 @@ chromosomes_display_default = yes
     <plot>
         type             = connector
         file             = SUBSTITUTE_SAMPLE.connector.circos
-        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
+        r0	             = SUBSTITUTE_INNERMOST_RADIUSr
         connector_dims   = 0.0,0.3,0.4,0.3,0
         thickness        = 4
         color            = red
@@ -439,7 +439,7 @@ chromosomes_display_default = yes
 <links>
     <link>
         file          = SUBSTITUTE_SAMPLE.link.circos
-        radius        = SUBSTITUTE_MAP_INNER_RADIUSr
+        radius        = SUBSTITUTE_INNERMOST_RADIUSr
         color         = red
         thickness     = 2
 

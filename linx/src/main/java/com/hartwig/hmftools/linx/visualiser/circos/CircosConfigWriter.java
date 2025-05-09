@@ -160,9 +160,6 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_MAP_GAIN_MAX", String.valueOf(mapMaxTracks))
                         .replaceAll("SUBSTITUTE_MAP_GAIN_SPACING", String.valueOf(1d / mapMaxTracks))
 
-                        .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(cobaltInnerRadius))
-                        .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(cobaltOuterRadius))
-
                         .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(copyNumberInnerRadius))
                         .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(copyNumberOuterRadius))
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
@@ -170,8 +167,13 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", labelPosition + "r")
 
+                        .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(cobaltInnerRadius))
+                        .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(cobaltOuterRadius))
+
                         .replaceAll("SUBSTITUTE_AMBER_INNER_RADIUS", String.valueOf(amberInnerRadius))
                         .replaceAll("SUBSTITUTE_AMBER_OUTER_RADIUS", String.valueOf(amberOuterRadius))
+
+                        .replaceAll("SUBSTITUTE_INNERMOST_RADIUS", String.valueOf(amberInnerRadius))
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.MaxTracks))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.MaxTracks))
