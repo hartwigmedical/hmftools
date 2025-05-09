@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -128,6 +129,30 @@ class ScalePosition
                     .build();
 
             results.add(newCobaltRatio);
+        }
+
+        return results;
+    }
+
+    public List<AmberBAF> interpolateAmberBAFs(final List<AmberBAF> amberBAFs)
+    {
+        List<AmberBAF> results = Lists.newArrayList();
+
+        for(AmberBAF amberBAF : amberBAFs)
+        {
+            ScaleContig positionMap = mContigMap.get(amberBAF.Chromosome);
+            int newPosition = positionMap.interpolate(amberBAF.Position);
+
+            AmberBAF newAmberBAF = new AmberBAF(
+                    amberBAF.Chromosome,
+                    newPosition,
+                    amberBAF.TumorBAF,
+                    amberBAF.TumorDepth,
+                    amberBAF.NormalBAF,
+                    amberBAF.NormalDepth
+            );
+
+            results.add(newAmberBAF);
         }
 
         return results;
