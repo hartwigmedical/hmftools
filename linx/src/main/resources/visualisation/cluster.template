@@ -387,8 +387,6 @@ chromosomes_display_default = yes
         glyph            = circle
         glyph_size       = 10
         color            = cobalt
-        stroke_color     = dred
-        stroke_thickness = 0
         min              = 0
         max              = 2
 
@@ -403,6 +401,34 @@ chromosomes_display_default = yes
         <backgrounds>
             <background>
                 color = vlblue_a5
+            </background>
+        </backgrounds>
+
+    </plot>
+
+    # Amber BAFs
+    <plot>
+        type             = scatter
+        file             = SUBSTITUTE_SAMPLE.amber.circos
+        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
+        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
+        glyph            = circle
+        glyph_size       = 10
+        color            = amber
+        min              = 0
+        max              = 1
+
+        <axes>
+            <axis>
+                color     = lorange
+                thickness = 1
+                spacing   = 0.5r
+            </axis>
+        </axes>
+
+        <backgrounds>
+            <background>
+                color = vlorange_a5
             </background>
         </backgrounds>
 
@@ -439,6 +465,8 @@ chromosomes_display_default = yes
     copy_gain_vl = 244,249,239
 
     cobalt = 0,71,171
+    amber = 255,126,0
+
 
     chr1 = 128,125,186
     chr2 = 145,142,179

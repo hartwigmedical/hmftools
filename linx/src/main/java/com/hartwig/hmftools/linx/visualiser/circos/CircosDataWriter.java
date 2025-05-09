@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -151,6 +152,9 @@ public class CircosDataWriter
 
         String chromosomeBandPath = filePrefix + ".chromosome.circos";
         Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.UnadjustedCopyNumbers));
+
+        String amberBAFsPath = filePrefix + ".amber.circos";
+        Files.write(new File(amberBAFsPath).toPath(), createAmberBAFs(data.AmberBAFs));
 
         String cobaltRatiosPath = filePrefix + ".cobalt.circos";
         Files.write(new File(cobaltRatiosPath).toPath(), createCobaltRatios(data.CobaltRatios));
@@ -297,6 +301,24 @@ public class CircosDataWriter
                     .toString();
 
             result.add(cobaltRatioString);
+        }
+
+        return result;
+    }
+
+    private List<String> createAmberBAFs(List<AmberBAF> amberBAFs)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(AmberBAF amberBAF : amberBAFs)
+        {
+            String amberBAFString =  new StringJoiner(DELIMITER).add(circosContig(amberBAF.Chromosome))
+                    .add(String.valueOf(amberBAF.Position))
+                    .add(String.valueOf(amberBAF.Position))
+                    .add(String.valueOf(amberBAF.TumorBAF))
+                    .toString();
+
+            result.add(amberBAFString);
         }
 
         return result;
