@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -295,10 +296,17 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(copyNumbers));
 
         List<GenomeRegion> regionsToCover = Span.spanPositions(positionsToCover);
+        List<AmberBAF> amberBAFs = Lists.newArrayList();
         List<CobaltRatio> cobaltRatios = Lists.newArrayList();
         for(GenomeRegion region : regionsToCover)
         {
-            List<CobaltRatio> cobaltRatiosInRegion = mSampleData.CobaltRatioData.stream()
+            List<AmberBAF> amberBAFsInRegion = mSampleData.AmberBAFs.stream()
+                    .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
+                    .toList();
+
+            amberBAFs.addAll(amberBAFsInRegion);
+
+            List<CobaltRatio> cobaltRatiosInRegion = mSampleData.CobaltRatios.stream()
                     .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
                     .toList();
 

@@ -39,6 +39,7 @@ public class VisualiserConfig
     public final String Sample;
     public final String SampleDataDir;
 
+    public final String AmberDir;
     public final String CobaltDir;
 
     public final boolean UseCohortFiles;
@@ -67,6 +68,7 @@ public class VisualiserConfig
     public final boolean RestrictClusterByGene;
 
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
+    private static final String AMBER_DIRECTORY = "amber_dir";
     private static final String COBALT_DIRECTORY = "cobalt_dir";
     private static final String LOAD_COHORT_FILES = "load_cohort_files";
     private static final String CLUSTER_IDS = "clusterId";
@@ -90,6 +92,7 @@ public class VisualiserConfig
         Sample = configBuilder.getValue(SAMPLE);
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(VIS_FILE_DIRECTORY));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIRECTORY));
+        AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIRECTORY));
 
         OutputPlotPath = checkAddDirSeparator(configBuilder.getValue(PLOT_OUT, SampleDataDir + "plot/"));
         OutputConfPath = checkAddDirSeparator(configBuilder.getValue(DATA_OUT, SampleDataDir + "data/"));
@@ -187,6 +190,7 @@ public class VisualiserConfig
         configBuilder.addPath(
                 VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
 
+        configBuilder.addPath(AMBER_DIRECTORY, false, "Path to directory containing AMBER output");
         configBuilder.addPath(COBALT_DIRECTORY, false, "Path to directory containing COBALT output");
 
         configBuilder.addFlag(LOAD_COHORT_FILES, "Load Linx cohort rather than per-sample vis files");

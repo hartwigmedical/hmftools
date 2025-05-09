@@ -20,7 +20,10 @@ import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -50,7 +53,8 @@ public class SampleData
     public final List<VisFusion> Fusions;
     public final List<VisGeneExon> Exons;
 
-    public List<CobaltRatio> CobaltRatioData;
+    public List<AmberBAF> AmberBAFs;
+    public List<CobaltRatio> CobaltRatios;
 
     private final VisualiserConfig mConfig;
 
@@ -89,11 +93,18 @@ public class SampleData
 
         boolean svDataFiltered = false;
 
+        if(mConfig.AmberDir != null)
+        {
+            final String amberBafFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.AmberDir, mConfig.Sample);
+            Multimap<Chromosome,AmberBAF> amberBafData = AmberBAFFile.read(amberBafFile, true);
+            AmberBAFs = Lists.newArrayList(amberBafData.values());
+        }
+
         if(mConfig.CobaltDir != null)
         {
             final String cobaltRatioFile = CobaltRatioFile.generateFilename(mConfig.CobaltDir, mConfig.Sample);
-            ListMultimap<Chromosome, CobaltRatio> cobaltRatioDataUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
-            CobaltRatioData = cobaltRatioDataUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).collect(toList());
+            ListMultimap<Chromosome, CobaltRatio> cobaltRatiosUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
+            CobaltRatios = cobaltRatiosUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).collect(toList());
         }
 
         if(!mConfig.SpecificRegions.isEmpty())
