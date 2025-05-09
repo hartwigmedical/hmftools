@@ -435,10 +435,10 @@ public class JunctionAssemblyTest
         assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
         assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
 
-        AssemblyDeduper.dedupJunctionAssemblies(assemblies);
-
-        assertEquals(2, assemblies.size());
-        assertEquals(3, assemblies.get(0).mergedAssemblyCount());
+        assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly2));
+        assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly3));
+        assertFalse(SequenceCompare.matchedAssemblySequences(assembly1, assembly4));
+        assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly5));
     }
 
     @Test
