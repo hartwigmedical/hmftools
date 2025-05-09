@@ -14,7 +14,6 @@ import java.util.function.Function;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 
 import org.apache.logging.log4j.core.util.IOUtils;
-import org.jetbrains.annotations.NotNull;
 
 public class CircosConfigWriter
 {
@@ -65,17 +64,21 @@ public class CircosConfigWriter
 
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
-        int numberOfGaps = displayGenes ? 5 : 3;
-        if(!data.AmberBAFs.isEmpty()) numberOfGaps += 1;
+        int numberOfGaps = 3;
+        if(displayGenes)                 numberOfGaps += 2;
+        if(!data.AmberBAFs.isEmpty())    numberOfGaps += 1;
         if(!data.CobaltRatios.isEmpty()) numberOfGaps += 1;
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.InnerRadius;
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
-        int cnaGainTrackSize = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
-        int mapGainTrackSize = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
-        int amberTrackSize = !data.AmberBAFs.isEmpty() ? 2 : 0;
-        int cobaltTrackSize = !data.CobaltRatios.isEmpty() ? 2 : 0;
-        double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTrackSize + mapGainTrackSize + amberTrackSize + cobaltTrackSize);
+        int cnaGainRelativeSize = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
+        int cnaLossRelativeSize = 2; // Diploid genome can only lose maximally 2 copies
+        int mapGainRelativeSize = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
+        int mapLossRelativeSize = 1; // Diploid genome can only lose maximally 1 minor allele
+        int amberRelativeSize = !data.AmberBAFs.isEmpty() ? 2 : 0;
+        int cobaltRelativeSize = !data.CobaltRatios.isEmpty() ? 2 : 0;
+        int purpleRelativeSize = cnaGainRelativeSize + cnaLossRelativeSize + mapGainRelativeSize + mapLossRelativeSize + amberRelativeSize + cobaltRelativeSize;
+        double purpleTrackSize = purpleSpaceAvailable / purpleRelativeSize;
 
         if(displayGenes)
         {
@@ -91,25 +94,26 @@ public class CircosConfigWriter
         }
 
         // Radius positions for each track are calculated starting from the outermost track
-        double exonDistance = exonOuterRadius - exonInnerRadius;
-        geneOuterRadius = exonOuterRadius - 9d / 20d * exonDistance;
-        geneInnerRadius = exonInnerRadius + 9d / 20d * exonDistance;
+        double exonTrackSize = exonOuterRadius - exonInnerRadius;
+        double geneTrackSizeTrim = 9d / 20d * exonTrackSize;
+        geneOuterRadius = exonOuterRadius - geneTrackSizeTrim;
+        geneInnerRadius = exonInnerRadius + geneTrackSizeTrim;
 
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 
         copyNumberOuterRadius = segmentInnerRadius - gapSize;
-        copyNumberMiddleRadius = copyNumberOuterRadius - cnaGainTrackSize * purpleTrackSize;
-        copyNumberInnerRadius = copyNumberMiddleRadius - 2 * purpleTrackSize;
+        copyNumberMiddleRadius = copyNumberOuterRadius - cnaGainRelativeSize * purpleTrackSize;
+        copyNumberInnerRadius = copyNumberMiddleRadius - cnaLossRelativeSize * purpleTrackSize;
 
         mapOuterRadius = copyNumberInnerRadius - gapSize;
-        mapMiddleRadius = mapOuterRadius - mapGainTrackSize * purpleTrackSize;
-        mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
+        mapMiddleRadius = mapOuterRadius - mapGainRelativeSize * purpleTrackSize;
+        mapInnerRadius = mapMiddleRadius - mapLossRelativeSize * purpleTrackSize;
 
         cobaltOuterRadius = mapInnerRadius - gapSize;
-        cobaltInnerRadius = cobaltOuterRadius - cobaltTrackSize * purpleTrackSize;
+        cobaltInnerRadius = cobaltOuterRadius - cobaltRelativeSize * purpleTrackSize;
 
         amberOuterRadius = cobaltInnerRadius - gapSize;
-        amberInnerRadius = amberOuterRadius - amberTrackSize * purpleTrackSize;
+        amberInnerRadius = amberOuterRadius - amberRelativeSize * purpleTrackSize;
 
         labelPosition = copyNumberMiddleRadius + purpleTrackSize*0.05; // Add slight offset so that the label isn't flush with the axis
     }
