@@ -217,7 +217,7 @@ chromosomes_display_default = yes
 
 
 	# -----------------------------------------------------------
-	# Minor Allele Gain (Green)
+	# Minor Allele Gain (Blue)
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.map.circos
@@ -386,9 +386,25 @@ chromosomes_display_default = yes
         r1               = SUBSTITUTE_COBALT_OUTER_RADIUSr
         glyph            = circle
         glyph_size       = 10
-        color            = black
+        color            = cobalt
         stroke_color     = dred
         stroke_thickness = 0
+        min              = 0
+        max              = 2
+
+        <axes>
+            <axis>
+                color     = lblue
+                thickness = 1
+                spacing   = 0.5r
+            </axis>
+        </axes>
+
+        <backgrounds>
+            <background>
+                color = vlblue_a5
+            </background>
+        </backgrounds>
 
     </plot>
 
@@ -421,6 +437,8 @@ chromosomes_display_default = yes
     copy_gain = 166,209,122
     copy_gain_l = 205,229,181
     copy_gain_vl = 244,249,239
+
+    cobalt = 0,71,171
 
     chr1 = 128,125,186
     chr2 = 145,142,179
