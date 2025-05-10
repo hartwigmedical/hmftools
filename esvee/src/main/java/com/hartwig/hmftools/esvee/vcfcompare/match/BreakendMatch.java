@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.vcfcompare.match;
 
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
 
 import org.jetbrains.annotations.Nullable;
 

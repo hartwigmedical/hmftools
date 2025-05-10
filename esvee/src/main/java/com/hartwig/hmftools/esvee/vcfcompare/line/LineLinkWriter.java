@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.vcfcompare.line;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
@@ -12,11 +11,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
 import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatch;
 import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LineLinkWriter

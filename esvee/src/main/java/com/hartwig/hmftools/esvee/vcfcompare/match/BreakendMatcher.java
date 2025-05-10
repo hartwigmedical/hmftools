@@ -9,7 +9,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
 
 public class BreakendMatcher
 {

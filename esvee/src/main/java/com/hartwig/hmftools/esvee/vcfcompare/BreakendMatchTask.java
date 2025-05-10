@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.vcfcompare.common.SvVcfFile;
-import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
 import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatchWriter;
 import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
 

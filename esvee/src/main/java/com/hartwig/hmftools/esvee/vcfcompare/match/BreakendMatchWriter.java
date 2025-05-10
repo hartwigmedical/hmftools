@@ -9,10 +9,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
-import static com.hartwig.hmftools.esvee.common.FileCommon.FILE_NAME_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -24,8 +21,8 @@ import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
-import com.hartwig.hmftools.esvee.vcfcompare.common.VcfType;
+import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.VcfType;
 
 public class BreakendMatchWriter
 {
