@@ -114,7 +114,7 @@ public class PrepConfig
     private static final String WRITE_TYPES = "write_types";
 
     public static final String READ_LENGTH = "read_length";
-    private static final String PARTITION_SIZE = "partition_size";
+    public static final String PARTITION_SIZE = "partition_size";
 
     private static final String TRACK_REMOTES = "track_remotes";
     private static final String NO_CACHE_BAM = "no_cache_bam";
