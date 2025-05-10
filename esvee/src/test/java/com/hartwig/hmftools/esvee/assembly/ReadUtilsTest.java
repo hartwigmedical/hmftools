@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -117,6 +118,7 @@ public class ReadUtilsTest
         // a read with a low count of SNVs
         readBases = REF_BASES_200.substring(20, 30) + "GGGGG";
         read = createRead(readId, 20, readBases, "15M");
+        read.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         assertTrue(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
 
         Junction negJunction = new Junction(CHR_1, 30, REVERSE);
@@ -143,6 +145,7 @@ public class ReadUtilsTest
         // a read with a low count of SNVs
         readBases = "GGGG" + REF_BASES_200.substring(30, 50);
         read = createRead(readId, 26, readBases, "34M");
+        read.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         assertTrue(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
 
         readBases = REF_BASES_200.substring(27, 51);

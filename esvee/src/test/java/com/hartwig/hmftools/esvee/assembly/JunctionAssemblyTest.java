@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -105,6 +106,7 @@ public class JunctionAssemblyTest
         MockRefGenome refGenome = new MockRefGenome();
         refGenome.RefGenomeMap.put(CHR_1, REF_BASES_200);
 
+        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         assertTrue(readSoftClipsAndCrossesJunction(read4, junction, refGenome));
 
         // similar but matches the ref

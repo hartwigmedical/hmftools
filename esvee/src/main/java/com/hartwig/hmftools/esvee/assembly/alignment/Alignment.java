@@ -7,9 +7,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasDominantIndelReadAssembly;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.isWeakIndelBasedUnlinkedAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
 import java.util.ArrayList;
@@ -61,11 +59,8 @@ public class Alignment
             return true;
         }
 
-        if(!assembly.junction().indelBased() && (assembly.outcome() == UNSET || assembly.outcome() == NO_LINK))
-        {
-            if(hasDominantIndelReadAssembly(assembly))
-                return true;
-        }
+        if(isWeakIndelBasedUnlinkedAssembly(assembly))
+            return true;
 
         return false;
     }

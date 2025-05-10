@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.read;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
@@ -183,6 +184,12 @@ public final class ReadUtils
 
     public static boolean readMismatchesPastJunction(final Read read, final Junction junction, final RefGenomeInterface refGenome)
     {
+        // must have min mismatches to even be tested
+        Object numOfEvents = read.bamRecord().getAttribute(NUM_MUTATONS_ATTRIBUTE);
+
+        if(numOfEvents == null || (int)numOfEvents < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            return false;
+
         int posStart, posEnd;
 
         if(junction.isForward())

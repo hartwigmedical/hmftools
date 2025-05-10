@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.I;
@@ -214,8 +217,18 @@ public final class IndelBuilder
         return "";
     }
 
-    public static boolean hasDominantIndelReadAssembly(final JunctionAssembly assembly)
+    public static boolean isWeakIndelBasedUnlinkedAssembly(final JunctionAssembly assembly)
     {
+        if(assembly.junction().indelBased()) // only applicable to soft-clipped assemblies
+            return false;
+
+        if(assembly.outcome() != UNSET && assembly.outcome() != NO_LINK)
+            return false;
+
+        if(assembly.extensionLength() >= ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH)
+            return false;
+
+        // classify as weak if has mostly indel reads
         int indelReads = 0;
         int totalJuncReads = 0;
 
