@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.utils;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
@@ -9,6 +8,10 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -33,17 +36,15 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.prep.BlacklistLocations;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 
-public class BlacklistExplorer
+public class BlacklistVcfMatcher
 {
     private final List<String> mSampleIds;
     private final String mVcfFilename;
@@ -57,7 +58,7 @@ public class BlacklistExplorer
     private static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_FILE = "output_file";
 
-    public BlacklistExplorer(final ConfigBuilder configBuilder)
+    public BlacklistVcfMatcher(final ConfigBuilder configBuilder)
     {
         mSampleIds = loadSampleIdsFile(configBuilder);
         mVcfFilename = configBuilder.getValue(VCF_FILE);
@@ -104,15 +105,13 @@ public class BlacklistExplorer
 
         closeBufferedWriter(mWriter);
 
-        SV_LOGGER.info("blacklist SV search complete");
+        SV_LOGGER.info("Blacklist SV search complete");
     }
 
     private synchronized void writeVariant(final String sampleId, final VariantContext variantContext, final BaseRegion blacklistRegion)
     {
         try
         {
-            mWriter.write(format("%s,%s,%s,%d", sampleId, variantContext.getID(), variantContext.getContig(), variantContext.getStart()));
-
             String filtersStr = "";
 
             if(!variantContext.getFilters().isEmpty())
@@ -133,10 +132,20 @@ public class BlacklistExplorer
 
             int tumorFrags = getGenotypeAttributeAsInt(tumor, TOTAL_FRAGS, 0);
 
-            mWriter.write(format(",%.1f,%d,%d,%s",
-                    variantContext.getPhredScaledQual(), tumorFrags, refDepth, filtersStr));
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(sampleId);
+            sj.add(variantContext.getID());
+            sj.add(variantContext.getContig());
+            sj.add(String.valueOf(variantContext.getStart()));
 
-            mWriter.write(format(",%d,%d", blacklistRegion.start(), blacklistRegion.end()));
+            sj.add(String.format("%.0f", variantContext.getPhredScaledQual()));
+            sj.add(String.valueOf(tumorFrags));
+            sj.add(String.valueOf(refDepth));
+            sj.add(filtersStr);
+            sj.add(String.valueOf(blacklistRegion.start()));
+            sj.add(String.valueOf(blacklistRegion.end()));
+
+            mWriter.write(sj.toString());
             mWriter.newLine();
         }
         catch(IOException e)
@@ -153,8 +162,12 @@ public class BlacklistExplorer
 
             BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
-            writer.write("SampleId,VcfId,Chromosome,Position");
-            writer.write(",Qual,TumorFrags,RefDepth,Filters,RegionStart,RegionEnd");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_SAMPLE_ID).add("VcfId");
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION);
+            sj.add("Qual").add("TumorFrags").add("RefDepth").add("Filters").add("RegionStart").add("RegionEnd");
+
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -177,7 +190,10 @@ public class BlacklistExplorer
             mSampleIds = Lists.newArrayList();
         }
 
-        public List<String> sampleIds() { return mSampleIds; }
+        public List<String> sampleIds()
+        {
+            return mSampleIds;
+        }
 
         @Override
         public Long call()
@@ -200,7 +216,7 @@ public class BlacklistExplorer
 
             SV_LOGGER.debug("{}: complete", mTaskId);
 
-            return (long)0;
+            return (long) 0;
         }
 
         private void processSample(final String sampleId)
@@ -213,35 +229,27 @@ public class BlacklistExplorer
                 return;
             }
 
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                    vcfFilename, new VCFCodec(), false);
+            VcfFileReader vcfFileReader = new VcfFileReader(vcfFilename);
 
-            try
+            int processed = 0;
+            for(VariantContext variantContext : vcfFileReader.iterator())
             {
-                int processed = 0;
-                for(VariantContext variantContext : reader.iterator())
+                String chromosome = variantContext.getContig();
+                int position = variantContext.getStart();
+
+                BaseRegion blacklistRegion = mBlacklistLocations.findBlacklistLocation(chromosome, position);
+
+                if(blacklistRegion != null)
                 {
-                    String chromosome = variantContext.getContig();
-                    int position = variantContext.getStart();
-
-                    BaseRegion blacklistRegion = mBlacklistLocations.findBlacklistLocation(chromosome, position);
-
-                    if(blacklistRegion != null)
-                    {
-                        writeVariant(sampleId, variantContext, blacklistRegion);
-                    }
-
-                    ++processed;
-
-                    if((processed % 100000) == 0)
-                    {
-                        SV_LOGGER.debug("sample({}) processed {} variants", sampleId, processed);
-                    }
+                    writeVariant(sampleId, variantContext, blacklistRegion);
                 }
-            }
-            catch(IOException e)
-            {
-                SV_LOGGER.error("error reading vcf({}): {}", mVcfFilename, e.toString());
+
+                ++processed;
+
+                if((processed % 100000) == 0)
+                {
+                    SV_LOGGER.debug("sample({}) processed {} variants", sampleId, processed);
+                }
             }
         }
     }
@@ -261,7 +269,7 @@ public class BlacklistExplorer
 
         configBuilder.checkAndParseCommandLine(args);
 
-        BlacklistExplorer blacklistExplorer = new BlacklistExplorer(configBuilder);
-        blacklistExplorer.run();
+        BlacklistVcfMatcher blacklistVcfMatcher = new BlacklistVcfMatcher(configBuilder);
+        blacklistVcfMatcher.run();
     }
 }
