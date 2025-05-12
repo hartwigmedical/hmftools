@@ -139,7 +139,7 @@ public class CircosDataWriter
         Files.write(new File(cnaPath).toPath(), createCNA(alterations));
 
         String mapPath = filePrefix + ".map.circos";
-        Files.write(new File(mapPath).toPath(), createMinorAllelePloidy(alterations));
+        Files.write(new File(mapPath).toPath(), createMinorAlleleCopyNumber(alterations));
 
         String fragile = filePrefix + ".fragile.circos";
         Files.write(new File(fragile).toPath(), highlights(fragileSites));
@@ -377,7 +377,7 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createMinorAllelePloidy(final List<VisCopyNumber> alterations)
+    private List<String> createMinorAlleleCopyNumber(final List<VisCopyNumber> alterations)
     {
         List<String> result = Lists.newArrayList();
         for(VisCopyNumber alteration : alterations)

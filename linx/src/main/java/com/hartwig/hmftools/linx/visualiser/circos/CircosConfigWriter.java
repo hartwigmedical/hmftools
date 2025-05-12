@@ -40,9 +40,9 @@ public class CircosConfigWriter
     private final double copyNumberMiddleRadius;
     private final double copyNumberInnerRadius;
 
-    private final double mapOuterRadius;
-    private final double mapMiddleRadius;
-    private final double mapInnerRadius;
+    private final double minorAlleleCopyNumberOuterRadius;
+    private final double minorAlleleCopyNumberMiddleRadius;
+    private final double minorAlleleCopyNumberInnerRadius;
 
     private final double innermostRadius;
 
@@ -75,7 +75,7 @@ public class CircosConfigWriter
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
         int cnaGainRelativeSize = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
         int cnaLossRelativeSize = 2; // Diploid genome can only lose maximally 2 copies
-        int mapGainRelativeSize = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAllelePloidy - 1)));
+        int mapGainRelativeSize = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAlleleCopyNumber - 1)));
         int mapLossRelativeSize = 1; // Diploid genome can only lose maximally 1 minor allele
         int amberRelativeSize = !data.AmberBAFs.isEmpty() ? 2 : 0;
         int cobaltRelativeSize = !data.CobaltRatios.isEmpty() ? 2 : 0;
@@ -123,10 +123,10 @@ public class CircosConfigWriter
         copyNumberInnerRadius = copyNumberMiddleRadius - cnaLossRelativeSize * purpleTrackSize;
         currentTrackOuterRadius = copyNumberInnerRadius;
 
-        mapOuterRadius = currentTrackOuterRadius - gapSize;
-        mapMiddleRadius = mapOuterRadius - mapGainRelativeSize * purpleTrackSize;
-        mapInnerRadius = mapMiddleRadius - mapLossRelativeSize * purpleTrackSize;
-        currentTrackOuterRadius = mapInnerRadius;
+        minorAlleleCopyNumberOuterRadius = currentTrackOuterRadius - gapSize;
+        minorAlleleCopyNumberMiddleRadius = minorAlleleCopyNumberOuterRadius - mapGainRelativeSize * purpleTrackSize;
+        minorAlleleCopyNumberInnerRadius = minorAlleleCopyNumberMiddleRadius - mapLossRelativeSize * purpleTrackSize;
+        currentTrackOuterRadius = minorAlleleCopyNumberInnerRadius;
 
         innermostRadius = currentTrackOuterRadius;
 
@@ -156,7 +156,7 @@ public class CircosConfigWriter
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.MaxCopyNumber - 2)));
 
-        int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.MaxMinorAllelePloidy - 1)));
+        int minorAlleleCopyNumberMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.MaxMinorAlleleCopyNumber - 1)));
 
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
@@ -179,11 +179,11 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
 
-                        .replaceAll("SUBSTITUTE_MAP_INNER_RADIUS", String.valueOf(mapInnerRadius))
-                        .replaceAll("SUBSTITUTE_MAP_OUTER_RADIUS", String.valueOf(mapOuterRadius))
-                        .replaceAll("SUBSTITUTE_MAP_MIDDLE_RADIUS", String.valueOf(mapMiddleRadius))
-                        .replaceAll("SUBSTITUTE_MAP_GAIN_MAX", String.valueOf(mapMaxTracks))
-                        .replaceAll("SUBSTITUTE_MAP_GAIN_SPACING", String.valueOf(1d / mapMaxTracks))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_INNER_RADIUS", String.valueOf(minorAlleleCopyNumberInnerRadius))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_OUTER_RADIUS", String.valueOf(minorAlleleCopyNumberOuterRadius))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUS", String.valueOf(minorAlleleCopyNumberMiddleRadius))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_MAX", String.valueOf(minorAlleleCopyNumberMaxTracks))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_SPACING", String.valueOf(1d / minorAlleleCopyNumberMaxTracks))
 
                         .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(copyNumberInnerRadius))
                         .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(copyNumberOuterRadius))

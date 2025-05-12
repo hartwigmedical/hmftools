@@ -221,10 +221,10 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.map.circos
-		r0   = SUBSTITUTE_MAP_MIDDLE_RADIUSr
-		r1   = SUBSTITUTE_MAP_OUTER_RADIUSr
+		r0   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
+		r1   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_OUTER_RADIUSr
 		min  = 0
-		max  = SUBSTITUTE_MAP_GAIN_MAX
+		max  = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
 		color = blue
@@ -234,7 +234,7 @@ chromosomes_display_default = yes
 			<axis>
 				color     = lblue
 				thickness = 1
-				spacing   = SUBSTITUTE_MAP_GAIN_SPACINGr
+				spacing   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_SPACINGr
 			</axis>
 		</axes>
 
@@ -259,8 +259,8 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.map.circos
-		r0   = SUBSTITUTE_MAP_INNER_RADIUSr
-		r1   = SUBSTITUTE_MAP_MIDDLE_RADIUSr
+		r0   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_INNER_RADIUSr
+		r1   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
 		min  = -1
 		max  = 0
 		glyph = circle
@@ -340,8 +340,8 @@ chromosomes_display_default = yes
 	<plot>
 		type             = scatter
 		file             = SUBSTITUTE_SAMPLE.scatter.sgl.circos
-		r0               = SUBSTITUTE_MAP_INNER_RADIUSr
-		r1               = SUBSTITUTE_MAP_MIDDLE_RADIUSr
+		r0               = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_INNER_RADIUSr
+		r1               = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
         glyph            = circle
         glyph_size       = 20
         color            = red

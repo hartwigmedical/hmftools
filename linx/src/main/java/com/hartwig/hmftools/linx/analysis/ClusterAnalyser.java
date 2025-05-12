@@ -442,7 +442,7 @@ public class ClusterAnalyser {
 
         if(rangeData != null)
         {
-            cluster.getMetrics().ValidAlleleJcnSegmentPerc = mChainFinder.getValidAllelePloidySegmentPerc();
+            cluster.getMetrics().ValidAlleleJcnSegmentPerc = mChainFinder.getValidAlleleCopyNumberSegmentPerc();
             cluster.getMetrics().TraversedRange = rangeData[RANGE_TOTAL];
             cluster.getMetrics().TotalDeleted = rangeData[DELETED_TOTAL];
         }

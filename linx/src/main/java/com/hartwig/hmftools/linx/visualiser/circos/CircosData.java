@@ -54,7 +54,7 @@ public class CircosData
     public final int MaxTracks;
     public final double MaxPloidy;
     public final double MaxCopyNumber;
-    public final double MaxMinorAllelePloidy;
+    public final double MaxMinorAlleleCopyNumber;
     public final double LabelSize;
     public final double GeneLabelSize;
     public final int MaxFrame;
@@ -115,7 +115,7 @@ public class CircosData
 
         MaxTracks = Segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
         MaxCopyNumber = CopyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);
-        MaxMinorAllelePloidy = CopyNumbers.stream().mapToDouble(VisCopyNumber::minorAlleleCopyNumber).max().orElse(0);
+        MaxMinorAlleleCopyNumber = CopyNumbers.stream().mapToDouble(VisCopyNumber::minorAlleleCopyNumber).max().orElse(0);
 
         double maxLinkPloidy = SvData.stream().mapToDouble(x -> x.JCN).max().orElse(0);
         double maxSegmentsPloidy = Segments.stream().mapToDouble(x -> x.LinkPloidy).max().orElse(0);
