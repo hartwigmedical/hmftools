@@ -69,6 +69,8 @@ public class SvVisualiser implements AutoCloseable
     private final List<Callable<Object>> mCallableImages;
     private final List<Callable<Object>> mCallableConfigs;
 
+    private final boolean mPlottingSelectedLoci;
+
     private SvVisualiser(final ConfigBuilder configBuilder) throws Exception
     {
         VIS_LOGGER.info("loading visualiser data");
@@ -79,6 +81,8 @@ public class SvVisualiser implements AutoCloseable
 
         mCallableImages = Lists.newArrayList();
         mCallableConfigs = Lists.newArrayList();
+
+        mPlottingSelectedLoci = !mConfig.Chromosomes.isEmpty() || !mConfig.Genes.isEmpty();
 
         if(mConfig.Genes.isEmpty())
         {
@@ -186,7 +190,7 @@ public class SvVisualiser implements AutoCloseable
                 .collect(toSet());
 
         List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
-        if(mConfig.Chromosomes.isEmpty() && chromosomeLinks.isEmpty())
+        if(!mPlottingSelectedLoci && chromosomeLinks.isEmpty())
         {
             VIS_LOGGER.warn("chromosomes({}) not present in file", chromosomesStr);
             return;
@@ -400,7 +404,7 @@ public class SvVisualiser implements AutoCloseable
 
         List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
 
-        if(mConfig.Chromosomes.isEmpty() && (copyNumbers.isEmpty() || segments.isEmpty() || links.isEmpty()))
+        if(!mPlottingSelectedLoci && (copyNumbers.isEmpty() || segments.isEmpty() || links.isEmpty()))
         {
             List<String> missingDataTypes = Lists.newArrayList();
             if(copyNumbers.isEmpty()) missingDataTypes.add("copy numbers");
