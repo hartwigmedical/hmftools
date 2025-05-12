@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.pon_gen.PonConfig.GERMLINE_CLINVAR_MAX_REPEAT;
+import static com.hartwig.hmftools.pave.pon_gen.PonConfig.GERMLINE_CLINVAR_MIN_SAMPLES;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -106,11 +108,15 @@ public class PonWriter
             sj.add("SampleCount");
             sj.add("MaxSampleReadCount");
             sj.add("TotalReadCount");
-            sj.add("SomaticHotspot");
-            sj.add("GermlineHotspot");
-            sj.add("ClinvarPathogenic");
-            sj.add("InCodingRegion");
-            sj.add("RepeatCount");
+
+            if(!mConfig.WriteFinal)
+            {
+                sj.add("SomaticHotspot");
+                sj.add("GermlineHotspot");
+                sj.add("ClinvarPathogenic");
+                sj.add("InCodingRegion");
+                sj.add("RepeatCount");
+            }
 
             writer.write(sj.toString());
             writer.newLine();
@@ -140,11 +146,19 @@ public class PonWriter
                 sj.add(String.valueOf(variant.maxSampleReadCount()));
                 sj.add(String.valueOf(variant.totalReadCount()));
 
-                sj.add(String.valueOf(variant.isSomaticHotspot()));
-                sj.add(String.valueOf(variant.isGermlineHotspot()));
-                sj.add(String.valueOf(variant.isClinvarPathogenic()));
-                sj.add(String.valueOf(variant.inCodingRegion()));
-                sj.add(String.valueOf(variant.repeatCount()));
+                if(mConfig.WriteFinal)
+                {
+                    if(filterOutVariant(variant))
+                        continue;
+                }
+                else
+                {
+                    sj.add(String.valueOf(variant.isSomaticHotspot()));
+                    sj.add(String.valueOf(variant.isGermlineHotspot()));
+                    sj.add(String.valueOf(variant.isClinvarPathogenic()));
+                    sj.add(String.valueOf(variant.inCodingRegion()));
+                    sj.add(String.valueOf(variant.repeatCount()));
+                }
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();
@@ -155,5 +169,24 @@ public class PonWriter
             PV_LOGGER.error("failed to initialise output file: {}", e.toString());
             System.exit(1);
         }
+    }
+
+    private boolean filterOutVariant(final VariantPonData variant)
+    {
+        // exckude a variant from the PON if either of the following dot points are satisfied:
+        // - somatic hotspot
+        // - (germline hotspot OR clinvar pathogenic) AND has sampleCount < 10 AND (has repeatCount < 4 or is NOT an indel)
+        if(variant.isSomaticHotspot())
+            return true;
+
+        if(variant.sampleCount() < GERMLINE_CLINVAR_MIN_SAMPLES
+        && (variant.isGermlineHotspot() || variant.clinvarPathogenicity().isPathogenic())
+        && (!variant.isIndel() || variant.repeatCount() < GERMLINE_CLINVAR_MAX_REPEAT))
+        {
+            return true;
+        }
+
+        return false;
+
     }
 }

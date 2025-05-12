@@ -28,6 +28,7 @@ public class PonConfig
     public final int MqfCutoff;
     public final int MinSamples;
     public final boolean ApplyWgsFilters;
+    public final boolean WriteFinal;
 
     public final int RefSampleGenoptypeIndex;
     public final RefGenomeVersion RefGenVersion;
@@ -45,12 +46,15 @@ public class PonConfig
     private static final String REF_SAMPLE_GENOTYPE_INDEX = "ref_sample_index";
     private static final String PARTITION_SIZE = "partition_size";
 
+    public static final String WRITE_FINAL_PON = "write_final";
     public static final String MANUAL_ENTRIES = "manual_entries";
     public static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     public static final String GERMLINE_HOTSPOT = "germline_hotspots";
 
     // constants
     private static final int DEFAULT_MIN_SAMPLES = 3;
+    protected static final int GERMLINE_CLINVAR_MIN_SAMPLES = 10;
+    protected static final int GERMLINE_CLINVAR_MAX_REPEAT = 3;
     private static final int DEFAULT_MIN_MAP_QUAL = -10;
     private static final int DEFAULT_MIN_QUAL = 40;
     private static final int DEFAULT_PARTITION_SIZE = 10_000_000;
@@ -69,6 +73,7 @@ public class PonConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         ApplyWgsFilters = configBuilder.hasFlag(APPLY_WGS_FILTERS);
+        WriteFinal = configBuilder.hasFlag(WRITE_FINAL_PON);
 
         ExistingPonFilename = configBuilder.getValue(PON_FILE);
 
@@ -91,6 +96,7 @@ public class PonConfig
         configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
 
         configBuilder.addFlag(APPLY_WGS_FILTERS, "Apply WGS filters");
+        configBuilder.addFlag(WRITE_FINAL_PON, "Write final PON without annotations");
 
         configBuilder.addPath(PON_FILE, false, "PON entries");
         ClinvarAnnotation.addConfig(configBuilder);
