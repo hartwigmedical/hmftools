@@ -4,11 +4,18 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
@@ -36,12 +43,22 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -73,6 +90,9 @@ public class BlacklistRepeatAnalyser
     private final int mBaseWindowLength;
     private final double mMinDominantPercent;
 
+    private final boolean mRemoveGeneOverlaps;
+    private final Map<String,List<GeneInfo>> mChrGenicRegions;
+
     private final int mPartitionSize;
     private final int mThreads;
     private final SpecificRegions mSpecificChrRegions;
@@ -80,6 +100,7 @@ public class BlacklistRepeatAnalyser
     private static final String OUTPUT_FILE = "output_file";
     private static final String MIN_DOMINANT_PERC = "min_dominant_perc";
     private static final String BASE_WINDOW_LENGTH = "base_window_length";
+    private static final String REMOVE_GENE_OVERLAPS = "remove_gene_overlaps";
 
     private static final int DEFAULT_BASE_WINDOW_LENGTH = 100;
     private static final double DEFAULT_MIN_DOMINANT_PERC = 0.95;
@@ -109,9 +130,13 @@ public class BlacklistRepeatAnalyser
             mUnmapRegionsMap = Collections.emptyMap();
         }
 
+        mChrGenicRegions = Maps.newHashMap();
+        loadGenicInfo(configBuilder);
+
         mPartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         mBaseWindowLength = configBuilder.getInteger(BASE_WINDOW_LENGTH);
         mMinDominantPercent = configBuilder.getDecimal(MIN_DOMINANT_PERC);
+        mRemoveGeneOverlaps = configBuilder.hasFlag(REMOVE_GENE_OVERLAPS);
 
         mThreads = parseThreads(configBuilder);
         mSpecificChrRegions = SpecificRegions.from(configBuilder);
@@ -163,6 +188,7 @@ public class BlacklistRepeatAnalyser
         private final List<RepeatMaskData> mRepeatMaskRegions;
         private final List<BaseRegion> mBlackListRegions;
         private final List<UnmappingRegion> mUnmapRegions;
+        private final List<GeneInfo> mGeneRegions;
 
         public RegionTask(final ChrBaseRegion region)
         {
@@ -170,7 +196,6 @@ public class BlacklistRepeatAnalyser
             mRepeatMaskRegions = mRepeatMaskAnnotations.findMatches(region);
 
             mBlackListRegions = Lists.newArrayList();
-
             List<BaseRegion> chrBlacklistRegions = mBlacklistLocations.getRegions(region.Chromosome);
 
             if(chrBlacklistRegions != null)
@@ -181,7 +206,6 @@ public class BlacklistRepeatAnalyser
             }
 
             mUnmapRegions = Lists.newArrayList();
-
             List<UnmappingRegion> chrUnmapRegions = mUnmapRegionsMap.get(region.Chromosome);
 
             if(chrUnmapRegions != null)
@@ -189,6 +213,16 @@ public class BlacklistRepeatAnalyser
                 chrUnmapRegions.stream()
                         .filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
                         .forEach(x -> mUnmapRegions.add(x));
+            }
+
+            mGeneRegions = Lists.newArrayList();
+            List<GeneInfo> chrGeneRegions = mChrGenicRegions.get(region.Chromosome);
+
+            if(chrGeneRegions != null)
+            {
+                chrGeneRegions.stream()
+                        .filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
+                        .forEach(x -> mGeneRegions.add(x));
             }
         }
 
@@ -217,7 +251,7 @@ public class BlacklistRepeatAnalyser
             for(UnmappingRegion unmapRegion : mUnmapRegions)
             {
                 // check for same required overlap as used in Redux to skip a read
-                if(!hasSufficientOverlap(region, unmapRegion, 0.9))
+                if(hasSufficientOverlap(region, unmapRegion, 0.9))
                     continue;
             }
 
@@ -242,6 +276,12 @@ public class BlacklistRepeatAnalyser
             {
                 if(baseCounts[i] > topBaseCount)
                 {
+                    if(topBaseCount > secondBaseCount)
+                    {
+                        secondBaseCount = topBaseCount;
+                        secondBase = topBase;
+                    }
+
                     topBaseCount = baseCounts[i];
                     topBase = Nucleotides.DNA_BASES[i];
                 }
@@ -279,7 +319,10 @@ public class BlacklistRepeatAnalyser
             List<BaseRegion> blacklistRegions = mBlackListRegions.stream()
                     .filter(x -> hasSufficientOverlap(region, x, 0.5)).collect(Collectors.toList());
 
-            writeRegionData(mRegion.Chromosome, region, dominantBases, dominantBasePercent, repeatMasks, blacklistRegions);
+            List<GeneInfo> genicOverlaps = mGeneRegions.stream()
+                    .filter(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end())).collect(Collectors.toList());
+
+            writeRegionData(mRegion.Chromosome, region, dominantBases, dominantBasePercent, repeatMasks, blacklistRegions, genicOverlaps);
         }
     }
 
@@ -292,6 +335,108 @@ public class BlacklistRepeatAnalyser
         return overlap >= requiredPerc * mBaseWindowLength;
     }
 
+    private void loadGenicInfo(final ConfigBuilder configBuilder)
+    {
+        if(!configBuilder.hasValue(ENSEMBL_DATA_DIR))
+            return;
+
+        List<DriverGene> driverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
+        KnownFusionCache knownFusionCache = new KnownFusionCache();
+        knownFusionCache.loadFile(configBuilder.getValue(KNOWN_FUSIONS_FILE));
+
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(configBuilder.getValue(ENSEMBL_DATA_DIR), mRefGenVersion);
+        ensemblDataCache.setRequiredData(true, false, false, true);
+        ensemblDataCache.load(false);
+
+        Set<String> addedGenes = driverGenes.stream().map(x -> x.gene()).collect(Collectors.toSet());
+
+        List<KnownFusionData> knownFusionData = knownFusionCache.getDataByType(KNOWN_PAIR);
+
+        if(knownFusionData != null)
+        {
+            knownFusionData.forEach(x -> addedGenes.add(x.FiveGene));
+            knownFusionData.forEach(x -> addedGenes.add(x.ThreeGene));
+        }
+
+        for(String geneName : addedGenes)
+        {
+            GeneData geneData = ensemblDataCache.getGeneDataByName(geneName);
+
+            if(geneData == null)
+                continue;
+
+            TranscriptData transcriptData = ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId);
+
+            if(transcriptData == null)
+                continue;
+
+            List<GeneInfo> geneRegions = mChrGenicRegions.get(geneData.Chromosome);
+
+            if(geneRegions == null)
+            {
+                geneRegions = Lists.newArrayList();
+                mChrGenicRegions.put(geneData.Chromosome, geneRegions);
+            }
+
+            if(transcriptData.posStrand())
+            {
+                geneRegions.add(new GeneInfo(transcriptData.
+                        TransStart - 10000, transcriptData.TransStart - 1, format("%s_UPSTREAM", geneName)));
+            }
+            else
+            {
+                geneRegions.add(new GeneInfo(transcriptData.
+                        TransEnd + 1, transcriptData.TransEnd + 10000, format("%s_UPSTREAM", geneName)));
+            }
+
+            for(int i = 0; i < transcriptData.exons().size(); ++i)
+            {
+                ExonData exonData = transcriptData.exons().get(i);
+
+                geneRegions.add(new GeneInfo(exonData.Start, exonData.End, format("%s_EXON_%d", geneName, exonData.Rank)));
+
+                if(i < transcriptData.exons().size() - 1)
+                {
+                    ExonData nextExon = transcriptData.exons().get(i + 1);
+
+                    geneRegions.add(new GeneInfo(
+                            exonData.End + 1, nextExon.Start - 1, format("%s_INTRON_%d", geneName, exonData.Rank)));
+                }
+            }
+        }
+
+        // manually create genic regions for IG
+        List<String> igGenes = List.of("IGH", "IGK", "IGL");
+
+        for(String geneName : igGenes)
+        {
+            ChrBaseRegion igRegion = getIgRegion(geneName, mRefGenVersion);
+
+            List<GeneInfo> geneRegions = mChrGenicRegions.get(igRegion.Chromosome);
+
+            if(geneRegions == null)
+            {
+                geneRegions = Lists.newArrayList();
+                mChrGenicRegions.put(igRegion.Chromosome, geneRegions);
+            }
+
+            geneRegions.add(new GeneInfo(igRegion.start(), igRegion.end(), geneName));
+        }
+    }
+
+    private class GeneInfo extends BaseRegion
+    {
+        public final String Info;
+
+        public GeneInfo(final int posStart, final int posEnd, final String info)
+        {
+            super(posStart, posEnd);
+            Info = info;
+        }
+
+        public String toString() { return format("%s:%d-%d", Info, start(), end()); }
+    }
+
     private BufferedWriter initialiseWriter()
     {
         try
@@ -302,7 +447,7 @@ public class BlacklistRepeatAnalyser
 
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END);
 
-            sj.add("DominantBases").add("Concentration").add("BlacklistRegions").add("RepeatInfo");
+            sj.add("DominantBases").add("Concentration").add("BlacklistRegions").add("RepeatInfo").add("GeneInfo");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -318,7 +463,7 @@ public class BlacklistRepeatAnalyser
 
     private synchronized void writeRegionData(
             final String chromosome, final BaseRegion region, final String dominantBases, final double basePercent,
-            final List<RepeatMaskData> repeatMasks, final List<BaseRegion> blacklistRegions)
+            final List<RepeatMaskData> repeatMasks, final List<BaseRegion> blacklistRegions, final List<GeneInfo> genicOverlaps)
     {
         try
         {
@@ -333,7 +478,10 @@ public class BlacklistRepeatAnalyser
             String repeatInfo = repeatMasks.stream()
                     .map(x -> format("%s:%d-%d", x.ClassType, x.Region.start(), x.Region.end())).collect(Collectors.joining(ITEM_DELIM));
 
-            sj.add(blacklistInfo).add(repeatInfo);
+            String geneOverlaps = genicOverlaps.stream()
+                    .map(x -> format("%s_%d:%d", x.Info, x.start(), x.end())).collect(Collectors.joining(ITEM_DELIM));
+
+            sj.add(blacklistInfo).add(repeatInfo).add(geneOverlaps);
 
             mWriter.write(sj.toString());
             mWriter.newLine();
@@ -354,11 +502,16 @@ public class BlacklistRepeatAnalyser
         UnmappedRegions.registerConfig(configBuilder);
         RepeatMaskAnnotations.addConfig(configBuilder);
 
+        addGenePanelOption(configBuilder, false);
+        addKnownFusionFileOption(configBuilder);
+        addEnsemblDir(configBuilder);
+
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
         configBuilder.addInteger(PARTITION_SIZE, "Read length", DEFAULT_CHR_PARTITION_SIZE);
 
         configBuilder.addInteger(BASE_WINDOW_LENGTH, "Base window length for analysis", DEFAULT_BASE_WINDOW_LENGTH);
         configBuilder.addDecimal(MIN_DOMINANT_PERC, "Min dominant concerntration of 1 or 2 bases", DEFAULT_MIN_DOMINANT_PERC);
+        configBuilder.addFlag(REMOVE_GENE_OVERLAPS, "Remove regions which overlap a genic region");
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
