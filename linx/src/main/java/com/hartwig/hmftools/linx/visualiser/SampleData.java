@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
@@ -40,6 +41,8 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.segment.SegmentFile;
 
 public class SampleData
 {
@@ -52,6 +55,7 @@ public class SampleData
 
     public List<AmberBAF> AmberBAFs;
     public List<CobaltRatio> CobaltRatios;
+    public List<ObservedRegion> PurpleSegments;
 
     private final VisualiserConfig mConfig;
 
@@ -102,6 +106,13 @@ public class SampleData
             final String cobaltRatioFile = CobaltRatioFile.generateFilename(mConfig.CobaltDir, mConfig.Sample);
             ListMultimap<Chromosome, CobaltRatio> cobaltRatiosUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
             CobaltRatios = cobaltRatiosUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).collect(toList());
+        }
+
+        if(mConfig.PurpleDir != null)
+        {
+            final String purpleSegmentFile = SegmentFile.generateFilename(mConfig.PurpleDir, mConfig.Sample);
+            List<ObservedRegion> purpleSegmentsUnfiltered = SegmentFile.read(purpleSegmentFile);
+            PurpleSegments = purpleSegmentsUnfiltered.stream().filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).collect(toList());
         }
 
         if(!mConfig.SpecificRegions.isEmpty())

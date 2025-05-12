@@ -48,6 +48,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -375,26 +376,37 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(copyNumbers));
 
         List<GenomeRegion> regionsToCover = Span.spanPositions(positionsToCover);
-        List<AmberBAF> amberBAFs = Lists.newArrayList();
-        List<CobaltRatio> cobaltRatios = Lists.newArrayList();
+        List<AmberBAF> regionAmberBAFs = Lists.newArrayList();
+        List<CobaltRatio> regionCobaltRatios = Lists.newArrayList();
+        List<ObservedRegion> regionPurpleSegments = Lists.newArrayList();
         for(GenomeRegion region : regionsToCover)
         {
             if(mConfig.AmberDir != null)
             {
-                List<AmberBAF> amberBAFsInRegion = mSampleData.AmberBAFs.stream()
+                regionAmberBAFs = mSampleData.AmberBAFs.stream()
                         .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
                         .toList();
-
-                amberBAFs.addAll(amberBAFsInRegion);
             }
 
             if(mConfig.CobaltDir != null)
             {
-                List<CobaltRatio> cobaltRatiosInRegion = mSampleData.CobaltRatios.stream()
+                regionCobaltRatios = mSampleData.CobaltRatios.stream()
                         .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
                         .toList();
+            }
 
-                cobaltRatios.addAll(cobaltRatiosInRegion);
+            if(mConfig.PurpleDir != null)
+            {
+                for(ObservedRegion purpleSegment : mSampleData.PurpleSegments)
+                {
+                    if(!region.overlaps(purpleSegment))
+                        continue;
+
+                    ObservedRegion newPurpleSegment = ObservedRegion.from(purpleSegment);
+                    newPurpleSegment.setStart(Math.max(region.start(), purpleSegment.start()));
+                    newPurpleSegment.setEnd(Math.min(region.end(), purpleSegment.end()));
+                    regionPurpleSegments.add(newPurpleSegment);
+                }
             }
         }
 
@@ -419,7 +431,7 @@ public class SvVisualiser implements AutoCloseable
 
         CircosData circosData = new CircosData(
                 mCircosConfig,
-                segments, links, copyNumbers, filteredExons, filteredFusions, amberBAFs, cobaltRatios,
+                segments, links, copyNumbers, filteredExons, filteredFusions, regionAmberBAFs, regionCobaltRatios, regionPurpleSegments,
                 showSimpleSvSegments,  mConfig.IncludeFragileSites, mConfig.IncludeLineElements
         );
 

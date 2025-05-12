@@ -25,6 +25,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public class CircosData
 {
@@ -40,6 +41,7 @@ public class CircosData
 
     public final List<AmberBAF> AmberBAFs;
     public final List<CobaltRatio> CobaltRatios;
+    public final List<ObservedRegion> PurpleSegments;
 
     public final List<VisSvData> UnadjustedLinks;
     public final List<VisCopyNumber> UnadjustedCopyNumbers;
@@ -63,7 +65,9 @@ public class CircosData
             final CircosConfig config, final List<VisSegment> unadjustedSegments,
             final List<VisSvData> unadjustedLinks, final List<VisCopyNumber> unadjustedCopyNumbers,
             final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions,
-            final List<AmberBAF> unadjustedAmberBAFs, final List<CobaltRatio> unadjustedCobaltRatios,
+            final List<AmberBAF> unadjustedAmberBAFs,
+            final List<CobaltRatio> unadjustedCobaltRatios,
+            final List<ObservedRegion> unadjustedPurpleSegments,
             boolean showSimpleSvSegments, boolean showFragileSites, boolean showLineElements
     )
     {
@@ -112,6 +116,7 @@ public class CircosData
 
         AmberBAFs = scalePosition.interpolateAmberBAFs(unadjustedAmberBAFs);
         CobaltRatios = scalePosition.interpolateCobaltRatios(unadjustedCobaltRatios);
+        PurpleSegments = scalePosition.interpolatePurpleSegments(unadjustedPurpleSegments);
 
         MaxTracks = Segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
         MaxCopyNumber = CopyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);

@@ -41,6 +41,7 @@ public class VisualiserConfig
 
     public final String AmberDir;
     public final String CobaltDir;
+    public final String PurpleDir;
 
     public final boolean UseCohortFiles;
     public final boolean IsGermline;
@@ -71,6 +72,7 @@ public class VisualiserConfig
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
     private static final String AMBER_DIRECTORY = "amber_dir";
     private static final String COBALT_DIRECTORY = "cobalt_dir";
+    private static final String PURPLE_DIRECTORY = "purple_dir";
     private static final String LOAD_COHORT_FILES = "load_cohort_files";
     private static final String CLUSTER_IDS = "clusterId";
     private static final String CHAIN_IDS = "chainId";
@@ -95,6 +97,7 @@ public class VisualiserConfig
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(VIS_FILE_DIRECTORY));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIRECTORY));
         AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIRECTORY));
+        PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIRECTORY));
 
         OutputPlotPath = checkAddDirSeparator(configBuilder.getValue(PLOT_OUT, SampleDataDir + "plot/"));
         OutputConfPath = checkAddDirSeparator(configBuilder.getValue(DATA_OUT, SampleDataDir + "data/"));
@@ -195,6 +198,7 @@ public class VisualiserConfig
 
         configBuilder.addPath(AMBER_DIRECTORY, false, "Path to directory containing AMBER output");
         configBuilder.addPath(COBALT_DIRECTORY, false, "Path to directory containing COBALT output");
+        configBuilder.addPath(PURPLE_DIRECTORY, false, "Path to directory containing PURPLE output");
 
         configBuilder.addFlag(LOAD_COHORT_FILES, "Load Linx cohort rather than per-sample vis files");
         configBuilder.addFlag(GERMLINE, "Load Linx germline VIS files");

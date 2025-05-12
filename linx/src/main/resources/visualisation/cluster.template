@@ -378,6 +378,34 @@ chromosomes_display_default = yes
 	</plot>
 
 	# -----------------------------------------------------------
+    # Amber BAFs
+    <plot>
+        type             = scatter
+        file             = SUBSTITUTE_SAMPLE.amber.circos
+        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
+        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
+        glyph            = circle
+        glyph_size       = 10
+        color            = amber
+        min              = 0
+        max              = 1
+
+        <axes>
+            <axis>
+                color     = lorange
+                thickness = 1
+                spacing   = 0.5r
+            </axis>
+        </axes>
+
+        <backgrounds>
+            <background>
+                color = vlorange_a5
+            </background>
+        </backgrounds>
+
+    </plot>
+
     # Cobalt ratios
     <plot>
         type             = scatter
@@ -406,32 +434,17 @@ chromosomes_display_default = yes
 
     </plot>
 
-    # Amber BAFs
+    # Purple segments
     <plot>
-        type             = scatter
-        file             = SUBSTITUTE_SAMPLE.amber.circos
-        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
-        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
-        glyph            = circle
-        glyph_size       = 10
-        color            = amber
+        type             = histogram
+        file             = SUBSTITUTE_SAMPLE.purple.circos
+        r0               = SUBSTITUTE_COBALT_INNER_RADIUSr
+        r1               = SUBSTITUTE_COBALT_OUTER_RADIUSr
+        color            = cobalt
+        thickness        = 3
         min              = 0
-        max              = 1
-
-        <axes>
-            <axis>
-                color     = lorange
-                thickness = 1
-                spacing   = 0.5r
-            </axis>
-        </axes>
-
-        <backgrounds>
-            <background>
-                color = vlorange_a5
-            </background>
-        </backgrounds>
-
+        max              = 2
+        extend_bin       = no
     </plot>
 
 </plots>

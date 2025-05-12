@@ -35,6 +35,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -158,6 +159,9 @@ public class CircosDataWriter
 
         String cobaltRatiosPath = filePrefix + ".cobalt.circos";
         Files.write(new File(cobaltRatiosPath).toPath(), createCobaltRatios(data.CobaltRatios));
+
+        String purpleSegmentsPath = filePrefix + ".purple.circos";
+        Files.write(new File(purpleSegmentsPath).toPath(), createPurpleSegments(data.PurpleSegments));
 
         return this;
     }
@@ -319,6 +323,24 @@ public class CircosDataWriter
                     .toString();
 
             result.add(amberBAFString);
+        }
+
+        return result;
+    }
+
+    private List<String> createPurpleSegments(List<ObservedRegion> purpleSegments)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(ObservedRegion purpleSegment : purpleSegments)
+        {
+            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.chromosome()))
+                    .add(String.valueOf(purpleSegment.start()))
+                    .add(String.valueOf(purpleSegment.end()))
+                    .add(String.valueOf(purpleSegment.observedTumorRatio()))
+                    .toString();
+
+            result.add(purpleSegmentString);
         }
 
         return result;

@@ -35,6 +35,12 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>purple</artifactId>
+            <version>${purple.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 

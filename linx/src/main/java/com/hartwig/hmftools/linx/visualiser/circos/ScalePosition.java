@@ -29,6 +29,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -107,6 +108,30 @@ class ScalePosition
         return results;
     }
 
+    public List<AmberBAF> interpolateAmberBAFs(final List<AmberBAF> amberBAFs)
+    {
+        List<AmberBAF> results = Lists.newArrayList();
+
+        for(AmberBAF amberBAF : amberBAFs)
+        {
+            ScaleContig positionMap = mContigMap.get(amberBAF.Chromosome);
+            int newPosition = positionMap.interpolate(amberBAF.Position);
+
+            AmberBAF newAmberBAF = new AmberBAF(
+                    amberBAF.Chromosome,
+                    newPosition,
+                    amberBAF.TumorBAF,
+                    amberBAF.TumorDepth,
+                    amberBAF.NormalBAF,
+                    amberBAF.NormalDepth
+            );
+
+            results.add(newAmberBAF);
+        }
+
+        return results;
+    }
+
     public List<CobaltRatio> interpolateCobaltRatios(final List<CobaltRatio> cobaltRatios)
     {
         List<CobaltRatio> results = Lists.newArrayList();
@@ -134,25 +159,19 @@ class ScalePosition
         return results;
     }
 
-    public List<AmberBAF> interpolateAmberBAFs(final List<AmberBAF> amberBAFs)
+    public List<ObservedRegion> interpolatePurpleSegments(final List<ObservedRegion> purpleSegments)
     {
-        List<AmberBAF> results = Lists.newArrayList();
+        List<ObservedRegion> results = Lists.newArrayList();
 
-        for(AmberBAF amberBAF : amberBAFs)
+        for(ObservedRegion purpleSegment : purpleSegments)
         {
-            ScaleContig positionMap = mContigMap.get(amberBAF.Chromosome);
-            int newPosition = positionMap.interpolate(amberBAF.Position);
+            ScaleContig positionMap = mContigMap.get(purpleSegment.chromosome());
 
-            AmberBAF newAmberBAF = new AmberBAF(
-                    amberBAF.Chromosome,
-                    newPosition,
-                    amberBAF.TumorBAF,
-                    amberBAF.TumorDepth,
-                    amberBAF.NormalBAF,
-                    amberBAF.NormalDepth
-            );
+            ObservedRegion newPurpleSegment = ObservedRegion.from(purpleSegment);
+            newPurpleSegment.setStart(positionMap.interpolate(purpleSegment.start()));
+            newPurpleSegment.setEnd(positionMap.interpolate(purpleSegment.end()));
 
-            results.add(newAmberBAF);
+            results.add(newPurpleSegment);
         }
 
         return results;
