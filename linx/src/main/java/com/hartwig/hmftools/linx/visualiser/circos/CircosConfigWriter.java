@@ -22,10 +22,16 @@ public class CircosConfigWriter
     private final CircosData circosData;
     private final CircosConfig config;
 
-    private final double exonOuterRadius;
-    private final double exonInnerRadius;
-    private final double geneOuterRadius;
-    private final double geneInnerRadius;
+    private double exonOuterRadius = 0;
+    private double exonInnerRadius = 0;
+    private double geneOuterRadius = 0;
+    private double geneInnerRadius = 0;
+
+    private double cobaltOuterRadius = 0;
+    private double cobaltInnerRadius = 0;
+
+    private double amberOuterRadius = 0;
+    private double amberInnerRadius = 0;
 
     private final double segmentOuterRadius;
     private final double segmentInnerRadius;
@@ -34,15 +40,11 @@ public class CircosConfigWriter
     private final double copyNumberMiddleRadius;
     private final double copyNumberInnerRadius;
 
-    private final double cobaltOuterRadius;
-    private final double cobaltInnerRadius;
-
     private final double mapOuterRadius;
     private final double mapMiddleRadius;
     private final double mapInnerRadius;
 
-    private final double amberOuterRadius;
-    private final double amberInnerRadius;
+    private final double innermostRadius;
 
     private final double labelSize;
     private final double labelPosition;
@@ -80,40 +82,53 @@ public class CircosConfigWriter
         int purpleRelativeSize = cnaGainRelativeSize + cnaLossRelativeSize + mapGainRelativeSize + mapLossRelativeSize + amberRelativeSize + cobaltRelativeSize;
         double purpleTrackSize = purpleSpaceAvailable / purpleRelativeSize;
 
+        // Radius positions for each track are calculated starting from the outermost track
+        double currentTrackOuterRadius = 1;
+
         if(displayGenes)
         {
-            exonOuterRadius = 1 - gapSize - config.ExonRankRadius;
+            // Exon track ("██") is overlaid on the gene track ("━━"), like this:
+            // ████━━━━████━━━━
+
+            exonOuterRadius = currentTrackOuterRadius - gapSize - config.ExonRankRadius;
             exonInnerRadius = exonOuterRadius - geneRelativeSize / totalRelativeSize * totalSpaceAvailable;
-            segmentOuterRadius = exonInnerRadius - gapSize;
+            currentTrackOuterRadius = exonInnerRadius;
+
+            double exonTrackSize = exonOuterRadius - exonInnerRadius;
+            double geneTrackSizeTrim = 9d / 20d * exonTrackSize; // This determines how thin the gene track will be
+            geneOuterRadius = exonOuterRadius - geneTrackSizeTrim;
+            geneInnerRadius = exonInnerRadius + geneTrackSizeTrim;
         }
-        else
+
+        if(!data.CobaltRatios.isEmpty())
         {
-            exonOuterRadius = 0;
-            exonInnerRadius = 0;
-            segmentOuterRadius = 1 - gapSize;
+            cobaltOuterRadius = currentTrackOuterRadius - gapSize;
+            cobaltInnerRadius = cobaltOuterRadius - cobaltRelativeSize * purpleTrackSize;
+            currentTrackOuterRadius = cobaltInnerRadius;
         }
 
-        // Radius positions for each track are calculated starting from the outermost track
-        double exonTrackSize = exonOuterRadius - exonInnerRadius;
-        double geneTrackSizeTrim = 9d / 20d * exonTrackSize;
-        geneOuterRadius = exonOuterRadius - geneTrackSizeTrim;
-        geneInnerRadius = exonInnerRadius + geneTrackSizeTrim;
+        if(!data.AmberBAFs.isEmpty())
+        {
+            amberOuterRadius = cobaltInnerRadius - gapSize;
+            amberInnerRadius = amberOuterRadius - amberRelativeSize * purpleTrackSize;
+            currentTrackOuterRadius = amberInnerRadius;
+        }
 
+        segmentOuterRadius = currentTrackOuterRadius - gapSize;
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
+        currentTrackOuterRadius = segmentInnerRadius;
 
-        copyNumberOuterRadius = segmentInnerRadius - gapSize;
+        copyNumberOuterRadius = currentTrackOuterRadius - gapSize;
         copyNumberMiddleRadius = copyNumberOuterRadius - cnaGainRelativeSize * purpleTrackSize;
         copyNumberInnerRadius = copyNumberMiddleRadius - cnaLossRelativeSize * purpleTrackSize;
+        currentTrackOuterRadius = copyNumberInnerRadius;
 
-        mapOuterRadius = copyNumberInnerRadius - gapSize;
+        mapOuterRadius = currentTrackOuterRadius - gapSize;
         mapMiddleRadius = mapOuterRadius - mapGainRelativeSize * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - mapLossRelativeSize * purpleTrackSize;
+        currentTrackOuterRadius = mapInnerRadius;
 
-        cobaltOuterRadius = mapInnerRadius - gapSize;
-        cobaltInnerRadius = cobaltOuterRadius - cobaltRelativeSize * purpleTrackSize;
-
-        amberOuterRadius = cobaltInnerRadius - gapSize;
-        amberInnerRadius = amberOuterRadius - amberRelativeSize * purpleTrackSize;
+        innermostRadius = currentTrackOuterRadius;
 
         labelPosition = copyNumberMiddleRadius + purpleTrackSize*0.05; // Add slight offset so that the label isn't flush with the axis
     }
@@ -155,6 +170,12 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(geneInnerRadius))
                         .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(geneOuterRadius))
 
+                        .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(cobaltInnerRadius))
+                        .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(cobaltOuterRadius))
+
+                        .replaceAll("SUBSTITUTE_AMBER_INNER_RADIUS", String.valueOf(amberInnerRadius))
+                        .replaceAll("SUBSTITUTE_AMBER_OUTER_RADIUS", String.valueOf(amberOuterRadius))
+
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
 
@@ -171,13 +192,7 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", labelPosition + "r")
 
-                        .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(cobaltInnerRadius))
-                        .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(cobaltOuterRadius))
-
-                        .replaceAll("SUBSTITUTE_AMBER_INNER_RADIUS", String.valueOf(amberInnerRadius))
-                        .replaceAll("SUBSTITUTE_AMBER_OUTER_RADIUS", String.valueOf(amberOuterRadius))
-
-                        .replaceAll("SUBSTITUTE_INNERMOST_RADIUS", String.valueOf(amberInnerRadius))
+                        .replaceAll("SUBSTITUTE_INNERMOST_RADIUS", String.valueOf(innermostRadius))
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.MaxTracks))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.MaxTracks))
