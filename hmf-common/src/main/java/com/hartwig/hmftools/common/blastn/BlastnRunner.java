@@ -85,6 +85,7 @@ public class BlastnRunner
     private final OptionalInt gapopen;
     private final OptionalInt gapextend;
     private final boolean subjectBestHit;
+    private final OptionalInt max_target_seqs;
 
     private BlastnRunner(Builder builder)
     {
@@ -102,6 +103,7 @@ public class BlastnRunner
         this.gapopen = builder.gapopen;
         this.gapextend = builder.gapextend;
         this.subjectBestHit = builder.subjectBestHit;
+        this.max_target_seqs = builder.max_target_seqs;
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -153,6 +155,10 @@ public class BlastnRunner
         {
             command.add("-subject_besthit");
         }
+        max_target_seqs.ifPresent(o -> {
+            command.add("-max_target_seqs");
+            command.add(Integer.toString(o));
+        });
 
         File outputFileCsv = new File(outputDir + "/" + prefix + ".blastn.csv.gz");
 
@@ -290,6 +296,8 @@ public class BlastnRunner
         // default subject best hit to true
         private boolean subjectBestHit = true;
 
+        private OptionalInt max_target_seqs = OptionalInt.empty();
+
         public Builder withTask(String task)
         {
             this.task = task;
@@ -375,6 +383,13 @@ public class BlastnRunner
         public Builder withSubjectBestHit(boolean subjectBestHit)
         {
             this.subjectBestHit = subjectBestHit;
+            return this;
+        }
+
+        public Builder withMaxTargetSeqs(int max_target_seqs)
+        {
+            Validate.isTrue(max_target_seqs > 0);
+            this.max_target_seqs = OptionalInt.of(max_target_seqs);
             return this;
         }
 
