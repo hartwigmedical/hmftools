@@ -375,6 +375,9 @@ public class SvVisualiser implements AutoCloseable
         List<VisCopyNumber> copyNumbers = VisCopyNumbers.copyNumbers(mSampleData.CopyNumbers, Span.spanPositions(positionsToCover));
         positionsToCover.addAll(Span.allPositions(copyNumbers));
 
+        positionsToCover = positionsToCover.stream().distinct().collect(toList());
+        Collections.sort(positionsToCover);
+
         List<GenomeRegion> regionsToCover = Span.spanPositions(positionsToCover);
         List<AmberBAF> regionAmberBAFs = Lists.newArrayList();
         List<CobaltRatio> regionCobaltRatios = Lists.newArrayList();
@@ -383,16 +386,12 @@ public class SvVisualiser implements AutoCloseable
         {
             if(mConfig.AmberDir != null)
             {
-                regionAmberBAFs = mSampleData.AmberBAFs.stream()
-                        .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
-                        .toList();
+                regionAmberBAFs = mSampleData.AmberBAFs.stream().filter(x -> region.contains(x)).toList();
             }
 
             if(mConfig.CobaltDir != null)
             {
-                regionCobaltRatios = mSampleData.CobaltRatios.stream()
-                        .filter(x -> region.chromosome().equals(x.chromosome()) && region.start() <= x.position() && x.position() <= region.end())
-                        .toList();
+                regionCobaltRatios = mSampleData.CobaltRatios.stream().filter(x -> region.contains(x)).toList();
             }
 
             if(mConfig.PurpleDir != null)
