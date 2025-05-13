@@ -140,19 +140,7 @@ class ScalePosition
         {
             ScaleContig positionMap = mContigMap.get(cobaltRatio.chromosome());
             int newPosition = positionMap.interpolate(cobaltRatio.position());
-
-            CobaltRatio newCobaltRatio = ImmutableCobaltRatio.builder()
-                    .chromosome(cobaltRatio.chromosome())
-                    .position(newPosition)
-                    .referenceReadDepth(cobaltRatio.referenceReadDepth())
-                    .tumorReadDepth(cobaltRatio.tumorReadDepth())
-                    .referenceGCRatio(cobaltRatio.referenceGCRatio())
-                    .tumorGCRatio(cobaltRatio.tumorGCRatio())
-                    .referenceGCDiploidRatio(cobaltRatio.referenceGCDiploidRatio())
-                    .referenceGcContent(cobaltRatio.referenceGcContent())
-                    .tumorGcContent(cobaltRatio.tumorGcContent())
-                    .build();
-
+            CobaltRatio newCobaltRatio = ImmutableCobaltRatio.builder().from(cobaltRatio).position(newPosition).build();
             results.add(newCobaltRatio);
         }
 
