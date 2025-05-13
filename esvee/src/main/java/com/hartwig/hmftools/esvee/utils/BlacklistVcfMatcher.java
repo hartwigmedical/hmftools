@@ -101,7 +101,8 @@ public class BlacklistVcfMatcher
         }
 
         final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mThreads);
+        if(!TaskExecutor.executeTasks(callableList, mThreads))
+            System.exit(1);
 
         closeBufferedWriter(mWriter);
 

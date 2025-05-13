@@ -27,8 +27,11 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -91,7 +94,9 @@ public class BlacklistRepeatAnalyser
     private final double mMinDominantPercent;
 
     private final boolean mRemoveGeneOverlaps;
+    private final boolean mWriteBlacklistBed;
     private final Map<String,List<GeneInfo>> mChrGenicRegions;
+    private final List<ChrBaseRegion> mFinalBlacklistRegions;
 
     private final int mPartitionSize;
     private final int mThreads;
@@ -99,8 +104,9 @@ public class BlacklistRepeatAnalyser
 
     private static final String OUTPUT_FILE = "output_file";
     private static final String MIN_DOMINANT_PERC = "min_dominant_perc";
-    private static final String BASE_WINDOW_LENGTH = "base_window_length";
+    protected static final String BASE_WINDOW_LENGTH = "base_window_length";
     private static final String REMOVE_GENE_OVERLAPS = "remove_gene_overlaps";
+    private static final String WRITE_BLACKLIST_BED = "write_blacklist_bed";
 
     private static final int DEFAULT_BASE_WINDOW_LENGTH = 100;
     private static final double DEFAULT_MIN_DOMINANT_PERC = 0.95;
@@ -133,10 +139,13 @@ public class BlacklistRepeatAnalyser
         mChrGenicRegions = Maps.newHashMap();
         loadGenicInfo(configBuilder);
 
+        mFinalBlacklistRegions = Lists.newArrayList();
+
         mPartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         mBaseWindowLength = configBuilder.getInteger(BASE_WINDOW_LENGTH);
         mMinDominantPercent = configBuilder.getDecimal(MIN_DOMINANT_PERC);
         mRemoveGeneOverlaps = configBuilder.hasFlag(REMOVE_GENE_OVERLAPS);
+        mWriteBlacklistBed = configBuilder.hasFlag(WRITE_BLACKLIST_BED);
 
         mThreads = parseThreads(configBuilder);
         mSpecificChrRegions = SpecificRegions.from(configBuilder);
@@ -177,6 +186,42 @@ public class BlacklistRepeatAnalyser
             System.exit(1);
 
         closeBufferedWriter(mWriter);
+
+        if(mWriteBlacklistBed)
+        {
+            ChrBaseRegion.checkMergeOverlaps(mFinalBlacklistRegions, true);
+
+            try
+            {
+                String outputBed = mOutputFile.replaceAll(TSV_EXTENSION, ".bed");
+
+                BufferedWriter writer = createBufferedWriter(outputBed, false);
+
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+                sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
+
+                writer.write(sj.toString());
+                writer.newLine();
+
+                for(ChrBaseRegion region : mFinalBlacklistRegions)
+                {
+                    StringJoiner regionData = new StringJoiner(TSV_DELIM);
+                    regionData.add(region.Chromosome);
+                    regionData.add(String.valueOf(region.start() - 1));  // write as a BED file, so note the -1 on the start
+                    regionData.add(String.valueOf(region.end()));
+                    writer.write(regionData.toString());
+                    writer.newLine();
+                }
+
+                writer.close();
+            }
+            catch(IOException e)
+            {
+                SV_LOGGER.error(" failed to write final BED file: {}", e.toString());
+                System.exit(1);
+            }
+        }
 
         SV_LOGGER.info("Blacklist region analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -323,7 +368,20 @@ public class BlacklistRepeatAnalyser
                     .filter(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end())).collect(Collectors.toList());
 
             writeRegionData(mRegion.Chromosome, region, dominantBases, dominantBasePercent, repeatMasks, blacklistRegions, genicOverlaps);
+
+            if(mWriteBlacklistBed)
+            {
+                if(!mRemoveGeneOverlaps || genicOverlaps.isEmpty())
+                {
+                    addBlacklistRegion(new ChrBaseRegion(mRegion.Chromosome, region.start(), region.end()));
+                }
+            }
         }
+    }
+
+    private synchronized void addBlacklistRegion(final ChrBaseRegion region)
+    {
+        mFinalBlacklistRegions.add(region);
     }
 
     private boolean hasSufficientOverlap(final BaseRegion window, final BaseRegion otherRegion, final double requiredPerc)
@@ -512,6 +570,7 @@ public class BlacklistRepeatAnalyser
         configBuilder.addInteger(BASE_WINDOW_LENGTH, "Base window length for analysis", DEFAULT_BASE_WINDOW_LENGTH);
         configBuilder.addDecimal(MIN_DOMINANT_PERC, "Min dominant concerntration of 1 or 2 bases", DEFAULT_MIN_DOMINANT_PERC);
         configBuilder.addFlag(REMOVE_GENE_OVERLAPS, "Remove regions which overlap a genic region");
+        configBuilder.addFlag(WRITE_BLACKLIST_BED, "Write blacklist BED file for use in Esvee Prep");
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

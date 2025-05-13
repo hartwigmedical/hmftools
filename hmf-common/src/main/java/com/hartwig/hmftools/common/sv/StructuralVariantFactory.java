@@ -130,7 +130,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
     {
         if(mFilter.test(context))
         {
-            final StructuralVariantType type = type(context);
             if(isSingleBreakend(context))
             {
                 mCompleteVariants.add(createSingleBreakend(context));
