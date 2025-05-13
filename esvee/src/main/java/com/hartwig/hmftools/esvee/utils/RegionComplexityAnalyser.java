@@ -259,11 +259,14 @@ public class RegionComplexityAnalyser
 
         public void addSampleBreakendCount(final String sampleId, final int breakendCount)
         {
+            if(TopSampleCounts.size() >= MAX_SAMPLE_COUNT && breakendCount <= TopSampleCounts.get(MAX_SAMPLE_COUNT - 1).BreakendCount)
+                return;
+
             int index = 0;
 
-            for(int i = 0; i < TopSampleCounts.size(); ++i)
+            for(; index < TopSampleCounts.size(); ++index)
             {
-                if(breakendCount > TopSampleCounts.get(i).BreakendCount)
+                if(breakendCount > TopSampleCounts.get(index).BreakendCount)
                     break;
             }
 
@@ -272,8 +275,10 @@ public class RegionComplexityAnalyser
 
             TopSampleCounts.add(index, new SampleBreakendCount(sampleId, breakendCount));
 
-            if(TopSampleCounts.size() > MAX_SAMPLE_COUNT)
-                TopSampleCounts.remove(5);
+            while(TopSampleCounts.size() > MAX_SAMPLE_COUNT)
+            {
+                TopSampleCounts.remove(TopSampleCounts.size() - 1);
+            }
         }
 
         public void mergeOther(final WindowData other)
