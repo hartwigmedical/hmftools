@@ -406,6 +406,35 @@ chromosomes_display_default = yes
 
     </plot>
 
+    # Amber PCF
+    <plot>
+        type             = histogram
+        file             = SUBSTITUTE_SAMPLE.amber_pcf.circos
+        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
+        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
+        color            = amber
+        thickness        = 3
+        min              = 0
+        max              = 1
+        extend_bin       = no
+        orientation      = out
+    </plot>
+
+    # Amber PCF mirror image
+    <plot>
+        type             = histogram
+        file             = SUBSTITUTE_SAMPLE.amber_pcf.circos
+        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
+        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
+        color            = amber
+        thickness        = 3
+        min              = 0
+        max              = 1
+        extend_bin       = no
+        orientation      = in
+    </plot>
+
+	# -----------------------------------------------------------
     # Cobalt ratios
     <plot>
         type             = scatter
@@ -434,10 +463,10 @@ chromosomes_display_default = yes
 
     </plot>
 
-    # Purple segments
+    # Cobalt PCF
     <plot>
         type             = histogram
-        file             = SUBSTITUTE_SAMPLE.purple.circos
+        file             = SUBSTITUTE_SAMPLE.cobalt_pcf.circos
         r0               = SUBSTITUTE_COBALT_INNER_RADIUSr
         r1               = SUBSTITUTE_COBALT_OUTER_RADIUSr
         color            = cobalt

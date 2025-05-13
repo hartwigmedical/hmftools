@@ -157,11 +157,14 @@ public class CircosDataWriter
         String amberBAFsPath = filePrefix + ".amber.circos";
         Files.write(new File(amberBAFsPath).toPath(), createAmberBAFs(data.AmberBAFs));
 
+        String amberPCFPath = filePrefix + ".amber_pcf.circos";
+        Files.write(new File(amberPCFPath).toPath(), createAmberPcf(data.PurpleSegments));
+
         String cobaltRatiosPath = filePrefix + ".cobalt.circos";
         Files.write(new File(cobaltRatiosPath).toPath(), createCobaltRatios(data.CobaltRatios));
 
-        String purpleSegmentsPath = filePrefix + ".purple.circos";
-        Files.write(new File(purpleSegmentsPath).toPath(), createPurpleSegments(data.PurpleSegments));
+        String cobaltPCFPath = filePrefix + ".cobalt_pcf.circos";
+        Files.write(new File(cobaltPCFPath).toPath(), createCobaltPcf(data.PurpleSegments));
 
         return this;
     }
@@ -292,24 +295,6 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createCobaltRatios(List<CobaltRatio> cobaltRatios)
-    {
-        List<String> result = Lists.newArrayList();
-
-        for(CobaltRatio cobaltRatio : cobaltRatios)
-        {
-            String cobaltRatioString =  new StringJoiner(DELIMITER).add(circosContig(cobaltRatio.chromosome()))
-                    .add(String.valueOf(cobaltRatio.position()))
-                    .add(String.valueOf(cobaltRatio.position()))
-                    .add(String.valueOf(cobaltRatio.tumorGCRatio()))
-                    .toString();
-
-            result.add(cobaltRatioString);
-        }
-
-        return result;
-    }
-
     private List<String> createAmberBAFs(List<AmberBAF> amberBAFs)
     {
         List<String> result = Lists.newArrayList();
@@ -328,7 +313,46 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createPurpleSegments(List<ObservedRegion> purpleSegments)
+    private List<String> createAmberPcf(List<ObservedRegion> purpleSegments)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(ObservedRegion purpleSegment : purpleSegments)
+        {
+            // Ensure histogram mirror images do not cross
+            double observedBAF = Math.min(1-purpleSegment.observedBAF(), purpleSegment.observedBAF());
+
+            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.chromosome()))
+                    .add(String.valueOf(purpleSegment.start()))
+                    .add(String.valueOf(purpleSegment.end()))
+                    .add(String.valueOf(observedBAF))
+                    .toString();
+
+            result.add(purpleSegmentString);
+        }
+
+        return result;
+    }
+
+    private List<String> createCobaltRatios(List<CobaltRatio> cobaltRatios)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(CobaltRatio cobaltRatio : cobaltRatios)
+        {
+            String cobaltRatioString =  new StringJoiner(DELIMITER).add(circosContig(cobaltRatio.chromosome()))
+                    .add(String.valueOf(cobaltRatio.position()))
+                    .add(String.valueOf(cobaltRatio.position()))
+                    .add(String.valueOf(cobaltRatio.tumorGCRatio()))
+                    .toString();
+
+            result.add(cobaltRatioString);
+        }
+
+        return result;
+    }
+
+    private List<String> createCobaltPcf(List<ObservedRegion> purpleSegments)
     {
         List<String> result = Lists.newArrayList();
 
