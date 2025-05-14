@@ -56,10 +56,23 @@ public class CircosData
 
     public final CircosConfig Config;
 
-    public final int MaxTracks;
-    public final double MaxPloidy;
-    public final double MaxCopyNumber;
-    public final double MaxMinorAlleleCopyNumber;
+    public static final int COPY_NUMBER_BASELINE = 0;
+    public static final int COPY_NUMBER_LOSS_MIN = -2;
+    public final double CopyNumberMax;
+    public final int CopyNumberTracksMax;
+
+    public static final int MINOR_ALLELE_COPY_NUMBER_LOSS_MIN = -1;
+    public final double MinorAlleleCopyNumberMax;
+    public final int MinorAlleleCopyNumberTracksMax;
+
+    public final int SvTracksMax;
+
+    public static final int AMBER_BAF_MIN = 0;
+    public static final int AMBER_BAF_MAX = 1;
+
+    public static final int COBALT_RATIO_MIN = 0;
+    public static final int COBALT_RATIO_MAX = 2;
+
     public final double LabelSize;
     public final double GeneLabelSize;
     public final int MaxFrame;
@@ -125,14 +138,12 @@ public class CircosData
         CobaltRatios = scalePosition.interpolateCobaltRatios(breakpointAlignedCobaltRatios);
         PurpleSegments = scalePosition.interpolatePurpleSegments(unadjustedPurpleSegments);
 
-        MaxTracks = Segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
-        MaxCopyNumber = CopyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);
-        MaxMinorAlleleCopyNumber = CopyNumbers.stream().mapToDouble(VisCopyNumber::minorAlleleCopyNumber).max().orElse(0);
+        SvTracksMax = Segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
+        CopyNumberMax = CopyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);
+        CopyNumberTracksMax = Math.max(2, (int) Math.round(Math.ceil(CopyNumberMax - 2)));
+        MinorAlleleCopyNumberMax = CopyNumbers.stream().mapToDouble(VisCopyNumber::minorAlleleCopyNumber).max().orElse(0);
+        MinorAlleleCopyNumberTracksMax = Math.max(1, (int) Math.round(Math.ceil(MinorAlleleCopyNumberMax - 1)));
 
-        double maxLinkPloidy = SvData.stream().mapToDouble(x -> x.JCN).max().orElse(0);
-        double maxSegmentsPloidy = Segments.stream().mapToDouble(x -> x.LinkPloidy).max().orElse(0);
-
-        MaxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
         Connectors = new Connectors(showSimpleSvSegments).createConnectors(Segments, SvData);
         LabelSize = config.labelSize(untruncatedVisCopyNumberFilesCount());
 

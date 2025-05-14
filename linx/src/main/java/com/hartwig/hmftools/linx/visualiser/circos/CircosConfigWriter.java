@@ -73,9 +73,9 @@ public class CircosConfigWriter
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.InnerRadius;
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
-        int cnaGainRelativeSize = Math.max(2, (int) Math.round(Math.ceil(data.MaxCopyNumber - 2)));
+        int cnaGainRelativeSize = Math.max(2, (int) Math.round(Math.ceil(data.CopyNumberMax - 2)));
         int cnaLossRelativeSize = 2; // Diploid genome can only lose maximally 2 copies
-        int mapGainRelativeSize = Math.max(1, (int) Math.round(Math.ceil(data.MaxMinorAlleleCopyNumber - 1)));
+        int mapGainRelativeSize = Math.max(1, (int) Math.round(Math.ceil(data.MinorAlleleCopyNumberMax - 1)));
         int mapLossRelativeSize = 1; // Diploid genome can only lose maximally 1 minor allele
         int amberRelativeSize = !data.AmberBAFs.isEmpty() ? 2 : 0;
         int cobaltRelativeSize = !data.CobaltRatios.isEmpty() ? 2 : 0;
@@ -136,7 +136,7 @@ public class CircosConfigWriter
     public double svTrackRelative(int track)
     {
         double difference = segmentOuterRadius() - segmentInnerRadius;
-        double singleTrack = difference / circosData.MaxTracks;
+        double singleTrack = difference / circosData.SvTracksMax;
 
         return segmentInnerRadius + track * singleTrack;
     }
@@ -154,10 +154,6 @@ public class CircosConfigWriter
         int chromosomeCount = circosData.ContigLengths.size();
         int totalContigLength = circosData.totalContigLength();
 
-        int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.MaxCopyNumber - 2)));
-
-        int minorAlleleCopyNumberMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.MaxMinorAlleleCopyNumber - 1)));
-
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
@@ -172,9 +168,13 @@ public class CircosConfigWriter
 
                         .replaceAll("SUBSTITUTE_COBALT_INNER_RADIUS", String.valueOf(cobaltInnerRadius))
                         .replaceAll("SUBSTITUTE_COBALT_OUTER_RADIUS", String.valueOf(cobaltOuterRadius))
+                        .replaceAll("SUBSTITUTE_COBALT_RATIO_MAX", String.valueOf(CircosData.COBALT_RATIO_MAX))
+                        .replaceAll("SUBSTITUTE_COBALT_RATIO_MIN", String.valueOf(CircosData.COBALT_RATIO_MIN))
 
                         .replaceAll("SUBSTITUTE_AMBER_INNER_RADIUS", String.valueOf(amberInnerRadius))
                         .replaceAll("SUBSTITUTE_AMBER_OUTER_RADIUS", String.valueOf(amberOuterRadius))
+                        .replaceAll("SUBSTITUTE_AMBER_BAF_MAX", String.valueOf(CircosData.AMBER_BAF_MAX))
+                        .replaceAll("SUBSTITUTE_AMBER_BAF_MIN", String.valueOf(CircosData.AMBER_BAF_MIN))
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
@@ -182,20 +182,24 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_INNER_RADIUS", String.valueOf(minorAlleleCopyNumberInnerRadius))
                         .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_OUTER_RADIUS", String.valueOf(minorAlleleCopyNumberOuterRadius))
                         .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUS", String.valueOf(minorAlleleCopyNumberMiddleRadius))
-                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_MAX", String.valueOf(minorAlleleCopyNumberMaxTracks))
-                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_SPACING", String.valueOf(1d / minorAlleleCopyNumberMaxTracks))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_LOSS_MIN", String.valueOf(CircosData.MINOR_ALLELE_COPY_NUMBER_LOSS_MIN))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_MAX", String.valueOf(circosData.MinorAlleleCopyNumberTracksMax))
+                        .replaceAll("SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_SPACING", String.valueOf(1d / circosData.MinorAlleleCopyNumberTracksMax))
 
-                        .replaceAll("SUBSTITUTE_CNA_INNER_RADIUS", String.valueOf(copyNumberInnerRadius))
-                        .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(copyNumberOuterRadius))
-                        .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
-                        .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", labelPosition + "r")
+
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_INNER_RADIUS", String.valueOf(copyNumberInnerRadius))
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_OUTER_RADIUS", String.valueOf(copyNumberOuterRadius))
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_BASELINE", String.valueOf(CircosData.COPY_NUMBER_BASELINE))
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_LOSS_MIN", String.valueOf(CircosData.COPY_NUMBER_LOSS_MIN))
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_GAIN_MAX", String.valueOf(circosData.CopyNumberTracksMax))
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_GAIN_AXIS_POSITION", cnaAxisPositions(circosData.CopyNumberTracksMax))
+                        .replaceAll("SUBSTITUTE_COPY_NUMBER_DISTANCE_RADIUS", labelPosition + "r")
 
                         .replaceAll("SUBSTITUTE_INNERMOST_RADIUS", String.valueOf(innermostRadius))
 
-                        .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.MaxTracks))
-                        .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.MaxTracks))
+                        .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.SvTracksMax))
+                        .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.SvTracksMax))
 
                         .replaceAll("SUBSTITUTE_LABEL_SIZE", String.valueOf(labelSize))
 

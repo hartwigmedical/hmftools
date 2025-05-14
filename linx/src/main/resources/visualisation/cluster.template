@@ -144,10 +144,10 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		r1   = SUBSTITUTE_CNA_OUTER_RADIUSr
-		min  = 0
-		max  = SUBSTITUTE_CNA_GAIN_MAX
+		r0   = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
+		r1   = SUBSTITUTE_COPY_NUMBER_OUTER_RADIUSr
+		min  = SUBSTITUTE_COPY_NUMBER_BASELINE
+		max  = SUBSTITUTE_COPY_NUMBER_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
 		color = copy_gain
@@ -157,7 +157,7 @@ chromosomes_display_default = yes
 			<axis>
 				color     = copy_gain_l
 				thickness = 3
-				position  = SUBSTITUTE_CNA_GAIN_AXIS_POSITION
+				position  = SUBSTITUTE_COPY_NUMBER_GAIN_AXIS_POSITION
 			</axis>
 		</axes>
 
@@ -175,7 +175,7 @@ chromosomes_display_default = yes
 		type             = text
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.distance.circos
-		r0               = SUBSTITUTE_CNA_DISTANCE_RADIUS
+		r0               = SUBSTITUTE_COPY_NUMBER_DISTANCE_RADIUS
 		r1               = 1r
 		show_links       = no
 		label_size       = SUBSTITUTE_LABEL_SIZEp
@@ -192,10 +192,10 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = SUBSTITUTE_CNA_INNER_RADIUSr
-		r1   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		min  = -2
-		max  = 0
+		r0   = SUBSTITUTE_COPY_NUMBER_INNER_RADIUSr
+		r1   = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
+		min  = SUBSTITUTE_COPY_NUMBER_LOSS_MIN
+		max  = SUBSTITUTE_COPY_NUMBER_BASELINE
 		color = copy_loss
 		fill_color = copy_loss
 
@@ -223,7 +223,7 @@ chromosomes_display_default = yes
 		file = SUBSTITUTE_SAMPLE.map.circos
 		r0   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
 		r1   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_OUTER_RADIUSr
-		min  = 0
+		min  = SUBSTITUTE_COPY_NUMBER_BASELINE
 		max  = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
@@ -261,8 +261,8 @@ chromosomes_display_default = yes
 		file = SUBSTITUTE_SAMPLE.map.circos
 		r0   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_INNER_RADIUSr
 		r1   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
-		min  = -1
-		max  = 0
+		min  = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_LOSS_MIN
+		max  = SUBSTITUTE_COPY_NUMBER_BASELINE
 		glyph = circle
 		glyph_size = 8
 		color = orange
@@ -358,8 +358,8 @@ chromosomes_display_default = yes
 	<plot>
 		type             = highlight
 		file             = SUBSTITUTE_SAMPLE.line_element.circos
-		r0               = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		r1               = SUBSTITUTE_CNA_OUTER_RADIUSr
+		r0               = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
+		r1               = SUBSTITUTE_COPY_NUMBER_OUTER_RADIUSr
 		fill_color       = black_a5
 		color            = transparent
 		stroke_thickness = 0
@@ -370,8 +370,8 @@ chromosomes_display_default = yes
 	<plot>
 		type             = highlight
 		file             = SUBSTITUTE_SAMPLE.fragile.circos
-		r0               = SUBSTITUTE_CNA_INNER_RADIUSr
-		r1               = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		r0               = SUBSTITUTE_COPY_NUMBER_INNER_RADIUSr
+		r1               = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
 		fill_color       = black_a5
 		color            = transparent
 		stroke_thickness = 0
@@ -387,8 +387,8 @@ chromosomes_display_default = yes
         glyph            = circle
         glyph_size       = 10
         color            = amber
-        min              = 0
-        max              = 1
+        min              = SUBSTITUTE_AMBER_BAF_MIN
+        max              = SUBSTITUTE_AMBER_BAF_MAX
 
         <axes>
             <axis>
@@ -414,8 +414,8 @@ chromosomes_display_default = yes
         r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
         color            = amber
         thickness        = 3
-        min              = 0
-        max              = 1
+        min              = SUBSTITUTE_AMBER_BAF_MIN
+        max              = SUBSTITUTE_AMBER_BAF_MAX
         extend_bin       = no
         orientation      = out
     </plot>
@@ -428,8 +428,8 @@ chromosomes_display_default = yes
         r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
         color            = amber
         thickness        = 3
-        min              = 0
-        max              = 1
+        min              = SUBSTITUTE_AMBER_BAF_MIN
+        max              = SUBSTITUTE_AMBER_BAF_MAX
         extend_bin       = no
         orientation      = in
     </plot>
@@ -444,8 +444,8 @@ chromosomes_display_default = yes
         glyph            = circle
         glyph_size       = 10
         color            = cobalt
-        min              = 0
-        max              = 2
+        min              = SUBSTITUTE_COBALT_RATIO_MIN
+        max              = SUBSTITUTE_COBALT_RATIO_MAX
 
         <axes>
             <axis>
@@ -471,8 +471,8 @@ chromosomes_display_default = yes
         r1               = SUBSTITUTE_COBALT_OUTER_RADIUSr
         color            = cobalt
         thickness        = 3
-        min              = 0
-        max              = 2
+        min              = SUBSTITUTE_COBALT_RATIO_MIN
+        max              = SUBSTITUTE_COBALT_RATIO_MAX
         extend_bin       = no
     </plot>
 
