@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,6 +71,8 @@ public class PartitionReader
     private final PerformanceCounter mPcProcessDuplicates;
     private int mNextLogReadCount;
     private int mProcessedReads;
+
+    private long mRegionStartTime;
 
     public PartitionReader(final ReduxConfig config, final BamReader bamReader)
     {
@@ -138,6 +141,8 @@ public class PartitionReader
     @VisibleForTesting
     public void setupRegion(final ChrBaseRegion region)
     {
+        mRegionStartTime = System.currentTimeMillis();
+
         mCurrentRegion = region;
         int chromosomeLength = mConfig.RefGenome.getChromosomeLength(region.Chromosome);
         mConsensusReads.setChromosomeLength(chromosomeLength);
@@ -163,6 +168,9 @@ public class PartitionReader
     @VisibleForTesting
     public void postProcessRegion()
     {
+        Duration regionElapsed = Duration.ofMillis(System.currentTimeMillis() - mRegionStartTime);
+        RD_LOGGER.info("*** {} {} {} {}", regionElapsed.toMillis(), regionElapsed.toString(), mCurrentRegion, mProcessedReads);
+
         // post-slice clean-up
         processReadGroups(mReadCache.evictAll());
 
