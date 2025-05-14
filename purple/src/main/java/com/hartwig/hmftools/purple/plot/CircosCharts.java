@@ -155,9 +155,23 @@ public class CircosCharts
 
     private void writeCopyNumbers(final List<PurpleCopyNumber> copyNumbers) throws IOException
     {
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".map.circos", copyNumbers, x -> x.minorAlleleCopyNumber() - 1);
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".cnv.circos", copyNumbers, x -> x.averageTumorCopyNumber() - 2);
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".map.circos",
+                copyNumbers.stream().filter(x -> !Double.isNaN(x.minorAlleleCopyNumber())).collect(Collectors.toList()),
+                x -> x.minorAlleleCopyNumber() - 1
+        );
+
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".cnv.circos",
+                copyNumbers.stream().filter(x -> !Double.isNaN(x.averageTumorCopyNumber())).collect(Collectors.toList()),
+                x -> x.averageTumorCopyNumber() - 2
+        );
+
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".baf.circos",
+                copyNumbers,
+                PurpleCopyNumber::averageActualBAF
+        );
     }
 
     private void writeEnrichedSomatics(final List<VariantContextDecorator> somaticVariants) throws IOException
