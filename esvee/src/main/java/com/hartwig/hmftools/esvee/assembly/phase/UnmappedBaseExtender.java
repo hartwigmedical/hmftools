@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Character.toLowerCase;
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -20,9 +21,12 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
@@ -152,6 +156,8 @@ public class UnmappedBaseExtender
             SV_LOGGER.debug("junc({}) initial sequence {}", mJunctionAssembly.junction().coords(), new String(mBases));
         }
 
+        checkExtensionConsensus(readSequenceMatches);
+
         // build out extension bases from these overlapping reads
         int newExtensionLength = readSequenceMatches.stream().mapToInt(x -> x.maxReadExtension()).max().orElse(0);
 
@@ -254,6 +260,141 @@ public class UnmappedBaseExtender
         int endIndex = startIndex + validLength - 1;
         mBases = subsetArray(mBases, startIndex, endIndex);
         mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);
+    }
+
+    private void checkExtensionConsensus(final List<ReadSequenceMatch> readSequenceMatches)
+    {
+        if(readSequenceMatches.size() <= 1)
+            return;
+
+        int readCount = readSequenceMatches.size();
+
+        int[] readIndexStarts = new int[readCount];
+        int[] readIndexEnds = new int[readCount];
+
+        int minExtensionLength = -1;
+
+        for(int i = 0; i < readCount; ++i)
+        {
+            ReadSequenceMatch readSequenceMatch = readSequenceMatches.get(i);
+            Read read = readSequenceMatch.Read;
+
+            if(mIsForwardJunction)
+            {
+                readIndexStarts[i] = readSequenceMatch.ReadSeqStart;
+                readIndexEnds[i] = read.basesLength() - 1;
+            }
+            else
+            {
+                readIndexStarts[i] = 0;
+                readIndexEnds[i] = readSequenceMatch.Overlap - 1;
+            }
+
+            int readExtension = readIndexEnds[i] - readIndexStarts[i] + 1;
+
+            if(minExtensionLength < 0 || readExtension < minExtensionLength)
+                minExtensionLength = readExtension;
+        }
+
+        for(int baseIndex = 0; baseIndex < minExtensionLength; ++baseIndex)
+        {
+            byte consensusBase = 0;
+
+            int[] baseCounts = null;
+
+            for(int i = 0; i < readCount; ++i)
+            {
+                ReadSequenceMatch readSequenceMatch = readSequenceMatches.get(i);
+                Read read = readSequenceMatch.Read;
+
+                int readBaseIndex = mIsForwardJunction ? readIndexStarts[i] + baseIndex : readIndexEnds[i] - baseIndex;
+                byte readBase = read.getBases()[readBaseIndex];
+
+                if(baseCounts == null)
+                {
+                    if(consensusBase == 0)
+                    {
+                        consensusBase = readBase;
+                        continue;
+                    }
+                    else if(consensusBase == readBase)
+                    {
+                        continue;
+                    }
+
+                    if(baseCounts == null)
+                    {
+                        baseCounts = new int[Nucleotides.DNA_BASES.length + 1];
+
+                        int consensusNucIndex = Nucleotides.baseIndex(consensusBase);
+
+                        if(consensusNucIndex >= 0)
+                            baseCounts[consensusNucIndex] = i;
+                    }
+                }
+
+                int nucIndex = Nucleotides.baseIndex(readBase);
+
+                if(nucIndex >= 0)
+                    ++baseCounts[nucIndex];
+            }
+
+            if(baseCounts == null) // all reads agree at this base
+                continue;
+
+            int maxCount = 0;
+            byte maxBase = 0;
+
+            for(int b = 0; b < baseCounts.length; ++b)
+            {
+                if(baseCounts[b] > maxCount)
+                {
+                    maxCount = baseCounts[b];
+                    maxBase = Nucleotides.DNA_BASE_BYTES[b];
+                }
+            }
+
+            // check reads again for mismatches
+            for(int i = 0; i < readCount; ++i)
+            {
+                ReadSequenceMatch readSequenceMatch = readSequenceMatches.get(i);
+                Read read = readSequenceMatch.Read;
+
+                int readBaseIndex = mIsForwardJunction ? readIndexStarts[i] + baseIndex : readIndexEnds[i] - baseIndex;
+                byte readBase = read.getBases()[readBaseIndex];
+
+                if(readBase != maxBase)
+                    ++readSequenceMatch.ConsensusMismatches;
+            }
+        }
+
+        /* NOTE: reads with large diffs vs the consensus are not purged, but they are attempted to be added last
+        
+        // purge any reads less than the min mismatch count
+        int minMismatches = readSequenceMatches.stream().mapToInt(x -> x.ConsensusMismatches).min().orElse(0);
+        int readsWithMinMismatches = (int)readSequenceMatches.stream().filter(x -> x.ConsensusMismatches == minMismatches).count();
+
+        if(readsWithMinMismatches == 1)
+            return;
+
+        double mismatchPurgeLevel = max(minMismatches * 1.2, minMismatches + 3);
+
+        int readIndex = 0;
+
+        while(readIndex < readSequenceMatches.size())
+        {
+            ReadSequenceMatch readSequenceMatch = readSequenceMatches.get(readIndex);
+
+            if(readSequenceMatch.ConsensusMismatches > mismatchPurgeLevel)
+            {
+                readSequenceMatches.remove(readIndex);
+            }
+            else
+            {
+                ++readIndex;
+            }
+        }
+        */
     }
 
     private boolean addRead(final ReadSequenceMatch readSequenceMatch, int baseOffset)
@@ -394,7 +535,7 @@ public class UnmappedBaseExtender
                     new String(overlapReadBases));
 
             SV_LOGGER.debug("junc({}) added read({}) new sequence {}",
-                    mJunctionAssembly.junction().coords(), readSequenceMatch.Read.id(), new String(mBases));
+                    mJunctionAssembly.junction().coords(), readSequenceMatch.Read.id(), nonNullBaseStr(mBases));
         }
 
         int matchedCount = readBaseOverlap - mismatchCount;
@@ -403,13 +544,27 @@ public class UnmappedBaseExtender
         return true;
     }
 
+    private static String nonNullBaseStr(final byte[] bases)
+    {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < bases.length; ++i)
+        {
+            if(bases[i] != 0)
+                sb.append((char)bases[i]);
+        }
+
+        return sb.toString();
+    }
+
     private class ReadSequenceMatch implements Comparable<ReadSequenceMatch>
     {
         public final Read Read;
         public final int ReadSeqStart;
         public final int ExtensionBaseSeqStart;
         public final int Overlap;
-        public final int Mismatches;
+        public final int Mismatches; // vs the existing extension bases
+
+        public int ConsensusMismatches; // from extension the sequence
 
         public ReadSequenceMatch(final Read read, final int readSeqStart, final int extensionBaseSeqStart, final int overlap, int mismatches)
         {
@@ -418,6 +573,7 @@ public class UnmappedBaseExtender
             ExtensionBaseSeqStart = extensionBaseSeqStart;
             Overlap = overlap;
             Mismatches = mismatches;
+            ConsensusMismatches = 0;
         }
 
         public int maxReadExtension()
@@ -434,6 +590,9 @@ public class UnmappedBaseExtender
         public int compareTo(final ReadSequenceMatch other)
         {
             // longer overlap followed by lower mismatches
+            if(ConsensusMismatches != other.ConsensusMismatches)
+                return ConsensusMismatches < other.ConsensusMismatches ? -1 : 1;
+
             if(Overlap != other.Overlap)
                 return Overlap > other.Overlap ? -1 : 1;
 
@@ -445,8 +604,8 @@ public class UnmappedBaseExtender
 
         public String toString()
         {
-            return format("id(%s) index(read=%d ext=%d) overlap(%d) mismatches(%d)",
-                    Read.id(), ReadSeqStart, ExtensionBaseSeqStart, Overlap, Mismatches);
+            return format("id(%s) index(read=%d ext=%d) overlap(%d) mismatches(%d consensus=%d)",
+                    Read.id(), ReadSeqStart, ExtensionBaseSeqStart, Overlap, Mismatches, ConsensusMismatches);
         }
     }
 
