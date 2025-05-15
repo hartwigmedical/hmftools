@@ -99,6 +99,7 @@ public class CircosDataWriter
         List<VisSegment> segments = data.Segments;
         List<VisSvData> links = data.SvData;
         List<VisCopyNumber> alterations = data.CopyNumbers;
+        List<GenomeRegion> centromereSites = data.CentromereSites;
         List<GenomeRegion> fragileSites = data.FragileSites;
         List<GenomeRegion> lineElements = data.LineElements;
         List<VisGeneExon> exons = data.Exons;
@@ -142,14 +143,17 @@ public class CircosDataWriter
         String mapPath = filePrefix + ".map.circos";
         Files.write(new File(mapPath).toPath(), createMinorAlleleCopyNumber(alterations));
 
-        String fragile = filePrefix + ".fragile.circos";
-        Files.write(new File(fragile).toPath(), highlights(fragileSites));
+        String centromeresPath = filePrefix + ".centromeres.circos";
+        Files.write(new File(centromeresPath).toPath(), highlights(centromereSites));
 
-        String line = filePrefix + ".line_element.circos";
-        Files.write(new File(line).toPath(), highlights(lineElements));
+        String fragileSitesPath = filePrefix + ".fragile.circos";
+        Files.write(new File(fragileSitesPath).toPath(), highlights(fragileSites));
 
-        String distances = filePrefix + ".distance.circos";
-        Files.write(new File(distances).toPath(), createDistances(data.UnadjustedCopyNumbers, alterations));
+        String linePath = filePrefix + ".line_element.circos";
+        Files.write(new File(linePath).toPath(), highlights(lineElements));
+
+        String distancesPath = filePrefix + ".distance.circos";
+        Files.write(new File(distancesPath).toPath(), createDistances(data.UnadjustedCopyNumbers, alterations));
 
         String chromosomeBandPath = filePrefix + ".chromosome.circos";
         Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.UnadjustedCopyNumbers));

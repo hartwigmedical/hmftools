@@ -288,7 +288,7 @@ public final class SvUtilities {
     public static String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
     public static String makeChrArmStr(final String chr, final ChromosomeArm arm) { return makeChrArmStr(chr, asStr(arm)); }
 
-    public static List<ChrBaseRegion> loadConfigFile(final List<String> fileLines, final RefGenomeVersion refGenomeVersion)
+    public static List<ChrBaseRegion> loadConfigFile(final List<String> fileLines, final RefGenomeVersion refGenomeVersion, final String delim)
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();
 
@@ -297,7 +297,7 @@ public final class SvUtilities {
             if(line.contains("Chromosome"))
                 continue;
 
-            String[] items = line.split(",", -1);
+            String[] items = line.split(delim, -1);
 
             if(items.length < 3)
             {
@@ -310,6 +310,11 @@ public final class SvUtilities {
         }
 
         return regions;
+    }
+
+    public static List<ChrBaseRegion> loadConfigFile(final List<String> fileLines, final RefGenomeVersion refGenomeVersion)
+    {
+        return loadConfigFile(fileLines, refGenomeVersion, ",");
     }
 
 

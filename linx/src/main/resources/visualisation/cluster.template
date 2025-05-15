@@ -12,7 +12,7 @@ show_tick_labels    = no
 
     # Ideogram position, fill and outline
     radius           = SUBSTITUTE_IDEOGRAM_RADIUSr
-    thickness        = 50p
+    thickness        = SUBSTITUTE_IDEOGRAM_THICKNESSp
     fill             = yes
     stroke_color     = dgrey
     stroke_thickness = 2p
@@ -352,6 +352,18 @@ chromosomes_display_default = yes
         max              = 1
 
 	</plot>
+
+    # -----------------------------------------------------------
+    # Centromeres
+    <plot>
+        type             = highlight
+        file             = SUBSTITUTE_SAMPLE.centromeres.circos
+        r0               = 1r-SUBSTITUTE_IDEOGRAM_THICKNESSp
+        r1               = 1r
+        fill_color       = black_a4
+        color            = transparent
+        stroke_thickness = 0
+    </plot>
 
 	# -----------------------------------------------------------
 	# Line Elements

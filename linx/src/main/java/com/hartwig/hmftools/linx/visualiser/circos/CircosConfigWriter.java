@@ -160,6 +160,7 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CURRENT_FRAME", String.valueOf(frame))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.OuterRadius))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_THICKNESS", String.valueOf(50))
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(exonInnerRadius))
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(exonOuterRadius))

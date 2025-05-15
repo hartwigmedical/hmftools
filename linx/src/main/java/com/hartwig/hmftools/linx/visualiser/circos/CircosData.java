@@ -36,6 +36,7 @@ public class CircosData
     public final List<VisSvData> SvData;
     public final List<Gene> Genes;
     public final List<VisSegment> Segments;
+    public final List<GenomeRegion> CentromereSites;
     public final List<GenomeRegion> LineElements;
     public final List<GenomeRegion> FragileSites;
     public final List<VisCopyNumber> CopyNumbers;
@@ -115,6 +116,9 @@ public class CircosData
         Collections.sort(positionsToScale);
         List<CobaltRatio> breakpointAlignedCobaltRatios = alignCobaltPositionsToBreakpoints(unadjustedCobaltRatios, positionsToScale);
 
+        List<GenomeRegion> unadjustedCentromereSites =
+                Highlights.limitHighlightsToRegions(Highlights.CENTROMERES, Span.spanPositions(positionsToScale));
+
         List<GenomeRegion> unadjustedFragileSites = !showFragileSites
                 ? Lists.newArrayList()
                 : Highlights.limitHighlightsToRegions(Highlights.FRAGILE_SITES, Span.spanPositions(positionsToScale));
@@ -128,8 +132,9 @@ public class CircosData
         Segments = scalePosition.scaleSegments(unadjustedSegments);
         SvData = scalePosition.scaleLinks(unadjustedLinks);
         CopyNumbers = scalePosition.interpolateCopyNumbers(unadjustedCopyNumbers);
-        FragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
+        CentromereSites = scalePosition.interpolateRegions(unadjustedCentromereSites);
         LineElements = scalePosition.interpolateRegions(unadjustedLineElements);
+        FragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
         Genes = scalePosition.interpolateGene(unadjustedGenes);
         DisruptedGeneRegions = scalePosition.interpolateRegions(unadjustedDisruptedGeneRegions);
         Exons = scalePosition.interpolateExons(unadjustedGeneExons);

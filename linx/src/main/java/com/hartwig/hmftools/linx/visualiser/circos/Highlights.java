@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 public class Highlights
 {
+    public static final List<GenomeRegion> CENTROMERES = Lists.newArrayList();
     public static final List<GenomeRegion> FRAGILE_SITES = Lists.newArrayList();
     public static final List<GenomeRegion> LINE_ELEMENTS = Lists.newArrayList();
 
@@ -46,7 +47,15 @@ public class Highlights
 
     public static void populateKnownSites(final RefGenomeVersion refGenomeVersion)
     {
-        List<String> resourceLines = new BufferedReader(new InputStreamReader(
+        List<String> resourceLines;
+
+        resourceLines = new BufferedReader(new InputStreamReader(
+                Highlights.class.getResourceAsStream(centromereSitesResourceFile(refGenomeVersion))))
+                .lines().collect(Collectors.toList());
+
+        loadConfigFile(resourceLines, refGenomeVersion, "\t").forEach(x -> CENTROMERES.add(x.genomeRegion()));
+
+        resourceLines = new BufferedReader(new InputStreamReader(
                 Highlights.class.getResourceAsStream(fragileSitesResourceFile(refGenomeVersion))))
                 .lines().collect(Collectors.toList());
 
@@ -57,5 +66,10 @@ public class Highlights
                 .lines().collect(Collectors.toList());
 
         loadConfigFile(resourceLines, refGenomeVersion).forEach(x -> LINE_ELEMENTS.add(x.genomeRegion()));
+    }
+
+    private static String centromereSitesResourceFile(final RefGenomeVersion refGenomeVersion)
+    {
+        return String.format("/sites/gaps.%s.txt", refGenomeVersion.identifier());
     }
 }
