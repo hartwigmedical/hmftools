@@ -53,9 +53,9 @@ public class SampleData
     public final List<VisFusion> Fusions;
     public final List<VisGeneExon> Exons;
 
-    public List<AmberBAF> AmberBAFs;
-    public List<CobaltRatio> CobaltRatios;
-    public List<ObservedRegion> PurpleSegments;
+    public final List<AmberBAF> AmberBAFs = Lists.newArrayList();
+    public final List<CobaltRatio> CobaltRatios = Lists.newArrayList();
+    public final List<ObservedRegion> PurpleSegments = Lists.newArrayList();
 
     private final VisualiserConfig mConfig;
 
@@ -93,27 +93,6 @@ public class SampleData
         List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
         boolean svDataFiltered = false;
-
-        if(mConfig.AmberDir != null)
-        {
-            final String amberBafFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.AmberDir, mConfig.Sample);
-            Multimap<Chromosome,AmberBAF> amberBafData = AmberBAFFile.read(amberBafFile, true);
-            AmberBAFs = Lists.newArrayList(amberBafData.values());
-        }
-
-        if(mConfig.CobaltDir != null)
-        {
-            final String cobaltRatioFile = CobaltRatioFile.generateFilename(mConfig.CobaltDir, mConfig.Sample);
-            ListMultimap<Chromosome, CobaltRatio> cobaltRatiosUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
-            CobaltRatios = cobaltRatiosUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).collect(toList());
-        }
-
-        if(mConfig.PurpleDir != null)
-        {
-            final String purpleSegmentFile = SegmentFile.generateFilename(mConfig.PurpleDir, mConfig.Sample);
-            List<ObservedRegion> purpleSegmentsUnfiltered = SegmentFile.read(purpleSegmentFile);
-            PurpleSegments = purpleSegmentsUnfiltered.stream().filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).collect(toList());
-        }
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
@@ -158,15 +137,51 @@ public class SampleData
         ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
                 .filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
-        if(Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty())
+        if(mConfig.AmberDir != null)
         {
-            if(!mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty())
+            final String amberBafFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.AmberDir, mConfig.Sample);
+            Multimap<Chromosome,AmberBAF> amberBafData = AmberBAFFile.read(amberBafFile, true);
+            AmberBAFs.addAll(amberBafData.values());
+        }
+
+        if(mConfig.CobaltDir != null)
+        {
+            final String cobaltRatioFile = CobaltRatioFile.generateFilename(mConfig.CobaltDir, mConfig.Sample);
+            ListMultimap<Chromosome, CobaltRatio> cobaltRatiosUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
+            List<CobaltRatio> cobaltRatiosFiltered = cobaltRatiosUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).toList();
+            CobaltRatios.addAll(cobaltRatiosFiltered);
+        }
+
+        if(mConfig.PurpleDir != null)
+        {
+            final String purpleSegmentFile = SegmentFile.generateFilename(mConfig.PurpleDir, mConfig.Sample);
+            List<ObservedRegion> purpleSegmentsUnfiltered = SegmentFile.read(purpleSegmentFile);
+            List<ObservedRegion> purpleSegmentsFiltered = purpleSegmentsUnfiltered.stream()
+                    .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).toList();
+            PurpleSegments.addAll(purpleSegmentsFiltered);
+        }
+
+        boolean clustersOrChainsProvided = !mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty();
+        boolean anyLinxVisDataEmpty = Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty();
+        boolean anyUpstreamCnvDataExists =  !AmberBAFs.isEmpty() || !CobaltRatios.isEmpty() || !PurpleSegments.isEmpty();
+
+        if(clustersOrChainsProvided && anyLinxVisDataEmpty)
+        {
+            VIS_LOGGER.error("sample({}) Cannot plot user specified cluster/chain IDs because Linx VIS data was empty", mConfig.Sample);
+            System.exit(1);
+        }
+
+        if(anyLinxVisDataEmpty)
+        {
+            if(anyUpstreamCnvDataExists)
             {
-                VIS_LOGGER.warn("sample({}) empty Linx VIS input files with specific cluster/chain IDs", mConfig.Sample);
-                System.exit(1);
+                VIS_LOGGER.info("sample({}) Linx VIS data empty, but proceeding to plotting CNV data", mConfig.Sample);
+            }
+            else
+            {
+                VIS_LOGGER.info("sample({}) Linx VIS data and (filtered) CNV data empty - no plots to generate", mConfig.Sample);
             }
 
-            VIS_LOGGER.info("sample({}) empty Linx VIS input files, no plots to generate", mConfig.Sample);
             return;
         }
 
