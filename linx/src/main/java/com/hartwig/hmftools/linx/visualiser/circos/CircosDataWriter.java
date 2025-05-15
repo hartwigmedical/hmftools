@@ -155,8 +155,8 @@ public class CircosDataWriter
         String distancesPath = filePrefix + ".distance.circos";
         Files.write(new File(distancesPath).toPath(), createDistances(data.UnadjustedCopyNumbers, alterations));
 
-        String chromosomeBandPath = filePrefix + ".chromosome.circos";
-        Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.UnadjustedCopyNumbers));
+        String chromosomeRangesPath = filePrefix + ".chromosome.circos";
+        Files.write(new File(chromosomeRangesPath).toPath(), createChromosomeRanges(data.ChromosomeRanges));
 
         String amberBAFsPath = filePrefix + ".amber.circos";
         Files.write(new File(amberBAFsPath).toPath(), createAmberBAFs(data.AmberBAFs));
@@ -173,11 +173,10 @@ public class CircosDataWriter
         return this;
     }
 
-    private List<String> chromosomeLocations(final List<VisCopyNumber> unadjustedAlterations)
+    private List<String> createChromosomeRanges(final List<GenomeRegion> regions)
     {
         List<String> result = Lists.newArrayList();
 
-        List<GenomeRegion> regions = Span.spanRegions(unadjustedAlterations);
         for(GenomeRegion region : regions)
         {
             String bandString = new StringJoiner(DELIMITER).add(region.chromosome())

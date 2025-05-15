@@ -50,6 +50,8 @@ public class CircosData
     public final List<VisSvData> UnadjustedLinks;
     public final List<VisCopyNumber> UnadjustedCopyNumbers;
 
+    public final List<GenomeRegion> ChromosomeRanges;
+
     public final Set<GenomePosition> ContigLengths;
 
     public final Set<String> UpstreamGenes;
@@ -126,6 +128,8 @@ public class CircosData
         List<GenomeRegion> unadjustedLineElements = !showLineElements
                 ? Lists.newArrayList()
                 : Highlights.limitHighlightsToRegions(Highlights.LINE_ELEMENTS, Span.spanPositions(positionsToScale));
+
+        ChromosomeRanges = Span.spanPositions(positionsToScale);
 
         final ScalePosition scalePosition = new ScalePosition(positionsToScale);
         ContigLengths = scalePosition.contigLengths();
