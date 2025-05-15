@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionR
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readMismatchesPastJunction;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
@@ -454,7 +453,7 @@ public class JunctionAssembler
         {
             if(read.isPairedRead())
             {
-                readPositions.add(read.cachedRead().fragmentEnd());
+                readPositions.add(read.cachedRead().fivePrimeFragmentPosition());
 
                 if(readPositions.size() >= ASSEMBLY_MIN_DISTINCT_FRAGS)
                     return true;

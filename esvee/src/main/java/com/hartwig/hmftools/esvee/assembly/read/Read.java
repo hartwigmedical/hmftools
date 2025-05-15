@@ -174,7 +174,7 @@ public class Read
     public int unclippedStart()  { return mUnclippedStart; }
     public int unclippedEnd() { return mUnclippedEnd; }
 
-    public int fragmentEnd() { return positiveStrand() ? mUnclippedStart : mUnclippedEnd; }
+    public int fivePrimeFragmentPosition() { return positiveStrand() ? mUnclippedStart : mUnclippedEnd; }
 
     // convenience
     public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart || mIndelInferredUnclippedStart != null; }

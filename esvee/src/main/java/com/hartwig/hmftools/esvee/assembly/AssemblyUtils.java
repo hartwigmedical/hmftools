@@ -281,4 +281,16 @@ public final class AssemblyUtils
 
         return emptyRanges;
     }
+
+    public static String nonNullBaseStr(final byte[] bases)
+    {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < bases.length; ++i)
+        {
+            if(bases[i] != 0)
+                sb.append((char)bases[i]);
+        }
+
+        return sb.toString();
+    }
 }

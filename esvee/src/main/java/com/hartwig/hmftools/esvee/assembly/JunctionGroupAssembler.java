@@ -228,7 +228,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
     private void processRecord(final SAMRecord record)
     {
-        mConfig.logReadId(record, "JunctionGroupAssembler:processRecord");
+        // mConfig.logReadId(record, "JunctionGroupAssembler:processRecord");
 
         // temporary checking of repeated (ie identical) supplementaries from SvPrep
         if(ignoreIdenticalSupplementary(record))

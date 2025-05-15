@@ -2,19 +2,25 @@ package com.hartwig.hmftools.esvee.assembly.read;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
+
+import java.util.Arrays;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 import htsjdk.samtools.CigarElement;
@@ -275,5 +281,12 @@ public final class ReadUtils
         }
 
         return qualitySum / (indexEnd - indexStart + 1);
+    }
+
+    public static int calcTrimmedReadBaseLength(final Read read, int indexStart, int indexEnd)
+    {
+        byte[] readBases = Arrays.copyOfRange(read.getBases(), max(indexStart, 0), min(indexEnd, read.basesLength()));
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(readBases);
+        return calcTrimmedBaseLength(0, readBases.length - 1, repeats);
     }
 }

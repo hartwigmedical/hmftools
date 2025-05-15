@@ -11,11 +11,15 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.AssemblyBuildDebug;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_READ_TRIMMED_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.nonNullBaseStr;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.calcTrimmedReadBaseLength;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import java.util.Collections;
@@ -367,34 +371,6 @@ public class UnmappedBaseExtender
                     ++readSequenceMatch.ConsensusMismatches;
             }
         }
-
-        /* NOTE: reads with large diffs vs the consensus are not purged, but they are attempted to be added last
-        
-        // purge any reads less than the min mismatch count
-        int minMismatches = readSequenceMatches.stream().mapToInt(x -> x.ConsensusMismatches).min().orElse(0);
-        int readsWithMinMismatches = (int)readSequenceMatches.stream().filter(x -> x.ConsensusMismatches == minMismatches).count();
-
-        if(readsWithMinMismatches == 1)
-            return;
-
-        double mismatchPurgeLevel = max(minMismatches * 1.2, minMismatches + 3);
-
-        int readIndex = 0;
-
-        while(readIndex < readSequenceMatches.size())
-        {
-            ReadSequenceMatch readSequenceMatch = readSequenceMatches.get(readIndex);
-
-            if(readSequenceMatch.ConsensusMismatches > mismatchPurgeLevel)
-            {
-                readSequenceMatches.remove(readIndex);
-            }
-            else
-            {
-                ++readIndex;
-            }
-        }
-        */
     }
 
     private boolean addRead(final ReadSequenceMatch readSequenceMatch, int baseOffset)
@@ -544,18 +520,6 @@ public class UnmappedBaseExtender
         return true;
     }
 
-    private static String nonNullBaseStr(final byte[] bases)
-    {
-        StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < bases.length; ++i)
-        {
-            if(bases[i] != 0)
-                sb.append((char)bases[i]);
-        }
-
-        return sb.toString();
-    }
-
     private class ReadSequenceMatch implements Comparable<ReadSequenceMatch>
     {
         public final Read Read;
@@ -676,11 +640,18 @@ public class UnmappedBaseExtender
 
         int totalOverlap = lowerOverlap + upperOverlap;
 
-        if(totalOverlap < ASSEMBLY_LINK_OVERLAP_BASES)
-            return null;
-
         int readIndexStart = readIndex - lowerOverlap;
         int readIndexEnd = readIndex + upperOverlap - 1;
+
+        if(totalOverlap < ASSEMBLY_LINK_OVERLAP_BASES)
+        {
+            // accept less overlap if not a repetitive section
+            int trimmedReadLength = calcTrimmedReadBaseLength(read, readIndexStart, readIndexEnd);
+
+            if(trimmedReadLength < ASSEMBLY_READ_TRIMMED_OVERLAP_BASES)
+                return null;
+        }
+
         int extBaseIndexStart = extBaseMatchIndex - lowerOverlap;
         int extBaseIndexEnd = extBaseMatchIndex + upperOverlap - 1;
 

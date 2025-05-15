@@ -180,6 +180,8 @@ public class AlignmentFragments
         // handle incomplete fragment reads
         for(FragmentReads fragmentReads : fragmentMap.values())
         {
+            updateUniqueFragmentPositions(fragmentReads);
+
             if(fragmentReads.Processed)
                 continue;
 
@@ -283,9 +285,6 @@ public class AlignmentFragments
         firstRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
         secondRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
-        updateBreakendFragmentPositions(firstBreakendMatches, firstRead);
-        updateBreakendFragmentPositions(secondBreakendMatches, secondRead);
-
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
@@ -306,31 +305,39 @@ public class AlignmentFragments
         }
     }
 
-    private static void updateBreakendFragmentPositions(final List<ReadBreakendMatch> breakendMatches, final SupportRead read)
+    private void updateUniqueFragmentPositions(final FragmentReads fragmentReads)
     {
-        // only add to one breakend and only to the the one which the read is local to
-        int fragmentPosition = read.fragmentEnd();
+        // use split reads (including supplementaries) to determine unique fragment end (ie 5' unsclipped) positions for each breakend
+        if(!fragmentReads.InPrimaryAssembly)
+            return;
 
-        for(ReadBreakendMatch breakendMatch : breakendMatches)
+        Set<Breakend> processedBreakends = Sets.newHashSet();
+
+        for(SupportRead read : fragmentReads.PrimaryReads)
         {
-            Breakend breakend = breakendMatch.Breakend;
-
-            if(!breakend.Chromosome.equals(read.chromosome()))
+            if(!read.type().isSplitSupport())
                 continue;
 
-            if(read.type().isSplitSupport())
+            List<ReadBreakendMatch> breakendMatches = findReadBreakendMatch(read);
+
+            int fragmentPosition = read.fivePrimeFragmentPosition();
+
+            for(ReadBreakendMatch breakendMatch : breakendMatches)
             {
+                Breakend breakend = breakendMatch.Breakend;
+
+                if(processedBreakends.contains(breakend))
+                    continue;
+
+                if(!breakend.Chromosome.equals(read.chromosome()))
+                    continue;
+
                 if(!positionWithin(breakend.Position, read.unclippedStart(), read.unclippedEnd()))
                     continue;
-            }
-            else
-            {
-                if(read.orientation() != breakend.Orient || abs(fragmentPosition - breakend.Position) >= DEFAULT_MAX_CONCORDANT_FRAG_LENGTH)
-                    continue;
-            }
 
-            breakend.addFragmentPosition(fragmentPosition);
-            return;
+                breakend.addFragmentPosition(fragmentPosition);
+                processedBreakends.add(breakend);
+            }
         }
     }
 
@@ -411,8 +418,6 @@ public class AlignmentFragments
             return;
 
         read.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
-
-        updateBreakendFragmentPositions(readBreakendMatches, read);
 
         for(Breakend breakend : breakends)
         {

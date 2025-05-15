@@ -96,7 +96,7 @@ public class RepeatInfo
         if(startOffset == 0 && endOffset == 0)
             return findRepeats(bases);
 
-        final byte[] extensionBases = Arrays.copyOfRange(bases, startOffset, bases.length - endOffset);
+        byte[] extensionBases = Arrays.copyOfRange(bases, startOffset, bases.length - endOffset);
         List<RepeatInfo> repeats = RepeatInfo.findRepeats(extensionBases);
 
         if(startOffset == 0)
