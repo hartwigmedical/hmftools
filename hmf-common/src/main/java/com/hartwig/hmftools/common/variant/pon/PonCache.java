@@ -43,9 +43,9 @@ public class PonCache
     public static final String PON_FILE = "pon_file";
 
     // annotations
-    public static final String PON_COUNT = "PON_COUNT";
-    public static final String PON_MAX = "PON_MAX";
-    public static final String PON_AVG_READS = "PON_READS";
+    public static final String PON_COUNT = "PON_COUNT"; // samples in cohort with the variant
+    public static final String PON_MAX = "PON_MAX"; // max observed reads from those samples
+    public static final String PON_AVG_READS = "PON_READS"; // average reads from those samples
 
     // PON filter config
     public static final String PON_FILTERS = "pon_filters";
@@ -63,7 +63,10 @@ public class PonCache
 
     // PON filters relating to PON generated from 1000 and 98 samples, prior to the hg38 re-run
     public static final String PON_FILTERS_V37 = "HOTSPOT:10:5;PANEL:6:5;UNKNOWN:6:0";
-    public static final String PON_FILTERS_V38 = "HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0";
+
+    private static final String PON_FILTERS_V38_98_SAMPLES = "HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0";
+    private static final String PON_FILTERS_V38_1000_SAMPLES = "HOTSPOT:6:5;PANEL:3:3;UNKNOWN:3:0";
+    public static final String PON_FILTERS_V38 = PON_FILTERS_V38_98_SAMPLES;
 
     protected static final Logger LOGGER = LogManager.getLogger(PonCache.class);
 
