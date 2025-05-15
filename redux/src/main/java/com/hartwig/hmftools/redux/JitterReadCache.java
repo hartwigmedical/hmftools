@@ -1,33 +1,21 @@
 package com.hartwig.hmftools.redux;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.getFragmentCoordReads;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
-import com.hartwig.hmftools.common.collect.UnionFind;
+import com.hartwig.hmftools.redux.common.AuxReadCache_0;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.common.IAuxReadCache;
 import com.hartwig.hmftools.redux.common.ReadInfo;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -35,10 +23,7 @@ public class JitterReadCache implements IReadCache
 {
     private final ReadCache mReadCache;
     private final int mMaxSoftClipLength;
-
-    private final Map<String, Set<FragmentCoords>> mAuxFragmentCoordsCache;
-    private final Map<FragmentCoords, DuplicateGroup> mAuxDuplicateGroupLookup;
-
+    private final IAuxReadCache mAuxReadCache = new AuxReadCache_0();
     private final SortedMultiset<Integer> mInnerCachedReadStarts;
 
     private int mCurrentReadPos;
@@ -48,8 +33,6 @@ public class JitterReadCache implements IReadCache
     {
         mReadCache = readCache;
         mMaxSoftClipLength = readCache.maxSoftClipLength();
-        mAuxFragmentCoordsCache = Maps.newHashMap();
-        mAuxDuplicateGroupLookup = Maps.newHashMap();
         mInnerCachedReadStarts = TreeMultiset.create();
 
         mCurrentReadPos = 0;
@@ -70,20 +53,6 @@ public class JitterReadCache implements IReadCache
         return mReadCache.currentReadMinPosition();
     }
 
-    private void pushSingleRead(final ReadInfo readInfo)
-    {
-        pushDuplicateGroup(new DuplicateGroup(null, readInfo.read(), readInfo.coordinates()));
-    }
-
-    private void pushDuplicateGroup(final DuplicateGroup duplicateGroup)
-    {
-        FragmentCoords coords = duplicateGroup.fragmentCoordinates();
-        String collapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
-        mAuxFragmentCoordsCache.computeIfAbsent(collapsedKey, x -> Sets.newHashSet());
-        mAuxFragmentCoordsCache.get(collapsedKey).add(coords);
-        mAuxDuplicateGroupLookup.put(coords, duplicateGroup);
-    }
-
     private int innerMinCachedReadStart()
     {
         if(mInnerCachedReadStarts.isEmpty())
@@ -100,72 +69,6 @@ public class JitterReadCache implements IReadCache
             return mCurrentReadPos - mMaxSoftClipLength + 1;
 
         return min(mCurrentReadPos, readCacheMinCachedReadStart) - mMaxSoftClipLength + 1;
-    }
-
-    private FragmentCoordReads popAuxCache()
-    {
-        if(mAuxDuplicateGroupLookup.isEmpty())
-            return null;
-
-        List<DuplicateGroup> groupsToPop = Lists.newArrayList();
-        List<Pair<String, FragmentCoords>> coordsToDrop = Lists.newArrayList();
-        for(String key : mAuxFragmentCoordsCache.keySet())
-        {
-            List<FragmentCoords> allCoords = Lists.newArrayList();
-            UnionFind<FragmentCoords> groupMerger = new UnionFind<>();
-            for(FragmentCoords coords : mAuxFragmentCoordsCache.get(key))
-            {
-                allCoords.add(coords);
-                groupMerger.add(coords);
-            }
-
-            for(int i = 0; i < allCoords.size() - 1; i++)
-            {
-                FragmentCoords coords1 = allCoords.get(i);
-                for(int j = i + 1; j < allCoords.size(); j++)
-                {
-                    FragmentCoords coords2 = allCoords.get(j);
-                    int lowerDiff = abs(coords1.PositionLower - coords2.PositionLower);
-                    int upperDiff = abs(coords1.PositionUpper - coords2.PositionUpper);
-                    if(lowerDiff > 0 && upperDiff > 0)
-                        continue;
-
-                    if(lowerDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE || upperDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE)
-                        continue;
-
-                    groupMerger.merge(coords1, coords2);
-                }
-            }
-
-            for(Set<FragmentCoords> partitions : groupMerger.getPartitions())
-            {
-                int maxPos = partitions.stream().mapToInt(FragmentCoords::readPosition).max().orElse(-1);
-                if(maxPos + SINGLE_END_JITTER_COLLAPSE_DISTANCE >= mLastReadCacheBoundary)
-                    continue;
-
-                partitions.forEach(coords ->
-                {
-                    groupsToPop.add(mAuxDuplicateGroupLookup.get(coords));
-                    coordsToDrop.add(Pair.of(key, coords));
-                });
-            }
-        }
-
-        for(Pair<String, FragmentCoords> keyCoordPair : coordsToDrop)
-        {
-            String key = keyCoordPair.getLeft();
-            FragmentCoords coords = keyCoordPair.getRight();
-            mAuxFragmentCoordsCache.get(key).remove(coords);
-            if(mAuxFragmentCoordsCache.get(key).isEmpty())
-                mAuxFragmentCoordsCache.remove(key);
-
-            mAuxDuplicateGroupLookup.remove(coords);
-        }
-
-        if(groupsToPop.isEmpty())
-            return null;
-
-        return getFragmentCoordReads(groupsToPop);
     }
 
     @Override
@@ -191,7 +94,7 @@ public class JitterReadCache implements IReadCache
             if(!tryAuxPop)
                 return null;
 
-            return popAuxCache();
+            return mAuxReadCache.popReads(mLastReadCacheBoundary);
         }
 
         List<ReadInfo> singleReads = Lists.newArrayList();
@@ -211,7 +114,7 @@ public class JitterReadCache implements IReadCache
             }
 
             tryAuxPop = true;
-            pushSingleRead(singleRead);
+            mAuxReadCache.pushSingleRead(singleRead);
         }
 
         for(DuplicateGroup duplicateGroup : fragmentCoordReads.DuplicateGroups)
@@ -229,12 +132,12 @@ public class JitterReadCache implements IReadCache
             }
 
             tryAuxPop = true;
-            pushDuplicateGroup(duplicateGroup);
+            mAuxReadCache.pushDuplicateGroup(duplicateGroup);
         }
 
         fragmentCoordReads = null;
         if(tryAuxPop)
-            fragmentCoordReads = popAuxCache();
+            fragmentCoordReads = mAuxReadCache.popReads(mLastReadCacheBoundary);
 
         if(fragmentCoordReads != null)
         {
@@ -265,9 +168,8 @@ public class JitterReadCache implements IReadCache
             duplicateGroups.addAll(fragmentCoordReads.DuplicateGroups);
         }
 
-        fragmentCoordReads = getFragmentCoordReads(mAuxDuplicateGroupLookup.values());
-        mAuxFragmentCoordsCache.clear();
-        mAuxDuplicateGroupLookup.clear();
+        fragmentCoordReads = mAuxReadCache.evictAll();
+
         singleReads.addAll(fragmentCoordReads.SingleReads);
         duplicateGroups.addAll(fragmentCoordReads.DuplicateGroups);
 
@@ -280,31 +182,28 @@ public class JitterReadCache implements IReadCache
     @Override
     public int minCachedReadStart()
     {
-        int minReadStart = innerMinCachedReadStart();
-        for(DuplicateGroup group : mAuxDuplicateGroupLookup.values())
-        {
-            for(SAMRecord read : group.reads())
-            {
-                int readStart = read.getAlignmentStart();
-                if(minReadStart < 0 || readStart < minReadStart)
-                    minReadStart = readStart;
-            }
-        }
+        int innerMinReadStart = innerMinCachedReadStart();
+        int auxMinReadStart = mAuxReadCache.minCachedReadStart();
+        if(innerMinReadStart < 0 && auxMinReadStart < 0)
+            return -1;
 
-        return minReadStart;
+        if(innerMinReadStart < 0)
+            innerMinReadStart = Integer.MAX_VALUE;
+
+        if(auxMinReadStart < 0)
+            auxMinReadStart = Integer.MAX_VALUE;
+
+        return min(innerMinReadStart, auxMinReadStart);
     }
 
     @Override
     public int cachedReadCount()
     {
-        return mReadCache.cachedReadCount() + mAuxDuplicateGroupLookup.values().stream().mapToInt(DuplicateGroup::readCount).sum();
+        return mReadCache.cachedReadCount() + mAuxReadCache.cachedReadCount();
     }
 
     @Override
-    public int cachedFragCoordGroups()
-    {
-        return mReadCache.cachedFragCoordGroups() + mAuxDuplicateGroupLookup.size();
-    }
+    public int cachedFragCoordGroups() { return mReadCache.cachedFragCoordGroups() + mAuxReadCache.cachedFragCoordGroups(); }
 
     private static List<SAMRecord> allFragmentCoordReads(final FragmentCoordReads fragmentCoordReads)
     {
@@ -319,12 +218,5 @@ public class JitterReadCache implements IReadCache
     }
 
     @VisibleForTesting
-    public Multiset<String> auxCacheReadNames()
-    {
-        return mAuxDuplicateGroupLookup.values()
-                .stream()
-                .flatMap(x -> x.reads().stream())
-                .map(SAMRecord::getReadName)
-                .collect(Collectors.toCollection(HashMultiset::create));
-    }
+    public Multiset<String> auxCacheReadNames() { return mAuxReadCache.readNames(); }
 }
