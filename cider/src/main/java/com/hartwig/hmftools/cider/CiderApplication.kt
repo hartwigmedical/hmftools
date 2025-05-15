@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.beust.jcommander.JCommander
-import com.beust.jcommander.ParameterException
-import com.beust.jcommander.ParametersDelegate
-import com.beust.jcommander.UnixStyleUsageFormatter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
@@ -11,11 +7,14 @@ import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
 import com.hartwig.hmftools.cider.blastn.BlastnAnnotator
 import com.hartwig.hmftools.cider.blastn.BlastnStatus
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
-import com.hartwig.hmftools.cider.primer.*
+import com.hartwig.hmftools.cider.primer.PrimerTsvFile
+import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
+import com.hartwig.hmftools.cider.primer.VdjPrimerMatchTsv
+import com.hartwig.hmftools.cider.primer.VdjPrimerMatcher
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
-import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
-import com.hartwig.hmftools.common.utils.config.LoggingOptions
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder
+import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.version.VersionInfo
 import htsjdk.samtools.SAMFileHeader
@@ -34,33 +33,21 @@ import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import kotlin.system.exitProcess
 
-class CiderApplication
+class CiderApplication(configBuilder: ConfigBuilder)
 {
-    // add the options
-    @ParametersDelegate
-    private val mParams = CiderParams()
-
-    // add to the logging options
-    @ParametersDelegate
-    private val mLoggingOptions = LoggingOptions()
+    private val mParams = CiderParams(configBuilder)
 
     @Throws(IOException::class, InterruptedException::class)
     fun run(args: Array<String>): Int
     {
         val runDate = LocalDate.now()
 
-        mLoggingOptions.setLogLevel()
         val versionInfo = VersionInfo("cider.version")
         sLogger.info("Cider version: {}, build timestamp: {}",
             versionInfo.version(),
             versionInfo.buildTime().format(ISO_ZONED_DATE_TIME))
-
-        if (!mParams.isValid)
-        {
-            sLogger.error(" invalid config, exiting")
-            return 1
-        }
 
         sLogger.info("run date: {}", runDate)
         sLogger.info("run args: {}", args.joinToString(" "))
@@ -301,33 +288,12 @@ class CiderApplication
         @JvmStatic
         fun main(args: Array<String>)
         {
-            val ciderApplication = CiderApplication()
-            val commander = JCommander.newBuilder()
-                .addObject(ciderApplication)
-                .build()
-
-            // use unix style formatter
-            commander.usageFormatter = UnixStyleUsageFormatter(commander)
-            // help message show in order parameters are declared
-            commander.parameterDescriptionComparator = DeclaredOrderParameterComparator(CiderApplication::class.java)
-            try
-            {
-                commander.parse(*args)
-            } catch (e: ParameterException)
-            {
-                println("Unable to parse args: " + e.message)
-                commander.usage()
-                System.exit(1)
-            }
-
-            // set all thread exception handler
-            Thread.setDefaultUncaughtExceptionHandler { t: Thread, e: Throwable ->
-                sLogger.error("[{}]: uncaught exception: {}", t, e)
-                e.printStackTrace(System.err)
-                System.exit(1)
-            }
-
-            System.exit(ciderApplication.run(args))
+            val configBuilder = ConfigBuilder("Cider")
+            CiderParams.registerConfig(configBuilder)
+            ConfigUtils.addLoggingOptions(configBuilder)
+            configBuilder.checkAndParseCommandLine(args)
+            val ciderApplication = CiderApplication(configBuilder)
+            exitProcess(ciderApplication.run(args))
         }
     }
 }

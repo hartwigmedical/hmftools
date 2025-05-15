@@ -202,7 +202,7 @@ To set up BLASTN, do the following:
 
 ## Ig/TCR gene reference data curation
 To create reference data, following steps:
-1. queried from IMGT (https://www.imgt.org/genedb/) to get all sequences for species Homo Sapiens and (separately) for Molecular Component: IG 
+1. queried from IMGT (https://www.imgt.org/genedb/)[[1]][1] to get all sequences for species Homo Sapiens and (separately) for Molecular Component: IG 
 and TR. Then we select all query results choosing “F+ORF+in-frame P nucleotide sequences with IMGT gaps”.
 2. Use both blast and ensembl to determine the V38 genomic location of each gene.
 3. For V and J genes, find their anchor regions.
@@ -243,7 +243,7 @@ Running with `-xmx32G`.
 | 600k               | 292                    |
 | 800k               | 518                    |
 
-"Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc. 
+"Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc.
 
 # Version History and Download Links
 - [1.0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.3)
@@ -294,3 +294,8 @@ Running with `-xmx32G`.
   - Changed vdj_seq.tsv output file extension to vdj.tsv.gz
 - [0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.3)
   - First public release 
+
+# References
+[1]: Giudicelli V., Chaume D. and Lefranc M.-P.
+    IMGT/GENE-DB: a comprehensive database for human and mouse immunoglobulin and T cell receptor genes
+    Nucl. Acids Res., 33(S1):D256-D261 (2005). DOI:10.1093/nar/gki010. PMID:15608191. pdf.
