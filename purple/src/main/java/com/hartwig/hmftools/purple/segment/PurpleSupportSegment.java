@@ -3,7 +3,7 @@ package com.hartwig.hmftools.purple.segment;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
-public class PurpleSegment implements GenomeRegion
+public class PurpleSupportSegment implements GenomeRegion
 {
     public final String Chromosome;
     public int Start;
@@ -15,7 +15,7 @@ public class PurpleSegment implements GenomeRegion
     public int MinStart;
     public int MaxStart;
 
-    public PurpleSegment(
+    public PurpleSupportSegment(
             final String chromosome, final int start, final int end, final boolean ratioSupport,
             final SegmentSupport support, final boolean svCluster, final int minStart, final int maxStart)
     {
@@ -29,9 +29,9 @@ public class PurpleSegment implements GenomeRegion
         MaxStart = maxStart;
     }
 
-    public static PurpleSegment from(final PurpleSegment ref)
+    public static PurpleSupportSegment from(final PurpleSupportSegment ref)
     {
-        return new PurpleSegment(
+        return new PurpleSupportSegment(
                 ref.Chromosome, ref.Start, ref.End, ref.RatioSupport, ref.Support, ref.SvCluster, ref.MinStart, ref.MaxStart);
     }
 

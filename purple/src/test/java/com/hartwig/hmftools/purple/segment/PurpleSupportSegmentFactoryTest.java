@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PurpleSegmentFactoryTest
+public class PurpleSupportSegmentFactoryTest
 {
     private static final GenomePosition CHROMOSOME_LENGTH = GenomePositions.create("1", 10_000_000);
     private static final GenomePosition CHROMOSOME_CENTROMERE = GenomePositions.create("1", 5_000_001);
@@ -30,7 +30,7 @@ public class PurpleSegmentFactoryTest
     @Test
     public void testEmpty()
     {
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Collections.emptyList());
+        final List<PurpleSupportSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Collections.emptyList());
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, CHROMOSOME_CENTROMERE.position() - 1, true, TELOMERE);
         assertPurpleSegment(segments.get(1), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
@@ -40,7 +40,7 @@ public class PurpleSegmentFactoryTest
     public void testSingleSV()
     {
         final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
+        final List<PurpleSupportSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, false, BND);
@@ -51,7 +51,7 @@ public class PurpleSegmentFactoryTest
     public void testSVAtCentromere()
     {
         final List<Cluster> clusters = Lists.newArrayList(cluster(17001, CHROMOSOME_CENTROMERE.position()));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
+        final List<PurpleSupportSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
         assertEquals(2, segments.size());
 
         assertPurpleSegment(segments.get(0), 1, CHROMOSOME_CENTROMERE.position() - 1, true, TELOMERE);
@@ -64,7 +64,7 @@ public class PurpleSegmentFactoryTest
         final Cluster cluster = cluster(17002, 18881);
         addRatios(cluster, 17050, 19000);
 
-        final List<PurpleSegment> segments =
+        final List<PurpleSupportSegment> segments =
                 PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
 
         assertEquals(3, segments.size());
@@ -81,7 +81,7 @@ public class PurpleSegmentFactoryTest
 
         final List<Cluster> clusters = Lists.newArrayList(cluster);
 
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
+        final List<PurpleSupportSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
 
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
@@ -96,7 +96,7 @@ public class PurpleSegmentFactoryTest
         cluster.Variants.add(variant(19991));
         final List<Cluster> clusters = Lists.newArrayList(cluster);
 
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
+        final List<PurpleSupportSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, clusters);
 
         assertEquals(4, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
@@ -111,7 +111,7 @@ public class PurpleSegmentFactoryTest
         final Cluster cluster = cluster(17002);
         addRatios(cluster, 18881, 19000);
 
-        final List<PurpleSegment> segments =
+        final List<PurpleSupportSegment> segments =
                 PurpleSegmentFactory.create(CHROMOSOME_CENTROMERE, CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
 
         assertEquals(3, segments.size());
@@ -120,7 +120,7 @@ public class PurpleSegmentFactoryTest
         assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
     }
 
-    private static void assertPurpleSegment(final PurpleSegment victim, int start, int end, boolean ratioSupport, final SegmentSupport support)
+    private static void assertPurpleSegment(final PurpleSupportSegment victim, int start, int end, boolean ratioSupport, final SegmentSupport support)
     {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());

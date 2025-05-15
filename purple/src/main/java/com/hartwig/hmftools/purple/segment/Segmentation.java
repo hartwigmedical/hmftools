@@ -52,7 +52,7 @@ public class Segmentation
         final PurpleSegmentFactory factory = new PurpleSegmentFactory(
                 mWindowSize, mReferenceData.Centromeres, mReferenceData.ChromosomeLengths);
 
-        final List<PurpleSegment> segments = factory.createSegments(structuralVariants, pcfPositions, cobaltData.Ratios);
+        final List<PurpleSupportSegment> segments = factory.createSegments(structuralVariants, pcfPositions, cobaltData.Ratios);
 
         if(!validateSegments(segments))
             return Lists.newArrayList();

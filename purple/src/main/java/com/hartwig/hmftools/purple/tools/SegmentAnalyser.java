@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.SegmentFile;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -125,7 +125,8 @@ public class SegmentAnalyser
 
                 try
                 {
-                    List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(samplePurpleDir, sampleId));
+                    List<PurpleSegment> segments = PurpleSegment.read(PurpleSegment.generateFilename(samplePurpleDir, sampleId));
+                    List<ObservedRegion> fittedRegions = segments.stream().map(x -> ObservedRegion.fromSegment(x)).collect(Collectors.toList());
 
                     if(mAnalysisType == AnalysisType.GERMLINE_AMP_DEL)
                         findGermlineAmpDels(sampleId, fittedRegions);

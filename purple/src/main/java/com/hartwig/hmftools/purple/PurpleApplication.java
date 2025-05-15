@@ -66,7 +66,7 @@ import com.hartwig.hmftools.purple.germline.GermlineSvCache;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.SegmentFile;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.purple.segment.Segmentation;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
@@ -309,7 +309,9 @@ public class PurpleApplication
                 bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
         PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
-        SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), fittedRegions);
+
+        List<PurpleSegment> segments = fittedRegions.stream().map(x -> x.toSegment()).collect(Collectors.toList());
+        PurpleSegment.write(PurpleSegment.generateFilename(mConfig.OutputDir, tumorId), segments);
 
         GermlineDeletions germlineDeletions = null;
 
@@ -491,7 +493,7 @@ public class PurpleApplication
                     .build();
 
             PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
-            SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
+            PurpleSegment.write(PurpleSegment.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(
                     mConfig.OutputDir, tumorId, true), Collections.emptyList());
