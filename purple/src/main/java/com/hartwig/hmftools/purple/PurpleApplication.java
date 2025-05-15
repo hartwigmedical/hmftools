@@ -221,7 +221,7 @@ public class PurpleApplication
         {
             PPL_LOGGER.warn("no valid observed regions created, exiting");
 
-            writeEmptyResultFiles(tumorId, sampleData, sampleDataFiles);
+            writeEmptyResultFiles(tumorId, sampleData, sampleDataFiles, observedRegions);
             System.exit(0);
         }
 
@@ -256,6 +256,14 @@ public class PurpleApplication
                     chimerismPercentage > 0);
 
             purityPloidyFitter.run();
+
+            if(!purityPloidyFitter.isValid())
+            {
+                PPL_LOGGER.warn("insufficient input Amber and Cobalt data, exiting");
+
+                writeEmptyResultFiles(tumorId, sampleData, sampleDataFiles, observedRegions);
+                System.exit(0);
+            }
 
             fittedRegions.addAll(purityPloidyFitter.fittedRegions());
 
@@ -445,7 +453,8 @@ public class PurpleApplication
     }
 
     private void writeEmptyResultFiles(
-            final String tumorId, final SampleData sampleData, final SampleDataFiles sampleDataFiles) throws IOException
+            final String tumorId, final SampleData sampleData, final SampleDataFiles sampleDataFiles,
+            final List<ObservedRegion> fittedRegions) throws IOException
     {
         Gender gender = Gender.FEMALE;
 
@@ -493,7 +502,9 @@ public class PurpleApplication
                     .build();
 
             PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
-            PurpleSegment.write(PurpleSegment.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
+
+            List<PurpleSegment> segments = fittedRegions.stream().map(x -> x.toSegment()).collect(Collectors.toList());
+            PurpleSegment.write(PurpleSegment.generateFilename(mConfig.OutputDir, tumorId), segments);
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(
                     mConfig.OutputDir, tumorId, true), Collections.emptyList());

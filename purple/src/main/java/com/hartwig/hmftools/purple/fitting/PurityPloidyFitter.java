@@ -126,7 +126,8 @@ public class PurityPloidyFitter
         if(mCopyNumberPurityFit == null)
         {
             PPL_LOGGER.error("failed to find copy number fit");
-            System.exit(1);
+            mIsValid = false;
+            return;
         }
 
         buildCopyNumbers(mCopyNumberPurityFit);
@@ -136,7 +137,8 @@ public class PurityPloidyFitter
         if(mFinalPurityFit == null)
         {
             PPL_LOGGER.error("failed to find final fit");
-            System.exit(1);
+            mIsValid = false;
+            return;
         }
 
         if(mFinalPurityFit != mCopyNumberPurityFit)
@@ -152,6 +154,13 @@ public class PurityPloidyFitter
         FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
                 mConfig, mExecutorService, mSampleData.Cobalt.CobaltChromosomes, mRegionFitCalculator, mObservedRegions,
                 !mConfig.tumorOnlyMode() ? mVariantPurityFitter.fittingSomatics() : Collections.emptyList());
+
+        if(!fittedPurityFactory.validDataForFit())
+        {
+            mIsValid = false;
+            return;
+        }
+
         try
         {
             fittedPurityFactory.fitPurity();
