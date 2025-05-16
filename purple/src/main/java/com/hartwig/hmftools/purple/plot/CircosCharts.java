@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple.plot;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.purple.region.ObservedRegionFactory.EXCLUDED_IMMUNE_REGIONS;
@@ -213,13 +211,10 @@ public class CircosCharts
 
     private void copyCentromereGapsToCircos(final RefGenomeVersion refGenomeVersion) throws IOException
     {
-        Charset charset = StandardCharsets.UTF_8;
-
-        RefGenomeCoordinates refGenomeCoordinates = refGenomeVersion.is37() ? COORDS_37 : COORDS_38;
-        String centromereGapsStr = refGenomeCoordinates.readCentromereGaps(refGenomeVersion);
+        List<String> centromereGapsStrings = RefGenomeCoordinates.readCentromereGaps(refGenomeVersion);
 
         final String outputFilename = mConfig.CircosDirectory + "gaps.txt";
-        Files.write(new File(outputFilename).toPath(), centromereGapsStr.getBytes(charset));
+        Files.write(new File(outputFilename).toPath(), centromereGapsStrings);
     }
 
     private String readResource(final String resource) throws IOException
