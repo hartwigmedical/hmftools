@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -314,7 +315,7 @@ public final class SvUtilities {
 
     public static List<ChrBaseRegion> loadConfigFile(final List<String> fileLines, final RefGenomeVersion refGenomeVersion)
     {
-        return loadConfigFile(fileLines, refGenomeVersion, ",");
+        return loadConfigFile(fileLines, refGenomeVersion, CSV_DELIM);
     }
 
 

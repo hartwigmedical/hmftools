@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.loadConfigFile;
 import static com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator.fragileSitesResourceFile;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.lineElementsResourceFile;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -49,11 +51,8 @@ public class Highlights
     {
         List<String> resourceLines;
 
-        resourceLines = new BufferedReader(new InputStreamReader(
-                Highlights.class.getResourceAsStream(centromereSitesResourceFile(refGenomeVersion))))
-                .lines().collect(Collectors.toList());
-
-        loadConfigFile(resourceLines, refGenomeVersion, "\t").forEach(x -> CENTROMERES.add(x.genomeRegion()));
+        resourceLines = RefGenomeCoordinates.readCentromereGaps(refGenomeVersion);
+        loadConfigFile(resourceLines, refGenomeVersion, TSV_DELIM).forEach(x -> CENTROMERES.add(x.genomeRegion()));
 
         resourceLines = new BufferedReader(new InputStreamReader(
                 Highlights.class.getResourceAsStream(fragileSitesResourceFile(refGenomeVersion))))
@@ -66,10 +65,5 @@ public class Highlights
                 .lines().collect(Collectors.toList());
 
         loadConfigFile(resourceLines, refGenomeVersion).forEach(x -> LINE_ELEMENTS.add(x.genomeRegion()));
-    }
-
-    private static String centromereSitesResourceFile(final RefGenomeVersion refGenomeVersion)
-    {
-        return String.format("/sites/gaps.%s.txt", refGenomeVersion.identifier());
     }
 }
