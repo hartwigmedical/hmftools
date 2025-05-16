@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
@@ -35,7 +36,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -316,18 +316,18 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createAmberPcf(List<ObservedRegion> purpleSegments)
+    private List<String> createAmberPcf(List<PurpleSegment> purpleSegments)
     {
         List<String> result = Lists.newArrayList();
 
-        for(ObservedRegion purpleSegment : purpleSegments)
+        for(PurpleSegment purpleSegment : purpleSegments)
         {
             // Ensure histogram mirror images do not cross
-            double observedBAF = Math.min(1-purpleSegment.observedBAF(), purpleSegment.observedBAF());
+            double observedBAF = Math.min(1-purpleSegment.ObservedBAF, purpleSegment.ObservedBAF);
 
-            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.chromosome()))
-                    .add(String.valueOf(purpleSegment.start()))
-                    .add(String.valueOf(purpleSegment.end()))
+            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.Chromosome))
+                    .add(String.valueOf(purpleSegment.PosStart))
+                    .add(String.valueOf(purpleSegment.PosEnd))
                     .add(String.valueOf(observedBAF))
                     .toString();
 
@@ -355,16 +355,16 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createCobaltPcf(List<ObservedRegion> purpleSegments)
+    private List<String> createCobaltPcf(List<PurpleSegment> purpleSegments)
     {
         List<String> result = Lists.newArrayList();
 
-        for(ObservedRegion purpleSegment : purpleSegments)
+        for(PurpleSegment purpleSegment : purpleSegments)
         {
-            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.chromosome()))
-                    .add(String.valueOf(purpleSegment.start()))
-                    .add(String.valueOf(purpleSegment.end()))
-                    .add(String.valueOf(purpleSegment.observedTumorRatio()))
+            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.Chromosome))
+                    .add(String.valueOf(purpleSegment.PosStart))
+                    .add(String.valueOf(purpleSegment.PosEnd))
+                    .add(String.valueOf(purpleSegment.ObservedTumorRatio))
                     .toString();
 
             result.add(purpleSegmentString);

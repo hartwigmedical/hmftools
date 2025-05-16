@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
@@ -28,7 +29,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public class CircosData
 {
@@ -45,7 +45,7 @@ public class CircosData
 
     public final List<AmberBAF> AmberBAFs;
     public final List<CobaltRatio> CobaltRatios;
-    public final List<ObservedRegion> PurpleSegments;
+    public final List<PurpleSegment> PurpleSegments;
 
     public final List<VisSvData> UnadjustedLinks;
     public final List<VisCopyNumber> UnadjustedCopyNumbers;
@@ -86,7 +86,7 @@ public class CircosData
             final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions,
             final List<AmberBAF> unadjustedAmberBAFs,
             final List<CobaltRatio> unadjustedCobaltRatios,
-            final List<ObservedRegion> unadjustedPurpleSegments,
+            final List<PurpleSegment> unadjustedPurpleSegments,
             boolean showSimpleSvSegments, boolean showFragileSites, boolean showLineElements
     )
     {

@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
@@ -29,7 +30,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -147,17 +147,19 @@ class ScalePosition
         return results;
     }
 
-    public List<ObservedRegion> interpolatePurpleSegments(final List<ObservedRegion> purpleSegments)
+    public List<PurpleSegment> interpolatePurpleSegments(final List<PurpleSegment> purpleSegments)
     {
-        List<ObservedRegion> results = Lists.newArrayList();
+        List<PurpleSegment> results = Lists.newArrayList();
 
-        for(ObservedRegion purpleSegment : purpleSegments)
+        for(PurpleSegment purpleSegment : purpleSegments)
         {
-            ScaleContig positionMap = mContigMap.get(purpleSegment.chromosome());
+            ScaleContig positionMap = mContigMap.get(purpleSegment.Chromosome);
 
-            ObservedRegion newPurpleSegment = ObservedRegion.from(purpleSegment);
-            newPurpleSegment.setStart(positionMap.interpolate(purpleSegment.start()));
-            newPurpleSegment.setEnd(positionMap.interpolate(purpleSegment.end()));
+            PurpleSegment newPurpleSegment = purpleSegment.withModifiedCoordinates(
+                    purpleSegment.Chromosome,
+                    positionMap.interpolate(purpleSegment.PosStart),
+                    positionMap.interpolate(purpleSegment.PosEnd)
+            );
 
             results.add(newPurpleSegment);
         }

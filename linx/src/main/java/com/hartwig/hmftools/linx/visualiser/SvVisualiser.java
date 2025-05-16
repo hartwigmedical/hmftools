@@ -29,6 +29,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
@@ -48,7 +50,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -381,7 +382,7 @@ public class SvVisualiser implements AutoCloseable
         List<GenomeRegion> regionsToCover = Span.spanPositions(positionsToCover);
         List<AmberBAF> filteredAmberBAFs = Lists.newArrayList();
         List<CobaltRatio> filteredCobaltRatios = Lists.newArrayList();
-        List<ObservedRegion> filteredPurpleSegments = Lists.newArrayList();
+        List<PurpleSegment> filteredPurpleSegments = Lists.newArrayList();
         for(GenomeRegion region : regionsToCover)
         {
             if(mConfig.AmberDir != null)
@@ -404,15 +405,21 @@ public class SvVisualiser implements AutoCloseable
 
             if(mConfig.PurpleDir != null)
             {
-                List<ObservedRegion> regionPurpleSegments = Lists.newArrayList();
-                for(ObservedRegion purpleSegment : mSampleData.PurpleSegments)
+                List<PurpleSegment> regionPurpleSegments = Lists.newArrayList();
+                for(PurpleSegment purpleSegment : mSampleData.PurpleSegments)
                 {
-                    if(!region.overlaps(purpleSegment))
+                    GenomeRegion purpleSegmentRegion = GenomeRegions.create(
+                            purpleSegment.Chromosome, purpleSegment.PosStart, purpleSegment.PosEnd);
+
+                    if(!region.overlaps(purpleSegmentRegion))
                         continue;
 
-                    ObservedRegion newPurpleSegment = ObservedRegion.from(purpleSegment);
-                    newPurpleSegment.setStart(Math.max(region.start(), purpleSegment.start()));
-                    newPurpleSegment.setEnd(Math.min(region.end(), purpleSegment.end()));
+                    PurpleSegment newPurpleSegment = purpleSegment.withModifiedCoordinates(
+                            purpleSegment.Chromosome,
+                            Math.max(purpleSegment.PosStart, region.start()),
+                            Math.min(purpleSegment.PosEnd, region.end())
+                    );
+
                     regionPurpleSegments.add(newPurpleSegment);
                 }
 

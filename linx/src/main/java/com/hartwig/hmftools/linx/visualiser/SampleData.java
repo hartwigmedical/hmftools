@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
@@ -41,8 +42,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.SegmentFile;
 
 public class SampleData
 {
@@ -55,7 +54,7 @@ public class SampleData
 
     public final List<AmberBAF> AmberBAFs = Lists.newArrayList();
     public final List<CobaltRatio> CobaltRatios = Lists.newArrayList();
-    public final List<ObservedRegion> PurpleSegments = Lists.newArrayList();
+    public final List<PurpleSegment> PurpleSegments = Lists.newArrayList();
 
     private final VisualiserConfig mConfig;
 
@@ -154,10 +153,10 @@ public class SampleData
 
         if(mConfig.PurpleDir != null)
         {
-            final String purpleSegmentFile = SegmentFile.generateFilename(mConfig.PurpleDir, mConfig.Sample);
-            List<ObservedRegion> purpleSegmentsUnfiltered = SegmentFile.read(purpleSegmentFile);
-            List<ObservedRegion> purpleSegmentsFiltered = purpleSegmentsUnfiltered.stream()
-                    .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).toList();
+            final String purpleSegmentFile = PurpleSegment.generateFilename(mConfig.PurpleDir, mConfig.Sample);
+            List<PurpleSegment> purpleSegmentsUnfiltered = PurpleSegment.read(purpleSegmentFile);
+            List<PurpleSegment> purpleSegmentsFiltered = purpleSegmentsUnfiltered.stream()
+                    .filter(x -> x.GermlineState == GermlineStatus.DIPLOID).toList();
             PurpleSegments.addAll(purpleSegmentsFiltered);
         }
 
