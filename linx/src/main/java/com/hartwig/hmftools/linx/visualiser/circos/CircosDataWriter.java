@@ -2,8 +2,6 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.PSEUDOGENE;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,10 +19,13 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
@@ -98,6 +99,7 @@ public class CircosDataWriter
         List<VisSegment> segments = data.Segments;
         List<VisSvData> links = data.SvData;
         List<VisCopyNumber> alterations = data.CopyNumbers;
+        List<GenomeRegion> centromereSites = data.CentromereSites;
         List<GenomeRegion> fragileSites = data.FragileSites;
         List<GenomeRegion> lineElements = data.LineElements;
         List<VisGeneExon> exons = data.Exons;
@@ -139,28 +141,42 @@ public class CircosDataWriter
         Files.write(new File(cnaPath).toPath(), createCNA(alterations));
 
         String mapPath = filePrefix + ".map.circos";
-        Files.write(new File(mapPath).toPath(), createMinorAllelePloidy(alterations));
+        Files.write(new File(mapPath).toPath(), createMinorAlleleCopyNumber(alterations));
 
-        String fragile = filePrefix + ".fragile.circos";
-        Files.write(new File(fragile).toPath(), highlights(fragileSites));
+        String centromeresPath = filePrefix + ".centromeres.circos";
+        Files.write(new File(centromeresPath).toPath(), highlights(centromereSites));
 
-        String line = filePrefix + ".line_element.circos";
-        Files.write(new File(line).toPath(), highlights(lineElements));
+        String fragileSitesPath = filePrefix + ".fragile.circos";
+        Files.write(new File(fragileSitesPath).toPath(), highlights(fragileSites));
 
-        String distances = filePrefix + ".distance.circos";
-        Files.write(new File(distances).toPath(), createDistances(data.UnadjustedCopyNumbers, alterations));
+        String linePath = filePrefix + ".line_element.circos";
+        Files.write(new File(linePath).toPath(), highlights(lineElements));
 
-        String chromosomeBandPath = filePrefix + ".chromosome.circos";
-        Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.UnadjustedCopyNumbers));
+        String distancesPath = filePrefix + ".distance.circos";
+        Files.write(new File(distancesPath).toPath(), createDistances(data.UnadjustedCopyNumbers, alterations));
+
+        String chromosomeRangesPath = filePrefix + ".chromosome.circos";
+        Files.write(new File(chromosomeRangesPath).toPath(), createChromosomeRanges(data.ChromosomeRanges));
+
+        String amberBAFsPath = filePrefix + ".amber.circos";
+        Files.write(new File(amberBAFsPath).toPath(), createAmberBAFs(data.AmberBAFs));
+
+        String amberPCFPath = filePrefix + ".amber_pcf.circos";
+        Files.write(new File(amberPCFPath).toPath(), createAmberPcf(data.PurpleSegments));
+
+        String cobaltRatiosPath = filePrefix + ".cobalt.circos";
+        Files.write(new File(cobaltRatiosPath).toPath(), createCobaltRatios(data.CobaltRatios));
+
+        String cobaltPCFPath = filePrefix + ".cobalt_pcf.circos";
+        Files.write(new File(cobaltPCFPath).toPath(), createCobaltPcf(data.PurpleSegments));
 
         return this;
     }
 
-    private List<String> chromosomeLocations(final List<VisCopyNumber> unadjustedAlterations)
+    private List<String> createChromosomeRanges(final List<GenomeRegion> regions)
     {
         List<String> result = Lists.newArrayList();
 
-        List<GenomeRegion> regions = Span.spanRegions(unadjustedAlterations);
         for(GenomeRegion region : regions)
         {
             String bandString = new StringJoiner(DELIMITER).add(region.chromosome())
@@ -282,6 +298,81 @@ public class CircosDataWriter
         return result;
     }
 
+    private List<String> createAmberBAFs(List<AmberBAF> amberBAFs)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(AmberBAF amberBAF : amberBAFs)
+        {
+            String amberBAFString =  new StringJoiner(DELIMITER).add(circosContig(amberBAF.Chromosome))
+                    .add(String.valueOf(amberBAF.Position))
+                    .add(String.valueOf(amberBAF.Position))
+                    .add(String.valueOf(amberBAF.TumorBAF))
+                    .toString();
+
+            result.add(amberBAFString);
+        }
+
+        return result;
+    }
+
+    private List<String> createAmberPcf(List<PurpleSegment> purpleSegments)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(PurpleSegment purpleSegment : purpleSegments)
+        {
+            // Ensure histogram mirror images do not cross
+            double observedBAF = Math.min(1-purpleSegment.ObservedBAF, purpleSegment.ObservedBAF);
+
+            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.Chromosome))
+                    .add(String.valueOf(purpleSegment.PosStart))
+                    .add(String.valueOf(purpleSegment.PosEnd))
+                    .add(String.valueOf(observedBAF))
+                    .toString();
+
+            result.add(purpleSegmentString);
+        }
+
+        return result;
+    }
+
+    private List<String> createCobaltRatios(List<CobaltRatio> cobaltRatios)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(CobaltRatio cobaltRatio : cobaltRatios)
+        {
+            String cobaltRatioString =  new StringJoiner(DELIMITER).add(circosContig(cobaltRatio.chromosome()))
+                    .add(String.valueOf(cobaltRatio.position()))
+                    .add(String.valueOf(cobaltRatio.position()))
+                    .add(String.valueOf(cobaltRatio.tumorGCRatio()))
+                    .toString();
+
+            result.add(cobaltRatioString);
+        }
+
+        return result;
+    }
+
+    private List<String> createCobaltPcf(List<PurpleSegment> purpleSegments)
+    {
+        List<String> result = Lists.newArrayList();
+
+        for(PurpleSegment purpleSegment : purpleSegments)
+        {
+            String purpleSegmentString = new StringJoiner(DELIMITER).add(circosContig(purpleSegment.Chromosome))
+                    .add(String.valueOf(purpleSegment.PosStart))
+                    .add(String.valueOf(purpleSegment.PosEnd))
+                    .add(String.valueOf(purpleSegment.ObservedTumorRatio))
+                    .toString();
+
+            result.add(purpleSegmentString);
+        }
+
+        return result;
+    }
+
     private List<String> highlights(final List<GenomeRegion> regions)
     {
         return regions.stream()
@@ -335,7 +426,7 @@ public class CircosDataWriter
         return result;
     }
 
-    private List<String> createMinorAllelePloidy(final List<VisCopyNumber> alterations)
+    private List<String> createMinorAlleleCopyNumber(final List<VisCopyNumber> alterations)
     {
         List<String> result = Lists.newArrayList();
         for(VisCopyNumber alteration : alterations)

@@ -283,7 +283,7 @@ public class ChainFinder
     {
         return mUniqueChains;
     }
-    public double getValidAllelePloidySegmentPerc() { return mClusterJcnLimits.getValidAlleleJcnSegmentPerc(); }
+    public double getValidAlleleCopyNumberSegmentPerc() { return mClusterJcnLimits.getValidAlleleJcnSegmentPerc(); }
     public final long[] calcRangeData() { return mClusterJcnLimits.calcRangeData(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
 

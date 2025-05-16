@@ -12,7 +12,7 @@ show_tick_labels    = no
 
     # Ideogram position, fill and outline
     radius           = SUBSTITUTE_IDEOGRAM_RADIUSr
-    thickness        = 50p
+    thickness        = SUBSTITUTE_IDEOGRAM_THICKNESSp
     fill             = yes
     stroke_color     = dgrey
     stroke_thickness = 2p
@@ -144,10 +144,10 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		r1   = SUBSTITUTE_CNA_OUTER_RADIUSr
-		min  = 0
-		max  = SUBSTITUTE_CNA_GAIN_MAX
+		r0   = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
+		r1   = SUBSTITUTE_COPY_NUMBER_OUTER_RADIUSr
+		min  = SUBSTITUTE_COPY_NUMBER_BASELINE
+		max  = SUBSTITUTE_COPY_NUMBER_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
 		color = copy_gain
@@ -157,7 +157,7 @@ chromosomes_display_default = yes
 			<axis>
 				color     = copy_gain_l
 				thickness = 3
-				position  = SUBSTITUTE_CNA_GAIN_AXIS_POSITION
+				position  = SUBSTITUTE_COPY_NUMBER_GAIN_AXIS_POSITION
 			</axis>
 		</axes>
 
@@ -175,7 +175,7 @@ chromosomes_display_default = yes
 		type             = text
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.distance.circos
-		r0               = SUBSTITUTE_CNA_DISTANCE_RADIUS
+		r0               = SUBSTITUTE_COPY_NUMBER_DISTANCE_RADIUS
 		r1               = 1r
 		show_links       = no
 		label_size       = SUBSTITUTE_LABEL_SIZEp
@@ -192,10 +192,10 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = SUBSTITUTE_CNA_INNER_RADIUSr
-		r1   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		min  = -2
-		max  = 0
+		r0   = SUBSTITUTE_COPY_NUMBER_INNER_RADIUSr
+		r1   = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
+		min  = SUBSTITUTE_COPY_NUMBER_LOSS_MIN
+		max  = SUBSTITUTE_COPY_NUMBER_BASELINE
 		color = copy_loss
 		fill_color = copy_loss
 
@@ -217,14 +217,14 @@ chromosomes_display_default = yes
 
 
 	# -----------------------------------------------------------
-	# Minor Allele Gain (Green)
+	# Minor Allele Gain (Blue)
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.map.circos
-		r0   = SUBSTITUTE_MAP_MIDDLE_RADIUSr
-		r1   = SUBSTITUTE_MAP_OUTER_RADIUSr
-		min  = 0
-		max  = SUBSTITUTE_MAP_GAIN_MAX
+		r0   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
+		r1   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_OUTER_RADIUSr
+		min  = SUBSTITUTE_COPY_NUMBER_BASELINE
+		max  = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
 		color = blue
@@ -234,7 +234,7 @@ chromosomes_display_default = yes
 			<axis>
 				color     = lblue
 				thickness = 1
-				spacing   = SUBSTITUTE_MAP_GAIN_SPACINGr
+				spacing   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_GAIN_SPACINGr
 			</axis>
 		</axes>
 
@@ -259,10 +259,10 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.map.circos
-		r0   = SUBSTITUTE_MAP_INNER_RADIUSr
-		r1   = SUBSTITUTE_MAP_MIDDLE_RADIUSr
-		min  = -1
-		max  = 0
+		r0   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_INNER_RADIUSr
+		r1   = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
+		min  = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_LOSS_MIN
+		max  = SUBSTITUTE_COPY_NUMBER_BASELINE
 		glyph = circle
 		glyph_size = 8
 		color = orange
@@ -296,7 +296,7 @@ chromosomes_display_default = yes
     <plot>
         type             = connector
         file             = SUBSTITUTE_SAMPLE.connector.circos
-        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
+        r0	             = SUBSTITUTE_INNERMOST_RADIUSr
         connector_dims   = 0.0,0.3,0.4,0.3,0
         thickness        = 4
         color            = red
@@ -340,8 +340,8 @@ chromosomes_display_default = yes
 	<plot>
 		type             = scatter
 		file             = SUBSTITUTE_SAMPLE.scatter.sgl.circos
-		r0               = SUBSTITUTE_MAP_INNER_RADIUSr
-		r1               = SUBSTITUTE_MAP_MIDDLE_RADIUSr
+		r0               = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_INNER_RADIUSr
+		r1               = SUBSTITUTE_MINOR_ALLELE_COPY_NUMBER_MIDDLE_RADIUSr
         glyph            = circle
         glyph_size       = 20
         color            = red
@@ -353,13 +353,25 @@ chromosomes_display_default = yes
 
 	</plot>
 
+    # -----------------------------------------------------------
+    # Centromeres
+    <plot>
+        type             = highlight
+        file             = SUBSTITUTE_SAMPLE.centromeres.circos
+        r0               = 1r-SUBSTITUTE_IDEOGRAM_THICKNESSp
+        r1               = 1r
+        fill_color       = black_a4
+        color            = transparent
+        stroke_thickness = 0
+    </plot>
+
 	# -----------------------------------------------------------
 	# Line Elements
 	<plot>
 		type             = highlight
 		file             = SUBSTITUTE_SAMPLE.line_element.circos
-		r0               = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		r1               = SUBSTITUTE_CNA_OUTER_RADIUSr
+		r0               = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
+		r1               = SUBSTITUTE_COPY_NUMBER_OUTER_RADIUSr
 		fill_color       = black_a5
 		color            = transparent
 		stroke_thickness = 0
@@ -370,19 +382,118 @@ chromosomes_display_default = yes
 	<plot>
 		type             = highlight
 		file             = SUBSTITUTE_SAMPLE.fragile.circos
-		r0               = SUBSTITUTE_CNA_INNER_RADIUSr
-		r1               = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		r0               = SUBSTITUTE_COPY_NUMBER_INNER_RADIUSr
+		r1               = SUBSTITUTE_COPY_NUMBER_MIDDLE_RADIUSr
 		fill_color       = black_a5
 		color            = transparent
 		stroke_thickness = 0
 	</plot>
+
+	# -----------------------------------------------------------
+    # Amber BAFs
+    <plot>
+        type             = scatter
+        file             = SUBSTITUTE_SAMPLE.amber.circos
+        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
+        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
+        glyph            = circle
+        glyph_size       = 10
+        color            = amber
+        min              = SUBSTITUTE_AMBER_BAF_MIN
+        max              = SUBSTITUTE_AMBER_BAF_MAX
+
+        <axes>
+            <axis>
+                color     = lorange
+                thickness = 1
+                spacing   = 0.5r
+            </axis>
+        </axes>
+
+        <backgrounds>
+            <background>
+                color = vlorange_a5
+            </background>
+        </backgrounds>
+
+    </plot>
+
+    # Amber PCF
+    <plot>
+        type             = histogram
+        file             = SUBSTITUTE_SAMPLE.amber_pcf.circos
+        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
+        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
+        color            = amber
+        thickness        = 3
+        min              = SUBSTITUTE_AMBER_BAF_MIN
+        max              = SUBSTITUTE_AMBER_BAF_MAX
+        extend_bin       = no
+        orientation      = out
+    </plot>
+
+    # Amber PCF mirror image
+    <plot>
+        type             = histogram
+        file             = SUBSTITUTE_SAMPLE.amber_pcf.circos
+        r0               = SUBSTITUTE_AMBER_INNER_RADIUSr
+        r1               = SUBSTITUTE_AMBER_OUTER_RADIUSr
+        color            = amber
+        thickness        = 3
+        min              = SUBSTITUTE_AMBER_BAF_MIN
+        max              = SUBSTITUTE_AMBER_BAF_MAX
+        extend_bin       = no
+        orientation      = in
+    </plot>
+
+	# -----------------------------------------------------------
+    # Cobalt ratios
+    <plot>
+        type             = scatter
+        file             = SUBSTITUTE_SAMPLE.cobalt.circos
+        r0               = SUBSTITUTE_COBALT_INNER_RADIUSr
+        r1               = SUBSTITUTE_COBALT_OUTER_RADIUSr
+        glyph            = circle
+        glyph_size       = 10
+        color            = cobalt
+        min              = SUBSTITUTE_COBALT_RATIO_MIN
+        max              = SUBSTITUTE_COBALT_RATIO_MAX
+
+        <axes>
+            <axis>
+                color     = lblue
+                thickness = 1
+                spacing   = 0.5r
+            </axis>
+        </axes>
+
+        <backgrounds>
+            <background>
+                color = vlblue_a5
+            </background>
+        </backgrounds>
+
+    </plot>
+
+    # Cobalt PCF
+    <plot>
+        type             = histogram
+        file             = SUBSTITUTE_SAMPLE.cobalt_pcf.circos
+        r0               = SUBSTITUTE_COBALT_INNER_RADIUSr
+        r1               = SUBSTITUTE_COBALT_OUTER_RADIUSr
+        color            = cobalt
+        thickness        = 3
+        min              = SUBSTITUTE_COBALT_RATIO_MIN
+        max              = SUBSTITUTE_COBALT_RATIO_MAX
+        extend_bin       = no
+    </plot>
 
 </plots>
 
 <links>
     <link>
         file          = SUBSTITUTE_SAMPLE.link.circos
-        radius        = SUBSTITUTE_MAP_INNER_RADIUSr
+        radius        = SUBSTITUTE_INNERMOST_RADIUSr
         color         = red
         thickness     = 2
 
@@ -406,6 +517,10 @@ chromosomes_display_default = yes
     copy_gain = 166,209,122
     copy_gain_l = 205,229,181
     copy_gain_vl = 244,249,239
+
+    cobalt = 0,71,171
+    amber = 255,126,0
+
 
     chr1 = 128,125,186
     chr2 = 145,142,179

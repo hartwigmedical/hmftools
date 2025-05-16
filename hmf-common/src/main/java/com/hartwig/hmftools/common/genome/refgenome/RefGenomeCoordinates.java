@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.genome.refgenome;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -14,7 +13,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
-import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
 public enum RefGenomeCoordinates
@@ -83,12 +81,14 @@ public enum RefGenomeCoordinates
         return result;
     }
 
-    public String readCentromereGaps(final RefGenomeVersion refGenomeVersion) throws IOException
+    public static List<String> readCentromereGaps(final RefGenomeVersion refGenomeVersion)
     {
-        String centromereGapsFile = refGenomeVersion.is37() ? "centromere_gaps.37.tsv" : "centromere_gaps.38.tsv";
-        InputStream in = getClass().getResourceAsStream("/refgenome/" + centromereGapsFile);
+        String centromereGapsFile = String.format("/refgenome/centromere_gaps.%s.tsv", refGenomeVersion.identifier());
+
+        InputStream in = RefGenomeCoordinates.class.getResourceAsStream(centromereGapsFile);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        return IOUtils.toString(reader);
+
+        return reader.lines().toList();
     }
 
 }
