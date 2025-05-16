@@ -703,13 +703,17 @@ public class LilacApplication
 
     private boolean hasSufficientGeneDepth(final Map<String,int[]> geneBaseDepth)
     {
-        int aLowCoverage = (int) Arrays.stream(geneBaseDepth.get(HLA_A)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-        int bLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-        int cLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_C)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
+        int aLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_A)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
+        int bLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
+        int cLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_C)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
 
-        if(!mConfig.ReferenceBam.isEmpty() && aLowCoverage + bLowCoverage + cLowCoverage >= mConfig.FatalLowCoverage)
+        int totalLowCoveragePositions = aLowCoveragePositions + bLowCoveragePositions + cLowCoveragePositions;
+
+        if(!mConfig.ReferenceBam.isEmpty() && totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
         {
-            LL_LOGGER.warn("gene depth coverage(A={} B={} C={}) too low, exiting", aLowCoverage, bLowCoverage, cLowCoverage);
+            LL_LOGGER.warn("Exiting due to too low coverage. Number of bases with <{} coverage per gene: A={}, B={}, C={}. Total={} exceeds threshold={}",
+                    WARN_LOW_COVERAGE_DEPTH, aLowCoveragePositions, bLowCoveragePositions, cLowCoveragePositions,
+                    totalLowCoveragePositions, mConfig.FatalTotalLowCoveragePositions);
             return false;
         }
 

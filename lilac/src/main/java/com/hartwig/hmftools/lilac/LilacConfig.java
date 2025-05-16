@@ -34,7 +34,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_ID;
 
@@ -91,7 +91,7 @@ public class LilacConfig
 
     public final boolean DebugPhasing;
     public final boolean RunValidation;
-    public final int FatalLowCoverage;
+    public final int FatalTotalLowCoveragePositions;
     public final int MaxEliminationCandidates;
     public final boolean LogPerfCalcs;
 
@@ -128,7 +128,7 @@ public class LilacConfig
     private static final String DEBUG_PHASING = "debug_phasing";
     public static final String RUN_VALIDATION = "run_validation";
     public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
-    public static final String FATAL_LOW_COVERAGE = "fatal_low_coverage";
+    public static final String FATAL_TOTAL_LOW_COVERAGE_POSITIONS = "fatal_total_low_coverage_positions";
     public static final String LOG_PERF_CALCS = "log_perf";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
@@ -202,7 +202,7 @@ public class LilacConfig
 
         MinFragmentsPerAllele = configBuilder.getInteger(MIN_FRAGMENTS_PER_ALLELE);
         MinFragmentsToRemoveSingle = configBuilder.getInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE);
-        FatalLowCoverage = configBuilder.getInteger(FATAL_LOW_COVERAGE);
+        FatalTotalLowCoveragePositions = configBuilder.getInteger(FATAL_TOTAL_LOW_COVERAGE_POSITIONS);
 
         TopScoreThreshold = min(configBuilder.getDecimal(TOP_SCORE_THRESHOLD), 0.5);
 
@@ -284,7 +284,7 @@ public class LilacConfig
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
         TopScoreThreshold = DEFAULT_TOP_SCORE_THRESHOLD;
-        FatalLowCoverage = DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD;
+        FatalTotalLowCoveragePositions = DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS;
         HlaYPercentThreshold = DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 
         CopyNumberFile = "";
@@ -321,7 +321,7 @@ public class LilacConfig
         configBuilder.addInteger(MIN_FRAGMENTS_PER_ALLELE,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
         configBuilder.addInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE,"Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
 
-        configBuilder.addInteger(FATAL_LOW_COVERAGE,"Fatal low coverage", DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
+        configBuilder.addInteger(FATAL_TOTAL_LOW_COVERAGE_POSITIONS,"Fatal total low coverage positions across all HLA loci", DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS);
         configBuilder.addDecimal(HLA_Y_THRESHOLD, "HLA-Y percent threshold", DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
 
         configBuilder.addDecimal(TOP_SCORE_THRESHOLD, "Max distance from top score", DEFAULT_TOP_SCORE_THRESHOLD);

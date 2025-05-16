@@ -50,7 +50,7 @@ public class LilacConstants
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
     public static final double WARN_INDEL_THRESHOLD = 0.005;
     public static final double WARN_LOW_COVERAGE_DEPTH = 10;
-    public static final int DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD = 300;
+    public static final int DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS = 300;
 
     public static final String HLA_PREFIX = "HLA-";
     public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
