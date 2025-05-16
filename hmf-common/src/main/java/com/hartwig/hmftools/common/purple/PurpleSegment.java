@@ -15,6 +15,8 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class PurpleSegment
 {
     public final String Chromosome;
@@ -111,7 +113,7 @@ public final class PurpleSegment
         int startIndex = fieldsIndexMap.get("start");
         int endIndex = fieldsIndexMap.get("end");
         int germlineStatusIndex = fieldsIndexMap.get("germlineStatus");
-        int svClusterIndex = fieldsIndexMap.get("svCluster");
+        @Nullable Integer svClusterIndex = fieldsIndexMap.get("svCluster");
         int bafCountIndex = fieldsIndexMap.get("bafCount");
         int observedBAFIndex = fieldsIndexMap.get("observedBAF");
         int minorAlleleCopyNumberDeviationIndex = fieldsIndexMap.get("minorAlleleCopyNumberDeviation");
@@ -152,7 +154,7 @@ public final class PurpleSegment
                     Double.parseDouble(values[observedNormalRatioIndex]),
                     Double.parseDouble(values[unnormalisedObservedNormalRatioIndex]),
                     GermlineStatus.valueOf(values[germlineStatusIndex]),
-                    Boolean.parseBoolean(values[svClusterIndex]),
+                    (svClusterIndex != null) ? Boolean.parseBoolean(values[svClusterIndex]) : false,
                     Double.parseDouble(values[gcContentIndex]),
                     Integer.parseInt(values[minStartIndex]),
                     Integer.parseInt(values[maxStartIndex]),
@@ -243,5 +245,16 @@ public final class PurpleSegment
                 .add(String.valueOf(MinStart))
                 .add(String.valueOf(MaxStart))
                 .toString();
+    }
+
+    public PurpleSegment withModifiedCoordinates(final String chromosome, final int posStart, final int posEnd)
+    {
+        return new PurpleSegment(
+                chromosome, posStart, posEnd,
+                RatioSupport, Support, BafCount, ObservedBAF, DepthWindowCount,
+                ObservedTumorRatio, ObservedNormalRatio, UnnormalisedObservedNormalRatio,
+                GermlineState, SvCluster, GcContent, MinStart, MaxStart,
+                MinorAlleleCopyNumberDeviation, MajorAlleleCopyNumberDeviation, DeviationPenalty, EventPenalty,
+                RefNormalisedCopyNumber, TumorCopyNumber, TumorBAF, FittedTumorCopyNumber, FittedBAF);
     }
 }
