@@ -102,6 +102,9 @@ public final class FileCommon
 
     public static List<String> parseSampleBamLists(final ConfigBuilder configBuilder, final String configItem)
     {
+        if(!configBuilder.hasValue(configItem))
+            return Collections.emptyList();
+
         return Arrays.stream(configBuilder.getValue(configItem).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
     }
 
