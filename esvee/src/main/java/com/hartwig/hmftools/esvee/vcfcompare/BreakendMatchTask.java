@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.caller.VcfWriter.SOMATIC_VCF_ID;
+import static com.hartwig.hmftools.esvee.caller.VcfWriter.UNFILTERED_VCF_ID;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_UNFILTERED_VCF;
 import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_VCF;
 import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.OLD_UNFILTERED_VCF;
 import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.OLD_VCF;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -38,15 +42,18 @@ public class BreakendMatchTask implements Runnable
 
         mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMap);
 
-        if(mConfig.OldUnfilteredVcf != null)
+        String oldUnfilteredVcf = getUnfilteredVcfFilename(mConfig.OldUnfilteredVcf, mConfig.OldVcf);
+        String newUnfilteredVcf = getUnfilteredVcfFilename(mConfig.NewUnfilteredVcf, mConfig.NewVcf);
+
+        if(oldUnfilteredVcf != null)
         {
-            Map<String,List<VariantBreakend>> oldChrBreakendMapUnfiltered = loadVariants(mConfig.OldUnfilteredVcf, OLD_UNFILTERED_VCF);
+            Map<String,List<VariantBreakend>> oldChrBreakendMapUnfiltered = loadVariants(oldUnfilteredVcf, OLD_UNFILTERED_VCF);
             mBreakendMatcher.matchBreakends(newChrBreakendMap, oldChrBreakendMapUnfiltered);
         }
 
-        if(mConfig.NewUnfilteredVcf != null)
+        if(newUnfilteredVcf != null)
         {
-            Map<String,List<VariantBreakend>> newChrBreakendMapUnfiltered = loadVariants(mConfig.NewUnfilteredVcf, NEW_UNFILTERED_VCF);
+            Map<String,List<VariantBreakend>> newChrBreakendMapUnfiltered = loadVariants(newUnfilteredVcf, NEW_UNFILTERED_VCF);
             mBreakendMatcher.matchBreakends(oldChrBreakendMap, newChrBreakendMapUnfiltered);
         }
 
@@ -58,7 +65,17 @@ public class BreakendMatchTask implements Runnable
         SV_LOGGER.info("completed breakend comparison");
     }
 
-    private static Map<String, List<VariantBreakend>> loadVariants(final String vcfFile, String label)
+    private String getUnfilteredVcfFilename(final String unfilteredVcfConfig, final String mainVcfConfig)
+    {
+        if(unfilteredVcfConfig != null)
+            return unfilteredVcfConfig;
+
+        String unfilteredVcf = mainVcfConfig.replaceAll(SOMATIC_VCF_ID, UNFILTERED_VCF_ID);
+
+        return Files.exists(Paths.get(unfilteredVcf)) ? unfilteredVcf : null;
+    }
+
+    private static Map<String, List<VariantBreakend>> loadVariants(final String vcfFile, final String label)
     {
         return new SvVcfFile(vcfFile, label.toUpperCase()).loadVariants().getVariantsAsMap();
     }
