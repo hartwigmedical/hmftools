@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
+
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_JITTER_MAX_DIST;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
 
@@ -7,6 +10,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public class AssemblyDeduper
 {
@@ -41,7 +46,7 @@ public class AssemblyDeduper
                     continue;
                 }
 
-                if(!SequenceCompare.matchedAssemblySequences(assembly, newAssembly))
+                if(!canDedupAssemblies(assembly, newAssembly))
                 {
                     ++newIndex;
                     continue;
@@ -66,6 +71,41 @@ public class AssemblyDeduper
         }
 
         removeExisting.forEach(x -> existingAssemblies.remove(x));
+    }
+
+    private static boolean canDedupAssemblies(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        if(!SequenceCompare.matchedAssemblySequences(first, second))
+            return false;
+
+        // check that one assembly doesn't support the second one existing if sufficient far apart
+        int junctionDistance = abs(first.junction().Position - second.junction().Position);
+
+        if(junctionDistance <= ASSEMBLY_DEDUP_JITTER_MAX_DIST)
+            return true;
+
+        IndelCoords firstIndelCoords = first.indelCoords();
+        IndelCoords secondIndelCoords = second.indelCoords();
+
+        for(SupportRead firstRead : first.support())
+        {
+            if(!firstRead.type().isSplitSupport())
+                continue;
+
+            if(secondIndelCoords != null && firstRead.indelCoords() != null && firstRead.indelCoords().matches(secondIndelCoords))
+                return false;
+
+            for(SupportRead secondRead : second.support())
+            {
+                if(secondRead.cachedRead() == firstRead.cachedRead())
+                    return false;
+
+                if(firstIndelCoords != null && secondRead.indelCoords() != null &&secondRead.indelCoords().matches(firstIndelCoords))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
