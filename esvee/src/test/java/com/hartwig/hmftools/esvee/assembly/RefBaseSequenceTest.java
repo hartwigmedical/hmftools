@@ -506,23 +506,23 @@ public class RefBaseSequenceTest
 
         Junction junction = new Junction(CHR_1, 100, FORWARD);
 
-        // each read has the same ref bases but a different cigar representation
-        String refBases = REF_BASES_200.substring(71, 101);
-        String readBases = refBases + extBases;
+        // the 2 reads cover the same ref bases (70-100) but have different cigar representations
+        String readBases = REF_BASES_200.substring(71, 101) + extBases;
 
         List<SupportRead> supportReads = Lists.newArrayList();
 
-        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 71, readBases, makeCigarString(readBases, 0, extBases.length()));
+        String cigar = makeCigarString(readBases, 0, extBases.length());
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 71, readBases, cigar);
         Read read2 = cloneRead(read1, READ_ID_GENERATOR.nextId());
 
         supportReads.add(new SupportRead(read1, SupportType.JUNCTION, 30, 0, 0));
         supportReads.add(new SupportRead(read2, SupportType.JUNCTION, 30, 0, 0));
 
-        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 61, readBases, "20M10I40M");
+        String readBases2 = REF_BASES_200.substring(61, 101) + extBases.substring(0, 30);
+
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 61, readBases2, "30M10I30M");
         Read read4 = cloneRead(read3, READ_ID_GENERATOR.nextId());
         Read read5 = cloneRead(read3, READ_ID_GENERATOR.nextId());
-
-        // List<Read> reads = List.of(read1, read2, read3, read4, read5);
 
         calcIndelInferredUnclippedPositions(read3);
         calcIndelInferredUnclippedPositions(read4);
@@ -532,15 +532,16 @@ public class RefBaseSequenceTest
         supportReads.add(new SupportRead(read4, SupportType.JUNCTION, 30, 0, 0));
         supportReads.add(new SupportRead(read5, SupportType.JUNCTION, 30, 0, 0));
 
-        JunctionAssembly assembly =
-                new JunctionAssembly(junction, extBases.getBytes(), extBaseQuals, supportReads, Collections.emptyList());
+        JunctionAssembly assembly = new JunctionAssembly(junction, extBases.getBytes(), extBaseQuals, supportReads, Collections.emptyList());
 
         RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
 
+        String refBases = REF_BASES_200.substring(61, 101);
+
         assertEquals(refBases, refBaseSeqBuilder.refBaseSequence());
         assertEquals(61, refBaseSeqBuilder.refBasePosition());
-        assertEquals(30, refBaseSeqBuilder.refBaseLength());
-        assertEquals("20M9I1M", refBaseSeqBuilder.cigarStr());
+        assertEquals(40, refBaseSeqBuilder.refBaseLength());
+        assertEquals("30M9I1M", refBaseSeqBuilder.cigarStr());
 
         assertTrue(refBaseSeqBuilder.reads().stream().allMatch(x -> x.mismatches() == 0));
     }
