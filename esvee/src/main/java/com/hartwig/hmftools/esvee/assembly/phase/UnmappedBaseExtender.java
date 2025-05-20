@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Character.toLowerCase;
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -11,11 +10,11 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.AssemblyBuildDebug;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_READ_TRIMMED_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.nonNullBaseStr;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
@@ -25,15 +24,12 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -328,7 +324,7 @@ public class UnmappedBaseExtender
 
                     if(baseCounts == null)
                     {
-                        baseCounts = new int[Nucleotides.DNA_BASES.length + 1];
+                        baseCounts = new int[DNA_BASE_COUNT];
 
                         int consensusNucIndex = Nucleotides.baseIndex(consensusBase);
 
