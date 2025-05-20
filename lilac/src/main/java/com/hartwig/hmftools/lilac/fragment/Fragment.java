@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.read.ReadRecord;
+import com.hartwig.hmftools.lilac.read.Read;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.StringJoiner;
 
 public class Fragment
 {
-    private final List<ReadRecord> mReads;
+    private final List<Read> mReads;
     private final String mReadGene; // mapped gene
     private final Set<String> mGenes; // other potentially applicable genes
 
@@ -39,7 +39,7 @@ public class Fragment
     private FragmentScope mScope;
 
     public Fragment(
-            final ReadRecord read, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
+            final Read read, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> qualities, final List<String> nucleotides)
     {
         mReads = Lists.newArrayListWithCapacity(2);
@@ -81,16 +81,16 @@ public class Fragment
 
     public String id() { return mReads.get(0).Id; }
 
-    public List<ReadRecord> reads() { return mReads; }
+    public List<Read> reads() { return mReads; }
 
     public void addReads(final Fragment other)
     {
         other.reads().forEach(x -> addRead(x));
     }
 
-    public void addRead(final ReadRecord read)
+    public void addRead(final Read read)
     {
-        if(mReads.stream().anyMatch(x -> x.getSamRecord().getFlags() == read.getSamRecord().getFlags()))
+        if(mReads.stream().anyMatch(x -> x.bamRecord().getFlags() == read.bamRecord().getFlags()))
             return;
 
         mReads.add(read);

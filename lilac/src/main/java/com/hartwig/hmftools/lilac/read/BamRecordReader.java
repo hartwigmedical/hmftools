@@ -125,7 +125,7 @@ public class BamRecordReader implements BamReader
         ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
         List<SAMRecord> records = mBamSlicer.slice(mSamReader, sliceRegion);
 
-        List<ReadRecord> reads = Lists.newArrayList();
+        List<Read> reads = Lists.newArrayList();
 
         for(SAMRecord record : records)
         {
@@ -147,7 +147,7 @@ public class BamRecordReader implements BamReader
             }
             else
             {
-                codingExonOverlaps.forEach(x -> reads.add(ReadRecord.create(x, record, true, true)));
+                codingExonOverlaps.forEach(x -> reads.add(Read.create(x, record, true, true)));
             }
         }
 
@@ -160,11 +160,11 @@ public class BamRecordReader implements BamReader
         return readFragments;
     }
 
-    private Map<String,Fragment> createFragments(final String geneName, final byte geneStrand, final List<ReadRecord> codingRecords)
+    private Map<String,Fragment> createFragments(final String geneName, final byte geneStrand, final List<Read> codingRecords)
     {
         Map<String,Fragment> readIdFragments = Maps.newHashMap();
 
-        for(ReadRecord codingRecord : codingRecords)
+        for(Read codingRecord : codingRecords)
         {
             Fragment fragment = mFragmentFactory.createFragment(codingRecord, geneName, geneStrand);
 
@@ -267,15 +267,15 @@ public class BamRecordReader implements BamReader
                     continue;
 
                 ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, codingRegion.start(), codingRegion.end());
-                List<ReadRecord> regionCodingRecords = findVariantRecords(variant, sliceRegion);
-                List<ReadRecord> codingRecords = Lists.newArrayList();
+                List<Read> regionCodingRecords = findVariantRecords(variant, sliceRegion);
+                List<Read> codingRecords = Lists.newArrayList();
 
-                for(ReadRecord record : regionCodingRecords)
+                for(Read record : regionCodingRecords)
                 {
                     if(!recordContainsVariant(variant, record))
                         continue;
 
-                    if(codingRecords.stream().anyMatch(x -> x.getSamRecord().hashCode() == record.getSamRecord().hashCode()))
+                    if(codingRecords.stream().anyMatch(x -> x.bamRecord().hashCode() == record.bamRecord().hashCode()))
                         continue;
 
                     codingRecords.add(record);
@@ -297,9 +297,9 @@ public class BamRecordReader implements BamReader
         return Lists.newArrayList();
     }
 
-    private List<Fragment> queryMateFragments(GeneCodingRegions geneCodingRegions, final List<ReadRecord> codingRecords)
+    private List<Fragment> queryMateFragments(GeneCodingRegions geneCodingRegions, final List<Read> codingRecords)
     {
-        List<SAMRecord> records = codingRecords.stream().map(x -> x.getSamRecord()).collect(Collectors.toList());
+        List<SAMRecord> records = codingRecords.stream().map(x -> x.bamRecord()).collect(Collectors.toList());
         List<SAMRecord> mateRecords = mBamSlicer.queryMates(mSamReader, records);
 
         List<Fragment> fragments = Lists.newArrayList();
@@ -314,7 +314,7 @@ public class BamRecordReader implements BamReader
             if(matchedCodingRegion == null)
                 continue;
 
-            ReadRecord codingRecord = ReadRecord.create(matchedCodingRegion, record, true, true);
+            Read codingRecord = Read.create(matchedCodingRegion, record, true, true);
 
             Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
 
@@ -325,11 +325,11 @@ public class BamRecordReader implements BamReader
         return fragments;
     }
 
-    private List<ReadRecord> findVariantRecords(final SomaticVariant variant, final ChrBaseRegion codingRegion)
+    private List<Read> findVariantRecords(final SomaticVariant variant, final ChrBaseRegion codingRegion)
     {
         final List<SAMRecord> records = mBamSlicer.slice(mSamReader, new ChrBaseRegion(variant.Chromosome, variant.Position, variant.Position));
 
-        final List<ReadRecord> codingRecords = Lists.newArrayList();
+        final List<Read> codingRecords = Lists.newArrayList();
 
         BaseRegion baseCodingRegion = new BaseRegion(codingRegion.start(), codingRegion.end());
 
@@ -337,7 +337,7 @@ public class BamRecordReader implements BamReader
         {
             if(bothEndsInRangeOfCodingTranscripts(record))
             {
-                codingRecords.add(ReadRecord.create(baseCodingRegion, record, true, true));
+                codingRecords.add(Read.create(baseCodingRegion, record, true, true));
             }
             else
             {
@@ -362,7 +362,7 @@ public class BamRecordReader implements BamReader
         }
     }
 
-    private static boolean recordContainsVariant(final SomaticVariant variant, final ReadRecord record)
+    private static boolean recordContainsVariant(final SomaticVariant variant, final Read record)
     {
         if(variant.Alt.length() != variant.Ref.length())
         {
@@ -375,12 +375,12 @@ public class BamRecordReader implements BamReader
             int position = variant.Position + i;
             char expectedBase = variant.Alt.charAt(i);
 
-            int readIndex = record.getSamRecord().getReadPositionAtReferencePosition(position) - 1;
+            int readIndex = record.bamRecord().getReadPositionAtReferencePosition(position) - 1;
 
             if(readIndex < 0)
                 return false;
 
-            if(record.getSamRecord().getReadString().charAt(readIndex) != expectedBase)
+            if(record.bamRecord().getReadString().charAt(readIndex) != expectedBase)
                 return false;
         }
 

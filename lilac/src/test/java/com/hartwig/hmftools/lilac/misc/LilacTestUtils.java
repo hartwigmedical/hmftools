@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.read.ReadRecord;
+import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -48,11 +48,11 @@ public class LilacTestUtils
         return HlaSequenceLoci.create(sequences.Allele, sequences.getRawSequence(), sequences.getRawSequence());
     }
 
-    public static ReadRecord createReadRecord(final String id)
+    public static Read createReadRecord(final String id)
     {
         SAMRecord record = buildSamRecord(100, "151M", "", "");
         record.setReadName(id);
-        return ReadRecord.create(new BaseRegion(0, 1), record, true, true);
+        return Read.create(new BaseRegion(0, 1), record, true, true);
     }
 
     public static Fragment createFragment(final String id)
