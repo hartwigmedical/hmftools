@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +28,9 @@ import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public final class LineUtils
 {
@@ -200,6 +205,38 @@ public final class LineUtils
 
         int medianIndex = totalEntries / 2;
         return lengths.get(medianIndex);
+    }
+
+    public static boolean isLineWithLocalAlignedInsert(final JunctionAssembly assembly)
+    {
+        // rule out out a line classification if it is supported by reads with inserts with alignment on both sides
+        if(assembly.junction().indelBased() || !assembly.hasLineSequence())
+            return false;
+
+        int polyAtLength = calcLineSequenceLength(assembly.formJunctionSequence(), assembly.isForwardJunction());
+        int maxPostPolyAtLength = 0;
+
+        for(SupportRead read : assembly.support())
+        {
+            if(read.type() != SupportType.INDEL || read.cachedRead().indelCoords() == null || read.cachedRead().indelCoords().isDelete())
+                continue;
+
+            IndelCoords indelCoords = read.cachedRead().indelCoords();
+
+            if(abs(indelCoords.Length - polyAtLength) <= 2)
+            {
+                int postInsertAlignedLength = 0;
+
+                if(assembly.isForwardJunction())
+                    maxPostPolyAtLength = read.alignmentEnd() - indelCoords.PosEnd;
+                else
+                    maxPostPolyAtLength = indelCoords.PosStart - read.alignmentStart();
+
+                maxPostPolyAtLength = max(maxPostPolyAtLength, postInsertAlignedLength);
+            }
+        }
+
+        return maxPostPolyAtLength >= MIN_VARIANT_LENGTH;
     }
 
     public static boolean hasLineSourceSequence(final JunctionAssembly assembly)

@@ -175,6 +175,7 @@ public class JunctionAssembly
 
     public boolean hasLineSequence() { return mHasLineSequence; }
     public void markLineSequence() { mHasLineSequence = true; }
+    public void unmarkLineSequence() { mHasLineSequence = false; }
 
     public List<SupportRead> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }

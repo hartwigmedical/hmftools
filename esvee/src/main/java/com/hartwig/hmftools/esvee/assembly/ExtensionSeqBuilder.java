@@ -800,7 +800,12 @@ public class ExtensionSeqBuilder
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
 
         if(mHasLineSequence)
-            extensionIndex += mIsForward ? (mLineExtensionLength + 1) : -(mLineExtensionLength + 1);
+        {
+            boolean skipMovePastLineSequence = !read.hasLineTail() && read.indelCoords() != null;
+
+            if(!skipMovePastLineSequence)
+                extensionIndex += mIsForward ? (mLineExtensionLength + 1) : -(mLineExtensionLength + 1);
+        }
 
         int repeatIndexStart = -1;
         int repeatSkipCount = 0;
@@ -817,9 +822,12 @@ public class ExtensionSeqBuilder
             if(readRepeatCount != READ_REPEAT_COUNT_INVALID && abs(readRepeatCount - mMaxRepeat.Count) <= permittedCountDiff)
                 repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.baseLength();
         }
-        else if(mJunction.indelCoords() != null && read.indelCoords() != null && mJunction.indelCoords().isDelete())
+        else if(mJunction.indelCoords() != null && read.indelCoords() != null
+        && mJunction.indelCoords().isDelete() && read.indelCoords().isDelete())
         {
-            if(mJunction.indelCoords().Length != read.indelCoords().Length)
+            // the read must cover the assembly INDEL entirely
+            if(read.alignmentStart() < mJunction.indelCoords().PosStart && read.alignmentEnd() > mJunction.indelCoords().PosEnd
+            && mJunction.indelCoords().Length != read.indelCoords().Length)
             {
                 // a shorter delete means more ref bases need to be skipped
                 repeatSkipCount = mJunction.indelCoords().Length - read.indelCoords().Length;

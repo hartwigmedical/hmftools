@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.esvee.caller.VcfWriter.GERMLINE_VCF_ID;
 import static com.hartwig.hmftools.esvee.caller.VcfWriter.SOMATIC_VCF_ID;
 import static com.hartwig.hmftools.esvee.caller.VcfWriter.UNFILTERED_VCF_ID;
 
@@ -56,9 +57,16 @@ public class CompareConfig
         if(unfilteredVcfConfig != null)
             return unfilteredVcfConfig;
 
-        String unfilteredVcf = mainVcfConfig.replaceAll(SOMATIC_VCF_ID, UNFILTERED_VCF_ID);
+        if(mainVcfConfig.contains(SOMATIC_VCF_ID) || mainVcfConfig.contains(GERMLINE_VCF_ID))
+        {
+            String fileId = mainVcfConfig.contains(SOMATIC_VCF_ID) ? SOMATIC_VCF_ID : GERMLINE_VCF_ID;
+            String unfilteredVcf = mainVcfConfig.replaceAll(fileId, UNFILTERED_VCF_ID);
 
-        return Files.exists(Paths.get(unfilteredVcf)) ? unfilteredVcf : null;
+            if(Files.exists(Paths.get(unfilteredVcf)))
+                return unfilteredVcf;
+        }
+
+        return null;
     }
 
     /*
