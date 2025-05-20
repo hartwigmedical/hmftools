@@ -80,7 +80,7 @@ public class VcfComparer
                 if(breakend.isFiltered() && !mConfig.IncludeNonPass)
                     continue;
 
-                if(breakend.coordMatchType() == NONE)
+                if(!breakend.matched())
                     writeVariantComparison(NONE, breakend.sv(), null, Collections.emptyList());
             }
 
@@ -89,7 +89,7 @@ public class VcfComparer
                 if(breakend.isFiltered() && !mConfig.IncludeNonPass)
                     continue;
 
-                if(breakend.coordMatchType() == NONE)
+                if(!breakend.matched())
                     writeVariantComparison(NONE, null, breakend.sv(), Collections.emptyList());
             }
         }
@@ -115,7 +115,7 @@ public class VcfComparer
     {
         for(Breakend breakend : breakends)
         {
-            if(breakend.coordMatchType() != null)
+            if(breakend.matched())
                 continue;
 
             if(breakend.isFiltered() && !mConfig.IncludeNonPass)
@@ -143,7 +143,7 @@ public class VcfComparer
 
         for(Breakend otherBreakend : otherBreakends)
         {
-            if(otherBreakend.coordMatchType() != null)
+            if(otherBreakend.matched())
                 continue;
 
             CoordMatchType matchType = determineMatchType(breakend, otherBreakend);
@@ -247,8 +247,7 @@ public class VcfComparer
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            String matchType = null;
-            String varCoords = null;
+            String matchType, varCoords ;
 
             if(oldVariant != null && newVariant != null)
             {
@@ -287,7 +286,7 @@ public class VcfComparer
             sj.add(String.valueOf(newVariant != null ? newVariant.qual() : 0));
 
             String oldFilters = oldVariant != null ? oldVariant.breakendStart().Filters.stream().collect(Collectors.joining(ITEM_DELIM)) : "";
-            String newFilters = oldVariant != null ? newVariant.breakendStart().Filters.stream().collect(Collectors.joining(ITEM_DELIM)) : "";
+            String newFilters = newVariant != null ? newVariant.breakendStart().Filters.stream().collect(Collectors.joining(ITEM_DELIM)) : "";
 
             sj.add(oldFilters).add(newFilters);
 

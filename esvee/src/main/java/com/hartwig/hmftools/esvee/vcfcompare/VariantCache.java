@@ -47,18 +47,23 @@ public class VariantCache
 
         String tumorId = "";
         String referenceId = null;
+        int tumorOrdinal = -1;
+        int referenceOrdinal = -1;
 
         if(vcfSampleNames.size() > 1)
         {
             tumorId = vcfSampleNames.get(1);
+            tumorOrdinal = 1;
             referenceId = vcfSampleNames.get(0);
+            referenceOrdinal = 0;
         }
         else
         {
             tumorId = vcfSampleNames.get(0);
+            tumorOrdinal = 0;
         }
 
-        mGenotypeIds = new GenotypeIds(referenceId != null ? 1 : -1, 0, referenceId, tumorId);
+        mGenotypeIds = new GenotypeIds(referenceOrdinal, tumorOrdinal, referenceId, tumorId);
 
         mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
         mSvFactory.setGenotypeOrdinals(mGenotypeIds.ReferenceOrdinal, mGenotypeIds.TumorOrdinal);

@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.NONE;
 
 import java.util.List;
 import java.util.Set;
@@ -77,8 +79,8 @@ public class Breakend
 
         if(context.hasAttribute(IHOMPOS))
         {
-            final List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
-            InexactHomology = new Interval(ihompos.get(0), ihompos.get(1));
+            List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
+            InexactHomology = new Interval(ihompos.get(0), ihompos.size() == 2 ? ihompos.get(1) : 0);
         }
         else
         {
@@ -93,7 +95,7 @@ public class Breakend
                 Filters.add(filterStr);
         }
 
-        mCoordMatchType = null;
+        mCoordMatchType = NONE;
         mLineData = null;
     }
 
@@ -157,6 +159,7 @@ public class Breakend
 
     public void setCoordMatchType(final CoordMatchType type) { mCoordMatchType = type; }
     public CoordMatchType coordMatchType() { return mCoordMatchType; }
+    public boolean matched() { return mCoordMatchType != NONE; }
 
     public void setLineData(final LineData data) { mLineData = data; }
     public LineData lineData() { return mLineData; }
