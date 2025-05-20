@@ -2,8 +2,6 @@ package com.hartwig.hmftools.esvee.vcfcompare.match;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
-import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
-
 public class MatchFunctions
 {
     public static boolean coordsMatchExactly(final String chrom1, int pos1, byte orient1, final String chrom2, int pos2, byte orient2)

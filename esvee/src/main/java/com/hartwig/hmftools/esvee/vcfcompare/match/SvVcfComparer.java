@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.esvee.vcfcompare;
+package com.hartwig.hmftools.esvee.vcfcompare.match;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
+import com.hartwig.hmftools.esvee.vcfcompare.line.LineCompareTask;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -14,26 +14,27 @@ public class SvVcfComparer
     private final CompareConfig mConfig;
 
     private final String mSampleId;
-    private final List<CompareTask> mCompareTasks;
-
+    // private final List<CompareTask> mCompareTasks;
 
     public SvVcfComparer(final CompareConfig config)
     {
         mConfig = config;
 
-        mSampleId = config.SampleId;
-        mCompareTasks = config.CompareTasks;
+        mSampleId = ""; // config.SampleId;
+        // mCompareTasks = config.CompareTasks;
     }
 
     public void run()
     {
         SV_LOGGER.info("comparing VCFs for sample: " + mSampleId);
 
+        /*
         if(mCompareTasks.contains(CompareTask.MATCH_BREAKENDS))
             new BreakendMatchTask(mConfig).run();
 
         if(mCompareTasks.contains(CompareTask.LINE_COMPARE))
             new LineCompareTask(mConfig).run();
+        */
     }
 
     public static void main(@NotNull final String[] args)

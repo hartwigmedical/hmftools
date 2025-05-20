@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.vcfcompare;
+package com.hartwig.hmftools.esvee.vcfcompare.match;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.VcfWriter.SOMATIC_VCF_ID;
@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatchWriter;
-import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
+import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
 
 import org.jetbrains.annotations.NotNull;
 

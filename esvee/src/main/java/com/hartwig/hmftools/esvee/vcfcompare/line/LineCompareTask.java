@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.vcfcompare;
+package com.hartwig.hmftools.esvee.vcfcompare.line;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.vcfcompare.line.LineLinkType;
-import com.hartwig.hmftools.esvee.vcfcompare.line.LineLinkWriter;
-import com.hartwig.hmftools.esvee.vcfcompare.line.LineLinker;
+import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
+import com.hartwig.hmftools.esvee.vcfcompare.match.SvVcfFile;
+import com.hartwig.hmftools.esvee.vcfcompare.match.VariantBreakend;
 import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.NotNull;

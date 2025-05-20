@@ -21,8 +21,6 @@ import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
-import com.hartwig.hmftools.esvee.vcfcompare.VcfType;
 
 public class BreakendMatchWriter
 {
@@ -37,7 +35,8 @@ public class BreakendMatchWriter
         mBreakendMatches = breakendMatches;
 
         mConfig = config;
-        mReferenceId = inferNormalId(config.SampleId);
+        mReferenceId = null;
+        // mReferenceId = inferNormalId(config.SampleId);
     }
 
     private static String inferNormalId(String tumorId)
@@ -63,7 +62,7 @@ public class BreakendMatchWriter
     {
         try
         {
-            String fileName = mConfig.formFilename("breakend");
+            String fileName = null; // mConfig.formFilename("breakend");
 
             SV_LOGGER.debug("writing comparison file: {}", fileName);
 
@@ -92,6 +91,7 @@ public class BreakendMatchWriter
 
     public void writeBreakends()
     {
+        /*
         BufferedWriter writer = initialiseWriter();
 
         for(BreakendMatch breakendMatch : mBreakendMatches)
@@ -103,6 +103,7 @@ public class BreakendMatchWriter
         }
 
         FileWriterUtils.closeBufferedWriter(writer);
+        */
     }
 
     private void writeBreakend(
@@ -135,8 +136,8 @@ public class BreakendMatchWriter
             oldFilter = oldBreakend.filtersStr();
             oldVcfType = oldBreakend.SourceVcfType.toString();
             oldQual = oldBreakend.qualStr();
-            oldTumorFrags = oldBreakend.fragsStr(mConfig.SampleId);
-            oldNormalFrags = oldBreakend.fragsStr(mConfig.ReferenceId);
+            oldTumorFrags = null; // oldBreakend.fragsStr(mConfig.SampleId);
+            oldNormalFrags = null; // oldBreakend.fragsStr(mConfig.ReferenceId);
             oldIsLine = String.valueOf(oldBreakend.hasLineInfoFlag());
         }
 
@@ -168,7 +169,7 @@ public class BreakendMatchWriter
             newFilter = newBreakend.filtersStr();
             newVcfType = newBreakend.SourceVcfType.toString();
             newQual = newBreakend.qualStr();
-            newTumorFrags = newBreakend.fragsStr(mConfig.SampleId);
+            newTumorFrags = null; // newBreakend.fragsStr(mConfig.SampleId);
             newNormalFrags = newBreakend.fragsStr(mReferenceId);
             newIsLine = String.valueOf(newBreakend.hasLineInfoFlag());
         }
@@ -257,8 +258,8 @@ public class BreakendMatchWriter
             diffSet.add(DIFF_VCF_TYPE);
 
         // VF
-        double oldTumorFrags = oldBreakend.getExtendedAttributeAsDouble(mConfig.SampleId, TOTAL_FRAGS);
-        double newTumorFrags = newBreakend.getExtendedAttributeAsDouble(mConfig.SampleId, TOTAL_FRAGS);
+        double oldTumorFrags = 0; // oldBreakend.getExtendedAttributeAsDouble(mConfig.SampleId, TOTAL_FRAGS);
+        double newTumorFrags = 0; // newBreakend.getExtendedAttributeAsDouble(mConfig.SampleId, TOTAL_FRAGS);
 
         if(hasDiffWithinTolerance(oldTumorFrags, newTumorFrags))
             diffSet.add(DIFF_TUMOR_FRAGS);

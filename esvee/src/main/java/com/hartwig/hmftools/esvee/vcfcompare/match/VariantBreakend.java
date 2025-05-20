@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.vcfcompare;
+package com.hartwig.hmftools.esvee.vcfcompare.match;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
@@ -297,39 +297,4 @@ public class VariantBreakend
 
         throw new NotImplementedException("eventId() not implemented for sv caller: " + mSvCallerType);
     }
-
-    /*
-    public static Map<String,List<VariantBreakend>> loadVariants(final String vcfFile)
-    {
-        SV_LOGGER.info("loading VCF file: {}", vcfFile);
-
-        Map<String,List<VariantBreakend>> chrBreakendMap = new HashMap<>();
-
-        VcfFileReader reader = new VcfFileReader(vcfFile);
-
-        String currentChr = "";
-        List<VariantBreakend> breakends = null;
-
-        SvCallerType svCallerType = SvCallerType.fromVcfPath(vcfFile);
-        VcfType sourceVcfType = VcfType.fromVcfPath(vcfFile);
-
-        for(VariantContext variantContext : reader.iterator())
-        {
-            String chromosome = variantContext.getContig();
-
-            if(!currentChr.equals(chromosome))
-            {
-                currentChr = chromosome;
-                breakends = new ArrayList<>();
-                chrBreakendMap.put(chromosome, breakends);
-            }
-
-            breakends.add(new VariantBreakend(variantContext, svCallerType, sourceVcfType));
-        }
-
-        SV_LOGGER.debug("Loaded {} structural variants", chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum());
-
-        return chrBreakendMap;
-    }
-    */
 }

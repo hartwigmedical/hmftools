@@ -1,23 +1,25 @@
-package com.hartwig.hmftools.esvee.caller;
+package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
+import com.hartwig.hmftools.esvee.caller.Interval;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -40,9 +42,11 @@ public class Breakend
     public final Interval InexactHomology;
     public final boolean IsLineInsertion;
 
+    public final Set<String> Filters;
+
     private final Variant mVariant;
 
-    private Breakend mLineSiteBreakend;
+    private CoordMatchType mCoordMatchType;
 
     public Breakend(
             final Variant variant, final boolean isStart, final VariantContext context, final String chromosome, final int position,
@@ -77,7 +81,15 @@ public class Breakend
             InexactHomology = new Interval();
         }
 
-        mLineSiteBreakend = null;
+        Filters = Sets.newHashSet();
+
+        for(String filterStr : context.getFilters())
+        {
+            if(!filterStr.equals(PASS))
+                Filters.add(filterStr);
+        }
+
+        mCoordMatchType = null;
     }
 
     public static Breakend from(
@@ -105,15 +117,13 @@ public class Breakend
     public boolean isStart() { return IsStart;}
     public boolean isEnd() { return !IsStart;}
 
-    public double calcAllelicFrequency(final Genotype genotype)
+    public int minPosition()
     {
-        int readPairSupport = (mVariant.isSgl() || !mVariant.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
-        int refSupport = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0);
-
-        int fragmentCount = fragmentCount(genotype);
-        double totalSupport = fragmentCount + refSupport + readPairSupport;
-
-        return totalSupport > 0 ? fragmentCount / totalSupport : 0;
+        return Position + ConfidenceInterval.Start;
+    }
+    public int maxPosition()
+    {
+        return Position + ConfidenceInterval.End;
     }
 
     public int fragmentCount(final Genotype genotype)
@@ -121,15 +131,14 @@ public class Breakend
         return getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
     }
 
-    public int fragmentCount() { return fragmentCount(TumorGenotype) + fragmentCount(RefGenotype); }
+    public int tumorFragmentCount() { return fragmentCount(TumorGenotype); }
+    public int referenceFragmentCount() { return fragmentCount(RefGenotype); }
 
     // convenience
     public boolean isSgl() { return mVariant.isSgl(); }
     public StructuralVariantType type() { return mVariant.type(); }
 
-    public boolean isLine() { return IsLineInsertion || Context.hasAttribute(LINE_SITE); }
-    public void setLineSiteBreakend(final Breakend breakend) { mLineSiteBreakend = breakend; }
-    public Breakend lineSiteBreakend() { return mLineSiteBreakend; }
+    public boolean isLine() { return Context.hasAttribute(LINE_SITE); }
 
     public boolean inChainedAssembly() { return Context.hasAttribute(ASM_LINKS); }
 
@@ -137,6 +146,12 @@ public class Breakend
     {
         return Context.getAttributeAsInt(SEG_REPEAT_LENGTH, 0);
     }
+
+    public boolean isPass() { return Filters.isEmpty(); }
+    public boolean isFiltered() { return !isPass(); }
+
+    public void setCoordMatchType(final CoordMatchType type) { mCoordMatchType = type; }
+    public CoordMatchType coordMatchType() { return mCoordMatchType; }
 
     public String toString()
     {

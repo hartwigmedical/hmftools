@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.vcfcompare.match;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.ArrayList;
@@ -9,7 +10,6 @@ import java.util.Map;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
 
 public class BreakendMatcher
 {
@@ -20,7 +20,8 @@ public class BreakendMatcher
 
     public BreakendMatcher(final CompareConfig config)
     {
-        mRefGenomeVersion = config.RefGenVersion;
+        mRefGenomeVersion = V37;
+        // mRefGenomeVersion = config.RefGenVersion;
         mIncludeNonPass = config.IncludeNonPass;
     }
 
