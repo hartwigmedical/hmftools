@@ -37,7 +37,8 @@ public class BwaAligner implements Aligner
             if(index != null)
             {
                 mAligner = new BwaMemAligner(index);
-                mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
+
+                // mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1); // no longer used
 
                 int mismatchPenalty = mAligner.getMismatchPenaltyOption();
                 mAligner.setMismatchPenaltyOption(mismatchPenalty + BWA_PENALTY_ADJUST);
