@@ -73,7 +73,7 @@ public class PonCache
 
     public static final String PON_FILTERS_V38 = PON_FILTERS_V38_1000_SAMPLES;
     public static final String PON_FILTERS_V37 = "HOTSPOT:10:5;PANEL:6:5;UNKNOWN:6:0";
-    
+
     protected static final Logger LOGGER = LogManager.getLogger(PonCache.class);
 
     public PonCache(final String filename, boolean loadOnDemand)
