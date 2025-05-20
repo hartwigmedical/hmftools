@@ -1,38 +1,22 @@
 package com.hartwig.hmftools.esvee.vcfcompare.line;
 
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
-import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_UNFILTERED_VCF;
-import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.NEW_VCF;
-import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.OLD_UNFILTERED_VCF;
-import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.OLD_VCF;
-
-import java.util.List;
-import java.util.Map;
-
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.vcfcompare.match.SvVcfFile;
-import com.hartwig.hmftools.esvee.vcfcompare.match.VariantBreakend;
-import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
 
-import org.jetbrains.annotations.NotNull;
-
-public class LineCompareTask implements Runnable
+public class LineCompareTask
 {
     private final CompareConfig mConfig;
-    private final BreakendMatcher mBreakendMatcher;
+    // private final BreakendMatcher mBreakendMatcher;
 
     public LineCompareTask(final CompareConfig config)
     {
         mConfig = config;
 
-        mBreakendMatcher = new BreakendMatcher(config);
+        // mBreakendMatcher = new BreakendMatcher(config);
     }
 
-    @Override
     public void run()
     {
+        /*
         SV_LOGGER.info("running LINE comparison");
 
         Map<String,List<VariantBreakend>> oldChrBreakendMap = loadAndLinkVariants(mConfig.OldVcf, OLD_VCF);
@@ -61,8 +45,10 @@ public class LineCompareTask implements Runnable
         writer.writeBreakends();
 
         SV_LOGGER.info("completed LINE comparison");
+         */
     }
 
+    /*
     private static Map<String, List<VariantBreakend>> loadAndLinkVariants(String vcfFile, String label)
     {
         Map<String, List<VariantBreakend>> chrBreakendMap =  new SvVcfFile(vcfFile, label.toUpperCase())
@@ -75,16 +61,5 @@ public class LineCompareTask implements Runnable
 
         return chrBreakendMapDeduped;
     }
-
-    public static void main(@NotNull final String[] args)
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        CompareConfig.registerConfig(configBuilder);
-        configBuilder.checkAndParseCommandLine(args);
-
-        CompareConfig compareConfig = new CompareConfig(configBuilder);
-
-        LineCompareTask svVcfCompare = new LineCompareTask(compareConfig);
-        svVcfCompare.run();
-    }
+    */
 }

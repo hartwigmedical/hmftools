@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.vcfcompare.line;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
@@ -8,15 +7,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.esvee.vcfcompare.Breakend;
 import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
-import com.hartwig.hmftools.esvee.vcfcompare.match.VariantBreakend;
-import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatch;
-import com.hartwig.hmftools.esvee.vcfcompare.match.BreakendMatcher;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -24,12 +19,9 @@ public class LineLinkWriter
 {
     public final CompareConfig mConfig;
 
-    private final BreakendMatcher mBreakendMatcher;
-
-    public LineLinkWriter(final BreakendMatcher breakendMatcher, final CompareConfig config)
+    public LineLinkWriter(final CompareConfig config)
     {
         mConfig = config;
-        mBreakendMatcher = breakendMatcher;
     }
 
     private static final String OLD_PREFIX = "Old";
@@ -133,21 +125,21 @@ public class LineLinkWriter
         String PolyAFrags = "";
         String OtherFrags = "";
 
-        public BreakendRowValues(@Nullable VariantBreakend breakend)
+        public BreakendRowValues(@Nullable Breakend breakend)
         {
             if(breakend == null)
                 return;
 
             boolean hasLink = breakend.hasLineLink();
             LineLink lineLink;
-            VariantBreakend polyASite;
-            VariantBreakend otherSite;
+            Breakend polyASite;
+            Breakend otherSite;
 
             if(hasLink)
             {
-                LinkType = breakend.LinkedLineBreakends.mType.toString();
+                LinkType = breakend.lineData().LinkedLineBreakends.mType.toString();
 
-                lineLink = breakend.LinkedLineBreakends;
+                lineLink = breakend.lineData().LinkedLineBreakends;
                 polyASite = lineLink.mPolyASite;
                 otherSite = lineLink.mOtherSite;
             }
@@ -168,13 +160,15 @@ public class LineLinkWriter
             }
         }
 
-        private void setPolyASiteValues(final VariantBreakend polyASite, @Nullable LineLink lineLink)
+        private void setPolyASiteValues(final Breakend polyASite, @Nullable LineLink lineLink)
         {
-            VcfType = polyASite.SourceVcfType.toString();
+            VcfType = null; // polyASite.SourceVcfType.toString();
 
-            PolyAId = polyASite.Id;
+            PolyAId = polyASite.sv().id();
             PolyACoords = polyASite.coordStr();
             PolyAInsertSeq = polyASite.InsertSequence;
+
+            /*
             PolyASvType = polyASite.SvType;
             PolyAFilter = polyASite.filtersStr();
             PolyAQual = polyASite.qualStr();
@@ -185,10 +179,12 @@ public class LineLinkWriter
                 PolyARemoteCoords = polyASite.otherCoordStr();
                 PolyARemoteId = polyASite.mateId();
             }
+            */
         }
 
-        private void setOtherSiteValues(final VariantBreakend otherSite, @Nullable LineLink lineLink)
+        private void setOtherSiteValues(final Breakend otherSite, @Nullable LineLink lineLink)
         {
+            /*
             OtherId = otherSite.Id;
             OtherCoords = otherSite.coordStr();
             OtherInsertSeq = otherSite.InsertSequence;
@@ -202,11 +198,12 @@ public class LineLinkWriter
                 OtherRemoteCoords = otherSite.otherCoordStr();
                 OtherRemoteId = otherSite.mateId();
             }
+            */
         }
 
-        private void setInferredOtherSiteValues(final VariantBreakend otherBreakend)
+        private void setInferredOtherSiteValues(final Breakend otherBreakend)
         {
-            LineLink inferredLink = otherBreakend.InferredLinkedLineBreakends;
+            LineLink inferredLink = otherBreakend.lineData().InferredLinkedLineBreakends;
 
             SV_LOGGER.trace("Used inferred link in breakend[{}] to assign otherSite[{}]", otherBreakend, inferredLink.mOtherSite);
             setOtherSiteValues(inferredLink.mOtherSite, inferredLink);
@@ -246,7 +243,7 @@ public class LineLinkWriter
         BreakendRowValues mBreakend1RowValues;
         BreakendRowValues mBreakend2RowValues;
 
-        public RowValues(@Nullable VariantBreakend breakend1, @Nullable VariantBreakend breakend2)
+        public RowValues(@Nullable Breakend breakend1, @Nullable Breakend breakend2)
         {
             if(breakend1 == null && breakend2 == null)
                 throw new IllegalStateException("`breakend1` and `breakend2` cannot both be null");
@@ -281,39 +278,40 @@ public class LineLinkWriter
         }
     }
 
-    private boolean isLineInsertSiteOfInterest(@Nullable VariantBreakend breakend)
+    private boolean isLineInsertSiteOfInterest(@Nullable Breakend breakend)
     {
         return breakend != null &&
-                (mConfig.IncludeNonPass || breakend.isPassVariant()) &&
+                (mConfig.IncludeNonPass || breakend.isPass()) &&
                 breakend.hasPolyATail();
     }
 
-    private static String getUnifiedPolyACoords(VariantBreakend oldBreakend, VariantBreakend newBreakend)
+    private static String getUnifiedPolyACoords(Breakend oldBreakend, Breakend newBreakend)
     {
         if(oldBreakend != null)
         {
             if(!oldBreakend.hasLineLink())
                 return oldBreakend.coordStr();
             else
-                return oldBreakend.LinkedLineBreakends.mPolyASite.coordStr();
+                return oldBreakend.lineData().InferredLinkedLineBreakends.mPolyASite.coordStr();
         }
         else
         {
             if(!newBreakend.hasLineLink())
                 return newBreakend.coordStr();
             else
-                return newBreakend.LinkedLineBreakends.mPolyASite.coordStr();
+                return newBreakend.lineData().LinkedLineBreakends.mPolyASite.coordStr();
         }
     }
 
+    /*
     private HashMap<String, Integer> countUnifiedPolyACoords(List<BreakendMatch> breakendMatches)
     {
         HashMap<String, Integer> countMap = new HashMap<>();
 
         for(BreakendMatch match : breakendMatches)
         {
-            VariantBreakend oldBreakend = match.OldBreakend;
-            VariantBreakend newBreakend = match.NewBreakend;
+            Breakend oldBreakend = match.OldBreakend;
+            Breakend newBreakend = match.NewBreakend;
 
             if(!isLineInsertSiteOfInterest(oldBreakend) && !isLineInsertSiteOfInterest(newBreakend))
                 continue;
@@ -326,7 +324,9 @@ public class LineLinkWriter
         return countMap;
     }
 
-    private static boolean variantHasAnyPass(@Nullable VariantBreakend breakend)
+     */
+
+    private static boolean variantHasAnyPass(@Nullable final Breakend breakend)
     {
         boolean anyPass;
 
@@ -336,12 +336,12 @@ public class LineLinkWriter
         }
         else if(!breakend.hasLineLink())
         {
-            anyPass = breakend.isPassVariant();
+            anyPass = breakend.isPass();
         }
         else
         {
-            anyPass = breakend.LinkedLineBreakends.mPolyASite.isPassVariant();
-            anyPass |= breakend.LinkedLineBreakends.mOtherSite.isPassVariant();
+            anyPass = breakend.lineData().LinkedLineBreakends.mPolyASite.isPass();
+            anyPass |= breakend.lineData().LinkedLineBreakends.mOtherSite.isPass();
         }
 
         return anyPass;
@@ -353,14 +353,15 @@ public class LineLinkWriter
         {
             BufferedWriter writer = initialiseWriter();
 
+            /*
             List<BreakendMatch> breakendMatches = mBreakendMatcher.getBreakendMatches();
 
             HashMap<String, Integer> unifiedPolyACoordsCountMap = countUnifiedPolyACoords(breakendMatches);
 
             for(BreakendMatch match : breakendMatches)
             {
-                VariantBreakend oldBreakend = match.OldBreakend;
-                VariantBreakend newBreakend = match.NewBreakend;
+                Breakend oldBreakend = match.OldBreakend;
+                Breakend newBreakend = match.NewBreakend;
 
                 List<String> rowStrings = new ArrayList<>();
 
@@ -385,40 +386,14 @@ public class LineLinkWriter
                 writer.write(String.join(TSV_DELIM, rowStrings));
                 writer.newLine();
             }
+            */
 
+            writer.newLine();
             FileWriterUtils.closeBufferedWriter(writer);
         }
         catch(IOException e)
         {
             SV_LOGGER.error("Failed to write output file: {}", e.toString());
-        }
-    }
-
-    enum CompareTask
-    {
-        MATCH_BREAKENDS,
-        LINE_COMPARE;
-
-        public static List<CompareTask> getAllTasks()
-        {
-            return List.of(CompareTask.class.getEnumConstants());
-        }
-
-        private static final String ALL = "ALL";
-
-        public static List<CompareTask> fromConfig(String configStr)
-        {
-            if(configStr == null || configStr.equals(ALL))
-                return getAllTasks();
-
-            Set<CompareTask> compareTasks = new HashSet<>();
-
-            String[] configStrValues = configStr.split(ITEM_DELIM, -1);
-
-            for(String value : configStrValues)
-                compareTasks.add(CompareTask.valueOf(value));
-
-            return new ArrayList<>(compareTasks);
         }
     }
 }

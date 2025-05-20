@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.esvee.caller.Interval;
+import com.hartwig.hmftools.esvee.vcfcompare.line.LineLink;
+import com.hartwig.hmftools.esvee.vcfcompare.line.LineLinker;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -47,6 +49,8 @@ public class Breakend
     private final Variant mVariant;
 
     private CoordMatchType mCoordMatchType;
+
+    private LineData mLineData;
 
     public Breakend(
             final Variant variant, final boolean isStart, final VariantContext context, final String chromosome, final int position,
@@ -90,6 +94,7 @@ public class Breakend
         }
 
         mCoordMatchType = null;
+        mLineData = null;
     }
 
     public static Breakend from(
@@ -153,8 +158,29 @@ public class Breakend
     public void setCoordMatchType(final CoordMatchType type) { mCoordMatchType = type; }
     public CoordMatchType coordMatchType() { return mCoordMatchType; }
 
+    public void setLineData(final LineData data) { mLineData = data; }
+    public LineData lineData() { return mLineData; }
+    public boolean hasPolyATail() { return mLineData != null && mLineData.HasPolyAT; }
+    public boolean hasLineLink() { return mLineData != null && mLineData.hasLineLink(); }
+    public boolean hasInferredLineLink() { return mLineData != null && mLineData.hasInferredLineLink(); }
+    public void setLineLink(final LineLink lineLink, boolean isInferred)
+    {
+        if(mLineData == null)
+            mLineData = new LineData(LineLinker.hasPolyATail(this));
+
+        if(isInferred)
+            mLineData.InferredLinkedLineBreakends = lineLink;
+        else
+            mLineData.LinkedLineBreakends = lineLink;
+    }
+
     public String toString()
     {
         return String.format("%s:%s pos(%s:%d:%d)", VcfId, type(), Chromosome, Position, Orient.asByte());
+    }
+
+    public String coordStr()
+    {
+        return String.format("%s:%d:%d", Context.getContig(), Position, Orient.asByte());
     }
 }
