@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.teal
 
-import com.beust.jcommander.*
-import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
-import com.hartwig.hmftools.common.utils.config.LoggingOptions
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder
+import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.version.VersionInfo
 import com.hartwig.hmftools.teal.breakend.BreakEndApp
@@ -14,18 +13,11 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.system.exitProcess
 
-class TealApplication
+class TealApplication(val params: TealParams)
 {
-    @ParametersDelegate
-    var params = TealParams()
-
-    @ParametersDelegate
-    val loggingOptions = LoggingOptions()
-
     fun run(): Int
     {
         params.validate()
-        loggingOptions.setLogLevel()
 
         if (!FileWriterUtils.checkCreateOutputDir(params.commonParams.outputDir))
         {
@@ -137,27 +129,12 @@ class TealApplication
         @JvmStatic
         fun main(args: Array<String>)
         {
-            // here we have some voodoo to work out if we are being used in pipeline mode or the standalone mode
-            val tealApp = TealApplication()
-            val commanderStandalone = JCommander.newBuilder()
-                .addObject(tealApp)
-                .build()
-
-            // use unix style formatter
-            commanderStandalone.usageFormatter = UnixStyleUsageFormatter(commanderStandalone)
-            commanderStandalone.parameterDescriptionComparator = DeclaredOrderParameterComparator(tealApp.javaClass)
-
-            try
-            {
-                commanderStandalone.parse(*args)
-                exitProcess(tealApp.run())
-            }
-            catch (standaloneParamException: ParameterException)
-            {
-                println("${standaloneParamException.message}")
-                commanderStandalone.usage()
-                exitProcess(1)
-            }
+            val configBuilder = ConfigBuilder("Teal")
+            TealParams.registerConfig(configBuilder)
+            ConfigUtils.addLoggingOptions(configBuilder)
+            configBuilder.checkAndParseCommandLine(args)
+            val tealApp = TealApplication(TealParams(configBuilder))
+            exitProcess(tealApp.run())
         }
     }
 }
