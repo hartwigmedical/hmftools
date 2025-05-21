@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
 
 import java.util.List;
@@ -40,7 +39,7 @@ public final class AminoAcidQualEnrichment
         List<Integer> filteredIntersect = Lists.newArrayList();
         for(Integer locusIndex : initialIntersect)
         {
-            List<String> allowed = count.getMinCountSequences(locusIndex, config.MinAminoAcidEvidenceFactor);
+            List<String> allowed = count.getMinCountOrVafSequences(locusIndex, config.MinAminoAcidEvidenceFactor);
             String actual = fragment.aminoAcid(locusIndex);
 
             if(allowed.contains(actual))

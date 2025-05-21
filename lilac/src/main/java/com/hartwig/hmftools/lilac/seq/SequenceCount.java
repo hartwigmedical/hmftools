@@ -138,7 +138,7 @@ public final class SequenceCount
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() > 1;
     }
 
-    public List<String> getMinCountSequences(int index, @Nullable final Double minLocalVAF)
+    public List<String> getMinCountOrVafSequences(int index, @Nullable final Double minLocalVAF)
     {
         if(index >= mSeqCountsList.length)
             return Lists.newArrayList();
@@ -152,7 +152,8 @@ public final class SequenceCount
             vafMinCount = coverageAtCurrentPosition * minLocalVAF;
         }
 
-        double minCount = max(mMinCount, vafMinCount);
+        // double minCount = max(mMinCount, vafMinCount);
+        double minCount = minLocalVAF != null ? vafMinCount : mMinCount;
 
         return seqCounts.entrySet().stream()
                 .filter(x -> x.getValue() >= minCount)
@@ -161,7 +162,7 @@ public final class SequenceCount
 
     public List<String> getMinCountSequences(int index)
     {
-        return getMinCountSequences(index, null);
+        return getMinCountOrVafSequences(index, null);
     }
 
     public String getMaxCountSequence(int index)

@@ -36,8 +36,8 @@ public final class NucleotideFragmentQualEnrichment
             int locusIndex = fragment.nucleotideLoci().get(i);
             String fragmentNucleotide = fragment.nucleotides().get(i);
 
-            List<String> highQualitySequences = highQualityCount.getMinCountSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
-            List<String> rawSequences = rawCount.getMinCountSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
+            List<String> highQualitySequences = highQualityCount.getMinCountOrVafSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
+            List<String> rawSequences = rawCount.getMinCountOrVafSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
             List<String> allowedSequences = highQualitySequences.stream().filter(x -> rawSequences.contains(x)).collect(Collectors.toList());
 
             if(allowedSequences.contains(fragmentNucleotide))

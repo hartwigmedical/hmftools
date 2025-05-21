@@ -99,7 +99,7 @@ public final class Candidates
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
-            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(locus, mConfig.MinAminoAcidEvidenceFactor);
+            List<String> expectedSequences = aminoAcidCount.getMinCountOrVafSequences(locus, mConfig.MinAminoAcidEvidenceFactor);
 
             if(expectedSequences.isEmpty())
                 continue;
