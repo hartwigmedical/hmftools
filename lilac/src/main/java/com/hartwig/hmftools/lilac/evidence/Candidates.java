@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.List;
@@ -106,7 +105,7 @@ public final class Candidates
                 continue;
 
             int index = 0;
-            // List<HlaAllele> removedAlleles = Lists.newArrayList();
+
             while(index < candidateSequences.size())
             {
                 HlaSequenceLoci sequence = candidateSequences.get(index);
@@ -123,16 +122,7 @@ public final class Candidates
                 }
 
                 candidateSequences.remove(index);
-                // removedAlleles.add(sequence.Allele);
             }
-
-            /*
-            if(!removedAlleles.isEmpty())
-            {
-                LL_LOGGER.debug("locus({}) seq({}) removed {} alleles: {}",
-                        locus, expectedSequences, removedAlleles.size(), HlaAllele.toString(removedAlleles, 50));
-            }
-            */
         }
 
         return candidateSequences;

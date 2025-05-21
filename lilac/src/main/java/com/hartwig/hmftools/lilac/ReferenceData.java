@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -304,7 +303,7 @@ public class ReferenceData
     {
         Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
 
-        String transcriptsFile = refGenomeVersion.is37() ? "/alleles/hla_transcripts_v37.csv" : "/alleles/hla_transcripts_v38.csv";
+        String transcriptsFile = refGenomeVersion.is37() ? "/transcripts/hla_transcripts_v37.csv" : "/transcripts/hla_transcripts_v38.csv";
 
         final List<String> hlaTranscriptData = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream(transcriptsFile))).lines().collect(Collectors.toList());

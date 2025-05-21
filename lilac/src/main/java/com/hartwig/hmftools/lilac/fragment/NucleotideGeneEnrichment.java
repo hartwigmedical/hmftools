@@ -80,15 +80,4 @@ public class NucleotideGeneEnrichment
         return false;
     }
 
-    // TODO: Rewrite matchToGenes() to be compatible with class GeneCache
-    // private boolean matchToGenes(
-    //         final Fragment fragment,
-    //         final Map<String, List<Integer>> proteinExonBoundariesList)
-    // {
-    //     for(String geneName : proteinExonBoundariesList.keySet())
-    //     {
-    //         List<Integer> proteinExonBoundaries = proteinExonBoundariesList.get(geneName);
-    //         // int minUniqueProteinExonBoundary = getMinUniqueBoundary(proteinExonBoundaries);
-    //     }
-    // }
 }

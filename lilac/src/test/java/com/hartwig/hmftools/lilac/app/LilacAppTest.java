@@ -131,6 +131,7 @@ public class LilacAppTest
     {
         LilacApplication lilac = createLilacApp();
 
+        disableLogging();
         disableCoverageThresholds();
 
         MockBamReader refBamReader = new MockBamReader();
