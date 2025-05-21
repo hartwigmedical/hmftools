@@ -5,6 +5,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
@@ -350,7 +352,7 @@ public class UnmappedBaseExtender
                 if(baseCounts[b] > maxCount)
                 {
                     maxCount = baseCounts[b];
-                    maxBase = Nucleotides.DNA_BASE_BYTES[b];
+                    maxBase = b < DNA_BASE_BYTES.length ? DNA_BASE_BYTES[b] : DNA_N_BYTE;
                 }
             }
 

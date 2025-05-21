@@ -89,9 +89,17 @@ public class AlignData
 
         mCigarElements = CigarUtils.cigarElementsFromStr(cigar);
 
-        mSoftClipLeft = mCigarElements.get(0).getOperator() == S ? mCigarElements.get(0).getLength() : 0;
-        int lastIndex = mCigarElements.size() - 1;
-        mSoftClipRight = mCigarElements.get(lastIndex).getOperator() == S ? mCigarElements.get(lastIndex).getLength() : 0;
+        if(!mCigarElements.isEmpty())
+        {
+            mSoftClipLeft = mCigarElements.get(0).getOperator() == S ? mCigarElements.get(0).getLength() : 0;
+            int lastIndex = mCigarElements.size() - 1;
+            mSoftClipRight = mCigarElements.get(lastIndex).getOperator() == S ? mCigarElements.get(lastIndex).getLength() : 0;
+        }
+        else
+        {
+            // TEMP: should not occur
+            mSoftClipLeft = mSoftClipRight = 0;
+        }
 
         mOrientation = SamRecordUtils.isFlagSet(mFlags, READ_REVERSE_STRAND) ? REVERSE : FORWARD;
         mAlignedBases = mCigarElements.stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
