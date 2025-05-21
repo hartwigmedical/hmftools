@@ -67,9 +67,7 @@ public class NucleotideGeneEnrichment
         return fragment;
     }
 
-    private boolean matchToGenes(
-            final Fragment fragment,
-            final Map<String, Integer> minUniqueProteinExonBoundariesPerGene)
+    private boolean matchToGenes(final Fragment fragment, final Map<String,Integer> minUniqueProteinExonBoundariesPerGene)
     {
         for(String geneName : minUniqueProteinExonBoundariesPerGene.keySet())
         {

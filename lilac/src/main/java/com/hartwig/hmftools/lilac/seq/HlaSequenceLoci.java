@@ -60,7 +60,7 @@ public class HlaSequenceLoci
 
     public boolean hasExonBoundaryWildcards() { return mHasExonBoundaryWildcards; }
 
-    public void setExonBoundaryWildcardsWildcards(final List<Integer> exonBoundaries)
+    public void setExonBoundaryWildcards(final List<Integer> exonBoundaries)
     {
         for(Integer locus : exonBoundaries)
         {

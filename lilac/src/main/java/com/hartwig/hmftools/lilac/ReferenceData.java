@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -237,13 +238,13 @@ public class ReferenceData
         for(HlaSequenceLoci sequence : AminoAcidSequences)
         {
             List<Integer> exonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
-            sequence.setExonBoundaryWildcardsWildcards(exonBoundaries);
+            sequence.setExonBoundaryWildcards(exonBoundaries);
         }
 
         for(HlaSequenceLoci sequence : NucleotideSequences)
         {
             List<Integer> exonBoundaries = getNucleotideExonBoundaries(sequence.Allele.Gene);
-            sequence.setExonBoundaryWildcardsWildcards(exonBoundaries);
+            sequence.setExonBoundaryWildcards(exonBoundaries);
         }
     }
 
