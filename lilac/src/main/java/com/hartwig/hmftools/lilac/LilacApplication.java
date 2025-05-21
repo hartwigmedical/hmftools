@@ -372,9 +372,9 @@ public class LilacApplication
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
             // For top solutions, recalculate from all evidence but keep the scoring values unchanged
-            for(int i = 0; i <  mRankedComplexes.size(); i++)
+            for(int i = 0; i < mRankedComplexes.size(); i++)
             {
-                ComplexCoverage origComplexCoverage =  mRankedComplexes.get(i);
+                ComplexCoverage origComplexCoverage = mRankedComplexes.get(i);
 
                 ComplexCoverage recalcComplexCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, origComplexCoverage.getAlleles());
                 recalcComplexCoverage.setScore(origComplexCoverage.getScore());
