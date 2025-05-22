@@ -14,10 +14,10 @@ import gzip
 import urllib
 from enum import Enum
 
-import pandas.errors
 import requests
 from bs4 import BeautifulSoup
 
+import pandas.errors
 import pandas as pd
 
 
@@ -26,6 +26,7 @@ logging.addLevelName(logging.WARNING,  "WARN ")
 
 
 class PopulationStandard(Enum):
+    
     GOLD = "g"
     GOLD_AND_SILVER = "s"
     ALL = ""
@@ -48,6 +49,7 @@ class AlleleGroup(Enum):
 
 
 class HlaLocusType(Enum):
+    
     CLASSICAL = "Classical"
     NON_CLASSICAL = "Non-classical"
 
@@ -126,15 +128,14 @@ class HlaAlleleFreqDownloader:
 
         return url
 
-    @staticmethod
-    def get_url(url: str, cache_dir: str) -> str:
+    def get_text_from_url(self, url) -> str:
 
-        if not os.path.exists(cache_dir):
-            logging.info(f"Making cache dir: {cache_dir}")
-            os.makedirs(cache_dir, exist_ok=True)
+        if not os.path.exists(self.cache_dir):
+            logging.info(f"Making cache dir: {self.cache_dir}")
+            os.makedirs(self.cache_dir, exist_ok=True)
 
         cache_basename = re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F ]", "-", url)
-        cache_file = f'{cache_dir}/{cache_basename}.html.gz'
+        cache_file = f'{self.cache_dir}/{cache_basename}.html.gz'
 
         if not os.path.exists(cache_file):
             req = requests.get(url)
@@ -147,12 +148,11 @@ class HlaAlleleFreqDownloader:
 
         return text
 
-    @staticmethod
-    def get_all_pages_as_text(url: str, cache_dir: str) -> list[str]:
+    def get_text_from_all_pages(self) -> list[str]:
 
-        logging.info(f'Scraping URL: {url}')
+        logging.info(f'Scraping URL: {self.main_url}')
 
-        text = HlaAlleleFreqDownloader.get_url(url, cache_dir)
+        text = self.get_text_from_url(self.main_url)
         bs = BeautifulSoup(text, 'html.parser')
 
         # Number of pages of results
@@ -169,7 +169,7 @@ class HlaAlleleFreqDownloader:
 
         pages = []
         for i in range(1, n_pages + 1):
-            text = HlaAlleleFreqDownloader.get_url(f'{url}&page={i}', cache_dir)
+            text = self.get_text_from_url(f'{self.main_url}&page={i}')
             pages.append(text)
 
         return pages
@@ -247,7 +247,7 @@ class HlaAlleleFreqDownloader:
                 logging.warning(f"Skipping loading empty cache file: {output_path}")
                 return pd.DataFrame()
 
-        pages = self.get_all_pages_as_text(self.main_url, self.cache_dir)
+        pages = self.get_text_from_all_pages()
         df = self.parse_all_pages(pages)
 
         if len(df) != 0:
