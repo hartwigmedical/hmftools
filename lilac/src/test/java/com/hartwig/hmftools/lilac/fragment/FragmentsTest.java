@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidInd
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildSamRecord;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
-import static com.hartwig.hmftools.lilac.read.ReadRecord.create;
+import static com.hartwig.hmftools.lilac.read.Read.create;
 
 import static org.junit.Assert.assertFalse;
 
@@ -26,7 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.lilac.read.ReadRecord;
+import com.hartwig.hmftools.lilac.read.Read;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -63,31 +63,31 @@ public class FragmentsTest
         SAMRecord record = buildSamRecord(200, "10S60M10S", TEST_READ_BASES.substring(0, 80), "");
         record.setInferredInsertSize(200);
 
-        ReadRecord readRecord = create(codingRegion, record, true, true);
-        assertNotNull(readRecord);
+        Read read = create(codingRegion, record, true, true);
+        assertNotNull(read);
 
-        assertEquals(190, readRecord.PositionStart);
-        assertEquals(269, readRecord.PositionEnd);
-        assertEquals(10, readRecord.SoftClippedStart);
-        assertEquals(10, readRecord.SoftClippedEnd);
+        assertEquals(190, read.PositionStart);
+        assertEquals(269, read.PositionEnd);
+        assertEquals(10, read.SoftClippedStart);
+        assertEquals(10, read.SoftClippedEnd);
 
         // now restricted at the lower 3' end
         record.setInferredInsertSize(70);
         record.setReadNegativeStrandFlag(true);
 
-        readRecord = create(codingRegion, record, true, true);
-        assertEquals(200, readRecord.PositionStart);
-        assertEquals(269, readRecord.PositionEnd);
-        assertEquals(0, readRecord.SoftClippedStart);
-        assertEquals(10, readRecord.SoftClippedEnd);
+        read = create(codingRegion, record, true, true);
+        assertEquals(200, read.PositionStart);
+        assertEquals(269, read.PositionEnd);
+        assertEquals(0, read.SoftClippedStart);
+        assertEquals(10, read.SoftClippedEnd);
 
         record.setReadNegativeStrandFlag(false);
 
-        readRecord = create(codingRegion, record, true, true);
-        assertEquals(190, readRecord.PositionStart);
-        assertEquals(259, readRecord.PositionEnd);
-        assertEquals(10, readRecord.SoftClippedStart);
-        assertEquals(0, readRecord.SoftClippedEnd);
+        read = create(codingRegion, record, true, true);
+        assertEquals(190, read.PositionStart);
+        assertEquals(259, read.PositionEnd);
+        assertEquals(10, read.SoftClippedStart);
+        assertEquals(0, read.SoftClippedEnd);
     }
 
     @Test
@@ -121,13 +121,13 @@ public class FragmentsTest
     public void testFragmentMerge()
     {
         String readId = "01";
-        ReadRecord readRecord = createReadRecord(readId);
+        Read read = createReadRecord(readId);
         Fragment frag1 = new Fragment(
-                readRecord, GENE_A, Sets.newHashSet(GENE_A),
+                read, GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
         Fragment frag2 = new Fragment(
-                readRecord, GENE_B, Sets.newHashSet(GENE_B),
+                read, GENE_B, Sets.newHashSet(GENE_B),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
         Fragment mergedFrag = mergeFragments(frag1, frag2);
@@ -139,7 +139,7 @@ public class FragmentsTest
         assertEquals(1, mergedFrag.nucleotides().size());
 
         frag2 = new Fragment(
-                readRecord, GENE_A, Sets.newHashSet(GENE_A),
+                read, GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(0, 1, 2, 3),
                 Lists.newArrayList(30, 30, 30, 30),
                 Lists.newArrayList("A", "A", "A", "A"));
@@ -154,7 +154,7 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.nucleotides().size());
 
         frag2 = new Fragment(
-                readRecord, GENE_C, Sets.newHashSet(GENE_C),
+                read, GENE_C, Sets.newHashSet(GENE_C),
                 Lists.newArrayList(3, 4, 5),
                 Lists.newArrayList(30, 30, 30),
                 Lists.newArrayList("A", "A", "A"));

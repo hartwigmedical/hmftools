@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.pon;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
@@ -52,21 +54,25 @@ public class PonCache
     public static final String PON_FILTER = "PON";
     public static final String PON_ARTEFACT_FILTER = "PONArtefact";
 
-    public static final int PON_FILTER_HOTSPOT_SAMPLE_COUNT = 10;
+    // defaults based on 1000 samples and hg38
+    public static final int PON_FILTER_HOTSPOT_SAMPLE_COUNT = 6;
     public static final int PON_FILTER_HOTSPOT_MAX_READS = 5;
 
-    public static final int PON_FILTER_PANEL_SAMPLE_COUNT = 6;
-    public static final int PON_FILTER_PANEL_MAX_READS = 5;
+    public static final int PON_FILTER_PANEL_SAMPLE_COUNT = 3;
+    public static final int PON_FILTER_PANEL_MAX_READS = 3;
 
-    public static final int PON_FILTER_OTHER_TIER_SAMPLE_COUNT = 6;
+    public static final int PON_FILTER_OTHER_TIER_SAMPLE_COUNT = 3;
     public static final int PON_FILTER_OTHER_TIER_MAX_READS = 0;
 
-    // PON filters relating to PON generated from 1000 and 98 samples, prior to the hg38 re-run
-    public static final String PON_FILTERS_V37 = "HOTSPOT:10:5;PANEL:6:5;UNKNOWN:6:0";
+    // PON filters relating to PON generated from 1000 and 98 samples
+    private static final String PON_FILTERS_V38_1000_SAMPLES =
+            format("HOTSPOT:%d:%d;PANEL:%d:%d;UNKNOWN:%d:%d",
+                    PON_FILTER_HOTSPOT_SAMPLE_COUNT, PON_FILTER_HOTSPOT_MAX_READS,
+                    PON_FILTER_PANEL_SAMPLE_COUNT, PON_FILTER_PANEL_MAX_READS,
+                    PON_FILTER_OTHER_TIER_SAMPLE_COUNT, PON_FILTER_OTHER_TIER_MAX_READS);
 
-    private static final String PON_FILTERS_V38_98_SAMPLES = "HOTSPOT:5:5;PANEL:2:5;UNKNOWN:2:0";
-    private static final String PON_FILTERS_V38_1000_SAMPLES = "HOTSPOT:6:5;PANEL:3:3;UNKNOWN:3:0";
-    public static final String PON_FILTERS_V38 = PON_FILTERS_V38_98_SAMPLES;
+    public static final String PON_FILTERS_V38 = PON_FILTERS_V38_1000_SAMPLES;
+    public static final String PON_FILTERS_V37 = "HOTSPOT:10:5;PANEL:6:5;UNKNOWN:6:0";
 
     protected static final Logger LOGGER = LogManager.getLogger(PonCache.class);
 

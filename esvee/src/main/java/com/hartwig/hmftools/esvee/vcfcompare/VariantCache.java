@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.esvee.caller;
+package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,35 +15,72 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
+import htsjdk.variant.vcf.VCFHeader;
 
-public class SvDataCache
+public class VariantCache
 {
-    private final CallerConfig mConfig;
-    private final TargetRegions mTargetRegions;
+    private final GenotypeIds mGenotypeIds;
     private final StructuralVariantFactory mSvFactory;
 
     private final List<Variant> mSvData;
     private final Map<String,List<Breakend>> mChromosomeBreakends;
-    private int mHardFilteredCount;
 
-    public SvDataCache(final CallerConfig config, final TargetRegions targetRegions)
+    public VariantCache(final String vcfFilename)
     {
-        mConfig = config;
         mSvData = Lists.newArrayList();
         mChromosomeBreakends = Maps.newHashMap();
 
-        mTargetRegions = targetRegions;
+        if(vcfFilename == null)
+        {
+            mGenotypeIds = null;
+            mSvFactory = null;
+            return;
+        }
+
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFilename);
+        VCFHeader vcfHeader = vcfFileReader.vcfHeader();
+        List<String> vcfSampleNames = vcfHeader.getGenotypeSamples();
+
+        String tumorId = "";
+        String referenceId = null;
+        int tumorOrdinal = -1;
+        int referenceOrdinal = -1;
+
+        if(vcfSampleNames.size() > 1)
+        {
+            tumorId = vcfSampleNames.get(1);
+            tumorOrdinal = 1;
+            referenceId = vcfSampleNames.get(0);
+            referenceOrdinal = 0;
+        }
+        else
+        {
+            tumorId = vcfSampleNames.get(0);
+            tumorOrdinal = 0;
+        }
+
+        mGenotypeIds = new GenotypeIds(referenceOrdinal, tumorOrdinal, referenceId, tumorId);
 
         mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
-        mHardFilteredCount = 0;
+        mSvFactory.setGenotypeOrdinals(mGenotypeIds.ReferenceOrdinal, mGenotypeIds.TumorOrdinal);
+
+        vcfFileReader.iterator().forEach(x -> processVariant(x));
+
+        buildBreakendMap();
+
+        SV_LOGGER.debug("loaded {} SVs from vcf({})", mSvData.size(), vcfFilename);
     }
 
-    public void setGenotypeOrdinals(final GenotypeIds genotypeIds)
+    public boolean valid() { return mGenotypeIds != null; }
+    public GenotypeIds genotypeIds() { return mGenotypeIds; }
+
+    public List<Breakend> getChromosomeBreakends(final String chromosome)
     {
-        mSvFactory.setGenotypeOrdinals(genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+        return mChromosomeBreakends.containsKey(chromosome) ? mChromosomeBreakends.get(chromosome) : Collections.emptyList();
     }
 
     public List<Variant> getSvList() { return mSvData; }
@@ -50,10 +88,9 @@ public class SvDataCache
 
     public int sglCount() { return (int)mSvData.stream().filter(x -> x.isSgl()).count(); }
     public int svCount() { return (int)mSvData.stream().filter(x -> !x.isSgl()).count(); }
-    public int hardFilteredCount() { return mHardFilteredCount; }
     public int incompleteSVs() { return mSvFactory.unmatched().size(); }
 
-    public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
+    private void processVariant(final VariantContext variant)
     {
         if(!HumanChromosome.contains(variant.getContig()))
             return;
@@ -62,14 +99,8 @@ public class SvDataCache
 
         if(isSgl)
         {
-            if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.getContig(), variant.getStart()))
-            {
-                ++mHardFilteredCount;
-                return;
-            }
-
             StructuralVariant sv = mSvFactory.createSingleBreakend(variant);
-            addSvData(new Variant(sv, genotypeIds));
+            addSvData(new Variant(sv, mGenotypeIds));
             return;
         }
 
@@ -90,7 +121,7 @@ public class SvDataCache
         if(sv == null)
             return;
 
-        addSvData(new Variant(sv, genotypeIds));
+        addSvData(new Variant(sv, mGenotypeIds));
     }
 
     private StructuralVariant popLastSv()
@@ -106,21 +137,12 @@ public class SvDataCache
 
     private void addSvData(final Variant var)
     {
-        // optionally filter out by config
-        if(mConfig.excludeVariant(var))
-            return;
-
         mSvData.add(var);
     }
 
-    public void buildBreakendMap()
+    private void buildBreakendMap()
     {
-        buildBreakendMap(mSvData, mChromosomeBreakends);
-    }
-
-    public static void buildBreakendMap(final List<Variant> variants, final Map<String,List<Breakend>> chrBreakendMap)
-    {
-        for(Variant var : variants)
+        for(Variant var : mSvData)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -129,19 +151,19 @@ public class SvDataCache
                 if(breakend == null)
                     continue;
 
-                List<Breakend> breakends = chrBreakendMap.get(breakend.Chromosome);
+                List<Breakend> breakends = mChromosomeBreakends.get(breakend.Chromosome);
 
                 if(breakends == null)
                 {
                     breakends = Lists.newArrayList();
-                    chrBreakendMap.put(breakend.Chromosome, breakends);
+                    mChromosomeBreakends.put(breakend.Chromosome, breakends);
                 }
 
                 breakends.add(breakend);
             }
         }
 
-        for(List<Breakend> breakends : chrBreakendMap.values())
+        for(List<Breakend> breakends : mChromosomeBreakends.values())
         {
             Collections.sort(breakends, new BreakendPositionComparator());
         }

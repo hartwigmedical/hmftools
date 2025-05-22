@@ -96,7 +96,7 @@ public final class ReadUtils
             if(read.indelImpliedUnclippedEnd() < refPosition)
                 return INVALID_INDEX;
 
-            return read.indelImpliedUnclippedEnd() - refPosition - 1;
+            return read.basesLength() - 1 - (read.indelImpliedUnclippedEnd() - refPosition);
         }
 
         // use the unclipped position to determine how far back from the start or end of the read the junction index is

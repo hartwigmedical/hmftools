@@ -22,6 +22,10 @@ public class ThreadedPerformanceCounter
     public PerformanceCounter getPerformanceCounter()
     {
         final long threadId = Thread.currentThread().getId();
+        PerformanceCounter pc = mThreadPc.get().get(threadId);
+        if(pc != null)
+            return pc;
+
         return mThreadPc.updateAndGet(currentRef ->
         {
             if(currentRef.containsKey(threadId))

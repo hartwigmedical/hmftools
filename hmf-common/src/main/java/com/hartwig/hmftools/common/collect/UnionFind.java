@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.collect;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -12,12 +12,8 @@ import com.google.common.collect.Sets;
 // see https://en.wikipedia.org/wiki/Disjoint-set_data_structure for an explanation of this data structure
 public class UnionFind<T>
 {
-    private final Map<T, T> mParentLookup;
-
-    public UnionFind()
-    {
-        mParentLookup = Maps.newHashMap();
-    }
+    private final HashMap<T, T> mParentLookup = Maps.newHashMap();
+    private final HashMap<T, Long> mSizeLookup = Maps.newHashMap();
 
     public void add(final T x)
     {
@@ -25,6 +21,7 @@ public class UnionFind<T>
             return;
 
         mParentLookup.put(x, null);
+        mSizeLookup.put(x, 1L);
     }
 
     public T getRepresentative(final T x)
@@ -52,12 +49,24 @@ public class UnionFind<T>
         if(xRep.equals(yRep))
             return;
 
-        mParentLookup.put(yRep, xRep);
+        long xSize = mSizeLookup.get(xRep);
+        long ySize = mSizeLookup.get(yRep);
+        long newSize = xSize + ySize;
+        if(xSize >= ySize)
+        {
+            mParentLookup.put(yRep, xRep);
+            mSizeLookup.put(xRep, newSize);
+        }
+        else
+        {
+            mParentLookup.put(xRep, yRep);
+            mSizeLookup.put(yRep, newSize);
+        }
     }
 
     public Collection<Set<T>> getPartitions()
     {
-        Map<T, Set<T>> partitions = Maps.newHashMap();
+        HashMap<T, Set<T>> partitions = Maps.newHashMap();
         for(T node : mParentLookup.keySet())
         {
             T repr = getRepresentative(node);

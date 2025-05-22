@@ -1,14 +1,16 @@
 package com.hartwig.hmftools.esvee.vcfcompare.line;
 
-import com.hartwig.hmftools.esvee.vcfcompare.VariantBreakend;
+import static java.lang.String.format;
+
+import com.hartwig.hmftools.esvee.vcfcompare.Breakend;
 
 public class LineLink
 {
-    public final VariantBreakend mPolyASite;
-    public final VariantBreakend mOtherSite;
+    public final Breakend mPolyASite;
+    public final Breakend mOtherSite;
     public final LineLinkType mType;
     
-    public LineLink(VariantBreakend polyASite, VariantBreakend otherSite, LineLinkType type)
+    public LineLink(Breakend polyASite, Breakend otherSite, LineLinkType type)
     {
         checkPolyASite(polyASite);
 
@@ -17,33 +19,34 @@ public class LineLink
         mType = type;
     }
 
-    private static void checkPolyASite(VariantBreakend polyASite)
+    private static void checkPolyASite(Breakend polyASite)
     {
         if(!polyASite.hasPolyATail())
         {
-            throw new IllegalStateException(String.format("breakend(%s) does not have a poly A tail. Insert sequence: %s",
+            throw new IllegalStateException(format("breakend(%s) does not have a poly A tail. Insert sequence: %s",
                             polyASite, polyASite.InsertSequence));
         }
     }
 
     public boolean hasRemotes()
     {
-        return !mPolyASite.eventId().equals(mOtherSite.eventId());
+        return !mPolyASite.sv().id().equals(mOtherSite.sv().id());
     }
 
     public boolean polyAHasRemote()
     {
-        return !mPolyASite.isSingle() && hasRemotes();
+        return !mPolyASite.isSgl() && hasRemotes();
     }
 
     public boolean otherHasRemote()
     {
-        return !mOtherSite.isSingle() && hasRemotes();
+        return !mOtherSite.isSgl() && hasRemotes();
     }
 
     @Override
     public String toString()
     {
-        return String.format("polyASite(%s %s) otherSite(%s %s)", mPolyASite.Id, mPolyASite.coordStr(), mOtherSite.Id, mOtherSite.coordStr());
+        return format("polyASite(%s %s) otherSite(%s %s)",
+                mPolyASite.sv().id(), mPolyASite.coordStr(), mOtherSite.sv().id(), mOtherSite.coordStr());
     }
 }

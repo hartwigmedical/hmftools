@@ -24,7 +24,7 @@ import htsjdk.samtools.SAMRecord;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ReadRecord
+public class Read
 {
     public final String Id;
     public final int SoftClippedStart; // soft-clipped bases at start and end
@@ -39,9 +39,9 @@ public class ReadRecord
     public final int ReadEnd;
 
     private final List<Indel> mIndels; // indels within the coding region
-    private final SAMRecord mSamRecord;
+    private final SAMRecord mRecord;
 
-    public ReadRecord(
+    public Read(
             final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
             int positionEnd, int readStart, int readEnd, final SAMRecord record)
     {
@@ -53,13 +53,13 @@ public class ReadRecord
         PositionEnd = positionEnd;
         ReadStart = readStart;
         ReadEnd = readEnd;
-        mSamRecord = record;
+        mRecord = record;
     }
 
     public String readInfo()
     {
         return format("%s:%d-%d %s",
-                mSamRecord.getContig(), mSamRecord.getStart(), mSamRecord.getEnd(), mSamRecord.getCigarString());
+                mRecord.getContig(), mRecord.getStart(), mRecord.getEnd(), mRecord.getCigarString());
     }
 
     public String toString() { return format("%s %s indels(%s) sc(%d/%d)",
@@ -67,7 +67,7 @@ public class ReadRecord
 
     public List<Indel> getIndels() { return mIndels; }
 
-    public SAMRecord getSamRecord() { return mSamRecord; }
+    public SAMRecord bamRecord() { return mRecord; }
 
     public final int maxIndelSize()
     {
@@ -85,8 +85,8 @@ public class ReadRecord
             int index = readBases.length - 1;
             for(int i = ReadStart; i <= ReadEnd; ++i)
             {
-                readBases[index] = Nucleotides.swapDnaBase(mSamRecord.getReadString().charAt(i));
-                readQuals[index] = mSamRecord.getBaseQualities()[i];
+                readBases[index] = Nucleotides.swapDnaBase(mRecord.getReadString().charAt(i));
+                readQuals[index] = mRecord.getBaseQualities()[i];
                 --index;
             }
 
@@ -96,27 +96,27 @@ public class ReadRecord
             int index = 0;
             for(int i = ReadStart; i <= ReadEnd; ++i)
             {
-                readBases[index] = mSamRecord.getReadString().charAt(i);
-                readQuals[index] = mSamRecord.getBaseQualities()[i];
+                readBases[index] = mRecord.getReadString().charAt(i);
+                readQuals[index] = mRecord.getBaseQualities()[i];
                 ++index;
             }
         }
     }
 
-    public List<ReadRecord> alignmentsOnly()
+    public List<Read> alignmentsOnly()
     {
-        final String chromosome = mSamRecord.getContig();
+        final String chromosome = mRecord.getContig();
         final ChrBaseRegion outerRegion = new ChrBaseRegion(chromosome, PositionStart, PositionEnd);
 
-        return mSamRecord.getAlignmentBlocks().stream()
+        return mRecord.getAlignmentBlocks().stream()
                 .map(x -> new ChrBaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
                 .filter(x -> outerRegion.overlaps(x))
                 .map(x -> new BaseRegion(max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
-                .map(x -> create(x, mSamRecord, false, false))
+                .map(x -> create(x, mRecord, false, false))
                 .collect(Collectors.toList());
     }
 
-    public static ReadRecord create(final BaseRegion codingRegion, final SAMRecord record, boolean includeSoftClips, boolean includeIndels)
+    public static Read create(final BaseRegion codingRegion, final SAMRecord record, boolean includeSoftClips, boolean includeIndels)
     {
         int softClipStart = leftSoftClipLength(record);
         int softClipEnd = rightSoftClipLength(record);
@@ -185,7 +185,7 @@ public class ReadRecord
 
         List<Indel> indels = includeIndels ? indels(positionStart, positionEnd, record) : Lists.newArrayList();
 
-        return new ReadRecord(
+        return new Read(
                 record.getReadName(), softClippedStart, softClippedEnd, indels,
                 positionStart, positionEnd, readIndexStart, readIndexEnd, record);
     }

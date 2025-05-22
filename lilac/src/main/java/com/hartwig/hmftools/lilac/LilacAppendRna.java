@@ -140,7 +140,9 @@ public class LilacAppendRna
 
         BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config, GENE_CACHE.GeneTranscriptMap, nucleotideFragFactory);
 
-        List<Fragment> rnaNucleotideFrags = nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaBamReader.findGeneFragments());
+        List<Fragment> rnaNucleotideFrags = rnaBamReader.findGeneFragments();
+
+        nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 

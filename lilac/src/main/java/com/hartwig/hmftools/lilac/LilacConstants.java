@@ -20,7 +20,7 @@ public class LilacConstants
     public static final double DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR = 0.00075;
     public static final double DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR = 0.004;
 
-    public static final int DEFAULT_MAX_REF_FRAGMENTS = 10000;
+    public static final int DEFAULT_MAX_REF_FRAGMENTS = 1000;
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;
 

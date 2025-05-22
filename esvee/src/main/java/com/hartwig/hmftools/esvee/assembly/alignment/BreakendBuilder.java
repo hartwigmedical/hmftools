@@ -483,6 +483,17 @@ public class BreakendBuilder
                 breakend.addFacingBreakend(nextBreakend);
                 nextBreakend.addFacingBreakend(breakend);
             }
+            else if(nextBreakend.svType() == DUP && nextBreakend.Orient.isReverse() && i < mAssemblyAlignment.breakends().size() - 2)
+            {
+                // handle links to the upper breakend of a short DUP
+                Breakend dupOtherBreakend = mAssemblyAlignment.breakends().get(i + 2);
+
+                if(dupOtherBreakend == nextBreakend.otherBreakend() && areFacingBreakends(breakend, dupOtherBreakend))
+                {
+                    breakend.addFacingBreakend(dupOtherBreakend);
+                    dupOtherBreakend.addFacingBreakend(breakend);
+                }
+            }
         }
 
         // add links for any assemblies with multiple facing breakends in the phase set

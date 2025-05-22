@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
 import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.ReferenceData.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.app.LilacAppTest.buildGeneCache;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
@@ -34,6 +35,8 @@ public class NucleotideTest
     @Test
     public void testGeneEnrichment()
     {
+        buildGeneCache();
+
         NucleotideGeneEnrichment enricher = new NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
 
         List<Integer> indices = Lists.newArrayList();
@@ -45,17 +48,18 @@ public class NucleotideTest
         assertGene(enricher, Sets.newHashSet(HLA_C), HLA_C, indices);
 
         indices.add(365);
-        assertGene(enricher, Sets.newHashSet("HLA-A"), "HLA-A", indices);
-        assertGene(enricher, Sets.newHashSet("HLA-B"), "HLA-B", indices);
+        assertGene(enricher, Sets.newHashSet(HLA_A), HLA_A, indices);
+        assertGene(enricher, Sets.newHashSet(HLA_B), HLA_B, indices);
     }
 
     private void assertGene(
-            NucleotideGeneEnrichment enricher,
-            Set<String> expectedGenes, String alignedGene, List<Integer> aminoAcideIndices)
+            final NucleotideGeneEnrichment enricher,
+            final Set<String> expectedGenes, final String alignedGene, final List<Integer> aminoAcideIndices)
     {
         Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
-        Fragment result = enricher.checkAddAdditionalGenes(fragment);
-        assertTrue(namesMatch(result.genes(), expectedGenes));
+
+        enricher.checkAdditionalGenes(fragment);
+        assertTrue(namesMatch(fragment.genes(), expectedGenes));
     }
 
     private Fragment create(final String gene, final List<Integer> indices)

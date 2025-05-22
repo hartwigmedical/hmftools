@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.seq;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -137,26 +138,22 @@ public final class SequenceCount
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() > 1;
     }
 
-    public List<String> getMinCountSequences(int index, @Nullable Double minLocalVAF)
+    public List<String> getMinCountOrVafSequences(int index, @Nullable final Double minLocalVAF)
     {
         if(index >= mSeqCountsList.length)
             return Lists.newArrayList();
 
         Map<String,Integer> seqCounts = get(index);
 
-        double minCount;
-        if(minLocalVAF == null)
+        double vafMinCount = 0;
+        if(minLocalVAF != null)
         {
-            minCount = mMinCount;
+            int coverageAtCurrentPosition = seqCounts.values().stream().mapToInt(x -> x.intValue()).sum();
+            vafMinCount = coverageAtCurrentPosition * minLocalVAF;
         }
-        else
-        {
-            int coverageAtCurrentPosition = 0;
-            for(int fragCount : seqCounts.values())
-                coverageAtCurrentPosition += fragCount;
 
-            minCount = coverageAtCurrentPosition * minLocalVAF;
-        }
+        // double minCount = max(mMinCount, vafMinCount);
+        double minCount = minLocalVAF != null ? vafMinCount : mMinCount;
 
         return seqCounts.entrySet().stream()
                 .filter(x -> x.getValue() >= minCount)
@@ -165,7 +162,7 @@ public final class SequenceCount
 
     public List<String> getMinCountSequences(int index)
     {
-        return getMinCountSequences(index, null);
+        return getMinCountOrVafSequences(index, null);
     }
 
     public String getMaxCountSequence(int index)

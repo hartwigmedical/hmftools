@@ -18,7 +18,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.utils.SuffixTree;
 import com.hartwig.hmftools.lilac.ReferenceData;
-import com.hartwig.hmftools.lilac.read.ReadRecord;
+import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import java.util.LinkedHashMap;
@@ -46,7 +46,7 @@ public class NucleotideFragmentFactory
         mReferenceData.AminoAcidSequencesWithDeletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
-    public final Fragment createFragment(final ReadRecord record, final String geneName, final byte geneStrand)
+    public final Fragment createFragment(final Read record, final String geneName, final byte geneStrand)
     {
         if(record.ReadStart < 0 || record.ReadEnd < record.ReadStart)
             return null;
@@ -122,7 +122,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment checkMatchedInsertDeleteSequence(
-            final ReadRecord record, final String geneName,
+            final Read record, final String geneName,
             final String aminoAcids, int matchRangeAllowedStart, int matchRangeAllowedEnd,
             final LinkedHashMap<HlaSequenceLoci,SuffixTree> sequenceMap)
     {
@@ -158,7 +158,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment createIndelFragment(
-            final ReadRecord record, final String geneName, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
+            final Read record, final String geneName, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
         List<Integer> aminoAcidLoci = formRange(startLoci, endLoci);
@@ -201,7 +201,7 @@ public class NucleotideFragmentFactory
                 String.valueOf(codons.charAt(0)), String.valueOf(codons.charAt(1)), codons.substring(2));
     }
 
-    public Fragment createAlignmentFragments(final ReadRecord record, final String geneName, final byte geneStrand)
+    public Fragment createAlignmentFragments(final Read record, final String geneName, final byte geneStrand)
     {
         List<Fragment> fragments = record.alignmentsOnly().stream()
                 .filter(x -> x != null)

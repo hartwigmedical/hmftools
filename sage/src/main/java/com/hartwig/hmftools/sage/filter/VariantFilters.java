@@ -218,10 +218,12 @@ public class VariantFilters
             filters.add(SoftFilter.MIN_TUMOR_SUPPORT);
         }
 
+        /* NOTE: disabled due to impact on ctDNA samples
         if(exceedsAltFragmentLength(primaryTumor))
         {
             filters.add(SoftFilter.FRAGMENT_LENGTH);
         }
+        */
 
         if(exceedsRealignedPercentage(primaryTumor))
         {

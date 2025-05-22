@@ -3,11 +3,10 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -26,7 +25,7 @@ public class NucleotideGeneEnrichment
         mBcMinUniqueProteinExonBoundary = getMinUniqueBoundary(bBoundaries, cBoundaries);
     }
 
-    private static int getMinUniqueBoundary(List<Integer> boundariesGene1, List<Integer> boundariesGene2)
+    private static int getMinUniqueBoundary(final List<Integer> boundariesGene1, final List<Integer> boundariesGene2)
     {
         Set<Integer> uniqueBoundaries = Sets.newHashSet();
 
@@ -43,54 +42,69 @@ public class NucleotideGeneEnrichment
     public final int getCFilterA() { return mAcMinUniqueProteinExonBoundary; }
     public final int getCFilterB() { return mBcMinUniqueProteinExonBoundary; }
 
-    public List<Fragment> checkAddAdditionalGenes(final List<Fragment> fragments)
+    public void checkAddAdditionalGenes(final List<Fragment> fragments)
     {
-        return fragments.stream().map(x -> checkAddAdditionalGenes(x)).collect(Collectors.toList());
+        fragments.forEach(x -> checkAdditionalGenes(x));
     }
 
     @VisibleForTesting
-    public final Fragment checkAddAdditionalGenes(final Fragment fragment)
+    public void checkAdditionalGenes(final Fragment fragment)
     {
         if(fragment.containsIndel())
-            return fragment;
+            return;
 
-        // add an extra gene for consideration if the fragment's max loci is within the minimum unique boundary for either pair
-        if(!fragment.containsGene(HLA_A) && matchToGenes(fragment, Map.of(HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary)))
-            fragment.addGene(HLA_A);
+        // logic: for any gene which isn't yet associated with the fragment, test if it could be by check its max nucleotide locus
+        // versus the first unique nucelotide for the gene pair
+        //
+        // example: a fragment isn't associated with gene A, is with A, and the fragments max base is within the unique base of A and B,
+        // so cannot it be distinguished between them - then add it to A as well
+        int maxFragmentNucleotideLocus = fragment.maxNucleotideLocus();
 
-        if(!fragment.containsGene(HLA_B) && matchToGenes(fragment, Map.of(HLA_A, mAbMinUniqueProteinExonBoundary, HLA_C, mBcMinUniqueProteinExonBoundary)))
-            fragment.addGene(HLA_B);
-
-        if(!fragment.containsGene(HLA_C) && matchToGenes(fragment, Map.of(HLA_A, mAcMinUniqueProteinExonBoundary, HLA_B, mBcMinUniqueProteinExonBoundary)))
-            fragment.addGene(HLA_C);
-
-        return fragment;
-    }
-
-    private boolean matchToGenes(
-            final Fragment fragment,
-            final Map<String, Integer> minUniqueProteinExonBoundariesPerGene)
-    {
-        for(String geneName : minUniqueProteinExonBoundariesPerGene.keySet())
+        if(considerAddingGene(fragment, HLA_A, maxFragmentNucleotideLocus))
         {
-            int minUniqueNucExonBoundary = minUniqueProteinExonBoundariesPerGene.get(geneName) * 3;
-
-            if(fragment.containsGene(geneName) && fragment.maxNucleotideLocus() < minUniqueNucExonBoundary)
-                return true;
+            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mAbMinUniqueProteinExonBoundary)
+            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mAcMinUniqueProteinExonBoundary))
+            {
+                fragment.addGene(HLA_A);
+            }
         }
 
-        return false;
+        if(considerAddingGene(fragment, HLA_B, maxFragmentNucleotideLocus))
+        {
+            // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
+            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAbMinUniqueProteinExonBoundary)
+            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mBcMinUniqueProteinExonBoundary))
+            {
+                fragment.addGene(HLA_B);
+            }
+        }
+
+        if(considerAddingGene(fragment, HLA_C, maxFragmentNucleotideLocus))
+        {
+            // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
+            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAcMinUniqueProteinExonBoundary)
+            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mBcMinUniqueProteinExonBoundary))
+            {
+                fragment.addGene(HLA_C);
+            }
+        }
     }
 
-    // TODO: Rewrite matchToGenes() to be compatible with class GeneCache
-    // private boolean matchToGenes(
-    //         final Fragment fragment,
-    //         final Map<String, List<Integer>> proteinExonBoundariesList)
-    // {
-    //     for(String geneName : proteinExonBoundariesList.keySet())
-    //     {
-    //         List<Integer> proteinExonBoundaries = proteinExonBoundariesList.get(geneName);
-    //         // int minUniqueProteinExonBoundary = getMinUniqueBoundary(proteinExonBoundaries);
-    //     }
-    // }
+    private boolean considerAddingGene(final Fragment fragment, final String gene, int maxFragmentNucleotideLocus)
+    {
+        if(fragment.containsGene(gene))
+            return false;
+
+        // the max supported read locus cannot be past the end of the gene's range
+        return maxFragmentNucleotideLocus <= GENE_CACHE.NucleotideLengths.get(gene);
+    }
+
+    private boolean checkAddAdditionalGene(
+            final Fragment fragment, int maxFragmentNucleotideLocus, final String otherGene, int geneComboUniqueAminoAcidBoundary)
+    {
+        if(!fragment.containsGene(otherGene))
+            return false;
+
+        return maxFragmentNucleotideLocus < geneComboUniqueAminoAcidBoundary * 3;
+    }
 }

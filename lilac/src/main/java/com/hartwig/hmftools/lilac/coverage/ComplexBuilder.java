@@ -71,34 +71,32 @@ public class ComplexBuilder
         double lowConfGroupMinUniqueFrags = totalFragCount * MIN_LOW_CONF_GROUP_UNIQUE_COVERAGE;
         double lowConfGroupMinTotalFrags = totalFragCount * MIN_LOW_CONF_GROUP_TOTAL_COVERAGE;
 
-        List<AlleleCoverage> lowConfGroups = groupCoverage.getAlleleCoverage().stream()
-                .filter(x -> !uniqueGroups.contains(x) &&
-                        (x.UniqueCoverage >= lowConfGroupMinUniqueFrags ||
-                         x.TotalCoverage  >= lowConfGroupMinTotalFrags)
-                )
-                .collect(Collectors.toList());
+        List<AlleleCoverage> lowConfGroups = Lists.newArrayList();
+        List<AlleleCoverage> discardedGroups = Lists.newArrayList();
 
-        List<AlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
-                .filter(x -> !uniqueGroups.contains(x) && !lowConfGroups.contains(x))
-                .collect(Collectors.toList());
+        for(AlleleCoverage alleleCoverage : groupCoverage.getAlleleCoverage())
+        {
+            if(uniqueGroups.contains(alleleCoverage))
+                continue;
+
+            if(alleleCoverage.UniqueCoverage >= lowConfGroupMinUniqueFrags || alleleCoverage.TotalCoverage  >= lowConfGroupMinTotalFrags)
+            {
+                lowConfGroups.add(alleleCoverage);
+            }
+            else
+            {
+                discardedGroups.add(alleleCoverage);
+            }
+        }
 
         LL_LOGGER.info("  confirmed {} unique allele groups{}{}",
-                uniqueGroups.size(),
-                uniqueGroups.isEmpty() ? "" : ": ",
-                AlleleCoverage.toString(uniqueGroups)
-        );
+                uniqueGroups.size(), uniqueGroups.isEmpty() ? "" : ": ", AlleleCoverage.toString(uniqueGroups));
 
         LL_LOGGER.info("  found {} insufficiently unique allele groups{}{}",
-                lowConfGroups.size(),
-                lowConfGroups.isEmpty() ? "" : ": ",
-                AlleleCoverage.toString(lowConfGroups)
-        );
+                lowConfGroups.size(), lowConfGroups.isEmpty() ? "" : ": ", AlleleCoverage.toString(lowConfGroups));
 
         LL_LOGGER.debug("  discarded {} allele groups{}{}",
-                discardedGroups.size(),
-                discardedGroups.isEmpty() ? "" : ": ",
-                AlleleCoverage.toString(discardedGroups)
-        );
+                discardedGroups.size(), discardedGroups.isEmpty() ? "" : ": ", AlleleCoverage.toString(discardedGroups));
 
         List<HlaAllele> uniqueGroupAlleles = coverageAlleles(uniqueGroups);
 
@@ -114,10 +112,8 @@ public class ComplexBuilder
         candidatesAfterUniqueGroups.addAll(commonAllelesInLowConfGroups);
 
         LL_LOGGER.debug("  keeping {} common allele(s) from insufficiently unique allele groups{}{}",
-                commonAllelesInLowConfGroups.size(),
-                commonAllelesInLowConfGroups.isEmpty() ? "" : ": ",
-                HlaAllele.toString(commonAllelesInLowConfGroups)
-        );
+                commonAllelesInLowConfGroups.size(), commonAllelesInLowConfGroups.isEmpty() ? "" : ": ",
+                HlaAllele.toString(commonAllelesInLowConfGroups));
 
         // keep common alleles from the same 2-digit group as rare alleles or alleles with wildcards
         List<HlaAllele> rareAlleles = candidatesAfterUniqueGroups.stream()
@@ -139,8 +135,7 @@ public class ComplexBuilder
         LL_LOGGER.debug("  keeping {} common allele(s) in the same 2-digit group as wildcard or rare allele candidates{}{}",
                 commonAllelesFromSameGroupAsDubiousAlleles.size(),
                 commonAllelesFromSameGroupAsDubiousAlleles.isEmpty() ? "" : ": ",
-                HlaAllele.toString(commonAllelesFromSameGroupAsDubiousAlleles)
-        );
+                HlaAllele.toString(commonAllelesFromSameGroupAsDubiousAlleles));
 
         // keep known stop-loss alleles
         List<HlaAllele> allelesWithStopLossIndel = recoveredAlleles.stream()
@@ -151,16 +146,10 @@ public class ComplexBuilder
         candidatesAfterUniqueGroups.addAll(allelesWithStopLossIndel);
 
         LL_LOGGER.debug("  keeping {} allele(s) with stop loss indel{}{}",
-                allelesWithStopLossIndel.size(),
-                allelesWithStopLossIndel.isEmpty() ? "" : ": ",
-                HlaAllele.toString(allelesWithStopLossIndel)
-        );
+                allelesWithStopLossIndel.size(), allelesWithStopLossIndel.isEmpty() ? "" : ": ",
+                HlaAllele.toString(allelesWithStopLossIndel));
 
-        mConfirmedRecoveredAlleles.addAll(
-                recoveredAlleles.stream()
-                .filter(x -> candidatesAfterUniqueGroups.contains(x))
-                .toList()
-        );
+        recoveredAlleles.stream().filter(x -> candidatesAfterUniqueGroups.contains(x)).forEach(x -> mConfirmedRecoveredAlleles.add(x));
 
         if(!mConfirmedRecoveredAlleles.isEmpty())
         {
@@ -184,19 +173,13 @@ public class ComplexBuilder
         Collections.sort(insufficientlyUniqueProteins, Collections.reverseOrder());
 
         LL_LOGGER.info("  confirmed {} unique proteins{}{}",
-                uniqueProteins.size(),
-                uniqueProteins.isEmpty() ? "" : ": ",
-                AlleleCoverage.toString(uniqueProteins)
-        );
+                uniqueProteins.size(), uniqueProteins.isEmpty() ? "" : ": ", AlleleCoverage.toString(uniqueProteins));
 
         LL_LOGGER.info("  found {} insufficiently unique proteins{}{}",
-                insufficientlyUniqueProteins.size(),
-                insufficientlyUniqueProteins.isEmpty() ? "" : ": ",
-                AlleleCoverage.toString(insufficientlyUniqueProteins)
-        );
+                insufficientlyUniqueProteins.size(), insufficientlyUniqueProteins.isEmpty() ? "" : ": ",
+                AlleleCoverage.toString(insufficientlyUniqueProteins));
 
         // unique protein filtering is no longer applied
-        // mConfirmedProteinAlleles.addAall(coverageAlleles(uniqueProteins));
 
         mUniqueProteinAlleles.addAll(filterWithUniqueProteins(candidatesAfterUniqueGroups, mConfirmedProteinAlleles));
 

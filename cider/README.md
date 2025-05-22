@@ -246,6 +246,8 @@ Running with `-xmx32G`.
 "Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc.
 
 # Version History and Download Links
+- [1.0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.4)
+  - Fix blastn performance issue when an assembly maps to a problematic region.   
 - [1.0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.3)
   - Handle unpaired reads
 - [1.0.2](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.2)

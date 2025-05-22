@@ -2,56 +2,48 @@ package com.hartwig.hmftools.teal
 
 import com.beust.jcommander.*
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
+import com.hartwig.hmftools.common.perf.TaskExecutor
+import com.hartwig.hmftools.common.utils.config.CommonConfig.*
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigDecimal
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
-import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter
 
-// only options that needed to be shown in validation are put here
-private const val REF_SAMPLE = "-reference"
-private const val TUMOR_SAMPLE = "-tumor"
-private const val REF_WGS_METRICS = "-reference_wgs_metrics"
-private const val TUMOR_WGS_METRICS = "-tumor_wgs_metrics"
-private const val REF_BAM = "-reference_bam"
-private const val TUMOR_BAM = "-tumor_bam"
-private const val PURPLE = "-purple"
-private const val COBALT = "-cobalt"
-private const val REF_MEAN_READ_DEPTH = "-reference_mean_read_depth"
-private const val TUMOR_MEAN_READ_DEPTH = "-tumor_mean_read_depth"
+private const val REF_WGS_METRICS = "reference_wgs_metrics"
+private const val TUMOR_WGS_METRICS = "tumor_wgs_metrics"
+private const val REF_MEAN_READ_DEPTH = "reference_mean_read_depth"
+private const val TUMOR_MEAN_READ_DEPTH = "tumor_mean_read_depth"
+private const val REFERENCE_DUPLICATE_PROPORTION = "reference_duplicate_proportion"
+private const val REFERENCE_GC50_READ_DEPTH = "reference_gc50_read_depth"
+private const val TUMOR_PURITY = "tumor_purity"
+private const val TUMOR_PLOIDY = "tumor_ploidy"
+private const val TUMOR_DUPLICATE_PROPORTION = "tumor_duplicate_proportion"
+private const val TUMOR_GC50_READ_DEPTH = "tumor_gc50_read_depth"
 
 // NOTE: We use nullable string for required argument types, this is to avoid (default: <empty string>) getting
 // printed in the usage by JCommander
-data class TealCommonParams
-    (
-    @Parameter(names = [REF_SAMPLE], description = "ID of reference sample")
-    var referenceSampleId: String? = null,
-
-    @Parameter(names = [TUMOR_SAMPLE], description = "ID of tumor sample")
-    var tumorSampleId: String? = null,
-
-    @Parameter(names = [REF_BAM], description = "Path to reference bam/cram file")
-    var referenceBamFile: String? = null,
-
-    @Parameter(names = [TUMOR_BAM], description = "Path to tumor bam/cram file")
-    var tumorBamFile: String? = null,
-
-    @Parameter(names = ["-" + RefGenomeSource.REF_GENOME],
-        description = "Path to reference genome fasta file if using CRAM files")
-    var refGenomeFile: String? = null,
-
-    @Parameter(names = ["-" + FileWriterUtils.OUTPUT_DIR],
-        required = true,
-        description = "Output directory")
-    var outputDir: String? = null,
-
-    @Parameter(names = ["-threads"], description = "Number of bam reader threads")
-    var threadCount: Int = 1,
-
-    @Parameter(names = ["-" + RefGenomeVersion.REF_GENOME_VERSION],
-        description = RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC,
-        converter = RefGenomeVersionConverter::class)
-    var refGenomeVersion: RefGenomeVersion = RefGenomeVersion.V37
-    )
+data class TealCommonParams(
+    val referenceSampleId: String? = null,
+    val tumorSampleId: String? = null,
+    val referenceBamFile: String? = null,
+    val tumorBamFile: String? = null,
+    val refGenomeFile: String? = null,
+    val outputDir: String? = null,
+    val threadCount: Int = 1,
+    val refGenomeVersion: RefGenomeVersion = RefGenomeVersion.V37
+)
 {
+    constructor(configBuilder: ConfigBuilder): this(
+        referenceSampleId = configBuilder.getValue(REFERENCE, null),
+        tumorSampleId = configBuilder.getValue(TUMOR, null),
+        referenceBamFile = configBuilder.getValue(REFERENCE_BAM, null),
+        tumorBamFile = configBuilder.getValue(TUMOR_BAM, null),
+        refGenomeFile = configBuilder.getValue(RefGenomeSource.REF_GENOME, null),
+        outputDir = FileWriterUtils.parseOutputDir(configBuilder),
+        threadCount = TaskExecutor.parseThreads(configBuilder),
+        refGenomeVersion = RefGenomeVersion.from(configBuilder))
+
     fun getRefGenomeVersionStr() : String
     {
         return refGenomeVersion.identifier()
@@ -73,22 +65,22 @@ data class TealCommonParams
     {
         if (referenceSampleId == null && referenceBamFile != null)
         {
-            throw ParameterException("$REF_SAMPLE is required when $REF_BAM(${referenceBamFile}) is specified")
+            throw ParameterException("$REFERENCE is required when $REFERENCE_BAM(${referenceBamFile}) is specified")
         }
 
         if (referenceSampleId != null && referenceBamFile == null)
         {
-            throw ParameterException("$REF_BAM is required when $REF_SAMPLE(${referenceSampleId}) is specified")
+            throw ParameterException("$REFERENCE_BAM is required when $REFERENCE(${referenceSampleId}) is specified")
         }
 
         if (tumorSampleId == null && tumorBamFile != null)
         {
-            throw ParameterException("$TUMOR_SAMPLE is required when ${TUMOR_BAM}(${tumorBamFile}) is specified")
+            throw ParameterException("$TUMOR is required when ${TUMOR_BAM}(${tumorBamFile}) is specified")
         }
 
         if (tumorSampleId != null && tumorBamFile == null)
         {
-            throw ParameterException("$TUMOR_BAM is required when $TUMOR_SAMPLE(${tumorSampleId}) is specified")
+            throw ParameterException("$TUMOR_BAM is required when $TUMOR(${tumorSampleId}) is specified")
         }
     }
     
@@ -117,28 +109,40 @@ data class TealCommonParams
     {
         return "${outputDir}/${tumorSampleId}.teal.breakend.tsv.gz"
     }
+
+    companion object
+    {
+        fun registerConfig(configBuilder: ConfigBuilder)
+        {
+            configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC)
+            configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC)
+            configBuilder.addConfigItem(TUMOR, TUMOR_DESC)
+            configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC)
+            addRefGenomeFile(configBuilder, false)
+            FileWriterUtils.addOutputDir(configBuilder)
+            TaskExecutor.addThreadOptions(configBuilder)
+            RefGenomeSource.addRefGenomeVersion(configBuilder)
+        }
+    }
 }
 
 // NOTE: We use nullable string for required argument types, this is to avoid (default: <empty string>) getting
 // printed in the usage by JCommander
-data class TealPipelineParams
-    (
-    @Parameter(names = [PURPLE], description = "Path to PURPLE output directory")
-    var purple: String? = null,
-
-    @Parameter(names = [COBALT], required = true, description = "Path to COBALT output directory")
-    var cobalt: String? = null,
-
-    @Parameter(names = [REF_WGS_METRICS], description = "Path to reference WGS METRICS file")
-    var referenceWgsMetrics: String? = null,
-
-    @Parameter(names = [TUMOR_WGS_METRICS], description = "Path to tumor WGS METRICS file")
-    var tumorWgsMetrics: String? = null,
-
-    @ParametersDelegate
+data class TealPipelineParams(
+    val purple: String? = null,
+    val cobalt: String? = null,
+    val referenceWgsMetrics: String? = null,
+    val tumorWgsMetrics: String? = null,
     val commonParams: TealCommonParams = TealCommonParams()
     )
 {
+    constructor(configBuilder: ConfigBuilder): this(
+        purple = configBuilder.getValue("purple"),
+        cobalt = configBuilder.getValue("cobalt"),
+        referenceWgsMetrics = configBuilder.getValue(REF_WGS_METRICS, null),
+        tumorWgsMetrics = configBuilder.getValue(TUMOR_WGS_METRICS, null),
+        commonParams = TealCommonParams(configBuilder))
+
     // validate the params, throw ParameterException if fails
     // NOTE we only validate optional arguments that could be missing
     @Throws(ParameterException::class)
@@ -150,7 +154,7 @@ data class TealPipelineParams
         {
             if (referenceWgsMetrics == null)
             {
-                throw ParameterException("$REF_WGS_METRICS is required when $REF_SAMPLE(${commonParams.referenceSampleId}) is specified")
+                throw ParameterException("$REF_WGS_METRICS is required when $REFERENCE(${commonParams.referenceSampleId}) is specified")
             }
         }
 
@@ -158,54 +162,59 @@ data class TealPipelineParams
         {
             if (purple == null)
             {
-                throw ParameterException("$PURPLE is required when $TUMOR_SAMPLE(${commonParams.tumorSampleId}) is specified")
+                throw ParameterException("$PURPLE_DIR_CFG is required when $TUMOR(${commonParams.tumorSampleId}) is specified")
             }
 
             if (tumorWgsMetrics == null)
             {
-                throw ParameterException("$TUMOR_WGS_METRICS is required when $TUMOR_SAMPLE(${commonParams.tumorSampleId}) is specified")
+                throw ParameterException("$TUMOR_WGS_METRICS is required when $TUMOR(${commonParams.tumorSampleId}) is specified")
             }
+        }
+    }
+
+    companion object
+    {
+        fun registerConfig(configBuilder: ConfigBuilder)
+        {
+            configBuilder.addPath("purple", false, PURPLE_DIR_DESC)
+            configBuilder.addPath("cobalt", true, COBALT_DIR_CFG)
+            configBuilder.addPath(REF_WGS_METRICS, false, "Path to reference BAM METRICS file")
+            configBuilder.addPath(TUMOR_WGS_METRICS, false, "Path to tumor BAM METRICS file")
+            TealCommonParams.registerConfig(configBuilder)
         }
     }
 }
 
 // NOTE: We use nullable string for required argument types, this is to avoid (default: <empty string>) getting
 // printed in the usage by JCommander
-data class TealParams
-    (
-    @ParametersDelegate
+data class TealParams(
     val commonParams: TealCommonParams = TealCommonParams(),
-
-    @Parameter(names = ["-reference_duplicate_proportion"],
-        description = "Proportion of reads that are marked duplicates in the reference sample BAM")
     var germlineDuplicateProportion: Double = 0.0,
-
-    @Parameter(names = [REF_MEAN_READ_DEPTH], description = "Mean read depth of the reference sample")
     var germlineMeanReadDepth: Double? = null,
-
-    @Parameter(names = ["-reference_gc50_read_depth"],
-        description = "GC 50 read depth of the reference sample. Defaults to mean reads per KB if not provided")
     var germlineGc50ReadDepth: Double? = null,
-
-    @Parameter(names = ["-tumor_purity"],
-        description = "Purity of the tumor sample")
     var tumorPurity: Double = 1.0,
-
-    @Parameter(names = ["-tumor_ploidy"],
-        description = "Ploidy of the tumor")
     var tumorPloidy: Double = 2.0,
-
-    @Parameter(names = ["-tumor_duplicate_proportion"],
-        description = "Proportion of reads that are marked duplicates in the tumor sample BAM")
     var tumorDuplicateProportion: Double = 0.0,
-
-    @Parameter(names = [TUMOR_MEAN_READ_DEPTH], description = "Mean read depth of the tumor sample")
     var tumorMeanReadDepth: Double? = null,
-
-    @Parameter(names = ["-tumor_gc50_read_depth"], description = "GC 50 read depth. Defaults to mean depth if not provided")
     var tumorGc50ReadDepth: Double? = null
 )
 {
+    constructor(configBuilder: ConfigBuilder): this(
+        commonParams = TealCommonParams(configBuilder),
+        germlineDuplicateProportion = getConfigDecimal(configBuilder, REFERENCE_DUPLICATE_PROPORTION, 0.0),
+        germlineMeanReadDepth = if (configBuilder.hasValue(REF_MEAN_READ_DEPTH))
+            configBuilder.getDecimal(REF_MEAN_READ_DEPTH) else null,
+        germlineGc50ReadDepth = if (configBuilder.hasValue(REFERENCE_GC50_READ_DEPTH))
+            configBuilder.getDecimal(REFERENCE_GC50_READ_DEPTH) else null,
+        tumorPurity = configBuilder.getDecimal(TUMOR_PURITY),
+        tumorPloidy = configBuilder.getDecimal(TUMOR_PLOIDY),
+        tumorDuplicateProportion = getConfigDecimal(configBuilder, TUMOR_DUPLICATE_PROPORTION, 0.0),
+        tumorMeanReadDepth = if (configBuilder.hasValue(TUMOR_MEAN_READ_DEPTH))
+            configBuilder.getDecimal(TUMOR_MEAN_READ_DEPTH) else null,
+        tumorGc50ReadDepth = if (configBuilder.hasValue(TUMOR_GC50_READ_DEPTH))
+            configBuilder.getDecimal(TUMOR_GC50_READ_DEPTH) else null,
+    )
+
     // validate the params, throw ParameterException if fails
     @Throws(ParameterException::class)
     fun validate()
@@ -216,7 +225,7 @@ data class TealParams
         {
             if (germlineMeanReadDepth == null)
             {
-                throw ParameterException("$REF_MEAN_READ_DEPTH is required when $REF_SAMPLE(${commonParams.referenceSampleId}) is specified")
+                throw ParameterException("$REF_MEAN_READ_DEPTH is required when $REFERENCE(${commonParams.referenceSampleId}) is specified")
             }
         }
 
@@ -224,8 +233,26 @@ data class TealParams
         {
             if (tumorMeanReadDepth == null)
             {
-                throw ParameterException("$TUMOR_MEAN_READ_DEPTH is required when $TUMOR_SAMPLE(${commonParams.tumorSampleId}) is specified")
+                throw ParameterException("$TUMOR_MEAN_READ_DEPTH is required when $TUMOR(${commonParams.tumorSampleId}) is specified")
             }
+        }
+    }
+
+    companion object
+    {
+        fun registerConfig(configBuilder: ConfigBuilder)
+        {
+            TealCommonParams.registerConfig(configBuilder)
+            configBuilder.addConfigItem(
+                REFERENCE_DUPLICATE_PROPORTION,
+                "Proportion of reads that are marked duplicates in the reference sample BAM")
+            configBuilder.addConfigItem(REF_MEAN_READ_DEPTH, "Mean read depth of the reference sample")
+            configBuilder.addConfigItem(REFERENCE_GC50_READ_DEPTH, "GC 50 read depth of the reference sample")
+            configBuilder.addDecimal(TUMOR_PURITY, "Purity of the tumor sample", 1.0)
+            configBuilder.addDecimal(TUMOR_PLOIDY, "Ploidy of the tumor", 2.0)
+            configBuilder.addDecimal(TUMOR_DUPLICATE_PROPORTION, "Proportion of reads that are marked duplicates in the tumor sample BAM", 0.0)
+            configBuilder.addConfigItem(TUMOR_MEAN_READ_DEPTH, "Mean read depth of the tumor sample")
+            configBuilder.addConfigItem(TUMOR_GC50_READ_DEPTH, "GC 50 read depth of the tumor sample")
         }
     }
 }

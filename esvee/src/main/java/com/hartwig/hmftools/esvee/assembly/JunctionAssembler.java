@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
@@ -140,6 +141,17 @@ public class JunctionAssembler
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
+
+        if(firstAssembly.hasLineSequence())
+        {
+            if(isLineWithLocalAlignedInsert(firstAssembly))
+            {
+                firstAssembly.unmarkLineSequence();
+
+                if(firstAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                    return Collections.emptyList();
+            }
+        }
 
         // test for a second well-supported, alternative assembly at the same junction
         JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);

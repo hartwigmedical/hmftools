@@ -182,9 +182,9 @@ public class LilacApplication
 
         List<Fragment> refFragments = mRefBamReader.findGeneFragments();
 
-        List<Fragment> enrichedRefFragments = NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(refFragments);
+        NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(refFragments);
 
-        mRefNucleotideFrags.addAll(enrichedRefFragments);
+        mRefNucleotideFrags.addAll(refFragments);
 
         int medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
 
@@ -372,9 +372,9 @@ public class LilacApplication
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
             // For top solutions, recalculate from all evidence but keep the scoring values unchanged
-            for(int i = 0; i <  mRankedComplexes.size(); i++)
+            for(int i = 0; i < mRankedComplexes.size(); i++)
             {
-                ComplexCoverage origComplexCoverage =  mRankedComplexes.get(i);
+                ComplexCoverage origComplexCoverage = mRankedComplexes.get(i);
 
                 ComplexCoverage recalcComplexCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, origComplexCoverage.getAlleles());
                 recalcComplexCoverage.setScore(origComplexCoverage.getScore());
@@ -555,8 +555,8 @@ public class LilacApplication
         }
         else
         {
-            List<Fragment> rawFragments = mTumorBamReader.findGeneFragments();
-            List<Fragment> tumorNucleotideFrags = NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(rawFragments);
+            List<Fragment> tumorNucleotideFrags = mTumorBamReader.findGeneFragments();
+            NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(tumorNucleotideFrags);
 
             List<Fragment> tumorFragments = mAminoAcidPipeline.calcComparisonCoverageFragments(tumorNucleotideFrags);
 
@@ -614,37 +614,6 @@ public class LilacApplication
         mRnaCoverage = LilacAppendRna.extractRnaCoverage(
                 mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper,
                 winningAlleles, winningSequences, winningNucSequences);
-
-        /*
-        final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment,
-        final AminoAcidFragmentPipeline aminoAcidPipeline, final FragmentAlleleMapper fragAlleleMapper,
-        final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
-
-        if(mConfig.RnaBam.isEmpty())
-        {
-            mRnaCoverage = ComplexCoverage.create(Lists.newArrayList());
-            return;
-        }
-
-        BamRecordReader rnaBamReader = new BamRecordReader(mConfig.RnaBam, mConfig.RefGenome, mRefData.HlaTranscriptData, mNucleotideFragFactory);
-
-        List<Fragment> rnaNucleotideFrags = mNucleotideGeneEnrichment.enrich(rnaBamReader.findGeneFragments());
-
-        List<Fragment> rnaFragments = mAminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
-
-        mResultsWriter.writeFragments(RNA, rnaFragments);
-
-        LL_LOGGER.info("calculating RNA coverage from frags({} highQual={})", rnaNucleotideFrags.size(), rnaFragments.size());
-
-        List<FragmentAlleles> rnaFragAlleles = mFragAlleleMapper.createFragmentAlleles(rnaFragments, winningSequences, winningNucSequences);
-
-        if(mHlaYCoverage.exceedsThreshold())
-            mHlaYCoverage.assignFragments(winningAlleles, rnaFragAlleles, rnaFragments, RNA);
-
-        mRnaCoverage = ComplexBuilder.calcProteinCoverage(rnaFragAlleles, winningAlleles);
-
-        mRnaCoverage.populateMissingCoverage(winningAlleles);
-        */
     }
 
     public void writeFileOutputs()

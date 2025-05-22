@@ -221,6 +221,13 @@ public class Alignment
                 newCigar = alignment.cigar().substring(0, alignment.cigar().lastIndexOf(CigarOperator.M.toString()) + 1);
             }
 
+            if(newCigar == null || newCigar.isEmpty())
+            {
+                SV_LOGGER.warn("assembly({}) error forming new cigar(orig={} new={})",
+                        assemblyAlignment, alignment.cigar(), newCigar);
+                return alignments;
+            }
+
             ++mRequeriedSoftClipCount;
 
             List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(softClipBases.getBytes());
@@ -239,6 +246,13 @@ public class Alignment
             AlignData refAlignment = new AlignData(
                     alignment.refLocation(), alignment.rawSequenceStart(), alignment.rawSequenceEnd(),
                     alignment.mapQual(), alignment.score(), alignment.flags(), newCigar, alignment.nMatches(), alignment.xaTag(), alignment.mdTag());
+
+            if(refAlignment.cigarElements().isEmpty())
+            {
+                SV_LOGGER.warn("assembly({}) error forming new cigar(orig={} new={})",
+                        assemblyAlignment, alignment.cigar(), newCigar);
+                return alignments;
+            }
 
             if(isLeftClip)
                 newAlignments.add(refAlignment);

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 
@@ -28,6 +29,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -441,6 +443,83 @@ public class JunctionAssemblyTest
         assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly3));
         assertFalse(SequenceCompare.matchedAssemblySequences(assembly1, assembly4));
         assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly5));
+    }
+
+    @Test
+    public void testAssemblyNoDedupWithSharedReads()
+    {
+        Junction indelJunctionNeg = new Junction(CHR_1, 130, REVERSE, false, true, false);
+        Junction indelJunctionPos = new Junction(CHR_1, 131, FORWARD, false, true, false);
+
+        String leftExtBases = REF_BASES_400.substring(200, 240);
+        String rightExtBases = REF_BASES_400.substring(260, 300);
+        String leftRefBases = REF_BASES_400.substring(100, 131);
+        String rightRefBases = REF_BASES_400.substring(131, 171);
+        String insertBases =rightRefBases; // a duplication
+
+        String indelReadBases = leftExtBases + leftRefBases + insertBases + rightRefBases + rightExtBases;
+
+        // both pairs of junctions share a read which supports them both, so are not deduped
+        Read indelRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 100,
+                indelReadBases,
+                "40S31M40I40M40S", CHR_1, 300, true);
+
+        JunctionAssembly indelAssemblyPos = new JunctionAssembly(
+                indelJunctionPos, indelRead.getBases(), indelRead.getBaseQuality(),
+                leftExtBases.length() + leftRefBases.length());
+
+        indelAssemblyPos.addJunctionRead(indelRead);
+        indelAssemblyPos.setIndelCoords(indelRead.indelCoords());
+
+        JunctionAssembly indelAssemblyNeg = new JunctionAssembly(
+                indelJunctionNeg, indelRead.getBases(), indelRead.getBaseQuality(),
+                leftExtBases.length() + leftRefBases.length() + 1);
+
+        indelAssemblyNeg.addJunctionRead(indelRead);
+        indelAssemblyNeg.setIndelCoords(indelRead.indelCoords());
+
+        Junction splitJunctionPos = new Junction(CHR_1, 170, FORWARD);
+        Junction splitJunctionNeg = new Junction(CHR_1, 100, REVERSE);
+
+        JunctionAssembly splitAssemblyNeg = new JunctionAssembly(
+                splitJunctionNeg, indelRead.getBases(), indelRead.getBaseQuality(), leftExtBases.length());
+        splitAssemblyNeg.addJunctionRead(indelRead);
+
+        JunctionAssembly splitAssemblyPos = new JunctionAssembly(
+                splitJunctionPos, indelRead.getBases(), indelRead.getBaseQuality(),
+                indelRead.basesLength() - rightExtBases.length() - 1);
+        splitAssemblyPos.addJunctionRead(indelRead);
+
+        List<JunctionAssembly> existingAssemblies = Lists.newArrayList(splitAssemblyPos, splitAssemblyNeg);
+        List<JunctionAssembly> newAssemblies = Lists.newArrayList(indelAssemblyPos, indelAssemblyNeg);
+
+        dedupProximateAssemblies(existingAssemblies, newAssemblies);
+
+        assertEquals(2, existingAssemblies.size());
+        assertEquals(2, newAssemblies.size());
+
+        // again without a shared read and they are deduped
+        Read splitRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 100,
+                indelReadBases, "40S31M30M70S", CHR_1, 300, true);
+
+        splitAssemblyNeg = new JunctionAssembly(
+                splitJunctionNeg, splitRead.getBases(), splitRead.getBaseQuality(), leftExtBases.length());
+        splitAssemblyNeg.addJunctionRead(splitRead);
+
+        splitAssemblyPos = new JunctionAssembly(
+                splitJunctionPos, splitRead.getBases(), splitRead.getBaseQuality(),
+                splitRead.basesLength() - rightExtBases.length() - 1);
+        splitAssemblyPos.addJunctionRead(splitRead);
+
+        existingAssemblies = Lists.newArrayList(splitAssemblyPos, splitAssemblyNeg);
+        newAssemblies = Lists.newArrayList(indelAssemblyPos, indelAssemblyNeg);
+
+        dedupProximateAssemblies(existingAssemblies, newAssemblies);
+
+        assertEquals(2, newAssemblies.size());
+        assertTrue(existingAssemblies.isEmpty()); // the indel assemblies are kept
     }
 
     @Test
