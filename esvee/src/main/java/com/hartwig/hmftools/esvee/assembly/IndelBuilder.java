@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
@@ -241,6 +242,6 @@ public final class IndelBuilder
                 ++indelReads;
         }
 
-        return indelReads >= 0.5 * totalJuncReads;
+        return indelReads >= ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC * totalJuncReads;
     }
 }
