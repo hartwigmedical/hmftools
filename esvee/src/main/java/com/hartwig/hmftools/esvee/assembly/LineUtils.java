@@ -341,7 +341,7 @@ public final class LineUtils
                     {
                         ++nonLineBases;
 
-                        if(nonLineBases > 2 || lineBases >= LINE_POLY_AT_REQ)
+                        if(nonLineBases > MAX_NON_LINE_BASES || lineBases >= LINE_POLY_AT_REQ)
                             break;
                     }
 

@@ -266,7 +266,7 @@ public class UnmappedBaseExtender
 
     private void checkExtensionConsensus(final List<ReadSequenceMatch> readSequenceMatches)
     {
-        if(readSequenceMatches.size() <= 1)
+        if(readSequenceMatches.size() <= 2) // no method for deciding between a pair of reads
             return;
 
         int readCount = readSequenceMatches.size();
@@ -283,13 +283,13 @@ public class UnmappedBaseExtender
 
             if(mIsForwardJunction)
             {
-                readIndexStarts[i] = readSequenceMatch.ReadSeqStart;
+                readIndexStarts[i] = readSequenceMatch.ReadSeqStart + readSequenceMatch.Overlap;
                 readIndexEnds[i] = read.basesLength() - 1;
             }
             else
             {
                 readIndexStarts[i] = 0;
-                readIndexEnds[i] = readSequenceMatch.Overlap - 1;
+                readIndexEnds[i] = readSequenceMatch.ReadSeqStart - 1;
             }
 
             int readExtension = readIndexEnds[i] - readIndexStarts[i] + 1;
@@ -309,8 +309,20 @@ public class UnmappedBaseExtender
                 ReadSequenceMatch readSequenceMatch = readSequenceMatches.get(i);
                 Read read = readSequenceMatch.Read;
 
+                boolean reverseBases = reverseReadBases(read);
+
                 int readBaseIndex = mIsForwardJunction ? readIndexStarts[i] + baseIndex : readIndexEnds[i] - baseIndex;
-                byte readBase = read.getBases()[readBaseIndex];
+                byte readBase;
+
+                if(reverseBases)
+                {
+                    readBaseIndex = read.basesLength() - readBaseIndex - 1;
+                    readBase = swapDnaBase(read.getBases()[readBaseIndex]);
+                }
+                else
+                {
+                    readBase = read.getBases()[readBaseIndex];
+                }
 
                 if(baseCounts == null)
                 {
@@ -363,7 +375,18 @@ public class UnmappedBaseExtender
                 Read read = readSequenceMatch.Read;
 
                 int readBaseIndex = mIsForwardJunction ? readIndexStarts[i] + baseIndex : readIndexEnds[i] - baseIndex;
-                byte readBase = read.getBases()[readBaseIndex];
+                boolean reverseBases = reverseReadBases(read);
+                byte readBase;
+
+                if(reverseBases)
+                {
+                    readBaseIndex = read.basesLength() - readBaseIndex - 1;
+                    readBase = swapDnaBase(read.getBases()[readBaseIndex]);
+                }
+                else
+                {
+                    readBase = read.getBases()[readBaseIndex];
+                }
 
                 if(readBase != maxBase)
                     ++readSequenceMatch.ConsensusMismatches;
