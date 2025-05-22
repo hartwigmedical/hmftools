@@ -111,7 +111,7 @@ public class LineSiteTest
         Junction firstJunction = new Junction(CHR_1, 100, FORWARD);
         Junction secondJunction = new Junction(CHR_1, 110, REVERSE);
 
-        String extraBases = "GTAGTGCTGTCGA";
+        String extraBases = "GTAGTGCTGTCGC";
 
         String firstExtBases = extraBases + polyA;
         String firstAssemblyBases = firstRefBases + firstExtBases;
@@ -169,7 +169,8 @@ public class LineSiteTest
 
         link = LineUtils.tryLineSequenceLink(firstAssembly, secondAssembly, true, false);
         assertNotNull(link);
-        assertEquals(firstExtBases, link.insertedBases());
+        String firstExtBasesRev = Nucleotides.reverseComplementBases(firstExtBases);
+        assertEquals(firstExtBasesRev, link.insertedBases());
         assertEquals(INV, link.svType());
 
         // first assembly has the poly-T sequence
@@ -181,7 +182,7 @@ public class LineSiteTest
         firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
         firstAssembly.markLineSequence();
 
-        secondExtBases = polyT + extraBases;
+        secondExtBases = polyT + extraBases2 + polyT + extraBases;
         secondAssemblyBases = secondExtBases + secondRefBases;
 
         secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());

@@ -268,34 +268,101 @@ public final class LineUtils
         if(first.hasLineSequence() && second.hasLineSequence()) // also cannot both be LINE insertions - only one will have the poly A/T
             return null;
 
-        // look for a poly A/T match of sufficient length at the ends of each sequence
-        String firstExtensionBases = first.formJunctionSequence();
-        String firstMatchBases = firstReversed ? Nucleotides.reverseComplementBases(firstExtensionBases) : firstExtensionBases;
+        String insertedBases = "";
 
-        String secondExtensionBases = second.formJunctionSequence();
+        if(first.hasLineSequence())
+        {
+            String lineExtensionBases = first.formJunctionSequence();
+            int polyAtLength = calcLineSequenceLength(lineExtensionBases, true);
 
-        if(secondReversed)
-            secondExtensionBases = Nucleotides.reverseComplementBases(secondExtensionBases);
+            String lineBases = lineExtensionBases.substring(0, polyAtLength);
 
-        int firstPolyAtLength = calcLineSequenceLength(firstMatchBases, false);
-        int secondPolyAtLength = calcLineSequenceLength(secondExtensionBases, true);
+            String otherBases = findLineInsertionSequence(second);
 
-        if(firstPolyAtLength < LINE_POLY_AT_REQ || secondPolyAtLength < LINE_POLY_AT_REQ)
-            return null;
+            if(otherBases == null)
+                return null;
 
-        String insertedBases = firstExtensionBases;
+            if(secondReversed)
+                otherBases = Nucleotides.reverseComplementBases(otherBases);
 
-        int minOverlap = min(firstPolyAtLength, secondPolyAtLength);
+            insertedBases = lineBases + otherBases;
+        }
+        else
+        {
+            String lineExtensionBases = second.formJunctionSequence();
+            int polyAtLength = calcLineSequenceLength(lineExtensionBases, false);
 
-        String secondExtraInsertBases = secondExtensionBases.substring(minOverlap);
-        insertedBases += secondExtraInsertBases;
+            String lineBases = lineExtensionBases.substring(lineExtensionBases.length() - polyAtLength);
+
+            String otherBases = findLineInsertionSequence(first);
+
+            if(otherBases == null)
+                return null;
+
+            if(firstReversed)
+                otherBases = Nucleotides.reverseComplementBases(otherBases);
+
+            insertedBases = otherBases + lineBases;
+        }
 
         return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, "");
+    }
+
+    private static String findLineInsertionSequence(final JunctionAssembly assembly)
+    {
+        // find the LINE sequence at the end of the extension bases, and return the inserted bases prior to that
+        String extensionBases = assembly.formJunctionSequence();
+        int extBaseLength = extensionBases.length();
+
+        boolean isForward = assembly.isForwardJunction();
+        int i = isForward ? extBaseLength - 1 : 0;
+
+        while(i >= 0 && i < extBaseLength)
+        {
+            char base = extensionBases.charAt(i);
+
+            if(base == LINE_CHAR_A || base == LINE_CHAR_T)
+            {
+                int lineBases = 1;
+                int nonLineBases = 0;
+                int lastLineBaseIndex = 0;
+
+                // check from this line base until the line sequence breaks
+                int j = isForward ? i - 1 : i + 1;
+
+                while(j >= 0 && j < extBaseLength)
+                {
+                    if(extensionBases.charAt(j) == base)
+                    {
+                        ++lineBases;
+                        lastLineBaseIndex = j;
+                    }
+                    else
+                    {
+                        ++nonLineBases;
+
+                        if(nonLineBases > 2 || lineBases >= LINE_POLY_AT_REQ)
+                            break;
+                    }
+
+                    j += isForward ? -1 : 1;
+                }
+
+                if(lineBases >= LINE_POLY_AT_REQ)
+                    return isForward ? extensionBases.substring(0, lastLineBaseIndex) : extensionBases.substring(lastLineBaseIndex + 1);
+            }
+
+            i += isForward ? -1 : 1;
+        }
+
+        return null;
     }
 
     public static int calcLineSequenceLength(final String sequence, boolean fromStart)
     {
         int sequenceLength = sequence.length();
+
+        // not robust to line sequences which don't start at the first junction base
         char lineBase = fromStart ? sequence.charAt(0) : sequence.charAt(sequenceLength - 1);
 
         if(lineBase != LINE_CHAR_A && lineBase != LINE_CHAR_T)
