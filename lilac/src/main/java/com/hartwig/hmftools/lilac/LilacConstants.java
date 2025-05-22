@@ -11,6 +11,9 @@ public class LilacConstants
     public static final String APP_NAME = "Lilac";
 
     public static final int DEFAULT_MIN_BASE_QUAL = 30;
+    public static int LOW_BASE_QUAL_THRESHOLD = DEFAULT_MIN_BASE_QUAL; // may be adjusted by config or dynamically from median quals
+
+    public static final double LOW_BASE_TRIM_PERC = 0.35;
     public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;

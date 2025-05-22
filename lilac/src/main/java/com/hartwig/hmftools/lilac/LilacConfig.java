@@ -72,7 +72,6 @@ public class LilacConfig
 
     public final MhcClass ClassType;
 
-    public int MinBaseQual;
     public final int MinEvidence;
     public final double MinNucleotideHighQualEvidenceFactor;
     public final double MinNucleotideEvidenceFactor;
@@ -192,7 +191,9 @@ public class LilacConfig
 
         ClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
 
-        MinBaseQual = configBuilder.getInteger(MIN_BASE_QUAL);
+        if(configBuilder.hasValue(MIN_BASE_QUAL))
+            LilacConstants.LOW_BASE_QUAL_THRESHOLD = configBuilder.getInteger(MIN_BASE_QUAL);
+
         MinEvidence = configBuilder.getInteger(MIN_EVIDENCE);
         MaxRefFragments = configBuilder.getInteger(MAX_REF_FRAGMENTS);
         MinNucleotideHighQualEvidenceFactor = configBuilder.getDecimal(MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
@@ -274,7 +275,6 @@ public class LilacConfig
 
         ClassType = MhcClass.CLASS_1;
 
-        MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
         MinNucleotideHighQualEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
         MinNucleotideEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;

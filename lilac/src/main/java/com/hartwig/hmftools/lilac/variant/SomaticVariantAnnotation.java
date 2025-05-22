@@ -83,7 +83,7 @@ public class SomaticVariantAnnotation
         if(fragments.isEmpty())
             return coverages;
 
-        fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));
+        fragments.forEach(x -> x.removeLowQualBases());
         fragments.forEach(x -> x.buildAminoAcids());
 
         // take all variants in this gene together, and then ignore those loci

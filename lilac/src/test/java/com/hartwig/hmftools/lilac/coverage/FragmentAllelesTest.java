@@ -146,7 +146,7 @@ public class FragmentAllelesTest
 
         assertTrue(frag1.validate());
 
-        frag1.qualityFilter(30);
+        frag1.removeLowQualBases();
         frag1.buildAminoAcids();
         assertEquals(9, frag1.nucleotideLoci().size());
         assertEquals(1, frag1.aminoAcidLoci().size());

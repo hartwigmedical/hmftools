@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_TRIM_PERC;
+import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarHandler;
@@ -40,10 +42,11 @@ public class Read
 
     private final List<Indel> mIndels; // indels within the coding region
     private final SAMRecord mRecord;
+    private final int mTrimmedBases;
 
     public Read(
             final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
-            int positionEnd, int readStart, int readEnd, final SAMRecord record)
+            int positionEnd, int readStart, int readEnd, final SAMRecord record, int trimmedBases)
     {
         Id = id;
         SoftClippedStart = softClippedStart;
@@ -54,6 +57,7 @@ public class Read
         ReadStart = readStart;
         ReadEnd = readEnd;
         mRecord = record;
+        mTrimmedBases = trimmedBases;
     }
 
     public String readInfo()
@@ -164,7 +168,7 @@ public class Read
                 restrictSoftclipEnd = true;
         }
 
-        // Add soft clip start
+        // add soft clip start and end
         if(positionStart == alignmentStart && softClipStart > 0 && includeSoftClips && !restrictSoftclipStart)
         {
             int earliestStart = max(codingRegion.start(), recordStart);
@@ -172,7 +176,6 @@ public class Read
             positionStart = earliestStart;
         }
 
-        // Add soft clip end
         if(positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips && !restrictSoftclipEnd)
         {
             int latestEnd = min(codingRegion.end(), recordEnd);
@@ -185,9 +188,11 @@ public class Read
 
         List<Indel> indels = includeIndels ? indels(positionStart, positionEnd, record) : Lists.newArrayList();
 
+        int lowQualTrimmedBases = 0; // findLowQualTrimmedBases(record);
+
         return new Read(
                 record.getReadName(), softClippedStart, softClippedEnd, indels,
-                positionStart, positionEnd, readIndexStart, readIndexEnd, record);
+                positionStart, positionEnd, readIndexStart, readIndexEnd, record, lowQualTrimmedBases);
     }
 
     private static List<Indel> indels(int startPosition, int endPosition, final SAMRecord record)
@@ -224,4 +229,38 @@ public class Read
         CigarHandler.traverseCigar(record, cigarHandler);
         return indels;
     }
+
+    public static int findLowQualTrimmedBases(final SAMRecord record)
+    {
+        boolean fromStart = record.getReadNegativeStrandFlag();
+        int baseIndex = fromStart ? 0 : record.getReadBases().length - 1;
+
+        double lowestScore = 0;
+        double currentScore = 0;
+        int lastLowestScoreIndex = -1;
+
+        while(baseIndex >= 0 && baseIndex < record.getReadBases().length)
+        {
+            if(belowMinQual(record.getBaseQualities()[baseIndex]))
+            {
+                currentScore -= LOW_QUAL_SCORE;
+
+                if(currentScore < lowestScore)
+                    lastLowestScoreIndex = baseIndex;
+            }
+            else
+            {
+                ++currentScore;
+            }
+
+            if(fromStart)
+                ++baseIndex;
+            else
+                --baseIndex;
+        }
+
+        return lastLowestScoreIndex;
+    }
+
+    protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
 }

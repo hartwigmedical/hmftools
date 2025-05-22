@@ -99,7 +99,7 @@ public class FragmentsTest
 
         Fragment fragment = new Fragment(createReadRecord("01"), HLA_A, Sets.newHashSet(HLA_A), indices, qualities, nucleotides);
 
-        fragment.qualityFilter(30);
+        fragment.removeLowQualBases();
 
         assertFalse(fragment.containsNucleotide(2));
 

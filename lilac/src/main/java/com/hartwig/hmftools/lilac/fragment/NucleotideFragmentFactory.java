@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
@@ -33,10 +34,9 @@ public class NucleotideFragmentFactory
     private final LinkedHashMap<HlaSequenceLoci,SuffixTree> mDeleteSuffixTrees;
     private final int mMinBaseQuality;
 
-    public NucleotideFragmentFactory(
-            int minBaseQuality, final ReferenceData referenceData)
+    public NucleotideFragmentFactory(final ReferenceData referenceData)
     {
-        mMinBaseQuality = minBaseQuality;
+        mMinBaseQuality = LOW_BASE_QUAL_THRESHOLD;
         mReferenceData = referenceData;
 
         mInsertSuffixTrees = Maps.newLinkedHashMap();

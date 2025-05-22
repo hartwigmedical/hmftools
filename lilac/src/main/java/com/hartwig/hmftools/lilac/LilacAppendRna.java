@@ -93,7 +93,7 @@ public class LilacAppendRna
 
         List<HlaAllele> winningAlleles = aminoAcidSequences.stream().map(x -> x.Allele).collect(Collectors.toList());
 
-        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mConfig.MinBaseQual, mRefData);
+        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mRefData);
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, Collections.emptyList());
 

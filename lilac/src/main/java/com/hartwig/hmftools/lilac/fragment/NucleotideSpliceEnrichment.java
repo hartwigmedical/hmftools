@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
@@ -13,9 +15,9 @@ public class NucleotideSpliceEnrichment
     private final double mMinEvidence;
     private final Set<Integer> mAminoAcidBoundary;
 
-    public NucleotideSpliceEnrichment(int minBaseQuality, double minEvidence, final Set<Integer> aminoAcidBoundary)
+    public NucleotideSpliceEnrichment(double minEvidence, final Set<Integer> aminoAcidBoundary)
     {
-        mMinBaseQuality = minBaseQuality;
+        mMinBaseQuality = LOW_BASE_QUAL_THRESHOLD;
         mMinEvidence = minEvidence;
         mAminoAcidBoundary = aminoAcidBoundary;
     }

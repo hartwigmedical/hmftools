@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
@@ -167,7 +168,7 @@ public class LilacApplication
 
         LL_LOGGER.info("finding read support in {} bam {}", mConfig.tumorOnly() ? "tumor" : "reference", referenceBam);
 
-        mNucleotideFragFactory = new NucleotideFragmentFactory(mConfig.MinBaseQual, mRefData);
+        mNucleotideFragFactory = new NucleotideFragmentFactory(mRefData);
 
         if(mRefBamReader == null)
             mRefBamReader = new BamRecordReader(referenceBam, mConfig, GENE_CACHE.GeneTranscriptMap, mNucleotideFragFactory);
@@ -188,10 +189,10 @@ public class LilacApplication
 
         int medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
 
-        if(medianBaseQuality < mConfig.MinBaseQual)
+        if(medianBaseQuality < LOW_BASE_QUAL_THRESHOLD)
         {
-            LL_LOGGER.info("lowering min base quality({}) to median({})", mConfig.MinBaseQual, medianBaseQuality);
-            mConfig.MinBaseQual = medianBaseQuality;
+            LL_LOGGER.info("lowering min base quality({}) to median({})", LOW_BASE_QUAL_THRESHOLD, medianBaseQuality);
+            LOW_BASE_QUAL_THRESHOLD = medianBaseQuality;
         }
 
         final Map<String,int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);

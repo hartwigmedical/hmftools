@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacUtils.aboveMinQual;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 
@@ -212,7 +213,7 @@ public class Fragment
     public int minAminoAcidLocus() { return !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(0) : -1; }
     public int maxAminoAcidLocus() { return !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1; }
 
-    public void qualityFilter(int minBaseQual)
+    public void removeLowQualBases()
     {
         if(mIsQualFiltered)
             return;
@@ -223,7 +224,7 @@ public class Fragment
         int index = 0;
         while(index < mNucleotideQuality.size())
         {
-            if(mNucleotideQuality.get(index) >= minBaseQual)
+            if(aboveMinQual(mNucleotideQuality.get(index)))
             {
                 ++index;
                 continue;

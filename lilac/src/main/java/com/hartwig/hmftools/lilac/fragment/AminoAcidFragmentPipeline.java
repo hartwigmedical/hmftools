@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 public class AminoAcidFragmentPipeline
 {
-    private final int mMinBaseQuality;
     private final double mMinEvidence;
     private final double mMinHighQualEvidence;
 
@@ -35,8 +34,6 @@ public class AminoAcidFragmentPipeline
 
     public AminoAcidFragmentPipeline(final LilacConfig config, final List<Fragment> referenceFragments)
     {
-        mMinBaseQuality = config.MinBaseQual;
-
         mOriginalRefFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
@@ -62,7 +59,7 @@ public class AminoAcidFragmentPipeline
 
         for(Fragment fragment : fragments)
         {
-            fragment.qualityFilter(mMinBaseQuality);
+            fragment.removeLowQualBases();
 
             if(!fragment.hasNucleotides())
             {
@@ -128,7 +125,7 @@ public class AminoAcidFragmentPipeline
                 .map(x -> copyNucleotideFragment(x))
                 .collect(Collectors.toList());
 
-        highQualFrags.forEach(x -> x.qualityFilter(mMinBaseQuality));
+        highQualFrags.forEach(x -> x.removeLowQualBases());
         highQualFrags = highQualFrags.stream().filter(x -> x.hasNucleotides()).collect(Collectors.toList());
 
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
@@ -139,7 +136,7 @@ public class AminoAcidFragmentPipeline
         Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
                 .filter(x -> x <= maxCommonAminoAcidExonBoundary).collect(Collectors.toSet());
 
-        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(mMinBaseQuality, mMinEvidence, aminoAcidBoundaries);
+        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(mMinEvidence, aminoAcidBoundaries);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
         List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(config, spliceEnrichedNucFrags, mMinEvidence);
