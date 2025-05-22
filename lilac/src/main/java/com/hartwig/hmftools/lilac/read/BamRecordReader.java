@@ -147,7 +147,7 @@ public class BamRecordReader implements BamReader
             }
             else
             {
-                codingExonOverlaps.forEach(x -> reads.add(Read.create(x, record, true, true)));
+                codingExonOverlaps.forEach(x -> reads.add(Read.createRead(x, record, true, true)));
             }
         }
 
@@ -314,7 +314,7 @@ public class BamRecordReader implements BamReader
             if(matchedCodingRegion == null)
                 continue;
 
-            Read codingRecord = Read.create(matchedCodingRegion, record, true, true);
+            Read codingRecord = Read.createRead(matchedCodingRegion, record, true, true);
 
             Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
 
@@ -337,7 +337,7 @@ public class BamRecordReader implements BamReader
         {
             if(bothEndsInRangeOfCodingTranscripts(record))
             {
-                codingRecords.add(Read.create(baseCodingRegion, record, true, true));
+                codingRecords.add(Read.createRead(baseCodingRegion, record, true, true));
             }
             else
             {

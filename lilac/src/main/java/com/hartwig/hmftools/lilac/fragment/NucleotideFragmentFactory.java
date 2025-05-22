@@ -48,7 +48,7 @@ public class NucleotideFragmentFactory
 
     public final Fragment createFragment(final Read record, final String geneName, final byte geneStrand)
     {
-        if(record.ReadStart < 0 || record.ReadEnd < record.ReadStart)
+        if(record.ReadIndexStart < 0 || record.ReadIndexEnd < record.ReadIndexStart)
             return null;
 
         boolean reverseStrand = geneStrand == NEG_STRAND;
@@ -59,7 +59,7 @@ public class NucleotideFragmentFactory
         int samCodingStartLoci = !reverseStrand ? codingPositionStartLoci : codingPositionEndLoci;
         int samCodingEndLoci = !reverseStrand ? codingPositionEndLoci : codingPositionStartLoci;
 
-        int readLength = record.ReadEnd - record.ReadStart + 1;
+        int readLength = record.ReadIndexEnd - record.ReadIndexStart + 1;
         final char[] codingRegionReadBases = new char[readLength];
         final byte[] codingRegionQualities = new byte[readLength];
 

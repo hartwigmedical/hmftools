@@ -37,8 +37,8 @@ public class Read
     public final int PositionEnd;
 
     // corresponding read base indices
-    public final int ReadStart;
-    public final int ReadEnd;
+    public final int ReadIndexStart;
+    public final int ReadIndexEnd;
 
     private final List<Indel> mIndels; // indels within the coding region
     private final SAMRecord mRecord;
@@ -46,7 +46,7 @@ public class Read
 
     public Read(
             final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
-            int positionEnd, int readStart, int readEnd, final SAMRecord record, int trimmedBases)
+            int positionEnd, int readIndexStart, int readIndexEnd, final SAMRecord record, int trimmedBases)
     {
         Id = id;
         SoftClippedStart = softClippedStart;
@@ -54,8 +54,8 @@ public class Read
         mIndels = indels;
         PositionStart = positionStart;
         PositionEnd = positionEnd;
-        ReadStart = readStart;
-        ReadEnd = readEnd;
+        ReadIndexStart = readIndexStart;
+        ReadIndexEnd = readIndexEnd;
         mRecord = record;
         mTrimmedBases = trimmedBases;
     }
@@ -87,7 +87,7 @@ public class Read
         if(reverseCompliment)
         {
             int index = readBases.length - 1;
-            for(int i = ReadStart; i <= ReadEnd; ++i)
+            for(int i = ReadIndexStart; i <= ReadIndexEnd; ++i)
             {
                 readBases[index] = Nucleotides.swapDnaBase(mRecord.getReadString().charAt(i));
                 readQuals[index] = mRecord.getBaseQualities()[i];
@@ -98,7 +98,7 @@ public class Read
         else
         {
             int index = 0;
-            for(int i = ReadStart; i <= ReadEnd; ++i)
+            for(int i = ReadIndexStart; i <= ReadIndexEnd; ++i)
             {
                 readBases[index] = mRecord.getReadString().charAt(i);
                 readQuals[index] = mRecord.getBaseQualities()[i];
@@ -116,11 +116,11 @@ public class Read
                 .map(x -> new ChrBaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
                 .filter(x -> outerRegion.overlaps(x))
                 .map(x -> new BaseRegion(max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
-                .map(x -> create(x, mRecord, false, false))
+                .map(x -> createRead(x, mRecord, false, false))
                 .collect(Collectors.toList());
     }
 
-    public static Read create(final BaseRegion codingRegion, final SAMRecord record, boolean includeSoftClips, boolean includeIndels)
+    public static Read createRead(final BaseRegion codingRegion, final SAMRecord record, boolean includeSoftClips, boolean includeIndels)
     {
         int softClipStart = leftSoftClipLength(record);
         int softClipEnd = rightSoftClipLength(record);

@@ -52,7 +52,7 @@ public class LilacTestUtils
     {
         SAMRecord record = buildSamRecord(100, "151M", "", "");
         record.setReadName(id);
-        return Read.create(new BaseRegion(0, 1), record, true, true);
+        return Read.createRead(new BaseRegion(0, 1), record, true, true);
     }
 
     public static Fragment createFragment(final String id)

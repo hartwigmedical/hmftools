@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidInd
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildSamRecord;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
-import static com.hartwig.hmftools.lilac.read.Read.create;
+import static com.hartwig.hmftools.lilac.read.Read.createRead;
 
 import static org.junit.Assert.assertFalse;
 
@@ -63,7 +63,7 @@ public class FragmentsTest
         SAMRecord record = buildSamRecord(200, "10S60M10S", TEST_READ_BASES.substring(0, 80), "");
         record.setInferredInsertSize(200);
 
-        Read read = create(codingRegion, record, true, true);
+        Read read = createRead(codingRegion, record, true, true);
         assertNotNull(read);
 
         assertEquals(190, read.PositionStart);
@@ -75,7 +75,7 @@ public class FragmentsTest
         record.setInferredInsertSize(70);
         record.setReadNegativeStrandFlag(true);
 
-        read = create(codingRegion, record, true, true);
+        read = createRead(codingRegion, record, true, true);
         assertEquals(200, read.PositionStart);
         assertEquals(269, read.PositionEnd);
         assertEquals(0, read.SoftClippedStart);
@@ -83,7 +83,7 @@ public class FragmentsTest
 
         record.setReadNegativeStrandFlag(false);
 
-        read = create(codingRegion, record, true, true);
+        read = createRead(codingRegion, record, true, true);
         assertEquals(190, read.PositionStart);
         assertEquals(259, read.PositionEnd);
         assertEquals(10, read.SoftClippedStart);
