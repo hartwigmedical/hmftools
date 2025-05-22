@@ -460,24 +460,32 @@ public class HomologyTest
     }
 
     @Test
-    public void testIndelInsertHomology()
+    public void testIndelInsertExactHomology()
     {
         MockRefGenome refGenome = new MockRefGenome();
-        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_400);
 
-        // bases 50-90: TCAAATCGTCTAGTGGCTAATGCTCGATCGATATGGCTTGA
+        String initialBases = REF_BASES_400.substring(0, 100);
+        String endBases = REF_BASES_400.substring(200, 300);
 
-        // 4:187995667-187996969:1 654M61I649M seq(0-1364 adj=0-1363) score(1227) flags(0) mapQual(60 adj=47) aligned(1303 adj=1153) md(995A307)
+        // bases 100 -> 199 - has a 20-base repeated section 4x from 110-190
+        String basesWithHomology =
+                "GGGCTGATGCAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTGGTTGATCGT";
+        //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        //                 10        20        30        40        50        60        70        80        90
+
+        refGenome.RefGenomeMap.put(CHR_1, initialBases + basesWithHomology + endBases);
 
         // an insert with a duplicated sequence
-        String insertedBases = "TGCCCTGTAGCTGATTGGCTAGCTGTAGCTGATCGATGCA";
+        String duplicatedBases = basesWithHomology.substring(10, 50);
+
+        // recall assumes there are 100 ref bases either side of the junction
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
-                refGenome, CHR_1, 190, FORWARD, CHR_1, 150, REVERSE, insertedBases, "");
+                refGenome, CHR_1, 109, FORWARD, CHR_1, 110, REVERSE, duplicatedBases, "");
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(refGenome, assemblyAlignment);
 
         AlignData alignment = createAlignment(
-                CHR_1, 51, 289, false, DEFAULT_MAP_QUAL, 200, 0, 240,
+                CHR_1, 10, 209, false, DEFAULT_MAP_QUAL, 200, 0, 220,
                 "100M40I100M", "", "");
 
         List<AlignData> alignments = Lists.newArrayList(alignment);
@@ -488,17 +496,41 @@ public class HomologyTest
 
         Breakend first = assemblyAlignment.breakends().get(0);
         assertEquals(DUP, first.svType());
-        assertEquals(150, first.Position);
+        assertEquals(110, first.Position);
         assertEquals(REVERSE, first.Orient);
         assertNotNull(first.Homology);
-        assertEquals(insertedBases, first.Homology.Homology);
+        assertEquals(duplicatedBases, first.Homology.Homology);
         assertEquals(-20, first.Homology.ExactStart);
         assertEquals(20, first.Homology.ExactEnd);
+        assertEquals(-20, first.Homology.InexactStart);
+        assertEquals(20, first.Homology.InexactEnd);
 
         Breakend second = assemblyAlignment.breakends().get(1);
-        assertEquals(191, second.Position);
+        assertEquals(149, second.Position);
         assertEquals(FORWARD, second.Orient);
-        assertEquals(-20, second.Homology.ExactStart);
-        assertEquals(20, second.Homology.ExactEnd);
+
+        // now with a mismatch mid-way through (10 bases into the duplicated section)
+        basesWithHomology =
+                "GGGCTGATGCAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCTTGGGTTTTTAAAAACCCCCGGGGGTTTTTGGTTGATCGT";
+        //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        //                 10        20        30        40        50        60        70        80        90
+
+        refGenome.RefGenomeMap.put(CHR_1, initialBases + basesWithHomology + endBases);
+
+        assemblyAlignment.breakends().clear();
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(2, assemblyAlignment.breakends().size());
+
+        first = assemblyAlignment.breakends().get(0);
+        assertEquals(DUP, first.svType());
+        assertEquals(110, first.Position);
+        assertEquals(REVERSE, first.Orient);
+        assertNotNull(first.Homology);
+        assertEquals("AAAAACCCCC", first.Homology.Homology);
+        assertEquals(-5, first.Homology.ExactStart);
+        assertEquals(5, first.Homology.ExactEnd);
+        assertEquals(-20, first.Homology.InexactStart);
+        assertEquals(20, first.Homology.InexactEnd);
     }
 }

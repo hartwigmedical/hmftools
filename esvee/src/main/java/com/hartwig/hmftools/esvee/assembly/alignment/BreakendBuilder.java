@@ -168,12 +168,42 @@ public class BreakendBuilder
 
                 if(!homology.Homology.isEmpty())
                 {
+                    // convert an INS to a DUP and reassess homology
                     int totalInexactHomology = homology.InexactEnd - homology.InexactStart;
-                    insertedBases = insertedBases.substring(totalInexactHomology);
+
                     indelSeqStart += totalInexactHomology;
-                    indelPosEnd += totalInexactHomology;
+                    indelPosStart += 1;
+                    indelPosEnd += totalInexactHomology - 1;
                     lowerOrient = REVERSE;
                     upperOrient = FORWARD;
+                    int newHomologyLength = 0;
+                    if(totalInexactHomology == insertedBases.length())
+                    {
+                        String postIndelBases = mRefGenome.getBaseString(
+                                alignment.chromosome(), indelPosEnd + 1, indelPosEnd + insertedBases.length());
+
+                        while(newHomologyLength < insertedBases.length() && newHomologyLength < postIndelBases.length()
+                        && insertedBases.charAt(newHomologyLength) == postIndelBases.charAt(newHomologyLength))
+                        {
+                            ++newHomologyLength;
+                        }
+                    }
+
+                    if(newHomologyLength > 0)
+                    {
+                        String newHomologyBases = insertedBases.substring(0, newHomologyLength);
+                        int exactHomologyStart = newHomologyLength / 2;
+
+                        if((newHomologyLength % 2) == 1)
+                            ++exactHomologyStart;
+
+                        int exactHomologyEnd = newHomologyLength - exactHomologyStart;
+
+                        homology = new HomologyData(
+                                newHomologyBases, -exactHomologyStart, exactHomologyEnd, homology.InexactStart, homology.InexactEnd);
+                    }
+
+                    insertedBases = insertedBases.substring(totalInexactHomology);
                 }
             }
         }
