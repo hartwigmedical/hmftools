@@ -192,15 +192,12 @@ public class BreakendBuilder
                     if(newHomologyLength > 0)
                     {
                         String newHomologyBases = insertedBases.substring(0, newHomologyLength);
-                        int exactHomologyStart = newHomologyLength / 2;
 
-                        if((newHomologyLength % 2) == 1)
-                            ++exactHomologyStart;
-
-                        int exactHomologyEnd = newHomologyLength - exactHomologyStart;
-
-                        homology = new HomologyData(
-                                newHomologyBases, -exactHomologyStart, exactHomologyEnd, homology.InexactStart, homology.InexactEnd);
+                        homology = new HomologyData(newHomologyBases, 0, newHomologyLength, 0, newHomologyLength);
+                    }
+                    else
+                    {
+                        homology = null;
                     }
 
                     insertedBases = insertedBases.substring(totalInexactHomology);

@@ -192,7 +192,7 @@ public class Alignment
 
         private List<AlignData> requerySoftClipAlignments(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
-            // re-align supplementaries to get a more reliable map quality
+            // re-align long soft-clipped sequences add attach them to the original alignment
             if(alignments.size() != 1)
                 return alignments;
 
@@ -247,9 +247,6 @@ public class Alignment
             else
                 softClipSeqIndexStart = alignment.sequenceEnd() + 1;
 
-            // String fullSequence = assemblyAlignment.fullSequence();
-            // String alignmentSequence = fullSequence.substring(alignment.sequenceStart(), alignment.sequenceEnd() + 1);
-
             for(AlignData rqAlignment : newAlignments)
             {
                 // adjust values to be in terms of the original sequence
@@ -267,7 +264,6 @@ public class Alignment
 
                 rqAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
             }
-
 
             if(isLeftClip)
                 newAlignments.add(alignment);

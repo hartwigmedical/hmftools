@@ -4,18 +4,21 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.alignment.HomologyData.NO_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.assembly.alignment.HomologyData.determineHomology;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemblyAlignment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -494,22 +497,27 @@ public class HomologyTest
 
         assertEquals(2, assemblyAlignment.breakends().size());
 
+        // expected result:
+        // converted to DUP with breakends at 110:-1, 149:1,
+        // inexact homology = exact homology = 0 at start, 40 at end,
+        // hom seq = AAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGGTTTTT
+
         Breakend first = assemblyAlignment.breakends().get(0);
         assertEquals(DUP, first.svType());
         assertEquals(110, first.Position);
         assertEquals(REVERSE, first.Orient);
         assertNotNull(first.Homology);
         assertEquals(duplicatedBases, first.Homology.Homology);
-        assertEquals(-20, first.Homology.ExactStart);
-        assertEquals(20, first.Homology.ExactEnd);
-        assertEquals(-20, first.Homology.InexactStart);
-        assertEquals(20, first.Homology.InexactEnd);
+        assertEquals(0, first.Homology.ExactStart);
+        assertEquals(40, first.Homology.ExactEnd);
+        assertEquals(0, first.Homology.InexactStart);
+        assertEquals(40, first.Homology.InexactEnd);
 
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(149, second.Position);
         assertEquals(FORWARD, second.Orient);
 
-        // now with a mismatch mid-way through (10 bases into the duplicated section)
+        // now with a mismatch mid-way through (10 bases into the duplicated section) - no longer has full exact homology
         basesWithHomology =
                 "GGGCTGATGCAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCTTGGGTTTTTAAAAACCCCCGGGGGTTTTTGGTTGATCGT";
         //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -528,9 +536,59 @@ public class HomologyTest
         assertEquals(REVERSE, first.Orient);
         assertNotNull(first.Homology);
         assertEquals("AAAAACCCCC", first.Homology.Homology);
-        assertEquals(-5, first.Homology.ExactStart);
-        assertEquals(5, first.Homology.ExactEnd);
-        assertEquals(-20, first.Homology.InexactStart);
-        assertEquals(20, first.Homology.InexactEnd);
+        assertEquals(0, first.Homology.ExactStart);
+        assertEquals(10, first.Homology.ExactEnd);
+        assertEquals(0, first.Homology.InexactStart);
+        assertEquals(10, first.Homology.InexactEnd);
+
+        second = assemblyAlignment.breakends().get(1);
+        assertEquals(149, second.Position);
+        assertEquals(FORWARD, second.Orient);
+
+        // converts to a partial DUP since full section is not inserted
+        basesWithHomology =
+                "GGGCTGATGCAAAAACCCCCGGGGGTTTTTAAAAACCCCCTTGGGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTGGTTGATCGT";
+        //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        //                 10        20        30        40        50        60        70        80        90
+
+        refGenome.RefGenomeMap.put(CHR_1, initialBases + basesWithHomology + endBases);
+
+        assemblyAlignment.breakends().clear();
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(2, assemblyAlignment.breakends().size());
+
+        first = assemblyAlignment.breakends().get(0);
+        assertEquals(DUP, first.svType());
+        assertEquals(110, first.Position);
+        assertEquals(REVERSE, first.Orient);
+        assertEquals(NO_HOMOLOGY, first.Homology);
+
+        second = assemblyAlignment.breakends().get(1);
+        assertEquals(139, second.Position);
+        assertEquals(FORWARD, second.Orient);
+
+        // mismatch at first base, remains as an INS
+        basesWithHomology =
+                "GGGCTGATGCTTAAACCCCCGGGGGTTTTTAAAAACCCCCTTGGGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTGGTTGATCGT";
+        //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        //                 10        20        30        40        50        60        70        80        90
+
+        refGenome.RefGenomeMap.put(CHR_1, initialBases + basesWithHomology + endBases);
+
+        assemblyAlignment.breakends().clear();
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(2, assemblyAlignment.breakends().size());
+
+        first = assemblyAlignment.breakends().get(0);
+        assertEquals(INS, first.svType());
+        assertEquals(109, first.Position);
+        assertEquals(FORWARD, first.Orient);
+        assertEquals(NO_HOMOLOGY, first.Homology);
+
+        second = assemblyAlignment.breakends().get(1);
+        assertEquals(110, second.Position);
+        assertEquals(REVERSE, second.Orient);
     }
 }

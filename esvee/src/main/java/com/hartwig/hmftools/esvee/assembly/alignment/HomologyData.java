@@ -220,7 +220,7 @@ public class HomologyData
         }
 
         if(exactMatch == 0)
-            return new HomologyData("", 0, 0, 0, 0);
+            return NO_HOMOLOGY;
 
         int halfRange = exactMatch / 2;
         int exactStart = max(halfRange, 1); // round up if an odd length
