@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Character.toLowerCase;
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -275,6 +276,7 @@ public class UnmappedBaseExtender
         int[] readIndexEnds = new int[readCount];
 
         int minExtensionLength = -1;
+        int maxExtensionLength = -1;
 
         for(int i = 0; i < readCount; ++i)
         {
@@ -296,9 +298,11 @@ public class UnmappedBaseExtender
 
             if(minExtensionLength < 0 || readExtension < minExtensionLength)
                 minExtensionLength = readExtension;
+
+            maxExtensionLength = max(maxExtensionLength, readExtension);
         }
 
-        for(int baseIndex = 0; baseIndex < minExtensionLength; ++baseIndex)
+        for(int baseIndex = 0; baseIndex < maxExtensionLength; ++baseIndex) // previously used minExtensionLength
         {
             byte consensusBase = 0;
 
@@ -312,6 +316,10 @@ public class UnmappedBaseExtender
                 boolean reverseBases = reverseReadBases(read);
 
                 int readBaseIndex = mIsForwardJunction ? readIndexStarts[i] + baseIndex : readIndexEnds[i] - baseIndex;
+
+                if(readBaseIndex < 0 || readBaseIndex >= read.basesLength())
+                    continue;
+
                 byte readBase;
 
                 if(reverseBases)
@@ -375,6 +383,10 @@ public class UnmappedBaseExtender
                 Read read = readSequenceMatch.Read;
 
                 int readBaseIndex = mIsForwardJunction ? readIndexStarts[i] + baseIndex : readIndexEnds[i] - baseIndex;
+
+                if(readBaseIndex < 0 || readBaseIndex >= read.basesLength())
+                    continue;
+
                 boolean reverseBases = reverseReadBases(read);
                 byte readBase;
 
