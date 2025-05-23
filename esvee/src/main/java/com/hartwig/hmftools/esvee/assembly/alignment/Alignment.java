@@ -180,7 +180,7 @@ public class Alignment
 
             alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
 
-            alignments = requerySoftClipAlignments(assemblyAlignment, alignments, requeriedAlignments);
+            alignments = requerySoftClipAlignments(assemblyAlignment, alignments);
 
             processAlignmentResults(assemblyAlignment, alignments);
 
@@ -190,8 +190,7 @@ public class Alignment
             writeAssemblyData(assemblyAlignment, alignments, requeriedAlignments);
         }
 
-        private List<AlignData> requerySoftClipAlignments(
-                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
+        private List<AlignData> requerySoftClipAlignments(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
             // re-align supplementaries to get a more reliable map quality
             if(alignments.size() != 1)
@@ -239,25 +238,41 @@ public class Alignment
             if(newAlignments.isEmpty())
                 return alignments;
 
-            requeriedAlignments.add(alignment);
-
             SV_LOGGER.trace("assembly({}) requeried single alignment({}) with long soft-clip", assemblyAlignment, alignment);
 
-            AlignData refAlignment = new AlignData(
-                    alignment.refLocation(), alignment.rawSequenceStart(), alignment.rawSequenceEnd(),
-                    alignment.mapQual(), alignment.score(), alignment.flags(), newCigar, alignment.nMatches(), alignment.xaTag(), alignment.mdTag());
-
-            if(refAlignment.cigarElements().isEmpty())
-            {
-                SV_LOGGER.warn("assembly({}) error forming new cigar(orig={} new={})",
-                        assemblyAlignment, alignment.cigar(), newCigar);
-                return alignments;
-            }
+            int softClipSeqIndexStart;
 
             if(isLeftClip)
-                newAlignments.add(refAlignment);
+                softClipSeqIndexStart = max(alignment.sequenceStart() - softClipLength, 0);
             else
-                newAlignments.add(0, refAlignment);
+                softClipSeqIndexStart = alignment.sequenceEnd() + 1;
+
+            // String fullSequence = assemblyAlignment.fullSequence();
+            // String alignmentSequence = fullSequence.substring(alignment.sequenceStart(), alignment.sequenceEnd() + 1);
+
+            for(AlignData rqAlignment : newAlignments)
+            {
+                // adjust values to be in terms of the original sequence
+                int adjSequenceStart = softClipSeqIndexStart + rqAlignment.sequenceStart();
+                int adjSequenceEnd = softClipSeqIndexStart + rqAlignment.sequenceEnd();
+
+                if(rqAlignment.orientation().isReverse())
+                {
+                    int newSequenceStart = (softClipLength - 1) - (rqAlignment.rawSequenceEnd() - 1);
+                    int newSequenceEnd = (softClipLength - 1) - adjSequenceStart;
+
+                    adjSequenceStart = max(newSequenceStart, 0);
+                    adjSequenceEnd = newSequenceEnd;
+                }
+
+                rqAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
+            }
+
+
+            if(isLeftClip)
+                newAlignments.add(alignment);
+            else
+                newAlignments.add(0, alignment);
 
             return newAlignments;
         }
