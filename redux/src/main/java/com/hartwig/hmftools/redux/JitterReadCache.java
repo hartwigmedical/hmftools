@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
@@ -8,10 +9,16 @@ import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_E
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.getFragmentCoordReads;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultiset;
@@ -21,7 +28,8 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
-import com.hartwig.hmftools.common.collect.UnionFind;
+import com.hartwig.hmftools.common.collect.Union;
+import com.hartwig.hmftools.common.collect.UnionQuickFind;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -35,11 +43,8 @@ public class JitterReadCache implements IReadCache
 {
     private final ReadCache mReadCache;
     private final int mMaxSoftClipLength;
-
-    private final Map<String, Set<FragmentCoords>> mAuxFragmentCoordsCache;
-    private final Map<FragmentCoords, DuplicateGroup> mAuxDuplicateGroupLookup;
-
     private final SortedMultiset<Integer> mInnerCachedReadStarts;
+    private final HashMap<String, CollapsedPartition> mCollapsedPartitionLookup = Maps.newHashMap();
 
     private int mCurrentReadPos;
     private int mLastReadCacheBoundary;
@@ -48,8 +53,6 @@ public class JitterReadCache implements IReadCache
     {
         mReadCache = readCache;
         mMaxSoftClipLength = readCache.maxSoftClipLength();
-        mAuxFragmentCoordsCache = Maps.newHashMap();
-        mAuxDuplicateGroupLookup = Maps.newHashMap();
         mInnerCachedReadStarts = TreeMultiset.create();
 
         mCurrentReadPos = 0;
@@ -70,20 +73,6 @@ public class JitterReadCache implements IReadCache
         return mReadCache.currentReadMinPosition();
     }
 
-    private void pushSingleRead(final ReadInfo readInfo)
-    {
-        pushDuplicateGroup(new DuplicateGroup(null, readInfo.read(), readInfo.coordinates()));
-    }
-
-    private void pushDuplicateGroup(final DuplicateGroup duplicateGroup)
-    {
-        FragmentCoords coords = duplicateGroup.fragmentCoordinates();
-        String collapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
-        mAuxFragmentCoordsCache.computeIfAbsent(collapsedKey, x -> Sets.newHashSet());
-        mAuxFragmentCoordsCache.get(collapsedKey).add(coords);
-        mAuxDuplicateGroupLookup.put(coords, duplicateGroup);
-    }
-
     private int innerMinCachedReadStart()
     {
         if(mInnerCachedReadStarts.isEmpty())
@@ -102,65 +91,37 @@ public class JitterReadCache implements IReadCache
         return min(mCurrentReadPos, readCacheMinCachedReadStart) - mMaxSoftClipLength + 1;
     }
 
-    private FragmentCoordReads popAuxCache()
+    public void pushSingleRead(final ReadInfo readInfo)
     {
-        if(mAuxDuplicateGroupLookup.isEmpty())
+        pushDuplicateGroup(new DuplicateGroup(null, readInfo.read(), readInfo.coordinates()));
+    }
+
+    public void pushDuplicateGroup(final DuplicateGroup duplicateGroup)
+    {
+        FragmentCoords coords = duplicateGroup.fragmentCoordinates();
+        String collapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
+        mCollapsedPartitionLookup.computeIfAbsent(collapsedKey, key -> new CollapsedPartition());
+        mCollapsedPartitionLookup.get(collapsedKey).pushDuplicateGroup(duplicateGroup);
+    }
+
+    private FragmentCoordReads popJitterReadCache()
+    {
+        if(mCollapsedPartitionLookup.isEmpty())
             return null;
 
         List<DuplicateGroup> groupsToPop = Lists.newArrayList();
-        List<Pair<String, FragmentCoords>> coordsToDrop = Lists.newArrayList();
-        for(String key : mAuxFragmentCoordsCache.keySet())
+        List<String> emptyCollapsedKeys = Lists.newArrayList();
+        for(Map.Entry<String, CollapsedPartition> entry : mCollapsedPartitionLookup.entrySet())
         {
-            List<FragmentCoords> allCoords = Lists.newArrayList();
-            UnionFind<FragmentCoords> groupMerger = new UnionFind<>();
-            for(FragmentCoords coords : mAuxFragmentCoordsCache.get(key))
-            {
-                allCoords.add(coords);
-                groupMerger.add(coords);
-            }
-
-            for(int i = 0; i < allCoords.size() - 1; i++)
-            {
-                FragmentCoords coords1 = allCoords.get(i);
-                for(int j = i + 1; j < allCoords.size(); j++)
-                {
-                    FragmentCoords coords2 = allCoords.get(j);
-                    int lowerDiff = abs(coords1.PositionLower - coords2.PositionLower);
-                    int upperDiff = abs(coords1.PositionUpper - coords2.PositionUpper);
-                    if(lowerDiff > 0 && upperDiff > 0)
-                        continue;
-
-                    if(lowerDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE || upperDiff > SINGLE_END_JITTER_COLLAPSE_DISTANCE)
-                        continue;
-
-                    groupMerger.merge(coords1, coords2);
-                }
-            }
-
-            for(Set<FragmentCoords> partitions : groupMerger.getPartitions())
-            {
-                int maxPos = partitions.stream().mapToInt(FragmentCoords::readPosition).max().orElse(-1);
-                if(maxPos + SINGLE_END_JITTER_COLLAPSE_DISTANCE >= mLastReadCacheBoundary)
-                    continue;
-
-                partitions.forEach(coords ->
-                {
-                    groupsToPop.add(mAuxDuplicateGroupLookup.get(coords));
-                    coordsToDrop.add(Pair.of(key, coords));
-                });
-            }
+            String collapsedKey = entry.getKey();
+            CollapsedPartition collapsedPartition = entry.getValue();
+            groupsToPop.addAll(collapsedPartition.popReads(mLastReadCacheBoundary));
+            if(collapsedPartition.isEmpty())
+                emptyCollapsedKeys.add(collapsedKey);
         }
 
-        for(Pair<String, FragmentCoords> keyCoordPair : coordsToDrop)
-        {
-            String key = keyCoordPair.getLeft();
-            FragmentCoords coords = keyCoordPair.getRight();
-            mAuxFragmentCoordsCache.get(key).remove(coords);
-            if(mAuxFragmentCoordsCache.get(key).isEmpty())
-                mAuxFragmentCoordsCache.remove(key);
-
-            mAuxDuplicateGroupLookup.remove(coords);
-        }
+        for(String collapsedKey : emptyCollapsedKeys)
+            mCollapsedPartitionLookup.remove(collapsedKey);
 
         if(groupsToPop.isEmpty())
             return null;
@@ -191,7 +152,7 @@ public class JitterReadCache implements IReadCache
             if(!tryAuxPop)
                 return null;
 
-            return popAuxCache();
+            return popJitterReadCache();
         }
 
         List<ReadInfo> singleReads = Lists.newArrayList();
@@ -234,7 +195,7 @@ public class JitterReadCache implements IReadCache
 
         fragmentCoordReads = null;
         if(tryAuxPop)
-            fragmentCoordReads = popAuxCache();
+            fragmentCoordReads = popJitterReadCache();
 
         if(fragmentCoordReads != null)
         {
@@ -265,9 +226,10 @@ public class JitterReadCache implements IReadCache
             duplicateGroups.addAll(fragmentCoordReads.DuplicateGroups);
         }
 
-        fragmentCoordReads = getFragmentCoordReads(mAuxDuplicateGroupLookup.values());
-        mAuxFragmentCoordsCache.clear();
-        mAuxDuplicateGroupLookup.clear();
+        fragmentCoordReads = getFragmentCoordReads(
+                mCollapsedPartitionLookup.values().stream().flatMap(CollapsedPartition::duplicateGroupStream));
+        mCollapsedPartitionLookup.clear();
+
         singleReads.addAll(fragmentCoordReads.SingleReads);
         duplicateGroups.addAll(fragmentCoordReads.DuplicateGroups);
 
@@ -280,34 +242,43 @@ public class JitterReadCache implements IReadCache
     @Override
     public int minCachedReadStart()
     {
-        int minReadStart = innerMinCachedReadStart();
-        for(DuplicateGroup group : mAuxDuplicateGroupLookup.values())
-        {
-            for(SAMRecord read : group.reads())
-            {
-                int readStart = read.getAlignmentStart();
-                if(minReadStart < 0 || readStart < minReadStart)
-                    minReadStart = readStart;
-            }
-        }
+        int innerCacheMinReadStart = innerMinCachedReadStart();
+        if(innerCacheMinReadStart < 0)
+            innerCacheMinReadStart = Integer.MAX_VALUE;
 
-        return minReadStart;
+        int outerCacheMinReadStart = mCollapsedPartitionLookup.values()
+                .stream()
+                .mapToInt(CollapsedPartition::minCachedReadStart)
+                .min()
+                .orElse(Integer.MAX_VALUE);
+
+        int minReadStart = min(innerCacheMinReadStart, outerCacheMinReadStart);
+        return minReadStart == Integer.MAX_VALUE ? -1 : minReadStart;
     }
 
     @Override
     public int cachedReadCount()
     {
-        return mReadCache.cachedReadCount() + mAuxDuplicateGroupLookup.values().stream().mapToInt(DuplicateGroup::readCount).sum();
+        return mReadCache.cachedReadCount() + mCollapsedPartitionLookup.values()
+                .stream()
+                .mapToInt(CollapsedPartition::cachedReadCount)
+                .sum();
     }
 
     @Override
     public int cachedFragCoordGroups()
     {
-        return mReadCache.cachedFragCoordGroups() + mAuxDuplicateGroupLookup.size();
+        return mReadCache.cachedFragCoordGroups() + mCollapsedPartitionLookup.values()
+                .stream()
+                .mapToInt(CollapsedPartition::cachedFragCoordGroups)
+                .sum();
     }
 
     private static List<SAMRecord> allFragmentCoordReads(final FragmentCoordReads fragmentCoordReads)
     {
+        if(fragmentCoordReads == null)
+            return Lists.newArrayList();
+
         List<SAMRecord> reads = Lists.newArrayList();
         for(DuplicateGroup group : fragmentCoordReads.DuplicateGroups)
             reads.addAll(group.allReads());
@@ -321,10 +292,160 @@ public class JitterReadCache implements IReadCache
     @VisibleForTesting
     public Multiset<String> auxCacheReadNames()
     {
-        return mAuxDuplicateGroupLookup.values()
+        return mCollapsedPartitionLookup.values()
                 .stream()
-                .flatMap(x -> x.reads().stream())
-                .map(SAMRecord::getReadName)
+                .flatMap(CollapsedPartition::readNamesStream)
                 .collect(Collectors.toCollection(HashMultiset::create));
+    }
+
+    private static class CollapsedPartition
+    {
+        private final static Comparator<Union<Integer, FragmentCoords>> COMPARE_BY_LOWER =
+                Comparator.comparingInt(x -> x.hasLeft() ? x.left() : x.right().PositionLower);
+        private final static Comparator<Union<Integer, FragmentCoords>> COMPARE_BY_UPPER =
+                Comparator.comparingInt(x -> x.hasLeft() ? x.left() : x.right().PositionUpper);
+
+        private final HashMap<FragmentCoords, DuplicateGroup> mDuplicateGroupLookup = Maps.newHashMap();
+        private final UnionQuickFind<FragmentCoords> mCoordsMerger = new UnionQuickFind<>();
+        private final SortedMap<Integer, TreeSet<Union<Integer, FragmentCoords>>> mLowerToUpper = Maps.newTreeMap();
+        private final SortedMap<Integer, TreeSet<Union<Integer, FragmentCoords>>> mUpperToLower = Maps.newTreeMap();
+        private final HashMap<FragmentCoords, Integer> mUpperBoundaryLookup = Maps.newHashMap();
+        private final TreeMap<Integer, HashMultiset<FragmentCoords>> mUpperBoundaryToFragCoords = Maps.newTreeMap();
+
+        public boolean isEmpty()
+        {
+            return mDuplicateGroupLookup.isEmpty();
+        }
+
+        public int minCachedReadStart()
+        {
+            return mDuplicateGroupLookup.values().stream()
+                    .flatMap(x -> x.reads().stream())
+                    .mapToInt(SAMRecord::getAlignmentStart)
+                    .min()
+                    .orElse(Integer.MAX_VALUE);
+        }
+
+        public int cachedReadCount()
+        {
+            return mDuplicateGroupLookup.values().stream().mapToInt(DuplicateGroup::readCount).sum();
+        }
+
+        public int cachedFragCoordGroups()
+        {
+            return mDuplicateGroupLookup.size();
+        }
+
+        public Stream<DuplicateGroup> duplicateGroupStream()
+        {
+            return mDuplicateGroupLookup.values().stream();
+        }
+
+        public Stream<SAMRecord> readStream()
+        {
+            return duplicateGroupStream().flatMap(x -> x.reads().stream());
+        }
+
+        public Stream<String> readNamesStream()
+        {
+            return readStream().map(SAMRecord::getReadName);
+        }
+
+        private void mergeGroups(final FragmentCoords coords1, final FragmentCoords coords2)
+        {
+            Pair<FragmentCoords, FragmentCoords> fromToPair = mCoordsMerger.merge(coords1, coords2);
+            if(fromToPair == null)
+                return;
+
+            FragmentCoords fromCoords = fromToPair.getLeft();
+            FragmentCoords toCoords = fromToPair.getRight();
+
+            int fromUpperBoundary = mUpperBoundaryLookup.get(fromCoords);
+            int toUpperBoundary = mUpperBoundaryLookup.get(toCoords);
+            int mergedUpperBoundary = max(fromUpperBoundary, toUpperBoundary);
+            mUpperBoundaryLookup.remove(fromCoords);
+            mUpperBoundaryLookup.put(toCoords, mergedUpperBoundary);
+
+            mUpperBoundaryToFragCoords.get(fromUpperBoundary).remove(fromCoords);
+            mUpperBoundaryToFragCoords.get(toUpperBoundary).remove(toCoords);
+            mUpperBoundaryToFragCoords.computeIfAbsent(mergedUpperBoundary, key -> HashMultiset.create());
+            mUpperBoundaryToFragCoords.get(mergedUpperBoundary).add(toCoords);
+
+            if(mUpperBoundaryToFragCoords.get(fromUpperBoundary).isEmpty())
+                mUpperBoundaryToFragCoords.remove(fromUpperBoundary);
+
+            if(mUpperBoundaryToFragCoords.get(toUpperBoundary).isEmpty())
+                mUpperBoundaryToFragCoords.remove(toUpperBoundary);
+        }
+
+        public void pushDuplicateGroup(final DuplicateGroup duplicateGroup)
+        {
+            FragmentCoords coords = duplicateGroup.fragmentCoordinates();
+            int upperBoundary = coords.readPosition() + SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+            mDuplicateGroupLookup.put(coords, duplicateGroup);
+            mCoordsMerger.add(coords);
+            mUpperBoundaryLookup.put(coords, upperBoundary);
+            mUpperBoundaryToFragCoords.computeIfAbsent(upperBoundary, key -> HashMultiset.create());
+            mUpperBoundaryToFragCoords.get(upperBoundary).add(coords);
+
+            int posLower = coords.PositionLower;
+            int posUpper = coords.PositionUpper;
+
+            mLowerToUpper.computeIfAbsent(posLower, key -> Sets.newTreeSet(COMPARE_BY_UPPER));
+            mUpperToLower.computeIfAbsent(posUpper, key -> Sets.newTreeSet(COMPARE_BY_LOWER));
+
+            TreeSet<Union<Integer, FragmentCoords>> uppersFixedLower = mLowerToUpper.get(posLower);
+            Union<Integer, FragmentCoords> splitter = Union.createLeft(posUpper);
+            Union<Integer, FragmentCoords> floor = uppersFixedLower.floor(splitter);
+            Union<Integer, FragmentCoords> ceil = uppersFixedLower.ceiling(splitter);
+            if(floor != null && abs(posUpper - floor.right().PositionUpper) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE)
+                mergeGroups(coords, floor.right());
+
+            if(ceil != null && abs(posUpper - ceil.right().PositionUpper) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE)
+                mergeGroups(coords, ceil.right());
+
+            TreeSet<Union<Integer, FragmentCoords>> lowersFixedUpper = mUpperToLower.get(posUpper);
+            splitter = Union.createLeft(posLower);
+            floor = lowersFixedUpper.floor(splitter);
+            ceil = lowersFixedUpper.ceiling(splitter);
+            if(floor != null && abs(posLower - floor.right().PositionLower) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE)
+                mergeGroups(coords, floor.right());
+
+            if(ceil != null && abs(posLower - ceil.right().PositionLower) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE)
+                mergeGroups(coords, ceil.right());
+
+            Union<Integer, FragmentCoords> coordsForSet = Union.createRight(coords);
+            mLowerToUpper.get(posLower).add(coordsForSet);
+            mUpperToLower.get(posUpper).add(coordsForSet);
+        }
+
+        public Collection<DuplicateGroup> popReads(final int lastReadCacheBoundary)
+        {
+            List<FragmentCoords> reprCoordsToPop =
+                    mUpperBoundaryToFragCoords.headMap(lastReadCacheBoundary).values().stream().flatMap(HashMultiset::stream).toList();
+            List<DuplicateGroup> groupsToPop = Lists.newArrayList();
+            for(FragmentCoords reprCoords : reprCoordsToPop)
+            {
+                Collection<FragmentCoords> coordsSet = mCoordsMerger.removeSet(reprCoords);
+                for(FragmentCoords coords : coordsSet)
+                    groupsToPop.add(mDuplicateGroupLookup.remove(coords));
+
+                mLowerToUpper.get(reprCoords.PositionLower).remove(Union.createLeft(reprCoords.PositionUpper));
+                mUpperToLower.get(reprCoords.PositionUpper).remove(Union.createLeft(reprCoords.PositionLower));
+
+                if(mLowerToUpper.get(reprCoords.PositionLower).isEmpty())
+                    mLowerToUpper.remove(reprCoords.PositionLower);
+
+                if(mUpperToLower.get(reprCoords.PositionUpper).isEmpty())
+                    mUpperToLower.remove(reprCoords.PositionUpper);
+
+                int upperBoundary = mUpperBoundaryLookup.remove(reprCoords);
+                mUpperBoundaryToFragCoords.get(upperBoundary).remove(reprCoords);
+                if(mUpperBoundaryToFragCoords.get(upperBoundary).isEmpty())
+                    mUpperBoundaryToFragCoords.remove(upperBoundary);
+            }
+
+            return groupsToPop;
+        }
     }
 }

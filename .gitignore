@@ -5,6 +5,7 @@
 .classpath
 .settings/
 .attach_pid*
+.run/
 
 # ignore dependency reduced poms
 dependency-reduced-pom.xml
@@ -25,4 +26,3 @@ hmf-common/src/test/resources/doid/201015_doid.json
 patient-db/patient-db-logs/*.log
 .DS_Store
 /patient-db/nb-configuration.xml
-

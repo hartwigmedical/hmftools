@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.collect;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +9,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class UnionQuickFind<T>
 {
@@ -31,12 +32,14 @@ public class UnionQuickFind<T>
         return mReprLookup.get(x);
     }
 
-    public void merge(final T x, final T y)
+    public Pair<T, T> merge(final T x, final T y)
     {
         T xRepr = getRepresentative(x);
         T yRepr = getRepresentative(y);
         if(xRepr.equals(yRepr))
-            return;
+        {
+            return null;
+        }
 
         ArrayList<T> xSet = mSetLookup.get(xRepr);
         ArrayList<T> ySet = mSetLookup.get(yRepr);
@@ -46,19 +49,30 @@ public class UnionQuickFind<T>
             mSetLookup.remove(yRepr);
             for(T el : ySet)
                 mReprLookup.put(el, xRepr);
+
+            return Pair.of(yRepr, xRepr);
         }
-        else
+
+        ySet.addAll(xSet);
+        mSetLookup.remove(xRepr);
+        for(T el : xSet)
         {
-            ySet.addAll(xSet);
-            mSetLookup.remove(xRepr);
-            for(T el : xSet)
-                mReprLookup.put(el, yRepr);
+            mReprLookup.put(el, yRepr);
         }
+
+        return Pair.of(xRepr, yRepr);
     }
 
-    public Collection<T> getSet(final T x)
+    public Collection<T> removeSet(final T x)
     {
-        return Collections.unmodifiableList(mSetLookup.get(getRepresentative(x)));
+        T repr = getRepresentative(x);
+        Collection<T> elements = mSetLookup.remove(repr);
+        for(T el : elements)
+        {
+            mReprLookup.remove(el);
+        }
+
+        return elements;
     }
 
     public Collection<Set<T>> getPartitions()

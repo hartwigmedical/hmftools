@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -64,22 +65,27 @@ public interface DuplicateGroupCollapser
         return acc;
     };
 
-    static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
+    static FragmentCoordReads getFragmentCoordReads(final Stream<DuplicateGroup> collapsedGroups)
     {
-        List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
-        List<ReadInfo> singleReads = Lists.newArrayList();
-        for(DuplicateGroup collapsedGroup : collapsedGroups)
+        final List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
+        final List<ReadInfo> singleReads = Lists.newArrayList();
+        collapsedGroups.forEach(collapsedGroup ->
         {
             if(collapsedGroup.readCount() == 1)
             {
                 singleReads.add(new ReadInfo(collapsedGroup.reads().get(0), collapsedGroup.fragmentCoordinates()));
-                continue;
+                return;
             }
 
             duplicateGroups.add(collapsedGroup);
-        }
+        });
 
         return new FragmentCoordReads(duplicateGroups, singleReads);
+    }
+
+    static FragmentCoordReads getFragmentCoordReads(final Collection<DuplicateGroup> collapsedGroups)
+    {
+        return getFragmentCoordReads(collapsedGroups.stream());
     }
 
     private static String collapseToFivePrimeKey(final FragmentCoords fragmentCoords)
@@ -124,9 +130,6 @@ public interface DuplicateGroupCollapser
 
     class UltimaCollapser
     {
-        private static final Comparator<Map.Entry<Integer, DuplicateGroup>> FIVE_PRIME_GROUP_ENTRY_COMPARATOR =
-                Comparator.comparingInt((Map.Entry<Integer, DuplicateGroup> x) -> x.getValue().readCount()).reversed();
-
         private final Map<String, TreeMap<Integer, DuplicateGroup>> mFivePrimeGroups;
 
         public UltimaCollapser()
