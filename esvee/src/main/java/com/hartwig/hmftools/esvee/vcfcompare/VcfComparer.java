@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.TRUTHSET_FILE_ID;
+import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.registerConfig;
 import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.EXACT;
 import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.NONE;
 import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.determineMatchType;
@@ -65,12 +67,13 @@ public class VcfComparer
             List<Breakend> newFilteredBreakends = newFilteredVariants.getChromosomeBreakends(chromosome);
 
             // first exact only from the main lists
+            // boolean noFiltersOnTruthset = mConfig.OldVcf.contains(TRUTHSET_FILE_ID);
             findBreakendMatches(oldBreakends, newBreakends, true);
 
             // then inexact from the main list
             findBreakendMatches(oldBreakends, newBreakends, false);
 
-            findBreakendMatches(oldBreakends, newFilteredBreakends, false);
+            findBreakendMatches(oldBreakends, newFilteredBreakends, true);
 
             findBreakendMatches(newBreakends, oldFilteredBreakends, false);
 
@@ -226,6 +229,16 @@ public class VcfComparer
     {
         if(diffs.isEmpty() && coordMatchType == EXACT && !mConfig.WriteMatches)
             return;
+
+        // ignore non-passing matches
+        if(oldVariant != null && newVariant != null && oldVariant.isFiltered() && newVariant.isFiltered())
+        {
+            return;
+        }
+        else if((oldVariant != null && oldVariant.isFiltered()) || (newVariant != null && newVariant.isFiltered()))
+        {
+            return;
+        }
 
         if(oldVariant != null)
         {

@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.esvee.caller.VcfWriter.UNFILTERED_VCF_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
@@ -36,6 +38,8 @@ public class CompareConfig
     private static final String WRITE_MATCHES = "write_matches";
 
     private static final String RUN_LINE_ROUTINE = "compare_line";
+
+    protected static final String TRUTHSET_FILE_ID = "truth";
 
     public CompareConfig(final ConfigBuilder configBuilder)
     {

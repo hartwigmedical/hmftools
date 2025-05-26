@@ -176,6 +176,10 @@ public class Alignment
                     .map(x -> AlignData.from(x, mConfig.RefGenVersion))
                     .filter(x -> x != null).collect(Collectors.toList());
 
+            // set the orientation-adjusted sequence coordinates - done here since used in requery logic
+            String fullSequence = assemblyAlignment.fullSequence();
+            alignments.forEach(x -> x.setFullSequenceData(fullSequence, assemblyAlignment.fullSequenceLength()));
+
             List<AlignData> requeriedAlignments = Lists.newArrayList();
 
             alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
@@ -242,7 +246,7 @@ public class Alignment
 
             int softClipSeqIndexStart;
 
-            if(isLeftClip)
+            if(isLeftClip == alignment.orientation().isForward())
                 softClipSeqIndexStart = max(alignment.sequenceStart() - softClipLength, 0);
             else
                 softClipSeqIndexStart = alignment.sequenceEnd() + 1;
