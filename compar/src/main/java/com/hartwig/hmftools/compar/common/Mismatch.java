@@ -11,22 +11,8 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.compar.ComparableItem;
 
-public class Mismatch
+public record Mismatch(ComparableItem RefItem, ComparableItem NewItem, MismatchType MismatchType, List<String> DiffValues)
 {
-    public final ComparableItem RefItem;
-    public final ComparableItem NewItem;
-    public final MismatchType MismatchType;
-    public final List<String> DiffValues; // list of the form: field(refValue/otherValue)
-
-    public Mismatch(
-            final ComparableItem refItem, final ComparableItem newItem, final MismatchType mismatchType, final List<String> diffValues)
-    {
-        RefItem = refItem;
-        NewItem = newItem;
-        MismatchType = mismatchType;
-        DiffValues = diffValues;
-    }
-
     public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
