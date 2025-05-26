@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
-import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.common.CommonUtils.countsAsCalled;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
@@ -30,7 +29,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -187,7 +185,6 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(unfilteredVariant != null)
                     {
-                        unfilteredVariant.setComparisonCoordinates(refVariant.Chromosome, refVariant.Position);
                         matchedVariant = unfilteredVariant;
                     }
                 }
@@ -223,7 +220,6 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(unfilteredVariant != null)
                 {
-                    unfilteredVariant.setComparisonCoordinates(newVariant.Chromosome, newVariant.Position);
                     mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches, usesNonPurpleVcfs));
                 }
                 else
@@ -261,7 +257,8 @@ public class SomaticVariantComparer implements ItemComparer
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
-                    AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId)), true);
+                    AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId)), true, testVariant.Chromosome,
+                    testVariant.Position);
         }
 
         return null;
@@ -333,10 +330,7 @@ public class SomaticVariantComparer implements ItemComparer
 
         for(Record record : results)
         {
-            final SomaticVariantData variant = SomaticVariantData.fromRecord(record);
-            BasePosition comparisonPosition = determineComparisonGenomePosition(
-                    variant.Chromosome, variant.Position, sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-            variant.setComparisonCoordinates(comparisonPosition.Chromosome, comparisonPosition.Position);
+            final SomaticVariantData variant = SomaticVariantData.fromRecord(record, sourceName, mConfig);
             variants.add(variant);
         }
 
@@ -372,14 +366,10 @@ public class SomaticVariantComparer implements ItemComparer
             if(variantContext.isFiltered())
                 continue;
 
-            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId, false);
+            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId, false, fileSources.Source, mConfig);
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
-
-            BasePosition comparisonPosition = determineComparisonGenomePosition(
-                    variant.Chromosome, variant.Position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-            variant.setComparisonCoordinates(comparisonPosition.Chromosome, comparisonPosition.Position);
 
             variants.add(variant);
         }

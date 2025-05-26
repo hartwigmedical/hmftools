@@ -158,7 +158,7 @@ public class SomaticVariantDataTest
                 Hotspot.HOTSPOT, VariantTier.HOTSPOT, false, "missense_variant", "MISSENSE",
                 "c.1799T>A", "p.Val600Glu", null, false,
                 275, 0., Set.of("PASS"), 1.1, 0.45,
-                new AllelicDepth(116, 21), false);
+                new AllelicDepth(116, 21), false, "7", 140453136);
     }
 
     private static SomaticVariantData createAlternateVictim()
@@ -167,6 +167,6 @@ public class SomaticVariantDataTest
                 Hotspot.NEAR_HOTSPOT, VariantTier.PANEL, true, "synonymous_variant", "SYNONYMOUS",
                 "c.1800T>A", "p.Val601Glu", "OTHER_EFFECT", true,
                 512, 1., Set.of("PON"), 3.6, 1.1,
-                new AllelicDepth(312, 50), false);
+                new AllelicDepth(312, 50), false, "8", 10000);
     }
 }
