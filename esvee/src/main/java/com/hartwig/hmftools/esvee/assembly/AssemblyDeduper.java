@@ -11,6 +11,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public class AssemblyDeduper
@@ -78,7 +79,12 @@ public class AssemblyDeduper
         if(!SequenceCompare.matchedAssemblySequences(first, second))
             return false;
 
-        // check that one assembly doesn't support the second one existing if sufficient far apart
+        // despite a sequence match, if an indel read supports a soft-clip junction without offering inferred support, do no dedup
+
+        if(first.indel() == second.indel()) // one junction must be indel-based and the other not
+            return true;
+
+        // and sufficiently far apart
         int junctionDistance = abs(first.junction().Position - second.junction().Position);
 
         if(junctionDistance <= ASSEMBLY_DEDUP_JITTER_MAX_DIST)
@@ -87,20 +93,26 @@ public class AssemblyDeduper
         IndelCoords firstIndelCoords = first.indelCoords();
         IndelCoords secondIndelCoords = second.indelCoords();
 
-        for(SupportRead firstRead : first.support())
+        if(secondIndelCoords != null)
         {
-            if(!firstRead.type().isSplitSupport())
-                continue;
+            for(SupportRead firstRead : first.support())
+            {
+                if(firstRead.type() != SupportType.JUNCTION)
+                    continue;
 
-            if(secondIndelCoords != null && firstRead.indelCoords() != null && firstRead.indelCoords().matches(secondIndelCoords))
-                return false;
+                if(firstRead.indelCoords() != null && firstRead.indelCoords().matches(secondIndelCoords))
+                    return false;
+            }
+        }
 
+        if(firstIndelCoords != null)
+        {
             for(SupportRead secondRead : second.support())
             {
-                if(secondRead.cachedRead() == firstRead.cachedRead())
-                    return false;
+                if(secondRead.type() != SupportType.JUNCTION)
+                    continue;
 
-                if(firstIndelCoords != null && secondRead.indelCoords() != null &&secondRead.indelCoords().matches(firstIndelCoords))
+                if(secondRead.indelCoords() != null && secondRead.indelCoords().matches(firstIndelCoords))
                     return false;
             }
         }
