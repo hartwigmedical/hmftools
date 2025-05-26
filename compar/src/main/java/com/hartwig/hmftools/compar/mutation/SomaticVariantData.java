@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser
 import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
@@ -40,6 +41,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -47,6 +49,7 @@ import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -85,9 +88,8 @@ public class SomaticVariantData implements ComparableItem
     public final double PurityAdjustedVaf;
     public final AllelicDepth TumorDepth;
     public final boolean IsFromUnfilteredVcf;
-
-    public String mComparisonChromosome;
-    public int mComparisonPosition;
+    public final String mComparisonChromosome;
+    public final int mComparisonPosition;
 
     protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
     protected static final String FLD_LPS = "HasLPS";
@@ -128,19 +130,6 @@ public class SomaticVariantData implements ComparableItem
         IsFromUnfilteredVcf = isFromUnfilteredVcf;
         mComparisonChromosome = comparisonChromosome;
         mComparisonPosition = comparisonPosition;
-    }
-
-    public SomaticVariantData(
-            final String chromosome, final int position, final String ref, final String alt, final VariantType type,
-            final String gene, final boolean reported, final Hotspot hotspotStatus, final VariantTier tier, final boolean biallelic,
-            final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
-            final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
-            final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
-            final AllelicDepth tumorDepth, final boolean isFromUnfilteredVcf)
-    {
-        this(chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier, biallelic, canonicalEffect, canonicalCodingEffect,
-                canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects, hasLPS, qual, subclonalLikelihood, filters,
-                variantCopyNumber, purityAdjustedVaf, tumorDepth, isFromUnfilteredVcf, chromosome, position);
     }
 
     @Override
@@ -211,12 +200,6 @@ public class SomaticVariantData implements ComparableItem
 
     public String comparisonChromosome() { return mComparisonChromosome; }
     public int comparisonPosition() { return mComparisonPosition; }
-
-    public void setComparisonCoordinates(final String chromosome, final int position)
-    {
-        mComparisonChromosome = chromosome;
-        mComparisonPosition = position;
-    }
 
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
@@ -291,7 +274,7 @@ public class SomaticVariantData implements ComparableItem
         return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf && !nonPurpleVcfs;
     }
 
-    public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile)
+    public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile, String sourceName, ComparConfig config)
     {
         int position = context.getStart();
         String chromosome = context.getContig();
@@ -303,6 +286,9 @@ public class SomaticVariantData implements ComparableItem
             variantImpact = VariantImpactSerialiser.fromVariantContext(context);
         else
             variantImpact = fromSnpEffAttributes(context);
+
+        BasePosition comparisonPosition = determineComparisonGenomePosition(
+                chromosome, position, sourceName, config.RequiresLiftover, config.LiftoverCache);
 
         return new SomaticVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
@@ -323,10 +309,13 @@ public class SomaticVariantData implements ComparableItem
                 context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0),
                 context.getAttributeAsDouble(PURPLE_AF, 0),
                 AllelicDepth.fromGenotype(context.getGenotype(sampleId)),
-                fromUnfilteredFile);
+                fromUnfilteredFile,
+                comparisonPosition.Chromosome,
+                comparisonPosition.Position
+        );
     }
 
-    public static SomaticVariantData fromRecord(final Record record)
+    public static SomaticVariantData fromRecord(final Record record, final String sourceName, final ComparConfig config)
     {
         Set<String> filters = Arrays.stream(record.getValue(SOMATICVARIANT.FILTER).split(";", -1)).collect(Collectors.toSet());
         String localPhaseSets = record.get(SOMATICVARIANT.LOCALPHASESET);
@@ -334,9 +323,15 @@ public class SomaticVariantData implements ComparableItem
         final AllelicDepth tumorDepth =
                 new AllelicDepth(record.getValue(SOMATICVARIANT.TOTALREADCOUNT), record.getValue(SOMATICVARIANT.ALLELEREADCOUNT));
 
+        var chromosome = record.getValue(SOMATICVARIANT.CHROMOSOME);
+        var position = record.getValue(SOMATICVARIANT.POSITION);
+
+        BasePosition comparisonPosition = determineComparisonGenomePosition(
+                chromosome, position, sourceName, config.RequiresLiftover, config.LiftoverCache);
+
         return new SomaticVariantData(
-                record.getValue(Tables.SOMATICVARIANT.CHROMOSOME),
-                record.getValue(Tables.SOMATICVARIANT.POSITION),
+                chromosome,
+                position,
                 record.getValue(Tables.SOMATICVARIANT.REF),
                 record.getValue(Tables.SOMATICVARIANT.ALT),
                 VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)),
@@ -356,7 +351,9 @@ public class SomaticVariantData implements ComparableItem
                 record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER),
                 record.getValue(SOMATICVARIANT.ADJUSTEDVAF),
                 tumorDepth,
-                false);
+                false,
+                comparisonPosition.Chromosome,
+                comparisonPosition.Position);
     }
 
     private static final String SNPEFF_WORST = "SEW";
