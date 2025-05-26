@@ -262,12 +262,12 @@ public class ReadCache implements IReadCache
 
         if(remainder == 0)
         {
-            groupPosEnd = mGroupSize * (int)floor(fragmentPosition / mGroupSize);
+            groupPosEnd = mGroupSize * (fragmentPosition / mGroupSize);
             groupPosStart = groupPosEnd - mGroupSize + 1;
         }
         else
         {
-            groupPosStart = mGroupSize * (int)floor(fragmentPosition / mGroupSize) + 1;
+            groupPosStart = mGroupSize * (int)floor(1.0f * fragmentPosition / mGroupSize) + 1;
             groupPosEnd = groupPosStart + mGroupSize - 1;
         }
 

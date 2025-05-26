@@ -14,12 +14,18 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.HashMultiset;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
+import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import org.junit.jupiter.api.Test;
 
@@ -476,6 +482,49 @@ public class ReadCacheTest
         assertEquals(5, fragmentCoordsReads.DuplicateGroups.get(0).readCount());
         assertEquals(1, fragmentCoordsReads.SingleReads.size());
         assertEquals(6, fragmentCoordsReads.totalReadCount());
+    }
+
+    @Test
+    public void testFragmentCoordsAreOnlyPoppedOnce()
+    {
+        String readCigar = "12S80M51S";
+        String mateCigar = "143M";
+
+        SAMRecord read1 = createSamRecord("READ_001", CHR_1, 1, "A".repeat(143), readCigar,  CHR_1, 1, false, false, null, true, mateCigar);
+        SAMRecord mate1 = createSamRecord("READ_001", CHR_1, 1, "A".repeat(143), mateCigar, CHR_1, 1, true, false, null, false, readCigar);
+
+        SAMRecord read2 = createSamRecord("READ_002", CHR_1, 1, "A".repeat(143), readCigar, CHR_1, 1, false, false, null, true, mateCigar);
+        SAMRecord mate2 = createSamRecord("READ_002", CHR_1, 1, "A".repeat(143), mateCigar, CHR_1, 1, true, false, null, false, readCigar);
+
+        FragmentCoords coords1 = FragmentCoords.fromRead(read1, false);
+        FragmentCoords mateCoords1 = FragmentCoords.fromRead(mate1, false);
+        FragmentCoords coords2 = FragmentCoords.fromRead(read2, false);
+        FragmentCoords mateCoords2 = FragmentCoords.fromRead(mate2, false);
+
+        assertEquals(coords1, coords2);
+        assertEquals(mateCoords1, mateCoords2);
+        assertNotEquals(coords1, mateCoords1);
+
+        ReadCache readCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA);
+        readCache.processRead(read1);
+        readCache.processRead(mate1);
+        readCache.processRead(read2);
+        readCache.processRead(mate2);
+
+        FragmentCoordReads fragmentCoordReads =  readCache.evictAll();
+
+        assertEquals(2, fragmentCoordReads.DuplicateGroups.size());
+        assertEquals(0, fragmentCoordReads.SingleReads.size());
+
+        HashMultiset<HashMultiset<String>> expectedDuplicatedGroups = HashMultiset.create(List.of(
+                HashMultiset.create(List.of(read1.getSAMString(), read2.getSAMString())),
+                HashMultiset.create(List.of(mate1.getSAMString(), mate2.getSAMString()))));
+
+        HashMultiset<HashMultiset<String>> actualDuplicatedGroups = fragmentCoordReads.DuplicateGroups.stream()
+                .map(g -> g.reads().stream().map(SAMRecord::getSAMString).collect(Collectors.toCollection(HashMultiset::create)))
+                        .collect(Collectors.toCollection(HashMultiset::create));
+
+        assertEquals(expectedDuplicatedGroups, actualDuplicatedGroups);
     }
 
     private static SAMRecord createRecord(final String chromosome, final int readStart, boolean isReversed)
