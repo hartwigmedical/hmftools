@@ -70,6 +70,10 @@ public class ReadFilters
         if(record.getSupplementaryAlignmentFlag() || record.getCigar().getCigarElements().size() > 1)
             return false;
 
+        // invalid cigar
+        if(record.getCigar().getCigarElements().stream().noneMatch(x -> x.getOperator() == M))
+            return false;
+
         if(record.getReadUnmappedFlag() || mateUnmapped(record))
             return false;
 

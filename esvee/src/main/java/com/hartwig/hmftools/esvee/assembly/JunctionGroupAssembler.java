@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
 
+import static htsjdk.samtools.CigarOperator.M;
+
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -232,6 +234,10 @@ public class JunctionGroupAssembler extends ThreadTask
 
         // temporary checking of repeated (ie identical) supplementaries from SvPrep
         if(ignoreIdenticalSupplementary(record))
+            return;
+
+        // old samples can be have invalid CIGARs
+        if(record.getCigar().getCigarElements().stream().noneMatch(x -> x.getOperator() == M))
             return;
 
         if(ReadFilters.filterLowQualRead(record))

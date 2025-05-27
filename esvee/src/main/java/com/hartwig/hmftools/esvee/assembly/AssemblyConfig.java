@@ -128,7 +128,6 @@ public class AssemblyConfig
 
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
     private static final String DISC_RATE_INCREMENT = "disc_rate_increment";
-    private static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
     private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
@@ -340,7 +339,6 @@ public class AssemblyConfig
 
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
-        configBuilder.addFlag(LOG_PHASE_GROUP_LINKS, "Log assembly links to build phase groups");
 
         configBuilder.addInteger(
                 ASSEMBLY_REF_BASE_WRITE_MAX, "Cap assembly ref bases in TSV and VCF, use zero to write all",

@@ -221,7 +221,7 @@ public final class ReadUtils
             return false; // insufficient for junction support anyway
 
         if(refLength > MIN_VARIANT_LENGTH / 2)
-            return false; // should have soft-clipped
+            return false; // should have been soft-clipped
 
         byte[] refBases = refGenome.getBases(read.chromosome(), posStart, posEnd);
 
@@ -233,6 +233,9 @@ public final class ReadUtils
 
         for(int i = 0; i < refLength; ++i)
         {
+            if(readIndexStart + i >= read.basesLength() || i >= refBases.length)
+                return false;
+
             if(read.getBases()[readIndexStart + i] != refBases[i])
                 ++mismatches;
 
