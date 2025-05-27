@@ -70,43 +70,11 @@ public class SomaticVariantComparer implements ItemComparer
         // use a custom method optimised for large numbers of variants
         final MatchLevel matchLevel = mConfig.Categories.get(category());
 
-        final List<SomaticVariantData> allRefVariants = Lists.newArrayList();
-        final List<SomaticVariantData> allNewVariants = Lists.newArrayList();
+        final List<SomaticVariantData> allRefVariants = loadVariants(sampleId, mConfig.SourceNames.get(0));
+        final List<SomaticVariantData> allNewVariants = loadVariants(sampleId, mConfig.SourceNames.get(1));
 
-        boolean hasRefItems = false;
-        boolean hasNewItems = false;
-
-        for(int i = 0; i <= 1; ++i)
-        {
-            final List<SomaticVariantData> variants = (i == 0) ? allRefVariants : allNewVariants;
-
-            final String sourceName = mConfig.SourceNames.get(i);
-
-            String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
-            String sourceGermlineSampleId = mConfig.sourceGermlineSampleId(sourceName, sampleId);
-
-            if(!mConfig.DbConnections.isEmpty())
-            {
-                variants.addAll(loadVariants(sourceSampleId, mConfig.DbConnections.get(sourceName), sourceName));
-            }
-            else
-            {
-                FileSources fileSources = mConfig.FileSources.get(sourceName);
-                List<SomaticVariantData> fileVariants =
-                        loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId, sourceGermlineSampleId));
-
-                if(fileVariants == null)
-                    continue;
-
-                variants.addAll(fileVariants);
-            }
-
-            if(sourceName.equals(REF_SOURCE))
-                hasRefItems = true;
-            else
-                hasNewItems = true;
-        }
-
+        boolean hasRefItems = allRefVariants != null;
+        boolean hasNewItems = allNewVariants != null;
         final List<String> emptyDiffs = Lists.newArrayList();
         
         if(!hasRefItems || !hasNewItems)
@@ -304,6 +272,22 @@ public class SomaticVariantComparer implements ItemComparer
         fieldNames.add(FLD_SUBCLONAL_LIKELIHOOD);
         fieldNames.add(FLD_LPS);
         return fieldNames;
+    }
+
+    private List<SomaticVariantData> loadVariants(final String sampleId, final String sourceName)
+    {
+        String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
+
+        if(!mConfig.DbConnections.isEmpty())
+        {
+            return loadVariants(sourceSampleId, mConfig.DbConnections.get(sourceName), sourceName);
+        }
+        else
+        {
+            String sourceGermlineSampleId = mConfig.sourceGermlineSampleId(sourceName, sampleId);
+            FileSources fileSources = mConfig.FileSources.get(sourceName);
+            return loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId, sourceGermlineSampleId));
+        }
     }
 
     @Override
