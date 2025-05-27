@@ -88,6 +88,7 @@ public class SomaticVariantData implements ComparableItem
     public final double PurityAdjustedVaf;
     public final AllelicDepth TumorDepth;
     public final boolean IsFromUnfilteredVcf;
+    public final boolean HasPurpleAnnotation;
     public final String mComparisonChromosome;
     public final int mComparisonPosition;
 
@@ -102,8 +103,8 @@ public class SomaticVariantData implements ComparableItem
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
             final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
-            final AllelicDepth tumorDepth, final boolean isFromUnfilteredVcf, final String comparisonChromosome,
-            final int comparisonPosition)
+            final AllelicDepth tumorDepth, final boolean isFromUnfilteredVcf, final boolean hasPurpleAnnotation,
+            final String comparisonChromosome, final int comparisonPosition)
     {
         Chromosome = chromosome;
         Position = position;
@@ -128,6 +129,7 @@ public class SomaticVariantData implements ComparableItem
         PurityAdjustedVaf = purityAdjustedVaf;
         TumorDepth = tumorDepth;
         IsFromUnfilteredVcf = isFromUnfilteredVcf;
+        HasPurpleAnnotation = hasPurpleAnnotation;
         mComparisonChromosome = comparisonChromosome;
         mComparisonPosition = comparisonPosition;
     }
@@ -205,18 +207,12 @@ public class SomaticVariantData implements ComparableItem
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
             final boolean includeMatches)
     {
-        return findMismatch(other, matchLevel, thresholds, includeMatches, false);
-    }
-
-    protected Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches, final boolean nonPurpleVcfs)
-    {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
-        final List<String> diffs = findDiffs(otherVar, thresholds, nonPurpleVcfs);
+        final List<String> diffs = findDiffs(otherVar, thresholds);
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
-    private List<String> findDiffs(final SomaticVariantData otherVar, final DiffThresholds thresholds, final boolean nonPurpleVcfs)
+    private List<String> findDiffs(final SomaticVariantData otherVar, final DiffThresholds thresholds)
     {
         final List<String> diffs = Lists.newArrayList();
 
@@ -238,7 +234,7 @@ public class SomaticVariantData implements ComparableItem
             checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
         }
 
-        if(canComparePurpleFields(otherVar, nonPurpleVcfs))
+        if(canComparePurpleFields(otherVar))
         {
             checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
             checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
@@ -269,13 +265,13 @@ public class SomaticVariantData implements ComparableItem
         return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf;
     }
 
-    private boolean canComparePurpleFields(final SomaticVariantData otherVar, final boolean nonPurpleVcfs)
+    private boolean canComparePurpleFields(final SomaticVariantData otherVar)
     {
-        return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf && !nonPurpleVcfs;
+        return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf && HasPurpleAnnotation && otherVar.HasPurpleAnnotation;
     }
 
     public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
-            String sourceName, ComparConfig config)
+            final boolean hasPurpleAnnotation, String sourceName, ComparConfig config)
     {
         int position = context.getStart();
         String chromosome = context.getContig();
@@ -311,6 +307,7 @@ public class SomaticVariantData implements ComparableItem
                 context.getAttributeAsDouble(PURPLE_AF, 0),
                 AllelicDepth.fromGenotype(context.getGenotype(sampleId)),
                 fromUnfilteredFile,
+                hasPurpleAnnotation,
                 comparisonPosition.Chromosome,
                 comparisonPosition.Position
         );
@@ -353,6 +350,7 @@ public class SomaticVariantData implements ComparableItem
                 record.getValue(SOMATICVARIANT.ADJUSTEDVAF),
                 tumorDepth,
                 false,
+                true,
                 comparisonPosition.Chromosome,
                 comparisonPosition.Position);
     }
@@ -412,63 +410,71 @@ public class SomaticVariantData implements ComparableItem
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, mComparisonChromosome,
-                mComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
     }
 
     public SomaticVariantData withPosition(int Position)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, mComparisonChromosome,
-                mComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
     }
 
     public SomaticVariantData withRef(String Ref)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, mComparisonChromosome,
-                mComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
     }
 
     public SomaticVariantData withAlt(String Alt)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, mComparisonChromosome,
-                mComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
     }
 
     public SomaticVariantData withType(VariantType Type)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, mComparisonChromosome,
-                mComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
     }
 
     public SomaticVariantData withIsFromUnfilteredVcf(boolean IsFromUnfilteredVcf)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, mComparisonChromosome,
-                mComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
+    }
+
+    public SomaticVariantData withHasPurpleAnnotation(boolean HasPurpleAnnotation)
+    {
+        return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
+                CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
     }
 
     public SomaticVariantData withComparisonChromosome(String ComparisonChromosome)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, ComparisonChromosome,
-                mComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                ComparisonChromosome, mComparisonPosition);
     }
 
     public SomaticVariantData withComparisonPosition(int ComparisonPosition)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
-                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, mComparisonChromosome,
-                ComparisonPosition);
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, ComparisonPosition);
     }
 }

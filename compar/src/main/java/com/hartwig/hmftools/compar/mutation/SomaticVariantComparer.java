@@ -73,7 +73,6 @@ public class SomaticVariantComparer implements ItemComparer
         final List<SomaticVariantData> allRefVariants = Lists.newArrayList();
         final List<SomaticVariantData> allNewVariants = Lists.newArrayList();
 
-        boolean usesNonPurpleVcfs = false;
         boolean hasRefItems = false;
         boolean hasNewItems = false;
 
@@ -100,7 +99,6 @@ public class SomaticVariantComparer implements ItemComparer
                     continue;
 
                 variants.addAll(fileVariants);
-                usesNonPurpleVcfs |= !fileSources.SomaticVcf.isEmpty();
             }
 
             if(sourceName.equals(REF_SOURCE))
@@ -195,8 +193,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(includeMismatchWithVariant(refVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
-                        Mismatch mismatch =
-                                refVariant.findMismatch(matchedVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches, usesNonPurpleVcfs);
+                        Mismatch mismatch = refVariant.findMismatch(matchedVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -220,7 +217,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(unfilteredVariant != null)
                 {
-                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches, usesNonPurpleVcfs));
+                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches));
                 }
                 else
                 {
@@ -257,8 +254,8 @@ public class SomaticVariantComparer implements ItemComparer
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
-                    AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId)), true, testVariant.Chromosome,
-                    testVariant.Position);
+                    AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId)), true, false,
+                    testVariant.Chromosome, testVariant.Position);
         }
 
         return null;
@@ -350,8 +347,8 @@ public class SomaticVariantComparer implements ItemComparer
         final List<SomaticVariantData> variants = Lists.newArrayList();
 
         // use the Purple suffix if not specified
-        String vcfFile = !fileSources.SomaticVcf.isEmpty() ?
-                fileSources.SomaticVcf : PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
+        boolean usePurpleVcf = fileSources.SomaticVcf.isEmpty();
+        String vcfFile = usePurpleVcf ? PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId) : fileSources.SomaticVcf;
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -366,7 +363,7 @@ public class SomaticVariantComparer implements ItemComparer
             if(variantContext.isFiltered())
                 continue;
 
-            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId, false, fileSources.Source, mConfig);
+            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId, false, usePurpleVcf, fileSources.Source, mConfig);
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
