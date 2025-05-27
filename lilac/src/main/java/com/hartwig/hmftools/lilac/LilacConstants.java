@@ -43,7 +43,6 @@ public class LilacConstants
     public static final double FREQUENCY_SCORE_PENALTY = 0.0018;
     public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0036;
     public static final double RECOVERY_SCORE_PENALTY = 0;
-    public static final double WILDCARD_SCORE_PENALTY = 0.000015;
 
     // QC thresholds
     public static int FAIL_LOW_COVERAGE_THRESHOLD = 200;
