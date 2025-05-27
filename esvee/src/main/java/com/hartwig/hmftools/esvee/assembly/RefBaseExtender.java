@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -488,15 +489,13 @@ public class RefBaseExtender
                 if(refSideSoftClip.matchesOriginal() || refSideSoftClip.hasProximateMatch(originalAssembly.refBasePosition()))
                     continue;
 
-                int refBaseDifference = refSideSoftClip.Position - originalAssembly.refBasePosition();
+                int newRefBaseLength = abs(refSideSoftClip.Position - originalAssembly.junction().Position) + 1;
+                int originRefBaseLength = originalAssembly.refBaseLength();
 
-                if(originalAssembly.junction().isReverse())
-                    refBaseDifference *= -1;
+                int refBaseDifference = originRefBaseLength - newRefBaseLength;
 
-                if(refBaseDifference <= 0)
+                if(newRefBaseLength <= 0 || refBaseDifference <= 0)
                     break;
-
-                int newRefBaseLength = originalAssembly.refBaseLength() - refBaseDifference;
 
                 List<SupportRead> newSupport = initialSupport.stream().filter(x -> !excludedReads.contains(x.id())).collect(Collectors.toList());
 
