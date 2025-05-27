@@ -274,7 +274,8 @@ public class SomaticVariantData implements ComparableItem
         return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf && !nonPurpleVcfs;
     }
 
-    public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile, String sourceName, ComparConfig config)
+    public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
+            String sourceName, ComparConfig config)
     {
         int position = context.getStart();
         String chromosome = context.getContig();
