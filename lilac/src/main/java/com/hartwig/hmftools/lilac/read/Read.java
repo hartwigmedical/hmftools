@@ -129,6 +129,8 @@ public class Read
         int recordStart = alignmentStart - softClipStart;
         int recordEnd = alignmentEnd + softClipEnd;
 
+        int lowQualTrimmedBases = findLowQualTrimmedBases(record);
+
         int positionStart = max(codingRegion.start(), alignmentStart);
         int positionEnd = min(codingRegion.end(), alignmentEnd);
 
@@ -153,6 +155,15 @@ public class Read
 
         int readIndexStart = record.getReadPositionAtReferencePosition(positionStart, true) - 1;
         int readIndexEnd = record.getReadPositionAtReferencePosition(positionEnd, true) - 1;
+
+        if(lowQualTrimmedBases > 0)
+        {
+            if(record.getReadNegativeStrandFlag())
+                readIndexStart += lowQualTrimmedBases;
+            else
+                readIndexEnd -= lowQualTrimmedBases;
+        }
+
         positionStart = record.getReferencePositionAtReadPosition(readIndexStart + 1);
         positionEnd = record.getReferencePositionAtReadPosition(readIndexEnd + 1);
 
@@ -187,8 +198,6 @@ public class Read
         int softClippedEnd = max(0, positionEnd - alignmentEnd);
 
         List<Indel> indels = includeIndels ? indels(positionStart, positionEnd, record) : Lists.newArrayList();
-
-        int lowQualTrimmedBases = 0; // findLowQualTrimmedBases(record);
 
         return new Read(
                 record.getReadName(), softClippedStart, softClippedEnd, indels,
@@ -259,7 +268,10 @@ public class Read
                 --baseIndex;
         }
 
-        return lastLowestScoreIndex;
+        if(lastLowestScoreIndex < 0)
+            return 0;
+
+        return fromStart ? lastLowestScoreIndex + 1 : record.getReadBases().length - lastLowestScoreIndex;
     }
 
     protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;

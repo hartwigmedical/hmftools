@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.lilac.read;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
+import static com.hartwig.hmftools.lilac.LilacConstants.MAX_LOW_BASE_PERC;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
+import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
@@ -129,6 +132,9 @@ public class BamRecordReader implements BamReader
 
         for(SAMRecord record : records)
         {
+            if(filterLowQualRead(record))
+                continue;
+
             List<BaseRegion> codingExonOverlaps = geneCodingRegions.CodingRegions.stream()
                     .filter(x -> positionsOverlap(x.start(), x.end(), record.getAlignmentStart(), record.getAlignmentEnd()))
                     .collect(Collectors.toList());
@@ -160,13 +166,41 @@ public class BamRecordReader implements BamReader
         return readFragments;
     }
 
+    private static boolean filterLowQualRead(final SAMRecord read)
+    {
+        // filter any read with 50% + bases classified as low qual or any invalid base
+        int baseLength = read.getReadBases().length;
+        int qualCountThreshold = (int)floor(baseLength * MAX_LOW_BASE_PERC) + 1;
+        int lowQualCount = 0;
+
+        for(int i = 0; i < baseLength; ++i)
+        {
+            if(belowMinQual(read.getBaseQualities()[i]))
+            {
+                ++lowQualCount;
+
+                if(lowQualCount >= qualCountThreshold)
+                    return true;
+            }
+            else
+            {
+                // exit early if majority will be high-qual
+                int highQualCount = i + 1 - lowQualCount;
+                if(highQualCount >= qualCountThreshold)
+                    return false;
+            }
+        }
+
+        return false;
+    }
+
     private Map<String,Fragment> createFragments(final String geneName, final byte geneStrand, final List<Read> codingRecords)
     {
         Map<String,Fragment> readIdFragments = Maps.newHashMap();
 
-        for(Read codingRecord : codingRecords)
+        for(Read read : codingRecords)
         {
-            Fragment fragment = mFragmentFactory.createFragment(codingRecord, geneName, geneStrand);
+            Fragment fragment = mFragmentFactory.createFragment(read, geneName, geneStrand);
 
             if(fragment != null)
             {
@@ -182,24 +216,24 @@ public class BamRecordReader implements BamReader
                     mergeFragments(existingFragment, fragment);
                 }
 
-                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.getIndels().contains(STOP_LOSS_ON_C_INDEL))
                     addKnownIndelFragment(existingFragment);
 
                 continue;
             }
 
-            if(codingRecord.containsIndel())
+            if(read.containsIndel())
             {
-                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.getIndels().contains(STOP_LOSS_ON_C_INDEL))
                 {
-                    LL_LOGGER.trace("missing known indel fragment: {} {}", codingRecord.Id, codingRecord.readInfo());
+                    LL_LOGGER.trace("missing known indel fragment: {} {}", read.Id, read.readInfo());
                 }
 
                 // the other read belonging to this fragment won't be used
-                mDiscardIndelReadIds.add(codingRecord.Id);
+                mDiscardIndelReadIds.add(read.Id);
             }
 
-            for(Indel indel : codingRecord.getIndels())
+            for(Indel indel : read.getIndels())
             {
                 if(INDEL_PON.contains(indel))
                 {
@@ -327,14 +361,17 @@ public class BamRecordReader implements BamReader
 
     private List<Read> findVariantRecords(final SomaticVariant variant, final ChrBaseRegion codingRegion)
     {
-        final List<SAMRecord> records = mBamSlicer.slice(mSamReader, new ChrBaseRegion(variant.Chromosome, variant.Position, variant.Position));
+        List<SAMRecord> records = mBamSlicer.slice(mSamReader, new ChrBaseRegion(variant.Chromosome, variant.Position, variant.Position));
 
-        final List<Read> codingRecords = Lists.newArrayList();
+        List<Read> codingRecords = Lists.newArrayList();
 
         BaseRegion baseCodingRegion = new BaseRegion(codingRegion.start(), codingRegion.end());
 
         for(SAMRecord record : records)
         {
+            if(filterLowQualRead(record))
+                continue;
+
             if(bothEndsInRangeOfCodingTranscripts(record))
             {
                 codingRecords.add(Read.createRead(baseCodingRegion, record, true, true));

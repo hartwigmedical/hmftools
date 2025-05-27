@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.misc;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 
@@ -9,6 +10,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
@@ -26,32 +29,21 @@ public class LilacTestUtils
         Configurator.setRootLevel(Level.ERROR);
     }
 
-    public static SAMRecord buildSamRecord(int alignmentStart, String cigar, String readString, String qualities)
-    {
-        SAMRecord record = new SAMRecord(null);
-        record.setReadName("READNAME");
-        record.setAlignmentStart(alignmentStart);
-        record.setCigarString(cigar);
-        record.setReadString(readString);
-        record.setReadNegativeStrandFlag(false);
-        record.setBaseQualityString(qualities);
-        record.setMappingQuality(20);
-        record.setDuplicateReadFlag(false);
-        record.setReadUnmappedFlag(false);
-        record.setProperPairFlag(true);
-        record.setReadPairedFlag(true);
-        return record;
-    }
-
     public static HlaSequenceLoci createSequenceLoci(final HlaSequence sequences)
     {
         return HlaSequenceLoci.create(sequences.Allele, sequences.getRawSequence(), sequences.getRawSequence());
     }
 
-    public static Read createReadRecord(final String id)
+    public static final String TEST_READ_ID = "READ_ID_001";
+    public static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(151);
+    public static final String TEST_READ_CIGAR = "151M";
+
+    public static Read createReadRecord(final String readId)
     {
-        SAMRecord record = buildSamRecord(100, "151M", "", "");
-        record.setReadName(id);
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                readId, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 300,
+                false, false, null);
+
         return Read.createRead(new BaseRegion(0, 1), record, true, true);
     }
 

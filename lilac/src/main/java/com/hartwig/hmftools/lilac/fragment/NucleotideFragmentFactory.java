@@ -46,26 +46,26 @@ public class NucleotideFragmentFactory
         mReferenceData.AminoAcidSequencesWithDeletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
-    public final Fragment createFragment(final Read record, final String geneName, final byte geneStrand)
+    public final Fragment createFragment(final Read read, final String geneName, final byte geneStrand)
     {
-        if(record.ReadIndexStart < 0 || record.ReadIndexEnd < record.ReadIndexStart)
+        if(read.ReadIndexStart < 0 || read.ReadIndexEnd < read.ReadIndexStart || read.PositionEnd < read.PositionStart)
             return null;
 
         boolean reverseStrand = geneStrand == NEG_STRAND;
 
-        int codingPositionStartLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, record.PositionStart);
-        int codingPositionEndLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, record.PositionEnd);
+        int codingPositionStartLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, read.PositionStart);
+        int codingPositionEndLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, read.PositionEnd);
 
         int samCodingStartLoci = !reverseStrand ? codingPositionStartLoci : codingPositionEndLoci;
         int samCodingEndLoci = !reverseStrand ? codingPositionEndLoci : codingPositionStartLoci;
 
-        int readLength = record.ReadIndexEnd - record.ReadIndexStart + 1;
+        int readLength = read.ReadIndexEnd - read.ReadIndexStart + 1;
         final char[] codingRegionReadBases = new char[readLength];
         final byte[] codingRegionQualities = new byte[readLength];
 
-        record.populateCodingRegion(codingRegionReadBases, codingRegionQualities, reverseStrand);
+        read.populateCodingRegion(codingRegionReadBases, codingRegionQualities, reverseStrand);
 
-        if(record.containsIndel() || record.containsSoftClip())
+        if(read.containsIndel() || read.containsSoftClip())
         {
             List<Integer> aminoAcidIndices = calcAminoAcidIndices(samCodingStartLoci, samCodingEndLoci);
             int firstAAIndex = aminoAcidIndices.get(0);
@@ -76,30 +76,30 @@ public class NucleotideFragmentFactory
             if(startLoci < 0 || startLoci >= sequence.length())
             {
                 // likely due to a delete in this region
-                LL_LOGGER.trace("invalid startLoci({}) requested: read({}) gene({})", startLoci, record.Id, geneName);
+                LL_LOGGER.trace("invalid startLoci({}) requested: read({}) gene({})", startLoci, read.Id, geneName);
                 return null;
             }
             String aminoAcids = Codons.aminoAcidFromBases(sequence.substring(startLoci));
 
             if(!aminoAcids.isEmpty())
             {
-                int matchRangeAllowedStart = firstAAIndex - record.SoftClippedStart / 3 - record.maxIndelSize();
-                int matchRangeAllowedEnd = firstAAIndex + record.maxIndelSize() + record.SoftClippedEnd / 3;
+                int matchRangeAllowedStart = firstAAIndex - read.SoftClippedStart / 3 - read.maxIndelSize();
+                int matchRangeAllowedEnd = firstAAIndex + read.maxIndelSize() + read.SoftClippedEnd / 3;
 
                 Fragment matchedFragment = checkMatchedInsertDeleteSequence(
-                        record, geneName, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mInsertSuffixTrees);
+                        read, geneName, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mInsertSuffixTrees);
 
                 if(matchedFragment != null)
                     return matchedFragment;
 
                 matchedFragment = checkMatchedInsertDeleteSequence(
-                        record, geneName, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mDeleteSuffixTrees);
+                        read, geneName, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mDeleteSuffixTrees);
 
                 if(matchedFragment != null)
                     return matchedFragment;
             }
 
-            if(record.containsIndel())
+            if(read.containsIndel())
                 return null;
         }
 
@@ -118,7 +118,7 @@ public class NucleotideFragmentFactory
             qualities.add(Integer.valueOf(codingRegionQualities[i]));
         }
 
-        return new Fragment(record, geneName, Sets.newHashSet(geneName), lociRange, qualities, nucleotides);
+        return new Fragment(read, geneName, Sets.newHashSet(geneName), lociRange, qualities, nucleotides);
     }
 
     private Fragment checkMatchedInsertDeleteSequence(

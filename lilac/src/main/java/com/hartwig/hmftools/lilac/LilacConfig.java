@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MAX_REF_FRAGMENTS;
@@ -156,7 +157,11 @@ public class LilacConfig
             ReferenceBam = configBuilder.getValue(REFERENCE_BAM, "");
             TumorBam = configBuilder.getValue(TUMOR_BAM, "");
             RnaBam = configBuilder.getValue(RNA_BAM, "");
-            OutputDir = parseOutputDir(configBuilder);
+
+            if(configBuilder.hasValue(OUTPUT_DIR))
+                OutputDir = parseOutputDir(configBuilder);
+            else
+                OutputDir = pathFromFile(ReferenceBam);
         }
 
         if(configBuilder.hasValue(SOMATIC_VCF) && configBuilder.hasValue(GENE_COPY_NUMBER))

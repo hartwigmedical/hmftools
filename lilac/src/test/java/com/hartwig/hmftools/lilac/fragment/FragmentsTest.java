@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.fragment;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_MILLISECOND;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
@@ -10,7 +11,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
-import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildSamRecord;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 import static com.hartwig.hmftools.lilac.read.Read.createRead;
 
@@ -26,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.lilac.read.Read;
 
 import org.junit.Ignore;
@@ -60,7 +62,10 @@ public class FragmentsTest
         BaseRegion codingRegion = new BaseRegion(100, 1000);
 
         // firstly a record with soft-clips at both ends which will be used
-        SAMRecord record = buildSamRecord(200, "10S60M10S", TEST_READ_BASES.substring(0, 80), "");
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                TEST_READ_ID, CHR_1, 200, TEST_READ_BASES.substring(0, 80), "10S60M10S", CHR_1, 300,
+                false, false, null);
+
         record.setInferredInsertSize(200);
 
         Read read = createRead(codingRegion, record, true, true);
