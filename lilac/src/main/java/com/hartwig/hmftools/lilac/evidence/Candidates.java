@@ -22,8 +22,8 @@ public final class Candidates
     private final List<HlaSequenceLoci> mAminoAcidSequences;
 
     public Candidates(
-            LilacConfig config,
-            double minEvidence, final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
+            final LilacConfig config, double minEvidence, final List<HlaSequenceLoci> nucleotideSequences,
+            final List<HlaSequenceLoci> aminoAcidSequences)
     {
         mConfig = config;
         mMinEvidence = minEvidence;

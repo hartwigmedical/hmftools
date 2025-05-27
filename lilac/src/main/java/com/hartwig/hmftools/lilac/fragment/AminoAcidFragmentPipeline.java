@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 public class AminoAcidFragmentPipeline
 {
+    private final LilacConfig mConfig;
     private final double mMinEvidence;
     private final double mMinHighQualEvidence;
 
@@ -34,6 +35,7 @@ public class AminoAcidFragmentPipeline
 
     public AminoAcidFragmentPipeline(final LilacConfig config, final List<Fragment> referenceFragments)
     {
+        mConfig = config;
         mOriginalRefFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
@@ -105,7 +107,7 @@ public class AminoAcidFragmentPipeline
         return refAminoAcids;
     }
 
-    public List<Fragment> referencePhasingFragments(final LilacConfig config, final HlaContext context)
+    public List<Fragment> referencePhasingFragments(final HlaContext context)
     {
         // filter and enrich fragments for phasing - all per gene
 
@@ -139,7 +141,7 @@ public class AminoAcidFragmentPipeline
         NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(mMinEvidence, aminoAcidBoundaries);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
-        List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(config, spliceEnrichedNucFrags, mMinEvidence);
+        List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(mConfig, spliceEnrichedNucFrags, mMinEvidence);
 
         // cache support at each base and amino acid for later writing and recovery of low-qual support
         SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, enrichedAminoAcidFrags);
