@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
@@ -38,7 +39,7 @@ public class ReadCacheTest
     {
         ReadCache readCache = new ReadCache(100, 100, false, ILLUMINA);
 
-        SAMRecord read1 = createRecord(CHR_1, 50, false);
+        SAMRecord read1 = createRecord(CHR_1, 50);
 
         readCache.processRead(read1);
 
@@ -49,13 +50,13 @@ public class ReadCacheTest
         FragmentCoordReads fragCoordReads = readCache.popReads();
         assertNull(fragCoordReads);
 
-        SAMRecord read2a = createRecord(CHR_1, 80, false);
-        SAMRecord read2b = createRecord(CHR_1, 80, false);
+        SAMRecord read2a = createRecord(CHR_1, 80);
+        SAMRecord read2b = createRecord(CHR_1, 80);
 
         readCache.processRead(read2a);
         readCache.processRead(read2b);
 
-        SAMRecord read3 = createRecord(CHR_1, 120, false);
+        SAMRecord read3 = createRecord(CHR_1, 120);
 
         readCache.processRead(read3);
 
@@ -66,14 +67,14 @@ public class ReadCacheTest
         fragCoordReads = readCache.popReads();
         assertNull(fragCoordReads);
 
-        SAMRecord read4 = createRecord(CHR_1, 199, false);
+        SAMRecord read4 = createRecord(CHR_1, 199);
 
         readCache.processRead(read4);
 
         assertEquals(2, readCache.cachedReadGroups());
 
         // the next read triggers the first group to be processed
-        SAMRecord read5 = createRecord(CHR_1, 201, false);
+        SAMRecord read5 = createRecord(CHR_1, 201);
 
         readCache.processRead(read5);
 
@@ -88,7 +89,7 @@ public class ReadCacheTest
         assertEquals(3, readCache.cachedFragCoordGroups());
 
         // next read is on a new chromosome so clears all previous
-        SAMRecord read6 = createRecord(CHR_2, 50, false);
+        SAMRecord read6 = createRecord(CHR_2, 50);
 
         readCache.processRead(read6);
 
@@ -103,9 +104,9 @@ public class ReadCacheTest
         assertEquals(1, readCache.cachedFragCoordGroups());
 
         // some more duplicates in the next group
-        SAMRecord read7a = createRecord(CHR_1, 150, false);
-        SAMRecord read7b = createRecord(CHR_1, 150, false);
-        SAMRecord read7c = createRecord(CHR_1, 150, false);
+        SAMRecord read7a = createRecord(CHR_1, 150);
+        SAMRecord read7b = createRecord(CHR_1, 150);
+        SAMRecord read7c = createRecord(CHR_1, 150);
 
         readCache.processRead(read7a);
         readCache.processRead(read7b);
@@ -490,7 +491,7 @@ public class ReadCacheTest
         String readCigar = "12S80M51S";
         String mateCigar = "143M";
 
-        SAMRecord read1 = createSamRecord("READ_001", CHR_1, 1, "A".repeat(143), readCigar,  CHR_1, 1, false, false, null, true, mateCigar);
+        SAMRecord read1 = createSamRecord("READ_001", CHR_1, 1, "A".repeat(143), readCigar, CHR_1, 1, false, false, null, true, mateCigar);
         SAMRecord mate1 = createSamRecord("READ_001", CHR_1, 1, "A".repeat(143), mateCigar, CHR_1, 1, true, false, null, false, readCigar);
 
         SAMRecord read2 = createSamRecord("READ_002", CHR_1, 1, "A".repeat(143), readCigar, CHR_1, 1, false, false, null, true, mateCigar);
@@ -511,7 +512,7 @@ public class ReadCacheTest
         readCache.processRead(read2);
         readCache.processRead(mate2);
 
-        FragmentCoordReads fragmentCoordReads =  readCache.evictAll();
+        FragmentCoordReads fragmentCoordReads = readCache.evictAll();
 
         assertEquals(2, fragmentCoordReads.DuplicateGroups.size());
         assertEquals(0, fragmentCoordReads.SingleReads.size());
@@ -522,16 +523,45 @@ public class ReadCacheTest
 
         HashMultiset<HashMultiset<String>> actualDuplicatedGroups = fragmentCoordReads.DuplicateGroups.stream()
                 .map(g -> g.reads().stream().map(SAMRecord::getSAMString).collect(Collectors.toCollection(HashMultiset::create)))
-                        .collect(Collectors.toCollection(HashMultiset::create));
+                .collect(Collectors.toCollection(HashMultiset::create));
 
         assertEquals(expectedDuplicatedGroups, actualDuplicatedGroups);
     }
 
-    private static SAMRecord createRecord(final String chromosome, final int readStart, boolean isReversed)
+    @Test
+    public void testReadCacheReadPositionWithinGroupBounds()
+    {
+        final int readLength = 143;
+        final int alignmentStart = 84026397;
+        final String cigar = "133M10S";
+        final String readBases = "A".repeat(readLength);
+        final String mateCigar = readLength + "M";
+
+        SAMRecord read1 = createSamRecord(
+                "READ_001", CHR_1, alignmentStart, readBases, cigar, CHR_2, 1, false, false, null, true, mateCigar);
+        SAMRecord read2 = read1.deepCopy();
+        read2.setReadName("READ_002");
+        List<SAMRecord> reads = List.of(read1, read2);
+
+        ReadCache readCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA);
+        reads.forEach(readCache::processRead);
+        FragmentCoordReads fragmentCoordReads = readCache.evictAll();
+
+        assertEquals(0, fragmentCoordReads.SingleReads.size());
+        assertEquals(1, fragmentCoordReads.DuplicateGroups.size());
+
+        List<SAMRecord> duplicateGroupReads = fragmentCoordReads.DuplicateGroups.get(0).reads();
+        assertEquals(2, duplicateGroupReads.size());
+        assertEquals(
+                Sets.newHashSet("READ_001", "READ_002"),
+                duplicateGroupReads.stream().map(SAMRecord::getReadName).collect(Collectors.toCollection(Sets::newHashSet)));
+    }
+
+    private static SAMRecord createRecord(final String chromosome, final int readStart)
     {
         return createSamRecord(
                 READ_ID_GEN.nextId(), chromosome, readStart, TEST_READ_BASES, TEST_READ_CIGAR,
-                CHR_1, 200, isReversed, false, null, true, TEST_READ_CIGAR);
+                CHR_1, 200, false, false, null, true, TEST_READ_CIGAR);
     }
 
     private static SAMRecord createUnpairedRecord(final String chromosome, final int readStart, int readEnd, boolean isReversed)

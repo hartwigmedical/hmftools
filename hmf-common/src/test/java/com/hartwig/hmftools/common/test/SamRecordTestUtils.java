@@ -193,12 +193,17 @@ public final class SamRecordTestUtils
         return flags;
     }
 
-    public static SAMRecord parseSamString(final SAMSequenceDictionary sequenceDictionary, final String samString)
+    public static SAMRecord parseSamString(final String samString, final SAMSequenceDictionary sequenceDictionary)
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
         SAMFileHeader samHeader = recordBuilder.getHeader();
         samHeader.setSequenceDictionary(sequenceDictionary);
         SAMLineParser samLineParser = new SAMLineParser(samHeader);
         return samLineParser.parseLine(samString);
+    }
+
+    public static SAMRecord parseSamString(final String samString)
+    {
+        return parseSamString(samString, SAM_DICTIONARY_V37);
     }
 }

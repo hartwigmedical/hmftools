@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
+import static java.lang.Math.floorDiv;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
@@ -262,12 +263,12 @@ public class ReadCache implements IReadCache
 
         if(remainder == 0)
         {
-            groupPosEnd = mGroupSize * (fragmentPosition / mGroupSize);
+            groupPosEnd = mGroupSize * floorDiv(fragmentPosition, mGroupSize);
             groupPosStart = groupPosEnd - mGroupSize + 1;
         }
         else
         {
-            groupPosStart = mGroupSize * (int)floor(1.0f * fragmentPosition / mGroupSize) + 1;
+            groupPosStart = mGroupSize * floorDiv(fragmentPosition, mGroupSize) + 1;
             groupPosEnd = groupPosStart + mGroupSize - 1;
         }
 
