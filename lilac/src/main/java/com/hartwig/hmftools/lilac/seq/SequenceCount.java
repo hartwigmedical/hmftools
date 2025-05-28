@@ -152,6 +152,7 @@ public final class SequenceCount
             vafMinCount = coverageAtCurrentPosition * minLocalVAF;
         }
 
+        // double minCount = max(mMinCount, vafMinCount);
         double minCount = minLocalVAF != null ? vafMinCount : mMinCount;
 
         return seqCounts.entrySet().stream()

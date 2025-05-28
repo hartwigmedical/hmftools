@@ -23,7 +23,7 @@ public class Fragment
 
     // initial nucleotide values
     private final List<Integer> mRawNucleotideLoci; // always in ascending order
-    private final List<Integer> mRawNucleotideQuality;
+    private final List<Integer> mRawNucleotideQuality; // base qual
     private final List<String> mRawNucleotides;
 
     // values which may be filtered
