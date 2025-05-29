@@ -210,7 +210,9 @@ public final class AssemblyLinker
 
     public static boolean isAssemblyIndelLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        return assembly1.indel() && assembly2.indel() && assembly1.indelCoords().matches(assembly2.indelCoords());
+        return assembly1.indel() && assembly2.indel()
+            && assembly1.isForwardJunction() != assembly2.isForwardJunction()
+            && assembly1.indelCoords().matches(assembly2.indelCoords());
     }
 
     public static AssemblyLink tryAssemblyIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)

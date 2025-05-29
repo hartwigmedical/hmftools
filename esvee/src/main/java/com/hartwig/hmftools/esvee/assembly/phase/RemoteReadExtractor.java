@@ -61,7 +61,7 @@ public class RemoteReadExtractor
     public static List<RemoteRegion> collectCandidateRemoteRegions(
             final JunctionAssembly assembly, final List<JunctionAssembly> phasedAssemblies, boolean checkAssemblyMatches)
     {
-        List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
+        List<RemoteRegion> remoteRegions = Lists.newArrayList();
 
         // ignore remote regions which overlap an assembly in this phase group with any matching reads
         for(RemoteRegion remoteRegion : assembly.remoteRegions())
@@ -71,7 +71,7 @@ public class RemoteReadExtractor
 
             if(!checkAssemblyMatches)
             {
-                combinedRemoteRegions.add(remoteRegion);
+                remoteRegions.add(remoteRegion);
                 continue;
             }
 
@@ -109,13 +109,16 @@ public class RemoteReadExtractor
                     if(readsChecked > MAX_MATCHED_READ_CHECK)
                         break;
                 }
+
+                if(matchesAssembly)
+                    break;
             }
 
             if(!matchesAssembly)
-                combinedRemoteRegions.add(remoteRegion);
+                remoteRegions.add(remoteRegion);
         }
 
-        return combinedRemoteRegions;
+        return remoteRegions;
     }
 
     private static final int HIGH_REMOTE_REGION_TOTAL_READ_COUNT = 1000;

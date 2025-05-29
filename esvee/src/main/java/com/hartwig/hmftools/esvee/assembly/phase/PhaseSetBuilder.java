@@ -56,6 +56,8 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
+import org.jetbrains.annotations.Nullable;
+
 public class PhaseSetBuilder
 {
     private final PhaseGroup mPhaseGroup;
@@ -81,6 +83,21 @@ public class PhaseSetBuilder
     private double mPerfLogTime;
     private long mStartTimeMs;
 
+    private Stage mCurrentStage;
+    private int mRoutineIteration;
+
+    private enum Stage
+    {
+        FormLocalLinks,
+        FindLineExtensions,
+        FindUnmappedExtensions,
+        FindNonLocalLinkCandidates,
+        FindNonLocalLinkCandidatesPostExtensions,
+        ApplyLinksAndExtensions,
+        AddUnlinkedAssemblyRefSupport,
+        FinalRoutines;
+    }
+
     public PhaseSetBuilder(
             final RefGenomeInterface refGenome, final RemoteReadExtractor remoteReadExtractor, final PhaseGroup phaseGroup)
     {
@@ -103,17 +120,19 @@ public class PhaseSetBuilder
 
         mPerfLogTime = 0;
         mStartTimeMs = 0;
+        mRoutineIteration = 0;
+        mCurrentStage = null;
     }
 
     private static final int HIGH_ASSEMBLY_COUNT = 100;
     private static final int HIGH_ASSEMBLY_READ_COUNT = 100;
+    private static final int MAX_ROUTINE_ITERATION = 2000;
+    private static final int MAX_HIGH_ASSEMBLY_MATCHED_READS = 1000;
 
     public void setPerfLogTime(double perfLogTime) { mPerfLogTime = perfLogTime; }
 
     public void buildPhaseSets()
     {
-        mStartTimeMs = System.currentTimeMillis();
-
         if(hasHighAssemblyCount())
         {
             SV_LOGGER.debug("pgId({}) assemblies({}) starting phase set building", mPhaseGroup.id(), mAssemblies.size());
@@ -127,6 +146,8 @@ public class PhaseSetBuilder
 
         addUnlinkedAssemblyRefSupport();
 
+        initialisePerfStage(Stage.FinalRoutines);
+
         formFacingLinks();
 
         checkBranchedAssemblies();
@@ -137,11 +158,13 @@ public class PhaseSetBuilder
 
         cleanupAssemblies();
 
-        checkLogPerfTime("phaseSets");
+        checkLogPerfTime(); // covers facing links onwards
     }
 
     private void findLocalLinks()
     {
+        initialisePerfStage(Stage.FormLocalLinks);
+
         // find local candidate links
         findSplitLinkCandidates(true);
 
@@ -167,15 +190,19 @@ public class PhaseSetBuilder
         }
 
         // check for other local alignments
-        List<JunctionAssembly> unlinkedAssemblies = mAssemblies.stream()
-                .filter(x -> !mLocallyLinkedAssemblies.contains(x)).collect(Collectors.toList());
 
-        for(JunctionAssembly assembly : unlinkedAssemblies)
+        for(JunctionAssembly assembly : mAssemblies)
         {
-            formsLocalLink(assembly);
+            if(!mLocallyLinkedAssemblies.contains(assembly))
+            {
+                formsLocalLink(assembly);
+            }
         }
 
-        checkLogPerfTime("findLocalLinks");
+        checkLogPerfTime();
+
+        // no need to keep this info for subsequent non-local candidate analysis
+        mExtensionCandidates.clear();
     }
 
     private boolean formsLocalLink(final JunctionAssembly assembly)
@@ -210,8 +237,6 @@ public class PhaseSetBuilder
         // if not, check that a pair hasn't already been tested
         // if no support is found then no need to check the link
 
-        List<ExtensionCandidate> existingCandidates = localOnly ? Collections.emptyList() : Lists.newArrayList(mExtensionCandidates);
-
         for(int i = 0; i < mAssemblies.size(); ++i)
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
@@ -225,28 +250,22 @@ public class PhaseSetBuilder
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
-                // avoid a second check of the same pair
-                if(existingCandidates.stream().anyMatch(x -> x.matchesAssemblies(assembly1, assembly2)))
-                    continue;
+                boolean isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
+                boolean isLocalLinkCandidate = false;
 
-                boolean isLocalIndel = false;
-                boolean isLocalLink = false;
+                if(!assembly1.discordantOnly() && !assembly2.discordantOnly() && assembly1.indel() == assembly2.indel())
+                {
+                    isLocalLinkCandidate = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2);
+                }
 
                 if(localOnly)
                 {
-                    isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
-
-                    isLocalLink = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2);
-
-                    if(!isLocalLink)
+                    if(!isLocalLinkCandidate)
                         continue;
-
-                    // discordant pairs cannot by definition be short local indel-type links
-                    if(assembly1.discordantOnly() || assembly2.discordantOnly())
-                        continue;
-
-                    // only link indel junctions to each other
-                    if(assembly1.indel() != assembly2.indel())
+                }
+                else
+                {
+                    if(isLocalLinkCandidate) // avoid checking the same pair again, since they were checked in the local-only call
                         continue;
                 }
 
@@ -275,7 +294,7 @@ public class PhaseSetBuilder
                 AssemblyLink assemblyLink = null;
 
                 if(hasSharedFragments)
-                    assemblyLink = checkSplitLink(assembly1, assembly2, isLocalLink);
+                    assemblyLink = checkSplitLink(assembly1, assembly2, isLocalLinkCandidate);
 
                 if(!hasSharedFragments || assemblyLink == null)
                 {
@@ -288,7 +307,7 @@ public class PhaseSetBuilder
                     continue;
                 }
 
-                ExtensionType type = isLocalLink ? (isLocalIndel ? INDEL : LOCAL_DEL_DUP) : SPLIT_LINK;
+                ExtensionType type = isLocalLinkCandidate ? (isLocalIndel ? INDEL : LOCAL_DEL_DUP) : SPLIT_LINK;
 
                 ExtensionCandidate extensionCandidate = new ExtensionCandidate(type, assemblyLink);
                 mExtensionCandidates.add(extensionCandidate);
@@ -296,6 +315,9 @@ public class PhaseSetBuilder
                 // now count up all possible linking fragments to compare with other candidate links and extensions
                 countSharedFragments(extensionCandidate, firstReadIdsRelated, secondReadIdsRelated);
             }
+
+            if(checkMaxRoutineIteration())
+                return;
         }
     }
 
@@ -363,41 +385,61 @@ public class PhaseSetBuilder
 
     private void findOtherLinksAndExtensions()
     {
+        // check non-local links after first attempting to extend bases using unmapped and remote reads
         findUnmappedExtensions();
 
-        checkLogPerfTime("findUnmappedExtensions");
+        List<JunctionAssembly> extendedAssemblies = applyOtherLinksAndExtensions(Stage.FindNonLocalLinkCandidates, null);
 
-        boolean addedExtensions = applyOtherLinksAndExtensions();
-
-        if(addedExtensions)
-            applyOtherLinksAndExtensions();
-
-        checkLogPerfTime("findOtherLinks");
+        if(!extendedAssemblies.isEmpty() && !hasHighAssemblyCount())
+        {
+            // if some assemblies were extended, they may now form links when they didn't before - so check this subset again
+            applyOtherLinksAndExtensions(Stage.FindNonLocalLinkCandidatesPostExtensions, extendedAssemblies);
+        }
     }
 
-    private boolean applyOtherLinksAndExtensions()
+    private List<JunctionAssembly> applyOtherLinksAndExtensions(
+            final Stage stage, @Nullable final List<JunctionAssembly> extendedAssemblies)
     {
+        initialisePerfStage(stage);
+
         findSplitLinkCandidates(false); // since local candidate links have already been found and applied
+
+        checkLogPerfTime();
+
+        initialisePerfStage(Stage.ApplyLinksAndExtensions);
+
+        // on the second pass only check asemblies which have been extended for new split links
+        boolean checkOnlyExtendedAssemblies = extendedAssemblies != null;
 
         // prioritise and select from all remaining candidates
         List<ExtensionCandidate> remainingCandidates = mExtensionCandidates.stream()
                 .filter(x -> !x.selected()) // skip those already registered
                 .filter(x -> x.isValid())
+                .filter(x -> !checkOnlyExtendedAssemblies || x.Type != UNMAPPED)
                 .collect(Collectors.toList());
 
         if(remainingCandidates.isEmpty())
-            return false;
+            return Collections.emptyList();
 
         Collections.sort(remainingCandidates, new ExtensionCandidate.StandardComparator());
 
         Set<JunctionAssembly> primaryLinkedAssemblies = Sets.newHashSet(mLocallyLinkedAssemblies);
 
-        boolean addedExtensions = false;
+        List<JunctionAssembly> newlyExtendedAssemblies = Lists.newArrayList();
 
         for(ExtensionCandidate extensionCandidate : remainingCandidates)
         {
             if(extensionCandidate.Type == SPLIT_LINK)
             {
+                if(checkOnlyExtendedAssemblies)
+                {
+                    if(!extendedAssemblies.contains(extensionCandidate.Assembly)
+                    && !extendedAssemblies.contains(extensionCandidate.SecondAssembly))
+                    {
+                        continue;
+                    }
+                }
+
                 boolean eitherInPrimary = primaryLinkedAssemblies.contains(extensionCandidate.Assembly)
                         || primaryLinkedAssemblies.contains(extensionCandidate.SecondAssembly);
 
@@ -424,34 +466,47 @@ public class PhaseSetBuilder
                 {
                     extensionCandidate.markSelected();
                     applyUnmappedReadExtension(extensionCandidate);
-                    addedExtensions = true;
+                    newlyExtendedAssemblies.add(extensionCandidate.Assembly);
                 }
             }
         }
 
-        return addedExtensions;
+        checkLogPerfTime();
+
+        return newlyExtendedAssemblies;
     }
 
     private void findUnmappedExtensions()
     {
+        initialisePerfStage(Stage.FindUnmappedExtensions);
+
+        double collectCandidateRemoteRegionsTotalSeconds = 0;
+        double extractRemoteRegionReadsTotalSeconds = 0;
+
         // any assembly not in a link uses unmapped reads to try to extend the extension sequence
         boolean hasHighAssemblyCount = hasHighAssemblyCount();
 
         for(JunctionAssembly assembly : mAssemblies)
         {
-            if(mLineRelatedAssemblies.contains(assembly)) // ignore if already processed as a line site
+            if(mLocallyLinkedAssemblies.contains(assembly) || mLineRelatedAssemblies.contains(assembly)) // ignore if already processed as a line site or a local indel
                 continue;
 
             List<Read> unmappedReads = Lists.newArrayList(assembly.unmappedReads());
 
-            List<RemoteRegion> combinedRemoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
-            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, hasHighAssemblyCount);
+            long startTimeMs = System.currentTimeMillis();
+            List<RemoteRegion> remoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
+
+            collectCandidateRemoteRegionsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
+
+            startTimeMs = System.currentTimeMillis();
+            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), remoteRegions, hasHighAssemblyCount);
+            extractRemoteRegionReadsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
             purgeSupplementaryReads(assembly, remoteReads);
             unmappedReads.addAll(remoteReads);
 
             if(unmappedReads.isEmpty())
-                continue;
+                break;
 
             UnmappedBaseExtender unmappedBaseExtender = new UnmappedBaseExtender(assembly);
             unmappedBaseExtender.processReads(unmappedReads);
@@ -465,6 +520,21 @@ public class PhaseSetBuilder
                 extensionCandidate.SupportCount = unmappedBaseExtender.supportReads().size();
                 mExtensionCandidates.add(extensionCandidate);
             }
+
+            if(checkMaxRoutineIteration())
+                break;
+
+            // if(collectCandidateRemoteRegionsTotalSeconds + extractRemoteRegionReadsTotalSeconds > mPerfLogTime * 5)
+            //    break;
+        }
+
+        checkLogPerfTime();
+
+        if(collectCandidateRemoteRegionsTotalSeconds > mPerfLogTime || extractRemoteRegionReadsTotalSeconds >= mPerfLogTime)
+        {
+            SV_LOGGER.debug(format("pgId(%d) phase set stage(%s) remoteRef(slices=%d reads=%d) collectRegions(%.1f) extractReads(%.1f)",
+                    mPhaseGroup.id(), mCurrentStage, mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch(),
+                    collectCandidateRemoteRegionsTotalSeconds, extractRemoteRegionReadsTotalSeconds));
         }
     }
 
@@ -476,6 +546,8 @@ public class PhaseSetBuilder
 
         if(mLineRelatedAssemblies.isEmpty())
             return;
+
+        initialisePerfStage(Stage.FindLineExtensions);
 
         List<JunctionAssembly> proximateLineAssemblies = Lists.newArrayList();
 
@@ -536,7 +608,7 @@ public class PhaseSetBuilder
 
         mLineRelatedAssemblies.addAll(proximateLineAssemblies);
 
-        checkLogPerfTime("findLineExtensions");
+        checkLogPerfTime();
     }
 
     private void applySplitLink(final AssemblyLink assemblyLink, boolean isPrimaryLink)
@@ -598,6 +670,8 @@ public class PhaseSetBuilder
 
     private void addUnlinkedAssemblyRefSupport()
     {
+        initialisePerfStage(Stage.AddUnlinkedAssemblyRefSupport);
+
         // any assembly which did not form a link or only an unmapped extension will now extend its ref bases from junction & extension mates
         List<JunctionAssembly> assemblies = Lists.newArrayList(mAssemblies);
 
@@ -631,6 +705,8 @@ public class PhaseSetBuilder
 
             extendRefBases(assembly, refExtensionReads, mRefGenome, allowRefSideSoftClipBranching, allowRefSideSoftClipBranching);
         }
+
+        checkLogPerfTime();
     }
 
     private boolean applySplitLinkSupport(
@@ -642,11 +718,28 @@ public class PhaseSetBuilder
 
         addLocalMateSupport(assembly1, assembly2);
 
-        checkMatchingCandidateSupport(
-                assembly2, allowDiscordantReads, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
+        boolean hasHighAssemblyCount = hasHighAssemblyCount();
+        boolean candidateSupportLimited1 = hasHighAssemblyCount && assembly1.candidateSupport().size() > MAX_HIGH_ASSEMBLY_MATCHED_READS;
+        boolean candidateSupportLimited2 = hasHighAssemblyCount && assembly2.candidateSupport().size() > MAX_HIGH_ASSEMBLY_MATCHED_READS;
+
+        List<Read> candidateSupport1 = candidateSupportLimited1 ?
+                assembly1.candidateSupport().subList(0, MAX_HIGH_ASSEMBLY_MATCHED_READS) : assembly1.candidateSupport();
+
+        List<Read> candidateSupport2 = candidateSupportLimited2
+                ? assembly2.candidateSupport().subList(0, MAX_HIGH_ASSEMBLY_MATCHED_READS) : assembly2.candidateSupport();
 
         checkMatchingCandidateSupport(
-                assembly1, allowDiscordantReads, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
+                assembly2, allowDiscordantReads, candidateSupport1, candidateSupport2, matchedCandidates1, matchedCandidates2);
+
+        checkMatchingCandidateSupport(
+                assembly1, allowDiscordantReads, candidateSupport2, Collections.emptyList(), matchedCandidates2, matchedCandidates1);
+
+        // remove candidates from actual assembly candidate lists, since only subset lists were manipulated
+        if(candidateSupportLimited1)
+            matchedCandidates1.forEach(x -> assembly1.candidateSupport().remove(x));
+
+        if(candidateSupportLimited2)
+            matchedCandidates2.forEach(x -> assembly2.candidateSupport().remove(x));
 
         addMatchingExtensionCandidates(assembly1, matchedCandidates1);
         addMatchingExtensionCandidates(assembly2, matchedCandidates2);
@@ -696,7 +789,7 @@ public class PhaseSetBuilder
         return true;
     }
 
-    private static void checkMatchingCandidateSupport(
+    private void checkMatchingCandidateSupport(
             final JunctionAssembly otherAssembly, boolean allowDiscordantReads,
             final List<Read> candidateSupport, final List<Read> otherCandidateSupport,
             final List<Read> matchedCandidates, final List<Read> otherMatchedCandidates)
@@ -1160,7 +1253,14 @@ public class PhaseSetBuilder
 
     private boolean hasHighAssemblyCount() { return mAssemblies.size() >= HIGH_ASSEMBLY_COUNT; }
 
-    private void checkLogPerfTime(final String stage)
+    private void initialisePerfStage(final Stage stage)
+    {
+        mCurrentStage = stage;
+        mStartTimeMs = System.currentTimeMillis();
+        mRoutineIteration = 0;
+    }
+
+    private void checkLogPerfTime()
     {
         if(mPerfLogTime == 0 || !hasHighAssemblyCount())
             return;
@@ -1176,11 +1276,22 @@ public class PhaseSetBuilder
                 sj.add(mAssemblies.get(i).junction().coords());
             }
 
-            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) stage(%s) time(%.3fs) details(links=%d candidates=%d line=%d) remoteRef(slices=%d reads=%d)",
-                    mPhaseGroup.id(), mAssemblies.size(), sj, stage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
-                    mLineRelatedAssemblies.size(), mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch()));
+            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) phase set stage(%s) time(%.1fs) details(links=%d candidates=%d line=%d)",
+                    mPhaseGroup.id(), mAssemblies.size(), sj, mCurrentStage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
+                    mLineRelatedAssemblies.size()));
         }
+    }
 
-        mStartTimeMs = System.currentTimeMillis();
+    private boolean checkMaxRoutineIteration()
+    {
+        ++mRoutineIteration;
+
+        if(mRoutineIteration < MAX_ROUTINE_ITERATION)
+            return false;
+
+        SV_LOGGER.debug(format("pgId(%d) exiting phase set stage(%s) details(links=%d candidates=%d) after %d iterations",
+                mPhaseGroup.id(), mCurrentStage, mSplitLinks.size(), mExtensionCandidates.size(), mRoutineIteration));
+
+        return true;
     }
 }
