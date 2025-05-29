@@ -281,7 +281,7 @@ public class Alignment
                 final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
         {
             // re-align supplementaries to get a more reliable map quality
-            if(alignments.stream().noneMatch(x -> x.isSupplementary()))
+            if(alignments.stream().noneMatch(x -> x.isSupplementary()) || alignments.stream().allMatch(x -> x.isSupplementary()))
                 return alignments;
 
             List<AlignData> newAlignments = Lists.newArrayList();
