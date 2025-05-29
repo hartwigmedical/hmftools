@@ -253,18 +253,37 @@ public class Alignment
 
             for(AlignData rqAlignment : newAlignments)
             {
-                // adjust values to be in terms of the original sequence
+                // adjust values to be in terms of the original sequence, and then ordered within the soft-clip bounds
+                int adjSequenceStart, adjSequenceEnd;
+
+                if(rqAlignment.orientation().isForward())
+                {
+                    adjSequenceStart = softClipSeqIndexStart + rqAlignment.sequenceStart();
+                    adjSequenceEnd = softClipSeqIndexStart + rqAlignment.sequenceEnd();
+                }
+                else
+                {
+                    int newSequenceStart = (softClipLength - 1) - (rqAlignment.rawSequenceEnd() - 1);
+                    int newSequenceEnd = newSequenceStart + rqAlignment.segmentLength() - 1;
+
+                    adjSequenceStart = softClipSeqIndexStart + newSequenceStart;
+                    adjSequenceEnd = softClipSeqIndexStart + newSequenceEnd;
+                }
+
+                /*
                 int adjSequenceStart = softClipSeqIndexStart + rqAlignment.sequenceStart();
                 int adjSequenceEnd = softClipSeqIndexStart + rqAlignment.sequenceEnd();
 
                 if(rqAlignment.orientation().isReverse())
                 {
                     int newSequenceStart = (softClipLength - 1) - (rqAlignment.rawSequenceEnd() - 1);
-                    int newSequenceEnd = (softClipLength - 1) - adjSequenceStart;
+                    int newSequenceEnd = newSequenceStart + rqAlignment.segmentLength() - 1;
+                    // int newSequenceEnd = (softClipLength - 1) - adjSequenceStart;
 
                     adjSequenceStart = max(newSequenceStart, 0);
                     adjSequenceEnd = newSequenceEnd;
                 }
+                */
 
                 rqAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
             }

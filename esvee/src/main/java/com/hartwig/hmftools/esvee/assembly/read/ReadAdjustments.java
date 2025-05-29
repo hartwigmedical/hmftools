@@ -59,19 +59,7 @@ public final class ReadAdjustments
             int scBaseCount = fromStart ? read.leftClipLength() : read.rightClipLength();
 
             if(scBaseCount == 0)
-            {
-                /*
-                // consider indel-adjusted reads which mask the line sequence
-
-                if(read.indelCoords() != null)
-                if((fromStart && read.hasIndelImpliedUnclippedStart()) || (!fromStart && read.hasIndelImpliedUnclippedEnd()))
-                    scBaseCount = LINE_POLY_AT_TEST_LEN;
-                else
-                    continue;
-                */
-
                 continue;
-            }
 
             if(scBaseCount >= LINE_POLY_AT_REQ)
             {

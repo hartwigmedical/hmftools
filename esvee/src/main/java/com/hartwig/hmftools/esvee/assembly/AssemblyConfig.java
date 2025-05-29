@@ -109,8 +109,6 @@ public class AssemblyConfig
     public final SpecificRegions SpecificChrRegions;
     public final List<Junction> SpecificJunctions;
 
-    public final boolean PerfDebug;
-    public final double PerfLogTime;
     private final List<String> mLogReadIds;
     private final boolean mCheckLogReadIds;
 
@@ -120,6 +118,8 @@ public class AssemblyConfig
     public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
     public static boolean DevDebug = false;
+    public static boolean PerfDebug;
+    public static double PerfLogTime;
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 

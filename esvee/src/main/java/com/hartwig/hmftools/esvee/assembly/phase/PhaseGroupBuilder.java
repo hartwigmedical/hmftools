@@ -81,7 +81,7 @@ public class PhaseGroupBuilder
 
         for(int i = 0; i < taskCount; ++i)
         {
-            LocalGroupBuilder groupBuilderTask = new LocalGroupBuilder(mConfig, taskQueue, mWriter);
+            LocalGroupBuilder groupBuilderTask = new LocalGroupBuilder(taskQueue, mWriter);
             localBuilderTasks.add(groupBuilderTask);
             threadTasks.add(groupBuilderTask);
         }

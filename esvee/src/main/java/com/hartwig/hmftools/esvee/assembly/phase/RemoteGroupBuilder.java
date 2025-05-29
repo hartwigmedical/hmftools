@@ -64,7 +64,7 @@ public class RemoteGroupBuilder extends ThreadTask
 
     public void logStats()
     {
-        if(mConfig.PerfDebug || mConfig.PerfLogTime > 0)
+        if(AssemblyConfig.PerfDebug || AssemblyConfig.PerfLogTime > 0)
         {
             // now appears inconsequential
             // SV_LOGGER.debug("remote phase group building stats: {}", mBuildStats);
@@ -87,7 +87,7 @@ public class RemoteGroupBuilder extends ThreadTask
                     findRemotePhasedAssemblies(junctionGroup, assembly);
                 }
 
-                stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
+                stopCheckLog(format("juncGroup(%s)", junctionGroup), AssemblyConfig.PerfLogTime);
             }
             catch(NoSuchElementException e)
             {

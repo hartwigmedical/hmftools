@@ -200,7 +200,7 @@ public class PhaseGroupTest
 
         junctionGroups.add(junctionGroup);
 
-        LocalGroupBuilder builder = new LocalGroupBuilder(TEST_CONFIG, new TaskQueue(junctionGroups), writer);
+        LocalGroupBuilder builder = new LocalGroupBuilder(new TaskQueue(junctionGroups), writer);
 
         builder.run();
 

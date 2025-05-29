@@ -80,7 +80,6 @@ public class PhaseSetBuilder
     private final List<AssemblyLink> mFacingLinks;
 
     // performance tracking
-    private double mPerfLogTime;
     private long mStartTimeMs;
 
     private Stage mCurrentStage;
@@ -118,7 +117,6 @@ public class PhaseSetBuilder
         mBranchedAssemblies = Lists.newArrayList();
         mLocallyLinkedAssemblies = Sets.newHashSet();
 
-        mPerfLogTime = 0;
         mStartTimeMs = 0;
         mRoutineIteration = 0;
         mCurrentStage = null;
@@ -128,8 +126,6 @@ public class PhaseSetBuilder
     private static final int HIGH_ASSEMBLY_READ_COUNT = 100;
     private static final int MAX_ROUTINE_ITERATION = 2000;
     private static final int MAX_HIGH_ASSEMBLY_MATCHED_READS = 1000;
-
-    public void setPerfLogTime(double perfLogTime) { mPerfLogTime = perfLogTime; }
 
     public void buildPhaseSets()
     {
@@ -480,7 +476,7 @@ public class PhaseSetBuilder
     {
         initialisePerfStage(Stage.FindUnmappedExtensions);
 
-        double collectCandidateRemoteRegionsTotalSeconds = 0;
+        double collectRemoteRegionsTotalSeconds = 0;
         double extractRemoteRegionReadsTotalSeconds = 0;
 
         // any assembly not in a link uses unmapped reads to try to extend the extension sequence
@@ -496,7 +492,7 @@ public class PhaseSetBuilder
             long startTimeMs = System.currentTimeMillis();
             List<RemoteRegion> remoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
 
-            collectCandidateRemoteRegionsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
+            collectRemoteRegionsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
             startTimeMs = System.currentTimeMillis();
             List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), remoteRegions, hasHighAssemblyCount);
@@ -524,17 +520,18 @@ public class PhaseSetBuilder
             if(checkMaxRoutineIteration())
                 break;
 
-            // if(collectCandidateRemoteRegionsTotalSeconds + extractRemoteRegionReadsTotalSeconds > mPerfLogTime * 5)
+            // if(collectCandidateRemoteRegionsTotalSeconds + extractRemoteRegionReadsTotalSeconds > AssemblyConfig.PerfLogTime * 5)
             //    break;
         }
 
         checkLogPerfTime();
 
-        if(collectCandidateRemoteRegionsTotalSeconds > mPerfLogTime || extractRemoteRegionReadsTotalSeconds >= mPerfLogTime)
+        if(AssemblyConfig.PerfLogTime > 0
+        && (collectRemoteRegionsTotalSeconds > AssemblyConfig.PerfLogTime || extractRemoteRegionReadsTotalSeconds >= AssemblyConfig.PerfLogTime))
         {
             SV_LOGGER.debug(format("pgId(%d) phase set stage(%s) remoteRef(slices=%d reads=%d) collectRegions(%.1f) extractReads(%.1f)",
                     mPhaseGroup.id(), mCurrentStage, mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch(),
-                    collectCandidateRemoteRegionsTotalSeconds, extractRemoteRegionReadsTotalSeconds));
+                    collectRemoteRegionsTotalSeconds, extractRemoteRegionReadsTotalSeconds));
         }
     }
 
@@ -1262,13 +1259,13 @@ public class PhaseSetBuilder
 
     private void checkLogPerfTime()
     {
-        if(mPerfLogTime == 0 || !hasHighAssemblyCount())
+        if(AssemblyConfig.PerfLogTime == 0 || !hasHighAssemblyCount())
             return;
 
         long timeTakenMs = System.currentTimeMillis() - mStartTimeMs;
         double seconds = timeTakenMs / 1000.0;
 
-        if(seconds >= mPerfLogTime)
+        if(seconds >= AssemblyConfig.PerfLogTime)
         {
             StringJoiner sj = new StringJoiner(";");
             for(int i = 0; i < min(mAssemblies.size(), 4); ++i)

@@ -28,16 +28,14 @@ import com.hartwig.hmftools.common.perf.TaskQueue;
 public class LocalGroupBuilder extends ThreadTask
 {
     private final TaskQueue mJunctionGroups;
-    private final AssemblyConfig mConfig;
     private final PhaseGroupBuildWriter mWriter;
 
     private final Set<PhaseGroup> mPhaseGroupsSets;
 
-    public LocalGroupBuilder(final AssemblyConfig config, final TaskQueue junctionGroups, final PhaseGroupBuildWriter writer)
+    public LocalGroupBuilder(final TaskQueue junctionGroups, final PhaseGroupBuildWriter writer)
     {
         super("LocalPhaseGroups");
 
-        mConfig = config;
         mWriter = writer;
         mJunctionGroups = junctionGroups;
 
@@ -62,7 +60,7 @@ public class LocalGroupBuilder extends ThreadTask
 
                 formLocalPhaseGroups(junctionGroup);
 
-                stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
+                stopCheckLog(format("juncGroup(%s)", junctionGroup), AssemblyConfig.PerfLogTime);
             }
             catch(NoSuchElementException e)
             {
