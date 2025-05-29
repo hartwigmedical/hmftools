@@ -1,4 +1,4 @@
-FROM bash:5.2
+FROM mambaorg/micromamba:0.24.0
 
 ARG VERSION
 ARG TOOL_NAME=teal
