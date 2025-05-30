@@ -3,30 +3,41 @@ package com.hartwig.hmftools.common.perf;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
+import com.google.common.collect.Lists;
 
-public class StackSampler extends Thread implements AutoCloseable
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.pcollections.HashTreePMap;
+import org.pcollections.PMap;
+
+public class StackSampler implements AutoCloseable
 {
-    private final int mSleepMillis;
+    private static final Logger LOGGER = LogManager.getLogger(StackSampler.class);
+
+    private final Duration mSamplePeriod;
     private final File mOutFile;
     private final boolean mIncludeTopLineNumber;
     private final boolean mCollapseThreads;
-    private final AtomicBoolean mStopSignal = new AtomicBoolean();
-    private final HashMultiset<String> mStackCounts = HashMultiset.create();
+    private final ConcurrentLinkedQueue<Map<Thread, StackTraceElement[]>> mSampleQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicReference<PMap<String, Long>> mStackCounts = new AtomicReference<>(HashTreePMap.empty());
 
-    public StackSampler(final int sampleFreq, final File outFile, final boolean includeTopLineNumber, final boolean collapseThreads)
+    public StackSampler(final int samplesPerSecond, final File outFile, final boolean includeTopLineNumber, final boolean collapseThreads)
     {
-        mSleepMillis = 1_000 / sampleFreq;
+        mSamplePeriod = Duration.ofNanos(1_000_000_000L / (long) samplesPerSecond);
         mOutFile = outFile;
         mIncludeTopLineNumber = includeTopLineNumber;
         mCollapseThreads = collapseThreads;
 
-        start();
+        run();
     }
 
     public StackSampler(final int sampleFreq, final File outFile)
@@ -34,121 +45,168 @@ public class StackSampler extends Thread implements AutoCloseable
         this(sampleFreq, outFile, true, true);
     }
 
-    private void processStack(final String threadName, final StackTraceElement[] stack)
+    private boolean threadNameFilter(final String threadName)
     {
-        if(!threadName.toLowerCase().matches("^(main|thread-.*|gc_thread.*|g1_conc.*)$"))
+        return threadName.toLowerCase().matches("^(main|thread-.*|gc_thread.*|g1_conc.*)$");
+    }
+
+    private static String collapseThreadName(final String threadName)
+    {
+        if(threadName.toLowerCase().startsWith("thread-"))
+        {
+            return "thread";
+        }
+
+        if(threadName.toLowerCase().startsWith("gc_thread"))
+        {
+            return "gc_thread";
+        }
+
+        if(threadName.toLowerCase().startsWith("g1_conc"))
+        {
+            return "g1_conc";
+        }
+
+        return threadName;
+    }
+
+    private static String stripLineNumberFromStackEl(final String stackEl)
+    {
+        String[] components = stackEl.split("\\(");
+        StringBuilder builder = new StringBuilder();
+        for(int j = 0; j < components.length - 1; j++)
+            builder.append(components[j]);
+
+        return builder.toString();
+    }
+
+    private static String stripPrefixFromStackEl(final String stackEl)
+    {
+        String[] components = stackEl.split("/");
+        StringBuilder builder = new StringBuilder();
+        if(components.length >= 2 && !components[1].isEmpty())
+            builder.append(components[1]);
+
+        for(int j = 2; j < components.length; j++)
+        {
+            if(!builder.isEmpty())
+                builder.append("/");
+
+            builder.append(components[j]);
+        }
+
+        return builder.toString();
+    }
+
+    private void processStack(final String threadName_, final StackTraceElement[] stack)
+    {
+        if(stack.length == 0)
             return;
 
-        String collapsedThreadName = threadName;
-        if(mCollapseThreads)
-        {
-            if(threadName.toLowerCase().startsWith("thread-"))
-            {
-                collapsedThreadName = "thread";
-            }
-            else if(threadName.toLowerCase().startsWith("gc_thread"))
-            {
-                collapsedThreadName = "gc_thread";
-            }
-            else if(threadName.toLowerCase().startsWith("g1_conc"))
-            {
-                collapsedThreadName = "g1_conc";
-            }
-        }
+        if(!threadNameFilter(threadName_))
+            return;
+
+        String threadName = mCollapseThreads ? collapseThreadName(threadName_) : threadName_;
 
         StringJoiner foldedStack = new StringJoiner(";");
-        foldedStack.add(collapsedThreadName);
-        for(int i = stack.length - 1; i >= 0; i--)
+        foldedStack.add(threadName);
+
+        List<String> stackEls = Lists.newArrayList(Arrays.stream(stack).map(StackTraceElement::toString).toList());
+        Collections.reverse(stackEls);
+        for(String stackEl : stackEls)
         {
-            StackTraceElement stackEl = stack[i];
-            String stackElStr = stackEl.toString();
-            String[] components;
-            StringBuilder builder;
-            if(i > 0 || !mIncludeTopLineNumber)
-            {
-                components = stackElStr.split("\\(");
-                builder = new StringBuilder();
-                for(int j = 0; j < components.length - 1; j++)
-                    builder.append(components[j]);
-
-                stackElStr = builder.toString();
-            }
-
-            components = stackElStr.split("/");
-            builder = new StringBuilder();
-            if(components.length >= 2 && !components[1].isEmpty())
-                builder.append(components[1]);
-
-            for(int j = 2; j < components.length; j++)
-            {
-                if(!builder.isEmpty())
-                    builder.append("/");
-
-                builder.append(components[j]);
-            }
-
-            stackElStr = builder.toString();
-            if(i == 0 && stackElStr.startsWith("java.lang.Object.wait0"))
-                return;
-
-            foldedStack.add(stackElStr);
+            stackEl = stripPrefixFromStackEl(stackEl);
+            stackEl = stripLineNumberFromStackEl(stackEl);
+            foldedStack.add(stackEl);
         }
 
-        mStackCounts.add(foldedStack.toString());
+        if(mIncludeTopLineNumber)
+            foldedStack.add(stack[0].toString());
+
+        final String foldedStackStr = foldedStack.toString();
+        mStackCounts.updateAndGet(stackCounts ->
+        {
+            if(!stackCounts.containsKey(foldedStackStr))
+                return stackCounts.plus(foldedStackStr, 1L);
+
+            long currentCount = stackCounts.get(foldedStackStr);
+            return stackCounts.plus(foldedStackStr, currentCount + 1L);
+        });
     }
 
-    @Override
-    public void run()
+    private void run()
     {
-        try
+        Thread stackSampler = new Thread(() ->
         {
-            final long thisThreadId = Thread.currentThread().getId();
-            while(!mStopSignal.get())
+            long nextSampleTime = System.nanoTime() + mSamplePeriod.toNanos();
+            while(true)
             {
-                Thread.sleep(mSleepMillis);
-                Map<Thread, StackTraceElement[]> stackTraces = Thread.getAllStackTraces();
-                for(Map.Entry<Thread, StackTraceElement[]> entry : stackTraces.entrySet())
+                if(System.nanoTime() < nextSampleTime)
                 {
-                    Thread thread = entry.getKey();
-                    StackTraceElement[] stack = entry.getValue();
-                    if(thisThreadId == thread.getId())
-                        continue;
+                    try
+                    {
+                        Thread.sleep(mSamplePeriod.toMillis() / 10L);
+                    }
+                    catch(InterruptedException e)
+                    {
+                    }
 
-                    processStack(thread.getName(), stack);
+                    continue;
+                }
+
+                nextSampleTime += mSamplePeriod.toNanos();
+                mSampleQueue.add(Thread.getAllStackTraces());
+            }
+        }, "STACK_SAMPLER");
+
+        stackSampler.setDaemon(true);
+        stackSampler.start();
+
+        Thread stackProcessor = new Thread(() ->
+        {
+            while(true)
+            {
+                Map<Thread, StackTraceElement[]> sample = mSampleQueue.poll();
+                if(sample == null)
+                {
+                    try
+                    {
+                        Thread.sleep(mSamplePeriod.toMillis());
+                    }
+                    catch(InterruptedException e)
+                    {
+                    }
+
+                    continue;
+                }
+
+                for(Map.Entry<Thread, StackTraceElement[]> entry : sample.entrySet())
+                {
+                    String threadName = entry.getKey().getName();
+                    StackTraceElement[] stackTrace = entry.getValue();
+                    processStack(threadName, stackTrace);
                 }
             }
+        }, "STACK_PROCESSOR");
 
-            try(BufferedWriter writer = new BufferedWriter(new FileWriter(mOutFile)))
-            {
-                for(Multiset.Entry<String> entry : mStackCounts.entrySet())
-                {
-                    writer.write(entry.getElement() + " " + entry.getCount());
-                    writer.newLine();
-                }
-            }
-        }
-        catch(Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void finish()
-    {
-        mStopSignal.set(true);
-        try
-        {
-            join();
-        }
-        catch(InterruptedException e)
-        {
-            throw new RuntimeException(e);
-        }
+        stackProcessor.setDaemon(true);
+        stackProcessor.start();
     }
 
     @Override
     public void close() throws Exception
     {
-        finish();
+        long totalStackCount = 0;
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(mOutFile)))
+        {
+            for(Map.Entry<String, Long> entry : mStackCounts.get().entrySet())
+            {
+                totalStackCount += entry.getValue();
+                writer.write(entry.getKey() + " " + entry.getValue());
+                writer.newLine();
+            }
+        }
+
+        LOGGER.info("StackSampler: {} stacks written", totalStackCount);
     }
 }
