@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
@@ -219,6 +220,7 @@ public class ExtensionSeqBuilder
         boolean checkReadRepeats = false;
         boolean readRepeatsComplete = false;
         byte[] currentReadBases = new byte[mReads.size()]; // each read's base at this index if valid and above min qual
+        int basesAdded = 0;
 
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
@@ -383,36 +385,37 @@ public class ExtensionSeqBuilder
             else
                 --extensionIndex;
 
-            if(mHasLineSequence && !lineBasesSet)
+            ++basesAdded;
+
+            if(mHasLineSequence && !lineBasesSet && (basesAdded + 1) >= LINE_POLY_AT_REQ)
             {
-                setLineExtensionBases(extensionIndex);
+                int remainingLineBases = mLineExtensionLength - basesAdded + 1; // excluding the ref base
+                setLineExtensionBases(extensionIndex, remainingLineBases);
                 lineBasesSet = true;
 
                 if(mIsForward)
-                    extensionIndex += mLineExtensionLength;
+                    extensionIndex += remainingLineBases;
                 else
-                    extensionIndex -= mLineExtensionLength;
+                    extensionIndex -= remainingLineBases;
             }
         }
     }
 
     private byte lineBase() { return mJunction.isForward() ? LINE_BASE_T : LINE_BASE_A; }
 
-    private void setLineExtensionBases(int extensionIndex)
+    private void setLineExtensionBases(int extensionIndex, int remainingLineBases)
     {
         // build out line bases if identified
         byte lineBase = lineBase();
 
-        int remainingBases = mLineExtensionLength;
-
-        while(extensionIndex >= 0 && extensionIndex < mBases.length && remainingBases > 0)
+        while(extensionIndex >= 0 && extensionIndex < mBases.length && remainingLineBases > 0)
         {
             mBases[extensionIndex] = lineBase;
             mBaseQuals[extensionIndex] = (byte)LOW_BASE_QUAL_THRESHOLD;
 
             extensionIndex += mIsForward ? 1 : -1;
 
-            --remainingBases;
+            --remainingLineBases;
         }
 
         // move each read to the end of its poly A/T sequence
@@ -798,12 +801,9 @@ public class ExtensionSeqBuilder
 
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
 
-        if(mHasLineSequence)
+        if(mHasLineSequence && read.hasLineTail())
         {
-            boolean skipMovePastLineSequence = !read.hasLineTail() && read.indelCoords() != null;
-
-            if(!skipMovePastLineSequence)
-                extensionIndex += mIsForward ? (mLineExtensionLength + 1) : -(mLineExtensionLength + 1);
+            extensionIndex += mIsForward ? (mLineExtensionLength + 1) : -(mLineExtensionLength + 1);
         }
 
         int repeatIndexStart = -1;
@@ -910,7 +910,7 @@ public class ExtensionSeqBuilder
         boolean hasMinLengthSoftClipRead = false;
 
         int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH / 2 : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
         for(ExtReadParseState read : mReads)
         {

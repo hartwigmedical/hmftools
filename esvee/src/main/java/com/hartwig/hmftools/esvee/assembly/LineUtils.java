@@ -98,7 +98,7 @@ public final class LineUtils
         return lengthFrequency.keySet().stream().mapToInt(x -> x.intValue()).max().orElse(0);
     }
 
-    private static final int MAX_NON_LINE_BASES = LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ;
+    public static final int MAX_NON_LINE_BASES = LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ;
 
     @VisibleForTesting
     public static Map<Integer,Integer> findLineExtensionFrequency(
