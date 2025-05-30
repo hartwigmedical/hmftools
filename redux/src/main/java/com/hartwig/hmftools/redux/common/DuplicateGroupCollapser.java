@@ -163,7 +163,8 @@ public interface DuplicateGroupCollapser
                         fivePrimeGroup,
                         (x, y) -> abs(x - y) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE,
                         DUPLICATE_GROUP_COMPARATOR,
-                        DUPLICATE_GROUP_MERGER));
+                        DUPLICATE_GROUP_MERGER,
+                        null));
             }
 
             return getFragmentCoordReads(collapsedGroups);
@@ -275,7 +276,7 @@ public interface DuplicateGroupCollapser
             BiPredicate<FragStartEnd, FragStartEnd> canMergeFn = (x, y) -> x.distance(y) <= mMaxDuplicateDistance;
             List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
             for(Map<FragStartEnd, DuplicateGroup> keyGroup : mKeyGroups.values())
-                collapsedGroups.addAll(clusterMerger(keyGroup, canMergeFn, DUPLICATE_GROUP_COMPARATOR, DUPLICATE_GROUP_MERGER));
+                collapsedGroups.addAll(clusterMerger(keyGroup, canMergeFn, DUPLICATE_GROUP_COMPARATOR, DUPLICATE_GROUP_MERGER, null));
 
             return getFragmentCoordReads(collapsedGroups);
         }

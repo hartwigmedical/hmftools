@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.collect;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 
 public class MergeUtils
 {
-    public static <K, V> List<V> clusterMerger(final Map<K, V> elements, final BiPredicate<K, K> canMergeFn,
-            final Comparator<V> valueComparator, final BinaryOperator<V> mergeFn)
+    public static <K, V> List<V> clusterMerger(
+            final Map<K, V> elements, final BiPredicate<K, K> canMergeFn, final Comparator<V> valueComparator,
+            final BinaryOperator<V> mergeFn, @Nullable final Map<K, Set<K>> mergeGroups)
     {
         if(elements.isEmpty())
             return Lists.newArrayList();
@@ -33,17 +36,35 @@ public class MergeUtils
         for(K key : allKeys)
             keyAdjacency.put(key, Sets.newHashSet());
 
-        for(int i = 0; i < allKeys.size() - 1; i++)
+        for(int i = 0; i < allKeys.size(); i++)
         {
             K key1 = allKeys.get(i);
-            for(int j = i + 1; j < allKeys.size(); j++)
+            if(mergeGroups == null)
             {
-                K key2 = allKeys.get(j);
-                if(canMergeFn.test(key1, key2))
+                for(int j = i + 1; j < allKeys.size(); j++)
                 {
-                    keyAdjacency.get(key1).add(key2);
-                    keyAdjacency.get(key2).add(key1);
+                    K key2 = allKeys.get(j);
+                    if(canMergeFn.test(key1, key2))
+                    {
+                        keyAdjacency.get(key1).add(key2);
+                        keyAdjacency.get(key2).add(key1);
+                    }
                 }
+
+                continue;
+            }
+
+            Collection<K> mergeGroup = mergeGroups.get(key1);
+            if(mergeGroup == null || mergeGroup.isEmpty())
+                continue;
+
+            for(K key2 : mergeGroup)
+            {
+                if(key1.equals(key2))
+                    continue;
+
+                if(canMergeFn.test(key1, key2))
+                    keyAdjacency.get(key1).add(key2);
             }
         }
 
