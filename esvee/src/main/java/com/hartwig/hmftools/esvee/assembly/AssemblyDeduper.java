@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_JITTER_MAX_DIST;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
@@ -76,6 +77,9 @@ public class AssemblyDeduper
 
     private static boolean canDedupAssemblies(final JunctionAssembly first, final JunctionAssembly second)
     {
+        if(dedupOnSupportRatio(first, second))
+            return true;
+
         if(!SequenceCompare.matchedAssemblySequences(first, second))
             return false;
 
@@ -120,8 +124,30 @@ public class AssemblyDeduper
         return true;
     }
 
+    private static boolean dedupOnSupportRatio(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // dedup an assembly if its support is much less than the other assembly
+        int junctionDistance = abs(first.junction().Position - second.junction().Position);
+
+        if(junctionDistance > ASSEMBLY_DEDUP_JITTER_MAX_DIST)
+            return false;
+
+        return assemblyExceedsSupportRatio(first, second) || assemblyExceedsSupportRatio(second, first);
+    }
+
+    private static boolean assemblyExceedsSupportRatio(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        return first.supportCount() > second.supportCount() * ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO;
+    }
+
     private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
     {
+        if(assemblyExceedsSupportRatio(first, second))
+            return true;
+
+        if(assemblyExceedsSupportRatio(second, first))
+            return false;
+
         if(first.indel() != second.indel())
             return first.indel();
 

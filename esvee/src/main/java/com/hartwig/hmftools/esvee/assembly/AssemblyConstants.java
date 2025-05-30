@@ -40,6 +40,7 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH = 75;
     public static final double ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC = 0.33;
     public static final int ASSEMBLY_DEDUP_JITTER_MAX_DIST = 20;
+    public static final int ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO = 50;
 
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;

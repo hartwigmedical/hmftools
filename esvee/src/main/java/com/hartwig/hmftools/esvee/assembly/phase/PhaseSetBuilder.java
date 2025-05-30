@@ -80,6 +80,7 @@ public class PhaseSetBuilder
     private final List<AssemblyLink> mFacingLinks;
 
     // performance tracking
+    private final boolean mHasHighAssemblyCount;
     private long mStartTimeMs;
 
     private Stage mCurrentStage;
@@ -117,6 +118,8 @@ public class PhaseSetBuilder
         mBranchedAssemblies = Lists.newArrayList();
         mLocallyLinkedAssemblies = Sets.newHashSet();
 
+        mHasHighAssemblyCount = mAssemblies.size() >= HIGH_ASSEMBLY_COUNT;
+
         mStartTimeMs = 0;
         mRoutineIteration = 0;
         mCurrentStage = null;
@@ -129,10 +132,7 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
-        if(hasHighAssemblyCount())
-        {
-            SV_LOGGER.debug("pgId({}) assemblies({}) starting phase set building", mPhaseGroup.id(), mAssemblies.size());
-        }
+        checkLogLargePhaseGroup();
 
         findLineExtensions();
 
@@ -386,15 +386,14 @@ public class PhaseSetBuilder
 
         List<JunctionAssembly> extendedAssemblies = applyOtherLinksAndExtensions(Stage.FindNonLocalLinkCandidates, null);
 
-        if(!extendedAssemblies.isEmpty() && !hasHighAssemblyCount())
+        if(!extendedAssemblies.isEmpty())
         {
             // if some assemblies were extended, they may now form links when they didn't before - so check this subset again
             applyOtherLinksAndExtensions(Stage.FindNonLocalLinkCandidatesPostExtensions, extendedAssemblies);
         }
     }
 
-    private List<JunctionAssembly> applyOtherLinksAndExtensions(
-            final Stage stage, @Nullable final List<JunctionAssembly> extendedAssemblies)
+    private List<JunctionAssembly> applyOtherLinksAndExtensions(final Stage stage, @Nullable final List<JunctionAssembly> extendedAssemblies)
     {
         initialisePerfStage(stage);
 
@@ -480,8 +479,6 @@ public class PhaseSetBuilder
         double extractRemoteRegionReadsTotalSeconds = 0;
 
         // any assembly not in a link uses unmapped reads to try to extend the extension sequence
-        boolean hasHighAssemblyCount = hasHighAssemblyCount();
-
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(mLocallyLinkedAssemblies.contains(assembly) || mLineRelatedAssemblies.contains(assembly)) // ignore if already processed as a line site or a local indel
@@ -490,12 +487,12 @@ public class PhaseSetBuilder
             List<Read> unmappedReads = Lists.newArrayList(assembly.unmappedReads());
 
             long startTimeMs = System.currentTimeMillis();
-            List<RemoteRegion> remoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, hasHighAssemblyCount);
+            List<RemoteRegion> remoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, mHasHighAssemblyCount);
 
             collectRemoteRegionsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
             startTimeMs = System.currentTimeMillis();
-            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), remoteRegions, hasHighAssemblyCount);
+            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), remoteRegions, mHasHighAssemblyCount);
             extractRemoteRegionReadsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
             purgeSupplementaryReads(assembly, remoteReads);
@@ -577,7 +574,7 @@ public class PhaseSetBuilder
                         .forEach(x -> combinedRemoteRegions.add(x));
             }
 
-            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, hasHighAssemblyCount());
+            List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), combinedRemoteRegions, mHasHighAssemblyCount);
             purgeSupplementaryReads(assembly, remoteReads);
 
             sharedUnmappedReads.addAll(remoteReads);
@@ -715,7 +712,7 @@ public class PhaseSetBuilder
 
         addLocalMateSupport(assembly1, assembly2);
 
-        boolean hasHighAssemblyCount = hasHighAssemblyCount();
+        boolean hasHighAssemblyCount = mHasHighAssemblyCount;
         boolean candidateSupportLimited1 = hasHighAssemblyCount && assembly1.candidateSupport().size() > MAX_HIGH_ASSEMBLY_MATCHED_READS;
         boolean candidateSupportLimited2 = hasHighAssemblyCount && assembly2.candidateSupport().size() > MAX_HIGH_ASSEMBLY_MATCHED_READS;
 
@@ -1248,8 +1245,6 @@ public class PhaseSetBuilder
         }
     }
 
-    private boolean hasHighAssemblyCount() { return mAssemblies.size() >= HIGH_ASSEMBLY_COUNT; }
-
     private void initialisePerfStage(final Stage stage)
     {
         mCurrentStage = stage;
@@ -1259,7 +1254,7 @@ public class PhaseSetBuilder
 
     private void checkLogPerfTime()
     {
-        if(AssemblyConfig.PerfLogTime == 0 || !hasHighAssemblyCount())
+        if(AssemblyConfig.PerfLogTime == 0 || !mHasHighAssemblyCount)
             return;
 
         long timeTakenMs = System.currentTimeMillis() - mStartTimeMs;
@@ -1267,15 +1262,24 @@ public class PhaseSetBuilder
 
         if(seconds >= AssemblyConfig.PerfLogTime)
         {
+            SV_LOGGER.debug(format("pgId(%d) assemblies(%d) phase set stage(%s) time(%.1fs) details(links=%d candidates=%d line=%d)",
+                    mPhaseGroup.id(), mAssemblies.size(), mCurrentStage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
+                    mLineRelatedAssemblies.size()));
+        }
+    }
+
+    private void checkLogLargePhaseGroup()
+    {
+        if(AssemblyConfig.PerfLogTime > 0 && mHasHighAssemblyCount)
+        {
             StringJoiner sj = new StringJoiner(";");
             for(int i = 0; i < min(mAssemblies.size(), 4); ++i)
             {
                 sj.add(mAssemblies.get(i).junction().coords());
             }
 
-            SV_LOGGER.debug(format("pgId(%d) assemblies(%d: %s) phase set stage(%s) time(%.1fs) details(links=%d candidates=%d line=%d)",
-                    mPhaseGroup.id(), mAssemblies.size(), sj, mCurrentStage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
-                    mLineRelatedAssemblies.size()));
+            SV_LOGGER.debug("pgId({}) assemblies({}: {}) starting phase set building",
+                    mPhaseGroup.id(), mAssemblies.size(), sj.toString());
         }
     }
 
