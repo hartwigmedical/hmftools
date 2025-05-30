@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.collect.Lists;
@@ -27,8 +28,12 @@ public class StackSampler implements AutoCloseable
     private final File mOutFile;
     private final boolean mIncludeTopLineNumber;
     private final boolean mCollapseThreads;
+    private final AtomicBoolean mStopSignal = new AtomicBoolean();
     private final ConcurrentLinkedQueue<Map<Thread, StackTraceElement[]>> mSampleQueue = new ConcurrentLinkedQueue<>();
     private final AtomicReference<PMap<String, Long>> mStackCounts = new AtomicReference<>(HashTreePMap.empty());
+
+    private Thread mStackSampler;
+    private Thread mStackProcessor;
 
     public StackSampler(final int samplesPerSecond, final File outFile, final boolean includeTopLineNumber, final boolean collapseThreads)
     {
@@ -136,10 +141,10 @@ public class StackSampler implements AutoCloseable
 
     private void run()
     {
-        Thread stackSampler = new Thread(() ->
+        mStackSampler = new Thread(() ->
         {
             long nextSampleTime = System.nanoTime() + mSamplePeriod.toNanos();
-            while(true)
+            while(!mStopSignal.get())
             {
                 if(System.nanoTime() < nextSampleTime)
                 {
@@ -159,12 +164,11 @@ public class StackSampler implements AutoCloseable
             }
         }, "STACK_SAMPLER");
 
-        stackSampler.setDaemon(true);
-        stackSampler.start();
+        mStackSampler.start();
 
-        Thread stackProcessor = new Thread(() ->
+        mStackProcessor = new Thread(() ->
         {
-            while(true)
+            while(!(mStopSignal.get() && mSampleQueue.isEmpty()))
             {
                 Map<Thread, StackTraceElement[]> sample = mSampleQueue.poll();
                 if(sample == null)
@@ -189,13 +193,16 @@ public class StackSampler implements AutoCloseable
             }
         }, "STACK_PROCESSOR");
 
-        stackProcessor.setDaemon(true);
-        stackProcessor.start();
+        mStackProcessor.start();
     }
 
     @Override
     public void close() throws Exception
     {
+        mStopSignal.set(true);
+        mStackSampler.join();
+        mStackProcessor.join();
+
         long totalStackCount = 0;
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(mOutFile)))
         {
