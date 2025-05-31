@@ -24,6 +24,9 @@ public class StackSampler implements AutoCloseable
 {
     private static final Logger LOGGER = LogManager.getLogger(StackSampler.class);
 
+    public static final String STACK_SAMPLER_THREAD_NAME = "STACK_SAMPLER";
+    public static final String STACK_PROCESSOR_THREAD_NAME = "STACK_PROCESSOR";
+
     private final Duration mSamplePeriod;
     private final File mOutFile;
     private final boolean mIncludeTopLineNumber;
@@ -37,7 +40,7 @@ public class StackSampler implements AutoCloseable
 
     public StackSampler(final int samplesPerSecond, final File outFile, final boolean includeTopLineNumber, final boolean collapseThreads)
     {
-        mSamplePeriod = Duration.ofNanos(1_000_000_000L / (long) samplesPerSecond);
+        mSamplePeriod = Duration.ofSeconds(1).dividedBy(samplesPerSecond);
         mOutFile = outFile;
         mIncludeTopLineNumber = includeTopLineNumber;
         mCollapseThreads = collapseThreads;
@@ -52,6 +55,9 @@ public class StackSampler implements AutoCloseable
 
     private boolean threadNameFilter(final String threadName)
     {
+        if(threadName.equals(STACK_SAMPLER_THREAD_NAME) || threadName.equals(STACK_PROCESSOR_THREAD_NAME))
+            return true;
+
         return threadName.toLowerCase().matches("^(main|thread-.*|gc_thread.*|g1_conc.*)$");
     }
 
@@ -146,23 +152,23 @@ public class StackSampler implements AutoCloseable
             long nextSampleTime = System.nanoTime() + mSamplePeriod.toNanos();
             while(!mStopSignal.get())
             {
-                if(System.nanoTime() < nextSampleTime)
+                long currentTime = System.nanoTime();
+                if(currentTime < nextSampleTime)
                 {
+                    Duration sleepDuration = Duration.ofNanos(nextSampleTime - currentTime);
                     try
                     {
-                        Thread.sleep(mSamplePeriod.toMillis() / 10L);
+                        Thread.sleep(sleepDuration.toMillis());
                     }
                     catch(InterruptedException e)
                     {
                     }
-
-                    continue;
                 }
 
                 nextSampleTime += mSamplePeriod.toNanos();
                 mSampleQueue.add(Thread.getAllStackTraces());
             }
-        }, "STACK_SAMPLER");
+        }, STACK_SAMPLER_THREAD_NAME);
 
         mStackSampler.start();
 
@@ -175,7 +181,7 @@ public class StackSampler implements AutoCloseable
                 {
                     try
                     {
-                        Thread.sleep(mSamplePeriod.toMillis());
+                        Thread.sleep(1_000);
                     }
                     catch(InterruptedException e)
                     {
@@ -191,7 +197,7 @@ public class StackSampler implements AutoCloseable
                     processStack(threadName, stackTrace);
                 }
             }
-        }, "STACK_PROCESSOR");
+        }, STACK_PROCESSOR_THREAD_NAME);
 
         mStackProcessor.start();
     }
