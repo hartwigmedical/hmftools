@@ -297,6 +297,7 @@ public class AssemblyApplication
                 ++assemblyCount;
                 junctionReadCount += assembly.supportCount();
                 candidateReadCount += assembly.candidateSupport().size();
+                candidateReadCount += assembly.unmappedReads().size();
             }
         }
 

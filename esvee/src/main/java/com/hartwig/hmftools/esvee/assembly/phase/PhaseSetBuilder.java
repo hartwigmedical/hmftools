@@ -82,6 +82,7 @@ public class PhaseSetBuilder
     // performance tracking
     private final boolean mHasHighAssemblyCount;
     private long mStartTimeMs;
+    private boolean mDetailsLogged;
 
     private Stage mCurrentStage;
     private int mRoutineIteration;
@@ -123,6 +124,7 @@ public class PhaseSetBuilder
         mStartTimeMs = 0;
         mRoutineIteration = 0;
         mCurrentStage = null;
+        mDetailsLogged = false;
     }
 
     private static final int HIGH_ASSEMBLY_COUNT = 100;
@@ -132,8 +134,6 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
-        checkLogLargePhaseGroup();
-
         findLineExtensions();
 
         findLocalLinks();
@@ -475,8 +475,7 @@ public class PhaseSetBuilder
     {
         initialisePerfStage(Stage.FindUnmappedExtensions);
 
-        double collectRemoteRegionsTotalSeconds = 0;
-        double extractRemoteRegionReadsTotalSeconds = 0;
+        double extractRemoteReadsTotalSeconds = 0;
 
         // any assembly not in a link uses unmapped reads to try to extend the extension sequence
         for(JunctionAssembly assembly : mAssemblies)
@@ -489,11 +488,8 @@ public class PhaseSetBuilder
             long startTimeMs = System.currentTimeMillis();
             List<RemoteRegion> remoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, mHasHighAssemblyCount);
 
-            collectRemoteRegionsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
-
-            startTimeMs = System.currentTimeMillis();
             List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), remoteRegions, mHasHighAssemblyCount);
-            extractRemoteRegionReadsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
+            extractRemoteReadsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
 
             purgeSupplementaryReads(assembly, remoteReads);
             unmappedReads.addAll(remoteReads);
@@ -523,12 +519,11 @@ public class PhaseSetBuilder
 
         checkLogPerfTime();
 
-        if(AssemblyConfig.PerfLogTime > 0
-        && (collectRemoteRegionsTotalSeconds > AssemblyConfig.PerfLogTime || extractRemoteRegionReadsTotalSeconds >= AssemblyConfig.PerfLogTime))
+        if(AssemblyConfig.PerfLogTime > 0 && extractRemoteReadsTotalSeconds >= AssemblyConfig.PerfLogTime)
         {
-            SV_LOGGER.debug(format("pgId(%d) phase set stage(%s) remoteRef(slices=%d reads=%d) collectRegions(%.1f) extractReads(%.1f)",
+            SV_LOGGER.debug(format("pgId(%d) phase set stage(%s) remoteRef(slices=%d reads=%d) extractReads(%.1f)",
                     mPhaseGroup.id(), mCurrentStage, mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch(),
-                    collectRemoteRegionsTotalSeconds, extractRemoteRegionReadsTotalSeconds));
+                    extractRemoteReadsTotalSeconds));
         }
     }
 
@@ -1262,24 +1257,9 @@ public class PhaseSetBuilder
 
         if(seconds >= AssemblyConfig.PerfLogTime)
         {
-            SV_LOGGER.debug(format("pgId(%d) assemblies(%d) phase set stage(%s) time(%.1fs) details(links=%d candidates=%d line=%d)",
-                    mPhaseGroup.id(), mAssemblies.size(), mCurrentStage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
+            SV_LOGGER.debug(format("%s phase set stage(%s) time(%.1fs) details(links=%d candidates=%d line=%d)",
+                    getPhaseGroupInfo(), mCurrentStage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
                     mLineRelatedAssemblies.size()));
-        }
-    }
-
-    private void checkLogLargePhaseGroup()
-    {
-        if(AssemblyConfig.PerfLogTime > 0 && mHasHighAssemblyCount)
-        {
-            StringJoiner sj = new StringJoiner(";");
-            for(int i = 0; i < min(mAssemblies.size(), 4); ++i)
-            {
-                sj.add(mAssemblies.get(i).junction().coords());
-            }
-
-            SV_LOGGER.debug("pgId({}) assemblies({}: {}) starting phase set building",
-                    mPhaseGroup.id(), mAssemblies.size(), sj.toString());
         }
     }
 
@@ -1290,9 +1270,25 @@ public class PhaseSetBuilder
         if(mRoutineIteration < MAX_ROUTINE_ITERATION)
             return false;
 
-        SV_LOGGER.debug(format("pgId(%d) exiting phase set stage(%s) details(links=%d candidates=%d) after %d iterations",
-                mPhaseGroup.id(), mCurrentStage, mSplitLinks.size(), mExtensionCandidates.size(), mRoutineIteration));
+        SV_LOGGER.debug(format("%s exiting phase set stage(%s) details(links=%d candidates=%d) after %d iterations",
+                getPhaseGroupInfo(), mCurrentStage, mSplitLinks.size(), mExtensionCandidates.size(), mRoutineIteration));
 
         return true;
+    }
+
+    private String getPhaseGroupInfo()
+    {
+        if(mDetailsLogged)
+            return format("pgId(%d)", mPhaseGroup.id());
+
+        mDetailsLogged = true;
+
+        StringJoiner sj = new StringJoiner(";");
+        for(int i = 0; i < min(mAssemblies.size(), 4); ++i)
+        {
+            sj.add(mAssemblies.get(i).junction().coords());
+        }
+
+        return format("pgId(%d) assemblies(%d: %s)", mPhaseGroup.id(), mAssemblies.size(), sj);
     }
 }
