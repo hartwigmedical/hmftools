@@ -23,9 +23,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -796,6 +798,8 @@ public class UmiGroupBuilder
         for(List<DuplicateGroup> keyGroup : keyGroups.values())
         {
             Map<JitterCollapseElementKey, DuplicateGroup> elements = Maps.newHashMap();
+            SortedMap<Integer, SortedMap<Integer, HashSet<JitterCollapseElementKey>>> lowerToUpper = Maps.newTreeMap();
+            SortedMap<Integer, SortedMap<Integer, HashSet<JitterCollapseElementKey>>> upperToLower = Maps.newTreeMap();
             for(DuplicateGroup group : keyGroup)
             {
                 FragmentCoords coords = group.fragmentCoordinates();
@@ -803,10 +807,47 @@ public class UmiGroupBuilder
                 JitterCollapseElementKey key = new JitterCollapseElementKey(keyId, coords, umiId);
                 keyId++;
                 elements.put(key, group);
+
+                lowerToUpper.computeIfAbsent(coords.PositionLower, k -> Maps.newTreeMap());
+                lowerToUpper.get(coords.PositionLower).computeIfAbsent(coords.PositionUpper, k -> Sets.newHashSet());
+                lowerToUpper.get(coords.PositionLower).get(coords.PositionUpper).add(key);
+
+                upperToLower.computeIfAbsent(coords.PositionUpper, k -> Maps.newTreeMap());
+                upperToLower.get(coords.PositionUpper).computeIfAbsent(coords.PositionLower, k -> Sets.newHashSet());
+                upperToLower.get(coords.PositionUpper).get(coords.PositionLower).add(key);
+            }
+
+            Map<JitterCollapseElementKey, Set<JitterCollapseElementKey>> mergeGroups = Maps.newHashMap();
+            for(JitterCollapseElementKey key1 : elements.keySet())
+            {
+                int lower = key1.coords.PositionLower;
+                int upper = key1.coords.PositionUpper;
+
+                SortedMap<Integer, HashSet<JitterCollapseElementKey>> inRange = lowerToUpper.get(lower)
+                        .subMap(upper - SINGLE_END_JITTER_COLLAPSE_DISTANCE, upper + SINGLE_END_JITTER_COLLAPSE_DISTANCE + 1);
+                for(JitterCollapseElementKey key2 : inRange.values().stream().flatMap(HashSet::stream).toList())
+                {
+                    if(key1.equals(key2))
+                        continue;
+
+                    mergeGroups.computeIfAbsent(key1, k -> Sets.newHashSet());
+                    mergeGroups.get(key1).add(key2);
+                }
+
+                inRange = upperToLower.get(upper)
+                        .subMap(lower - SINGLE_END_JITTER_COLLAPSE_DISTANCE, lower + SINGLE_END_JITTER_COLLAPSE_DISTANCE + 1);
+                for(JitterCollapseElementKey key2 : inRange.values().stream().flatMap(HashSet::stream).toList())
+                {
+                    if(key1.equals(key2))
+                        continue;
+
+                    mergeGroups.computeIfAbsent(key1, k -> Sets.newHashSet());
+                    mergeGroups.get(key1).add(key2);
+                }
             }
 
             List<DuplicateGroup> mergedGroups = clusterMerger(
-                    elements, (x, y) -> x.canMerge(umiConfig, y), DUPLICATE_GROUP_COMPARATOR, UmiGroupBuilder::jitterMergeFn);
+                    elements, (x, y) -> x.canMerge(umiConfig, y), DUPLICATE_GROUP_COMPARATOR, UmiGroupBuilder::jitterMergeFn, mergeGroups);
             finalUmiGroups.addAll(mergedGroups);
         }
 
