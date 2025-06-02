@@ -70,13 +70,19 @@ public class SomaticVariantComparer implements ItemComparer
         // use a custom method optimised for large numbers of variants
         final MatchLevel matchLevel = mConfig.Categories.get(category());
 
-        final List<SomaticVariantData> allRefVariants = loadVariants(sampleId, mConfig.SourceNames.get(0));
-        final List<SomaticVariantData> allNewVariants = loadVariants(sampleId, mConfig.SourceNames.get(1));
+        final List<SomaticVariantData> refVariants = loadVariants(sampleId, mConfig.SourceNames.get(0));
+        final List<SomaticVariantData> newVariants = loadVariants(sampleId, mConfig.SourceNames.get(1));
 
-        boolean hasRefItems = allRefVariants != null;
-        boolean hasNewItems = allNewVariants != null;
+        return identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel);
+    }
+
+    public boolean identifyMismatches(final String sampleId, final List<Mismatch> mismatches, final List<SomaticVariantData> refVariants,
+            final List<SomaticVariantData> newVariants, final MatchLevel matchLevel)
+    {
+        boolean hasRefItems = refVariants != null;
+        boolean hasNewItems = newVariants != null;
         final List<String> emptyDiffs = Lists.newArrayList();
-        
+
         if(!hasRefItems || !hasNewItems)
         {
             InvalidDataItem invalidDataItem = new InvalidDataItem(category());
@@ -94,47 +100,47 @@ public class SomaticVariantComparer implements ItemComparer
         final String refSourceSampleId = mConfig.sourceSampleId(REF_SOURCE, sampleId);
         final String newSourceSampleId = mConfig.sourceSampleId(NEW_SOURCE, sampleId);
 
-        final Map<String,List<SomaticVariantData>> refVariantsMap = buildVariantMap(allRefVariants);
-        final Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(allNewVariants);
+        final Map<String,List<SomaticVariantData>> refVariantsMap = buildVariantMap(refVariants);
+        final Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(newVariants);
         final List<SomaticVariantData> emptyVariants = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chrStr = chromosome.toString();
-            List<SomaticVariantData> refVariants = refVariantsMap.get(chrStr);
-            List<SomaticVariantData> newVariants = newVariantsMap.get(chrStr);
+            List<SomaticVariantData> chromosomeRefVariants = refVariantsMap.get(chrStr);
+            List<SomaticVariantData> chromosomeNewVariants = newVariantsMap.get(chrStr);
 
-            if(newVariants == null && refVariants == null)
+            if(chromosomeNewVariants == null && chromosomeRefVariants == null)
                 continue;
 
-            if(newVariants == null)
-                newVariants = emptyVariants;
+            if(chromosomeNewVariants == null)
+                chromosomeNewVariants = emptyVariants;
 
-            if(refVariants == null)
-                refVariants = emptyVariants;
+            if(chromosomeRefVariants == null)
+                chromosomeRefVariants = emptyVariants;
 
             int index1 = 0;
             int index2 = 0;
-            while(index1 < refVariants.size())
+            while(index1 < chromosomeRefVariants.size())
             {
-                final SomaticVariantData refVariant = refVariants.get(index1);
+                final SomaticVariantData refVariant = chromosomeRefVariants.get(index1);
 
                 SomaticVariantData matchedVariant = null;
 
                 // shift index2 back to index at or before first potentially matching variant
-                while(index2 > 0 && (index2 >= newVariants.size() || newVariants.get(index2).Position >= refVariant.comparisonPosition()))
+                while(index2 > 0 && (index2 >= chromosomeNewVariants.size() || chromosomeNewVariants.get(index2).Position >= refVariant.comparisonPosition()))
                 {
                     --index2;
                 }
 
-                while(index2 < newVariants.size())
+                while(index2 < chromosomeNewVariants.size())
                 {
-                    final SomaticVariantData newVariant = newVariants.get(index2);
+                    final SomaticVariantData newVariant = chromosomeNewVariants.get(index2);
 
                     if(refVariant.matches(newVariant))
                     {
                         matchedVariant = newVariant;
-                        newVariants.remove(index2);
+                        chromosomeNewVariants.remove(index2);
                         break;
                     }
                     else if(newVariant.Position > refVariant.comparisonPosition())
@@ -157,7 +163,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(matchedVariant != null)
                 {
-                    refVariants.remove(index1);
+                    chromosomeRefVariants.remove(index1);
 
                     if(includeMismatchWithVariant(refVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
@@ -173,10 +179,10 @@ public class SomaticVariantComparer implements ItemComparer
                 }
             }
 
-            refVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
+            chromosomeRefVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
                     .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
 
-            for(SomaticVariantData newVariant : newVariants)
+            for(SomaticVariantData newVariant : chromosomeNewVariants)
             {
                 if(!includeMismatchWithVariant(newVariant, matchLevel))
                     continue;

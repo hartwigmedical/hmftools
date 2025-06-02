@@ -267,7 +267,7 @@ public class SomaticVariantData implements ComparableItem
 
     private boolean canComparePurpleFields(final SomaticVariantData otherVar)
     {
-        return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf && HasPurpleAnnotation && otherVar.HasPurpleAnnotation;
+        return HasPurpleAnnotation && otherVar.HasPurpleAnnotation;
     }
 
     public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
@@ -439,6 +439,22 @@ public class SomaticVariantData implements ComparableItem
     }
 
     public SomaticVariantData withType(VariantType Type)
+    {
+        return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
+                CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
+    }
+
+    public SomaticVariantData withReported(boolean Reported)
+    {
+        return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
+                CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
+                SubclonalLikelihood, Filters, VariantCopyNumber, PurityAdjustedVaf, TumorDepth, IsFromUnfilteredVcf, HasPurpleAnnotation,
+                mComparisonChromosome, mComparisonPosition);
+    }
+
+    public SomaticVariantData withCanonicalHgvsProteinImpact(String CanonicalHgvsProteinImpact)
     {
         return new SomaticVariantData(Chromosome, Position, Ref, Alt, Type, Gene, Reported, HotspotStatus, Tier, Biallelic, CanonicalEffect,
                 CanonicalCodingEffect, CanonicalHgvsCodingImpact, CanonicalHgvsProteinImpact, OtherReportedEffects, HasLPS, Qual,
