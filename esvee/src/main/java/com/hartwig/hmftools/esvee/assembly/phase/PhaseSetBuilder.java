@@ -96,7 +96,8 @@ public class PhaseSetBuilder
         FindNonLocalLinkCandidatesPostExtensions,
         ApplyLinksAndExtensions,
         AddUnlinkedAssemblyRefSupport,
-        FinalRoutines;
+        FinalisePhaseSets,
+        MergePhaseSetAlignments;
     }
 
     public PhaseSetBuilder(
@@ -131,6 +132,16 @@ public class PhaseSetBuilder
     private static final int HIGH_ASSEMBLY_READ_COUNT = 100;
     private static final int MAX_HIGH_ASSEMBLY_MATCHED_READS = 1000;
 
+    public void run()
+    {
+        buildPhaseSets();
+
+        initialisePerfStage(Stage.MergePhaseSetAlignments);
+
+        mPhaseGroup.finalisePhaseSetAlignments();
+        checkLogPerfTime();
+    }
+
     public void buildPhaseSets()
     {
         findLineExtensions();
@@ -141,7 +152,7 @@ public class PhaseSetBuilder
 
         addUnlinkedAssemblyRefSupport();
 
-        initialisePerfStage(Stage.FinalRoutines);
+        initialisePerfStage(Stage.FinalisePhaseSets);
 
         formFacingLinks();
 
@@ -1256,9 +1267,17 @@ public class PhaseSetBuilder
 
         if(seconds >= AssemblyConfig.PerfLogTime)
         {
-            SV_LOGGER.debug(format("%s phase set stage(%s) time(%.1fs) details(links=%d candidates=%d line=%d)",
-                    getPhaseGroupInfo(), mCurrentStage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
-                    mLineRelatedAssemblies.size()));
+            if(mCurrentStage == Stage.MergePhaseSetAlignments)
+            {
+                SV_LOGGER.debug(format("%s phase set stage(%s) time(%.1fs) phaseSets(%d)",
+                        getPhaseGroupInfo(), mCurrentStage, seconds, mPhaseGroup.phaseSets().size()));
+            }
+            else
+            {
+                SV_LOGGER.debug(format("%s phase set stage(%s) time(%.1fs) details(links=%d candidates=%d line=%d)",
+                        getPhaseGroupInfo(), mCurrentStage, seconds, mSplitLinks.size(), mExtensionCandidates.size(),
+                        mLineRelatedAssemblies.size()));
+            }
         }
     }
 
