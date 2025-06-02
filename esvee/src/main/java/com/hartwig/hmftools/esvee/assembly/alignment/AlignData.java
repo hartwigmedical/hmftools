@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -13,10 +14,14 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_GAP_OPEN_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
@@ -189,10 +194,50 @@ public class AlignData
     public int adjustedAlignment() { return mAdjustedAlignment; }
     public double modifiedMapQual() { return mModifiedMapQual; }
 
+    private int calcAdjustedIndelScore()
+    {
+        int indelLength = 0;
+
+        for(CigarElement element : mCigarElements)
+        {
+            if(element.getOperator() == S) // must be fully aligned reads, ie no soft-clips
+                return 0;
+
+            if(element.getOperator().isIndel() && element.getLength() >= MIN_VARIANT_LENGTH)
+            {
+                if(indelLength != 0) // only allow 1 long INDEL, so exit if a second is found
+                    return 0;
+
+                indelLength = element.getLength();
+
+                if(element.getOperator() == D)
+                    indelLength = -indelLength;
+            }
+        }
+
+        return indelLength;
+    }
+
     public void setAdjustedAlignment(final String fullSequence, int inexactHomologyStart, int inexactHomologyEnd)
     {
         int sequenceLength = mSequenceEnd - mSequenceStart + 1;
-        int scoreAdjustment = sequenceLength - mScore;
+
+        // adjust the score for CIGAR indels >= min length from single alignments
+        int adjustedScore = mScore;
+
+        int adjustedIndelScore = calcAdjustedIndelScore();
+
+        if(adjustedIndelScore != 0)
+        {
+            if(adjustedIndelScore < 0)
+                sequenceLength += adjustedIndelScore; // remove deleted segment
+            else
+                sequenceLength -= adjustedIndelScore;
+
+            adjustedScore += abs(adjustedIndelScore) + BWA_GAP_OPEN_PENALTY;
+        }
+
+        int scoreAdjustment = sequenceLength - adjustedScore;
 
         int seqStart = inexactHomologyStart > 0 ? mSequenceStart + inexactHomologyStart : mSequenceStart;
         int seqEnd = inexactHomologyEnd > 0 ? mSequenceEnd - inexactHomologyEnd : mSequenceEnd;
@@ -212,7 +257,7 @@ public class AlignData
         int inexactHomologyLength = inexactHomologyStart + inexactHomologyEnd;
         double adjustedSequenceLength = max(sequenceLength - inexactHomologyLength, 0);
 
-        if((mScore + ALIGNMENT_CALC_SCORE_FACTOR) / adjustedSequenceLength < ALIGNMENT_CALC_SCORE_THRESHOLD)
+        if((adjustedScore + ALIGNMENT_CALC_SCORE_FACTOR) / adjustedSequenceLength < ALIGNMENT_CALC_SCORE_THRESHOLD)
         {
             mModifiedMapQual = 0;
         }
