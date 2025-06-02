@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasWellAnchoredRead;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.markSupplementaryDuplicates;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
@@ -885,18 +886,7 @@ public class JunctionTracker
 
         if(!junctionData.internalIndel())
         {
-            boolean hasPassingAlignedRead = false;
-
-            for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
-            {
-                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore, true))
-                {
-                    hasPassingAlignedRead = true;
-                    break;
-                }
-            }
-
-            if(!hasPassingAlignedRead)
+            if(!hasWellAnchoredRead(junctionData, mFilterConfig))
                 return false;
         }
 
