@@ -83,15 +83,13 @@ public class AssemblyDeduper
         if(!SequenceCompare.matchedAssemblySequences(first, second))
             return false;
 
-        // despite a sequence match, if an indel read supports a soft-clip junction without offering inferred support, do no dedup
-
-        if(first.indel() == second.indel()) // one junction must be indel-based and the other not
+        if(first.indel() == second.indel()) // remaining checks are for indel vs non-indel
             return true;
 
-        // and sufficiently far apart
+        // despite a sequence match, if an indel read supports a soft-clip junction without offering inferred support, do not dedup
         int junctionDistance = abs(first.junction().Position - second.junction().Position);
 
-        if(junctionDistance <= ASSEMBLY_DEDUP_JITTER_MAX_DIST)
+        if(junctionDistance <= ASSEMBLY_DEDUP_JITTER_MAX_DIST) // must be sufficiently far apart
             return true;
 
         IndelCoords firstIndelCoords = first.indelCoords();
@@ -150,6 +148,9 @@ public class AssemblyDeduper
 
         if(first.indel() != second.indel())
             return first.indel();
+
+        if(first.discordantOnly() != second.discordantOnly())
+            return !first.discordantOnly();
 
         if(first.supportCount() != second.supportCount())
             return first.supportCount() > second.supportCount();
