@@ -120,7 +120,7 @@ public class PurityData implements ComparableItem
                 diffs, FLD_UNS_CN_SEGS,
                 Purity.qc().unsupportedCopyNumberSegments(), otherPurity.Purity.qc().unsupportedCopyNumberSegments(),thresholds);
 
-        checkDiff(diffs, FLD_SV_TMB, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), thresholds);
+        checkDiff(diffs, FLD_SV_TMB, Purity.svTumorMutationalBurden(), otherPurity.Purity.svTumorMutationalBurden(), thresholds);
 
         checkDiff(diffs, FLD_QC_STATUS, qcStatus(Purity.qc().status()), qcStatus(otherPurity.Purity.qc().status()));
 
