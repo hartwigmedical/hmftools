@@ -100,7 +100,7 @@ public class AssemblyConfig
     public final int Threads;
 
     // default value overrides
-    public final int PhaseProcessingLimit;
+    public static int PhaseProcessingLimit;
     public final int AssemblyMapQualThreshold;
     public final boolean DiscordantOnlyDisabled;
     public final double DiscordantRateIncrement;

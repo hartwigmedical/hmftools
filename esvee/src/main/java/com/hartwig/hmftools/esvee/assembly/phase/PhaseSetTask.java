@@ -80,7 +80,22 @@ public class PhaseSetTask extends ThreadTask
                 try
                 {
                     phaseSetBuilder.buildPhaseSets();
+
+                    long startTimeMs = System.currentTimeMillis();
+
                     phaseGroup.finalisePhaseSetAlignments();
+
+                    if(AssemblyConfig.PerfLogTime > 0)
+                    {
+                        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+                        double seconds = timeTakenMs / 1000.0;
+
+                        if(seconds >= AssemblyConfig.PerfLogTime)
+                        {
+                            SV_LOGGER.debug(format("%d finalise phase sets time(%.1fs) phaseSets(%d)",
+                                    phaseGroup.id(), seconds, phaseGroup.phaseSets().size()));
+                        }
+                    }
                 }
                 catch(Exception e)
                 {

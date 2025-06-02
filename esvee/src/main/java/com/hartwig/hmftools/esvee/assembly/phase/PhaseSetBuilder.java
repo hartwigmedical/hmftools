@@ -129,7 +129,6 @@ public class PhaseSetBuilder
 
     private static final int HIGH_ASSEMBLY_COUNT = 100;
     private static final int HIGH_ASSEMBLY_READ_COUNT = 100;
-    private static final int MAX_ROUTINE_ITERATION = 2000;
     private static final int MAX_HIGH_ASSEMBLY_MATCHED_READS = 1000;
 
     public void buildPhaseSets()
@@ -521,8 +520,8 @@ public class PhaseSetBuilder
 
         if(AssemblyConfig.PerfLogTime > 0 && extractRemoteReadsTotalSeconds >= AssemblyConfig.PerfLogTime)
         {
-            SV_LOGGER.debug(format("pgId(%d) phase set stage(%s) remoteRef(slices=%d reads=%d) extractReads(%.1f)",
-                    mPhaseGroup.id(), mCurrentStage, mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch(),
+            SV_LOGGER.debug(format("pgId(%s) phase set stage(%s) remoteRef(slices=%d reads=%d) extractReads(%.1f)",
+                    getPhaseGroupInfo(), mCurrentStage, mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch(),
                     extractRemoteReadsTotalSeconds));
         }
     }
@@ -1265,9 +1264,12 @@ public class PhaseSetBuilder
 
     private boolean checkMaxRoutineIteration()
     {
+        if(AssemblyConfig.PhaseProcessingLimit == 0)
+            return false;
+
         ++mRoutineIteration;
 
-        if(mRoutineIteration < MAX_ROUTINE_ITERATION)
+        if(mRoutineIteration < AssemblyConfig.PhaseProcessingLimit)
             return false;
 
         SV_LOGGER.debug(format("%s exiting phase set stage(%s) details(links=%d candidates=%d) after %d iterations",
