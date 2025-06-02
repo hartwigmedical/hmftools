@@ -169,6 +169,9 @@ public class DepthTask implements Callable
             VariantContext variant = mVariantsList.get(i);
             VariantInfo variantInfo = mVariantInfoList.get(i);
 
+            double totalDepth = 0;
+            int totalFrags = 0;
+
             for(int s = 0; s < mConfig.SampleIds.size(); ++s)
             {
                 String sampleId = mConfig.SampleIds.get(s);
@@ -189,7 +192,13 @@ public class DepthTask implements Callable
                 double af = variantFrags / total;
 
                 genotype.getExtendedAttributes().put(ALLELE_FRACTION, af);
+
+                totalFrags += variantFrags;
+                totalDepth += total;
             }
+
+            double totalAf = totalDepth > 0 ? totalFrags / totalDepth : 0;
+            variant.getCommonInfo().putAttribute(ALLELE_FRACTION, totalAf);
 
             RefSupportCounts totalCounts = variantInfo.totalSupport();
             setRefDepthValue(variant, totalCounts.RefSupport, refVcfTag);

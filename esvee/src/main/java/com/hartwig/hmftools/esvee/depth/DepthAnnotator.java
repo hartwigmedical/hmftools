@@ -193,6 +193,9 @@ public class DepthAnnotator
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
 
+        if(!header.hasInfoLine(ALLELE_FRACTION))
+            header.addMetaDataLine(new VCFInfoHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
+
         if(!header.hasFormatLine(ALLELE_FRACTION))
             header.addMetaDataLine(new VCFFormatHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
 
