@@ -142,6 +142,11 @@ public class Breakend implements Comparable<Breakend>
         return mFragmentLengthCount > 0 ? (int)round(mFragmentLengthTotal / (double)mFragmentLengthCount) : 0;
     }
 
+    public double validFragmentLengthPercent()
+    {
+        return mFragmentLengthCount > 0 ? mFragmentLengthCount / (double)(mFragmentLengthCount + mIncompleteFragmentCount) : 0;
+    }
+
     public int incompleteFragmentCount() { return mIncompleteFragmentCount; }
 
     public void addInferredFragmentLength(final int length, boolean isComplete)

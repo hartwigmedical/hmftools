@@ -99,6 +99,8 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH = 50;
     public static final int ALIGNMENT_RECOVERY_MAX_MD_ERRORS = 4;
 
+    public static final double BREAKEND_REQ_VALID_FRAGMENT_LENGTH_PERC = 0.33;
+
     public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 
     // DUX-4 regions

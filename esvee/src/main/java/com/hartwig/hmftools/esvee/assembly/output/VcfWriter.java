@@ -66,6 +66,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BREAKEND_REQ_VALID_FRAGMENT_LENGTH_PERC;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment.toVcfTag;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
@@ -297,7 +298,12 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SPLIT_FRAGS, totalSplitFrags);
         builder.attribute(DISC_FRAGS, totalDiscFrags);
         builder.attribute(TOTAL_FRAGS, totalSplitFrags + totalDiscFrags);
-        builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
+
+        // for SGLs with too few fragments with a valid length, set the calculated value to zero
+        if(breakend.isSingle() && breakend.validFragmentLengthPercent() < BREAKEND_REQ_VALID_FRAGMENT_LENGTH_PERC)
+            builder.attribute(AVG_FRAG_LENGTH, 0);
+        else
+            builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
 
         List<AlternativeAlignment> altAlignments = breakend.alternativeAlignments();
         if(!altAlignments.isEmpty())
