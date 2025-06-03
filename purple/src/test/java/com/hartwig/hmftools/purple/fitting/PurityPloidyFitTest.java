@@ -19,7 +19,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -43,7 +42,6 @@ import com.hartwig.hmftools.purple.segment.Segmentation;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurityPloidyFitTest
@@ -148,43 +146,29 @@ public class PurityPloidyFitTest
     @Test
     public void testMostDiploidPurity()
     {
-        final FittedPurity fp1 = createRandomPurity(0.3, 0.3, 2.3);
-        final FittedPurity fp2 = createRandomPurity(0.3, 0.2, 1.9);
-        final FittedPurity fp3 = createRandomPurity(0.4, 0.4, 1.8);
-        final FittedPurity fp4 = createRandomPurity(0.4, 0.3, 2.05);
+        FittedPurity fp1 = createFittedPurity(0.3, 0.3, 2.3);
+        FittedPurity fp2 = createFittedPurity(0.3, 0.2, 1.9);
+        FittedPurity fp3 = createFittedPurity(0.4, 0.4, 1.8);
+        FittedPurity fp4 = createFittedPurity(0.4, 0.3, 2.05);
 
-        final List<FittedPurity> all = Lists.newArrayList(fp1, fp2, fp3, fp4);
+        List<FittedPurity> all = Lists.newArrayList(fp1, fp2, fp3, fp4);
         Collections.shuffle(all);
 
-        final List<FittedPurity> result = BestFit.mostDiploidPerPurity(all);
+        List<FittedPurity> result = BestFit.mostDiploidPerPurity(all);
 
         assertEquals(2, result.size());
         assertEquals(fp2, result.get(0));
         assertEquals(fp4, result.get(1));
     }
 
-    public static double nextDouble(@NotNull final Random random)
-    {
-        return Math.round(random.nextDouble() * 10000D) / 10000D;
-    }
-
-    @NotNull
-    public static ImmutableFittedPurity.Builder createRandomPurityBuilder(@NotNull Random random)
+    private FittedPurity createFittedPurity(double purity, double score, double ploidy)
     {
         return ImmutableFittedPurity.builder()
-                .purity(nextDouble(random))
-                .normFactor(nextDouble(random))
-                .score(nextDouble(random))
-                .diploidProportion(nextDouble(random))
-                .ploidy(nextDouble(random))
-                .somaticPenalty(nextDouble(random));
+                .purity(purity)
+                .normFactor(0.95)
+                .score(score)
+                .diploidProportion(1.0)
+                .ploidy(ploidy)
+                .somaticPenalty(0).build();
     }
-
-    @NotNull
-    private FittedPurity createRandomPurity(double purity, double score, double ploidy)
-    {
-        Random random = new Random();
-        return createRandomPurityBuilder(random).purity(purity).score(score).ploidy(ploidy).build();
-    }
-
 }

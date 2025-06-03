@@ -47,17 +47,17 @@ public class Segmentation
     public List<ObservedRegion> createObservedRegions(
             final List<StructuralVariant> structuralVariants, final AmberData amberData, final CobaltData cobaltData)
     {
-        final Map<Chromosome,List<PCFPosition>> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
+        Map<Chromosome,List<PCFPosition>> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
 
-        final PurpleSegmentFactory factory = new PurpleSegmentFactory(
+        PurpleSegmentFactory factory = new PurpleSegmentFactory(
                 mWindowSize, mReferenceData.Centromeres, mReferenceData.ChromosomeLengths);
 
-        final List<PurpleSupportSegment> segments = factory.createSegments(structuralVariants, pcfPositions, cobaltData.Ratios);
+        List<PurpleSupportSegment> segments = factory.createSegments(structuralVariants, pcfPositions, cobaltData.Ratios);
 
         if(!validateSegments(segments))
             return Lists.newArrayList();
 
-        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
+        ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
 
         List<ObservedRegion> observedRegions = observedRegionFactory.formObservedRegions(
                 segments, amberData.ChromosomeBafs, cobaltData.Ratios, mGcProfiles);

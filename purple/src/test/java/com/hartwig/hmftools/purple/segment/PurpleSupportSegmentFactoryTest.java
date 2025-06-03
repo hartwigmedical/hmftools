@@ -128,13 +128,11 @@ public class PurpleSupportSegmentFactoryTest
         assertEquals(support, victim.Support);
     }
 
-    @NotNull
     private static Cluster cluster(int start)
     {
         return new Cluster(CHROMOSOME_LENGTH.chromosome(), start, start);
     }
 
-    @NotNull
     private static Cluster cluster(int start, int... variants)
     {
         Cluster cluster = cluster(start);
@@ -146,7 +144,6 @@ public class PurpleSupportSegmentFactoryTest
         return cluster;
     }
 
-    @NotNull
     private static void addRatios(final Cluster cluster, int... ratios)
     {
         for(int position : ratios)
@@ -155,7 +152,6 @@ public class PurpleSupportSegmentFactoryTest
         }
     }
 
-    @NotNull
     private static SVSegment variant(int position)
     {
         return new SVSegment(CHROMOSOME_LENGTH.chromosome(), position, StructuralVariantType.BND);

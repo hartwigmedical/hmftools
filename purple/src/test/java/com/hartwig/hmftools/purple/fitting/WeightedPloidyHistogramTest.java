@@ -20,7 +20,6 @@ import org.junit.Test;
 
 public class WeightedPloidyHistogramTest
 {
-
     @Test
     public void testMaxBucket()
     {

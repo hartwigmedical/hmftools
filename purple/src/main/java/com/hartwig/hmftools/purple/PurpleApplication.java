@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.fitting.FittedPurityFactory.createFittedRegionFactory;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
 
 import java.io.IOException;
@@ -99,7 +98,12 @@ public class PurpleApplication
             System.exit(1);
         }
 
-        // and common reference data
+        PPL_LOGGER.info("reference({}) tumor({}) {}",
+                mConfig.ReferenceId != null ? mConfig.ReferenceId : "NONE", mConfig.TumorId != null ? mConfig.TumorId : "NONE",
+                mConfig.TargetRegionsMode ? "running on target-regions only" : "");
+
+        PPL_LOGGER.info("output directory: {}", mConfig.OutputDir);
+
         mReferenceData = new ReferenceData(configBuilder, mConfig);
 
         if(!mReferenceData.isValid())
@@ -234,8 +238,7 @@ public class PurpleApplication
         Set<String> reportedGenes = Sets.newHashSet();
         SomaticStream somaticStream = null;
 
-        RegionFitCalculator regionFitCalculator =
-                createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
+        RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, amberData.AverageTumorDepth);
 
         double chimerismPercentage = 0;
 

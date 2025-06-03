@@ -220,12 +220,6 @@ public class FittedPurityFactory
                 .build();
     }
 
-    public static RegionFitCalculator createFittedRegionFactory(
-            final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig)
-    {
-        return new RegionFitCalculator(cobaltChromosomes, fitScoreConfig, averageTumorDepth);
-    }
-
     private static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)
     {
         if(region.bafCount() <= 0)
