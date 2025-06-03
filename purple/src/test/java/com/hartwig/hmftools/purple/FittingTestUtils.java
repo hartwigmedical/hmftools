@@ -1,49 +1,25 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
-
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.Segmentation;
 
-public class PurpleTestUtils
+public class FittingTestUtils
 {
-    public static final String TUMOR_SAMPLE_ID = "SAMPLE_ID";
-    public static final String REF_SAMPLE_ID = "REF_SAMPLE_ID";
-
-    public static PurpleConfig buildDefaultPurpleConfig()
-    {
-        return buildPurpleConfig(buildDefaultConfigBuilder());
-    }
-
-    public static ConfigBuilder buildDefaultConfigBuilder()
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder();
-        PurpleConfig.registerConfig(configBuilder);
-
-        configBuilder.setValue(TUMOR, TUMOR_SAMPLE_ID);
-        configBuilder.setValue(REFERENCE, REF_SAMPLE_ID);
-
-        return configBuilder;
-    }
-
-    public static PurpleConfig buildPurpleConfig(final ConfigBuilder configBuilder)
-    {
-        return new PurpleConfig("version", configBuilder);
-    }
-
     public static CobaltChromosomes buildCobaltChromosomes()
     {
         List<MedianRatio> medianRatios = Lists.newArrayList();
@@ -110,5 +86,39 @@ public class PurpleTestUtils
                 0, 2, tumorCopyNumber, observedBaf, tumorCopyNumber, observedBaf);
     }
 
+    public static ObservedRegion createDefaultFittedRegion(final String chromosome, final int start, final int end)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,
+                1, 1, 1, GermlineStatus.DIPLOID, false,
+                0.93, 0, 0, 0, 0, 0,
+                0, 2, 2, 0.5, 0, 0);
+    }
 
+    public static PurityAdjuster buildPurityAdjuster(final Gender gender, final double purity, final double normFactor)
+    {
+        Map<String,Double> observedRatioMap = Maps.newHashMap();
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            if(chromosome.isAutosome())
+            {
+                observedRatioMap.put(chromosome.toString(), 1.0);
+            }
+            else if(chromosome.equals(HumanChromosome._X))
+            {
+                if(gender == Gender.MALE)
+                    observedRatioMap.put(chromosome.toString(), 0.5);
+                else
+                    observedRatioMap.put(chromosome.toString(), 1.0);
+            }
+            else if(chromosome.equals(HumanChromosome._Y))
+            {
+                if(gender == Gender.MALE)
+                    observedRatioMap.put(chromosome.toString(), 0.5);
+            }
+        }
+
+        return new PurityAdjuster(observedRatioMap, purity, normFactor);
+    }
 }
