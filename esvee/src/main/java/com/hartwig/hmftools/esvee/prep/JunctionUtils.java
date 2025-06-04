@@ -295,7 +295,7 @@ public final class JunctionUtils
     {
         List<PrepRead> junctionReads = junctionData.readTypeReads().get(ReadType.JUNCTION);
 
-        if(junctionReads.stream().anyMatch(x -> aboveAlignedScoreDifference(x)))
+        if(junctionReads.stream().anyMatch(x -> aboveAlignedScoreDifference(x, filterConfig.MinCalcAlignmentScore)))
             return true;
 
         if(junctionReads.stream().anyMatch(x -> aboveRepeatTrimmedAlignmentThreshold(x, filterConfig.MinCalcAlignmentScore, true)))
@@ -304,12 +304,16 @@ public final class JunctionUtils
         return false;
     }
 
-    private static boolean aboveAlignedScoreDifference(final PrepRead read)
+    private static boolean aboveAlignedScoreDifference(final PrepRead read, int minAlignScore)
     {
         Integer asScore = read.record().getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+
+        if(asScore == null || asScore < minAlignScore)
+            return false;
+
         Integer xsScore = read.record().getIntegerAttribute(XS_ATTRIBUTE);
 
-        return asScore != null && xsScore != null && asScore - xsScore >= MIN_ALIGNMENT_SCORE_DIFF;
+        return xsScore != null && asScore - xsScore >= MIN_ALIGNMENT_SCORE_DIFF;
     }
 
     public static int markSupplementaryDuplicates(final Map<String,ReadGroup> readGroupMap, final ReadIdTrimmer readIdTrimmer)
