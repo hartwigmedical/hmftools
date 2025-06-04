@@ -2,14 +2,12 @@ package com.hartwig.hmftools.esvee.prep.types;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SUPPORT_FRAGMENT_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_LENGTH_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT;
@@ -25,7 +23,6 @@ public class ReadFilterConfig
 {
     // initial read filtering to identify junction candidates
     public final int MinAlignmentBases;
-    public final int MinCalcAlignmentScore;
     public final int MinMapQuality;
     public final int MinInsertAlignmentOverlap;
     public final int MinIndelLength;
@@ -59,7 +56,6 @@ public class ReadFilterConfig
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
         MinSupportingReadDistance = minSupportingReadDistance;
 
-        MinCalcAlignmentScore = MIN_CALC_ALIGNMENT_SCORE;
         MinInsertLengthSupport = MIN_INSERT_LENGTH_SUPPORT;
         MinJunctionSupport = minJunctionSupport;
 

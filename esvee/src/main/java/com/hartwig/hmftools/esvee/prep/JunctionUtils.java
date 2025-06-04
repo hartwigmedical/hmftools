@@ -12,9 +12,13 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_SCORE_DIFF;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_LOWER_SCORE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.calcRepeatTrimmedAlignmentScore;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.FragmentData.unclippedPosition;
 import static com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus.DUPLICATE;
@@ -293,13 +297,19 @@ public final class JunctionUtils
 
     public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        List<PrepRead> junctionReads = junctionData.readTypeReads().get(ReadType.JUNCTION);
+        for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
+        {
+            double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, MIN_CALC_ALIGNMENT_SCORE, true);
 
-        if(junctionReads.stream().anyMatch(x -> aboveAlignedScoreDifference(x, filterConfig.MinCalcAlignmentScore)))
-            return true;
+            if(adjustedAlignScore < 0)
+                continue;
 
-        if(junctionReads.stream().anyMatch(x -> aboveRepeatTrimmedAlignmentThreshold(x, filterConfig.MinCalcAlignmentScore, true)))
-            return true;
+            if(adjustedAlignScore >= MIN_CALC_ALIGNMENT_SCORE)
+                return true;
+
+            if(adjustedAlignScore >= MIN_CALC_ALIGNMENT_LOWER_SCORE && aboveAlignedScoreDifference(read, filterConfig.MinAlignmentBases))
+                return true;
+        }
 
         return false;
     }
