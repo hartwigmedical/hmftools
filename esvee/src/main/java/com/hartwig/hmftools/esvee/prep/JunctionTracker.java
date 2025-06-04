@@ -893,14 +893,6 @@ public class JunctionTracker
         if(junctionFrags + exactSupportCount < mFilterConfig.MinJunctionSupport)
             return false;
 
-        /*
-        purgeSupplementaryDuplicates(junctionData);
-
-        // re-assessed after duplicate assessment
-        junctionFrags = junctionData.junctionFragmentCount();
-        exactSupportCount = junctionData.exactSupportFragmentCount();
-        */
-
         return junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport;
     }
 

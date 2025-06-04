@@ -5,11 +5,14 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_SCORE_DIFF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
@@ -290,50 +293,23 @@ public final class JunctionUtils
 
     public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        // require either a locally concordant mate read or sufficient aligned bases less repeats and mismatches
-        for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
-        {
-            if(hasConcordantMate(read, junctionData, filterConfig))
-            {
-                return true;
-            }
-        }
+        List<PrepRead> junctionReads = junctionData.readTypeReads().get(ReadType.JUNCTION);
 
-        for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
-        {
-            if(aboveRepeatTrimmedAlignmentThreshold(read, filterConfig.MinCalcAlignmentScore, true))
-            {
-                return true;
-            }
-        }
+        if(junctionReads.stream().anyMatch(x -> aboveAlignedScoreDifference(x)))
+            return true;
+
+        if(junctionReads.stream().anyMatch(x -> aboveRepeatTrimmedAlignmentThreshold(x, filterConfig.MinCalcAlignmentScore, true)))
+            return true;
 
         return false;
     }
 
-    private static boolean hasConcordantMate(final PrepRead read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
+    private static boolean aboveAlignedScoreDifference(final PrepRead read)
     {
-        if(!read.hasFlag(SAMFlag.READ_PAIRED) || read.isMateUnmapped() || isChimericRead(read.record(), filterConfig))
-            return false;
+        Integer asScore = read.record().getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+        Integer xsScore = read.record().getIntegerAttribute(XS_ATTRIBUTE);
 
-        String mateCigarStr = read.record().getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-
-        if(mateCigarStr == null)
-            return false;
-
-        List<CigarElement> mateCigar = cigarElementsFromStr(mateCigarStr);
-
-        if(mateCigar.size() != 1)
-            return false;
-
-        if(junctionData.isForward())
-        {
-            int mateEnd = read.MatePosStart + mateCigar.get(0).getLength() - 1;
-            return mateEnd < read.start();
-        }
-        else
-        {
-            return read.MatePosStart > read.end();
-        }
+        return asScore != null && xsScore != null && asScore - xsScore >= MIN_ALIGNMENT_SCORE_DIFF;
     }
 
     public static int markSupplementaryDuplicates(final Map<String,ReadGroup> readGroupMap, final ReadIdTrimmer readIdTrimmer)

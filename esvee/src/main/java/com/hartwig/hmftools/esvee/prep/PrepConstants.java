@@ -27,6 +27,7 @@ public final class PrepConstants
     // candidate junction fragments
     public static final int MIN_ALIGNMENT_BASES = 50;
     public static final int MIN_CALC_ALIGNMENT_SCORE = 40;
+    public static final int MIN_ALIGNMENT_SCORE_DIFF = 20;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
     public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
     public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
