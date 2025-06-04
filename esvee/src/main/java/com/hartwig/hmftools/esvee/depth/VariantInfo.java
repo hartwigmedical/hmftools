@@ -71,11 +71,6 @@ public class VariantInfo
         return totalCounts;
     }
 
-    private static byte getOrientation(final VariantContext variant)
-    {
-        return isSingleBreakend(variant) ? parseSingleOrientation(variant) : parseSvOrientation(variant);
-    }
-
     public String toString()
     {
         return format("pos(%d %d-%d)", Position, PositionMin, PositionMax);

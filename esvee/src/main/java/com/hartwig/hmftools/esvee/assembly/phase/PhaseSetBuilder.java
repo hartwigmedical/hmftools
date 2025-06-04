@@ -189,7 +189,7 @@ public class PhaseSetBuilder
             boolean isPrimaryLink = !mLocallyLinkedAssemblies.contains(extensionCandidate.Assembly)
                     && !mLocallyLinkedAssemblies.contains(extensionCandidate.SecondAssembly);
 
-            applySplitLink(assemblyLink, isPrimaryLink);
+            applySplitLink(assemblyLink, isPrimaryLink, true);
 
             mLocallyLinkedAssemblies.add(extensionCandidate.Assembly);
             mLocallyLinkedAssemblies.add(extensionCandidate.SecondAssembly);
@@ -234,7 +234,7 @@ public class PhaseSetBuilder
         return true;
     }
 
-    private void findSplitLinkCandidates(boolean localOnly)
+    private void findSplitLinkCandidates(boolean localIndelOnly)
     {
         if(mAssemblies.size() < 2)
             return;
@@ -247,14 +247,22 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
+            if(!localIndelOnly && mLocallyLinkedAssemblies.contains(assembly1)) // no attempt to find secondaries for these
+                continue;
+
             Set<String> firstReadIds = Sets.newHashSet();
             boolean firstHighReadCount = assemblyHasHighReadCount(assembly1);
-            populateReadIds(assembly1, firstReadIds, localOnly);
+
+            if(!localIndelOnly)
+                populateReadIds(assembly1, firstReadIds, localIndelOnly);
 
             // allow linking assemblies to be included, to allow secondary links to be found
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
+
+                if(!localIndelOnly && mLocallyLinkedAssemblies.contains(assembly2))
+                    continue;
 
                 boolean isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
                 boolean isLocalLinkCandidate = false;
@@ -264,7 +272,7 @@ public class PhaseSetBuilder
                     isLocalLinkCandidate = isLocalIndel || isLocalAssemblyCandidate(assembly1, assembly2);
                 }
 
-                if(localOnly)
+                if(localIndelOnly)
                 {
                     if(!isLocalLinkCandidate)
                         continue;
@@ -277,12 +285,14 @@ public class PhaseSetBuilder
 
                 Set<String> secondReadIds = Sets.newHashSet();
                 boolean secondHighReadCount = assemblyHasHighReadCount(assembly2);
-                populateReadIds(assembly2, secondReadIds, localOnly);
+
+                if(!localIndelOnly)
+                    populateReadIds(assembly2, secondReadIds, localIndelOnly);
 
                 Set<String> firstReadIdsRelated;
                 Set<String> secondReadIdsRelated;
 
-                if(!localOnly && (firstHighReadCount || secondHighReadCount))
+                if(!localIndelOnly && (firstHighReadCount || secondHighReadCount))
                 {
                     firstReadIdsRelated = Sets.newHashSet();
                     secondReadIdsRelated = Sets.newHashSet();
@@ -295,7 +305,7 @@ public class PhaseSetBuilder
                 }
 
                 // proximate breakends may not share reads esp if indels vs soft-clips are the source of differences
-                boolean hasSharedFragments = localOnly || hasSharedFragment(firstReadIdsRelated, secondReadIdsRelated);
+                boolean hasSharedFragments = localIndelOnly || hasSharedFragment(firstReadIdsRelated, secondReadIdsRelated);
 
                 AssemblyLink assemblyLink = null;
 
@@ -304,7 +314,7 @@ public class PhaseSetBuilder
 
                 if(!hasSharedFragments || assemblyLink == null)
                 {
-                    if(localOnly)
+                    if(localIndelOnly)
                     {
                         // cache to avoid checking on a second pass
                         mExtensionCandidates.add(new ExtensionCandidate(LOCAL_DEL_DUP, assembly1, assembly2));
@@ -317,6 +327,15 @@ public class PhaseSetBuilder
 
                 ExtensionCandidate extensionCandidate = new ExtensionCandidate(type, assemblyLink);
                 mExtensionCandidates.add(extensionCandidate);
+
+                if(localIndelOnly)
+                {
+                    // populate read IDs now that the link has been made
+                    if(firstReadIds.isEmpty())
+                        populateReadIds(assembly1, firstReadIds, localIndelOnly);
+
+                    populateReadIds(assembly2, secondReadIds, localIndelOnly);
+                }
 
                 // now count up all possible linking fragments to compare with other candidate links and extensions
                 countSharedFragments(extensionCandidate, firstReadIdsRelated, secondReadIdsRelated);
@@ -332,11 +351,11 @@ public class PhaseSetBuilder
         return assembly.supportCount() >= HIGH_ASSEMBLY_READ_COUNT || assembly.candidateSupport().size() >= HIGH_ASSEMBLY_READ_COUNT;
     }
 
-    private static void populateReadIds(final JunctionAssembly assembly, final Set<String> readIds, boolean localOnly)
+    private void populateReadIds(final JunctionAssembly assembly, final Set<String> readIds, boolean localIndelOnly)
     {
         if(assemblyHasHighReadCount(assembly))
         {
-            if(localOnly)
+            if(localIndelOnly)
             {
                 assembly.support().stream().filter(x -> !x.isDiscordant() && x.isMateMapped()).forEach(x -> readIds.add(x.id()));
                 assembly.candidateSupport().stream().filter(x -> !isDiscordantFragment(x) && x.isMateMapped()).forEach(x -> readIds.add(x.id()));
@@ -350,7 +369,10 @@ public class PhaseSetBuilder
         {
             // take all reads
             assembly.support().forEach(x -> readIds.add(x.id()));
-            assembly.candidateSupport().forEach(x -> readIds.add(x.id()));
+
+            // ignore candidate discordant reads around local indels since it's not clear enough if it relates to the assembly
+            if(!localIndelOnly)
+                assembly.candidateSupport().forEach(x -> readIds.add(x.id()));
         }
     }
 
@@ -456,7 +478,7 @@ public class PhaseSetBuilder
                 }
 
                 extensionCandidate.markSelected();
-                applySplitLink(extensionCandidate.Link, !eitherInPrimary);
+                applySplitLink(extensionCandidate.Link, !eitherInPrimary, false);
 
                 if(!eitherInPrimary)
                 {
@@ -610,10 +632,17 @@ public class PhaseSetBuilder
         checkLogPerfTime();
     }
 
-    private void applySplitLink(final AssemblyLink assemblyLink, boolean isPrimaryLink)
+    private void applySplitLink(final AssemblyLink assemblyLink, boolean isPrimaryLink, boolean isLocalIndel)
     {
         boolean allowBranching = isPrimaryLink && !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH);
-        boolean allowDiscordantReads = !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
+
+        // discordant reads are not used to build out local indel links
+        boolean allowDiscordantReads = !isLocalIndel && !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
+
+        if(isLocalIndel)
+        {
+            adjustLocalIndelSupport(assemblyLink.first(), assemblyLink.second());
+        }
 
         applySplitLinkSupport(assemblyLink.first(), assemblyLink.second(), allowBranching, allowDiscordantReads);
 
@@ -714,8 +743,6 @@ public class PhaseSetBuilder
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<Read> matchedCandidates1 = Lists.newArrayList();
         List<Read> matchedCandidates2 = Lists.newArrayList();
-
-        addLocalMateSupport(assembly1, assembly2);
 
         boolean hasHighAssemblyCount = mHasHighAssemblyCount;
         boolean candidateSupportLimited1 = hasHighAssemblyCount && assembly1.candidateSupport().size() > MAX_HIGH_ASSEMBLY_MATCHED_READS;
@@ -872,7 +899,7 @@ public class PhaseSetBuilder
         return AssemblyUtils.isLocalAssemblyCandidate(first, second, false, false);
     }
 
-    private void addLocalMateSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    private void adjustLocalIndelSupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         if(!isLocalAssemblyCandidate(assembly1, assembly2))
             return;
