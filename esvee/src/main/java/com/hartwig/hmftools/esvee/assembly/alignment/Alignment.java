@@ -7,8 +7,12 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.isWeakIndelBasedUnlinkedAssembly;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -379,6 +383,36 @@ public class Alignment
 
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
+
+            // final filters on assembly and alignment results
+            if(isWeakSingleReadExtensionAssembly(assemblyAlignment))
+            {
+                assemblyAlignment.breakends().clear();
+            }
+        }
+
+        private static boolean isWeakSingleReadExtensionAssembly(final AssemblyAlignment assemblyAlignment)
+        {
+            if(assemblyAlignment.assemblies().size() != 1 || assemblyAlignment.breakends().isEmpty())
+                return false;
+
+            // check not a short indel
+            if(assemblyAlignment.breakends().size() == 2)
+            {
+                Breakend breakend = assemblyAlignment.breakends().get(0);
+                if(isShortLocalDelDupIns(breakend.svType(), breakend.svLength()))
+                    return false;
+            }
+
+            JunctionAssembly assembly = assemblyAlignment.assemblies().get(0);
+
+            if(assembly.hasLineSequence() || assembly.junction().DiscordantOnly || assembly.junction().indelBased()) // simple split junction
+                return false;
+
+            if(assembly.stats().SoftClipSecondMaxLength >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH) // only 1 read above the min length
+                return false;
+
+            return true;
         }
     }
 

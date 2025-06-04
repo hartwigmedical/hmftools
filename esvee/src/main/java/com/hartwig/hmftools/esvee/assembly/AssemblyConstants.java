@@ -23,7 +23,6 @@ public final class AssemblyConstants
     public static final int UNMAPPED_TRIM_THRESHOLD = 40;
 
     // primary assembly
-    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
     public static final int DECOY_MAX_MISMATCHES = 3;
     public static final double DECOY_MIN_SCORE_FACTOR = 0.9;
     public static final int ASSEMBLY_MIN_READ_SUPPORT = 2;
