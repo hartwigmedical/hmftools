@@ -29,6 +29,7 @@ import com.hartwig.hmftools.lilac.fragment.FragmentSource;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
 
 public class HlaYCoverage
 {
@@ -112,8 +113,7 @@ public class HlaYCoverage
         // only test heterozygous locations in A since HLA-Y matches its exon boundaries
         for(Fragment fragment : fragments)
         {
-            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
-                    .filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcids().stream().map(AminoAcid::locus).filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
 
             if(fragAminoAcidLoci.isEmpty())
                 continue;
@@ -198,8 +198,7 @@ public class HlaYCoverage
 
         for(Fragment fragment : fragments)
         {
-            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
-                    .filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcids().stream().map(AminoAcid::locus).filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
 
             if(fragAminoAcidLoci.isEmpty())
                 continue;

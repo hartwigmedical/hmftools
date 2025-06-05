@@ -2,16 +2,16 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.seq.SequenceCount;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
+
 public class NucleotideSpliceEnrichment
 {
-    private final int mMinBaseQuality;
+    private final byte mMinBaseQuality;
     private final double mMinEvidence;
     private final Set<Integer> mAminoAcidBoundary;
 

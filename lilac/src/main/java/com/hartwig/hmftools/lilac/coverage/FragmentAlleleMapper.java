@@ -27,6 +27,8 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
+import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
 public class FragmentAlleleMapper
 {
@@ -121,7 +123,7 @@ public class FragmentAlleleMapper
                 if(!fragment.genes().contains(longGeneName(geneEntry.getKey())))
                     continue;
 
-                if(fragment.aminoAcidLoci().stream().anyMatch(x -> geneEntry.getValue().containsKey(x)))
+                if(fragment.aminoAcids().stream().mapToInt(AminoAcid::locus).anyMatch(x -> geneEntry.getValue().containsKey(x)))
                 {
                     hasHetLoci = true;
                     break;
@@ -146,7 +148,7 @@ public class FragmentAlleleMapper
         Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
 
         mRefNucleotideHetLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
-                x.getKey(), fragment.nucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
+                x.getKey(), fragment.nucleotides().stream().map(Nucleotide::locus).filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
         Map<HlaAllele, SequenceMatchType> nucleotideAlleleMatches = findNucleotideMatches(fragment, nucleotideSequences);
 
@@ -206,8 +208,7 @@ public class FragmentAlleleMapper
             String gene = entry.getKey();
             List<Integer> refNucleotideLoci = entry.getValue();
 
-            List<Integer> fragmentMatchedLoci = fragment.nucleotideLoci().stream()
-                    .filter(y -> refNucleotideLoci.contains(y)).collect(Collectors.toList());
+            List<Integer> fragmentMatchedLoci = fragment.nucleotides().stream().map(Nucleotide::locus).filter(y -> refNucleotideLoci.contains(y)).collect(Collectors.toList());
 
             // also check for support from low-qual reads at this same location
             List<Integer> missedNucleotideLoci = refNucleotideLoci.stream()
@@ -334,8 +335,7 @@ public class FragmentAlleleMapper
         {
             Map<Integer,Set<String>> hetLociSeqMap = geneEntry.getValue();
 
-            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
-                    .filter(x -> hetLociSeqMap.containsKey(x)).collect(Collectors.toList());
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcids().stream().map(AminoAcid::locus).filter(x -> hetLociSeqMap.containsKey(x)).collect(Collectors.toList());
 
             // also attempt to retrieve amino acids from low-qual nucleotides
             Map<Integer,String> missedAminoAcids = Maps.newHashMap();

@@ -64,12 +64,12 @@ public class NucleotideTest
 
     private Fragment create(final String gene, final List<Integer> indices)
     {
-        List<Integer> qualities = Lists.newArrayListWithCapacity(indices.size());
+        List<Byte> qualities = Lists.newArrayListWithCapacity(indices.size());
         List<String> nucleotides = Lists.newArrayListWithCapacity(indices.size());
 
         for(int i = 0; i < indices.size(); ++i)
         {
-            qualities.add(0);
+            qualities.add((byte) 0);
             nucleotides.add("G");
         }
 

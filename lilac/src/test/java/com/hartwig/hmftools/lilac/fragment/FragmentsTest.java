@@ -99,7 +99,7 @@ public class FragmentsTest
     public void testFragmentAddNucleotide()
     {
         List<Integer> indices = Lists.newArrayList(1, 2, 3, 6, 7, 8);
-        List<Integer> qualities = Lists.newArrayList(37, 25, 37, 37, 37, 25);
+        List<Byte> qualities = Lists.newArrayList((byte) 37, (byte) 25, (byte) 37, (byte) 37, (byte) 37, (byte) 25);
         List<String> nucleotides = Lists.newArrayList("A", "G", "T", "C", "A", "G");
 
         Fragment fragment = new Fragment(createReadRecord("01"), HLA_A, Sets.newHashSet(HLA_A), indices, qualities, nucleotides);
@@ -108,16 +108,16 @@ public class FragmentsTest
 
         assertFalse(fragment.containsNucleotide(2));
 
-        fragment.addNucleotideInfo(5, "G", 30);
+        fragment.addNucleotideInfo(5, "G", (byte) 30);
 
         assertTrue(fragment.containsNucleotide(5));
-        assertTrue(FragmentUtils.validateLociBases(fragment.id(), fragment.rawNucleotideLoci(), fragment.rawNucleotides()));
+        assertTrue(FragmentUtils.validateLociBases(fragment.id(), fragment.rawNucleotides()));
 
-        fragment.addNucleotideInfo(9, "T", 30);
+        fragment.addNucleotideInfo(9, "T", (byte) 30);
         assertTrue(fragment.containsNucleotide(9));
         assertTrue(fragment.validate());
 
-        fragment.addNucleotideInfo(0, "A", 37);
+        fragment.addNucleotideInfo(0, "A", (byte) 37);
         assertTrue(fragment.containsNucleotide(0));
         assertTrue(fragment.validate());
     }
@@ -129,24 +129,24 @@ public class FragmentsTest
         Read read = createReadRecord(readId);
         Fragment frag1 = new Fragment(
                 read, GENE_A, Sets.newHashSet(GENE_A),
-                Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
+                Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
         Fragment frag2 = new Fragment(
                 read, GENE_B, Sets.newHashSet(GENE_B),
-                Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
+                Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
         Fragment mergedFrag = mergeFragments(frag1, frag2);
         assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.genes().size());
         assertEquals(1, mergedFrag.nucleotideLoci().size());
         assertEquals(Integer.valueOf(1), mergedFrag.nucleotideLoci().get(0));
-        assertEquals(1, mergedFrag.nucleotideQuality().size());
+        assertEquals(1, mergedFrag.nucleotides().size());
         assertEquals(1, mergedFrag.nucleotides().size());
 
         frag2 = new Fragment(
                 read, GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(0, 1, 2, 3),
-                Lists.newArrayList(30, 30, 30, 30),
+                Lists.newArrayList((byte) 30, (byte) 30, (byte) 30, (byte) 30),
                 Lists.newArrayList("A", "A", "A", "A"));
 
         mergedFrag = mergeFragments(frag1, frag2);
@@ -155,13 +155,13 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.nucleotideLoci().size());
         assertEquals(Integer.valueOf(0), mergedFrag.nucleotideLoci().get(0));
         assertEquals(Integer.valueOf(1), mergedFrag.nucleotideLoci().get(1));
-        assertEquals(4, mergedFrag.nucleotideQuality().size());
+        assertEquals(4, mergedFrag.nucleotides().size());
         assertEquals(4, mergedFrag.nucleotides().size());
 
         frag2 = new Fragment(
                 read, GENE_C, Sets.newHashSet(GENE_C),
                 Lists.newArrayList(3, 4, 5),
-                Lists.newArrayList(30, 30, 30),
+                Lists.newArrayList((byte) 30, (byte) 30, (byte) 30),
                 Lists.newArrayList("A", "A", "A"));
 
         mergedFrag = mergeFragments(frag1, frag2);
@@ -172,7 +172,7 @@ public class FragmentsTest
         assertEquals(Integer.valueOf(3), mergedFrag.nucleotideLoci().get(3));
         assertEquals(Integer.valueOf(4), mergedFrag.nucleotideLoci().get(4));
         assertEquals(Integer.valueOf(5), mergedFrag.nucleotideLoci().get(5));
-        assertEquals(6, mergedFrag.nucleotideQuality().size());
+        assertEquals(6, mergedFrag.nucleotides().size());
         assertEquals(6, mergedFrag.nucleotides().size());
     }
 

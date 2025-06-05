@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
+import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
 public final class NucleotideFragmentQualEnrichment
 {
@@ -31,10 +32,10 @@ public final class NucleotideFragmentQualEnrichment
         final List<Integer> filteredIndices = Lists.newArrayList();
         boolean allPresent = true;
 
-        for(int i = 0; i < fragment.nucleotideLoci().size(); ++i)
+        for(int i = 0; i < fragment.nucleotides().size(); ++i)
         {
-            int locusIndex = fragment.nucleotideLoci().get(i);
-            String fragmentNucleotide = fragment.nucleotides().get(i);
+            int locusIndex = fragment.nucleotides().get(i).locus();
+            String fragmentNucleotide = fragment.nucleotides().get(i).bases();
 
             List<String> highQualitySequences = highQualityCount.getMinCountOrVafSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
             List<String> rawSequences = rawCount.getMinCountOrVafSequences(locusIndex, DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
@@ -54,19 +55,13 @@ public final class NucleotideFragmentQualEnrichment
             return fragment;
 
         int filteredCount = filteredIndices.size();
-        final List<Integer> filteredLoci = Lists.newArrayListWithExpectedSize(filteredCount);
-        final List<Integer> filteredQuality = Lists.newArrayListWithExpectedSize(filteredCount);
-        final List<String> filteredNucleotides = Lists.newArrayListWithExpectedSize(filteredCount);
+        final List<Nucleotide> filteredNucleotides = Lists.newArrayListWithExpectedSize(filteredCount);
 
         for(Integer index : filteredIndices)
-        {
-            filteredLoci.add(fragment.nucleotideLoci().get(index));
-            filteredQuality.add(fragment.nucleotideQuality().get(index));
             filteredNucleotides.add(fragment.nucleotides().get(index));
-        }
 
         Fragment newFragment = new Fragment(
-                fragment.reads().get(0), fragment.readGene(), fragment.genes(), filteredLoci, filteredQuality, filteredNucleotides);
+                fragment.reads().get(0), fragment.readGene(), fragment.genes(), filteredNucleotides);
 
         newFragment.addReads(fragment);
 

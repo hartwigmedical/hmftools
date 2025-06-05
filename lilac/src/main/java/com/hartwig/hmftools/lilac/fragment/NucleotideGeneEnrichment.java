@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -58,8 +59,8 @@ public class NucleotideGeneEnrichment
         //
         // example: a fragment isn't associated with gene A, is with A, and the fragments max base is within the unique base of A and B,
         // so cannot it be distinguished between them - then add it to A as well
-        int maxFragmentNucleotideLocus = fragment.maxNucleotideLocus();
-
+        OptionalInt maxFragmentNucleotideLocus_ = fragment.maxNucleotideLocus();
+        int maxFragmentNucleotideLocus = maxFragmentNucleotideLocus_.getAsInt();
         if(considerAddingGene(fragment, HLA_A, maxFragmentNucleotideLocus))
         {
             if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mAbMinUniqueProteinExonBoundary)

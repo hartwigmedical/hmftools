@@ -2,6 +2,13 @@ package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -16,15 +23,7 @@ import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
-
 import htsjdk.variant.variantcontext.VariantContext;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class SomaticVariantAnnotation
 {
@@ -103,8 +102,7 @@ public class SomaticVariantAnnotation
             {
                 boolean matches = true;
                 int matchCount = 0;
-
-                for(int locus = fragment.minAminoAcidLocus(); locus <= fragment.maxAminoAcidLocus(); ++locus)
+                for(int locus = fragment.minAminoAcidLocus().getAsInt(); locus <= fragment.maxAminoAcidLocus().getAsInt(); ++locus)
                 {
                     if(locus >= sequenceLoci.length())
                         break;
@@ -112,12 +110,21 @@ public class SomaticVariantAnnotation
                     if(variantLoci.contains(locus))
                         continue;
 
-                    int index = fragment.aminoAcidLoci().indexOf(locus);
+                    int index = -1;
+                    for(int i = 0; i < fragment.aminoAcids().size(); i++)
+                    {
+                        if(fragment.aminoAcids().get(i).locus() == locus)
+                        {
+                            index = i;
+                            break;
+                        }
+                    }
+
                     String fragmentAA = "";
 
                     if(index >= 0)
                     {
-                        fragmentAA = fragment.aminoAcids().get(index);
+                        fragmentAA = fragment.aminoAcids().get(index).acid();
                     }
                     else
                     {

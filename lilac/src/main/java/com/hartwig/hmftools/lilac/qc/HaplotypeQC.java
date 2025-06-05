@@ -6,14 +6,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.seq.SequenceCount;
-import org.apache.commons.math3.util.Pair;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Collections;
@@ -22,6 +14,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
+
+import org.apache.commons.math3.util.Pair;
 
 public class HaplotypeQC
 {
@@ -59,9 +60,11 @@ public class HaplotypeQC
         if(!PON_HAPLOTYPES.isEmpty())
             return;
 
-        final List<String> ponHaplotypes = new BufferedReader(new InputStreamReader(
-                HaplotypeQC.class.getResourceAsStream("/pon/haplotypes.csv")))
-                .lines().collect(Collectors.toList());
+        var haplotypeQC = HaplotypeQC.class.getResourceAsStream("/pon/haplotypes.csv");
+        if(haplotypeQC == null)
+            throw new RuntimeException("Cannot load HaplotypeQC from resource /pon/haplotypes.csv");
+
+        final List<String> ponHaplotypes = new BufferedReader(new InputStreamReader(haplotypeQC)).lines().collect(Collectors.toList());
 
         ponHaplotypes.forEach(x -> PON_HAPLOTYPES.add(Haplotype.fromString(x)));
     }
@@ -172,7 +175,7 @@ public class HaplotypeQC
         {
             for(Fragment fragment : fragments)
             {
-                if(!positionsOverlap(fragment.minAminoAcidLocus(), fragment.maxAminoAcidLocus(), haplotype.StartLocus, haplotype.EndLocus))
+                if(!positionsOverlap(fragment.minAminoAcidLocus().getAsInt(), fragment.maxAminoAcidLocus().getAsInt(), haplotype.StartLocus, haplotype.EndLocus))
                     continue;
 
                 int matchCount = 0;
@@ -186,7 +189,7 @@ public class HaplotypeQC
 
                     if(index >= 0)
                     {
-                        fragmentAA = fragment.aminoAcids().get(index);
+                        fragmentAA = fragment.aminoAcids().get(index).acid();
                     }
                     else
                     {

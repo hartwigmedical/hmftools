@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
@@ -11,6 +10,10 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Codons;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
+import com.hartwig.hmftools.lilac.utils.Nucleotide;
+
+import org.jetbrains.annotations.NotNull;
 
 public class FragmentUtils
 {
@@ -76,15 +79,15 @@ public class FragmentUtils
 
         int index1 = 0;
 
-        for(int index2 = 0; index2 < frag2.nucleotideLoci().size(); ++index2)
+        for(int index2 = 0; index2 < frag2.nucleotides().size(); ++index2)
         {
-            int locus2 = frag2.nucleotideLoci().get(index2);
+            int locus2 = frag2.nucleotides().get(index2).locus();
 
             boolean add = true;
 
-            for(; index1 < frag1.nucleotideLoci().size(); ++index1)
+            for(; index1 < frag1.nucleotides().size(); ++index1)
             {
-                int locus1 = frag1.nucleotideLoci().get(index1);
+                int locus1 = frag1.nucleotides().get(index1).locus();
 
                 if(locus1 < locus2)
                     continue;
@@ -99,7 +102,7 @@ public class FragmentUtils
             {
                 try
                 {
-                    frag1.addNucleotideInfo(index1, locus2, frag2.nucleotides().get(index2), frag2.nucleotideQuality().get(index2));
+                    frag1.addNucleotideInfo(index1, locus2, frag2.nucleotides().get(index2).bases(), frag2.nucleotides().get(index2).qual());
                     frag1.addReads(frag2);
                     ++index1; // move past insertion point
                 }
@@ -116,8 +119,7 @@ public class FragmentUtils
     public static Fragment copyNucleotideFragment(final Fragment fragment)
     {
         // ignores all state, just starts with original information
-        Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(),
-                fragment.rawNucleotideLoci(), fragment.rawNucleotideQuality(), fragment.rawNucleotides());
+        Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(), fragment.rawNucleotides());
 
         for(int i = 1; i < fragment.reads().size(); ++i)
         {
@@ -127,12 +129,12 @@ public class FragmentUtils
         return newFragment;
     }
 
-    public static String formCodonAminoAcid(int locus, final List<Integer> nucleotideLoci, final List<String> nucleotides)
+    public static String formCodonAminoAcid(int locus, final List<Nucleotide> nucleotides)
     {
-        int nucIndex = nucleotideLoci.indexOf(locus * 3);
-        String first = nucleotides.get(nucIndex);
-        String second = nucleotides.get(nucIndex + 1);
-        String third = nucleotides.get(nucIndex + 2);
+        int nucIndex = Nucleotide.loci(nucleotides).indexOf(locus * 3);
+        String first = nucleotides.get(nucIndex).bases();
+        String second = nucleotides.get(nucIndex + 1).bases();
+        String third = nucleotides.get(nucIndex + 2).bases();
 
         if(first == DEL_STR && second == DEL_STR && third == DEL_STR)
             return DEL_STR;
@@ -171,27 +173,20 @@ public class FragmentUtils
             return false;
         }
 
-        if(fragment.nucleotides().size() != fragment.nucleotideQuality().size())
-        {
-            LL_LOGGER.warn("{} {} inconsistent bases loci({}) quals({})",
-                    fragment.id(), fragment.readInfo(), fragment.nucleotides().size(), fragment.nucleotideQuality().size());
-            return false;
-        }
-
-        if(!validateLociBases(fragment.id(), fragment.nucleotideLoci(), fragment.nucleotides()))
+        if(!validateLociBases(fragment.id(), fragment.nucleotides()))
             return false;
 
-        if(!validateLociBases(fragment.id(), fragment.rawNucleotideLoci(), fragment.rawNucleotides()))
+        if(!validateLociBases(fragment.id(), fragment.rawNucleotides()))
             return false;
 
         if(fragment.aminoAcidConversionCount() > 0)
         {
-            if(!validateLociBases(fragment.id(), fragment.aminoAcidLoci(), fragment.aminoAcids()))
+            if(!validateLociBases_(fragment.id(), fragment.aminoAcids()))
                 return false;
 
-            for(int i = 0; i < fragment.aminoAcidLoci().size(); ++i)
+            for(int i = 0; i < fragment.aminoAcids().size(); ++i)
             {
-                if(fragment.aminoAcids().get(i).isEmpty())
+                if(fragment.aminoAcids().get(i).acid().isEmpty())
                 {
                     LL_LOGGER.warn("{} {} empty amino-acid, index({})", fragment.id(), fragment.readInfo(), i);
                     return false;
@@ -209,18 +204,28 @@ public class FragmentUtils
         return true;
     }
 
-    public static boolean validateLociBases(final String id, final List<Integer> loci, final List<String> sequences)
+    // TODO: need this once we just not use a List?
+    public static boolean validateLociBases(final String id, @NotNull final List<Nucleotide> nucleotides)
     {
-        if(sequences.size() != sequences.size())
+        for(int i = 0; i < nucleotides.size() - 1; ++i)
         {
-            LL_LOGGER.warn("frag({}) inconsistent loci({}) bases({})",
-                    id, loci.size(), sequences.size());
-            return false;
+            if(nucleotides.get(i).locus() >= nucleotides.get(i + 1).locus())
+            {
+                LL_LOGGER.warn("frag({}) loci out of order at index({})", id, i);
+                return false;
+            }
         }
 
-        for(int i = 0; i < loci.size() - 1; ++i)
+        return true;
+    }
+
+    // TODO: need this once we just not use a List?
+    // TODO: rename
+    public static boolean validateLociBases_(final String id, @NotNull final List<AminoAcid> aminoAcids)
+    {
+        for(int i = 0; i < aminoAcids.size() - 1; ++i)
         {
-            if(loci.get(i) >= loci.get(i + 1))
+            if(aminoAcids.get(i).locus() >= aminoAcids.get(i + 1).locus())
             {
                 LL_LOGGER.warn("frag({}) loci out of order at index({})", id, i);
                 return false;

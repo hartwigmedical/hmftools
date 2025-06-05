@@ -16,51 +16,14 @@ import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT;
+import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
+import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory.calculateGeneCoverage;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
-import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
-import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
-import com.hartwig.hmftools.lilac.evidence.Candidates;
-import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
-import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
-import com.hartwig.hmftools.lilac.coverage.HlaComplex;
-import com.hartwig.hmftools.lilac.coverage.ComplexBuilder;
-import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
-import com.hartwig.hmftools.lilac.coverage.ComplexCoverageCalculator;
-import com.hartwig.hmftools.lilac.coverage.ComplexCoverageRanking;
-import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
-import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
-import com.hartwig.hmftools.lilac.read.BamReader;
-import com.hartwig.hmftools.lilac.read.Indel;
-import com.hartwig.hmftools.lilac.seq.SequenceCount;
-import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
-import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
-import com.hartwig.hmftools.lilac.qc.BamQC;
-import com.hartwig.hmftools.lilac.qc.CoverageQC;
-import com.hartwig.hmftools.lilac.qc.HaplotypeQC;
-import com.hartwig.hmftools.lilac.qc.SolutionSummary;
-import com.hartwig.hmftools.lilac.qc.LilacQC;
-import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
-import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
-import com.hartwig.hmftools.lilac.read.BamRecordReader;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.variant.SomaticVariant;
-import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,6 +34,43 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexBuilder;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverageCalculator;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverageRanking;
+import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
+import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
+import com.hartwig.hmftools.lilac.coverage.HlaComplex;
+import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
+import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
+import com.hartwig.hmftools.lilac.evidence.Candidates;
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
+import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
+import com.hartwig.hmftools.lilac.qc.BamQC;
+import com.hartwig.hmftools.lilac.qc.CoverageQC;
+import com.hartwig.hmftools.lilac.qc.HaplotypeQC;
+import com.hartwig.hmftools.lilac.qc.LilacQC;
+import com.hartwig.hmftools.lilac.qc.SolutionSummary;
+import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
+import com.hartwig.hmftools.lilac.read.BamReader;
+import com.hartwig.hmftools.lilac.read.BamRecordReader;
+import com.hartwig.hmftools.lilac.read.Indel;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
+import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
+import com.hartwig.hmftools.lilac.variant.SomaticVariant;
+import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -187,7 +187,7 @@ public class LilacApplication
 
         mRefNucleotideFrags.addAll(refFragments);
 
-        int medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
+        byte medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
 
         if(medianBaseQuality < LOW_BASE_QUAL_THRESHOLD)
         {

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.seq;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -10,18 +9,20 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
 import org.apache.commons.math3.util.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +57,11 @@ public final class SequenceCount
 
     public static SequenceCount nucleotides(double minCount, final List<Fragment> fragments)
     {
-        int length = fragments.stream().mapToInt(x -> x.maxNucleotideLocus()).max().orElse(0) + 1;
+        int length = fragments.stream()
+                .map(Fragment::maxNucleotideLocus)
+                .filter(OptionalInt::isPresent)
+                .mapToInt(OptionalInt::getAsInt)
+                .max().orElse(0) + 1;
 
         Map<String,Integer>[] seqCountsList = new Map[length];
         for(int i = 0; i < length; ++i)
@@ -66,10 +71,11 @@ public final class SequenceCount
 
         for(Fragment fragment : fragments)
         {
-            for(int index = 0; index < fragment.nucleotideLoci().size(); ++index)
+            List<Nucleotide> nucleotides = fragment.nucleotides();
+            for(int index = 0; index < nucleotides.size(); ++index)
             {
-                int locus = fragment.nucleotideLoci().get(index);
-                String nucleotide = fragment.nucleotides().get(index);
+                int locus = nucleotides.get(index).locus();
+                String nucleotide = nucleotides.get(index).bases();
                 increment(seqCountsList, locus, nucleotide);
             }
         }
@@ -79,7 +85,11 @@ public final class SequenceCount
 
     public static SequenceCount aminoAcids(double minCount, final List<Fragment> fragments)
     {
-        int length = fragments.stream().mapToInt(x -> x.maxAminoAcidLocus()).max().orElse(0) + 1;
+        int length = fragments.stream()
+                .map(Fragment::maxAminoAcidLocus)
+                .filter(OptionalInt::isPresent)
+                .mapToInt(OptionalInt::getAsInt)
+                .max().orElse(0) + 1;
 
         Map<String,Integer>[] seqCountsList = new Map[length];
         for(int i = 0; i < length; ++i)
@@ -89,10 +99,10 @@ public final class SequenceCount
 
         for(Fragment fragment : fragments)
         {
-            for(int index = 0; index < fragment.aminoAcidLoci().size(); ++index)
+            for(int index = 0; index < fragment.aminoAcids().size(); ++index)
             {
-                int locus = fragment.aminoAcidLoci().get(index);
-                String aminoAcid = fragment.aminoAcids().get(index);
+                int locus = fragment.aminoAcids().get(index).locus();
+                String aminoAcid = fragment.aminoAcids().get(index).acid();
                 increment(seqCountsList, locus, aminoAcid);
             }
         }
