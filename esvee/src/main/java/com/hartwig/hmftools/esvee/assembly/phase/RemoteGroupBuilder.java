@@ -106,7 +106,7 @@ public class RemoteGroupBuilder extends ThreadTask
     {
         // for the given assembly, looks in all overlapping other junction groups (based on remote regions, ref-side soft-clips, and
         // the local junction group for indels) for other assemblies with shared reads
-        if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty())
+        if(assembly.remoteRegions().isEmpty())
             return;
 
         Set<JunctionGroup> linkedJunctionGroups = Sets.newHashSet();
@@ -122,19 +122,6 @@ public class RemoteGroupBuilder extends ThreadTask
                 continue;
 
             linkedJunctionGroups.addAll(overlappingJunctions);
-        }
-
-        // CHECK: really necessary if already checked by local phase group (same junction) building?
-        if(!assembly.refSideSoftClips().isEmpty())
-        {
-            // if the assembly has candidate facing TI links, then add its own junction group - they will often share reads which are
-            // discordant in one and a junction read in the other
-            RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(0);
-
-            if(positionWithin(refSideSoftClip.Position, junctionGroup.minPosition(), junctionGroup.maxPosition()))
-            {
-                linkedJunctionGroups.add(junctionGroup);
-            }
         }
 
         for(JunctionGroup otherJunctionGroup : linkedJunctionGroups)

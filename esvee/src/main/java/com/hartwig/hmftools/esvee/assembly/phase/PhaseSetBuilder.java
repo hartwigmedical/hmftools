@@ -553,7 +553,7 @@ public class PhaseSetBuilder
 
         if(AssemblyConfig.PerfLogTime > 0 && extractRemoteReadsTotalSeconds >= AssemblyConfig.PerfLogTime)
         {
-            SV_LOGGER.debug(format("pgId(%s) phase set stage(%s) remoteRef(slices=%d reads=%d) extractReads(%.1f)",
+            SV_LOGGER.debug(format("%s phase set stage(%s) remoteRef(slices=%d reads=%d) extractReads(%.1f)",
                     getPhaseGroupInfo(), mCurrentStage, mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch(),
                     extractRemoteReadsTotalSeconds));
         }
@@ -731,7 +731,7 @@ public class PhaseSetBuilder
                 }
             }
 
-            extendRefBases(assembly, refExtensionReads, mRefGenome, allowRefSideSoftClipBranching, allowRefSideSoftClipBranching);
+            extendRefBases(assembly, refExtensionReads, mRefGenome, allowRefSideSoftClipBranching);
         }
 
         checkLogPerfTime();
@@ -802,8 +802,8 @@ public class PhaseSetBuilder
             return false;
 
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
-        extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching, true);
-        extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching, true);
+        extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching);
+        extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching);
 
         // register any newly branched assemblies
         for(JunctionAssembly assembly : mAssemblies)

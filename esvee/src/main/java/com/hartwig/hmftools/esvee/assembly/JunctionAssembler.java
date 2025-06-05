@@ -14,11 +14,11 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSE
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
-import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.checkSupportVsRefSideSoftClip;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
@@ -173,7 +173,7 @@ public class JunctionAssembler
             // call routine to purge reads likely add to multiple assemblies and breaching a dominant RSSC
             // NOTE: this could be done for all assemblies, not just split ones
             if(assemblies.size() > 1)
-                checkRefSideSoftClips(assembly);
+                checkSupportVsRefSideSoftClip(assembly);
 
             RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
             assembly.setRefBases(refBaseSeqBuilder);
