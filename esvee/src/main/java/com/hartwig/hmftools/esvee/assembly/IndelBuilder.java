@@ -186,6 +186,14 @@ public final class IndelBuilder
         return false;
     }
 
+    public static boolean indelAssembliesMatch(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        if(first.indelCoords() == null || second.indelCoords() == null || first.isForwardJunction() == second.isForwardJunction())
+            return false;
+
+        return first.indelCoords().matches(second.indelCoords());
+    }
+
     public static String findInsertedBases(final Read read)
     {
         final IndelCoords indelCoords = read.indelCoords();

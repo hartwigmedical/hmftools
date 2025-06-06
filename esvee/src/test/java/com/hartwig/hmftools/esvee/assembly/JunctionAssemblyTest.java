@@ -493,8 +493,9 @@ public class JunctionAssemblyTest
 
         List<JunctionAssembly> existingAssemblies = Lists.newArrayList(splitAssemblyPos, splitAssemblyNeg);
         List<JunctionAssembly> newAssemblies = Lists.newArrayList(indelAssemblyPos, indelAssemblyNeg);
+        List<JunctionAssembly> dedupIndels = Lists.newArrayList();
 
-        dedupProximateAssemblies(existingAssemblies, newAssemblies);
+        dedupProximateAssemblies(existingAssemblies, newAssemblies, dedupIndels);
 
         assertEquals(2, existingAssemblies.size());
         assertEquals(2, newAssemblies.size());
@@ -516,7 +517,7 @@ public class JunctionAssemblyTest
         existingAssemblies = Lists.newArrayList(splitAssemblyPos, splitAssemblyNeg);
         newAssemblies = Lists.newArrayList(indelAssemblyPos, indelAssemblyNeg);
 
-        dedupProximateAssemblies(existingAssemblies, newAssemblies);
+        dedupProximateAssemblies(existingAssemblies, newAssemblies, dedupIndels);
 
         assertEquals(2, newAssemblies.size());
         assertTrue(existingAssemblies.isEmpty()); // the indel assemblies are kept

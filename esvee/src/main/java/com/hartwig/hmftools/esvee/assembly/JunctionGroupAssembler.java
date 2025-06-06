@@ -150,6 +150,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mSupplementaryRepeats.clear();
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
+        List<JunctionAssembly> dedupedIndels = Lists.newArrayList();
 
         RefBaseExtender refBaseExtender = new RefBaseExtender();
 
@@ -191,7 +192,7 @@ public class JunctionGroupAssembler extends ThreadTask
             }
 
             // dedup assemblies with close junction positions, same orientation
-            dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);
+            dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies, dedupedIndels);
 
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)

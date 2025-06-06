@@ -139,7 +139,7 @@ public class JunctionAssembler
                 extensionSeqBuilder.repeatInfo());
 
         // filter LINE source-type sites marked by opposition orientation poly A/T sequences
-        if(LineUtils.hasLineSourceSequence(firstAssembly))
+        if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
             return Collections.emptyList();
 
         firstAssembly.setExtBaseBuildInfo(extensionSeqBuilder.buildInformation());

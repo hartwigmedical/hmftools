@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_JITTER_MAX_DIST;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.indelAssembliesMatch;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
 
 import java.util.List;
@@ -17,7 +18,9 @@ import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public class AssemblyDeduper
 {
-    public static void dedupProximateAssemblies(final List<JunctionAssembly> existingAssemblies, final List<JunctionAssembly> newAssemblies)
+    public static void dedupProximateAssemblies(
+            final List<JunctionAssembly> existingAssemblies, final List<JunctionAssembly> newAssemblies,
+            final List<JunctionAssembly> dedupedIndels)
     {
         if(newAssemblies.isEmpty() || existingAssemblies.isEmpty())
             return;
@@ -28,7 +31,7 @@ public class AssemblyDeduper
 
         List<JunctionAssembly> removeExisting = Lists.newArrayList();
 
-        while(index >= 0)
+        while(index >= 0 && !newAssemblies.isEmpty())
         {
             JunctionAssembly assembly = existingAssemblies.get(index);
 
@@ -41,31 +44,21 @@ public class AssemblyDeduper
             {
                 JunctionAssembly newAssembly = newAssemblies.get(newIndex);
 
-                if(newAssembly.junction() == assembly.junction()
-                || newAssembly.junction().Orient != assembly.junction().Orient)
+                if(newAssembly.junction() == assembly.junction() || newAssembly.junction().Orient != assembly.junction().Orient)
                 {
                     ++newIndex;
                     continue;
                 }
 
-                if(!canDedupAssemblies(assembly, newAssembly))
+                if(newAssembly.indel() && assembly.indel())
                 {
-                    ++newIndex;
-                    continue;
-                }
-
-                // take the assembly with the most read support
-                if(selectFirstAssembly(assembly, newAssembly))
-                {
-                    assembly.addMergedAssembly();
-                    newAssemblies.remove(newIndex);
+                    if(checkDedupIndelPair(newAssembly, assembly, newIndex, newAssemblies, existingAssemblies, removeExisting, dedupedIndels))
+                        ++newIndex;
                 }
                 else
                 {
-                    // keep this assembly and mark the existing one for removal
-                    newAssembly.addMergedAssembly();
-                    removeExisting.add(assembly);
-                    ++newIndex;
+                    if(checkDedupNonIndel(newAssembly, assembly, newIndex, newAssemblies, removeExisting))
+                        ++newIndex;
                 }
             }
 
@@ -73,6 +66,97 @@ public class AssemblyDeduper
         }
 
         removeExisting.forEach(x -> existingAssemblies.remove(x));
+    }
+
+    private static boolean checkDedupNonIndel(
+            final JunctionAssembly newAssembly, final JunctionAssembly assembly, final int newIndex,
+            final List<JunctionAssembly> newAssemblies, final List<JunctionAssembly> removeExisting)
+    {
+        // removes true if keeps the new assembly
+        if(!canDedupAssemblies(assembly, newAssembly))
+            return true;
+
+        if(selectFirstAssembly(assembly, newAssembly))
+        {
+            assembly.addMergedAssembly();
+            newAssemblies.remove(newIndex);
+            return false;
+        }
+        else
+        {
+            // keep this assembly and mark the existing one for removal
+            newAssembly.addMergedAssembly();
+            removeExisting.add(assembly);
+            return true;
+        }
+    }
+
+    private static boolean checkDedupIndelPair(
+            final JunctionAssembly newAssembly, final JunctionAssembly assembly, final int newIndex,
+            final List<JunctionAssembly> newAssemblies, final List<JunctionAssembly> existingAssemblies,
+            final List<JunctionAssembly> removeExisting, final List<JunctionAssembly> dedupedIndels)
+    {
+        // removes true if keeps the new assembly
+        JunctionAssembly matchedIndel = newAssembly.indel() ? dedupedIndels.stream()
+                .filter(x -> indelAssembliesMatch(x, newAssembly)).findFirst().orElse(null) : null;
+
+        boolean dedupNewAssembly = false;
+
+        if(matchedIndel == null)
+        {
+            if(!canDedupAssemblies(assembly, newAssembly))
+                return true;
+
+            // take the assembly with the most read support
+            dedupNewAssembly = selectFirstAssembly(assembly, newAssembly);
+        }
+        else
+        {
+            dedupNewAssembly = true;
+            dedupedIndels.remove(matchedIndel);
+        }
+
+        if(dedupNewAssembly)
+        {
+            assembly.addMergedAssembly();
+            newAssemblies.remove(newIndex);
+
+            if(matchedIndel == null)
+            {
+                // remove the paired other assembly, as long the retained assembly has a matching pair
+                JunctionAssembly matchedExistingIndel = existingAssemblies.stream()
+                        .filter(x -> indelAssembliesMatch(x, newAssembly)).findFirst().orElse(null);
+
+                if(matchedExistingIndel != null)
+                {
+                    if(existingAssemblies.stream().anyMatch(x -> indelAssembliesMatch(x, assembly)))
+                        removeExisting.add(matchedExistingIndel);
+                }
+                else
+                {
+                    dedupedIndels.add(newAssembly);
+                }
+            }
+
+            return false;
+        }
+        else
+        {
+            // keep this assembly and mark the existing one for removal
+            newAssembly.addMergedAssembly();
+            removeExisting.add(assembly);
+
+            JunctionAssembly matchedExistingIndel = existingAssemblies.stream()
+                    .filter(x -> indelAssembliesMatch(x, assembly)).findFirst().orElse(null);
+
+            if(matchedExistingIndel != null)
+            {
+                if(existingAssemblies.stream().anyMatch(x -> indelAssembliesMatch(x, newAssembly)))
+                    removeExisting.add(matchedExistingIndel);
+            }
+
+            return true;
+        }
     }
 
     private static boolean canDedupAssemblies(final JunctionAssembly first, final JunctionAssembly second)
