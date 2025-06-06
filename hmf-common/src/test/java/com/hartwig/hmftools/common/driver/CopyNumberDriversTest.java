@@ -129,10 +129,23 @@ public class CopyNumberDriversTest
                 .minRegionStartSupport(SegmentSupport.BND)
                 .minRegionEndSupport(SegmentSupport.TELOMERE)
                 .build();
+
         GeneCopyNumber longDelEndSupport = ImmutableGeneCopyNumber.builder()
                 .from(longDelNoSupport)
                 .minRegionStartSupport(SegmentSupport.CENTROMERE)
                 .minRegionStartSupport(SegmentSupport.BND)
+                .build();
+
+        GeneCopyNumber longDelBothSupport = ImmutableGeneCopyNumber.builder()
+                .from(longDelNoSupport)
+                .minRegionStartSupport(SegmentSupport.BND)
+                .minRegionEndSupport(SegmentSupport.BND)
+                .build();
+
+        GeneCopyNumber shortDelNoSupport = ImmutableGeneCopyNumber.builder()
+                .from(longDelNoSupport)
+                .minRegionStart(1)
+                .minRegionEnd(100)
                 .build();
 
         GeneCopyNumber shortDelStartSupport = ImmutableGeneCopyNumber.builder()
@@ -151,10 +164,9 @@ public class CopyNumberDriversTest
                 .minRegionEnd(100)
                 .build();
 
-        GeneCopyNumber longDelBothSupport = ImmutableGeneCopyNumber.builder()
-                .from(longDelNoSupport)
+        GeneCopyNumber shortDelBothSupport = ImmutableGeneCopyNumber.builder()
+                .from(shortDelEndSupport)
                 .minRegionStartSupport(SegmentSupport.BND)
-                .minRegionEndSupport(SegmentSupport.BND)
                 .build();
 
         Set<PurpleQCStatus> noWarn = Sets.newHashSet();
@@ -172,13 +184,44 @@ public class CopyNumberDriversTest
                 Collections.singletonList(longDelEndSupport), false).size());
 
         assertEquals(1, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
-                Collections.singletonList(shortDelStartSupport), false).size());
+                Collections.singletonList(longDelBothSupport), false).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(longDelNoSupport), false).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(shortDelNoSupport), false).size());
 
         assertEquals(1, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
                 Collections.singletonList(shortDelEndSupport), false).size());
 
         assertEquals(1, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
-                Collections.singletonList(longDelBothSupport), false).size());
+                Collections.singletonList(shortDelBothSupport), false).size());
+
+        // Check effect of panel mode.
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(longDelNoSupport), true).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(longDelStartSupport), true).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(longDelEndSupport), true).size());
+
+        assertEquals(1, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(longDelBothSupport), true).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(shortDelNoSupport), true).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(shortDelStartSupport), true).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(shortDelEndSupport), true).size());
+
+        assertEquals(1, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(shortDelBothSupport), true).size());
 
         Set<PurpleQCStatus> warnCopyNumber = Sets.newHashSet(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
         assertEquals(0, new DeletionDrivers(warnCopyNumber, genePanel).deletions(
@@ -191,13 +234,19 @@ public class CopyNumberDriversTest
                 Collections.singletonList(longDelEndSupport), false).size());
 
         assertEquals(1, new DeletionDrivers(warnCopyNumber, genePanel).deletions(
+                Collections.singletonList(longDelBothSupport), false).size());
+
+        assertEquals(0, new DeletionDrivers(warnDeletedGenes, genePanel).deletions(
+                Collections.singletonList(shortDelNoSupport), false).size());
+
+        assertEquals(1, new DeletionDrivers(warnCopyNumber, genePanel).deletions(
                 Collections.singletonList(shortDelStartSupport), false).size());
 
         assertEquals(1, new DeletionDrivers(warnCopyNumber, genePanel).deletions(
                 Collections.singletonList(shortDelEndSupport), false).size());
 
         assertEquals(1, new DeletionDrivers(warnCopyNumber, genePanel).deletions(
-                Collections.singletonList(longDelBothSupport), false).size());
+                Collections.singletonList(shortDelBothSupport), false).size());
     }
 
     @NotNull

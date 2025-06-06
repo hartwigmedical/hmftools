@@ -33,7 +33,7 @@ public class CobaltChromosomes
     public static final double TWO_X_CUTOFF = 0.65;
     public static final double TWO_Y_CUTOFF = 0.75;
     public static final double Y_CUTOFF = 0.05;
-    public static final double MOSIAC_X_CUTOFF = 0.8;
+    public static final double MOSAIC_X_CUTOFF = 0.8;
     public static final double TRISOMY_CUTOFF = 1.35;
     public static final double TERTRASOMY_CUTOFF = 1.8;
 
@@ -208,7 +208,7 @@ public class CobaltChromosomes
 
     private static boolean isMosiacX(boolean isFemale, final HumanChromosome chromosome, double medianRatio, double minAutosomeRatio)
     {
-        return isFemale && Doubles.lessThan(medianRatio, min(minAutosomeRatio, MOSIAC_X_CUTOFF)) && chromosome == _X;
+        return isFemale && Doubles.lessThan(medianRatio, min(minAutosomeRatio, MOSAIC_X_CUTOFF)) && chromosome == _X;
     }
 
     private static boolean isTrisomy(final HumanChromosome chromosome, double medianRatio)

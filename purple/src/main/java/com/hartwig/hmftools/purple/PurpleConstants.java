@@ -46,7 +46,7 @@ public class PurpleConstants
 
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 150;
-    public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 3;
+    public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 1;
 
     public static final double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
 
@@ -151,7 +151,7 @@ public class PurpleConstants
     public static final double BIALLELIC_ASSUMED_FRACTION = 0.2;
 
     // chimerism
-    public static final double CHIMERISM_SAMPLE_CUTOFF = 0.05;
+    public static final double CHIMERISM_SAMPLE_CUTOFF = 0.08;
     public static final int CHIMERISM_MIN_BAF_COUNT = 2;
     public static final double CHIMERISM_KDE_BANDWIDTH = 0.01;
 }

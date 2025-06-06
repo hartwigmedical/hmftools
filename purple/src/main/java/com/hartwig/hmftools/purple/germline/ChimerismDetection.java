@@ -72,6 +72,7 @@ public class ChimerismDetection
     public void run()
     {
         detectChimerism();
+        PPL_LOGGER.info(format("chimerism analysis: weighted-mean(%.3f)", mWeightedAverage));
 
         if(!isDetected())
             return;
