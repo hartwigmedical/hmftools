@@ -247,7 +247,7 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
-            if(!localIndelOnly && mLocallyLinkedAssemblies.contains(assembly1)) // no attempt to find secondaries for these
+            if(!localIndelOnly && !allowLocalIndelSecondaryLinks(assembly1)) // no attempt to find secondaries for these
                 continue;
 
             Set<String> firstReadIds = Sets.newHashSet();
@@ -261,7 +261,7 @@ public class PhaseSetBuilder
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
-                if(!localIndelOnly && mLocallyLinkedAssemblies.contains(assembly2))
+                if(!localIndelOnly && !allowLocalIndelSecondaryLinks(assembly2))
                     continue;
 
                 boolean isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
@@ -344,6 +344,21 @@ public class PhaseSetBuilder
             if(checkMaxRoutineIteration())
                 return;
         }
+    }
+
+    private boolean allowLocalIndelSecondaryLinks(final JunctionAssembly assembly)
+    {
+        // protect local indels from testing and making secondary links, with exceptions made for those at LINE insertion sites
+        // or others with long insertion sequences
+        if(mLineRelatedAssemblies.contains(assembly))
+            return true;
+
+        if(!mLocallyLinkedAssemblies.contains(assembly))
+            return true;
+
+        AssemblyLink existingLink = mSplitLinks.stream().filter(x -> x.hasAssembly(assembly)).findFirst().orElse(null);
+
+        return existingLink == null || existingLink.insertedBases().length() > existingLink.length();
     }
 
     private static boolean assemblyHasHighReadCount(final JunctionAssembly assembly)
@@ -544,9 +559,6 @@ public class PhaseSetBuilder
 
             if(checkMaxRoutineIteration())
                 break;
-
-            // if(collectCandidateRemoteRegionsTotalSeconds + extractRemoteRegionReadsTotalSeconds > AssemblyConfig.PerfLogTime * 5)
-            //    break;
         }
 
         checkLogPerfTime();
