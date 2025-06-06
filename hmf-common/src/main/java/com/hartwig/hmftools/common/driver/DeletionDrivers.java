@@ -21,7 +21,7 @@ public class DeletionDrivers
 {
     public static final double MAX_COPY_NUMBER_DEL = 0.5;
     public static final int SHORT_DEL_LENGTH = 10_000_000;
-    public static final int TARGET_REGIONS_MIN_DEPTH_COUNT = 3;
+    public static final int TARGET_REGIONS_MIN_DEPTH_COUNT = 1;
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
@@ -52,29 +52,42 @@ public class DeletionDrivers
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
             if(geneCopyNumber.minCopyNumber() >= MAX_COPY_NUMBER_DEL)
+            {
                 continue;
+            }
 
             if(!mDeletionTargets.containsKey(geneCopyNumber.geneName()))
+            {
                 continue;
+            }
 
             boolean hasFullSvSupport = supportedByTwoSVs(geneCopyNumber);
             boolean isShort = geneCopyNumber.minRegionBases() < SHORT_DEL_LENGTH;
 
-            if(checkQcStatus)
-            {
-                if(!hasFullSvSupport && !(isShort && supportedByOneSVAndMere(geneCopyNumber)))
-                    continue;
-            }
-
             if(isTargetRegions)
             {
-                if(!isShort)
-                    continue;
-
-                if(!hasFullSvSupport && geneCopyNumber.depthWindowCount() < TARGET_REGIONS_MIN_DEPTH_COUNT)
-                    continue;
+                if(!hasFullSvSupport)
+                {
+                    if(checkQcStatus)
+                    {
+                        continue;
+                    }
+                    if(geneCopyNumber.depthWindowCount() < TARGET_REGIONS_MIN_DEPTH_COUNT)
+                    {
+                        continue;
+                    }
+                }
             }
-
+            else
+            {
+                if(checkQcStatus)
+                {
+                    if(!hasFullSvSupport && !(isShort && supportedByOneSVAndMere(geneCopyNumber)))
+                    {
+                        continue;
+                    }
+                }
+            }
             drivers.add(createDelDriver(geneCopyNumber));
         }
 
@@ -89,10 +102,14 @@ public class DeletionDrivers
     static boolean supportedByOneSVAndMere(final GeneCopyNumber geneCopyNumber)
     {
         if(MERE.contains(geneCopyNumber.minRegionStartSupport()) && geneCopyNumber.minRegionEndSupport().isSV())
+        {
             return true;
+        }
 
         if(MERE.contains(geneCopyNumber.minRegionEndSupport()) && geneCopyNumber.minRegionStartSupport().isSV())
+        {
             return true;
+        }
 
         return false;
     }
