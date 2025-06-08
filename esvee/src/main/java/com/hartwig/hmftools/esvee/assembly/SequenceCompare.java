@@ -6,10 +6,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 
 import java.util.Collections;
@@ -262,7 +261,13 @@ public final class SequenceCompare
 
     public static int permittedRepeatCount(final int repeatCount)
     {
-        return repeatCount < REPEAT_2_DIFF_COUNT ? 1 : 2;
+        if(repeatCount >= REPEAT_3_DIFF_COUNT)
+            return 3;
+
+        if(repeatCount >= REPEAT_2_DIFF_COUNT)
+            return 2;
+
+        return 1;
     }
 
     private static int checkRepeatDifference(

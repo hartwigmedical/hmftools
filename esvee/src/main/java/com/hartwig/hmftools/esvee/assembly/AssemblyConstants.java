@@ -47,6 +47,7 @@ public final class AssemblyConstants
 
     // sequence comparison
     public static final int REPEAT_2_DIFF_COUNT = 11;
+    public static final int REPEAT_3_DIFF_COUNT = 16;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
