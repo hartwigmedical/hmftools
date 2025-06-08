@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_CALC_SCORE_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_CALC_SCORE_THRESHOLD;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_INDEL_RECOVERY_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_GAP_OPEN_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
@@ -196,6 +197,9 @@ public class AlignData
 
     private int calcAdjustedIndelScore()
     {
+        if(mMapQual < ALIGNMENT_INDEL_RECOVERY_MIN_MAP_QUAL)
+            return 0;
+
         int indelLength = 0;
 
         for(CigarElement element : mCigarElements)
