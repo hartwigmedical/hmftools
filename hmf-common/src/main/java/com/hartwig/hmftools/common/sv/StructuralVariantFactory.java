@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAK
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.HashSet;
@@ -182,13 +183,11 @@ public class StructuralVariantFactory implements SvFactoryInterface
         StructuralVariantLeg startLeg = setLegCommon(contextStart, isSmallDelDup, startOrientation)
                 .position(start)
                 .homology(contextStart.getAttributeAsString(HOMSEQ, ""))
-                .alleleFrequency(contextStart.getAttributeAsDouble(ALLELE_FRACTION, 0.0))
                 .build();
 
         StructuralVariantLeg endLeg = setLegCommon(contextEnd, isSmallDelDup, endOrientation)
                 .position(end)
                 .homology(contextEnd.getAttributeAsString(HOMSEQ, ""))
-                .alleleFrequency(contextEnd.getAttributeAsDouble(ALLELE_FRACTION, 0.0))
                 .build();
 
         StructuralVariantType inferredType = BND;
@@ -244,8 +243,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
 
     public StructuralVariant createSingleBreakend(final VariantContext context)
     {
-        double af = context.getAttributeAsDouble(ALLELE_FRACTION, 0.0);
-
         final String alt = context.getAlternateAllele(0).getDisplayString();
 
         // local orientation determined by the positioning of the anchoring bases
@@ -257,7 +254,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
 
         final StructuralVariantLeg startLeg = setLegCommon(context, false, orientation)
                 .homology("")
-                .alleleFrequency(af)
                 .build();
 
         return setCommon(context)
@@ -367,6 +363,9 @@ public class StructuralVariantFactory implements SvFactoryInterface
             int refPairFrags = getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0);
             builder.tumorVariantFragmentCount(totalFrags);
             builder.tumorReferenceFragmentCount(refFrags + (ignoreRefpair ? 0 : refPairFrags));
+
+            double af = getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
+            builder.alleleFrequency(af);
         }
 
         return builder;
