@@ -72,6 +72,7 @@ public class DeletionDrivers
                     {
                         continue;
                     }
+
                     if(geneCopyNumber.depthWindowCount() < TARGET_REGIONS_MIN_DEPTH_COUNT)
                     {
                         continue;
@@ -88,6 +89,7 @@ public class DeletionDrivers
                     }
                 }
             }
+
             drivers.add(createDelDriver(geneCopyNumber));
         }
 
