@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_A
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -324,8 +327,11 @@ public class VariantFilters
     {
         int depth = primaryTumor.depth();
         int altSupport = primaryTumor.altSupport();
-        int strongSupport = primaryTumor.strongAltSupport();
-        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
+
+        if(depth == 0 || altSupport == 0)
+            return false;
+
+        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, primaryTumor.strongAltSupport());
 
         primaryTumor.setMapQualFactor(mapQualFactor);
 
@@ -333,12 +339,12 @@ public class VariantFilters
     }
 
     private static double calcMapQualFactor(
-            final VariantTier tier, final ReadContextCounter primaryTumor, final int depth, final int altSupport, final int strongSupport)
+            final VariantTier tier, final ReadContextCounter primaryTumor, int depth, int altSupport, int strongSupport)
     {
         double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
 
-        double avgMapQual = primaryTumor.mapQualityTotal() / depth;
-        double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
+        double avgMapQual = primaryTumor.mapQualityTotal() / (double)depth;
+        double avgAltMapQual = primaryTumor.altMapQualityTotal() / (double)altSupport;
 
         double mapQualDiffPenalty = max(2 * (avgMapQual - avgAltMapQual), 0);
 
@@ -375,7 +381,7 @@ public class VariantFilters
             if(probability > 0)
                 readStrandBiasPenalty = -10 * log10(probability);
             else
-                readStrandBiasPenalty = 50; // fall-back to apply a penalty for extreme bias
+                readStrandBiasPenalty = MAP_QUAL_READ_BIAS_CAP; // fall-back to apply a penalty for extreme bias
         }
 
         double avgEdgeDistance = primaryTumor.readEdgeDistance().avgDistanceFromEdge();
@@ -394,7 +400,7 @@ public class VariantFilters
         if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1
         && primaryTumor.readContext().MaxRepeat.repeatLength() * primaryTumor.readContext().MaxRepeat.Count >= 15)
         {
-            int maxPenalty = primaryTumor.isIndel() ? 18 : 24;
+            int maxPenalty = primaryTumor.isIndel() ? MAP_QUAL_INDEL_REPEAT_PENALTY : MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
             repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, maxPenalty);
         }
 
