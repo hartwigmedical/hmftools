@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC;
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
@@ -237,19 +237,29 @@ public final class IndelBuilder
         if(assembly.extensionLength() >= ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH)
             return false;
 
-        // classify as weak if has mostly indel reads
-        int indelReads = 0;
-        int totalJuncReads = 0;
+        // classify as weak if has the top 2 indel reads have the longest extensions
+        int maxNonIndelLength = 0;
+        List<Integer> indelReadLengths = Lists.newArrayList();
 
         for(SupportRead read : assembly.support())
         {
             if(read.type().isSplitSupport())
-                ++totalJuncReads;
+            {
+                int extensionLength = read.extensionBaseMatches();
 
-            if(read.type() == SupportType.INDEL)
-                ++indelReads;
+                if(read.type() == SupportType.INDEL)
+                    indelReadLengths.add(extensionLength);
+                else
+                    maxNonIndelLength = max(maxNonIndelLength, extensionLength);
+            }
         }
 
-        return indelReads >= ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC * totalJuncReads;
+        if(indelReadLengths.size() < 2)
+            return false;
+
+        Collections.sort(indelReadLengths);
+        int secondLongestIndel = indelReadLengths.get(indelReadLengths.size() - 2);
+
+        return secondLongestIndel > maxNonIndelLength;
     }
 }

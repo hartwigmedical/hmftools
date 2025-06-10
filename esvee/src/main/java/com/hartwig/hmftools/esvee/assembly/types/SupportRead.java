@@ -77,9 +77,9 @@ public class SupportRead
     private SupportType mBreakendType;
 
     // those past the junction
-    private int mJunctionMatches;
-    private int mJunctionMismatches;
-    private Integer mReferenceMismatches;
+    private int mExtBaseMatches;
+    private int mExtBaseMismatches;
+    private Integer mRefBaseMismatches;
 
     private Read mRead; // expect to be null unless required for BAM or read TSV writing
 
@@ -125,9 +125,9 @@ public class SupportRead
         mIndelCoords = read.indelCoords() != null && read.indelCoords().Length >= MIN_INDEL_LENGTH ? read.indelCoords() : null;
         mHasLineTail = read.hasLineTail();
 
-        mJunctionMatches = matches;
-        mJunctionMismatches = mismatches;
-        mReferenceMismatches =  null;
+        mExtBaseMatches = matches;
+        mExtBaseMismatches = mismatches;
+        mRefBaseMismatches =  null;
 
         mJunctionReadStartDistance = junctReadStartDistance;
         mFullAssemblyIndex = -1;
@@ -182,13 +182,13 @@ public class SupportRead
 
     public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
 
-    public int junctionMismatches() { return mJunctionMismatches; }
-    public int junctionMatches() { return mJunctionMatches; }
+    public int extensionBaseMismatches() { return mExtBaseMismatches; }
+    public int extensionBaseMatches() { return mExtBaseMatches; }
 
-    public int referenceMismatches() { return mReferenceMismatches != null ? mReferenceMismatches : -1; }
-    public boolean hasReferenceMismatches() { return mReferenceMismatches != null; }
+    public int referenceMismatches() { return mRefBaseMismatches != null ? mRefBaseMismatches : -1; }
+    public boolean hasReferenceMismatches() { return mRefBaseMismatches != null; }
 
-    public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }
+    public void setReferenceMismatches(int mismatches) { mRefBaseMismatches = mismatches; }
 
     @Nullable
     public Read cachedRead() { return mRead; }
@@ -254,6 +254,6 @@ public class SupportRead
         return format("type(%s) read(%s %s:%d-%d %s %d) index(juncDist=%d asm=%d:%d) hqMatch(%d) mismatch(junc=%d ref=%d)",
                 mType, mId, mChromosome, mAlignmentStart, mAlignmentEnd, mCigar, orientation().asByte(), mJunctionReadStartDistance,
                 mFullAssemblyIndex, mFullAssemblyOrientation != null ? mFullAssemblyOrientation.asByte() : 0,
-                mJunctionMatches, mJunctionMismatches, mReferenceMismatches != null ? mReferenceMismatches : -1);
+                mExtBaseMatches, mExtBaseMismatches, mRefBaseMismatches != null ? mRefBaseMismatches : -1);
     }
 }

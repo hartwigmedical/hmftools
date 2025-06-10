@@ -29,7 +29,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -247,7 +246,7 @@ public class JunctionAssemblyTest
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
     }
 
     @Test
@@ -294,7 +293,7 @@ public class JunctionAssemblyTest
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
     }
 
     @Test
@@ -342,7 +341,7 @@ public class JunctionAssemblyTest
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
 
         String buildInfo = extSeqBuilder.buildInformation();
         assertEquals("5;5;0;true;28:CAG:4:10;2:2:1:0", buildInfo);
@@ -389,7 +388,7 @@ public class JunctionAssemblyTest
 
         supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
     }
 
     @Test

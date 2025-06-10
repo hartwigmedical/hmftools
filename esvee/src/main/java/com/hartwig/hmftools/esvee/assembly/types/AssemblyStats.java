@@ -127,18 +127,18 @@ public class AssemblyStats
 
         if(supportRead.type().isSplitSupport())
         {
-            SoftClipMatchTotal += supportRead.junctionMatches();
-            SoftClipMismatchTotal += supportRead.junctionMismatches();
+            SoftClipMatchTotal += supportRead.extensionBaseMatches();
+            SoftClipMismatchTotal += supportRead.extensionBaseMismatches();
             RefBaseMismatchTotal += max(supportRead.referenceMismatches(), 0);
 
-            if(supportRead.junctionMatches() > MaxExtBaseMatchCount)
+            if(supportRead.extensionBaseMatches() > MaxExtBaseMatchCount)
             {
                 SoftClipSecondMaxLength = MaxExtBaseMatchCount; // promote the second highest
-                MaxExtBaseMatchCount = supportRead.junctionMatches();
+                MaxExtBaseMatchCount = supportRead.extensionBaseMatches();
             }
-            else if(supportRead.junctionMatches() > SoftClipSecondMaxLength)
+            else if(supportRead.extensionBaseMatches() > SoftClipSecondMaxLength)
             {
-                SoftClipSecondMaxLength = supportRead.junctionMatches();
+                SoftClipSecondMaxLength = supportRead.extensionBaseMatches();
             }
         }
     }
