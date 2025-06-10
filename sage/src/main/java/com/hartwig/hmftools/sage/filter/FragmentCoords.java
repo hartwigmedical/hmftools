@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.filter;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
@@ -100,4 +101,5 @@ public class FragmentCoords
     @VisibleForTesting
     public int lowerCount() { return mLowerCoords.size(); }
     public int upperCount() { return mUpperCoords.size(); }
+    public int minCount() { return min(mLowerCoords.size(), mUpperCoords.size()); }
 }

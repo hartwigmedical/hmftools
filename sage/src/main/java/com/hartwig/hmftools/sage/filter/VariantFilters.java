@@ -194,6 +194,9 @@ public class VariantFilters
             if(belowMinTumorQual(config, tier, primaryTumor, mIsGermline))
                 filters.add(SoftFilter.MIN_TUMOR_QUAL);
 
+            if(belowMinMapQualFactor(config, tier, primaryTumor))
+                filters.add(SoftFilter.MIN_MAP_QUAL_FACTOR);
+
             if(belowMinTumorVaf(config, primaryTumor))
                 filters.add(SoftFilter.MIN_TUMOR_VAF);
         }
@@ -299,8 +302,6 @@ public class VariantFilters
 
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
-        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
-
         if(isGermline)
         {
             BinomialDistribution hetGermlineDistribution = new BinomialDistribution(depth, GERMLINE_HET_MIN_EXPECTED_VAF);
@@ -313,13 +314,22 @@ public class VariantFilters
         }
 
         primaryTumor.setTumorQualProbability(prob);
-        primaryTumor.setMapQualFactor(mapQualFactor);
-
-        if(mapQualFactor < config.MapQualFactor)
-            return true;
 
         double scoreCutoff = config.QualPScore;
         return prob >= scoreCutoff;
+    }
+
+    private static boolean belowMinMapQualFactor(
+            final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor)
+    {
+        int depth = primaryTumor.depth();
+        int altSupport = primaryTumor.altSupport();
+        int strongSupport = primaryTumor.strongAltSupport();
+        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
+
+        primaryTumor.setMapQualFactor(mapQualFactor);
+
+        return mapQualFactor < config.MapQualFactor;
     }
 
     private static double calcMapQualFactor(
@@ -498,7 +508,7 @@ public class VariantFilters
         else if(primaryTumor.altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_1)
             minRequiredUniqueFrags = REQUIRED_UNIQUE_FRAG_COORDS_1;
 
-        return min(primaryTumor.fragmentCoords().lowerCount(), primaryTumor.fragmentCoords().upperCount()) < minRequiredUniqueFrags;
+        return primaryTumor.fragmentCoords().minCount() < minRequiredUniqueFrags;
     }
 
     private boolean exceedsRealignedPercentage(final ReadContextCounter primaryTumor)

@@ -424,7 +424,7 @@ public class ReadContextCounter
                 logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
                 countAltSupportMetrics(record, fragmentData);
 
-                return readMatchInfo.ExactMatch ? ALT_SUPPORT_EXACT : ALT_SUPPORT_LOW_QUAL_MISMATCHES;
+                return readMatchInfo.ExactMatch && matchType.FullAltSupport ? ALT_SUPPORT_EXACT : ALT_SUPPORT_LOW_QUAL_MISMATCHES;
             }
         }
 

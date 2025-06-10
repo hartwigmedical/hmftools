@@ -11,8 +11,12 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_FLAG_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
@@ -208,6 +212,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
 
@@ -223,6 +228,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_FLAG, 1, VCFHeaderLineType.Integer, MIN_COORDS_FLAG_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
@@ -248,6 +254,11 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasFormatLine(AVG_BASE_QUAL))
         {
             header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
+        }
+
+        if(!header.hasFormatLine(AVG_RAW_BASE_QUAL))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
         }
 
         if(!header.hasFormatLine(AVG_MAP_QUALITY))
@@ -284,6 +295,11 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasInfoLine(SIMPLE_ALT_COUNT))
         {
             header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
+        }
+
+        if(!header.hasFormatLine(MIN_COORDS_FLAG))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_FLAG, 1, VCFHeaderLineType.Integer, MIN_COORDS_FLAG_DESC));
         }
 
         if(!header.hasFormatLine(LPS_APPEND_INFO))
