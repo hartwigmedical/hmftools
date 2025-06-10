@@ -233,7 +233,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
         return trimStringListValue(variantContext.getAttributeAsString(ASM_LINKS, ""));
     }
 
-    private static String trimStringListValue(final String listValue)
+    public static String trimStringListValue(final String listValue)
     {
         if(listValue.isEmpty())
             return listValue;
