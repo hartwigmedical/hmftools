@@ -47,7 +47,8 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 import org.jetbrains.annotations.NotNull;
 
-public class GenomeMappabilityFinder
+// TODO: doc
+public class OffTargetRiskProfiler
 {
     private final RefGenomeSource mRefGenome;
     private final RefGenomeVersion mRefGenVersion;
@@ -58,6 +59,12 @@ public class GenomeMappabilityFinder
     private final int mBaseWindowLength;
     // Each window is spaced this far apart. < mBaseWindowLength implies overlapping windows.
     private final int mBaseWindowSpacing;
+
+    // Alignment score must exceed this to count towards the risk score.
+    private final int mMatchScoreThreshold;
+    // Amount that 1 alignment match counts towards the risk score.
+    // E.g. value of 10 means an alignment with score = mMatchScoreThreshold contributes 10 risk score points.
+    private final int mMatchScoreOffset;
 
     // Performance tuning parameters.
     // How many windows to align with BWA-MEM at once.
@@ -76,13 +83,19 @@ public class GenomeMappabilityFinder
     private static final String CFG_BASE_WINDOW_SPACING = "window_spacing";
     private static final int DEFAULT_WINDOW_SPACING = 40;
 
+    private static final String CFG_MATCH_SCORE_THRESHOLD = "match_score_threshold";
+    private static final int DEFAULT_MATCH_SCORE_THRESHOLD = 24;    // Determined empirically via experiment
+
+    private static final String CFG_MATCH_SCORE_OFFSET = "match_score_offset";
+    private static final int DEFAULT_MATCH_SCORE_OFFSET = 26;   // Determined empirically via experiment
+
     private static final String CFG_BATCH_SIZE = "batch_size";
     private static final int DEFAULT_BATCH_SIZE = 100000;
 
     private static final String FLD_RISK_SCORE = "risk_score";
     private static final String FLD_QUALITY_SCORE = "quality_score";
 
-    public GenomeMappabilityFinder(final ConfigBuilder configBuilder)
+    public OffTargetRiskProfiler(final ConfigBuilder configBuilder)
     {
         mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
         mRefGenVersion = deriveRefGenomeVersion(mRefGenome);
@@ -91,6 +104,8 @@ public class GenomeMappabilityFinder
 
         mBaseWindowLength = configBuilder.getInteger(CFG_BASE_WINDOW_LENGTH);
         mBaseWindowSpacing = configBuilder.getInteger(CFG_BASE_WINDOW_SPACING);
+        mMatchScoreThreshold = configBuilder.getInteger(CFG_MATCH_SCORE_THRESHOLD);
+        mMatchScoreOffset = configBuilder.getInteger(CFG_MATCH_SCORE_OFFSET);
 
         mBatchSize = configBuilder.getInteger(CFG_BATCH_SIZE);
         mThreads = parseThreads(configBuilder);
@@ -103,7 +118,7 @@ public class GenomeMappabilityFinder
         mOutputWriter = initialiseOutputWriter(configBuilder.getValue(CFG_OUTPUT_FILE));
     }
 
-    private static BwaMemAligner initialiseBwaAligner(final String refGenomeImageFile)
+    private BwaMemAligner initialiseBwaAligner(final String refGenomeImageFile)
     {
         if(refGenomeImageFile.isEmpty() || !Files.exists(Paths.get(refGenomeImageFile)))
             System.exit(1);
@@ -113,23 +128,37 @@ public class GenomeMappabilityFinder
             BwaMemIndex index = new BwaMemIndex(refGenomeImageFile);
             BwaMemAligner aligner = new BwaMemAligner(index);
 
-            // TODO: adjust parameters as required
+            // Output many alignments per query
+            aligner.setFlagOption(aligner.getFlagOption() | aligner.MEM_F_ALL);
+            aligner.setOutputScoreThresholdOption(20);
+            // Don't prune seeds with many occurrences in the genome. This is a key performance tuning parameter.
+            aligner.setMaxMemIntvOption(2000);
+            aligner.setMaxSeedOccurencesOption(10000);
+            // Other minor params to encourage more alignments to be found.
+            aligner.setBandwidthOption(mBaseWindowLength);
+            aligner.setZDropOption(500);
+            aligner.setSplitFactorOption(0.5f);
+            aligner.setDropRatioOption(0.1f);
 
-            GU_LOGGER.debug("BWA align options: ");
-            GU_LOGGER.debug("  BWA Bandwidth: {}", aligner.getBandwidthOption());
-            GU_LOGGER.debug("  BWA MatchScore: {}", aligner.getMatchScoreOption());
-            GU_LOGGER.debug("  BWA OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
-            GU_LOGGER.debug("  BWA SplitFactor: {}", aligner.getSplitFactorOption());
-            GU_LOGGER.debug("  BWA Mismatch: {}", aligner.getXADropRatio());
-            GU_LOGGER.debug("  BWA IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
-            GU_LOGGER.debug("  BWA IGapOpenExtend: {}", aligner.getIGapExtendPenaltyOption());
-            GU_LOGGER.debug("  BWA DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
-            GU_LOGGER.debug("  BWA DGapOpenExtend: {}", aligner.getDGapExtendPenaltyOption());
-            GU_LOGGER.debug("  BWA DropRatio: {}", aligner.getDropRatioOption());
-            GU_LOGGER.debug("  BWA ZDrop: {}", aligner.getZDropOption());
-            GU_LOGGER.debug("  BWA XADropRatio: {}", aligner.getXADropRatio());
-            GU_LOGGER.debug("  BWA MaxXAHits: {}", aligner.getMaxXAHitsOption());
-            GU_LOGGER.debug("  BWA MaxXAHitsAlt: {}", aligner.getMaxXAHitsAltOption());
+            GU_LOGGER.debug("BWA-MEM options:");
+            GU_LOGGER.debug("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
+            GU_LOGGER.debug("  SplitFactor: {}", aligner.getSplitFactorOption());
+            GU_LOGGER.debug("  SplitWidth: {}", aligner.getSplitWidthOption());
+            GU_LOGGER.debug("  MaxSeedOccurrences: {}", aligner.getMaxSeedOccurencesOption());
+            GU_LOGGER.debug("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
+            GU_LOGGER.debug("  DropRatio: {}", aligner.getDropRatioOption());
+            GU_LOGGER.debug("  Match: {}", aligner.getMatchScoreOption());
+            GU_LOGGER.debug("  Mismatch: {}", aligner.getXADropRatio());
+            GU_LOGGER.debug("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
+            GU_LOGGER.debug("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
+            GU_LOGGER.debug("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
+            GU_LOGGER.debug("  DGapExtend: {}", aligner.getDGapExtendPenaltyOption());
+            GU_LOGGER.debug("  Clip3: {}", aligner.getClip3PenaltyOption());
+            GU_LOGGER.debug("  Clip5: {}", aligner.getClip5PenaltyOption());
+            GU_LOGGER.debug("  Bandwidth: {}", aligner.getBandwidthOption());
+            GU_LOGGER.debug("  ZDrop: {}", aligner.getZDropOption());
+            GU_LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
+            GU_LOGGER.debug("  Flags: {}", aligner.getFlagOption());
 
             return aligner;
         }
@@ -270,6 +299,8 @@ public class GenomeMappabilityFinder
 
         configBuilder.addInteger(CFG_BASE_WINDOW_LENGTH, "Base window length for analysis", DEFAULT_WINDOW_LENGTH);
         configBuilder.addInteger(CFG_BASE_WINDOW_SPACING, "Offset through the genome of each base window", DEFAULT_WINDOW_SPACING);
+        configBuilder.addInteger(CFG_MATCH_SCORE_THRESHOLD, "Minimum alignment score to consider a match against the window", DEFAULT_MATCH_SCORE_THRESHOLD);
+        configBuilder.addInteger(CFG_MATCH_SCORE_OFFSET, "Points contributed when alignment score = threshold", DEFAULT_MATCH_SCORE_OFFSET);
 
         configBuilder.addInteger(CFG_BATCH_SIZE, "Number of windows to align simultaneously", DEFAULT_BATCH_SIZE);
         addThreadOptions(configBuilder);
@@ -280,7 +311,7 @@ public class GenomeMappabilityFinder
 
         configBuilder.checkAndParseCommandLine(args);
 
-        GenomeMappabilityFinder genomeMappabilityFinder = new GenomeMappabilityFinder(configBuilder);
-        genomeMappabilityFinder.run();
+        OffTargetRiskProfiler offTargetRiskProfiler = new OffTargetRiskProfiler(configBuilder);
+        offTargetRiskProfiler.run();
     }
 }
