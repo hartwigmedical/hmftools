@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
@@ -238,6 +239,7 @@ public final class IndelBuilder
             return false;
 
         // classify as weak if has the top 2 indel reads have the longest extensions
+        int totalJuncReads = 0;
         int maxNonIndelLength = 0;
         List<Integer> indelReadLengths = Lists.newArrayList();
 
@@ -246,13 +248,21 @@ public final class IndelBuilder
             if(read.type().isSplitSupport())
             {
                 int extensionLength = read.extensionBaseMatches();
+                ++totalJuncReads;
 
                 if(read.type() == SupportType.INDEL)
+                {
                     indelReadLengths.add(extensionLength);
+                }
                 else
+                {
                     maxNonIndelLength = max(maxNonIndelLength, extensionLength);
+                }
             }
         }
+
+        if(indelReadLengths.size() >= ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC * totalJuncReads)
+            return true;
 
         if(indelReadLengths.size() < 2)
             return false;
