@@ -353,7 +353,7 @@ public class JunctionAssembly
         {
             int trimLength = newRefBasePosition - mRefBasePosition;
 
-            if(trimLength <= 0)
+            if(trimLength <= 0 || trimLength >= mBases.length - 1)
                 return;
 
             mBases = subsetArray(mBases, trimLength, mBases.length - 1);
@@ -364,7 +364,7 @@ public class JunctionAssembly
         {
             int trimLength = mRefBasePosition - newRefBasePosition;
 
-            if(trimLength <= 0)
+            if(trimLength <= 0 || trimLength >= mBases.length - 1)
                 return;
 
             mBases = subsetArray(mBases, 0, mBases.length - 1 - trimLength);

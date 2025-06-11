@@ -951,6 +951,9 @@ public class PhaseSetBuilder
         // for each assembly in a split link, look for a facing link (whether linked or not)
         Set<JunctionAssembly> facingAssemblies = Sets.newHashSet();
 
+        List<AssemblyLink> splitLinks = Lists.newArrayList(mSplitLinks);
+        splitLinks.addAll(mSecondarySplitLinks);
+
         for(int i = 0; i < mAssemblies.size() - 1; ++i)
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
@@ -965,7 +968,7 @@ public class PhaseSetBuilder
                 if(!isFacingAssemblyCandidate(assembly2, facingAssemblies, mSplitLinks))
                     continue;
 
-                AssemblyLink facingLink = tryAssemblyFacing(assembly1, assembly2, mSplitLinks);
+                AssemblyLink facingLink = tryAssemblyFacing(assembly1, assembly2, splitLinks);
 
                 if(facingLink == null)
                     continue;
