@@ -405,7 +405,7 @@ public class Alignment
 
             JunctionAssembly assembly = assemblyAlignment.assemblies().get(0);
 
-            if(assembly.extensionLength() < ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH)
+            if(assembly.stats().MaxExtBaseMatchCount < ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH)
                 return false;
 
             if(assembly.hasLineSequence() || assembly.junction().DiscordantOnly || assembly.junction().indelBased()) // simple split junction
