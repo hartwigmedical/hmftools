@@ -28,7 +28,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class Variant
 {
     // VCF data
-    private final String mId;
     private final StructuralVariantType mType;
 
     private final int mReferenceOrdinal;
@@ -46,9 +45,6 @@ public class Variant
 
     public Variant(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
-        // is this used for anything
-        mId = "NONE";// sv.startContext().getAttributeAsString(EVENT, sv.id());
-
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
 
         mIsShortLocal = (sv.type() == DEL || sv.type() == DUP || sv.type() == INS)
@@ -91,8 +87,6 @@ public class Variant
         mGermline = false;
         mRmAnnotation = null;
     }
-
-    public String id() { return mId; }
 
     public String chromosomeStart() { return mBreakends[SE_START].Chromosome; }
     public String chromosomeEnd() { return !isSgl() ? mBreakends[SE_END].Chromosome : ""; }
@@ -204,13 +198,13 @@ public class Variant
     {
         if(!isSgl())
         {
-            return String.format("%s:%s pos(%s:%d - %s:%d)",
-                    mId, mType.toString(), chromosomeStart(), posStart(), chromosomeEnd(), posEnd());
+            return String.format("%s pos(%s:%d - %s:%d)",
+                    mType.toString(), chromosomeStart(), posStart(), chromosomeEnd(), posEnd());
         }
         else
         {
-            return String.format("%s:%s pos(%s:%d)",
-                    mId, mType.toString(), chromosomeStart(), posStart());
+            return String.format("%s pos(%s:%d)",
+                    mType.toString(), chromosomeStart(), posStart());
         }
     }
 }

@@ -181,11 +181,23 @@ public class DepthTask implements Callable
                     continue;
 
                 genotype.getExtendedAttributes().put(refVcfTag, sampleCounts.RefSupport);
-                genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
 
                 int variantFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
 
-                double total = variantFrags + sampleCounts.total();
+                double total = variantFrags + sampleCounts.RefSupport;
+
+                // NOTE: SGLs and short indels do not consider ref-pair support for AF
+                if(variantInfo.IsSgl || variantInfo.IsShortIndel)
+                {
+                    genotype.getExtendedAttributes().put(refPairVcfTag, 0);
+                }
+                else
+                {
+                    genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
+
+                    total += sampleCounts.RefSupport;
+                }
+
                 double af = variantFrags / total;
 
                 genotype.getExtendedAttributes().put(ALLELE_FRACTION, af);

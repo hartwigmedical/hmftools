@@ -390,7 +390,7 @@ public class StructuralVariantFactory implements SvFactoryInterface
         return filters.stream().sorted().collect(Collectors.joining(";"));
     }
 
-    private static StructuralVariantType type(final VariantContext context)
+    public static StructuralVariantType type(final VariantContext context)
     {
         return StructuralVariantType.fromAttribute((String) context.getAttribute(SV_TYPE));
     }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 
@@ -62,7 +64,7 @@ public class Breakend
         ConfidenceInterval = Interval.fromCiposTag(context.getAttributeAsIntList(CIPOS, 0));
 
         String ref = context.getAlleles().get(0).getDisplayString();
-        final VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
+        VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
         InsertSequence = altInsertCoords.InsertSequence;
 
         IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
@@ -107,6 +109,10 @@ public class Breakend
 
     public double calcAllelicFrequency(final Genotype genotype)
     {
+        // set in the depth annotator, which has the same logic as here - so can remove this in future
+        if(genotype.hasExtendedAttribute(ALLELE_FRACTION))
+            return getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
+
         int readPairSupport = (mVariant.isSgl() || !mVariant.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
         int refSupport = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0);
 
