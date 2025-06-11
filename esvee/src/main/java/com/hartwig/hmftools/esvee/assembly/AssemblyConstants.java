@@ -37,6 +37,7 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
     public static final int ASSEMBLY_MIN_DISTINCT_FRAGS = 2;
     public static final int ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH = 85;
+    public static final int ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH = 50;
     public static final double ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC = 0.33;
     public static final int ASSEMBLY_DEDUP_JITTER_MAX_DIST = 20;
     public static final int ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO = 50;

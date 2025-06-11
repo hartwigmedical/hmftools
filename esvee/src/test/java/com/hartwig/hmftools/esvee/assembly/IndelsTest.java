@@ -13,6 +13,9 @@ import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferredUnclippedPositions;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.isWeakIndelBasedUnlinkedAssembly;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 
 import static org.junit.Assert.assertEquals;
@@ -28,6 +31,7 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import org.junit.Test;
@@ -196,6 +200,52 @@ public class IndelsTest
         assertEquals(1, assemblies.size());
         assembly = assemblies.get(0);
         assertEquals(4, assembly.supportCount());
+    }
+
+    @Test
+    public void testUnlinkedIndelBasedAssemblyFiltering()
+    {
+        Junction junction = new Junction(CHR_1, 100, FORWARD);
+
+        String refBases = REF_BASES_400.substring(1, 100);
+        String extBases = REF_BASES_400.substring(200, 240);
+
+        // both pairs of junctions share a read which supports them both, so are not deduped
+        Read splitRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1,
+                refBases + extBases, "100M40S", CHR_1, 300, true);
+
+        JunctionAssembly assembly = new JunctionAssembly(
+                junction, splitRead.getBases(), splitRead.getBaseQuality(), refBases.length());
+
+        assembly.addJunctionRead(splitRead);
+
+        assertFalse(isWeakIndelBasedUnlinkedAssembly(assembly));
+
+        // 2 longest junction reads are indel reads now
+        Read indelRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 51,
+                refBases + extBases, "50M50I50M", CHR_1, 300, true);
+
+        SupportRead support = new SupportRead(indelRead1, INDEL, 50, indelRead1.basesLength(), 0);
+        support.setReferenceMismatches(0);
+        assembly.addSupport(indelRead1, INDEL, 50, 50, 0);
+
+        // since 50% if the reads now
+        assertTrue(isWeakIndelBasedUnlinkedAssembly(assembly));
+
+        assembly.addJunctionRead(splitRead);
+        assembly.addJunctionRead(splitRead);
+        assembly.addJunctionRead(splitRead);
+        assembly.addJunctionRead(splitRead);
+        assembly.addJunctionRead(splitRead);
+
+        assertFalse(isWeakIndelBasedUnlinkedAssembly(assembly));
+
+        // 2 longest reads are indels
+        assembly.addSupport(indelRead1, INDEL, 50, 50, 0);
+
+        assertTrue(isWeakIndelBasedUnlinkedAssembly(assembly));
     }
 
     @Test

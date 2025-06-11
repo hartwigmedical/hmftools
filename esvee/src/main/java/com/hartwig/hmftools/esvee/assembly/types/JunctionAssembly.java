@@ -850,10 +850,12 @@ public class JunctionAssembly
         // positive if on the lower side of the junction
         int junctionReadStartDistance = mJunction.Position - read.unclippedStart();
 
-        SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, read.basesLength(), 0);
+        // assume all extension bases match
+        int extensionBases = mJunction.isForward() ? read.unclippedEnd() - mJunction.Position : mJunction.Position - read.unclippedStart();
+
+        SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, extensionBases, 0);
         support.setReferenceMismatches(0);
         mSupport.add(support);
-        // mStats.addRead(support, mJunction, read); // add through standard clearing routine
     }
 
     @VisibleForTesting
