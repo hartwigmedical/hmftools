@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -27,12 +26,14 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -175,7 +176,7 @@ public class OffTargetRiskProfiler
 
         long startTimeMs = System.currentTimeMillis();
 
-        List<ChrBaseRegion> regions = getBaseRegions();
+        Stream<ChrBaseRegion> regions = getWindowRegions();
 
         // TODO
         List<RegionTask> regionTasks = regions.stream().map(x -> new RegionTask(x)).collect(Collectors.toList());
@@ -188,30 +189,22 @@ public class OffTargetRiskProfiler
         GU_LOGGER.info("Genome mappability analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private List<ChrBaseRegion> getBaseRegions() {
+    private Stream<ChrBaseRegion> getWindowRegions() {
         RefGenomeCoordinates coordinates = mRefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-        // TODO
+        return Arrays.stream(HumanChromosome.values())
+                .map(chr -> mRefGenVersion.versionedChromosome(chr.toString()))
+                .filter(mSpecificChrRegions::includeChromosome)
+                .flatMap(chr -> createWindowRegions(chr, coordinates.length(chr)))
+                .filter(region -> !mSpecificChrRegions.hasFilters() || mSpecificChrRegions.includeRegion(region));
+    }
 
-        List<ChrBaseRegion> regions = Lists.newArrayList();
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            String chrStr = mRefGenVersion.versionedChromosome(chromosome.toString());
-
-            if(mSpecificChrRegions.excludeChromosome(chrStr))
-                continue;
-
-            List<ChrBaseRegion> chrRegions = buildPartitions(chrStr, coordinates.length(chrStr), mPartitionSize);
-
-            for(ChrBaseRegion region : chrRegions)
-            {
-                if(mSpecificChrRegions.hasFilters() && !mSpecificChrRegions.includeRegion(region))
-                    continue;
-
-                regions.add(region);
-            }
-        }
-        return regions;
+    // Partition a chromosome into windows to analyse.
+    private Stream<ChrBaseRegion> createWindowRegions(String chromosome, int chromosomeLength) {
+        // TODO: is start and end 0 or 1 indexed? inclusive/exclusive?
+        return IntStream.iterate(1, start -> true, start -> start + mBaseWindowSpacing)
+                .mapToObj(start -> new ChrBaseRegion(chromosome, start, start + mBaseWindowLength - 1))
+                .takeWhile(region -> region.end() <= chromosomeLength);
     }
 
     // TODO
