@@ -224,13 +224,6 @@ public class AssemblyDeduper
 
     private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
     {
-        // always favour assemblies with germline over those without, so as not to miss germline support
-        boolean firstHasGermlineSupport = first.support().stream().anyMatch(x -> x.isReference());
-        boolean secondHasGermlineSupport = second.support().stream().anyMatch(x -> x.isReference());
-
-        if(firstHasGermlineSupport != secondHasGermlineSupport)
-            return firstHasGermlineSupport;
-
         if(assemblyExceedsSupportRatio(first, second))
             return true;
 
@@ -239,6 +232,13 @@ public class AssemblyDeduper
 
         if(first.indel() != second.indel())
             return first.indel();
+
+        // always favour assemblies with germline over those without, so as not to miss germline support
+        boolean firstHasGermlineSupport = first.support().stream().anyMatch(x -> x.isReference());
+        boolean secondHasGermlineSupport = second.support().stream().anyMatch(x -> x.isReference());
+
+        if(firstHasGermlineSupport != secondHasGermlineSupport)
+            return firstHasGermlineSupport;
 
         if(first.discordantOnly() != second.discordantOnly())
             return !first.discordantOnly();
