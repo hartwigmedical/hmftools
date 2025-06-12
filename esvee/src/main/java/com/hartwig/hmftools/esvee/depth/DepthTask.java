@@ -169,6 +169,9 @@ public class DepthTask implements Callable
             VariantContext variant = mVariantsList.get(i);
             VariantInfo variantInfo = mVariantInfoList.get(i);
 
+            // NOTE: SGLs and short indels do not consider ref-pair support for AF
+            boolean skipRefPairSupport = variantInfo.IsSgl || variantInfo.IsShortIndel;
+
             for(int s = 0; s < mConfig.SampleIds.size(); ++s)
             {
                 String sampleId = mConfig.SampleIds.get(s);
@@ -184,19 +187,11 @@ public class DepthTask implements Callable
 
                 int variantFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
 
-                double total = variantFrags + sampleCounts.RefSupport;
+                int refPairSupport = skipRefPairSupport ? 0 : sampleCounts.RefPairSupport;
 
-                // NOTE: SGLs and short indels do not consider ref-pair support for AF
-                if(variantInfo.IsSgl || variantInfo.IsShortIndel)
-                {
-                    genotype.getExtendedAttributes().put(refPairVcfTag, 0);
-                }
-                else
-                {
-                    genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
+                double total = variantFrags + sampleCounts.RefSupport + refPairSupport;
 
-                    total += sampleCounts.RefSupport;
-                }
+                genotype.getExtendedAttributes().put(refPairVcfTag, refPairSupport);
 
                 double af = variantFrags / total;
 
@@ -205,7 +200,7 @@ public class DepthTask implements Callable
 
             RefSupportCounts totalCounts = variantInfo.totalSupport();
             setRefDepthValue(variant, totalCounts.RefSupport, refVcfTag);
-            setRefDepthValue(variant, totalCounts.RefPairSupport, refPairVcfTag);
+            setRefDepthValue(variant, skipRefPairSupport ? 0 : totalCounts.RefPairSupport, refPairVcfTag);
         }
 
         SV_LOGGER.info("chr({}) complete for {} variants, total reads({})", mChromosome, processed, mTotalReadCount);
