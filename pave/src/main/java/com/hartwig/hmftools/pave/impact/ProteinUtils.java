@@ -207,9 +207,7 @@ public final class ProteinUtils
         }
 
         // extend the range of up and downstream codons for INDELs to help determine the net differences in amino acids
-        extendIndelCodonBases(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
-
-        // extendRefAminoAcids(variant, pc, transData, exon, refGenome);
+        extendIndelData(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
 
         trimAminoAcids(variant, pc, posStrand);
 
@@ -219,18 +217,28 @@ public final class ProteinUtils
         return pc;
     }
 
-    public static void extendIndelCodonBases(
+    private static void extendIndelData(
             final VariantData variant, final CodingContext cc, final ProteinContext pc,
             final TranscriptData transData, final ExonData exon, final RefGenomeInterface refGenome, int downstreamAltOpenCodonBases)
     {
         if(!variant.isIndel())
             return;
 
+        extendIndelCodonBases(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
+
+        extendRefAminoAcids(variant, pc, transData, exon, refGenome);
+    }
+
+    private static void extendIndelCodonBases(
+            final VariantData variant, final CodingContext cc, final ProteinContext pc,
+            final TranscriptData transData, final ExonData exon, final RefGenomeInterface refGenome, int downstreamAltOpenCodonBases)
+    {
         boolean posStrand = transData.posStrand();
 
         // for indels contained with a codon (ie phase 1 or 2), extract the first additional upstream bases
         if(variant.isInsert() && (cc.UpstreamPhase == PHASE_1 || cc.UpstreamPhase == PHASE_2) && pc.CodonIndex > 1)
         {
+            // however this is only done if the first 1 or 2 AAs in the ref match the last 1 or 2 AAs in the alt
             boolean firstMatchesLast = pc.RefAminoAcids.charAt(0) == pc.AltAminoAcids.charAt(pc.AltAminoAcids.length() - 1);
 
             boolean firstSeqMatchesLast = pc.RefAminoAcids.length() >= 2 && pc.AltAminoAcids.length() >= 2
@@ -327,13 +335,35 @@ public final class ProteinUtils
             final VariantData variant, final ProteinContext pc, final TranscriptData transData, final ExonData exon,
             final RefGenomeInterface refGenome)
     {
-        if(transData.Strand == NEG_STRAND)
+        if(transData.Strand == NEG_STRAND || !variant.isInsert())
             return;
 
         int currentPos = pc.refCodingBaseEnd();
         int extraBases = 3;
 
-        String lastAminoAcid = pc.RefAminoAcids.substring(pc.RefAminoAcids.length() - 1);
+        // if the ref and alt AAs match, continue as long as the next ref AAs match the additional alt AAs (indicating a duplication)
+
+        // scenario 1: MAPPPPQ -> MAPPPP P Q - has an extra P, need to go until encounters the Q
+        // scenario 2: LGHEX -> LGHE GHE X - duplicated GHE
+
+        int altAaIndex = -1;
+
+        for(int i = 0; i < min(pc.RefAminoAcids.length(), pc.AltAminoAcids.length()); ++i)
+        {
+            if(pc.RefAminoAcids.charAt(i) == pc.AltAminoAcids.charAt(i))
+                altAaIndex = i;
+            else
+                break;
+        }
+
+        if(altAaIndex < 0)
+            return;
+
+        // now search for the AA of difference in the ref AAs from this point
+
+        ++altAaIndex;
+        char comparisonAminoAcid = altAaIndex >= pc.AltAminoAcids.length() ?
+                pc.AltAminoAcids.charAt(pc.AltAminoAcids.length() - 1) : pc.AltAminoAcids.charAt(altAaIndex);
 
         String extendedRefBases = "";
 
@@ -342,14 +372,21 @@ public final class ProteinUtils
             String downstreamBases = getExtraBases(
                     transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, true);
 
-            if(downstreamBases == null)
+            if(downstreamBases == null || downstreamBases.length() < 3)
                 break;
 
             String extendedAminoAcids = aminoAcidFromBases(downstreamBases);
-            String newLastAminoAcid = extendedAminoAcids.substring(extendedAminoAcids.length() - 1);
 
-            if(!newLastAminoAcid.equals(lastAminoAcid))
+            char nextRefAminoAcid = extendedAminoAcids.charAt(extendedAminoAcids.length() - 1);
+
+            if(nextRefAminoAcid != comparisonAminoAcid)
                 break;
+
+            if(altAaIndex < pc.AltAminoAcids.length() - 1)
+            {
+                ++altAaIndex;
+                comparisonAminoAcid = pc.AltAminoAcids.charAt(altAaIndex);
+            }
 
             extendedRefBases = downstreamBases;
 
@@ -404,9 +441,7 @@ public final class ProteinUtils
 
         boolean repeatStartRemoval = canTrimStart && variant.isIndel();
 
-        boolean repeatEndRemoval = variant.isInsert();
-
-        trimAminoAcids(proteinContext, posStrand, canTrimStart, repeatStartRemoval, repeatEndRemoval);
+        trimAminoAcids(proteinContext, posStrand, canTrimStart, repeatStartRemoval, true);
     }
 
     public static void trimAminoAcids(
@@ -415,32 +450,6 @@ public final class ProteinUtils
         int aaIndex = proteinContext.CodonIndex;
         String netRefAminoAcids = proteinContext.RefAminoAcids;
         String netAltAminoAcids = proteinContext.AltAminoAcids;
-
-        /*
-        if(canTrimStart)
-        {
-            // find the first point of difference in AAs
-            int skippedAAs = 0;
-
-            while(netRefAminoAcids.length() > skippedAAs && netAltAminoAcids.length() > skippedAAs)
-            {
-                if(netRefAminoAcids.charAt(skippedAAs) != netAltAminoAcids.charAt(skippedAAs))
-                    break;
-
-                ++skippedAAs;
-
-                if(!repeatStartRemoval) // only the first
-                    break;
-            }
-
-            if(skippedAAs > 0)
-            {
-                aaIndex += skippedAAs - 1;
-                netRefAminoAcids = netRefAminoAcids.substring(skippedAAs);
-                netAltAminoAcids = netAltAminoAcids.substring(skippedAAs);
-            }
-        }
-        */
 
         // strip off the initial AA if it doesn't relate to any of the altered bases, as is the case for a DEL where the reference
         // is the last base of a codon
@@ -489,6 +498,10 @@ public final class ProteinUtils
 
         proteinContext.NetRefAminoAcids = netRefAminoAcids;
         proteinContext.NetAltAminoAcids = netAltAminoAcids;
+
+        if(proteinContext.NetRefAminoAcids.isEmpty())
+            --aaIndex;
+
         proteinContext.NetCodonIndexRange[SE_START] = aaIndex;
         proteinContext.NetCodonIndexRange[SE_END] = aaIndex + max(netRefAminoAcids.length() - 1, 0);
     }
@@ -504,8 +517,23 @@ public final class ProteinUtils
             return;
 
         // first inserted amino acids matches end ref AA
-        if(pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(0) && pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(1))
+        char firstAlt = pc.NetAltAminoAcids.charAt(0);
+        boolean possibleDup = false;
+
+        for(int i = 0; i < pc.RefAminoAcids.length(); ++i)
+        {
+            if(firstAlt == pc.RefAminoAcids.charAt(i))
+            {
+                possibleDup = true;
+                break;
+            }
+        }
+
+        if(!possibleDup)
             return;
+
+        // if(pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(0) && pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(1))
+        //    return;
 
         // a duplication of AAs means 1 extra copy, not multiple
         // duplication (single AA) p.Gln8dup
@@ -535,28 +563,15 @@ public final class ProteinUtils
             }
         }
 
-        // otherwise extend downstream the length of the inserted AAs and test for a match
-        int extraBases = (netAminoAcids.length() - 1) * 3;
-        boolean searchUp = posStrand;
-        int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
+        // no partial duplications so find the index in the ref
+        int dupIndex = pc.RefAminoAcids.indexOf(netAminoAcids);
 
-        String downstreamBases = getExtraBases(
-                transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, searchUp);
-
-        if(downstreamBases == null)
+        if(dupIndex < 0)
             return;
 
-        String extraAminoAcids = posStrand
-                ? aminoAcidFromBases(downstreamBases)
-                : aminoAcidFromBases(reverseComplementBases(downstreamBases));
-
-        String extendedRefAminoAcids = pc.RefAminoAcids.charAt(1) + extraAminoAcids;
-
-        if(extendedRefAminoAcids.equals(netAminoAcids))
-        {
-            pc.IsDuplication = true;
-            pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START] + extendedRefAminoAcids.length() - 1;
-        }
+        pc.IsDuplication = true;
+        pc.NetCodonIndexRange[SE_START] = pc.CodonIndex + dupIndex;
+        pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START] + netAminoAcids.length() - 1;
     }
 
     public static int getOpenCodonBases(int phase)

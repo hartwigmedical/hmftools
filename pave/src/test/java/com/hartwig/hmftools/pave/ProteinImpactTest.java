@@ -247,6 +247,7 @@ public class ProteinImpactTest
 
         // pos codons: M 20-22, A 23-25, C 26-28, D 29-31, L 32-34, L 35-37, G 38-40, H 41-43, E 44-46, stopX 47-49
         // M  A  C  D  L  L  G  H  E  X
+        // 1  2  3  4  5  6  7  8  9  10
         // ATGGCTTGTGACTTATTAGGACACGAGTAA
 
         // DLLG -> DCCLLG, or shortened DL -> DCCL, so should be p.D4_L5insCC
@@ -299,7 +300,7 @@ public class ProteinImpactTest
 
         impact = mClassifier.classifyVariant(var, mPosTrans);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
-        assertEquals("p.Leu6_Gly7insGlyGlyGly", impact.proteinContext().Hgvs);
+        assertEquals("p.Gly7_His8insGlyGlyGly", impact.proteinContext().Hgvs);
 
         // range of AAs: L(TTA) G(GGA) H(CAC) E(GAG), T>TAGGACACGA - duplicating GHE
         pos = 36;

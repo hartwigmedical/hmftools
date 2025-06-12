@@ -375,6 +375,7 @@ public class PhasedVariantsTest
 
         assertTrue(impact1.codingContext().IsFrameShift);
         assertTrue(impact1.hasEffect(FRAMESHIFT));
+        assertEquals("p.Ile48fs", impact1.proteinContext().Hgvs);
 
         pos = 25;
         ref = mRefBases.substring(pos, pos + 8);
@@ -395,6 +396,7 @@ public class PhasedVariantsTest
 
         assertTrue(impact3.codingContext().IsFrameShift);
         assertTrue(impact3.hasEffect(FRAMESHIFT));
+        assertEquals("p.Arg42fs", impact3.proteinContext().Hgvs);
 
         pos = 40;
         ref = mRefBases.substring(pos, pos + 1);

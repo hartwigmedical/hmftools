@@ -265,7 +265,6 @@ public class HgvsCodingTest
         GENE_DATA_CACHE.getEnsemblCache().getTranscriptDataMap().put(geneData.GeneId, Lists.newArrayList(transcriptData));
     }
 
-    @Ignore
     @Test
     public void testAminoAcidRightAlignment()
     {
@@ -279,8 +278,6 @@ public class HgvsCodingTest
         String refCodingBases1 = "ATG GCT CCA CCC CCG CCT CAG".replace(" ", "");
         String intronicBases = "TTTTGGGGCCCCAAA"; // as in previous test
 
-        // MockRefGenome refGenome = new MockRefGenome();
-
         String refBases = generateTestBases(20) + refCodingBases1 + intronicBases;
         REF_GENOME.RefGenomeMap.put(CHR_1, refBases);
 
@@ -289,8 +286,6 @@ public class HgvsCodingTest
                 20, 70, false, "");
 
         addGeneTranscript(posTrans);
-
-        // ImpactClassifier classifier = new ImpactClassifier(refGenome);
 
         // duplication of first P should be converted to a right-aligned AA change
         int pos = 25;
@@ -311,7 +306,6 @@ public class HgvsCodingTest
         assertEquals("p.Pro6dup", impact.proteinContext().Hgvs);
     }
 
-    @Ignore
     @Test
     public void testAminoAcidRightAlignment2()
     {
