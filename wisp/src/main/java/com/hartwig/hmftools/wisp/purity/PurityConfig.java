@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_BQR_MIN_QUAL;
 import static com.hartwig.hmftools.wisp.purity.SampleData.sampleIdsFromStr;
@@ -128,7 +129,20 @@ public class PurityConfig
         }
 
         SomaticVcf = configBuilder.getValue(SOMATIC_VCF);
-        SomaticDir = checkAddDirSeparator(configBuilder.getValue(SOMATIC_DIR, SampleDataDir));
+
+        if(configBuilder.hasValue(SOMATIC_DIR))
+        {
+            SomaticDir = checkAddDirSeparator(configBuilder.getValue(SOMATIC_DIR));
+        }
+        else if(SampleDataDir != null)
+        {
+            SomaticDir = SampleDataDir;
+        }
+        else
+        {
+            SomaticDir = pathFromFile(SomaticVcf);
+        }
+
         PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir));
         AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIR_CFG, SampleDataDir));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir));
