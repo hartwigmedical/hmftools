@@ -204,34 +204,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(TINC_RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, TINC_RECOVERED_DESC));
 
         // genotype fields
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_QUALITY, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_FLAG, 1, VCFHeaderLineType.Integer, MIN_COORDS_FLAG_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
+        addGenotypeHeader(header);
 
         for(SoftFilter filter : SoftFilter.values())
         {
@@ -249,63 +222,40 @@ public class VariantVCF implements AutoCloseable
         return header;
     }
 
-    public static void appendHeader(final VCFHeader header)
+    public static void addGenotypeHeader(final VCFHeader header)
     {
-        if(!header.hasFormatLine(AVG_BASE_QUAL))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
-        }
+        // call from Sage append as well for new samples, and this handles the additional in later versions of new genotype fields
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
 
-        if(!header.hasFormatLine(AVG_RAW_BASE_QUAL))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
 
-        if(!header.hasFormatLine(AVG_MAP_QUALITY))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
 
-        if(!header.hasFormatLine(UMI_TYPE_COUNTS))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(
-                    UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
 
-        if(!header.hasFormatLine(READ_STRAND_BIAS))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 1, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
 
-        if(!header.hasInfoLine(MAX_READ_EDGE_DISTANCE))
-        {
-            header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
 
-        if(!header.hasInfoLine(AVG_MODIFIED_BASE_QUAL))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));
 
-        if(!header.hasInfoLine(AVG_MODIFIED_ALT_MAP_QUAL))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_QUALITY, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESC));
 
-        if(!header.hasInfoLine(SIMPLE_ALT_COUNT))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESC));
 
-        if(!header.hasFormatLine(MIN_COORDS_FLAG))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_FLAG, 1, VCFHeaderLineType.Integer, MIN_COORDS_FLAG_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_FLAG, 1, VCFHeaderLineType.Integer, MIN_COORDS_FLAG_DESC));
 
-        if(!header.hasFormatLine(LPS_APPEND_INFO))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(LPS_APPEND_INFO, 1, VCFHeaderLineType.String, LPS_APPEND_INFO_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
     }
 
     @Override
