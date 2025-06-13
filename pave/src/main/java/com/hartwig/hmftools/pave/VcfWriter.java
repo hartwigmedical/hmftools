@@ -203,6 +203,8 @@ public class VcfWriter
 
         final ProteinContext pc = transImpact.proteinContext();
         StringJoiner sj = new StringJoiner(VAR_TRANS_IMPACT_DELIM);
+        sj.add(pc.RefCodonBasesExtended);
+        sj.add(pc.AltCodonBasesComplete);
         sj.add(pc.RefAminoAcids);
         sj.add(pc.AltAminoAcids);
         sj.add(pc.NetRefAminoAcids);
