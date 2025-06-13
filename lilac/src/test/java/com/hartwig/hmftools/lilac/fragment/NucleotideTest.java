@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.lilac.app.LilacAppTest.buildGeneCache;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Set;
@@ -52,7 +52,7 @@ public class NucleotideTest
         assertGene(enricher, Sets.newHashSet(HLA_B), HLA_B, indices);
     }
 
-    private void assertGene(
+    private static void assertGene(
             final NucleotideGeneEnrichment enricher,
             final Set<String> expectedGenes, final String alignedGene, final List<Integer> aminoAcideIndices)
     {
@@ -62,14 +62,14 @@ public class NucleotideTest
         assertTrue(namesMatch(fragment.genes(), expectedGenes));
     }
 
-    private Fragment create(final String gene, final List<Integer> indices)
+    private static Fragment create(final String gene, final List<Integer> indices)
     {
-        List<Integer> qualities = Lists.newArrayListWithCapacity(indices.size());
+        List<Byte> qualities = Lists.newArrayListWithCapacity(indices.size());
         List<String> nucleotides = Lists.newArrayListWithCapacity(indices.size());
 
         for(int i = 0; i < indices.size(); ++i)
         {
-            qualities.add(0);
+            qualities.add((byte) 0);
             nucleotides.add("G");
         }
 

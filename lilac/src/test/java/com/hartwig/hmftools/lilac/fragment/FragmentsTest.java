@@ -15,12 +15,12 @@ import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 import static com.hartwig.hmftools.lilac.read.Read.createRead;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
-
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -99,26 +99,25 @@ public class FragmentsTest
     public void testFragmentAddNucleotide()
     {
         List<Integer> indices = Lists.newArrayList(1, 2, 3, 6, 7, 8);
-        List<Integer> qualities = Lists.newArrayList(37, 25, 37, 37, 37, 25);
+        List<Byte> qualities = Lists.newArrayList((byte) 37, (byte) 25, (byte) 37, (byte) 37, (byte) 37, (byte) 25);
         List<String> nucleotides = Lists.newArrayList("A", "G", "T", "C", "A", "G");
 
         Fragment fragment = new Fragment(createReadRecord("01"), HLA_A, Sets.newHashSet(HLA_A), indices, qualities, nucleotides);
 
         fragment.removeLowQualBases();
 
-        assertFalse(fragment.containsNucleotide(2));
+        assertFalse(fragment.containsNucleotideLocus(2));
 
-        fragment.addNucleotideInfo(5, "G", 30);
+        fragment.addNucleotide(5, "G", (byte) 30);
 
-        assertTrue(fragment.containsNucleotide(5));
-        assertTrue(FragmentUtils.validateLociBases(fragment.id(), fragment.rawNucleotideLoci(), fragment.rawNucleotides()));
+        assertTrue(fragment.containsNucleotideLocus(5));
 
-        fragment.addNucleotideInfo(9, "T", 30);
-        assertTrue(fragment.containsNucleotide(9));
+        fragment.addNucleotide(9, "T", (byte) 30);
+        assertTrue(fragment.containsNucleotideLocus(9));
         assertTrue(fragment.validate());
 
-        fragment.addNucleotideInfo(0, "A", 37);
-        assertTrue(fragment.containsNucleotide(0));
+        fragment.addNucleotide(0, "A", (byte) 37);
+        assertTrue(fragment.containsNucleotideLocus(0));
         assertTrue(fragment.validate());
     }
 
@@ -129,54 +128,55 @@ public class FragmentsTest
         Read read = createReadRecord(readId);
         Fragment frag1 = new Fragment(
                 read, GENE_A, Sets.newHashSet(GENE_A),
-                Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
+                Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
         Fragment frag2 = new Fragment(
                 read, GENE_B, Sets.newHashSet(GENE_B),
-                Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
+                Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
         Fragment mergedFrag = mergeFragments(frag1, frag2);
         assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.genes().size());
-        assertEquals(1, mergedFrag.nucleotideLoci().size());
-        assertEquals(Integer.valueOf(1), mergedFrag.nucleotideLoci().get(0));
-        assertEquals(1, mergedFrag.nucleotideQuality().size());
-        assertEquals(1, mergedFrag.nucleotides().size());
+        assertEquals(1, mergedFrag.nucleotidesByLoci().size());
+        assertEquals(1, mergedFrag.minNucleotideLocus());
+        assertEquals(1, mergedFrag.nucleotidesByLoci().size());
+        assertEquals(1, mergedFrag.nucleotidesByLoci().size());
 
         frag2 = new Fragment(
                 read, GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(0, 1, 2, 3),
-                Lists.newArrayList(30, 30, 30, 30),
+                Lists.newArrayList((byte) 30, (byte) 30, (byte) 30, (byte) 30),
                 Lists.newArrayList("A", "A", "A", "A"));
 
         mergedFrag = mergeFragments(frag1, frag2);
         assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.genes().size());
-        assertEquals(4, mergedFrag.nucleotideLoci().size());
-        assertEquals(Integer.valueOf(0), mergedFrag.nucleotideLoci().get(0));
-        assertEquals(Integer.valueOf(1), mergedFrag.nucleotideLoci().get(1));
-        assertEquals(4, mergedFrag.nucleotideQuality().size());
-        assertEquals(4, mergedFrag.nucleotides().size());
+        assertEquals(4, mergedFrag.nucleotidesByLoci().size());
+        assertEquals(Integer.valueOf(0), Lists.newArrayList(mergedFrag.nucleotidesByLoci().keySet()).get(0));
+        assertEquals(Integer.valueOf(1), Lists.newArrayList(mergedFrag.nucleotidesByLoci().keySet()).get(1));
+        assertEquals(4, mergedFrag.nucleotidesByLoci().size());
+        assertEquals(4, mergedFrag.nucleotidesByLoci().size());
 
         frag2 = new Fragment(
                 read, GENE_C, Sets.newHashSet(GENE_C),
                 Lists.newArrayList(3, 4, 5),
-                Lists.newArrayList(30, 30, 30),
+                Lists.newArrayList((byte) 30, (byte) 30, (byte) 30),
                 Lists.newArrayList("A", "A", "A"));
 
         mergedFrag = mergeFragments(frag1, frag2);
+        ArrayList<Integer> nucleotideLoci = Lists.newArrayList(mergedFrag.nucleotidesByLoci().keySet());
         assertTrue(frag1.validate());
         assertEquals(3, mergedFrag.genes().size());
-        assertEquals(6, mergedFrag.nucleotideLoci().size());
-        assertEquals(Integer.valueOf(0), mergedFrag.nucleotideLoci().get(0));
-        assertEquals(Integer.valueOf(3), mergedFrag.nucleotideLoci().get(3));
-        assertEquals(Integer.valueOf(4), mergedFrag.nucleotideLoci().get(4));
-        assertEquals(Integer.valueOf(5), mergedFrag.nucleotideLoci().get(5));
-        assertEquals(6, mergedFrag.nucleotideQuality().size());
-        assertEquals(6, mergedFrag.nucleotides().size());
+        assertEquals(6, mergedFrag.nucleotidesByLoci().size());
+        assertEquals(Integer.valueOf(0), nucleotideLoci.get(0));
+        assertEquals(Integer.valueOf(3), nucleotideLoci.get(3));
+        assertEquals(Integer.valueOf(4), nucleotideLoci.get(4));
+        assertEquals(Integer.valueOf(5), nucleotideLoci.get(5));
+        assertEquals(6, mergedFrag.nucleotidesByLoci().size());
+        assertEquals(6, mergedFrag.nucleotidesByLoci().size());
     }
 
-    private void assertRange(int expectedStart, int expectedEnd, List<Integer> victim)
+    private static void assertRange(int expectedStart, int expectedEnd, List<Integer> victim)
     {
         assertEquals(expectedStart, victim.get(0).intValue());
         assertEquals(expectedEnd, victim.get(victim.size() - 1).intValue());
@@ -204,36 +204,18 @@ public class FragmentsTest
 
         long startTime = System.nanoTime();
 
-        for(int i = 0; i < iterations; ++i)
-        {
-            Fragment.findLociIndexManual(lociValues, searchLoci[searchValueIndex++]);
-
-            if(searchValueIndex >= searchLoci.length)
-                searchValueIndex = 0;
-        }
-
         long sampleTime = System.nanoTime() - startTime;
         double sampleTimeMillis = sampleTime / NANOS_IN_MILLISECOND;
 
         LL_LOGGER.info(format("manual search time: %.6fms", sampleTimeMillis));
 
-        searchValueIndex = 0;
         startTime = System.nanoTime();
-
-        for(int i = 0; i < iterations; ++i)
-        {
-            Fragment.findLociInsertionIndex(lociValues, searchLoci[searchValueIndex++]);
-
-            if(searchValueIndex >= searchLoci.length)
-                searchValueIndex = 0;
-        }
 
         sampleTime = System.nanoTime() - startTime;
         sampleTimeMillis = sampleTime / NANOS_IN_MILLISECOND;
 
         LL_LOGGER.info(format("binary search time: %.6fms", sampleTimeMillis));
 
-        searchValueIndex = 0;
         startTime = System.nanoTime();
 
         for(int i = 0; i < iterations; ++i)

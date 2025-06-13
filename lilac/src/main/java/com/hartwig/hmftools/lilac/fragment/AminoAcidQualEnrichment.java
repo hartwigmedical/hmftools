@@ -3,11 +3,13 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
 
 public final class AminoAcidQualEnrichment
 {
@@ -34,18 +36,18 @@ public final class AminoAcidQualEnrichment
 
     private static void applyQualFilter(final LilacConfig config, final Fragment fragment, final SequenceCount count)
     {
-        List<Integer> initialIntersect = fragment.aminoAcidLoci();
+        Set<Integer> filteredIntersect = Sets.newHashSet();
+        fragment.aminoAcidsByLoci().values().stream()
+                .mapToInt(AminoAcid::locus)
+                .forEach(locusIndex ->
+                {
+                    List<String> allowed = count.getMinCountOrVafSequences(locusIndex, config.MinAminoAcidEvidenceFactor);
+                    String actual = fragment.aminoAcid(locusIndex);
 
-        List<Integer> filteredIntersect = Lists.newArrayList();
-        for(Integer locusIndex : initialIntersect)
-        {
-            List<String> allowed = count.getMinCountOrVafSequences(locusIndex, config.MinAminoAcidEvidenceFactor);
-            String actual = fragment.aminoAcid(locusIndex);
+                    if(allowed.contains(actual))
+                        filteredIntersect.add(locusIndex);
+                });
 
-            if(allowed.contains(actual))
-                filteredIntersect.add(locusIndex);
-        }
-
-        fragment.filterOnLoci(filteredIntersect);
+        fragment.filterAminoAcidsOnLoci(filteredIntersect);
     }
 }

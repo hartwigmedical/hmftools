@@ -74,7 +74,7 @@ public final class LilacQC
         columns.addAll(BamQC.header());
         columns.addAll(CoverageQC.header());
         columns.addAll(AminoAcidQC.header());
-        columns.addAll(HaplotypeQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.HaplotypeQC.header());
         columns.addAll(SomaticVariantQC.header());
         return columns;
     }

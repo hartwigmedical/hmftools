@@ -59,7 +59,6 @@ public class NucleotideGeneEnrichment
         // example: a fragment isn't associated with gene A, is with A, and the fragments max base is within the unique base of A and B,
         // so cannot it be distinguished between them - then add it to A as well
         int maxFragmentNucleotideLocus = fragment.maxNucleotideLocus();
-
         if(considerAddingGene(fragment, HLA_A, maxFragmentNucleotideLocus))
         {
             if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mAbMinUniqueProteinExonBoundary)
