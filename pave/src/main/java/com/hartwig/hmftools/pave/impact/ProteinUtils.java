@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave.impact;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Codons.CODON_LENGTH;
 import static com.hartwig.hmftools.common.codon.Codons.aminoAcidFromBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
@@ -70,11 +71,11 @@ public final class ProteinUtils
             }
         }
 
-        int downstreamMod = pc.RefCodonBases.length() % 3;
-        int downstreamOpenCodonBases = downstreamMod == 0 ? 0 : 3 - downstreamMod;
+        int downstreamMod = pc.RefCodonBases.length() % CODON_LENGTH;
+        int downstreamOpenCodonBases = downstreamMod == 0 ? 0 : CODON_LENGTH - downstreamMod;
 
         if(variant.isInsert())
-            downstreamOpenCodonBases += 3; // get the ref codon past the insert as well
+            downstreamOpenCodonBases += CODON_LENGTH; // get the ref codon past the insert as well
 
         if(downstreamOpenCodonBases > 0)
         {
@@ -166,8 +167,8 @@ public final class ProteinUtils
         pc.AltCodonBasesComplete = pc.AltCodonBases;
 
         // fill in any incomplete alt AAs due to a frameshift
-        int downstreamAltMod = pc.AltCodonBases.length() % 3;
-        int downstreamAltOpenCodonBases = downstreamAltMod == 0 ? 0 : 3 - downstreamAltMod;
+        int downstreamAltMod = pc.AltCodonBases.length() % CODON_LENGTH;
+        int downstreamAltOpenCodonBases = downstreamAltMod == 0 ? 0 : CODON_LENGTH - downstreamAltMod;
 
         if(downstreamAltOpenCodonBases > 0)
         {
@@ -249,7 +250,7 @@ public final class ProteinUtils
                 boolean searchUp = !posStrand;
 
                 String upstreamBases = getExtraBases(
-                        transData, refGenome, variant.Chromosome, exon, 3, searchUp, pc.RefCodonsRanges);
+                        transData, refGenome, variant.Chromosome, exon, CODON_LENGTH, searchUp, pc.RefCodonsRanges);
 
                 if(upstreamBases != null)
                 {
@@ -284,7 +285,7 @@ public final class ProteinUtils
         // from last ref codon base get 3 more each time
         boolean searchUp = posStrand;
         int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
-        int extraBases = 3 + downstreamAltOpenCodonBases;
+        int extraBases = CODON_LENGTH + downstreamAltOpenCodonBases;
 
         while(true)
         {
@@ -327,7 +328,7 @@ public final class ProteinUtils
             if(codingRegionEnded)
                 break;
 
-            extraBases += 3;
+            extraBases += CODON_LENGTH;
         }
     }
 
@@ -339,7 +340,7 @@ public final class ProteinUtils
             return;
 
         int currentPos = pc.refCodingBaseEnd();
-        int extraBases = 3;
+        int extraBases = CODON_LENGTH;
 
         // if the ref and alt AAs match, continue as long as the next ref AAs match the additional alt AAs (indicating a duplication)
 
@@ -372,7 +373,7 @@ public final class ProteinUtils
             String downstreamBases = getExtraBases(
                     transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, true);
 
-            if(downstreamBases == null || downstreamBases.length() < 3)
+            if(downstreamBases == null || downstreamBases.length() < CODON_LENGTH)
                 break;
 
             String extendedAminoAcids = aminoAcidFromBases(downstreamBases);
@@ -395,7 +396,7 @@ public final class ProteinUtils
             if(codingRegionEnded)
                 break;
 
-            extraBases += 3;
+            extraBases += CODON_LENGTH;
         }
 
         String initialAltCodonBasesComplete = pc.AltCodonBasesComplete;

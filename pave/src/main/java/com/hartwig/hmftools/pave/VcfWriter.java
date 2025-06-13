@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_DELIM;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
@@ -12,6 +16,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,6 +33,7 @@ import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.Mappability;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
 import com.hartwig.hmftools.pave.annotation.Reportability;
+import com.hartwig.hmftools.pave.impact.ProteinContext;
 import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -37,6 +43,8 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class VcfWriter
 {
@@ -47,7 +55,10 @@ public class VcfWriter
     private final Set<HumanChromosome> mCompleteChromosomes;
     private HumanChromosome mCurrentChromosome;
 
-    public static final String PASS = "PASS";
+    public boolean mWriteDetailed;
+
+    protected static final String PROTEIN_CONTEXT = "PR_CXT";
+    protected static final String PROTEIN_CONTEXT_DESC = "Protein context information";
 
     public VcfWriter(final String outputVCF, final String templateVCF)
     {
@@ -59,6 +70,8 @@ public class VcfWriter
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
 
+        mWriteDetailed = false;
+
         mChrPendingVariants = Maps.newHashMap();
         mCompleteChromosomes = Sets.newHashSet();
         mCurrentChromosome = HumanChromosome._1;
@@ -69,7 +82,7 @@ public class VcfWriter
         }
     }
 
-    public final void writeHeader(final ReferenceData referenceData, boolean setReportability)
+    public void writeHeader(final ReferenceData referenceData, boolean setReportability, boolean writeDetailed)
     {
         final VersionInfo version = fromAppName(APP_NAME);
 
@@ -78,6 +91,13 @@ public class VcfWriter
 
         VariantTranscriptImpact.writeHeader(newHeader);
         VariantImpactSerialiser.writeHeader(newHeader);
+
+        if(writeDetailed)
+        {
+            mWriteDetailed = true;
+
+            newHeader.addMetaDataLine(new VCFInfoHeaderLine(PROTEIN_CONTEXT, 1, VCFHeaderLineType.String, PROTEIN_CONTEXT_DESC));
+        }
 
         if(referenceData.StandardPon.enabled() || referenceData.ArtefactsPon.enabled())
         {
@@ -114,7 +134,7 @@ public class VcfWriter
         mWriter.writeHeader(newHeader);
     }
 
-    public static VariantContext buildVariant(final VariantContext context, final VariantData variant, final VariantImpact variantImpact)
+    public VariantContext buildVariant(final VariantContext context, final VariantData variant, final VariantImpact variantImpact)
     {
         VariantContextBuilder builder = new VariantContextBuilder(variant.context())
                 .genotypes(variant.context().getGenotypes())
@@ -135,7 +155,7 @@ public class VcfWriter
         {
             List<VariantTranscriptImpact> transImpacts = Lists.newArrayList();
 
-            for(Map.Entry<String, List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
+            for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
             {
                 final String geneName = entry.getKey();
                 final List<VariantTransImpact> geneImpacts = entry.getValue();
@@ -145,10 +165,16 @@ public class VcfWriter
                     int affectedExon = transImpact.codingContext().ExonRank;
                     int affectedCodon = codonForBase(transImpact.codingContext().CodingBase);
                     String refSeqId = transImpact.TransData.RefSeqId == null ? "" : transImpact.TransData.RefSeqId;
+
                     transImpacts.add(new VariantTranscriptImpact(
                             transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
                             transImpact.effectsStr(), transImpact.inSpliceRegion(),
                             transImpact.hgvsCoding(), transImpact.hgvsProtein(), refSeqId, affectedExon, affectedCodon));
+
+                    if(mWriteDetailed && transImpact.TransData.IsCanonical)
+                    {
+                        writeProteinInfoString(newContext, transImpact);
+                    }
                 }
             }
 
@@ -168,6 +194,23 @@ public class VcfWriter
         }
 
         return newContext;
+    }
+
+    private static void writeProteinInfoString(final VariantContext variantContext, final VariantTransImpact transImpact)
+    {
+        if(!transImpact.hasProteinContext() || variantContext.getCommonInfo().hasAttribute(PROTEIN_CONTEXT))
+            return;
+
+        final ProteinContext pc = transImpact.proteinContext();
+        StringJoiner sj = new StringJoiner(VAR_TRANS_IMPACT_DELIM);
+        sj.add(pc.RefAminoAcids);
+        sj.add(pc.AltAminoAcids);
+        sj.add(pc.NetRefAminoAcids);
+        sj.add(pc.NetAltAminoAcids);
+        sj.add(String.valueOf(pc.CodonIndex));
+        sj.add(format("%d_%d", pc.NetCodonIndexRange[0], pc.NetCodonIndexRange[1]));
+
+        variantContext.getCommonInfo().putAttribute(PROTEIN_CONTEXT, sj.toString());
     }
 
     public synchronized void onChromosomeComplete(final HumanChromosome chromosome)

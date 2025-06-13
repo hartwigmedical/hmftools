@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.pave.PaveConstants.PON_VAF_THRESHOLD;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.pave.VcfWriter.buildVariant;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
 
 import java.util.List;
@@ -191,7 +190,7 @@ public class ChromosomeTask implements Callable
         if(mConfig.WritePassOnly && !variant.filters().isEmpty())
             return;
 
-        VariantContext newVariant = buildVariant(variant.context(), variant, variantImpact);
+        VariantContext newVariant = mVcfWriter.buildVariant(variant.context(), variant, variantImpact);
         mVcfWriter.writeVariant(mChromosome, newVariant);
 
         if(mConfig.WriteTranscriptFile)

@@ -130,7 +130,7 @@ public class PaveApplication
 
         VcfWriter vcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
 
-        vcfWriter.writeHeader(mReferenceData, mConfig.SetReportable);
+        vcfWriter.writeHeader(mReferenceData, mConfig.SetReportable, mConfig.WriteDetailed);
 
         return vcfWriter;
     }
