@@ -2,19 +2,17 @@ package com.hartwig.hmftools.esvee.depth;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.subtractExact;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.type;
+import static com.hartwig.hmftools.common.sv.SvUtils.isIndel;
+import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isIndel;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
 
 import java.util.List;
 
@@ -43,7 +41,7 @@ public class VariantInfo
 
         if(!IsSgl)
         {
-            StructuralVariantType svType = type(variant);
+            StructuralVariantType svType = StructuralVariantType.fromContext(variant);
 
             if(isIndel(svType))
             {

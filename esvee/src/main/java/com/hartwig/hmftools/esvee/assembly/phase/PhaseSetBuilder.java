@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.sv.SvUtils;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
@@ -649,7 +650,7 @@ public class PhaseSetBuilder
         boolean allowBranching = isPrimaryLink && !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH);
 
         // discordant reads are not used to build out local indel links
-        boolean allowDiscordantReads = !isLocalIndel && !CommonUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
+        boolean allowDiscordantReads = !isLocalIndel && !SvUtils.isShortLocalDelDupIns(assemblyLink.svType(), assemblyLink.length());
 
         if(isLocalIndel)
         {

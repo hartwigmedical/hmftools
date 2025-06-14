@@ -8,10 +8,10 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 import static com.hartwig.hmftools.esvee.assembly.alignment.HomologyData.NO_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
 
 import java.util.Collections;
@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.SvUtils;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 public class Breakend implements Comparable<Breakend>
@@ -187,7 +188,7 @@ public class Breakend implements Comparable<Breakend>
         return svType() == DUP ? posLength + 1 : posLength;
     }
 
-    public boolean isShortLocalDelDupIns() { return CommonUtils.isShortLocalDelDupIns(svType(), svLength()); }
+    public boolean isShortLocalDelDupIns() { return SvUtils.isShortLocalDelDupIns(svType(), svLength()); }
 
     public int minPosition() { return Position + Homology.ExactStart; }
     public int maxPosition() { return Position + Homology.ExactEnd; }

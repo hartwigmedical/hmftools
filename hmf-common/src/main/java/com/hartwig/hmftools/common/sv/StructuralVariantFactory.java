@@ -2,8 +2,9 @@ package com.hartwig.hmftools.common.sv;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.sv.SvUtils.SMALL_DELDUP_SIZE;
+import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
+import static com.hartwig.hmftools.common.sv.SvUtils.isIndel;
+import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
@@ -16,7 +17,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_ALIGN_LENGTH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_COVERAGE;
@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.jetbrains.annotations.Nullable;
@@ -156,9 +157,6 @@ public class StructuralVariantFactory implements SvFactoryInterface
 
     public StructuralVariant createSV(final VariantContext contextStart, final VariantContext contextEnd)
     {
-        int start = contextStart.getStart();
-        int end = contextEnd.getStart();
-
         final String alt = contextStart.getAlternateAllele(0).getDisplayString();
         final Matcher match = BREAKEND_REGEX.matcher(alt);
         if(!match.matches())
@@ -167,63 +165,64 @@ public class StructuralVariantFactory implements SvFactoryInterface
         }
 
         // Local orientation determined by the positionin of the anchoring bases
-        final byte startOrientation = (match.group(1).length() > 0 ? ORIENT_FWD : ORIENT_REV);
+        byte startOrientation = (match.group(1).length() > 0 ? ORIENT_FWD : ORIENT_REV);
 
         // Other orientation determined by the direction of the brackets
-        final byte endOrientation = (match.group(2).equals("]") ? ORIENT_FWD : ORIENT_REV);
+        byte endOrientation = (match.group(2).equals("]") ? ORIENT_FWD : ORIENT_REV);
 
         // Grab the inserted sequence by removing 1 base from the reference anchoring bases
         String insertedSequence = match.group(1).length() > 0 ?
                 match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
 
-        boolean isSmallDelDup = contextStart.getContig().equals(contextEnd.getContig())
-                && abs(contextStart.getStart() - contextEnd.getStart()) <= SMALL_DELDUP_SIZE
-                && startOrientation != endOrientation;
+        StructuralVariantType svType = StructuralVariantType.fromContext(contextStart);
 
-        StructuralVariantLeg startLeg = setLegCommon(contextStart, isSmallDelDup, startOrientation)
-                .position(start)
-                .homology(contextStart.getAttributeAsString(HOMSEQ, ""))
-                .build();
+        VariantContext legContextStart = contextStart;
+        VariantContext legContextEnd = contextEnd;
 
-        StructuralVariantLeg endLeg = setLegCommon(contextEnd, isSmallDelDup, endOrientation)
-                .position(end)
-                .homology(contextEnd.getAttributeAsString(HOMSEQ, ""))
-                .build();
-
-        StructuralVariantType inferredType = BND;
-        if(startLeg.chromosome().equals(endLeg.chromosome()))
+        // check for same-base DUP and need to switch context info
+        if(contextStart.getContig().equals(contextEnd.getContig()) && startOrientation != endOrientation
+                && contextStart.getStart() == contextEnd.getStart() && startOrientation == ORIENT_FWD)
         {
-            if(startLeg.orientation() == endLeg.orientation())
-            {
-                inferredType = StructuralVariantType.INV;
-            }
-            else if(startLeg.orientation() == -1)
-            {
-                inferredType = StructuralVariantType.DUP;
-            }
-            else if(insertedSequence != null && insertedSequence.length() > 0 && abs(endLeg.position() - startLeg.position()) <= 1)
-            {
-                inferredType = StructuralVariantType.INS;
-            }
-            else
-            {
-                inferredType = StructuralVariantType.DEL;
-            }
+            legContextStart = contextEnd;
+            legContextEnd = contextStart;
+            startOrientation = ORIENT_REV;
+            endOrientation = ORIENT_FWD;
         }
+
+        if(svType == null)
+        {
+            // infer from attributes
+            svType = formSvType(
+                    legContextStart.getContig(), legContextEnd.getContig(), legContextStart.getStart(), legContextEnd.getStart(),
+                    Orientation.fromByte(startOrientation), Orientation.fromByte(endOrientation), !insertedSequence.isEmpty());
+        }
+
+        int indelLength = isIndel(svType) ? abs(contextStart.getStart() - contextEnd.getStart()) : 0;
+        boolean isSmallDelDup = isShortLocalDelDupIns(svType, indelLength);
+
+        StructuralVariantLeg startLeg = setLegCommon(legContextStart, isSmallDelDup, startOrientation)
+                .position(legContextStart.getStart())
+                .homology(legContextStart.getAttributeAsString(HOMSEQ, ""))
+                .build();
+
+        StructuralVariantLeg endLeg = setLegCommon(legContextEnd, isSmallDelDup, endOrientation)
+                .position(legContextEnd.getStart())
+                .homology(legContextEnd.getAttributeAsString(HOMSEQ, ""))
+                .build();
 
         ImmutableStructuralVariantImpl.Builder svBuilder = setCommon(contextStart);
 
         svBuilder.start(startLeg)
                 .end(endLeg)
-                .mateId(contextEnd.getID())
+                .mateId(legContextEnd.getID())
                 .insertSequence(insertedSequence)
-                .type(inferredType)
-                .filter(filters(contextStart, contextEnd))
-                .startContext(contextStart)
-                .endContext(contextEnd);
+                .type(svType)
+                .filter(filters(legContextStart, legContextEnd))
+                .startContext(legContextStart)
+                .endContext(legContextEnd);
 
-        svBuilder.startLinkedBy(parseAssemblyLinks(contextStart));
-        svBuilder.endLinkedBy(parseAssemblyLinks(contextEnd));
+        svBuilder.startLinkedBy(parseAssemblyLinks(legContextStart));
+        svBuilder.endLinkedBy(parseAssemblyLinks(legContextEnd));
 
         return svBuilder.build();
     }
@@ -388,10 +387,5 @@ public class StructuralVariantFactory implements SvFactoryInterface
             filters.add(PASS);
         }
         return filters.stream().sorted().collect(Collectors.joining(";"));
-    }
-
-    public static StructuralVariantType type(final VariantContext context)
-    {
-        return StructuralVariantType.fromAttribute((String) context.getAttribute(SV_TYPE));
     }
 }

@@ -103,8 +103,6 @@ public final class AssemblyConstants
 
     public static final double BREAKEND_REQ_VALID_FRAGMENT_LENGTH_PERC = 0.33;
 
-    public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
-
     // DUX-4 regions
     public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37 = List.of(
             new ChrBaseRegion("4", 190930000, 191030000),

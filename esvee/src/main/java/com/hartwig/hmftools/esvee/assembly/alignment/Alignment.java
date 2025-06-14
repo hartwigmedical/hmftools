@@ -5,13 +5,13 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.isWeakIndelBasedUnlinkedAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
 
 import java.util.ArrayList;
 import java.util.Collections;

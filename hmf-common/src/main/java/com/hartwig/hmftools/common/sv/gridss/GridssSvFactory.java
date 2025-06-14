@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.sv.gridss;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
@@ -51,6 +52,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvFactoryInterface;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -213,7 +215,7 @@ public class GridssSvFactory implements SvFactoryInterface
             }
             else if(startLeg.orientation() == -1)
             {
-                inferredType = StructuralVariantType.DUP;
+                inferredType = DUP;
             }
             else if(insertedSequence != null && insertedSequence.length() > 0
                     && Math.abs(endLeg.position() - startLeg.position()) <= 1)
@@ -475,6 +477,14 @@ public class GridssSvFactory implements SvFactoryInterface
 
     private static StructuralVariantType type(final VariantContext context)
     {
-        return StructuralVariantType.fromAttribute((String) context.getAttribute(SV_TYPE));
+        String svTypeStr = context.getAttributeAsString(SV_TYPE, BND.toString());
+
+        if(svTypeStr.startsWith("DUP"))
+        {
+            return DUP;
+        }
+
+
+        return StructuralVariantType.valueOf(svTypeStr);
     }
 }

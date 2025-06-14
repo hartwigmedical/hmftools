@@ -8,11 +8,11 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.SvUtils.isIndel;
+import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isLocalIndelAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isIndel;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
 
 import java.util.Collections;
