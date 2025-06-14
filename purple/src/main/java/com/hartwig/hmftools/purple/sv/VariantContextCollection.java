@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
-
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -10,7 +8,7 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.SvFactoryInterface;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -76,7 +74,7 @@ public class VariantContextCollection
         {
             // converts variant contexts into structural variants
             mModified = false;
-            SvFactoryInterface svFactory = buildSvFactory(false, new SegmentationVariantsFilter());
+            StructuralVariantFactory svFactory = StructuralVariantFactory.build(new SegmentationVariantsFilter());
             mVariantContexts.forEach(svFactory::addVariantContext);
 
             mVariants.clear();

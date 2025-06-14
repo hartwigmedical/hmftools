@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.common.sv.SvFactoryInterface.buildSvFactory;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED_DESC;
@@ -24,12 +23,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.sv.SvFactoryInterface;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
@@ -188,7 +186,7 @@ public class SomaticSvCache
     private VariantContextCollection getEnrichedCollection(
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
-        SvFactoryInterface svFactory = buildSvFactory(false, x -> true);
+        StructuralVariantFactory svFactory = StructuralVariantFactory.build();
         svFactory.setGenotypeOrdinals(mGenotypeIds.ReferenceOrdinal, mGenotypeIds.TumorOrdinal);
 
         Iterator<VariantContext> variantIter = mVariantCollection.iterator();

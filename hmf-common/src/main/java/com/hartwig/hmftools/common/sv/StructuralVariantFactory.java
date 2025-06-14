@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +51,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-public class StructuralVariantFactory implements SvFactoryInterface
+public class StructuralVariantFactory
 {
     private final Map<String,VariantContext> mUnmatchedVariants;
     private final List<StructuralVariant> mCompleteVariants;
@@ -68,6 +69,13 @@ public class StructuralVariantFactory implements SvFactoryInterface
         CompoundFilter compoundfilter = new CompoundFilter(true);
         compoundfilter.add(new HumanChromosomeFilter());
         compoundfilter.add(filter);
+        return new StructuralVariantFactory(compoundfilter);
+    }
+
+    public static StructuralVariantFactory build()
+    {
+        CompoundFilter compoundfilter = new CompoundFilter(true);
+        compoundfilter.add(new AlwaysPassFilter());
         return new StructuralVariantFactory(compoundfilter);
     }
 
