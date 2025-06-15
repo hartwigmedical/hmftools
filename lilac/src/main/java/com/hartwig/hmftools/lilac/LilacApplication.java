@@ -16,51 +16,14 @@ import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT;
+import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
+import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory.calculateGeneCoverage;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
-import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
-import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
-import com.hartwig.hmftools.lilac.evidence.Candidates;
-import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
-import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
-import com.hartwig.hmftools.lilac.coverage.HlaComplex;
-import com.hartwig.hmftools.lilac.coverage.ComplexBuilder;
-import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
-import com.hartwig.hmftools.lilac.coverage.ComplexCoverageCalculator;
-import com.hartwig.hmftools.lilac.coverage.ComplexCoverageRanking;
-import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
-import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
-import com.hartwig.hmftools.lilac.read.BamReader;
-import com.hartwig.hmftools.lilac.read.Indel;
-import com.hartwig.hmftools.lilac.seq.SequenceCount;
-import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
-import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
-import com.hartwig.hmftools.lilac.qc.BamQC;
-import com.hartwig.hmftools.lilac.qc.CoverageQC;
-import com.hartwig.hmftools.lilac.qc.HaplotypeQC;
-import com.hartwig.hmftools.lilac.qc.SolutionSummary;
-import com.hartwig.hmftools.lilac.qc.LilacQC;
-import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
-import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
-import com.hartwig.hmftools.lilac.read.BamRecordReader;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.variant.SomaticVariant;
-import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -72,7 +35,42 @@ import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexBuilder;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverageCalculator;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverageRanking;
+import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
+import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
+import com.hartwig.hmftools.lilac.coverage.HlaComplex;
+import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
+import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
+import com.hartwig.hmftools.lilac.evidence.Candidates;
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
+import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
+import com.hartwig.hmftools.lilac.qc.BamQC;
+import com.hartwig.hmftools.lilac.qc.CoverageQC;
+import com.hartwig.hmftools.lilac.qc.HaplotypeQC;
+import com.hartwig.hmftools.lilac.qc.LilacQC;
+import com.hartwig.hmftools.lilac.qc.SolutionSummary;
+import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
+import com.hartwig.hmftools.lilac.read.BamReader;
+import com.hartwig.hmftools.lilac.read.BamRecordReader;
+import com.hartwig.hmftools.lilac.read.Indel;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
+import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
+import com.hartwig.hmftools.lilac.variant.SomaticVariant;
+import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
 public class LilacApplication
 {
@@ -92,9 +90,9 @@ public class LilacApplication
     private SequenceCount mRefAminoAcidCounts;
     private SequenceCount mRefNucleotideCounts;
 
-    private List<ComplexCoverage> mRankedComplexes;
-    private List<Fragment> mRefNucleotideFrags;
-    private List<FragmentAlleles> mRefFragAlleles;
+    private final List<ComplexCoverage> mRankedComplexes;
+    private final List<Fragment> mRefNucleotideFrags;
+    private final List<FragmentAlleles> mRefFragAlleles;
     private final List<SomaticVariant> mSomaticVariants;
     private final List<SomaticCodingCount> mSomaticCodingCounts;
 
@@ -187,7 +185,7 @@ public class LilacApplication
 
         mRefNucleotideFrags.addAll(refFragments);
 
-        int medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
+        byte medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
 
         if(medianBaseQuality < LOW_BASE_QUAL_THRESHOLD)
         {
@@ -221,7 +219,7 @@ public class LilacApplication
         geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaB()));
         geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaC()));
 
-        List<Callable> callableList = geneTasks.stream().collect(Collectors.toList());
+        List<Callable> callableList = Lists.newArrayList(geneTasks);
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
@@ -397,7 +395,7 @@ public class LilacApplication
                 if(rankedCoverage.getAlleles().size() != mConfig.ActualAlleles.size())
                     continue;
 
-                if(rankedCoverage.getAlleles().stream().allMatch(x -> mConfig.ActualAlleles.contains(x)))
+                if(mConfig.ActualAlleles.containsAll(rankedCoverage.getAlleles()))
                 {
                     actualAllelesCoverage = rankedCoverage;
                     break;
@@ -456,7 +454,7 @@ public class LilacApplication
             if(fragAllele.getFragment().isScopeSet())
                 continue;
 
-            if(winningAlleles.stream().anyMatch(x -> fragAllele.contains(x)))
+            if(winningAlleles.stream().anyMatch(fragAllele::contains))
                 fragAllele.getFragment().setScope(SOLUTION);
             else
                 fragAllele.getFragment().setScope(CANDIDATE);
@@ -635,7 +633,7 @@ public class LilacApplication
         if(!mConfig.RunValidation)
             return true;
 
-        List<Fragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).collect(Collectors.toList());
+        List<Fragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).toList();
         if(invalidFragments.isEmpty())
             return true;
 
@@ -690,7 +688,7 @@ public class LilacApplication
         return true;
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 

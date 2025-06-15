@@ -4,6 +4,11 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMax;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMin;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
@@ -11,11 +16,6 @@ import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 
 import org.apache.commons.math3.util.Pair;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class ExtendEvidence
 {
@@ -47,7 +47,7 @@ public final class ExtendEvidence
             List<Integer> indices = Lists.newArrayList(mHeterozygousLoci.get(i), mHeterozygousLoci.get(i + 1));
 
             final List<Fragment> filteredFragments = mFragments.stream()
-                    .filter(x -> x.containsAminoAcids(indices)).collect(Collectors.toList());
+                    .filter(x -> x.containsAminoAcidLoci(indices)).collect(Collectors.toList());
 
             if(!filteredFragments.isEmpty())
             {
@@ -150,7 +150,7 @@ public final class ExtendEvidence
         Collections.sort(mergeIndices);
 
         List<Fragment> filteredFragments = mFragments.stream()
-                .filter(x -> x.containsAminoAcids(mergeIndices)).collect(Collectors.toList());
+                .filter(x -> x.containsAminoAcidLoci(mergeIndices)).collect(Collectors.toList());
 
         if(!filteredFragments.isEmpty())
         {

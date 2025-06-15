@@ -218,7 +218,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
 
     public static PhasedEvidence evidence(final List<Fragment> fragments, final List<Integer> indices)
     {
-        List<Fragment> filteredFragments = fragments.stream().filter(x -> x.containsAminoAcids(indices)).collect(Collectors.toList());
+        List<Fragment> filteredFragments = fragments.stream().filter(x -> x.containsAminoAcidLoci(indices)).collect(Collectors.toList());
         final Map<String,Integer> evidence = Maps.newHashMap();
 
         for(Fragment fragment : filteredFragments)

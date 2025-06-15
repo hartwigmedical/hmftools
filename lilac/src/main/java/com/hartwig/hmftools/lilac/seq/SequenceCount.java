@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.seq;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -10,11 +9,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
@@ -22,6 +16,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
+import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
 import org.apache.commons.math3.util.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +57,7 @@ public final class SequenceCount
 
     public static SequenceCount nucleotides(double minCount, final List<Fragment> fragments)
     {
-        int length = fragments.stream().mapToInt(x -> x.maxNucleotideLocus()).max().orElse(0) + 1;
+        int length = fragments.stream().mapToInt(Fragment::maxNucleotideLocus).max().orElse(0) + 1;
 
         Map<String,Integer>[] seqCountsList = new Map[length];
         for(int i = 0; i < length; ++i)
@@ -66,11 +67,11 @@ public final class SequenceCount
 
         for(Fragment fragment : fragments)
         {
-            for(int index = 0; index < fragment.nucleotideLoci().size(); ++index)
+            for(Nucleotide nucleotide : fragment.nucleotidesByLoci().values())
             {
-                int locus = fragment.nucleotideLoci().get(index);
-                String nucleotide = fragment.nucleotides().get(index);
-                increment(seqCountsList, locus, nucleotide);
+                int locus = nucleotide.locus();
+                String bases = nucleotide.bases();
+                increment(seqCountsList, locus, bases);
             }
         }
 
@@ -79,7 +80,7 @@ public final class SequenceCount
 
     public static SequenceCount aminoAcids(double minCount, final List<Fragment> fragments)
     {
-        int length = fragments.stream().mapToInt(x -> x.maxAminoAcidLocus()).max().orElse(0) + 1;
+        int length = fragments.stream().mapToInt(Fragment::maxAminoAcidLocus).max().orElse(0) + 1;
 
         Map<String,Integer>[] seqCountsList = new Map[length];
         for(int i = 0; i < length; ++i)
@@ -89,11 +90,11 @@ public final class SequenceCount
 
         for(Fragment fragment : fragments)
         {
-            for(int index = 0; index < fragment.aminoAcidLoci().size(); ++index)
+            for(AminoAcid aminoAcid : fragment.aminoAcidsByLoci().values())
             {
-                int locus = fragment.aminoAcidLoci().get(index);
-                String aminoAcid = fragment.aminoAcids().get(index);
-                increment(seqCountsList, locus, aminoAcid);
+                int locus = aminoAcid.locus();
+                String acid = aminoAcid.acid();
+                increment(seqCountsList, locus, acid);
             }
         }
 
@@ -148,7 +149,7 @@ public final class SequenceCount
         double vafMinCount = 0;
         if(minLocalVAF != null)
         {
-            int coverageAtCurrentPosition = seqCounts.values().stream().mapToInt(x -> x.intValue()).sum();
+            int coverageAtCurrentPosition = seqCounts.values().stream().mapToInt(Integer::intValue).sum();
             vafMinCount = coverageAtCurrentPosition * minLocalVAF;
         }
 
@@ -157,7 +158,7 @@ public final class SequenceCount
 
         return seqCounts.entrySet().stream()
                 .filter(x -> x.getValue() >= minCount)
-                .map(x -> x.getKey()).collect(Collectors.toList());
+                .map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
     public List<String> getMinCountSequences(int index)
@@ -269,7 +270,7 @@ public final class SequenceCount
         for(int locus = 0; locus < mSeqCountsList.length; ++locus)
         {
             Set<String> aminoAcids = mSeqCountsList[locus].entrySet().stream()
-                    .filter(x -> x.getValue() >= minCount).map(x -> x.getKey()).collect(Collectors.toSet());
+                    .filter(x -> x.getValue() >= minCount).map(Map.Entry::getKey).collect(Collectors.toSet());
 
             for(HlaSequenceLoci extraSeqLoci : extraSequences)
             {

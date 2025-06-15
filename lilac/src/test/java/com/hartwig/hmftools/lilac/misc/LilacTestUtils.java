@@ -57,7 +57,7 @@ public class LilacTestUtils
     {
         List<Integer> loci = formRange(locusStart, locusEnd);
         List<String> sequences = buildTargetSequences(sequence, loci);
-        List<Integer> qualities = loci.stream().map(x -> DEFAULT_MIN_BASE_QUAL).collect(Collectors.toList());
+        List<Byte> qualities = loci.stream().map(x -> DEFAULT_MIN_BASE_QUAL).collect(Collectors.toList());
 
         return new Fragment(createReadRecord(id), gene, Sets.newHashSet(gene), loci, qualities, sequences);
     }

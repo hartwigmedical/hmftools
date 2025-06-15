@@ -3,14 +3,14 @@ package com.hartwig.hmftools.lilac.evidence;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class NucleotideFiltering
 {
@@ -56,7 +56,7 @@ public class NucleotideFiltering
 
         for(Fragment fragment : fragments)
         {
-            if(!fragment.containsAllNucleotides(nucleotideIndices))
+            if(!fragment.containsAllNucleotideLoci(nucleotideIndices))
                 continue;
 
             String nucleotides = fragment.nucleotides(nucleotideIndices);
