@@ -1,28 +1,15 @@
 package com.hartwig.hmftools.esvee.vcfcompare;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
 
-import java.util.Arrays;
-import java.util.Set;
-
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
-import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotation;
-import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -35,7 +22,6 @@ public class Variant
 
     // repeatedly used values for filtering are cached
     private final double mQual;
-    private final String mInsertSequence;
 
     public Variant(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
@@ -43,30 +29,17 @@ public class Variant
         mId = sv.startContext().getAttributeAsString(SV_ID, sv.id());
 
         // special handling of DUPs at the same base - need to switch their breakends
-        if(sv.type() == INS && sv.position(true).equals(sv.position(false)))
-        {
-            mType = sv.type();
+        mType = sv.type();
 
-            mBreakends = new Breakend[] {
-                    Breakend.from(this, true, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal),
-                    Breakend.from(this, false, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) };
-        }
-        else
-        {
-            mType = sv.type();
+        Breakend breakendStart = Breakend.from(
+                this, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
 
-            Breakend breakendStart = Breakend.from(
-                    this, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+        Breakend breakendEnd = sv.end() != null ?
+                Breakend.from(this, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
 
-            Breakend breakendEnd = sv.end() != null ?
-                    Breakend.from(this, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
-
-            mBreakends = new Breakend[] { breakendStart, breakendEnd };
-        }
+        mBreakends = new Breakend[] { breakendStart, breakendEnd };
 
         mQual = sv.qualityScore();
-
-        mInsertSequence = sv.insertSequence();
     }
 
     public String id() { return mId; }

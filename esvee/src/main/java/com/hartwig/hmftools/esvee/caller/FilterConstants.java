@@ -54,9 +54,12 @@ public class FilterConstants
 
     public final int PonDistance;
     public static final int DEFAULT_PON_DISTANCE = 3;
-    public static final String PON_DISTANCE = "pon_distance";
+    public static final String CFG_PON_DISTANCE = "pon_distance";
 
-    public static final int SHORT_CALLING_SIZE = 1000;
+    public static final int PON_SHORT_INDEL_LENGTH = 200;
+    public static final int PON_SHORT_INDEL_PON_DISTANCE = 10;
+    public static final int PON_SHORT_INDEL_MAX_REPEAT_PON_DISTANCE = 20;
+    public static final int PON_SHORT_INDEL_MAX_REPEATS = 11;
 
     public static final int MIN_TRIMMED_ANCHOR_LENGTH = MIN_ANCHOR_LENGTH;
     public static final int MIN_AVG_FRAG_FACTOR = 3;
@@ -105,7 +108,7 @@ public class FilterConstants
 
         int minQualHotspot = configBuilder.getInteger(CFG_MIN_QUAL_HOTSPOT);
 
-        int ponDistance = configBuilder.getInteger(PON_DISTANCE);
+        int ponDistance = configBuilder.getInteger(CFG_PON_DISTANCE);
 
         return new FilterConstants(
                 minQual, minQualHotspot, MIN_VARIANT_LENGTH,
@@ -152,7 +155,7 @@ public class FilterConstants
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addInteger(PON_DISTANCE, "PON permitted margin", DEFAULT_PON_DISTANCE);
+        configBuilder.addInteger(CFG_PON_DISTANCE, "PON permitted margin", DEFAULT_PON_DISTANCE);
         configBuilder.addFlag(FILTER_SGLS, "Filter SGLs from VCF, intended for tumor-only mode, default=true in target panel");
 
         configBuilder.addInteger(CFG_MIN_QUAL,

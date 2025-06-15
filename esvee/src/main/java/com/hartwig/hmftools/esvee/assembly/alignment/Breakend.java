@@ -50,6 +50,7 @@ public class Breakend implements Comparable<Breakend>
     private int mNonPrimaryAssemblyFragmentCount;
 
     private Set<Integer> mFragmentPositions;
+    private int mMaxLocalRepeat;
 
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
@@ -79,6 +80,7 @@ public class Breakend implements Comparable<Breakend>
         mNonPrimaryAssemblyFragmentCount = 0;
 
         mFragmentPositions = null;
+        mMaxLocalRepeat = 0;
     }
 
     public int id() { return mId; }
@@ -104,6 +106,9 @@ public class Breakend implements Comparable<Breakend>
     }
 
     public int uniqueFragmentPositionCount() { return mFragmentPositions != null ? mFragmentPositions.size() : 0; }
+
+    public void setMaxLocalRepeat(int maxLocalRepeat) { mMaxLocalRepeat = maxLocalRepeat; }
+    public int maxLocalRepeat() { return mMaxLocalRepeat; }
 
     public List<AlternativeAlignment> alternativeAlignments()
     {

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -96,6 +97,8 @@ public class BreakendBuilder
             // otherwise handle multiple alignments
             formMultipleBreakends(validAlignments, lowQualAlignments);
         }
+
+        setMaxLocalRepeat();
     }
 
     private boolean formIndelBreakends(final AlignData alignment)
@@ -610,5 +613,29 @@ public class BreakendBuilder
         relatedAlignments.forEach(x -> altAlignments.addAll(x.allAlignments()));
 
         return altAlignments;
+    }
+
+    private void setMaxLocalRepeat()
+    {
+        // maximum repeat at the junction is used by the caller for filtering
+        if(mAssemblyAlignment.breakends().size() != 2)
+            return;
+
+        if(!mAssemblyAlignment.breakends().stream().allMatch(x -> x.isShortLocalDelDupIns()))
+            return;
+
+        int maxRepeatLength = 0;
+
+        for(JunctionAssembly assembly : mAssemblyAlignment.assemblies())
+        {
+            if(assembly.repeatInfo() != null)
+            {
+                int maxRepeat = assembly.repeatInfo().stream().mapToInt(x -> x.Count).max().orElse(0);
+                maxRepeatLength = max(maxRepeatLength, maxRepeat);
+            }
+        }
+
+        int maxLocalRepeat = maxRepeatLength;
+        mAssemblyAlignment.breakends().forEach(x -> x.setMaxLocalRepeat(maxLocalRepeat));
     }
 }

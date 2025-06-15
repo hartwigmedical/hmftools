@@ -117,6 +117,8 @@ public class Variant
         return type == INS || type == INV || type == DEL || type == DUP;
     }
 
+    public int svLength() { return hasLength(mType) ? abs(posEnd() - posStart()) : 0; }
+
     public int adjustedLength()
     {
         if(!hasLength(mType))
