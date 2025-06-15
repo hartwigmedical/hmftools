@@ -100,11 +100,11 @@ public class UmiStatistics
         if(frequency <= 10)
             return frequency;
         else if(frequency <= 100)
-            return round(frequency/10) * 10;
+            return round(1.0f * frequency / 10) * 10;
         else if(frequency <= 1000)
-            return round(frequency/100) * 100;
+            return round(1.0f * frequency / 100) * 100;
         else
-            return round(frequency/1000) * 1000;
+            return round(1.0f * frequency / 1000) * 1000;
     }
 
     private PositionFragmentCounts getOrCreatePositionFragmentData(int uniqueCoordCount, int uniqueFragmentCount)
