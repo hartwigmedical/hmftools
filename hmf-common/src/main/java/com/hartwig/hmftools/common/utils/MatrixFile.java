@@ -160,7 +160,7 @@ public final class MatrixFile
                     writer.write(String.format("%.6f", sigData[i][j]));
 
                 if(j < matrix.Cols-1)
-                    writer.write(String.format(",", sigData[i][j]));
+                    writer.write(",");
             }
 
             writer.newLine();

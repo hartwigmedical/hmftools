@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.bam;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 
 import java.util.List;
 import java.util.Objects;
@@ -189,6 +189,12 @@ public class SupplementaryReadData
         final SupplementaryReadData that = (SupplementaryReadData) o;
         return Position == that.Position && Strand == that.Strand && MapQuality == that.MapQuality && NM == that.NM
                 && Objects.equals(Chromosome, that.Chromosome) && Objects.equals(Cigar, that.Cigar);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(Position, Strand, MapQuality, NM, Chromosome, Cigar);
     }
 
     public String toString()

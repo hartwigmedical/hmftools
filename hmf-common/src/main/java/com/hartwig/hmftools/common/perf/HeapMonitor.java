@@ -101,7 +101,7 @@ public class HeapMonitor extends Thread
     {
         Runtime runtime = Runtime.getRuntime();
         long memory = runtime.totalMemory() - runtime.freeMemory();
-        return round(memory / MEGABYTE);
+        return round(1.0f * memory / MEGABYTE);
     }
 }
 

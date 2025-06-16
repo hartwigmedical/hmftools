@@ -651,8 +651,13 @@ public class UmiGroupBuilder
                 }
 
                 UnmappedPair unmappedPair = fragment.right();
-                mergedUmiGroups.add(unmappedPair.MappedGroup);
-                mergedUmiGroups.add(unmappedPair.UnmappedGroup);
+
+                if(unmappedPair.MappedGroup != null)
+                    mergedUmiGroups.add(unmappedPair.MappedGroup);
+
+                if(unmappedPair.UnmappedGroup != null)
+                    mergedUmiGroups.add(unmappedPair.UnmappedGroup);
+
                 continue;
             }
 
@@ -664,8 +669,11 @@ public class UmiGroupBuilder
             else
             {
                 UnmappedPair unmappedPair = baseFragment.right();
-                mergedUmiGroups.add(unmappedPair.MappedGroup);
-                mergedUmiGroups.add(unmappedPair.UnmappedGroup);
+                if(unmappedPair.MappedGroup != null)
+                    mergedUmiGroups.add(unmappedPair.MappedGroup);
+
+                if(unmappedPair.UnmappedGroup != null)
+                    mergedUmiGroups.add(unmappedPair.UnmappedGroup);
             }
 
             for(int i = 0; i < partitionFragments.size(); i++)
@@ -683,14 +691,20 @@ public class UmiGroupBuilder
                 if(baseFragment.hasLeft())
                 {
                     DuplicateGroup baseGroup = baseFragment.left();
-                    baseGroup.addPolyGUmiReads(fragment.right().MappedGroup.reads());
-                    baseGroup.addPolyGUmiReads(fragment.right().UnmappedGroup.reads());
+                    if(fragment.right().MappedGroup != null)
+                        baseGroup.addPolyGUmiReads(fragment.right().MappedGroup.reads());
+
+                    if(fragment.right().UnmappedGroup != null)
+                        baseGroup.addPolyGUmiReads(fragment.right().UnmappedGroup.reads());
                 }
                 else
                 {
                     UnmappedPair unmappedPair = baseFragment.right();
-                    unmappedPair.MappedGroup.addPolyGUmiReads(fragment.right().MappedGroup.reads());
-                    unmappedPair.UnmappedGroup.addPolyGUmiReads(fragment.right().UnmappedGroup.reads());
+                    if(unmappedPair.MappedGroup != null && fragment.right().MappedGroup != null)
+                        unmappedPair.MappedGroup.addPolyGUmiReads(fragment.right().MappedGroup.reads());
+
+                    if(unmappedPair.UnmappedGroup != null && fragment.right().UnmappedGroup != null)
+                        unmappedPair.UnmappedGroup.addPolyGUmiReads(fragment.right().UnmappedGroup.reads());
                 }
             }
         }
