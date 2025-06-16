@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PANEL_INCLUSION_BUFFER;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -90,7 +91,17 @@ public class SvDataCache
         if(sv == null)
             return;
 
+        // one of the breakends at least must be within a targeted region
+        if(mTargetRegions.hasTargetRegions() && !svWithinTargetedRegion(sv))
+            return;
+
         addSvData(new Variant(sv, genotypeIds));
+    }
+
+    private boolean svWithinTargetedRegion(final StructuralVariant sv)
+    {
+        return mTargetRegions.inTargetRegions(sv.chromosome(true), sv.position(true), PANEL_INCLUSION_BUFFER)
+            || mTargetRegions.inTargetRegions(sv.chromosome(false), sv.position(false), PANEL_INCLUSION_BUFFER);
     }
 
     private StructuralVariant popLastSv()

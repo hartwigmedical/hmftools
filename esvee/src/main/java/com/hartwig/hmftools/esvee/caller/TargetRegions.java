@@ -31,14 +31,16 @@ public class TargetRegions
 
     public boolean hasTargetRegions() { return !mTargetRegions.isEmpty(); }
 
-    public boolean inTargetRegions(final String chromsome, int position)
+    public boolean inTargetRegions(final String chromsome, int position) { return inTargetRegions(chromsome, position, 0); }
+
+    public boolean inTargetRegions(final String chromsome, int position, int buffer)
     {
         final List<BaseRegion> chrRegions = mTargetRegions.get(chromsome);
 
         if(chrRegions == null)
             return false;
 
-        return chrRegions.stream().anyMatch(x -> positionWithin(position, x.start(), x.end()));
+        return chrRegions.stream().anyMatch(x -> positionWithin(position, x.start() - buffer, x.end() + buffer));
     }
 
     private void loadTargetRegionsBed(final String filename, final RefGenomeVersion refGenVersion)

@@ -91,13 +91,15 @@ public class FilterConstants
     public static final double GERMLINE_AF_THRESHOLD = 0.1;
     public static final double GERMLINE_AD_THRESHOLD = 0.01;
 
+    public static final int PANEL_INCLUSION_BUFFER = 1000;
+
     public static FilterConstants from(final ConfigBuilder configBuilder)
     {
         boolean targetedMode = configBuilder.hasValue(TARGET_REGIONS_BED);
         RefGenomeVersion refGenVersion = RefGenomeVersion.from(configBuilder);
 
         // use targeted panel defaults where applicable
-        boolean filterSgls = targetedMode || configBuilder.hasFlag(FILTER_SGLS);
+        boolean filterSgls = configBuilder.hasFlag(FILTER_SGLS);
 
         int minSupport = configBuilder.getInteger(CFG_MIN_SUPPORT);
         int minSupportHotspot = configBuilder.getInteger(CFG_MIN_SUPPORT_HOTSPOT);
