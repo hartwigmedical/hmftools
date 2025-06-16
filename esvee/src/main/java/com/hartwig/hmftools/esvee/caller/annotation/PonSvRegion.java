@@ -18,6 +18,8 @@ public class PonSvRegion implements Comparable<PonSvRegion>
     public final Orientation OrientEnd;
     public final int PonCount;
 
+    private Integer mUpdatedPonCount;
+
     public static final String FLD_CHR_LOWER = "ChrLower";
     public static final String FLD_POS_LOWER_START = "PosLowerStart";
     public static final String FLD_POS_LOWER_END = "PosLowerEnd";
@@ -39,6 +41,7 @@ public class PonSvRegion implements Comparable<PonSvRegion>
         RegionEnd = regionEnd;
         OrientEnd = orientEnd;
         PonCount = ponCount;
+        mUpdatedPonCount = null;
     }
 
     public boolean overlapsStart(final BaseRegion svStart)
@@ -50,6 +53,9 @@ public class PonSvRegion implements Comparable<PonSvRegion>
     {
         return overlapsStart(svStart) && RegionEnd.overlaps(svEnd) && OrientStart == orientStart && OrientEnd == orientEnd;
     }
+
+    public void setUpdatePonCount(int ponCount) { mUpdatedPonCount = ponCount; }
+    public int updatePonCount() { return mUpdatedPonCount != null ? mUpdatedPonCount : PonCount; }
 
     @Override
     public int compareTo(final PonSvRegion other)
@@ -118,7 +124,7 @@ public class PonSvRegion implements Comparable<PonSvRegion>
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(RegionStart.Chromosome).add(String.valueOf(RegionStart.start())).add(String.valueOf(RegionStart.end()));
         sj.add(RegionEnd.Chromosome).add(String.valueOf(RegionEnd.start())).add(String.valueOf(RegionEnd.end()));
-        sj.add(String.valueOf(OrientStart.asByte())).add(String.valueOf(OrientEnd.asByte())).add(String.valueOf(PonCount));
+        sj.add(String.valueOf(OrientStart.asByte())).add(String.valueOf(OrientEnd.asByte())).add(String.valueOf(updatePonCount()));
         return sj.toString();
     }
 
@@ -129,7 +135,7 @@ public class PonSvRegion implements Comparable<PonSvRegion>
         return String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
                 RegionStart.Chromosome, RegionStart.start() - 1, RegionStart.end(),
                 RegionEnd.Chromosome, RegionEnd.start() - 1, RegionEnd.end(), SPARE_FIELD,
-                PonCount, OrientStart.asChar(), OrientEnd.asChar());
+                updatePonCount(), OrientStart.asChar(), OrientEnd.asChar());
     }
 
     public String toString()

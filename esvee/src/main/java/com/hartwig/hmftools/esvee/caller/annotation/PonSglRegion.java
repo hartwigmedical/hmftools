@@ -22,11 +22,14 @@ public class PonSglRegion implements Comparable<PonSglRegion>
     public final Orientation Orient;
     public final int PonCount;
 
+    private Integer mUpdatedPonCount;
+
     public PonSglRegion(final ChrBaseRegion region, final Orientation orient, final int ponCount)
     {
         Region = region;
         Orient = orient;
         PonCount = ponCount;
+        mUpdatedPonCount = null;
     }
 
     public boolean overlaps(final BaseRegion svStart)
@@ -38,6 +41,9 @@ public class PonSglRegion implements Comparable<PonSglRegion>
     {
         return overlaps(svRegion) && Orient == orientation;
     }
+
+    public void setUpdatePonCount(int ponCount) { mUpdatedPonCount = ponCount; }
+    public int updatePonCount() { return mUpdatedPonCount != null ? mUpdatedPonCount : PonCount; }
 
     public String toString()
     {
@@ -95,7 +101,7 @@ public class PonSglRegion implements Comparable<PonSglRegion>
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(Region.Chromosome).add(String.valueOf(Region.start())).add(String.valueOf(Region.end()));
-        sj.add(String.valueOf(Orient.asByte())).add(String.valueOf(PonCount));
+        sj.add(String.valueOf(Orient.asByte())).add(String.valueOf(updatePonCount()));
         return sj.toString();
     }
 
@@ -105,7 +111,7 @@ public class PonSglRegion implements Comparable<PonSglRegion>
 
         // fields: Chr,PosBegin,PosEnd,Unknown,PonCount,Orientation
         return String.format("%s\t%d\t%d\t%s\t%d\t%s",
-                Region.Chromosome, Region.start() - 1, Region.end(), SPARE_FIELD, PonCount, Orient.asChar());
+                Region.Chromosome, Region.start() - 1, Region.end(), SPARE_FIELD, updatePonCount(), Orient.asChar());
 
     }
 }
