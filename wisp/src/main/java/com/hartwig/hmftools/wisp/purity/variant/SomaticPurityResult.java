@@ -2,6 +2,7 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.wisp.purity.DetectionResult.FALSE;
 import static com.hartwig.hmftools.wisp.purity.DetectionResult.NA;
@@ -12,6 +13,8 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityVa
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 import static com.hartwig.hmftools.wisp.purity.variant.PurityCalcData.CALC_NO_SET;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -21,7 +24,7 @@ import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 public class SomaticPurityResult
 {
     public final int TotalVariants;
-    public final int ChipVariants;
+    public final String OutlierVariantInfo;
     public final FragmentTotals FragTotals; // used in purity fit - passes filters and either avg qual > threshold or has no allele fragments
     public final UmiTypeCounts UmiCounts;
 
@@ -32,11 +35,11 @@ public class SomaticPurityResult
     public static final SomaticPurityResult INVALID_RESULT = new SomaticPurityResult(false);
 
     public SomaticPurityResult(
-            boolean valid, int totalVariants, int chipVariants, final FragmentTotals fragmentTotals,
+            boolean valid, int totalVariants, final String outlierVariantInfo, final FragmentTotals fragmentTotals,
             final UmiTypeCounts umiTypeCounts, final PurityCalcData purityCalcData)
     {
         TotalVariants = totalVariants;
-        ChipVariants = chipVariants;
+        OutlierVariantInfo = outlierVariantInfo;
         FragTotals = fragmentTotals;
         UmiCounts = umiTypeCounts;
         PurityCalcs = purityCalcData;
@@ -48,7 +51,7 @@ public class SomaticPurityResult
     {
         mValid = valid;
         TotalVariants = 0;
-        ChipVariants = 0;
+        OutlierVariantInfo = "";
         PurityCalcs = new PurityCalcData();
         FragTotals = new FragmentTotals();
         UmiCounts = UmiTypeCounts.NO_UMI_COUNTS;
@@ -69,7 +72,6 @@ public class SomaticPurityResult
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("SNV_MRD");
         sj.add("TotalVariants");
-        sj.add("CalcVariants");
         sj.add("ChipVariants");
         sj.add("SNVPurity");
         sj.add("RawSNVPurity");
@@ -94,6 +96,7 @@ public class SomaticPurityResult
         sj.add("PeakBandwidth");
         sj.add("PeakBandwidthLow");
         sj.add("PeakBandwidthHigh");
+        sj.add("OutlierVariants");
         sj.add("ErrorRate");
         sj.add("RawBqrErrorRate");
         sj.add("BqrThreshold");
@@ -107,7 +110,6 @@ public class SomaticPurityResult
         sj.add(formatDetectionResult().toString());
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", FragTotals.variantCount()));
-        sj.add(format("%d", ChipVariants));
         sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
         sj.add(formatPurityValue(PurityCalcs.RawPurityEstimate));
         sj.add(formatProbabilityValue(PurityCalcs.Probability));
@@ -133,6 +135,10 @@ public class SomaticPurityResult
         sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidth));
         sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthLow));
         sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthHigh));
+
+
+        sj.add(OutlierVariantInfo);
+
         sj.add(format("%.6f", PurityCalcs.ErrorRate));
         sj.add(format("%.6f", PurityCalcs.RawBqrErrorRate));
         sj.add(format("%d", PurityCalcs.BqrQualThreshold));

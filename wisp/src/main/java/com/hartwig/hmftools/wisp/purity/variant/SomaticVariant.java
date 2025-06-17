@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -81,6 +82,8 @@ public class SomaticVariant
 
     public void setSequenceGcRatio(double ratio) { mSequenceGcRatio = ratio; }
     public double sequenceGcRatio() { return mSequenceGcRatio; }
+
+    public double variantCnFloored() { return max(VariantCopyNumber, 1); }
 
     public boolean matches(final SimpleVariant variant)
     {

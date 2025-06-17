@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
@@ -27,9 +28,9 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSeque
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATICS;
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
 import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_ALLELE_FRAGS;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_PERC;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_RETEST_PERC;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_PERC;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_RETEST_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_GERMLINE_QUAL_THRESHOLD;
@@ -37,7 +38,7 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_GERMLINE_AF;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
-import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.CHIP;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.OUTLIER;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GC_RATIO;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
@@ -292,7 +293,7 @@ public class SomaticVariants
     {
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
-        int sampleTotalAD = 0;
+        double sampleTotalAD = 0; // this value will be normalised by copy number
 
         for(SomaticVariant variant : mVariants)
         {
@@ -308,7 +309,7 @@ public class SomaticVariants
 
             filteredVariants.add(variant);
 
-            sampleTotalAD += sampleFragData.AlleleCount;
+            sampleTotalAD += sampleFragData.AlleleCount / variant.variantCnFloored();
         }
 
         SomaticPurityResult purityResult = INVALID_RESULT;
@@ -316,9 +317,9 @@ public class SomaticVariants
         if(!filteredVariants.isEmpty())
         {
             // check for CHIP variants and remove them from variants used for purity estimates
-            int chipVariantCount = filterChipVariants(sampleId, filteredVariants, sampleTotalAD);
+            List<SomaticVariant> outlierVariants = findOutlierVariants(sampleId, filteredVariants, sampleTotalAD);
 
-            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), chipVariantCount);
+            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), outlierVariants);
         }
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
@@ -389,16 +390,16 @@ public class SomaticVariants
         return filters;
     }
 
-    private int filterChipVariants(final String sampleId, final List<SomaticVariant> filteredVariants, int initialSampleTotalAD)
+    private List<SomaticVariant> findOutlierVariants(
+            final String sampleId, final List<SomaticVariant> filteredVariants, double initialSampleTotalAD)
     {
-        // check for CHIP variants and remove them from variants used for purity estimates
-        // recompute the total sample AD if any CHIP variant are found and repeat
-        int sampleTotalAD = initialSampleTotalAD;
+        // check for CHIP or similar outlier variants and remove them from variants used for purity estimates
+        // recompute the total sample AD if any outlier variants are found and repeat
+        double sampleTotalAD = initialSampleTotalAD;
 
-        int chipVariantCount = 0;
-
-        List<SomaticVariant> chipVariants = Lists.newArrayList();
-        double minSamplePerc = CHIP_MIN_SAMPLE_PERC;
+        List<SomaticVariant> allOutlierVariants = Lists.newArrayList();
+        List<SomaticVariant> outlierVariants = Lists.newArrayList();
+        double minSamplePerc = OUTLIER_MIN_SAMPLE_PERC;
 
         while(true)
         {
@@ -406,43 +407,43 @@ public class SomaticVariants
             {
                 GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
-                if(sampleFragData.AlleleCount <= CHIP_MIN_ALLELE_FRAGS)
+                if(sampleFragData.AlleleCount <= OUTLIER_MIN_ALLELE_FRAGS)
                     continue;
 
-                if(sampleFragData.AlleleCount / (double) sampleTotalAD > minSamplePerc)
+                if((sampleFragData.AlleleCount / variant.variantCnFloored()) / sampleTotalAD > minSamplePerc)
                 {
                     sampleFragData.markLikeChip();
-                    chipVariants.add(variant);
+                    outlierVariants.add(variant);
                 }
             }
 
-            if(chipVariants.isEmpty())
+            if(outlierVariants.isEmpty())
                 break;
 
-            chipVariantCount += chipVariants.size();
+            allOutlierVariants.addAll(outlierVariants);
 
-            for(SomaticVariant variant : chipVariants)
+            for(SomaticVariant variant : outlierVariants)
             {
-                CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
-                        sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+                CT_LOGGER.debug(format("sample(%s) chip variant(%s) normalised ad(%.1f) vs sampleTotal(%.1f)",
+                        sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount / variant.variantCnFloored(), sampleTotalAD));
 
                 filteredVariants.remove(variant);
             }
 
-            chipVariants.clear();
+            outlierVariants.clear();
 
             // increase threshold and recompute sample allele total less the identified CHIP variants
-            minSamplePerc = CHIP_MIN_SAMPLE_RETEST_PERC;
+            minSamplePerc = OUTLIER_MIN_SAMPLE_RETEST_PERC;
 
             sampleTotalAD = 0;
             for(SomaticVariant variant : filteredVariants)
             {
                 GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-                sampleTotalAD += sampleFragData.AlleleCount;
+                sampleTotalAD += sampleFragData.AlleleCount / max(variant.VariantCopyNumber, 1);
             }
         }
 
-        return chipVariantCount;
+        return allOutlierVariants;
     }
 
     public static BufferedWriter initialiseVariantWriter(final PurityConfig config)
@@ -498,7 +499,7 @@ public class SomaticVariants
             List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
 
             if(sampleFragData.likelyChip())
-                filterReasons.add(CHIP);
+                filterReasons.add(OUTLIER);
 
             if(filterReasons.isEmpty() && sampleFragData.isLowQual())
                 filterReasons.add(LOW_QUAL_PER_AD);

@@ -13,5 +13,5 @@ public enum FilterReason
     SUBCLONAL,
     GC_RATIO,
     LOW_QUAL_PER_AD,
-    CHIP;
+    OUTLIER;
 }
