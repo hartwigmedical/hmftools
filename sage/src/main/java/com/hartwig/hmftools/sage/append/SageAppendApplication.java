@@ -159,7 +159,8 @@ public class SageAppendApplication
         if(existingVariants.isEmpty())
         {
             outputVCF.close();
-            SG_LOGGER.info("writing empty output VCF", existingVariants.size());
+            mFragmentLengths.close();
+            SG_LOGGER.info("writing empty output VCF and fragment lengths TSV");
             return;
         }
 
