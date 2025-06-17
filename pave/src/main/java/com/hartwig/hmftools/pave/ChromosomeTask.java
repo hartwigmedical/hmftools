@@ -144,7 +144,7 @@ public class ChromosomeTask implements Callable
 
         VariantData variant = VariantData.fromContext(variantContext);
 
-        if(mConfig.ReadPassOnly)
+        if(!mConfig.ProcessNonPass)
         {
             if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
                 return;

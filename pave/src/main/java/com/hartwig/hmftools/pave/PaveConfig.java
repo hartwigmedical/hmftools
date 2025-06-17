@@ -10,15 +10,12 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS;
 import static com.hartwig.hmftools.pave.annotation.GnomadAnnotation.GNOMAD_NO_FILTER;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -47,7 +44,7 @@ public class PaveConfig
 
     public final boolean WriteTranscriptFile;
     public final boolean OnlyCanonical;
-    public final boolean ReadPassOnly;
+    public final boolean ProcessNonPass;
     public final boolean WritePassOnly;
     public final boolean WriteDetailed;
 
@@ -62,7 +59,7 @@ public class PaveConfig
 
     // optional and debugging config
     private static final String ONLY_CANONCIAL = "only_canonical";
-    private static final String READ_PASS_ONLY = "read_pass_only";
+    private static final String PROCESS_NON_PASS = "process_non_pass";
     private static final String WRITE_PASS_ONLY = "write_pass_only";
     private static final String WRITE_TRANSCRIPT_DATA = "write_transcript_data";
     private static final String WRITE_DETAILED = "write_detailed";
@@ -81,7 +78,7 @@ public class PaveConfig
 
         WriteTranscriptFile = SampleId != null && configBuilder.hasFlag(WRITE_TRANSCRIPT_DATA);
         OnlyCanonical = configBuilder.hasFlag(ONLY_CANONCIAL);
-        ReadPassOnly = configBuilder.hasFlag(READ_PASS_ONLY);
+        ProcessNonPass = configBuilder.hasFlag(PROCESS_NON_PASS);
         WritePassOnly = configBuilder.hasFlag(WRITE_PASS_ONLY);
         WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED);
         SetReportable = configBuilder.hasFlag(SET_REPORTABLE);
@@ -135,7 +132,7 @@ public class PaveConfig
 
         configBuilder.addFlag(WRITE_TRANSCRIPT_DATA, "Write variant impacts per transcript to TSV");
         configBuilder.addFlag(ONLY_CANONCIAL, "Only check canonical transcripts");
-        configBuilder.addFlag(READ_PASS_ONLY, "Filter incoming variants to PASS only");
+        configBuilder.addFlag(PROCESS_NON_PASS, "Process non-PASS variants");
         configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");
         configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
         configBuilder.addFlag(WRITE_DETAILED, "Write detailed transcript impact info");
