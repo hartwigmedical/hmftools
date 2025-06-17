@@ -337,26 +337,27 @@ public class PhasedVariantClassifier
                     prevAltBasesTrimmed = 0;
                 }
 
-                if(combinedAltCodons.length() - prevAltBasesTrimmed <= 0)
+                if(combinedAltCodons.length() - prevAltBasesTrimmed > 0)
                 {
-                    PV_LOGGER.warn("phasing variants LPS({}) var({}) combinedAltCodons({}) prevAltBasesTrimmed({})",
+                    String previousExtraAltBases = "";
+
+                    if(lastRefCodonEnd > refCodonEnd)
+                    {
+                        previousExtraAltBases = combinedAltCodons.substring(lastRefCodonEnd - refCodonEnd + 1);
+                    }
+
+                    combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - prevAltBasesTrimmed);
+
+                    combinedAltCodons += transImpact.proteinContext().AltCodonBases.substring(currentAltBasesTrimmed);
+
+                    // restore the trimmed ref bases which the previous variant(s) had
+                    combinedAltCodons += previousExtraAltBases;
+                }
+                else
+                {
+                    PV_LOGGER.trace("phasing variants LPS({}) var({}) skip adjusting combinedAltCodons({}) prevAltBasesTrimmed({})",
                             localPhaseSet, variant, combinedAltCodons, prevAltBasesTrimmed);
-                    return;
                 }
-
-                String previousExtraAltBases = "";
-
-                if(lastRefCodonEnd > refCodonEnd)
-                {
-                    previousExtraAltBases = combinedAltCodons.substring(lastRefCodonEnd - refCodonEnd + 1);
-                }
-
-                combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - prevAltBasesTrimmed);
-
-                combinedAltCodons += transImpact.proteinContext().AltCodonBases.substring(currentAltBasesTrimmed);
-
-                // restore the trimmed ref bases which the previous variant(s) had
-                combinedAltCodons += previousExtraAltBases;
             }
             else
             {
