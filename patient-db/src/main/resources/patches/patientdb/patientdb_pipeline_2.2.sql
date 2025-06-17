@@ -1,5 +1,5 @@
 ####
-# SQL updates for Pipeline release 6.1
+# SQL updates for Pipeline release 2.2
 # NOTE: only add updates to this script if the tools impacted by them will be released with this pipeline release
 
 # Remove Gridss SV columns
