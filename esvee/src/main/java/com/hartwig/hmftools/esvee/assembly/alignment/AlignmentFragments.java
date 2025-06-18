@@ -618,14 +618,23 @@ public class AlignmentFragments
         // look for a read crossing any segment boundary
         for(BreakendSegment segment : breakend.segments())
         {
-            int segmentSeqStart = segment.Alignment.sequenceStart();
+            // determine which end of the segment corresponds to the breakend
+            int segmentJunctionIndex;
 
-            if(segmentSeqStart > 0 && readSeqIndexStart < segmentSeqStart && readSeqIndexEnd > segmentSeqStart)
-                return true;
+            if(breakend.Orient.isForward())
+            {
+                segmentJunctionIndex = segment.Alignment.isForward() ? segment.Alignment.sequenceEnd() : segment.Alignment.sequenceStart();
+            }
+            else
+            {
+                segmentJunctionIndex = segment.Alignment.isForward() ? segment.Alignment.sequenceStart() : segment.Alignment.sequenceEnd();
+            }
 
-            int segmentSeqEnd = segment.Alignment.sequenceEnd();
+            // ignore ends of the full assembly since these are not junctions
+            if(segmentJunctionIndex == 0 || segmentJunctionIndex == fullSequenceEndIndex)
+                continue;
 
-            if(segmentSeqEnd < fullSequenceEndIndex && readSeqIndexStart < segmentSeqEnd && readSeqIndexEnd > segmentSeqEnd)
+            if(readSeqIndexStart < segmentJunctionIndex && readSeqIndexEnd > segmentJunctionIndex)
                 return true;
 
             if(segment.indelSeqenceIndices() != null)
