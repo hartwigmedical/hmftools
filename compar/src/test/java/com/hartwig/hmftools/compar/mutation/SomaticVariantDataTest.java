@@ -113,7 +113,8 @@ public class SomaticVariantDataTest
                 .withType(passVictim.Type)
                 .withComparisonChromosome(passVictim.mComparisonChromosome)
                 .withComparisonPosition(passVictim.mComparisonPosition)
-                .withIsFromUnfilteredVcf(true);
+                .withIsFromUnfilteredVcf(true)
+                .withHasPurpleAnnotation(false);
 
         var diffThresholds = createDefaultThresholds();
 
