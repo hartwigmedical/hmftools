@@ -851,11 +851,13 @@ public class ExtensionSeqBuilder
             if(read.exhausted() || read.exceedsMaxMismatches())
                 break;
 
+            /*
             if(read.currentIndex() >= read.read().basesLength())
             {
                 SV_LOGGER.error("read({}) invalid state", read);
                 break;
             }
+            */
 
             byte base = read.currentBase();
             byte qual = read.currentQual();

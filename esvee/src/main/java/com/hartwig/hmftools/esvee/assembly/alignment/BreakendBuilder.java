@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.alignment;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -135,7 +137,9 @@ public class BreakendBuilder
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
 
-        int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.positionStart();
+        int indelSeqStart = alignment.sequenceStart() + getReadIndexFromPosition(
+                alignment.positionStart(), alignment.cigarElements(),  indelCoords.PosStart, true, false);
+
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
         if(!isChained)
