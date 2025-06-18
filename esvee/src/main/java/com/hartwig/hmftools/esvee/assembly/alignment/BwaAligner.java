@@ -39,7 +39,7 @@ public class BwaAligner implements Aligner
             {
                 mAligner = new BwaMemAligner(index);
 
-                // mAligner.setZDropOption(BWA_ZDROP);
+                mAligner.setZDropOption(BWA_ZDROP);
 
                 int mismatchPenalty = mAligner.getMismatchPenaltyOption();
                 mAligner.setMismatchPenaltyOption(mismatchPenalty + BWA_PENALTY_ADJUST);
