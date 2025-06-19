@@ -20,6 +20,7 @@ public class PonConfig
     public final int MinSamples;
     public final int PositionBuffer;
     public final boolean WriteBedFiles;
+    public final boolean FilterOnPass;
 
     public final int Threads;
 
@@ -30,6 +31,7 @@ public class PonConfig
     private static final String MIN_SAMPLES = "min_samples";
     private static final String POSITION_BUFFER = "position_buffer";
     private static final String WRITE_BED_FILES = "write_bed";
+    private static final String FILTER_ON_PASS = "filter_on_pass";
 
     // constants
     private static final int DEFAULT_MIN_SAMPLES = 3;
@@ -44,6 +46,7 @@ public class PonConfig
         PositionBuffer = configBuilder.getInteger(POSITION_BUFFER);
 
         WriteBedFiles = configBuilder.hasFlag(WRITE_BED_FILES);
+        FilterOnPass = configBuilder.hasFlag(FILTER_ON_PASS);
 
         Threads = parseThreads(configBuilder);
 
@@ -60,6 +63,7 @@ public class PonConfig
         configBuilder.addInteger(POSITION_BUFFER, "Merge PON entries if positions are within buffer", 0);
 
         configBuilder.addFlag(WRITE_BED_FILES, "Write output in BED format instead of TSV");
+        configBuilder.addFlag(FILTER_ON_PASS, "Form PON from passing variants only");
 
         addThreadOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

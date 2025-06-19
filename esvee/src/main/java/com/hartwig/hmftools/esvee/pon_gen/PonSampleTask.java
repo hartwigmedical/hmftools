@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.pon_gen;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;
@@ -66,13 +67,13 @@ public class PonSampleTask implements Callable
 
         for(VariantContext variantContext : vcfReader.iterator())
         {
+            if(mConfig.FilterOnPass && !variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
+                continue;
+
             processVariant(variantContext);
         }
 
         SV_LOGGER.debug("sampleVcf({}) read {} variants", sampleVcf, mProcessedVariants);
-
-        // log current PON stats
-        // SV_LOGGER.info("{}: {}}", mTaskId, mPonStore.statsString());
     }
 
     private void clearSampleData()

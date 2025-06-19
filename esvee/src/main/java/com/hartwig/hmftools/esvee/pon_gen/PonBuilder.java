@@ -281,18 +281,18 @@ public class PonBuilder
 
     private PonSvRegion mergeSvRegions(final PonSvRegion region, final PonSvRegion nextRegion)
     {
+        ChrBaseRegion regionStart = new ChrBaseRegion(
+                region.RegionStart.Chromosome,
+                min(region.RegionStart.start(), nextRegion.RegionStart.start()),
+                max(region.RegionStart.end(), nextRegion.RegionStart.end()));
+
+        ChrBaseRegion regionEnd = new ChrBaseRegion(
+                region.RegionEnd.Chromosome,
+                min(region.RegionEnd.start(), nextRegion.RegionEnd.start()),
+                max(region.RegionEnd.end(), nextRegion.RegionEnd.end()));
+
         return new PonSvRegion(
-                new ChrBaseRegion(
-                        region.RegionStart.Chromosome,
-                        min(region.RegionStart.start(), nextRegion.RegionStart.start()),
-                        max(region.RegionStart.end(), nextRegion.RegionStart.end())),
-                region.OrientStart,
-                new ChrBaseRegion(
-                        region.RegionEnd.Chromosome,
-                        min(region.RegionEnd.start(), nextRegion.RegionEnd.start()),
-                        max(region.RegionEnd.end(), nextRegion.RegionEnd.end())),
-                region.OrientEnd,
-                region.PonCount + nextRegion.PonCount);
+                regionStart, region.OrientStart, regionEnd, region.OrientEnd, region.PonCount + nextRegion.PonCount);
     }
 
     private boolean canMergeSglRegions(final PonSglRegion region, final PonSglRegion nextRegion)
@@ -307,12 +307,12 @@ public class PonBuilder
 
     private PonSglRegion mergeSglRegions(final PonSglRegion region, final PonSglRegion nextRegion)
     {
-        return new PonSglRegion(
-                new ChrBaseRegion(
-                        region.Region.Chromosome,
-                        min(region.Region.start(), nextRegion.Region.start()),
-                        max(region.Region.end(), nextRegion.Region.end())),
-                region.Orient, region.PonCount + nextRegion.PonCount);
+        ChrBaseRegion chrBaseRegion = new ChrBaseRegion(
+                region.Region.Chromosome,
+                min(region.Region.start(), nextRegion.Region.start()),
+                max(region.Region.end(), nextRegion.Region.end()));
+
+        return new PonSglRegion(chrBaseRegion, region.Orient, region.PonCount + nextRegion.PonCount);
     }
 
     private static boolean areProximateRegions(final ChrBaseRegion region, final ChrBaseRegion nextRegion, final int permittedBuffer)

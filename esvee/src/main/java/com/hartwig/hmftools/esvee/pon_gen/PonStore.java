@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 
 public class PonStore
 {
-    private final Map<String, PonLocations> mSvLocations;
+    private final Map<String,PonLocations> mSvLocations;
     private final Map<String,PonLocations> mSglLocations;
 
     public PonStore()

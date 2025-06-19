@@ -58,8 +58,11 @@ public class VcfComparer
         VariantCache oldFilteredVariants = new VariantCache(mConfig.OldUnfilteredVcf);
         VariantCache newFilteredVariants = new VariantCache(mConfig.NewUnfilteredVcf);
 
+        Set<String> combinedChromosomes = Sets.newHashSet(oldVariants.getBreakendMap().keySet());
+        combinedChromosomes.addAll(newVariants.getBreakendMap().keySet());
+
         // begin matching routine, looping by chromosome
-        for(String chromosome : oldVariants.getBreakendMap().keySet())
+        for(String chromosome : combinedChromosomes)
         {
             List<Breakend> oldBreakends = oldVariants.getChromosomeBreakends(chromosome);
             List<Breakend> newBreakends = newVariants.getChromosomeBreakends(chromosome);
@@ -73,8 +76,10 @@ public class VcfComparer
             // then inexact from the main list
             findBreakendMatches(oldBreakends, newBreakends, false);
 
+            // then search for old in the filtered new list
             findBreakendMatches(oldBreakends, newFilteredBreakends, true);
 
+            // and vice versa
             findBreakendMatches(newBreakends, oldFilteredBreakends, false);
 
             // finally log unmatched breakends
