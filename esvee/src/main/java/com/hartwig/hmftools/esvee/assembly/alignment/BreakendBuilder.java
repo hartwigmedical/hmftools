@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -139,6 +140,9 @@ public class BreakendBuilder
 
         int indelSeqStart = alignment.sequenceStart() + getReadIndexFromPosition(
                 alignment.positionStart(), alignment.cigarElements(),  indelCoords.PosStart, true, false);
+
+        if(alignment.cigarElements().get(0).getOperator() == S) // back out soft-clip since the method above includes that
+            indelSeqStart -= alignment.cigarElements().get(0).getLength();
 
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 

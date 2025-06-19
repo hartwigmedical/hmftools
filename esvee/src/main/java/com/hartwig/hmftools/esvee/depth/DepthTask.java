@@ -193,7 +193,7 @@ public class DepthTask implements Callable
 
                 genotype.getExtendedAttributes().put(refPairVcfTag, refPairSupport);
 
-                double af = variantFrags / total;
+                double af = total > 0 ? variantFrags / total : 0;
 
                 genotype.getExtendedAttributes().put(ALLELE_FRACTION, af);
             }
