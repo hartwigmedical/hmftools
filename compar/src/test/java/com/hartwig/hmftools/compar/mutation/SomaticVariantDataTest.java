@@ -21,7 +21,7 @@ public class SomaticVariantDataTest
     @Test
     public void fullyMatchesSelf()
     {
-        var victim = SomaticVariantDataTestFactory.createDefault().build();
+        var victim = TestSomaticVariantDataBuilder.create();
         var diffThresholds = createDefaultThresholds();
 
         assertTrue(victim.matches(victim));
@@ -36,8 +36,16 @@ public class SomaticVariantDataTest
     @Test
     public void fullyMatchesSelfWithLiftover()
     {
-        var victim = SomaticVariantDataTestFactory.createDefault().withComparisonChromosome("8").withComparisonPosition(10000).build();
-        var liftoverVictim = SomaticVariantDataTestFactory.createDefault().withChromosome("8").withPosition(10000).build();
+        var victim = TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.comparisonChromosome = "8";
+            b.comparisonPosition = 10000;
+        });
+        var liftoverVictim = TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.chromosome = "8";
+            b.position = 10000;
+        });
         var diffThresholds = createDefaultThresholds();
 
         assertTrue(victim.matches(liftoverVictim));
@@ -53,15 +61,17 @@ public class SomaticVariantDataTest
     @Test
     public void onlyMatchesIndex()
     {
-        var refVictim = SomaticVariantDataTestFactory.createDefault().build();
-        var newVictim = SomaticVariantDataTestFactory.createAlternateDefault().withChromosome(refVictim.Chromosome)
-                .withPosition(refVictim.Position)
-                .withRef(refVictim.Ref)
-                .withAlt(refVictim.Alt)
-                .withType(refVictim.Type)
-                .withComparisonChromosome(refVictim.mComparisonChromosome)
-                .withComparisonPosition(refVictim.mComparisonPosition)
-                .build();
+        var refVictim = TestSomaticVariantDataBuilder.create();
+        var newVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
+        {
+            b.chromosome = refVictim.Chromosome;
+            b.position = refVictim.Position;
+            b.ref = refVictim.Ref;
+            b.alt = refVictim.Alt;
+            b.type = refVictim.Type;
+            b.comparisonChromosome = refVictim.mComparisonChromosome;
+            b.comparisonPosition = refVictim.mComparisonPosition;
+        });
 
         var diffThresholds = createDefaultThresholds();
 
@@ -77,16 +87,18 @@ public class SomaticVariantDataTest
     @Test
     public void nonPurpleMatchHandledCorrectly()
     {
-        var refVictim = SomaticVariantDataTestFactory.createDefault().withHasPurpleAnnotation(false).build();
-        var newVictim = SomaticVariantDataTestFactory.createAlternateDefault().withChromosome(refVictim.Chromosome)
-                .withPosition(refVictim.Position)
-                .withRef(refVictim.Ref)
-                .withAlt(refVictim.Alt)
-                .withType(refVictim.Type)
-                .withComparisonChromosome(refVictim.mComparisonChromosome)
-                .withComparisonPosition(refVictim.mComparisonPosition)
-                .withHasPurpleAnnotation(false)
-                .build();
+        var refVictim = TestSomaticVariantDataBuilder.create(b -> b.hasPurpleAnnotation = false);
+        var newVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
+        {
+            b.chromosome = refVictim.Chromosome;
+            b.position = refVictim.Position;
+            b.ref = refVictim.Ref;
+            b.alt = refVictim.Alt;
+            b.type = refVictim.Type;
+            b.comparisonChromosome = refVictim.mComparisonChromosome;
+            b.comparisonPosition = refVictim.mComparisonPosition;
+            b.hasPurpleAnnotation = false;
+        });
 
         var diffThresholds = createDefaultThresholds();
 
@@ -102,17 +114,19 @@ public class SomaticVariantDataTest
     @Test
     public void unfilteredMatchHandledCorrectly()
     {
-        var passVictim = SomaticVariantDataTestFactory.createDefault().build();
-        var filteredVictim = SomaticVariantDataTestFactory.createAlternateDefault().withChromosome(passVictim.Chromosome)
-                .withPosition(passVictim.Position)
-                .withRef(passVictim.Ref)
-                .withAlt(passVictim.Alt)
-                .withType(passVictim.Type)
-                .withComparisonChromosome(passVictim.mComparisonChromosome)
-                .withComparisonPosition(passVictim.mComparisonPosition)
-                .withIsFromUnfilteredVcf(true)
-                .withHasPurpleAnnotation(false)
-                .build();
+        var passVictim = TestSomaticVariantDataBuilder.create();
+        var filteredVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
+        {
+            b.chromosome = passVictim.Chromosome;
+            b.position = passVictim.Position;
+            b.ref = passVictim.Ref;
+            b.alt = passVictim.Alt;
+            b.type = passVictim.Type;
+            b.comparisonChromosome = passVictim.mComparisonChromosome;
+            b.comparisonPosition = passVictim.mComparisonPosition;
+            b.isFromUnfilteredVcf = true;
+            b.hasPurpleAnnotation = false;
+        });
 
         var diffThresholds = createDefaultThresholds();
 
@@ -136,33 +150,38 @@ public class SomaticVariantDataTest
     @Test
     public void indexMismatchesAreRecognized()
     {
-        var baseVictim = SomaticVariantDataTestFactory.createDefault();
-        var victim = baseVictim.build();
+        var victim = TestSomaticVariantDataBuilder.create();
 
-        var alternateVictim = SomaticVariantDataTestFactory.createAlternateDefault().build();
+        var alternateVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults();
 
-        var chromosomeMismatch =
-                baseVictim.withChromosome(alternateVictim.Chromosome).withComparisonChromosome(alternateVictim.Chromosome).build();
+        var chromosomeMismatch = TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.chromosome = alternateVictim.Chromosome;
+            b.comparisonChromosome = alternateVictim.mComparisonChromosome;
+        });
 
         assertFalse(victim.matches(chromosomeMismatch));
         assertFalse(chromosomeMismatch.matches(victim));
 
-        var positionMismatch = baseVictim.withPosition(alternateVictim.Position).withComparisonPosition(alternateVictim.Position).build();
-
+        var positionMismatch = TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.position = alternateVictim.Position;
+            b.comparisonPosition = alternateVictim.mComparisonPosition;
+        });
         assertFalse(victim.matches(positionMismatch));
         assertFalse(positionMismatch.matches(victim));
 
-        var refMismatch = baseVictim.withRef(alternateVictim.Ref).build();
+        var refMismatch = TestSomaticVariantDataBuilder.create(b -> b.ref = alternateVictim.Ref);
 
         assertFalse(victim.matches(refMismatch));
         assertFalse(refMismatch.matches(victim));
 
-        var altMismatch = baseVictim.withAlt(alternateVictim.Alt).build();
+        var altMismatch = TestSomaticVariantDataBuilder.create(b -> b.alt = alternateVictim.Alt);
 
         assertFalse(victim.matches(altMismatch));
         assertFalse(altMismatch.matches(victim));
 
-        var variantTypeMismatch = baseVictim.withType(alternateVictim.Type).build();
+        var variantTypeMismatch = TestSomaticVariantDataBuilder.create(b -> b.type = alternateVictim.Type);
 
         assertFalse(victim.matches(variantTypeMismatch));
         assertFalse(variantTypeMismatch.matches(victim));

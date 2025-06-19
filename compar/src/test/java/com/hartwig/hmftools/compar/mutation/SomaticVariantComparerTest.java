@@ -52,22 +52,38 @@ public class SomaticVariantComparerTest
         var newVariants = new ArrayList<SomaticVariantData>();
         var matchLevel = MatchLevel.DETAILED;
 
-        var baseVariant = SomaticVariantDataTestFactory.createDefault();
-
         // match
-        refVariants.add(baseVariant.build());
-        newVariants.add(baseVariant.build());
+        refVariants.add(TestSomaticVariantDataBuilder.create());
+        newVariants.add(TestSomaticVariantDataBuilder.create());
 
         // value difference
-        refVariants.add(baseVariant.withAlt("C").withReported(false).build());
-        newVariants.add(baseVariant.withAlt("C").withCanonicalHgvsProteinImpact("p.Val600Gly").withReported(false).build());
+        refVariants.add(TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.alt = "C";
+            b.reported = false;
+        }));
+        newVariants.add(TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.alt = "C";
+            b.reported = false;
+            b.canonicalHgvsProteinImpact = "p.Val600Gly";
+        }));
 
         // ref only
-        refVariants.add(baseVariant.withChromosome("8").withReported(false).build());
-        newVariants.add(baseVariant.withChromosome("8").withReported(false).withIsFromUnfilteredVcf(true).build());
+        refVariants.add(TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.chromosome = "8";
+            b.reported = false;
+        }));
+        newVariants.add(TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.chromosome = "8";
+            b.reported = false;
+            b.isFromUnfilteredVcf = true;
+        }));
 
         //new only
-        newVariants.add(baseVariant.withType(VariantType.INDEL).build());
+        newVariants.add(TestSomaticVariantDataBuilder.create(b -> b.type = VariantType.INDEL));
 
         var result = victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel);
         assertTrue(result);
@@ -92,23 +108,34 @@ public class SomaticVariantComparerTest
         var newVariants = new ArrayList<SomaticVariantData>();
         var matchLevel = MatchLevel.REPORTABLE;
 
-        var baseVariant = SomaticVariantDataTestFactory.createDefault();
-
         // match
-        refVariants.add(baseVariant.build());
-        newVariants.add(baseVariant.build());
+        refVariants.add(TestSomaticVariantDataBuilder.create());
+        newVariants.add(TestSomaticVariantDataBuilder.create());
 
         // value difference
-        refVariants.add(baseVariant.withAlt("C").build());
-        newVariants.add(baseVariant.withAlt("C").withCanonicalHgvsProteinImpact("p.Val600Gly").build());
+        refVariants.add(TestSomaticVariantDataBuilder.create(b -> b.alt = "C"));
+        newVariants.add(TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.alt = "C";
+            b.canonicalHgvsProteinImpact = "p.Val600Gly";
+        }));
 
         // ref only
-        refVariants.add(baseVariant.withChromosome("8").build());
-        newVariants.add(baseVariant.withChromosome("8").withReported(false).build());
+        refVariants.add(TestSomaticVariantDataBuilder.create(b -> b.chromosome = "8"));
+        newVariants.add(TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.chromosome = "8";
+            b.reported = false;
+        }));
 
         //new only
-        refVariants.add(baseVariant.withType(VariantType.INDEL).withIsFromUnfilteredVcf(true).withReported(false).build());
-        newVariants.add(baseVariant.withType(VariantType.INDEL).build());
+        refVariants.add(TestSomaticVariantDataBuilder.create(b ->
+        {
+            b.type = VariantType.INDEL;
+            b.isFromUnfilteredVcf = true;
+            b.reported = false;
+        }));
+        newVariants.add(TestSomaticVariantDataBuilder.create(b -> b.type = VariantType.INDEL));
 
         var result = victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel);
         assertTrue(result);
