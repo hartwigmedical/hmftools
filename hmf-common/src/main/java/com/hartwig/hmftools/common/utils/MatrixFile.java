@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.common.utils;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,15 @@ public final class MatrixFile
     {
         try
         {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+            List<String> fileData = Lists.newArrayList();
+
+            BufferedReader fileReader = createBufferedReader(filename);
+
+            String line = null;
+            while((line = fileReader.readLine()) != null)
+            {
+                fileData.add(line);
+            }
 
             Matrix matrix = loadMatrixDataFile(fileData, columnNames, ignoreFields, transpose);
 

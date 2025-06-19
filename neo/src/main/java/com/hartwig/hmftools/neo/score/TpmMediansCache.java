@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.score.NeoRnaData.NO_TPM_VALUE;
 
@@ -64,20 +65,17 @@ public class TpmMediansCache
         // GeneId,GeneName,TransName,Mesothelium,etc
         if(!Files.exists(Paths.get(filename)))
         {
-            NE_LOGGER.error("invalid cohort TPM file({})", filename);
+            NE_LOGGER.error("invalid cohort TPM medians file({})", filename);
             return;
         }
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
-            String line = fileReader.readLine();
+            String header = fileReader.readLine();
 
-            if (line == null)
-                return;
-
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, GENE_EXP_DELIM);
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(header, GENE_EXP_DELIM);
 
             fieldsMap.keySet().stream()
                     .filter(x -> !x.equals(FLD_GENE_ID) && !x.equals(FLD_GENE_NAME) && !x.equals(FLD_TRANS_NAME))
@@ -85,6 +83,7 @@ public class TpmMediansCache
 
             int transNameIndex = fieldsMap.get(FLD_TRANS_NAME);
 
+            String line = null;
             while ((line = fileReader.readLine()) != null)
             {
                 final String[] items = line.split(GENE_EXP_DELIM, -1);
