@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.mutation;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -100,8 +99,7 @@ public class TestSomaticVariantDataBuilder
     {
         return new SomaticVariantData(chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier, biallelic, canonicalEffect,
                 canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects, hasLPS, qual,
-                subclonalLikelihood, filters, variantCopyNumber, purityAdjustedVaf,
-                new AllelicDepth(tumorTotalReadCount, tumorSupportingReadCount), isFromUnfilteredVcf, hasPurpleAnnotation,
-                comparisonChromosome, comparisonPosition);
+                subclonalLikelihood, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
+                isFromUnfilteredVcf, hasPurpleAnnotation, comparisonChromosome, comparisonPosition);
     }
 }

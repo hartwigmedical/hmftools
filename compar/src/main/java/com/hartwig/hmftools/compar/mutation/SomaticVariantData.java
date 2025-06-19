@@ -86,7 +86,8 @@ public class SomaticVariantData implements ComparableItem
     public final Set<String> Filters;
     public final double VariantCopyNumber;
     public final double PurityAdjustedVaf;
-    public final AllelicDepth TumorDepth;
+    public final int TumorSupportingReadCount;
+    public final int TumorTotalReadCount;
     public final boolean IsFromUnfilteredVcf;
     public final boolean HasPurpleAnnotation;
     public final String mComparisonChromosome;
@@ -103,8 +104,8 @@ public class SomaticVariantData implements ComparableItem
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
             final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
-            final AllelicDepth tumorDepth, final boolean isFromUnfilteredVcf, final boolean hasPurpleAnnotation,
-            final String comparisonChromosome, final int comparisonPosition)
+            final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
+            final boolean hasPurpleAnnotation, final String comparisonChromosome, final int comparisonPosition)
     {
         Chromosome = chromosome;
         Position = position;
@@ -127,7 +128,8 @@ public class SomaticVariantData implements ComparableItem
         Filters = filters;
         VariantCopyNumber = variantCopyNumber;
         PurityAdjustedVaf = purityAdjustedVaf;
-        TumorDepth = tumorDepth;
+        TumorSupportingReadCount = tumorSupportingReadCount;
+        TumorTotalReadCount = tumorTotalReadCount;
         IsFromUnfilteredVcf = isFromUnfilteredVcf;
         HasPurpleAnnotation = hasPurpleAnnotation;
         mComparisonChromosome = comparisonChromosome;
@@ -163,8 +165,8 @@ public class SomaticVariantData implements ComparableItem
         values.add(format("%d", Qual));
         values.add(format("%.2f", VariantCopyNumber));
         values.add(format("%.2f", PurityAdjustedVaf));
-        values.add(String.format("%d", TumorDepth.AlleleReadCount));
-        values.add(String.format("%d", TumorDepth.TotalReadCount));
+        values.add(String.format("%d", TumorSupportingReadCount));
+        values.add(String.format("%d", TumorTotalReadCount));
 
         values.add(format("%.2f", SubclonalLikelihood));
         values.add(format("%s", HasLPS));
@@ -221,8 +223,8 @@ public class SomaticVariantData implements ComparableItem
 
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
         checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorDepth.AlleleReadCount, otherVar.TumorDepth.AlleleReadCount, thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorDepth.TotalReadCount, otherVar.TumorDepth.TotalReadCount, thresholds);
+        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, otherVar.TumorSupportingReadCount, thresholds);
+        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, otherVar.TumorTotalReadCount, thresholds);
 
         if(canComparePaveFields(otherVar))
         {
@@ -287,6 +289,7 @@ public class SomaticVariantData implements ComparableItem
         BasePosition comparisonPosition = determineComparisonGenomePosition(
                 chromosome, position, sourceName, config.RequiresLiftover, config.LiftoverCache);
 
+        var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
         return new SomaticVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
                 variantImpact.GeneName,
@@ -305,7 +308,8 @@ public class SomaticVariantData implements ComparableItem
                 context.getFilters(),
                 context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0),
                 context.getAttributeAsDouble(PURPLE_AF, 0),
-                AllelicDepth.fromGenotype(context.getGenotype(sampleId)),
+                tumorAllelicDepth.AlleleReadCount,
+                tumorAllelicDepth.TotalReadCount,
                 fromUnfilteredFile,
                 hasPurpleAnnotation,
                 comparisonPosition.Chromosome,
@@ -318,8 +322,6 @@ public class SomaticVariantData implements ComparableItem
         Set<String> filters = Arrays.stream(record.getValue(SOMATICVARIANT.FILTER).split(";", -1)).collect(Collectors.toSet());
         String localPhaseSets = record.get(SOMATICVARIANT.LOCALPHASESET);
         double qual = record.getValue(Tables.SOMATICVARIANT.QUAL);
-        final AllelicDepth tumorDepth =
-                new AllelicDepth(record.getValue(SOMATICVARIANT.TOTALREADCOUNT), record.getValue(SOMATICVARIANT.ALLELEREADCOUNT));
 
         var chromosome = record.getValue(SOMATICVARIANT.CHROMOSOME);
         var position = record.getValue(SOMATICVARIANT.POSITION);
@@ -348,7 +350,8 @@ public class SomaticVariantData implements ComparableItem
                 filters,
                 record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER),
                 record.getValue(SOMATICVARIANT.ADJUSTEDVAF),
-                tumorDepth,
+                record.getValue(SOMATICVARIANT.ALLELEREADCOUNT),
+                record.getValue(SOMATICVARIANT.TOTALREADCOUNT),
                 false,
                 true,
                 comparisonPosition.Chromosome,

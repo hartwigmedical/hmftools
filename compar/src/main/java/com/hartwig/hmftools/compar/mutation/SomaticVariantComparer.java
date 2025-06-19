@@ -222,13 +222,14 @@ public class SomaticVariantComparer implements ItemComparer
             if(!testVariant.Ref.equals(ref) || !testVariant.Alt.equals(alt))
                 continue;
 
+            final AllelicDepth tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId));
             return new SomaticVariantData(
                     context.getContig(), context.getStart(), ref, alt, VariantType.type(context),
                     "", false, Hotspot.fromVariant(context), VariantTier.fromContext(context),
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
-                    AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId)), true, false,
+                    tumorAllelicDepth.AlleleReadCount, tumorAllelicDepth.TotalReadCount, true, false,
                     testVariant.Chromosome, testVariant.Position);
         }
 

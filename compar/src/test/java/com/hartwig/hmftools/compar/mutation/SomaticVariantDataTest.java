@@ -248,8 +248,8 @@ public class SomaticVariantDataTest
         testSingleFieldMismatch(FLD_QUAL, b -> b.qual = alternateValueSource.Qual);
         testSingleFieldMismatch(FLD_TIER, b -> b.tier = alternateValueSource.Tier);
         testSingleFieldMismatch(FLD_TUMOR_SUPPORTING_READ_COUNT, b -> b.tumorSupportingReadCount =
-                alternateValueSource.TumorDepth.AlleleReadCount);
-        testSingleFieldMismatch(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount = alternateValueSource.TumorDepth.TotalReadCount);
+                alternateValueSource.TumorSupportingReadCount);
+        testSingleFieldMismatch(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount = alternateValueSource.TumorTotalReadCount);
         testSingleFieldMismatch(FLD_GENE, b -> b.gene = alternateValueSource.Gene);
         testSingleFieldMismatch(FLD_CANON_EFFECT, b -> b.canonicalEffect = alternateValueSource.CanonicalEffect);
         testSingleFieldMismatch(FLD_CODING_EFFECT, b -> b.canonicalCodingEffect = alternateValueSource.CanonicalCodingEffect);
