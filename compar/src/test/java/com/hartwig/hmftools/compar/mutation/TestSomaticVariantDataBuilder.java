@@ -31,7 +31,8 @@ public class TestSomaticVariantDataBuilder
     public Set<String> filters = Set.of("PASS");
     public double variantCopyNumber = 1.1;
     public double purityAdjustedVaf = 0.45;
-    public AllelicDepth tumorDepth = new AllelicDepth(116, 21);
+    public int tumorTotalReadCount = 116;
+    public int tumorSupportingReadCount = 21;
     public boolean isFromUnfilteredVcf = false;
     public boolean hasPurpleAnnotation = true;
     public String comparisonChromosome = "7";
@@ -60,7 +61,8 @@ public class TestSomaticVariantDataBuilder
         b.filters = Set.of("PON");
         b.variantCopyNumber = 3.6;
         b.purityAdjustedVaf = 1.1;
-        b.tumorDepth = new AllelicDepth(312, 50);
+        b.tumorTotalReadCount = 312;
+        b.tumorSupportingReadCount = 50;
         b.comparisonChromosome = "8";
         b.comparisonPosition = 10000;
     };
@@ -98,7 +100,8 @@ public class TestSomaticVariantDataBuilder
     {
         return new SomaticVariantData(chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier, biallelic, canonicalEffect,
                 canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects, hasLPS, qual,
-                subclonalLikelihood, filters, variantCopyNumber, purityAdjustedVaf, tumorDepth, isFromUnfilteredVcf, hasPurpleAnnotation,
+                subclonalLikelihood, filters, variantCopyNumber, purityAdjustedVaf,
+                new AllelicDepth(tumorTotalReadCount, tumorSupportingReadCount), isFromUnfilteredVcf, hasPurpleAnnotation,
                 comparisonChromosome, comparisonPosition);
     }
 }
