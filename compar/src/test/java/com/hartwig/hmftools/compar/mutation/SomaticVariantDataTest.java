@@ -42,14 +42,15 @@ import org.junit.Test;
 
 public class SomaticVariantDataTest
 {
-    Set<String> PURPLE_ONLY_FIELDS =
+    private static final Set<String> PURPLE_ONLY_FIELDS =
             Set.of(FLD_HOTSPOT, FLD_BIALLELIC, FLD_OTHER_REPORTED, FLD_SUBCLONAL_LIKELIHOOD, FLD_VARIANT_COPY_NUMBER, FLD_PURITY_ADJUSTED_VAF);
-    Set<String> PAVE_ONLY_FIELDS = Set.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
-    Set<String> SAGE_FIELDS =
+    private static final Set<String> PAVE_ONLY_FIELDS =
+            Set.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
+    private static final Set<String> SAGE_FIELDS =
             Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FILTER_DIFF);
 
-    Set<String> ALL_FIELDS = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS, PURPLE_ONLY_FIELDS));
-    Set<String> FIELDS_UP_TO_PAVE = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS));
+    private static final Set<String> ALL_FIELDS = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS, PURPLE_ONLY_FIELDS));
+    private static final Set<String> FIELDS_UP_TO_PAVE = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS));
 
     @Test
     public void fullyMatchesSelf()
@@ -279,7 +280,7 @@ public class SomaticVariantDataTest
         testSingleFieldMismatch(FILTER_DIFF, b -> b.filters = alternateValueSource.Filters);
     }
 
-    public void testSingleFieldMismatch(final String field, final Consumer<TestSomaticVariantDataBuilder> initializer)
+    private void testSingleFieldMismatch(final String field, final Consumer<TestSomaticVariantDataBuilder> initializer)
     {
         var refVictim = TestSomaticVariantDataBuilder.create();
         var newVictim = TestSomaticVariantDataBuilder.create(initializer);
@@ -305,7 +306,7 @@ public class SomaticVariantDataTest
         assertEquals(field, extractFieldNameFromDifference(reportedMismatch.DiffValues().get(0)));
     }
 
-    private static void assertDifferencesAreForFields(Set<String> expectedFields, List<String> differences)
+    private static void assertDifferencesAreForFields(final Set<String> expectedFields, final List<String> differences)
     {
         assertEquals(expectedFields.size(), differences.size());
         assertEquals(expectedFields, differences.stream()
@@ -313,7 +314,7 @@ public class SomaticVariantDataTest
                 .collect(Collectors.toSet()));
     }
 
-    private static String extractFieldNameFromDifference(String difference)
+    private static String extractFieldNameFromDifference(final String difference)
     {
         return difference.split("\\(")[0];
     }
@@ -328,7 +329,7 @@ public class SomaticVariantDataTest
         return diffThresholds;
     }
 
-    private static Set<String> union(List<Set<String>> sets)
+    private static Set<String> union(final List<Set<String>> sets)
     {
         return sets.stream().flatMap(Collection::stream).collect(Collectors.toSet());
     }

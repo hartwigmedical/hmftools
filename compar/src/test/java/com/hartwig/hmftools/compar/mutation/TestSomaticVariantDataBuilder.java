@@ -70,7 +70,7 @@ public class TestSomaticVariantDataBuilder
     {
     }
 
-    public static SomaticVariantData create(Consumer<TestSomaticVariantDataBuilder> initializer)
+    public static SomaticVariantData create(final Consumer<TestSomaticVariantDataBuilder> initializer)
     {
         TestSomaticVariantDataBuilder builder = new TestSomaticVariantDataBuilder();
         initializer.accept(builder);
@@ -82,7 +82,7 @@ public class TestSomaticVariantDataBuilder
         return create(b -> {});
     }
 
-    public static SomaticVariantData createWithAlternateDefaults(Consumer<TestSomaticVariantDataBuilder> initializer)
+    public static SomaticVariantData createWithAlternateDefaults(final Consumer<TestSomaticVariantDataBuilder> initializer)
     {
         TestSomaticVariantDataBuilder builder = new TestSomaticVariantDataBuilder();
         ALTERNATE_DEFAULT_INITIALIZER.accept(builder);
