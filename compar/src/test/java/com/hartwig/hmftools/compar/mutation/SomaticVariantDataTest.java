@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
@@ -24,8 +25,12 @@ import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -37,6 +42,15 @@ import org.junit.Test;
 
 public class SomaticVariantDataTest
 {
+    Set<String> PURPLE_ONLY_FIELDS =
+            Set.of(FLD_HOTSPOT, FLD_BIALLELIC, FLD_OTHER_REPORTED, FLD_SUBCLONAL_LIKELIHOOD, FLD_VARIANT_COPY_NUMBER, FLD_PURITY_ADJUSTED_VAF);
+    Set<String> PAVE_ONLY_FIELDS = Set.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
+    Set<String> SAGE_FIELDS =
+            Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FILTER_DIFF);
+
+    Set<String> ALL_FIELDS = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS, PURPLE_ONLY_FIELDS));
+    Set<String> FIELDS_UP_TO_PAVE = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS));
+
     @Test
     public void fullyMatchesSelf()
     {
@@ -100,7 +114,7 @@ public class SomaticVariantDataTest
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
         assertEquals(refVictim, mismatch.RefItem());
         assertEquals(newVictim, mismatch.NewItem());
-        assertEquals(18, mismatch.DiffValues().size());
+        assertDifferencesAreForFields(ALL_FIELDS, mismatch.DiffValues());
     }
 
     @Test
@@ -127,7 +141,7 @@ public class SomaticVariantDataTest
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
         assertEquals(refVictim, mismatch.RefItem());
         assertEquals(newVictim, mismatch.NewItem());
-        assertEquals(12, mismatch.DiffValues().size());
+        assertDifferencesAreForFields(FIELDS_UP_TO_PAVE, mismatch.DiffValues());
     }
 
     @Test
@@ -155,7 +169,7 @@ public class SomaticVariantDataTest
         assertEquals(MismatchType.REF_ONLY, mismatch.MismatchType());
         assertEquals(passVictim, mismatch.RefItem());
         assertEquals(filteredVictim, mismatch.NewItem());
-        assertEquals(7, mismatch.DiffValues().size());
+        assertDifferencesAreForFields(SAGE_FIELDS, mismatch.DiffValues());
 
         assertTrue(filteredVictim.matches(passVictim));
         var oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false);
@@ -163,11 +177,11 @@ public class SomaticVariantDataTest
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.MismatchType());
         assertEquals(filteredVictim, oppositeMismatch.RefItem());
         assertEquals(passVictim, oppositeMismatch.NewItem());
-        assertEquals(7, oppositeMismatch.DiffValues().size());
+        assertDifferencesAreForFields(SAGE_FIELDS, mismatch.DiffValues());
     }
 
     @Test
-    public void reportabilityLossHandledCorrectly()
+    public void reportabilityChangeHandledCorrectly()
     {
         var passVictim = TestSomaticVariantDataBuilder.create();
         var nonReportableVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
@@ -190,7 +204,7 @@ public class SomaticVariantDataTest
         assertEquals(MismatchType.REF_ONLY, mismatch.MismatchType());
         assertEquals(passVictim, mismatch.RefItem());
         assertEquals(nonReportableVictim, mismatch.NewItem());
-        assertEquals(18, mismatch.DiffValues().size());
+        assertDifferencesAreForFields(ALL_FIELDS, mismatch.DiffValues());
 
         assertTrue(nonReportableVictim.matches(passVictim));
         var oppositeMismatch = nonReportableVictim.findMismatch(passVictim, MatchLevel.REPORTABLE, diffThresholds, false);
@@ -198,7 +212,7 @@ public class SomaticVariantDataTest
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.MismatchType());
         assertEquals(nonReportableVictim, oppositeMismatch.RefItem());
         assertEquals(passVictim, oppositeMismatch.NewItem());
-        assertEquals(18, oppositeMismatch.DiffValues().size());
+        assertDifferencesAreForFields(ALL_FIELDS, mismatch.DiffValues());
     }
 
     @Test
@@ -280,7 +294,7 @@ public class SomaticVariantDataTest
         assertEquals(refVictim, detailedMismatch.RefItem());
         assertEquals(newVictim, detailedMismatch.NewItem());
         assertEquals(1, detailedMismatch.DiffValues().size());
-        assertEquals(field, detailedMismatch.DiffValues().get(0).split("\\(")[0]);
+        assertEquals(field, extractFieldNameFromDifference(detailedMismatch.DiffValues().get(0)));
 
         var reportedMismatch = refVictim.findMismatch(newVictim, MatchLevel.REPORTABLE, diffThresholds, false);
 
@@ -288,7 +302,20 @@ public class SomaticVariantDataTest
         assertEquals(refVictim, reportedMismatch.RefItem());
         assertEquals(newVictim, reportedMismatch.NewItem());
         assertEquals(1, reportedMismatch.DiffValues().size());
-        assertEquals(field, reportedMismatch.DiffValues().get(0).split("\\(")[0]);
+        assertEquals(field, extractFieldNameFromDifference(reportedMismatch.DiffValues().get(0)));
+    }
+
+    private static void assertDifferencesAreForFields(Set<String> expectedFields, List<String> differences)
+    {
+        assertEquals(expectedFields.size(), differences.size());
+        assertEquals(expectedFields, differences.stream()
+                .map(SomaticVariantDataTest::extractFieldNameFromDifference)
+                .collect(Collectors.toSet()));
+    }
+
+    private static String extractFieldNameFromDifference(String difference)
+    {
+        return difference.split("\\(")[0];
     }
 
     private static DiffThresholds createDefaultThresholds()
@@ -299,5 +326,10 @@ public class SomaticVariantDataTest
         var diffThresholds = new DiffThresholds();
         comparer.registerThresholds(diffThresholds);
         return diffThresholds;
+    }
+
+    private static Set<String> union(List<Set<String>> sets)
+    {
+        return sets.stream().flatMap(Collection::stream).collect(Collectors.toSet());
     }
 }
