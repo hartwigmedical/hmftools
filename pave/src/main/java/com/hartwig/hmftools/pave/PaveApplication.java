@@ -93,7 +93,7 @@ public class PaveApplication
 
         PV_LOGGER.info("sample({}) processing VCF file({})", mConfig.SampleId, mConfig.VcfFile);
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = chromosomeTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
         {

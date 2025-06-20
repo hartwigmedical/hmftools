@@ -18,8 +18,10 @@ import com.hartwig.hmftools.common.utils.config.ConfigItemType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class TaskExecutor
+public final class TaskExecutor
 {
+    private TaskExecutor() {}
+
     protected static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
 
     public static final String THREADS = "threads";
@@ -40,7 +42,7 @@ public class TaskExecutor
 
     public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
 
-    public static boolean executeTasks(final List<Callable> tasks, int threadCount)
+    public static <T> boolean executeTasks(final List<Callable<T>> tasks, int threadCount)
     {
         if(threadCount <= 1)
         {

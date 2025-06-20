@@ -6,8 +6,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public class LilacConstants
+public final class LilacConstants
 {
+    private LilacConstants() {}
+
     public static final String APP_NAME = "Lilac";
 
     public static final byte DEFAULT_MIN_BASE_QUAL = 30;
@@ -81,17 +83,17 @@ public class LilacConstants
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
     // output file IDs
-    public static String LILAC_FILE_ID = ".lilac.";
+    public static final String LILAC_FILE_ID = ".lilac.";
 
-    public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
-    public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
-    public static String LILAC_FILE_FRAGMENTS = "fragments.tsv";
-    public static String LILAC_FILE_READS = "reads.tsv";
+    public static final String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
+    public static final String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
+    public static final String LILAC_FILE_FRAGMENTS = "fragments.tsv";
+    public static final String LILAC_FILE_READS = "reads.tsv";
 
-    public static String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
-    public static String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
+    public static final String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
+    public static final String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
 
-    public static String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
-    public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
-    public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
+    public static final String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
+    public static final String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
+    public static final String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
 }

@@ -136,7 +136,7 @@ public class MissensePeptideScorer
                 }
             }
 
-            final List<Callable> callableList = geneTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = geneTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
@@ -152,7 +152,7 @@ public class MissensePeptideScorer
         NE_LOGGER.info("missense peptide generation complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private class GeneTask implements Callable
+    private class GeneTask implements Callable<Long>
     {
         public final List<String> GeneIds;
         public final List<String> Alleles;

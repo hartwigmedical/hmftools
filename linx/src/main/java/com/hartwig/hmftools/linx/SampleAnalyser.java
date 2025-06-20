@@ -59,7 +59,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
-public class SampleAnalyser implements Callable
+public class SampleAnalyser implements Callable<Long>
 {
     private final int mId;
     private final LinxConfig mConfig;

@@ -138,7 +138,7 @@ public class PeptideProteomeSimilarity
                     taskIndex = 0;
             }
 
-            final List<Callable> callableList = searchTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = searchTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -285,7 +285,7 @@ public class PeptideProteomeSimilarity
         }
     }
 
-    private class PeptideSearchTask implements Callable
+    private class PeptideSearchTask implements Callable<Long>
     {
         private final int mTaskId;
         private final Map<String,List<TranscriptAminoAcids>> mTransAminoAcidMap;

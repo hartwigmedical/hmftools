@@ -114,7 +114,7 @@ public class FusionCohort
 
         ISF_LOGGER.info("loading ({}) sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
 
-        final List<Callable> callableList = fusionTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = fusionTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(mConfig.Fusions.GenerateCohort)

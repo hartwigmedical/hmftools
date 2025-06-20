@@ -64,7 +64,7 @@ public class GenerateReferenceData
         ISF_LOGGER.info("generating expected transcript counts cache");
 
         final List<ChrExpectedCountsTask> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Long>> callableList = Lists.newArrayList();
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
@@ -82,7 +82,7 @@ public class GenerateReferenceData
         ISF_LOGGER.info("generating GC counts cache");
 
         final List<ExpectedGcRatiosGenerator> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Long>> callableList = Lists.newArrayList();
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {

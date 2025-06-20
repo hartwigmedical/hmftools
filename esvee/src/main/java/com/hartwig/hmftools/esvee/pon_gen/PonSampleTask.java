@@ -20,7 +20,7 @@ import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class PonSampleTask implements Callable
+public class PonSampleTask implements Callable<Long>
 {
     private final List<String> mSampleVcfFiles;
     private final PonConfig mConfig;

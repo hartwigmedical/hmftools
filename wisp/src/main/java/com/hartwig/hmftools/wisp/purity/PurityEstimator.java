@@ -88,7 +88,7 @@ public class PurityEstimator
 
             CT_LOGGER.debug("splitting {} patients across {} threads", mConfig.Samples.size(), purityCalcTasks.size());
 
-            List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
+            List<Callable<Long>> callableList = purityCalcTasks.stream().collect(Collectors.toList());
             if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             {
                 System.exit(1);
@@ -116,7 +116,7 @@ public class PurityEstimator
 
             if(plotTasks.size() > 1)
             {
-                final List<Callable> callableList = plotTasks.stream().collect(Collectors.toList());
+                final List<Callable<Long>> callableList = plotTasks.stream().collect(Collectors.toList());
                 if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
                 {
                     System.exit(1);
@@ -132,7 +132,7 @@ public class PurityEstimator
                 mConfig.Samples.size() > 1 ? format(", mins(%s)", runTimeMinsStr(startTimeMs)) : "");
     }
 
-    private class PurityTask implements Callable
+    private class PurityTask implements Callable<Long>
     {
         public final List<SampleData> Samples;
 
@@ -283,7 +283,7 @@ public class PurityEstimator
         }
     }
 
-    private class PlotTask implements Callable
+    private class PlotTask implements Callable<Long>
     {
         public final List<SampleData> Samples;
 

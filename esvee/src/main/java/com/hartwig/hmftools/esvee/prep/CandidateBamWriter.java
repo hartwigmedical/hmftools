@@ -125,7 +125,7 @@ public class CandidateBamWriter
             chromosomeTasks.add(chrTask);
         }
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = chromosomeTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
@@ -151,7 +151,7 @@ public class CandidateBamWriter
         }
     }
 
-    private class CandidateReadMatchTask implements Callable
+    private class CandidateReadMatchTask implements Callable<Long>
     {
         private final String mChromosome;
         private final SamReader mSamReader;

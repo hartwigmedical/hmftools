@@ -23,7 +23,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 
 import htsjdk.samtools.SAMException;
 
-public class ExpectedGcRatiosGenerator implements Callable
+public class ExpectedGcRatiosGenerator implements Callable<Long>
 {
     private final RefDataConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;

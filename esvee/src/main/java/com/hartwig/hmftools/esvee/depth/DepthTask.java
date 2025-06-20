@@ -41,7 +41,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class DepthTask implements Callable
+public class DepthTask implements Callable<Long>
 {
     private final DepthConfig mConfig;
     private final Map<String,Integer> mSampleVcfGenotypeIds;

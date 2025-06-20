@@ -67,7 +67,7 @@ public class LilacConfig
     public final String ResourceDir;
     public final String RefGenome;
     public final RefGenomeVersion RefGenVersion;
-    public final String SampleDataDir;
+    private final String SampleDataDir;
     public final String OutputDir;
 
     public final MhcClass ClassType;
@@ -102,7 +102,6 @@ public class LilacConfig
 
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";
-    public static final String RESOURCE_DIR_DESC = "Path to resource files";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
@@ -124,11 +123,11 @@ public class LilacConfig
     private static final String ACTUAL_ALLELES = "actual_alleles";
     private static final String RESTRICTED_ALLELES = "restricted_alleles";
     private static final String DEBUG_PHASING = "debug_phasing";
-    public static final String RUN_VALIDATION = "run_validation";
-    public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
-    public static final String FATAL_TOTAL_LOW_COVERAGE_POSITIONS = "fatal_total_low_coverage_positions";
-    public static final String LOG_PERF_CALCS = "log_perf";
-    public static final String STACK_SAMPLE_RATE = "stack_sample_rate";
+    private static final String RUN_VALIDATION = "run_validation";
+    private static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
+    private static final String FATAL_TOTAL_LOW_COVERAGE_POSITIONS = "fatal_total_low_coverage_positions";
+    private static final String LOG_PERF_CALCS = "log_perf";
+    private static final String STACK_SAMPLE_RATE = "stack_sample_rate";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);
 
@@ -240,7 +239,7 @@ public class LilacConfig
         return ReferenceBam.isEmpty() && !TumorBam.isEmpty();
     }
 
-    private String checkFileExists(final String filename)
+    private static String checkFileExists(final String filename)
     {
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
@@ -371,7 +370,7 @@ public class LilacConfig
         configBuilder.addConfigItem(MHC_CLASS, false, "MHC Class Type", MhcClass.CLASS_1.toString());
     }
 
-    private List<HlaAllele> parseAlleleList(final String allelesStr)
+    private static List<HlaAllele> parseAlleleList(final String allelesStr)
     {
         if(allelesStr == null || allelesStr.isEmpty())
         {
@@ -379,6 +378,6 @@ public class LilacConfig
         }
 
         String[] alleles = allelesStr.split(ITEM_DELIM, -1);
-        return Arrays.stream(alleles).map(x -> HlaAllele.fromString(x)).collect(Collectors.toList());
+        return Arrays.stream(alleles).map(HlaAllele::fromString).collect(Collectors.toList());
     }
 }

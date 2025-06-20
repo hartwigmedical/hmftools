@@ -22,7 +22,7 @@ import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 
-public class ComparTask implements Callable
+public class ComparTask implements Callable<Long>
 {
     private final int mTaskId;
     private final ComparConfig mConfig;

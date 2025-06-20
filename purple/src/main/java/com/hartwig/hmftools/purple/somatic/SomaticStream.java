@@ -211,7 +211,7 @@ public class SomaticStream
                     enrichers.get(taskIndex).addVariant(variant);
                 }
 
-                final List<Callable> callableList = enrichers.stream().collect(Collectors.toList());
+                final List<Callable<Long>> callableList = enrichers.stream().collect(Collectors.toList());
                 TaskExecutor.executeTasks(callableList, mConfig.Threads);
             }
             else

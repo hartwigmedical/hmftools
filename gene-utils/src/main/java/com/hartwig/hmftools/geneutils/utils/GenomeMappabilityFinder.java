@@ -163,7 +163,7 @@ public class GenomeMappabilityFinder
 
         List<RegionTask> regionTasks = regions.stream().map(x -> new RegionTask(x)).collect(Collectors.toList());
 
-        List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
+        List<Callable<Long>> callableList = regionTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mThreads))
             System.exit(1);
 
@@ -172,7 +172,7 @@ public class GenomeMappabilityFinder
         GU_LOGGER.info("Genome mappability analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private class RegionTask implements Callable
+    private class RegionTask implements Callable<Long>
     {
         private final ChrBaseRegion mRegion;
 

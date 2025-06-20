@@ -155,7 +155,7 @@ public class Isofox
         }
 
         final List<ChromosomeTaskExecutor> chrTasks = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Long>> callableList = Lists.newArrayList();
         final List<String> chromosomes = Lists.newArrayList();
 
         // process any enriched genes first, then add the rest in order of decreasing length
@@ -212,7 +212,7 @@ public class Isofox
         return true;
     }
 
-    private void processBamFragments(final List<ChromosomeTaskExecutor> chrTasks, final List<Callable> callableList)
+    private void processBamFragments(final List<ChromosomeTaskExecutor> chrTasks, final List<Callable<Long>> callableList)
     {
         FragmentTypeCounts totalFragmentCounts = new FragmentTypeCounts();
 
@@ -311,7 +311,7 @@ public class Isofox
     }
 
     private void applyGcAdjustments(
-            final List<ChromosomeTaskExecutor> chrTasks, final List<Callable> callableList, final GcRatioCounts actualGcCounts)
+            final List<ChromosomeTaskExecutor> chrTasks, final List<Callable<Long>> callableList, final GcRatioCounts actualGcCounts)
     {
         ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
 
@@ -373,7 +373,7 @@ public class Isofox
             fragSizeCalcs.add(fragSizeCalc);
         }
 
-        final List<Callable> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
         boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(!validExecution)
@@ -412,7 +412,7 @@ public class Isofox
         ISF_LOGGER.info("basic BAM read counts");
 
         final List<BamReadCounter> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Long>> callableList = Lists.newArrayList();
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {

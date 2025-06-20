@@ -194,7 +194,7 @@ public class RandomPeptideDistribution
 
         if(mConfig.Threads > 1)
         {
-            final List<Callable> callableList = alleleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = alleleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -237,7 +237,7 @@ public class RandomPeptideDistribution
 
         if(mConfig.Threads > 1)
         {
-            final List<Callable> callableList = alleleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = alleleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else

@@ -77,7 +77,7 @@ public class FragmentSizeDistribution
 
         List<ChromosomeTask> chrTasks = sampledChromosomes.stream().map(x -> new ChromosomeTask(x)).collect(Collectors.toList());
 
-        final List<Callable> callableList = chrTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = chrTasks.stream().collect(Collectors.toList());
         boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(!validExecution)
@@ -199,7 +199,7 @@ public class FragmentSizeDistribution
         }
     }
 
-    private class ChromosomeTask implements Callable
+    private class ChromosomeTask implements Callable<Long>
     {
         private final String mChromosome;
         private int mProcessedReads;

@@ -123,7 +123,7 @@ public class FileDbLoadChecker
             ++taskIndex;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = sampleTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mThreads);
 
         closeBufferedWriter(mWriter);
@@ -170,7 +170,7 @@ public class FileDbLoadChecker
         }
     }
 
-    public class SampleCheckerTask implements Callable
+    public class SampleCheckerTask implements Callable<Long>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;

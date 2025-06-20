@@ -62,7 +62,7 @@ public class NeoEpitopeFinder
 
         if(mConfig.Threads > 1)
         {
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else

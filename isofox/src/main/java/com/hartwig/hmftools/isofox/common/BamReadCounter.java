@@ -35,7 +35,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 // simple BAM read counter, used for experimental purposes at the moment
-public class BamReadCounter implements Callable
+public class BamReadCounter implements Callable<Long>
 {
     private final IsofoxConfig mConfig;
 

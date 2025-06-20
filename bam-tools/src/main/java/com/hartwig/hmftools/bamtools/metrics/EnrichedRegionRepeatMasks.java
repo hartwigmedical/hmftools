@@ -91,7 +91,7 @@ public class EnrichedRegionRepeatMasks
             ++taskIndex;
         }
 
-        final List<Callable> callableList = annotationTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = annotationTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mThreads))
             System.exit(1);
 
@@ -163,7 +163,7 @@ public class EnrichedRegionRepeatMasks
         return regions;
     }
 
-    private class AnnotationTask implements Callable
+    private class AnnotationTask implements Callable<Long>
     {
         private final int mTaskId;
         public final List<RegionData> Regions;
