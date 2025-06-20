@@ -13,6 +13,8 @@ import com.hartwig.hmftools.compar.ComparableItem;
 
 public record Mismatch(ComparableItem RefItem, ComparableItem NewItem, MismatchType MismatchType, List<String> DiffValues)
 {
+    // DiffValues is list of the form: field(refValue/otherValue)
+
     public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
