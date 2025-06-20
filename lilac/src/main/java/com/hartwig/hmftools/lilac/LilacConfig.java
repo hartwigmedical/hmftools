@@ -26,16 +26,15 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MAX_REF_FRAGMENTS;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_ID;
 
@@ -73,10 +72,9 @@ public class LilacConfig
 
     public final MhcClass ClassType;
 
-    public final int MinEvidence;
-    public final double MinNucleotideHighQualEvidenceFactor;
-    public final double MinNucleotideEvidenceFactor;
-    public final double MinAminoAcidEvidenceFactor;
+    public final double MinEvidenceFactor;
+    public final double MinHighQualEvidenceFactor;
+    public final int MinVafFilterDepth;
     public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
@@ -112,11 +110,10 @@ public class LilacConfig
 
     // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";
-    private static final String MIN_EVIDENCE = "min_evidence";
     private static final String MAX_REF_FRAGMENTS = "max_ref_fragments";
-    private static final String MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR = "min_nucleotide_high_qual_evidence_factor";
-    private static final String MIN_NUCLEOTIDE_EVIDENCE_FACTOR = "min_nucleotide_evidence_factor";
-    private static final String MIN_AMINO_ACID_EVIDENCE_FACTOR = "min_amino_acid_evidence_factor";
+    private static final String MIN_EVIDENCE_FACTOR = "min_evidence_factor";
+    private static final String MIN_HIGH_QUAL_EVIDENCE_FACTOR = "min_high_qual_evidence_factor";
+    private static final String EVIDENCE_VAF_FILTER_MIN_DEPTH = "vaf_min_depth";
     private static final String MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele";
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
     private static final String TOP_SCORE_THRESHOLD = "top_score_threshold";
@@ -131,7 +128,7 @@ public class LilacConfig
     public static final String FATAL_TOTAL_LOW_COVERAGE_POSITIONS = "fatal_total_low_coverage_positions";
     public static final String LOG_PERF_CALCS = "log_perf";
 
-    public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
+    public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);
 
     public LilacConfig(final ConfigBuilder configBuilder)
     {
@@ -159,9 +156,13 @@ public class LilacConfig
             RnaBam = configBuilder.getValue(RNA_BAM, "");
 
             if(configBuilder.hasValue(OUTPUT_DIR))
+            {
                 OutputDir = parseOutputDir(configBuilder);
+            }
             else
+            {
                 OutputDir = pathFromFile(ReferenceBam);
+            }
         }
 
         if(configBuilder.hasValue(SOMATIC_VCF) && configBuilder.hasValue(GENE_COPY_NUMBER))
@@ -197,13 +198,14 @@ public class LilacConfig
         ClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
 
         if(configBuilder.hasValue(MIN_BASE_QUAL))
+        {
             LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte) configBuilder.getInteger(MIN_BASE_QUAL);
+        }
 
-        MinEvidence = configBuilder.getInteger(MIN_EVIDENCE);
+        MinEvidenceFactor = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         MaxRefFragments = configBuilder.getInteger(MAX_REF_FRAGMENTS);
-        MinNucleotideHighQualEvidenceFactor = configBuilder.getDecimal(MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
-        MinNucleotideEvidenceFactor = configBuilder.getDecimal(MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
-        MinAminoAcidEvidenceFactor = configBuilder.getDecimal(MIN_AMINO_ACID_EVIDENCE_FACTOR);
+        MinHighQualEvidenceFactor = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        MinVafFilterDepth = configBuilder.getInteger(EVIDENCE_VAF_FILTER_MIN_DEPTH);
         HlaYPercentThreshold = configBuilder.getDecimal(HLA_Y_THRESHOLD);
 
         MinFragmentsPerAllele = configBuilder.getInteger(MIN_FRAGMENTS_PER_ALLELE);
@@ -230,14 +232,20 @@ public class LilacConfig
         }
     }
 
-    public boolean tumorOnly() { return ReferenceBam.isEmpty() && !TumorBam.isEmpty(); }
+    public boolean tumorOnly()
+    {
+        return ReferenceBam.isEmpty() && !TumorBam.isEmpty();
+    }
 
     private String checkFileExists(final String filename)
     {
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String formFileId(final String fileId) { return OutputDir + Sample + LILAC_FILE_ID + fileId; }
+    public String formFileId(final String fileId)
+    {
+        return OutputDir + Sample + LILAC_FILE_ID + fileId;
+    }
 
     public void logParams()
     {
@@ -280,10 +288,9 @@ public class LilacConfig
 
         ClassType = MhcClass.CLASS_1;
 
-        MinEvidence = DEFAULT_MIN_EVIDENCE;
-        MinNucleotideHighQualEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
-        MinNucleotideEvidenceFactor = DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
-        MinAminoAcidEvidenceFactor = DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR;
+        MinEvidenceFactor = DEFAULT_MIN_EVIDENCE_FACTOR;
+        MinHighQualEvidenceFactor = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
+        MinVafFilterDepth = DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH;
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
 
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
@@ -317,32 +324,31 @@ public class LilacConfig
 
         registerCommonConfig(configBuilder);
 
-        configBuilder.addInteger(MIN_BASE_QUAL,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
-        configBuilder.addInteger(MIN_EVIDENCE, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
+        configBuilder.addInteger(MIN_BASE_QUAL, "Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
+        configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE_FACTOR);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
-        configBuilder.addDecimal(MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor per nucleotide position", DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
-        configBuilder.addDecimal(MIN_NUCLEOTIDE_EVIDENCE_FACTOR, "Min fragment evidence factor per nucleotide position", DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
-        configBuilder.addDecimal(MIN_AMINO_ACID_EVIDENCE_FACTOR, "Min fragment evidence factor per amino acid position", DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR);
-        configBuilder.addInteger(MIN_FRAGMENTS_PER_ALLELE,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
-        configBuilder.addInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE,"Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
+        configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        configBuilder.addInteger(EVIDENCE_VAF_FILTER_MIN_DEPTH, "Min fragment evidence depth", DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH);
+        configBuilder.addInteger(MIN_FRAGMENTS_PER_ALLELE, "Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
+        configBuilder.addInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE, "Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
 
-        configBuilder.addInteger(FATAL_TOTAL_LOW_COVERAGE_POSITIONS,"Fatal total low coverage positions across all HLA loci", DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS);
+        configBuilder.addInteger(FATAL_TOTAL_LOW_COVERAGE_POSITIONS, "Fatal total low coverage positions across all HLA loci", DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS);
         configBuilder.addDecimal(HLA_Y_THRESHOLD, "HLA-Y percent threshold", DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
 
         configBuilder.addDecimal(TOP_SCORE_THRESHOLD, "Max distance from top score", DEFAULT_TOP_SCORE_THRESHOLD);
-        configBuilder.addConfigItem(ACTUAL_ALLELES,"Comma separated known actual alleles for the sample");
-        configBuilder.addConfigItem(RESTRICTED_ALLELES,"Comma separated restricted analysis allele list");
+        configBuilder.addConfigItem(ACTUAL_ALLELES, "Comma separated known actual alleles for the sample");
+        configBuilder.addConfigItem(RESTRICTED_ALLELES, "Comma separated restricted analysis allele list");
 
         configBuilder.addInteger(
                 MAX_ELIM_CANDIDATES,
                 "Revert to only common alleles if candidate allele count exceeds this after elimination", 0);
 
-        configBuilder.addPath(GENE_COPY_NUMBER, false,"Path to gene copy number file");
+        configBuilder.addPath(GENE_COPY_NUMBER, false, "Path to gene copy number file");
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(SOMATIC_VCF, false,"Path to sample Purple somatic VCF");
+        configBuilder.addPath(SOMATIC_VCF, false, "Path to sample Purple somatic VCF");
         configBuilder.addFlag(DEBUG_PHASING, "More detailed logging of phasing");
         configBuilder.addFlag(RUN_VALIDATION, "Run validation checks");
-        configBuilder.addFlag(LOG_PERF_CALCS,"Log performance metrics");
+        configBuilder.addFlag(LOG_PERF_CALCS, "Log performance metrics");
         ResultsWriter.registerConfig(configBuilder);
 
         BamUtils.addValidationStringencyOption(configBuilder);
@@ -363,7 +369,9 @@ public class LilacConfig
     private List<HlaAllele> parseAlleleList(final String allelesStr)
     {
         if(allelesStr == null || allelesStr.isEmpty())
+        {
             return Lists.newArrayList();
+        }
 
         String[] alleles = allelesStr.split(ITEM_DELIM, -1);
         return Arrays.stream(alleles).map(x -> HlaAllele.fromString(x)).collect(Collectors.toList());

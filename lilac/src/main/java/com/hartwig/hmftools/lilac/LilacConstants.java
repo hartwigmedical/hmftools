@@ -15,15 +15,13 @@ public class LilacConstants
 
     public static final double LOW_BASE_TRIM_PERC = 0.35;
     public static final double MAX_LOW_BASE_PERC = 0.5;
-    public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
     public static final double DEFAULT_TOP_SCORE_THRESHOLD = 0.005;
 
-    public static final double DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR = 0.000375;
-    public static final double DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR = 0.00075;
-    public static final double DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR = 0.004;
-
+    public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.008;
+    public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.004;
+    public static final int DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH = 10;
     public static final int DEFAULT_MAX_REF_FRAGMENTS = 1000;
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;
@@ -73,7 +71,7 @@ public class LilacConstants
             "A*31:135", "A*33:191", "A*02:783", "B*07:282",
 
             // Similar to HLA-Y
-            "A*30:205", "A*30:207", "A*30:225", "A*30:228","A*01:81","A*01:237");
+            "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237");
 
     // common INDEL associated with allele C*04:09N
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";

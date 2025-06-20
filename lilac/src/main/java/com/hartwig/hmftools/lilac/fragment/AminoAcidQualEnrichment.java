@@ -13,7 +13,7 @@ import com.hartwig.hmftools.lilac.utils.AminoAcid;
 
 public final class AminoAcidQualEnrichment
 {
-    public static List<Fragment> qualityFilterAminoAcidFragments(final LilacConfig config, final List<Fragment> fragments, double minEvidence)
+    public static List<Fragment> qualityFilterAminoAcidFragments(final LilacConfig config, final List<Fragment> fragments)
     {
         // only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
         List<Fragment> qualityFilteredAminoAcidFragments = fragments.stream()
@@ -21,7 +21,8 @@ public final class AminoAcidQualEnrichment
 
         qualityFilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
 
-        SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, qualityFilteredAminoAcidFragments);
+        SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(
+                config.MinVafFilterDepth, config.MinEvidenceFactor, qualityFilteredAminoAcidFragments);
 
         List<Fragment> unfilteredAminoAcidFragments = fragments.stream()
                 .filter(x -> x.hasNucleotides())
@@ -41,11 +42,13 @@ public final class AminoAcidQualEnrichment
                 .mapToInt(AminoAcid::locus)
                 .forEach(locusIndex ->
                 {
-                    List<String> allowed = count.getMinCountOrVafSequences(locusIndex, config.MinAminoAcidEvidenceFactor);
+                    List<String> allowed = count.getMinEvidenceSequences(locusIndex, config.MinEvidenceFactor);
                     String actual = fragment.aminoAcid(locusIndex);
 
                     if(allowed.contains(actual))
+                    {
                         filteredIntersect.add(locusIndex);
+                    }
                 });
 
         fragment.filterAminoAcidsOnLoci(filteredIntersect);
