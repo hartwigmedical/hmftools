@@ -81,7 +81,7 @@ public class SomaticVariantComparer implements ItemComparer
     {
         boolean hasRefItems = refVariants != null;
         boolean hasNewItems = newVariants != null;
-        final List<String> emptyDiffs = Lists.newArrayList();
+        final List<String> emptyDiffs = List.of();
 
         if(!hasRefItems || !hasNewItems)
         {
@@ -102,7 +102,7 @@ public class SomaticVariantComparer implements ItemComparer
 
         final Map<String,List<SomaticVariantData>> refVariantsMap = buildVariantMap(refVariants);
         final Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(newVariants);
-        final List<SomaticVariantData> emptyVariants = Lists.newArrayList();
+        final List<SomaticVariantData> emptyVariants = List.of();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
