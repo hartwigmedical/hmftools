@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.rna.TranscriptExpressionFile;
 import com.hartwig.hmftools.neo.bind.BindData;
 
-public class NeoScorerTask implements Callable
+public class NeoScorerTask implements Callable<Long>
 {
     private final int mThreadId;
     private final List<SampleData> mSamples;

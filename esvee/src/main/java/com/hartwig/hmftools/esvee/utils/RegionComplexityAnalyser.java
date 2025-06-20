@@ -107,7 +107,7 @@ public class RegionComplexityAnalyser
                 taskIndex = 0;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = sampleTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mThreads))
             System.exit(1);
 
@@ -124,7 +124,7 @@ public class RegionComplexityAnalyser
         SV_LOGGER.info("Region complexity analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Long>
     {
         private final List<String> mSampleIds;
         private final WindowDataMap mWindowDataMap;

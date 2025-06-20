@@ -169,7 +169,7 @@ public class BamChecker
             sortTasks.add(new BamSortTask(unsortedBamFilename, sortedBamFilename));
         }
 
-        List<Callable> threadTasks = sortTasks.stream().collect(Collectors.toList());
+        List<Callable<Long>> threadTasks = sortTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(threadTasks, mConfig.Threads))
         {
@@ -211,7 +211,7 @@ public class BamChecker
         }
     }
 
-    private class BamSortTask implements Callable
+    private class BamSortTask implements Callable<Long>
     {
         private final String mInputBam;
         private final String mOutputBam;

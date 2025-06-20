@@ -66,7 +66,7 @@ public class ResultsWriter
         SUMMARY,
         FRAGMENTS,
         READS,
-        REF_COUNTS;
+        REF_COUNTS
     }
 
     public ResultsWriter(final LilacConfig config, final ConfigBuilder configBuilder)
@@ -79,7 +79,7 @@ public class ResultsWriter
 
         if(writeTypesStr.equals(WRITE_TYPES_ALL))
         {
-            Arrays.stream(WriteType.values()).forEach(x -> mWriteTypes.add(x));
+            Arrays.stream(WriteType.values()).forEach(mWriteTypes::add);
         }
         else
         {
@@ -135,7 +135,7 @@ public class ResultsWriter
         }
     }
 
-    public void writeReferenceFragments(final List<ComplexCoverage> rankedComplexes, final List<Fragment> refNucleotideFrags,
+    public void writeReferenceFragments(final List<ComplexCoverage> rankedComplexes, final Iterable<Fragment> refNucleotideFrags,
             final List<FragmentAlleles> refFragAlleles)
     {
         if(!mWriteTypes.contains(WriteType.FRAGMENTS))
@@ -190,7 +190,7 @@ public class ResultsWriter
         }
     }
 
-    public void writeFragments(final FragmentSource source, final List<Fragment> fragments)
+    public void writeFragments(final FragmentSource source, final Iterable<Fragment> fragments)
     {
         if(mFragmentWriter == null)
             return;
@@ -200,7 +200,7 @@ public class ResultsWriter
             for(Fragment fragment : fragments)
             {
                 StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
-                fragment.genes().forEach(x -> genesStr.add(x));
+                fragment.genes().forEach(genesStr::add);
 
                 mFragmentWriter.write(String.format("%s\t%s\t%s\t%s",
                         source.toString(), fragment.id(), fragment.readInfo(), genesStr));

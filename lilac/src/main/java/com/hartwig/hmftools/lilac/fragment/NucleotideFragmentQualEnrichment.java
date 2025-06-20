@@ -14,6 +14,8 @@ import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
 public final class NucleotideFragmentQualEnrichment
 {
+    private NucleotideFragmentQualEnrichment() {}
+
     public static List<Fragment> qualityFilterFragments(int minEvidenceDepth, double minEvidenceFactor, double minHighQualEvidenceFactor,
             final List<Fragment> fragments, final List<Fragment> highQualFrags)
     {

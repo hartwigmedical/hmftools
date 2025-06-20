@@ -60,7 +60,7 @@ public class SnvLiftover
 
         if(mThreads > 1)
         {
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mThreads);
         }
         else

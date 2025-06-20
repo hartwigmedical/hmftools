@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.misc;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import java.util.Map;
@@ -126,7 +126,7 @@ public class QualityControlTest
         assertEquals(10, qc.UnusedAminoAcidMaxFrags);
     }
 
-    private HlaSequenceLoci createSequenceLoci(final String allele, final String sequenceStr)
+    private static HlaSequenceLoci createSequenceLoci(final String allele, final String sequenceStr)
     {
         HlaSequence sequence = new HlaSequence(HlaAllele.fromString(allele), sequenceStr);
         return HlaSequenceLoci.create(sequence.Allele, sequence.getRawSequence(), sequence.getRawSequence());

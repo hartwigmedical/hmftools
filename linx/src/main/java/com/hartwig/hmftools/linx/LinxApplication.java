@@ -132,7 +132,7 @@ public class LinxApplication
                 sampleAnalysers.get(i).setSampleIds(saSampleLists.get(i));
             }
 
-            final List<Callable> callableList = sampleAnalysers.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = sampleAnalysers.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else

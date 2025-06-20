@@ -133,7 +133,7 @@ public class ProbeFinder
                 }
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
@@ -149,7 +149,7 @@ public class ProbeFinder
         CT_LOGGER.info("Probe variation selection complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Long>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;

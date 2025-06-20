@@ -13,22 +13,23 @@ import com.hartwig.hmftools.lilac.utils.AminoAcid;
 
 public final class AminoAcidQualEnrichment
 {
-    public static List<Fragment> qualityFilterAminoAcidFragments(final LilacConfig config, final List<Fragment> fragments)
+    private AminoAcidQualEnrichment() {}
+
+    public static List<Fragment> qualityFilterAminoAcidFragments(final LilacConfig config, final Collection<Fragment> fragments)
     {
         // only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
         List<Fragment> qualityFilteredAminoAcidFragments = fragments.stream()
-                .map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
+                .map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
 
-        qualityFilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
+        qualityFilteredAminoAcidFragments.forEach(Fragment::buildAminoAcids);
 
-        SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(
-                config.MinVafFilterDepth, config.MinEvidenceFactor, qualityFilteredAminoAcidFragments);
+        SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(config.MinVafFilterDepth, config.MinEvidenceFactor, qualityFilteredAminoAcidFragments);
 
         List<Fragment> unfilteredAminoAcidFragments = fragments.stream()
-                .filter(x -> x.hasNucleotides())
-                .map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
+                .filter(Fragment::hasNucleotides)
+                .map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
 
-        unfilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
+        unfilteredAminoAcidFragments.forEach(Fragment::buildAminoAcids);
 
         unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(config, x, highQualityAminoAcidCounts));
 

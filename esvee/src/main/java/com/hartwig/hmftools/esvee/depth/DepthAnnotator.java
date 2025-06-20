@@ -154,7 +154,7 @@ public class DepthAnnotator
             depthTasks.add(depthTask);
         }
 
-        final List<Callable> callableList = depthTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = depthTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 

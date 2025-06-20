@@ -125,7 +125,7 @@ public class CuppaDataPrep
             sampleTasks.add(new SamplePrepTask(sampleIndex, mConfig, categoryPrep, featureBySampleMatrix));
         }
 
-        List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
+        List<Callable<Long>> callableTasks = sampleTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
 
         DataItemMatrix matrix = new DataItemMatrix(mConfig.SampleIds, featureBySampleMatrix);

@@ -110,7 +110,7 @@ public class PonBuilder
                 taskIndex = 0;
         }
 
-        List<Callable> callableList = ponTasks.stream().collect(Collectors.toList());
+        List<Callable<Long>> callableList = ponTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, callableList.size()))
             System.exit(1);

@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jetbrains.annotations.Nullable;
 
-public class SamplePrepTask implements Callable
+public class SamplePrepTask implements Callable<Long>
 {
     private final PrepConfig mConfig;
     private final int mSampleIndex;

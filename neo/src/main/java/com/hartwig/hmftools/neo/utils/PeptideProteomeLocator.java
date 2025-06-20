@@ -112,7 +112,7 @@ public class PeptideProteomeLocator
                     taskIndex = 0;
             }
 
-            final List<Callable> callableList = searchTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = searchTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -173,7 +173,7 @@ public class PeptideProteomeLocator
         }
     }
 
-    private class PeptideSearchTask implements Callable
+    private class PeptideSearchTask implements Callable<Long>
     {
         private final int mTaskId;
         private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;

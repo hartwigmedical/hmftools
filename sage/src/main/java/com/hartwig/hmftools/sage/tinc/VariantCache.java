@@ -146,7 +146,7 @@ public class VariantCache
 
         LOGGER.debug("loading unfiltered VCF file({})", mConfig.InputVcf);
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = chromosomeTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
         {
@@ -246,7 +246,7 @@ public class VariantCache
         }
     }
 
-    public class ChromosomeTask implements Callable
+    public class ChromosomeTask implements Callable<Long>
     {
         private final HumanChromosome mChromosome;
         private final String mChromosomeStr;

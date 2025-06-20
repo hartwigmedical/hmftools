@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLo
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -217,7 +218,7 @@ public class LilacApplication
         geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaB()));
         geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaC()));
 
-        List<Callable> callableList = Lists.newArrayList(geneTasks);
+        List<Callable<Long>> callableList = Lists.newArrayList(geneTasks);
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
@@ -431,7 +432,7 @@ public class LilacApplication
         StringJoiner totalCoverages = new StringJoiner(",");
         winningRefCoverage.getAlleleCoverage().forEach(x -> totalCoverages.add(format("%.0f",x.TotalCoverage)));
 
-        double scoreMargin = 0;
+        double scoreMargin = 0.0;
         StringJoiner nextSolutionInfo = new StringJoiner(ITEM_DELIM);
 
         if(mRankedComplexes.size() > 1)
@@ -514,7 +515,7 @@ public class LilacApplication
         }
 
         List<FragmentAlleles> calcRefFragAlleles = Lists.newArrayList();
-        int nthElement = (int)floor(mRefFragAlleles.size() / (double)mConfig.MaxRefFragments);
+        int nthElement = (int) floor(mRefFragAlleles.size() / (double) mConfig.MaxRefFragments);
 
         int counter = 0;
         for(FragmentAlleles fragmentAllele : mRefFragAlleles)
@@ -535,7 +536,8 @@ public class LilacApplication
         return calcRefFragAlleles;
     }
 
-    public void extractTumorResults(final List<HlaAllele> winningAlleles, final ComplexCoverage winningRefCoverage,
+    private void extractTumorResults(
+            final List<HlaAllele> winningAlleles, final ComplexCoverage winningRefCoverage,
             final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
     {
         if(mConfig.TumorBam.isEmpty())
@@ -603,14 +605,16 @@ public class LilacApplication
         }
     }
 
-    public void extractRnaCoverage(final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+    private void extractRnaCoverage(
+            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
             final List<HlaSequenceLoci> winningNucSequences)
     {
-        mRnaCoverage = LilacAppendRna.extractRnaCoverage(mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory,
-                NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper, winningAlleles, winningSequences, winningNucSequences);
+        mRnaCoverage = LilacAppendRna.extractRnaCoverage(
+                mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper,
+                winningAlleles, winningSequences, winningNucSequences);
     }
 
-    public void writeFileOutputs()
+    private void writeFileOutputs()
     {
         mSummaryMetrics.log(mConfig.Sample);
 
@@ -623,7 +627,7 @@ public class LilacApplication
         mResultsWriter.writeReferenceFragments(mRankedComplexes, mRefNucleotideFrags, mRefFragAlleles);
     }
 
-    private boolean validateFragments(final List<Fragment> fragments)
+    private boolean validateFragments(final Collection<Fragment> fragments)
     {
         if(!mConfig.RunValidation)
             return true;

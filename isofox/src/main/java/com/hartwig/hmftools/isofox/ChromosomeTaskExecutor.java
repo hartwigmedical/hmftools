@@ -50,7 +50,7 @@ import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
-public class ChromosomeTaskExecutor implements Callable
+public class ChromosomeTaskExecutor implements Callable<Long>
 {
     private final String mChromosome;
     private final IsofoxConfig mConfig;

@@ -44,7 +44,7 @@ import htsjdk.samtools.SamReaderFactory;
 // calculate fragment length distribution for a sample
 // this can be done either independently from fragment counting or lengths can be registering during that process
 
-public class FragmentSizeCalcs implements Callable
+public class FragmentSizeCalcs implements Callable<Long>
 {
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;

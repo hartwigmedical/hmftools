@@ -216,7 +216,7 @@ public class SageAppendApplication
                         i, region, regionVariants, mConfig, mRefGenome, recalibrationMap, mFragmentLengths, msiJitterCalcs));
             }
 
-            final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = regionTasks.stream().collect(Collectors.toList());
             if(!TaskExecutor.executeTasks(callableList, mConfig.Common.Threads))
             {
                 System.exit(1);

@@ -131,7 +131,7 @@ public class RnaHealthChecker
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Long>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mThreads);
         }
         else
@@ -147,7 +147,7 @@ public class RnaHealthChecker
         SG_LOGGER.info("RNA Health-Checker complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Long>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;

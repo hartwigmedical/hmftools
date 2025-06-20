@@ -69,7 +69,7 @@ import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 import org.jooq.Record;
 import org.jooq.Result;
 
-public class SampleLoaderTask implements Callable
+public class SampleLoaderTask implements Callable<Long>
 {
     private final int mTaskId;
     private final DataLoaderConfig mConfig;
