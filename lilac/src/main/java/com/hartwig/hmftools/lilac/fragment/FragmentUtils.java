@@ -111,7 +111,7 @@ public class FragmentUtils
         String second = bases.get(1);
         String third = bases.get(2);
 
-        if(first == DEL_STR && second == DEL_STR && third == DEL_STR)
+        if(first.equals(DEL_STR) && second.equals(DEL_STR) && third.equals(DEL_STR))
             return DEL_STR;
 
         return Codons.aminoAcidFromBases(first + second + third);

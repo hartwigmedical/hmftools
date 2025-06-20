@@ -15,15 +15,13 @@ public class LilacConstants
 
     public static final double LOW_BASE_TRIM_PERC = 0.35;
     public static final double MAX_LOW_BASE_PERC = 0.5;
-    public static final int DEFAULT_MIN_EVIDENCE = 2;
+    public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.008;
+    public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.004;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
     public static final double DEFAULT_TOP_SCORE_THRESHOLD = 0.005;
 
-    public static final double DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR = 0.000375;
-    public static final double DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR = 0.00075;
-    public static final double DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR = 0.004;
-
+    public static final int DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH = 10;
     public static final int DEFAULT_MAX_REF_FRAGMENTS = 1000;
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;

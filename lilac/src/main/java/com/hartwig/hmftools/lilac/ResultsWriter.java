@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
-import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_AA;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_FRAGS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_NUC;
+import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_READS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SOMATIC_VCF;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
@@ -135,8 +135,8 @@ public class ResultsWriter
         }
     }
 
-    public void writeReferenceFragments(
-            final List<ComplexCoverage> rankedComplexes, final List<Fragment> refNucleotideFrags, final List<FragmentAlleles> refFragAlleles)
+    public void writeReferenceFragments(final List<ComplexCoverage> rankedComplexes, final List<Fragment> refNucleotideFrags,
+            final List<FragmentAlleles> refFragAlleles)
     {
         if(!mWriteTypes.contains(WriteType.FRAGMENTS))
             return;
@@ -146,7 +146,7 @@ public class ResultsWriter
         writeFragments(mConfig.tumorOnly() ? TUMOR : REFERENCE, refNucleotideFrags);
     }
 
-    public void writeFailedSampleFileOutputs(final Map<String,int[]> geneBaseDepth, int medianBaseQuality)
+    public void writeFailedSampleFileOutputs(final Map<String, int[]> geneBaseDepth)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -161,7 +161,7 @@ public class ResultsWriter
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
         LilacQC summaryMetrics = new LilacQC(
-                0, "", 0, null,
+                0, "", (byte) 0, null,
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
 
         SolutionSummary solutionSummary = new SolutionSummary(
@@ -239,7 +239,7 @@ public class ResultsWriter
 
     public void writeVariant(final VariantContext context, final List<HlaAllele> alleles)
     {
-        if(mConfig.OutputDir.isEmpty() || context != null)
+        if(mConfig.OutputDir.isEmpty() || context == null)
             return;
 
         if(mVcfWriter == null)

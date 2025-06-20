@@ -22,7 +22,6 @@ public class GeneTask implements Callable
     private final ReferenceData mRefData;
     private final AminoAcidFragmentPipeline mAminoAcidPipeline;
     private final Candidates mCandidateFactory;
-    private final double mMinEvidence;
 
     // gene specific information
     private final HlaContext mHlaContext;
@@ -39,7 +38,6 @@ public class GeneTask implements Callable
         mRefData = referenceData;
         mAminoAcidPipeline = aminoAcidPipeline;
         mCandidateFactory = candidateFactory;
-        mMinEvidence = aminoAcidPipeline.minEvidence();
 
         mHlaContext = hlaContext;
 
@@ -58,7 +56,8 @@ public class GeneTask implements Callable
         List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
 
         // determine phasing of amino acids
-        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig, mMinEvidence);
+        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(
+                mConfig, mConfig.MinEvidenceFactor, mConfig.MinVafFilterDepth);
         mPhasedEvidence.addAll(phasedEvidenceFactory.evidence(mHlaContext, mCandidateFrags));
 
         // validate phasing against expected sequences
