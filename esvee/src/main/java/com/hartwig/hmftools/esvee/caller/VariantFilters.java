@@ -413,11 +413,7 @@ public class VariantFilters
                 if(breakend.sv().filters().contains(INV_SHORT_ISOLATED))
                     continue;
 
-                if(breakend.sv().type() != INV || breakend.sv().svLength() > INV_ADJACENT_LENGTH)
-                    continue;
-
-                // finally check that the breakend isn't in a chain with other passing variants and low UFP evidence
-                if(breakend.inChainedAssembly() && breakend.sv().maxUniqueFragmentPositions() >= INV_ADJACENT_MIN_UPS)
+                if(!isCandidateIsolatedInv(breakend.sv()))
                     continue;
 
                 // search forwards and backwards for an adjacent non-artefact breakend
@@ -456,12 +452,22 @@ public class VariantFilters
         }
     }
 
+    private static boolean isCandidateIsolatedInv(final Variant var)
+    {
+        // a short INV which either isn't in a chain or has low UFP evidence
+        return var.type() == INV && var.svLength() <= INV_ADJACENT_LENGTH
+            && (!var.inChainedAssembly() || var.maxUniqueFragmentPositions() < INV_ADJACENT_MIN_UPS);
+    }
+
     private static boolean hasAdjacentNonArtefact(final Breakend breakend, final Breakend otherBreakend)
     {
         if(otherBreakend == breakend.otherBreakend())
             return false;
 
         if(breakend.Orient == otherBreakend.Orient) // must be facing away
+            return false;
+
+        if(isCandidateIsolatedInv(otherBreakend.sv()))
             return false;
 
         // skip if the next breakend is also an artefact (including PON)

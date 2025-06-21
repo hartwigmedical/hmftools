@@ -273,17 +273,28 @@ public class FiltersTest
                 "04", CHR_1, CHR_1, 2000, 2050, ORIENT_FWD, ORIENT_FWD, "",
                 commonAttributes, null, Collections.emptyMap());
 
-        // lastly adjacent to another breakend
+        commonAttributes = Maps.newHashMap();
+
+        // adjacent to another non-INV artefact breakend
         Variant inv5 = createSv(
-                "06", CHR_1, CHR_1, 4000, 4050, ORIENT_FWD, ORIENT_FWD, "",
+                "05", CHR_1, CHR_1, 4000, 4050, ORIENT_REV, ORIENT_REV, "",
                 commonAttributes, null, Collections.emptyMap());
 
         Variant var = createSv(
-                "07", CHR_1, CHR_1, 4100, 10000, ORIENT_FWD, ORIENT_REV, "",
+                "00", CHR_1, CHR_1, 4100, 10000, ORIENT_FWD, ORIENT_REV, "",
+                commonAttributes, null, Collections.emptyMap());
+
+        // 2 adjacent INVs are both marked as isolated
+        Variant inv6 = createSv(
+                "06", CHR_1, CHR_1, 5000, 5050, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, null, Collections.emptyMap());
+
+        Variant inv7 = createSv(
+                "07", CHR_1, CHR_1, 5100, 5150, ORIENT_FWD, ORIENT_FWD, "",
                 commonAttributes, null, Collections.emptyMap());
 
         Map<String,List<Breakend>> chrBreakendMap = Maps.newHashMap();
-        List<Variant> variants = Lists.newArrayList(inv1, inv2, inv3, inv4, inv5, inv5, var);
+        List<Variant> variants = Lists.newArrayList(inv1, inv2, inv3, inv4, inv5, var, inv6, inv7);
 
         buildBreakendMap(variants, chrBreakendMap);
 
@@ -296,6 +307,9 @@ public class FiltersTest
         assertFalse(inv4.filters().contains(FilterType.INV_SHORT_ISOLATED));
         assertFalse(inv5.filters().contains(FilterType.INV_SHORT_ISOLATED));
         assertFalse(var.filters().contains(FilterType.INV_SHORT_ISOLATED));
+
+        assertTrue(inv6.filters().contains(FilterType.INV_SHORT_ISOLATED));
+        assertTrue(inv7.filters().contains(FilterType.INV_SHORT_ISOLATED));
     }
 
     @Test
