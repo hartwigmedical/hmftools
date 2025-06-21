@@ -140,6 +140,7 @@ public class ReduxConfig
     private static final String SKIP_FULL_UNMAPPED_READS = "skip_fully_unmapped";
     private static final String SKIP_UNMAPPING = "skip_unmapping";
     private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
+    private static final String UNMAP_MITOCHONDRIAL = "unmap_mt";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -228,7 +229,9 @@ public class ReduxConfig
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
             UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS_FILE));
-            UnmapRegions.addMitochondrialRegion(RefGenVersion);
+
+            if(configBuilder.hasFlag(UNMAP_MITOCHONDRIAL))
+                UnmapRegions.addMitochondrialRegion(RefGenVersion);
         }
         else
         {
@@ -344,6 +347,7 @@ public class ReduxConfig
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
         configBuilder.addFlag(SKIP_FULL_UNMAPPED_READS, "Skip processing existing fully unmapped reads");
         configBuilder.addFlag(SKIP_UNMAPPING, "Skip unmapping routine, including excluded regions");
+        configBuilder.addFlag(UNMAP_MITOCHONDRIAL, "Unmap mitochondrial reads");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
