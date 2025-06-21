@@ -20,6 +20,7 @@ public enum FilterType
     SGL("sgl", "SGLs filtered entirely", false),
     INV_SHORT_LOW_VAF_HOM("invShortLowVafHom", "Short (<3K) low-VAF INV artefacts with homology", false),
     INV_SHORT_FRAG_LOW_VAF("invShortFragLowVaf", "Short (<300b) low-VAF INV artefacts", false),
+    INV_SHORT_ISOLATED("invShortIsolated", "Short (<100b) isolated INV artefacts", false),
     DEL_SHORT_LOW_VAF("delShortLowVaf", "Short low-VAF DEL artefacts with homology", false),
     PON("PON", "Found in panel of normals", true);
 

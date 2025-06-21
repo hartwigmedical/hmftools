@@ -58,6 +58,7 @@ public class CallerApplication
     private final HotspotCache mHotspotCache;
     private final VariantFilters mVariantFilters;
     private final RepeatMaskAnnotator mRepeatMaskAnnotator;
+    private final boolean mTargetedPanelMode;
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
@@ -122,6 +123,7 @@ public class CallerApplication
 
         TargetRegions targetRegions = new TargetRegions(configBuilder.getValue(TARGET_REGIONS_BED), mConfig.RefGenVersion);
         mSvDataCache = new SvDataCache(mConfig, targetRegions);
+        mTargetedPanelMode = targetRegions.hasTargetRegions();
 
         mRepeatMaskAnnotator = new RepeatMaskAnnotator();
 
@@ -228,6 +230,9 @@ public class CallerApplication
 
             mVariantFilters.applyFilters(var);
         }
+
+        if(mTargetedPanelMode)
+            mVariantFilters.applyAdjacentFilters(mSvDataCache.getBreakendMap());
 
         // set germline status and final filters based on LINE
         for(Variant var : mSvDataCache.getSvList())

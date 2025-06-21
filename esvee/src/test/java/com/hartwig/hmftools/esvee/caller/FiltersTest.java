@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
@@ -17,14 +19,17 @@ import static com.hartwig.hmftools.esvee.caller.CallerApplication.isGermline;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_REF_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_MIN_UPS;
 import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -238,6 +243,61 @@ public class FiltersTest
         mVariantFilters.applyFilters(var);
         assertTrue(var.filters().contains(FilterType.DEL_SHORT_LOW_VAF));
     }
+
+    @Test
+    public void testIsolatedInvFilter()
+    {
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+        commonAttributes.put(IHOMPOS, new int[] {-10,10});
+
+        Variant inv1 = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, null, Collections.emptyMap());
+
+        // 2 artefacts close to each other, but still marked as isolated
+        Variant inv2 = createSv(
+                "02", CHR_1, CHR_1, 1100, 1150, ORIENT_REV, ORIENT_REV, "",
+                commonAttributes, null, Collections.emptyMap());
+        inv2.filters().add(FilterType.PON);
+
+        Variant inv3 = createSv(
+                "03", CHR_1, CHR_1, 1140, 1200, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, null, Collections.emptyMap());
+        inv3.filters().add(FilterType.INV_SHORT_FRAG_LOW_VAF);
+
+        // chained and higher-UFP INVs are excluded
+        commonAttributes = Maps.newHashMap();
+        commonAttributes.put(UNIQUE_FRAG_POSITIONS, INV_ADJACENT_MIN_UPS + 1);
+        commonAttributes.put(ASM_LINKS, "123");
+        Variant inv4 = createSv(
+                "04", CHR_1, CHR_1, 2000, 2050, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, null, Collections.emptyMap());
+
+        // lastly adjacent to another breakend
+        Variant inv5 = createSv(
+                "06", CHR_1, CHR_1, 4000, 4050, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, null, Collections.emptyMap());
+
+        Variant var = createSv(
+                "07", CHR_1, CHR_1, 4100, 10000, ORIENT_FWD, ORIENT_REV, "",
+                commonAttributes, null, Collections.emptyMap());
+
+        Map<String,List<Breakend>> chrBreakendMap = Maps.newHashMap();
+        List<Variant> variants = Lists.newArrayList(inv1, inv2, inv3, inv4, inv5, inv5, var);
+
+        buildBreakendMap(variants, chrBreakendMap);
+
+        mVariantFilters.applyAdjacentFilters(chrBreakendMap);
+
+        assertTrue(inv1.filters().contains(FilterType.INV_SHORT_ISOLATED));
+        assertTrue(inv2.filters().contains(FilterType.INV_SHORT_ISOLATED));
+        assertTrue(inv3.filters().contains(FilterType.INV_SHORT_ISOLATED));
+
+        assertFalse(inv4.filters().contains(FilterType.INV_SHORT_ISOLATED));
+        assertFalse(inv5.filters().contains(FilterType.INV_SHORT_ISOLATED));
+        assertFalse(var.filters().contains(FilterType.INV_SHORT_ISOLATED));
+    }
+
     @Test
     public void testMarkGermline()
     {

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -165,6 +166,18 @@ public class Variant
         }
 
         return false;
+    }
+
+    public int maxUniqueFragmentPositions()
+    {
+        int maxUps = 0;
+        for(Breakend breakend : mBreakends)
+        {
+            if(breakend != null)
+                maxUps = max(maxUps, breakend.uniqueFragmentPositions());
+        }
+
+        return maxUps;
     }
 
     public void addFilter(final FilterType filter) { mFilters.add(filter); }

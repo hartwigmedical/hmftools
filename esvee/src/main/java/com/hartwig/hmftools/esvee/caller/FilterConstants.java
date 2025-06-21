@@ -3,15 +3,22 @@ package com.hartwig.hmftools.esvee.caller;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_FRAG_LOW_VAF;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
+import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 public class FilterConstants
 {
@@ -81,6 +88,11 @@ public class FilterConstants
     public static final int INV_SHORT_FRAGMENT_LENGTH = 300;
     public static final double INV_SHORT_FRAGMENT_MIN_AF = 0.05;
     public static final int INV_SHORT_FRAGMENT_AF_RATIO = 50;
+
+    public static final int INV_ADJACENT_LENGTH = 100;
+    public static final int INV_ADJACENT_MIN_UPS = 4;
+    public static final Set<FilterType> INV_ADJACENT_EXCLUDED_FILTERS = Sets.newHashSet(
+            PON, INV_SHORT_FRAG_LOW_VAF, INV_SHORT_LOW_VAF_HOM, INV_SHORT_ISOLATED);
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);

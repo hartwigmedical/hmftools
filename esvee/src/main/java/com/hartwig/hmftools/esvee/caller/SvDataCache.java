@@ -27,6 +27,7 @@ public class SvDataCache
 
     private final List<Variant> mSvData;
     private final Map<String,List<Breakend>> mChromosomeBreakends;
+
     private int mHardFilteredCount;
 
     public SvDataCache(final CallerConfig config, final TargetRegions targetRegions)
