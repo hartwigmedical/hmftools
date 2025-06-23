@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.geneutils.utils;
 
-import static java.lang.Math.min;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
@@ -26,11 +26,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -38,15 +38,13 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
+import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
-import org.jetbrains.annotations.NotNull;
 
 // TODO: doc
 public class OffTargetRiskProfiler
@@ -104,9 +102,24 @@ public class OffTargetRiskProfiler
         mSpecificChrRegions = SpecificRegions.from(configBuilder);
 
         mBaseWindowLength = configBuilder.getInteger(CFG_BASE_WINDOW_LENGTH);
+        if (mBaseWindowLength < 10) {
+            // Less than 10 bases probably doesn't make such sense, and BWA-MEM is designed for longer reads.
+            throw new RuntimeException(String.format("%s must be >= 10", CFG_BASE_WINDOW_LENGTH));
+        }
         mBaseWindowSpacing = configBuilder.getInteger(CFG_BASE_WINDOW_SPACING);
+        if (mBaseWindowSpacing < 1) {
+            throw new RuntimeException(String.format("%s must be >= 1", CFG_BASE_WINDOW_SPACING));
+        }
         mMatchScoreThreshold = configBuilder.getInteger(CFG_MATCH_SCORE_THRESHOLD);
+        if (mMatchScoreThreshold > mBaseWindowLength) {
+            // If this is true then all alignments will be excluded which is useless.
+            throw new RuntimeException(String.format("%s must be <= %s", CFG_MATCH_SCORE_THRESHOLD, CFG_BASE_WINDOW_LENGTH));
+        }
         mMatchScoreOffset = configBuilder.getInteger(CFG_MATCH_SCORE_OFFSET);
+        if (mMatchScoreOffset < 0) {
+            // Negative values will break the risk model maths.
+            throw new RuntimeException(String.format("%s must be >= 0", CFG_MATCH_SCORE_OFFSET));
+        }
 
         mBatchSize = configBuilder.getInteger(CFG_BATCH_SIZE);
         mThreads = parseThreads(configBuilder);
@@ -129,9 +142,11 @@ public class OffTargetRiskProfiler
             BwaMemIndex index = new BwaMemIndex(refGenomeImageFile);
             BwaMemAligner aligner = new BwaMemAligner(index);
 
-            // Output many alignments per query
+            // Ensure we can find alignments of the specified window size.
+            aligner.setMinSeedLengthOption(mBaseWindowLength / 2);
+            // Output many alignments per query.
             aligner.setFlagOption(aligner.getFlagOption() | aligner.MEM_F_ALL);
-            aligner.setOutputScoreThresholdOption(20);
+            aligner.setOutputScoreThresholdOption(max(1, mBaseWindowLength - 5));
             // Don't prune seeds with many occurrences in the genome. This is a key performance tuning parameter.
             aligner.setMaxMemIntvOption(2000);
             aligner.setMaxSeedOccurencesOption(10000);
@@ -140,6 +155,8 @@ public class OffTargetRiskProfiler
             aligner.setZDropOption(500);
             aligner.setSplitFactorOption(0.5f);
             aligner.setDropRatioOption(0.1f);
+            // Performance params.
+            aligner.setNThreadsOption(mThreads);
 
             GU_LOGGER.debug("BWA-MEM options:");
             GU_LOGGER.debug("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
@@ -160,6 +177,7 @@ public class OffTargetRiskProfiler
             GU_LOGGER.debug("  ZDrop: {}", aligner.getZDropOption());
             GU_LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
             GU_LOGGER.debug("  Flags: {}", aligner.getFlagOption());
+            GU_LOGGER.debug("  Threads: {}", aligner.getNThreadsOption());
 
             return aligner;
         }
@@ -177,12 +195,7 @@ public class OffTargetRiskProfiler
         long startTimeMs = System.currentTimeMillis();
 
         Stream<ChrBaseRegion> regions = getWindowRegions();
-
-        // TODO
-        List<RegionTask> regionTasks = regions.stream().map(x -> new RegionTask(x)).collect(Collectors.toList());
-        List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
-        if(!TaskExecutor.executeTasks(callableList, mThreads))
-            System.exit(1);
+        processBaseRegions(regions);
 
         closeBufferedWriter(mOutputWriter);
 
@@ -199,7 +212,6 @@ public class OffTargetRiskProfiler
                 .filter(region -> !mSpecificChrRegions.hasFilters() || mSpecificChrRegions.includeRegion(region));
     }
 
-    // Partition a chromosome into windows to analyse.
     private Stream<ChrBaseRegion> createWindowRegions(String chromosome, int chromosomeLength) {
         // TODO: is start and end 0 or 1 indexed? inclusive/exclusive?
         return IntStream.iterate(1, start -> true, start -> start + mBaseWindowSpacing)
@@ -207,41 +219,61 @@ public class OffTargetRiskProfiler
                 .takeWhile(region -> region.end() <= chromosomeLength);
     }
 
-    // TODO
-    private class RegionTask implements Callable
-    {
-        private final ChrBaseRegion mRegion;
-
-        public RegionTask(final ChrBaseRegion region)
-        {
-            mRegion = region;
-        }
-
-        @Override
-        public Long call()
-        {
-            int currentWindowStart = mRegion.start();
-            int windowEnd = currentWindowStart + mBaseWindowLength - 1;
-
-            int minRegionEnd = mRegion.end() - (int)(mBaseWindowLength * 0.1);
-
-            while(windowEnd <= minRegionEnd)
+    private void processBaseRegions(Stream<ChrBaseRegion> regions) {
+        List<ChrBaseRegion> batch = new ArrayList<>(mBatchSize);
+        regions.forEach(region -> {
+            batch.add(region);
+            if (batch.size() == mBatchSize)
             {
-                analyseWindow(new BaseRegion(currentWindowStart, min(windowEnd, mRegion.end())));
-
-                currentWindowStart = windowEnd + 1;
-                windowEnd = currentWindowStart + mBaseWindowLength - 1;
+                processBaseRegionBatch(batch);
+                batch.clear();
             }
-
-            return (long)0;
+        });
+        if (!batch.isEmpty()) {
+            processBaseRegionBatch(batch);
         }
+    }
 
-        private void analyseWindow(final BaseRegion region)
-        {
-            byte[] refBases = mRefGenome.getBases(mRegion.Chromosome, region.start(), region.end());
-
-            // writeWindowData(mRegion.Chromosome);
+    private void processBaseRegionBatch(List<ChrBaseRegion> batch) {
+        List<byte[]> sequences = batch.stream().map(
+                region -> mRefGenome.getBases(region.chromosome(), region.start(), region.end())).toList();
+        List<List<BwaMemAlignment>> alignments = mAligner.alignSeqs(sequences);
+        if (alignments.size() != batch.size()) {
+            throw new RuntimeException("Alignment failed");
         }
+        for (int i = 0; i < batch.size(); ++i) {
+            ChrBaseRegion region = batch.get(i);
+            List<BwaMemAlignment> windowAlignments = alignments.get(i);
+            RiskModelResult risk = computeRiskModel(windowAlignments);
+            writeWindowResult(region, risk);
+        }
+    }
+
+    private record RiskModelResult(
+        // Range: [0, +inf].
+        // Higher is higher chance of off-target match.
+        long riskScore,
+        // Range: [0, 1].
+        // Roughly reciprocal to the number of perfect match alignments. E.g. 1 means no off-target, 0.5 means 1 off-target.
+        double qualityScore
+    ) {}
+
+    private RiskModelResult computeRiskModel(List<BwaMemAlignment> alignments) {
+        List<BwaMemAlignment> offTarget = alignments.stream()
+                // Order by best match first.
+                .sorted(Comparator.comparing(BwaMemAlignment::getAlignerScore, Comparator.reverseOrder()))
+                // Drop the first alignment which is assumed to be the on-target exact match.
+                .skip(1)
+                // Keep only alignments with score above the configured threshold.
+                .filter(a -> a.getAlignerScore() >= mMatchScoreThreshold)
+                .toList();
+        long offTargetScoreSum = offTarget.stream().mapToLong(BwaMemAlignment::getAlignerScore).sum();
+        long offTargetCount = offTarget.size();
+        long riskScore = offTargetScoreSum - offTargetCount * (mMatchScoreThreshold - mMatchScoreOffset);
+        // This value is the approximate equivalent total count of exact match alignments.
+        double effectiveOffTargetMatchLength = (double) riskScore / (mBaseWindowLength - mMatchScoreThreshold + mMatchScoreOffset);
+        double qualityScore = 1 / (1 + effectiveOffTargetMatchLength);
+        return new RiskModelResult(riskScore, qualityScore);
     }
 
     private BufferedWriter initialiseOutputWriter(String path)
@@ -265,15 +297,13 @@ public class OffTargetRiskProfiler
         }
     }
 
-    private void writeWindowData(
-            final String chromosome, final int positionStart, final int positionEnd,
-            final double riskScore, final double qualityScore)
+    private void writeWindowResult(ChrBaseRegion region, RiskModelResult risk)
     {
         try
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(chromosome).add(String.valueOf(positionStart)).add(String.valueOf(positionEnd))
-                    .add(String.valueOf(riskScore)).add(String.valueOf(qualityScore));
+            sj.add(region.chromosome()).add(String.valueOf(region.start())).add(String.valueOf(region.end()))
+                    .add(String.valueOf(risk.riskScore)).add(String.valueOf(risk.qualityScore));
             mOutputWriter.write(sj.toString());
             mOutputWriter.newLine();
         }
@@ -283,7 +313,7 @@ public class OffTargetRiskProfiler
         }
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
