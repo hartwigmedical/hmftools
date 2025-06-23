@@ -57,9 +57,9 @@ public final class PaveUtils
                             variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
                             selectedTransImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
 
-                            if(selectedTransImpact == transImpact)
+                            if(selectedTransImpact == transImpact && transImpact.TransData.posStrand())
                             {
-                                // use the right-aligned coding string regardless of which variant is prioritised
+                                // use the right-aligned coding string regardless of which variant is prioritised if on the positive strand
                                 transImpact.codingContext().Hgvs = raTransImpact.codingContext().Hgvs;
                             }
                         }
