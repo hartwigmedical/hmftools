@@ -618,6 +618,17 @@ public class AlignmentFragments
         // look for a read crossing any segment boundary
         for(BreakendSegment segment : breakend.segments())
         {
+            if(segment.indelSeqenceIndices() != null)
+            {
+                int[] indelSequenceIndices = segment.indelSeqenceIndices();
+
+                if(readSeqIndexStart < indelSequenceIndices[0] && readSeqIndexEnd > indelSequenceIndices[0])
+                    return true;
+
+                if(readSeqIndexStart < indelSequenceIndices[1] && readSeqIndexEnd > indelSequenceIndices[1])
+                    return true;
+            }
+
             // determine which end of the segment corresponds to the breakend
             int segmentJunctionIndex;
 
@@ -636,17 +647,6 @@ public class AlignmentFragments
 
             if(readSeqIndexStart < segmentJunctionIndex && readSeqIndexEnd > segmentJunctionIndex)
                 return true;
-
-            if(segment.indelSeqenceIndices() != null)
-            {
-                int[] indelSequenceIndices = segment.indelSeqenceIndices();
-
-                if(readSeqIndexStart < indelSequenceIndices[0] && readSeqIndexEnd > indelSequenceIndices[0])
-                    return true;
-
-                if(readSeqIndexStart < indelSequenceIndices[1] && readSeqIndexEnd > indelSequenceIndices[1])
-                    return true;
-            }
         }
 
         return false;
