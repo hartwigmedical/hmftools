@@ -145,7 +145,7 @@ public class OffTargetRiskProfiler
             // Ensure we can find alignments of the specified window size.
             aligner.setMinSeedLengthOption(mBaseWindowLength / 2);
             // Output many alignments per query.
-            aligner.setFlagOption(aligner.getFlagOption() | aligner.MEM_F_ALL);
+            aligner.setFlagOption(aligner.getFlagOption() | BwaMemAligner.MEM_F_ALL);
             aligner.setOutputScoreThresholdOption(max(1, mBaseWindowLength - 5));
             // Don't prune seeds with many occurrences in the genome. This is a key performance tuning parameter.
             aligner.setMaxMemIntvOption(2000);
