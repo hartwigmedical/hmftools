@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Disable glob expansion. "*" in filenames are handled within hmftools java code
+set -f
+
 # Parse arguments
 jvm_mem_opts=""
 jvm_gen_opts=""
