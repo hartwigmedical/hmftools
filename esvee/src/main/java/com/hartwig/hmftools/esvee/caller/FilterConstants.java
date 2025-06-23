@@ -97,8 +97,13 @@ public class FilterConstants
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
-    public static final String PON_INS_SEQ_FWD_STRAND = "GTGTAGATCTCGGTGGTCGCCGTATCATTAAAAA";
-    public static final String PON_INS_SEQ_REV_STRAND = "TTTTTAATGATACGGCGACCACCGAGATCTACAC";
+    public static final String PON_INS_SEQ_FWD_STRAND_1 = "GCCGTATCATTAAAAA";
+    public static final String PON_INS_SEQ_FWD_STRAND_2 = "GTAGATCTCGGTGGTC";
+    public static final String PON_INS_SEQ_REV_STRAND_1 = "TTTTTAATGATACGGC";
+    public static final String PON_INS_SEQ_REV_STRAND_2 = "GACCACCGAGATCTAC";
+
+    // (insert sequence contains GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC) and strand bias = 1.0
+    //(insert sequence contains TTTTTAATGATACGGC or GACCACCGAGATCTAC) and strand bias = 0.0
 
     public static final double GERMLINE_AF_THRESHOLD = 0.1;
     public static final double GERMLINE_AD_THRESHOLD = 0.01;

@@ -34,8 +34,10 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_RATE_L
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_STD_DEV_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_1;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_2;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_1;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_2;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
@@ -387,9 +389,11 @@ public class VariantFilters
 
             double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
 
-            if(strandBias == 1.0 && var.insertSequence().contains(PON_INS_SEQ_FWD_STRAND))
+            String insSequence = var.insertSequence();
+
+            if(strandBias == 1.0 && (insSequence.contains(PON_INS_SEQ_FWD_STRAND_1) || insSequence.contains(PON_INS_SEQ_FWD_STRAND_2)))
                 hasFailing = true;
-            else if(strandBias == 0 && var.insertSequence().contains(PON_INS_SEQ_REV_STRAND))
+            else if(strandBias == 0 && (insSequence.contains(PON_INS_SEQ_REV_STRAND_1) || insSequence.contains(PON_INS_SEQ_REV_STRAND_2)))
                 hasFailing = true;
             else
                 hasPassing = true;
