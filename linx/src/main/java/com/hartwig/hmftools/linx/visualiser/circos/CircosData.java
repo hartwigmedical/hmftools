@@ -103,6 +103,7 @@ public class CircosData
         List<VisGeneExon> unadjustedGeneExons = VisExons.geneExons(unadjustedGenes, unadjustedExons);
         List<GenomeRegion> unadjustedGeneExonRegions = unadjustedGeneExons.stream().collect(Collectors.toList());
 
+        // Determine the segment breakpoints of in the circos plot
         List<GenomePosition> positionsToScale = Lists.newArrayList();
         positionsToScale.addAll(VisLinks.allPositions(unadjustedLinks));
         positionsToScale.addAll(Span.allPositions(unadjustedSegments));
@@ -116,8 +117,8 @@ public class CircosData
 
         positionsToScale = positionsToScale.stream().distinct().collect(Collectors.toList());
         Collections.sort(positionsToScale);
-        List<CobaltRatio> breakpointAlignedCobaltRatios = alignCobaltPositionsToBreakpoints(unadjustedCobaltRatios, positionsToScale);
 
+        // Optional annotations
         List<GenomeRegion> unadjustedCentromereSites =
                 Highlights.limitHighlightsToRegions(Highlights.CENTROMERES, Span.spanPositions(positionsToScale));
 
@@ -131,21 +132,29 @@ public class CircosData
 
         ChromosomeRanges = Span.spanPositions(positionsToScale);
 
-        final ScalePosition scalePosition = new ScalePosition(positionsToScale);
-        ContigLengths = scalePosition.contigLengths();
-        Segments = scalePosition.scaleSegments(unadjustedSegments);
-        SvData = scalePosition.scaleLinks(unadjustedLinks);
-        CopyNumbers = scalePosition.interpolateCopyNumbers(unadjustedCopyNumbers);
-        CentromereSites = scalePosition.interpolateRegions(unadjustedCentromereSites);
-        LineElements = scalePosition.interpolateRegions(unadjustedLineElements);
-        FragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
-        Genes = scalePosition.interpolateGene(unadjustedGenes);
-        DisruptedGeneRegions = scalePosition.interpolateRegions(unadjustedDisruptedGeneRegions);
-        Exons = scalePosition.interpolateExons(unadjustedGeneExons);
+        // Scale positions based on the log of the size of each plot contig
+        final ScalePosition positionScaler = new ScalePosition(positionsToScale);
+        ContigLengths = positionScaler.contigLengths();
+        Segments = positionScaler.scaleSegments(unadjustedSegments);
+        SvData = positionScaler.scaleLinks(unadjustedLinks);
+        CopyNumbers = positionScaler.interpolateCopyNumbers(unadjustedCopyNumbers);
+        CentromereSites = positionScaler.interpolateRegions(unadjustedCentromereSites);
+        LineElements = positionScaler.interpolateRegions(unadjustedLineElements);
+        FragileSites = positionScaler.interpolateRegions(unadjustedFragileSites);
+        Genes = positionScaler.interpolateGene(unadjustedGenes);
+        DisruptedGeneRegions = positionScaler.interpolateRegions(unadjustedDisruptedGeneRegions);
+        Exons = positionScaler.interpolateExons(unadjustedGeneExons);
 
-        AmberBAFs = scalePosition.interpolateAmberBAFs(unadjustedAmberBAFs);
-        CobaltRatios = scalePosition.interpolateCobaltRatios(breakpointAlignedCobaltRatios);
-        PurpleSegments = scalePosition.interpolatePurpleSegments(unadjustedPurpleSegments);
+        List<AmberBAF> amberBAFsScaled = positionScaler.interpolateAmberBAFs(unadjustedAmberBAFs);
+        List<AmberBAF> amberBAFsDownsampled = downsampleList(amberBAFsScaled, DOWNSAMPLE_TARGET);
+        AmberBAFs = amberBAFsDownsampled;
+
+        List<CobaltRatio> cobaltRatiosBreakpointAligned = alignCobaltPositionsToBreakpoints(unadjustedCobaltRatios, positionsToScale);
+        List<CobaltRatio> cobaltRatiosScaled = positionScaler.interpolateCobaltRatios(cobaltRatiosBreakpointAligned);
+        List<CobaltRatio> cobaltRatiosDownsampled = downsampleList(cobaltRatiosScaled, DOWNSAMPLE_TARGET);
+        CobaltRatios = cobaltRatiosDownsampled;
+
+        PurpleSegments = positionScaler.interpolatePurpleSegments(unadjustedPurpleSegments);
 
         SvTracksMax = Segments.stream().mapToInt(x -> x.Track).max().orElse(0) + 1;
         CopyNumberMax = CopyNumbers.stream().mapToDouble(x -> x.CopyNumber).max().orElse(0);
@@ -165,8 +174,7 @@ public class CircosData
     }
 
     private static final int COBALT_WINDOW_SIZE = 1000; // Importing CobaltConstants would lead to a dependency on Cobalt
-
-    public static List<CobaltRatio> alignCobaltPositionsToBreakpoints(List<CobaltRatio> cobaltRatios, List<GenomePosition> positionsToScale)
+    private static List<CobaltRatio> alignCobaltPositionsToBreakpoints(List<CobaltRatio> cobaltRatios, List<GenomePosition> positionsToScale)
     {
         /*
         Cobalt positions refer to the start position of the window. Change the Cobalt positions such that:
@@ -224,6 +232,28 @@ public class CircosData
         }
 
         return realignedCobaltRatios;
+    }
+
+    private static final int DOWNSAMPLE_TARGET = 5000;
+    private static <T> List<T> downsampleList(List<T> list, int sampleCount) {
+
+        if(list.size() <= sampleCount)
+            return list;
+
+        double step = (double) list.size() / sampleCount;
+
+        List<T> subsampledList = Lists.newArrayList();
+
+        for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
+            int newSampleIndex = (int) Math.floor(sampleIndex * step);
+
+            if (newSampleIndex >= list.size())
+                break;
+
+            subsampledList.add(list.get(newSampleIndex));
+        }
+
+        return subsampledList;
     }
 
     public List<Connector> connectors()
