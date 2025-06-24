@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
@@ -124,7 +125,13 @@ public class OffTargetRiskProfiler
         }
 
         mBatchSize = configBuilder.getInteger(CFG_BATCH_SIZE);
+        if (mBatchSize < 1) {
+            throw new RuntimeException(String.format("%s must be >= 1", CFG_BATCH_SIZE));
+        }
         mThreads = parseThreads(configBuilder);
+        if (mThreads < 1) {
+            throw new RuntimeException(String.format("%s must be >= 1", THREADS));
+        }
 
         String refGenomeImageFile = configBuilder.getValue(REF_GENOME) + ".img";
 
