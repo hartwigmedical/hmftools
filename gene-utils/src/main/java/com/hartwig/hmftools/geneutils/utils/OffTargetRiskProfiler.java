@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.geneutils.utils;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
+import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
@@ -80,7 +82,7 @@ public class OffTargetRiskProfiler
     private static final int DEFAULT_WINDOW_LENGTH = 40;
 
     private static final String CFG_BASE_WINDOW_SPACING = "window_spacing";
-    private static final int DEFAULT_WINDOW_SPACING = 40;
+    private static final int DEFAULT_WINDOW_SPACING = 20;
 
     private static final String CFG_MATCH_SCORE_THRESHOLD = "match_score_threshold";
     private static final int DEFAULT_MATCH_SCORE_THRESHOLD = 24;    // Determined empirically via experiment
@@ -91,8 +93,8 @@ public class OffTargetRiskProfiler
     private static final String CFG_BATCH_SIZE = "batch_size";
     private static final int DEFAULT_BATCH_SIZE = 100000;
 
-    private static final String FLD_RISK_SCORE = "risk_score";
-    private static final String FLD_QUALITY_SCORE = "quality_score";
+    private static final String FLD_RISK_SCORE = "RiskScore";
+    private static final String FLD_QUALITY_SCORE = "QualityScore";
 
     public OffTargetRiskProfiler(final ConfigBuilder configBuilder)
     {
@@ -143,7 +145,7 @@ public class OffTargetRiskProfiler
             BwaMemAligner aligner = new BwaMemAligner(index);
 
             // Ensure we can find alignments of the specified window size.
-            aligner.setMinSeedLengthOption(mBaseWindowLength / 2);
+            aligner.setMinSeedLengthOption(min(19, mBaseWindowLength / 2));
             // Output many alignments per query.
             aligner.setFlagOption(aligner.getFlagOption() | BwaMemAligner.MEM_F_ALL);
             aligner.setOutputScoreThresholdOption(max(1, mBaseWindowLength - 5));
@@ -190,19 +192,21 @@ public class OffTargetRiskProfiler
 
     public void run()
     {
-        GU_LOGGER.info("analysing blacklist regions");
+        GU_LOGGER.info("Starting");
 
         long startTimeMs = System.currentTimeMillis();
 
         Stream<ChrBaseRegion> regions = getWindowRegions();
-        processBaseRegions(regions);
+        processBaseWindows(regions);
 
         closeBufferedWriter(mOutputWriter);
 
-        GU_LOGGER.info("Genome mappability analysis complete, mins({})", runTimeMinsStr(startTimeMs));
+        GU_LOGGER.info("Analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private Stream<ChrBaseRegion> getWindowRegions() {
+        GU_LOGGER.info("Creating base window regions");
+
         RefGenomeCoordinates coordinates = mRefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         return Arrays.stream(HumanChromosome.values())
@@ -219,33 +223,36 @@ public class OffTargetRiskProfiler
                 .takeWhile(region -> region.end() <= chromosomeLength);
     }
 
-    private void processBaseRegions(Stream<ChrBaseRegion> regions) {
+    private void processBaseWindows(Stream<ChrBaseRegion> regions) {
+        GU_LOGGER.info("Processing base windows");
         List<ChrBaseRegion> batch = new ArrayList<>(mBatchSize);
         regions.forEach(region -> {
             batch.add(region);
             if (batch.size() == mBatchSize)
             {
-                processBaseRegionBatch(batch);
+                processBaseWindowBatch(batch);
                 batch.clear();
             }
         });
         if (!batch.isEmpty()) {
-            processBaseRegionBatch(batch);
+            processBaseWindowBatch(batch);
         }
     }
 
-    private void processBaseRegionBatch(List<ChrBaseRegion> batch) {
+    private void processBaseWindowBatch(List<ChrBaseRegion> batch) {
+        GU_LOGGER.debug("Processing window batch of size {}", batch.size());
         List<byte[]> sequences = batch.stream().map(
                 region -> mRefGenome.getBases(region.chromosome(), region.start(), region.end())).toList();
+        GU_LOGGER.debug("Running BWA-MEM alignment");
         List<List<BwaMemAlignment>> alignments = mAligner.alignSeqs(sequences);
         if (alignments.size() != batch.size()) {
             throw new RuntimeException("Alignment failed");
         }
+        GU_LOGGER.debug("Running risk model");
+        List<RiskModelResult> riskModelResults = alignments.stream().map(this::computeRiskModel).toList();
+        GU_LOGGER.debug("Writing results");
         for (int i = 0; i < batch.size(); ++i) {
-            ChrBaseRegion region = batch.get(i);
-            List<BwaMemAlignment> windowAlignments = alignments.get(i);
-            RiskModelResult risk = computeRiskModel(windowAlignments);
-            writeWindowResult(region, risk);
+            writeWindowResult(batch.get(i), riskModelResults.get(i));
         }
     }
 
@@ -319,6 +326,8 @@ public class OffTargetRiskProfiler
 
         addRefGenomeFile(configBuilder, true);
         addSpecificChromosomesRegionsConfig(configBuilder);
+
+        configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
         configBuilder.addInteger(CFG_BASE_WINDOW_LENGTH, "Base window length for analysis", DEFAULT_WINDOW_LENGTH);
         configBuilder.addInteger(CFG_BASE_WINDOW_SPACING, "Offset through the genome of each base window", DEFAULT_WINDOW_SPACING);
