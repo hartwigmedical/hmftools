@@ -206,9 +206,7 @@ public class OffTargetRiskProfiler
 
     private Stream<ChrBaseRegion> getWindowRegions() {
         GU_LOGGER.info("Creating base window regions");
-
         RefGenomeCoordinates coordinates = mRefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-
         return Arrays.stream(HumanChromosome.values())
                 .map(chr -> mRefGenVersion.versionedChromosome(chr.toString()))
                 .filter(mSpecificChrRegions::includeChromosome)
@@ -239,20 +237,55 @@ public class OffTargetRiskProfiler
     }
 
     private void processBaseWindowBatch(List<ChrBaseRegion> batch) {
-        GU_LOGGER.debug("Processing window batch of size {}", batch.size());
-        List<byte[]> sequences = batch.stream().map(
-                region -> mRefGenome.getBases(region.chromosome(), region.start(), region.end())).toList();
+        GU_LOGGER.debug("Processing base window batch of size {}", batch.size());
+
+        GU_LOGGER.debug("Retrieving base window sequences");
+        // Somewhat awkward stream processing here because we need the base sequence to filter on
+        // and also need to keep the region info for later.
+        List<RegionWithSequence> regionsWithSequence = batch.stream()
+                .map(region -> new RegionWithSequence(
+                        region,
+                        mRefGenome.getBases(region.chromosome(), region.start(), region.end())))
+                .filter(region -> isSequenceNormal(region.sequence))
+                .toList();
+        GU_LOGGER.debug("Dropped {} windows with denormal bases", batch.size() - regionsWithSequence.size());
+
         GU_LOGGER.debug("Running BWA-MEM alignment");
+        List<byte[]> sequences = regionsWithSequence.stream().map(RegionWithSequence::sequence).toList();
         List<List<BwaMemAlignment>> alignments = mAligner.alignSeqs(sequences);
-        if (alignments.size() != batch.size()) {
+        if (alignments.size() != sequences.size()) {
+            // Presumably this shouldn't occur, but we'll check to give a nicer error just in case.
             throw new RuntimeException("Alignment failed");
         }
+
         GU_LOGGER.debug("Running risk model");
         List<RiskModelResult> riskModelResults = alignments.stream().map(this::computeRiskModel).toList();
+
         GU_LOGGER.debug("Writing results");
-        for (int i = 0; i < batch.size(); ++i) {
-            writeWindowResult(batch.get(i), riskModelResults.get(i));
+        for (int i = 0; i < regionsWithSequence.size(); ++i) {
+            writeWindowResult(regionsWithSequence.get(i).region, riskModelResults.get(i));
         }
+    }
+
+    private record RegionWithSequence(ChrBaseRegion region, byte[] sequence) {}
+
+    private static boolean isSequenceNormal(byte[] sequence) {
+        for (byte b : sequence) {
+            switch (b) {
+                case 'A':
+                case 'C':
+                case 'G':
+                case 'T':
+                case 'a':
+                case 'c':
+                case 'g':
+                case 't':
+                    continue;
+                default:
+                    return false;
+            }
+        }
+        return true;
     }
 
     private record RiskModelResult(
@@ -309,7 +342,7 @@ public class OffTargetRiskProfiler
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(region.chromosome()).add(String.valueOf(region.start())).add(String.valueOf(region.end()))
-                    .add(String.valueOf(risk.riskScore)).add(String.valueOf(risk.qualityScore));
+                    .add(String.valueOf(risk.riskScore)).add(String.valueOf((float)risk.qualityScore));
             mOutputWriter.write(sj.toString());
             mOutputWriter.newLine();
         }
