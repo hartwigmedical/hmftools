@@ -217,7 +217,6 @@ public class OffTargetRiskProfiler
     }
 
     private Stream<ChrBaseRegion> createWindowRegions(String chromosome, int chromosomeLength) {
-        // TODO: is start and end 0 or 1 indexed? inclusive/exclusive?
         return IntStream.iterate(1, start -> true, start -> start + mBaseWindowSpacing)
                 .mapToObj(start -> new ChrBaseRegion(chromosome, start, start + mBaseWindowLength - 1))
                 .takeWhile(region -> region.end() <= chromosomeLength);
