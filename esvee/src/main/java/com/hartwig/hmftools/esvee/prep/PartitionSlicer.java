@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_WINDOW_SIZE;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_JUNCTION;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.PartitionStats;
@@ -41,6 +43,7 @@ public class PartitionSlicer
     private String mCurrentSampleId;
 
     private final JunctionTracker mJunctionTracker;
+    private final DepthTracker mDepthTracker;
 
     private final PartitionStats mStats;
     private final CombinedStats mCombinedStats;
@@ -67,7 +70,8 @@ public class PartitionSlicer
         mRegion = region;
         mCombinedStats = combinedStats;
 
-        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mConfig.Hotspots, mConfig.Blacklist);
+        mDepthTracker = new DepthTracker(new BaseRegion(mRegion.start(), mRegion.end()), DEPTH_WINDOW_SIZE);
+        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots, mConfig.Blacklist);
 
         mSamReaders = samReaders;
         mBamSlicer = bamSlicer;
@@ -179,6 +183,8 @@ public class PartitionSlicer
         {
             processFilteredRead(read);
         }
+
+        mDepthTracker.processRead(record);
     }
 
     private void processFilteredRead(final PrepRead read)

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
@@ -46,6 +48,12 @@ public final class PrepConstants
     public static final int MAX_SUPPORT_FRAGMENT_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
     public static final double MIN_EXACT_BASE_PERC = 0.25;
+
+    // depth tracking and filter
+    public static final int DEPTH_WINDOW_SIZE = 1000;
+    public static final double DEPTH_MIN_SUPPORT_RATIO = 0.005;
+    public static final double DEPTH_MIN_SUPPORT_RATIO_DISCORDANT = 0.01;
+    public static final double DEPTH_MIN_CHECK = 2 / DEPTH_MIN_SUPPORT_RATIO_DISCORDANT;
 
     // discordant groups
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS = 3;

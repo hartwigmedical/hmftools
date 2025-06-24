@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_WINDOW_SIZE;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.HOTSPOT_CACHE;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
@@ -46,15 +47,20 @@ import htsjdk.samtools.SAMRecord;
 
 public class JunctionsTest
 {
-    private static final String REF_BASES = generateRandomBases(500);
+    protected static final String REF_BASES = generateRandomBases(500);
 
     private final ChrBaseRegion mPartitionRegion;
     private final JunctionTracker mJunctionTracker;
+    private final DepthTracker mDepthTracker;
 
     public JunctionsTest()
     {
         mPartitionRegion = new ChrBaseRegion(CHR_1, 1, 5000);
-        mJunctionTracker = new JunctionTracker(mPartitionRegion, new PrepConfig(1000), HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
+
+        mDepthTracker = new DepthTracker(new BaseRegion(mPartitionRegion.start(), mPartitionRegion.end()), DEPTH_WINDOW_SIZE);
+
+        mJunctionTracker = new JunctionTracker(
+                mPartitionRegion, new PrepConfig(1000), mDepthTracker, HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
     }
 
     private void addRead(final PrepRead read, final ReadType readType)
@@ -324,7 +330,8 @@ public class JunctionsTest
     {
         BLACKLIST_LOCATIONS.addRegion(CHR_1, new BaseRegion(500, 1500));
 
-        JunctionTracker junctionTracker = new JunctionTracker(mPartitionRegion, new PrepConfig(1000), HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
+        JunctionTracker junctionTracker = new JunctionTracker(
+                mPartitionRegion, new PrepConfig(1000), mDepthTracker, HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
 
         PrepRead read1 = PrepRead.from(createSamRecord(
                 READ_ID_GENERATOR.nextId(), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));

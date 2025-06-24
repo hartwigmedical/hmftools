@@ -1,11 +1,20 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
+import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.prep.JunctionsTest.REF_BASES;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 
+import org.checkerframework.dataflow.qual.Pure;
 import org.junit.Test;
+
+import htsjdk.samtools.SAMRecord;
 
 public class MiscTest
 {
@@ -46,5 +55,49 @@ public class MiscTest
         readId = "011852_2-UGAv3-2-1333458495";
         assertEquals(readId, trimmer.trim(readId));
         assertFalse(trimmer.enabled());
+    }
+
+    @Test
+    public void testDepthTracker()
+    {
+        DepthTracker depthTracker = new DepthTracker(new BaseRegion(1, 1000), 100);
+
+        SAMRecord read = createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1, REF_BASES.substring(0, 50), "50M");
+
+        depthTracker.processRead(read);
+
+        read = createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 10, REF_BASES.substring(0, 50), "50M");
+
+        depthTracker.processRead(read);
+
+        read = createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 120, REF_BASES.substring(0, 50), "50M");
+
+        depthTracker.processRead(read);
+
+        read = createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 180, REF_BASES.substring(0, 50), "50M");
+
+        depthTracker.processRead(read);
+
+        read = createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1001, REF_BASES.substring(0, 50), "50M");
+
+        depthTracker.processRead(read);
+
+        read = createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 951, REF_BASES.substring(0, 50), "50M");
+
+        depthTracker.processRead(read);
+
+        assertEquals(2, depthTracker.calcDepth(1));
+        assertEquals(2, depthTracker.calcDepth(100));
+        assertEquals(2, depthTracker.calcDepth(101));
+        assertEquals(2, depthTracker.calcDepth(199));
+        assertEquals(0, depthTracker.calcDepth(301));
+        assertEquals(1, depthTracker.calcDepth(1000));
+        assertEquals(0, depthTracker.calcDepth(1001));
     }
 }
