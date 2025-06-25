@@ -106,7 +106,10 @@ public class PhaseSetBuilder
     {
         mRefGenome = refGenome;
         mPhaseGroup = phaseGroup;
+
         mRemoteReadExtractor = remoteReadExtractor;
+        mRemoteReadExtractor.resetCounts();
+
         mLocalSequenceMatcher = new LocalSequenceMatcher(refGenome, LOCAL_ASSEMBLY_MATCH_DISTANCE);
 
         mPhaseSets = mPhaseGroup.phaseSets();
@@ -525,6 +528,9 @@ public class PhaseSetBuilder
 
         double extractRemoteReadsTotalSeconds = 0;
 
+        int totalRawRemoteRegions = 0;
+        int totalRemoteRegions = 0;
+
         // any assembly not in a link uses unmapped reads to try to extend the extension sequence
         for(JunctionAssembly assembly : mAssemblies)
         {
@@ -536,8 +542,12 @@ public class PhaseSetBuilder
             long startTimeMs = System.currentTimeMillis();
             List<RemoteRegion> remoteRegions = collectCandidateRemoteRegions(assembly, mAssemblies, mHasHighAssemblyCount);
 
+            totalRawRemoteRegions += assembly.remoteRegions().size();
+
             List<Read> remoteReads = mRemoteReadExtractor.extractRemoteRegionReads(mPhaseGroup.id(), remoteRegions, mHasHighAssemblyCount);
             extractRemoteReadsTotalSeconds += (System.currentTimeMillis() - startTimeMs) / 1000.0;
+
+            totalRemoteRegions += remoteRegions.size();
 
             purgeSupplementaryReads(assembly, remoteReads);
             unmappedReads.addAll(remoteReads);
@@ -566,9 +576,9 @@ public class PhaseSetBuilder
 
         if(AssemblyConfig.PerfLogTime > 0 && extractRemoteReadsTotalSeconds >= AssemblyConfig.PerfLogTime)
         {
-            SV_LOGGER.debug(format("%s phase set stage(%s) remoteRef(slices=%d reads=%d) extractReads(%.1f)",
-                    getPhaseGroupInfo(), mCurrentStage, mRemoteReadExtractor.remoteReadSlices(), mRemoteReadExtractor.remoteReadsSearch(),
-                    extractRemoteReadsTotalSeconds));
+            SV_LOGGER.debug(format("%s phase set stage(%s) remoteRegions(raw=%d collected=%d slices=%d) reads(%d) extractReads(%.1f)",
+                    getPhaseGroupInfo(), mCurrentStage, totalRawRemoteRegions, totalRemoteRegions, mRemoteReadExtractor.remoteReadSlices(),
+                    mRemoteReadExtractor.remoteReadsSearch(), extractRemoteReadsTotalSeconds));
         }
     }
 
