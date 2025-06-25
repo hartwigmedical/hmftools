@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCoun
 import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SGL_FILE;
 import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SV_FILE;
 import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.GERMLINE_PON_MARGIN;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.GERMLINE_SGL_PON_MARGIN;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
@@ -85,6 +86,7 @@ public class CallerApplication
         {
             mArtefactPonCache = new PonCache(
                     configBuilder.getInteger(GERMLINE_PON_MARGIN),
+                    configBuilder.getInteger(GERMLINE_SGL_PON_MARGIN),
                     configBuilder.getValue(ARTEFACT_PON_BED_SV_FILE),
                     configBuilder.getValue(ARTEFACT_PON_BED_SGL_FILE),
                     false);

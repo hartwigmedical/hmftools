@@ -53,7 +53,7 @@ public class PonCombiner
 
         for(int i = 0; i < svFiles.length; ++i)
         {
-            mPonCaches.add(new PonCache(0, svFiles[i], sglFiles[i], true));
+            mPonCaches.add(new PonCache(0, 0, svFiles[i], sglFiles[i], true));
         }
 
         if(mPonCaches.get(0).svRegions().keySet().stream().anyMatch(x -> x.startsWith("chr")))

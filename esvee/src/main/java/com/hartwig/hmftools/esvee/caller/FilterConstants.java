@@ -59,9 +59,8 @@ public class FilterConstants
     public final List<ChrBaseRegion> PolyGcRegions;
     public final ChrBaseRegion LowQualRegion;
 
-    public final int PonDistance;
     public static final int DEFAULT_PON_DISTANCE = 3;
-    public static final String CFG_PON_DISTANCE = "pon_distance";
+    public static final int DEFAULT_SGL_PON_DISTANCE = 10;
 
     public static final int PON_SHORT_INDEL_LENGTH = 200;
     public static final int PON_MAX_INS_SEQ_LENGTH = 100;
@@ -103,9 +102,6 @@ public class FilterConstants
     public static final String PON_INS_SEQ_REV_STRAND_1 = "TTTTTAATGATACGGC";
     public static final String PON_INS_SEQ_REV_STRAND_2 = "GACCACCGAGATCTAC";
 
-    // (insert sequence contains GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC) and strand bias = 1.0
-    //(insert sequence contains TTTTTAATGATACGGC or GACCACCGAGATCTAC) and strand bias = 0.0
-
     public static final double GERMLINE_AF_THRESHOLD = 0.1;
     public static final double GERMLINE_AD_THRESHOLD = 0.01;
 
@@ -128,16 +124,13 @@ public class FilterConstants
 
         int minQualHotspot = configBuilder.getInteger(CFG_MIN_QUAL_HOTSPOT);
 
-        int ponDistance = configBuilder.getInteger(CFG_PON_DISTANCE);
-
         return new FilterConstants(
                 minQual, minQualHotspot, MIN_VARIANT_LENGTH,
                 minSupport, minSupportSgl, minSupportHotspot,
                 DEFAULT_MIN_AF_JUNCTION, DEFAULT_MIN_AF_SGL, DEFAULT_MIN_AF_HOTSPOT,
                 filterSgls,
                 getPolyGRegions(refGenVersion),
-                refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
-                ponDistance);
+                refGenVersion == V37 ? PMS2_V37 : PMS2_V38);
     }
 
     @VisibleForTesting
@@ -148,15 +141,14 @@ public class FilterConstants
                 DEFAULT_MIN_SUPPORT_JUNCTION, DEFAULT_MIN_SUPPORT_SGL, DEFAULT_MIN_SUPPORT_HOTSPOT,
                 DEFAULT_MIN_AF_JUNCTION, DEFAULT_MIN_AF_SGL, DEFAULT_MIN_AF_HOTSPOT,
                 filterSgls,
-                getPolyGRegions(refGenomeVersion), refGenomeVersion == V37 ? PMS2_V37 : PMS2_V38,
-                ponDistance);
+                getPolyGRegions(refGenomeVersion), refGenomeVersion == V37 ? PMS2_V37 : PMS2_V38);
     }
 
     public FilterConstants(
             final int minQual, final int minQualHotspot,
             final int minLength, final int minSupportJunction, final int minSupportSgl, final int minSupportHotspot,
             final double minAfJunction, final double minAfSgl, final double minAfHotspot,
-            final boolean filterSGLs, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion, final int ponDistance)
+            final boolean filterSGLs, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion)
     {
         MinQual = minQual;
         MinQualHotspot = minQualHotspot;
@@ -170,12 +162,10 @@ public class FilterConstants
         FilterSGLs = filterSGLs;
         PolyGcRegions = polyGcRegions;
         LowQualRegion = lowQualRegion;
-        PonDistance = ponDistance;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addInteger(CFG_PON_DISTANCE, "PON permitted margin", DEFAULT_PON_DISTANCE);
         configBuilder.addFlag(FILTER_SGLS, "Filter SGLs from VCF, intended for tumor-only mode, default=true in target panel");
 
         configBuilder.addInteger(CFG_MIN_QUAL,
