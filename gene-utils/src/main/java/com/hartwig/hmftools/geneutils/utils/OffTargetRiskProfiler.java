@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
@@ -197,6 +198,27 @@ public class OffTargetRiskProfiler
         }
     }
 
+    private BufferedWriter initialiseOutputWriter(String path)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(path, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END)
+                    .add(FLD_RISK_SCORE).add(FLD_QUALITY_SCORE);
+            writer.write(sj.toString());
+            writer.newLine();
+
+            return writer;
+        }
+        catch(IOException e)
+        {
+            GU_LOGGER.error("failed to initialise output file: {}", e.toString());
+            return null;
+        }
+    }
+
     public void run()
     {
         GU_LOGGER.info("Starting");
@@ -204,11 +226,15 @@ public class OffTargetRiskProfiler
         long startTimeMs = System.currentTimeMillis();
 
         Stream<ChrBaseRegion> regions = getWindowRegions();
-        processBaseWindows(regions);
+        ProcessingStats stats = processBaseWindows(regions);
 
         closeBufferedWriter(mOutputWriter);
 
         GU_LOGGER.info("Analysis complete, mins({})", runTimeMinsStr(startTimeMs));
+        GU_LOGGER.info("Window stats:");
+        GU_LOGGER.info("  Total: {}", stats.totalWindows);
+        GU_LOGGER.info("  Analysed: {}", stats.totalWindows);
+        GU_LOGGER.info("  Denormal: {}", stats.denormalWindows);
     }
 
     private Stream<ChrBaseRegion> getWindowRegions() {
@@ -227,38 +253,62 @@ public class OffTargetRiskProfiler
                 .takeWhile(region -> region.end() <= chromosomeLength);
     }
 
-    private void processBaseWindows(Stream<ChrBaseRegion> regions) {
-        GU_LOGGER.info("Processing base windows");
-        List<ChrBaseRegion> batch = new ArrayList<>(mBatchSize);
-        regions.forEach(region -> {
-            batch.add(region);
-            if (batch.size() == mBatchSize)
-            {
-                processBaseWindowBatch(batch);
-                batch.clear();
-            }
-        });
-        if (!batch.isEmpty()) {
-            processBaseWindowBatch(batch);
+    private record ProcessingStats(
+            // Total number of windows considered.
+            long totalWindows,
+            // Number of windows analysed (i.e. not skipped).
+            long analysedWindows,
+            // How many base windows were skipped because they contained bases which are not ACGT.
+            long denormalWindows
+    ) {
+        ProcessingStats() {
+            this(0, 0, 0);
+        }
+
+        ProcessingStats add(ProcessingStats other) {
+            return new ProcessingStats(
+                    totalWindows + other.totalWindows,
+                    analysedWindows + other.analysedWindows,
+                    denormalWindows + other.denormalWindows
+            );
         }
     }
 
-    private void processBaseWindowBatch(List<ChrBaseRegion> batch) {
+    private ProcessingStats processBaseWindows(Stream<ChrBaseRegion> regions) {
+        GU_LOGGER.info("Processing base windows");
+        return partitionRegionsIntoBatches(regions)
+                .map(this::processBaseWindowBatch)
+                .reduce(new ProcessingStats(), ProcessingStats::add);
+    }
+
+    private Stream<List<ChrBaseRegion>> partitionRegionsIntoBatches(Stream<ChrBaseRegion> regions) {
+        Iterator<ChrBaseRegion> iterator = regions.iterator();
+        return Stream.generate(() -> {
+            List<ChrBaseRegion> batch = new ArrayList<>(mBatchSize);
+            for (int i = 0; i < mBatchSize && iterator.hasNext(); i++) {
+                batch.add(iterator.next());
+            }
+            return batch;
+        }).takeWhile(b -> !b.isEmpty());
+    }
+
+    private ProcessingStats processBaseWindowBatch(List<ChrBaseRegion> batch) {
         GU_LOGGER.debug("Processing base window batch of size {}", batch.size());
 
         GU_LOGGER.debug("Retrieving base window sequences");
         // Somewhat awkward stream processing here because we need the base sequence to filter on
         // and also need to keep the region info for later.
-        List<RegionWithSequence> regionsWithSequence = batch.stream()
+        List<RegionWithSequence> preprocessedRegions = batch.stream()
                 .map(region -> new RegionWithSequence(
                         region,
                         mRefGenome.getBases(region.chromosome(), region.start(), region.end())))
                 .filter(region -> isSequenceNormal(region.sequence))
                 .toList();
-        GU_LOGGER.debug("Dropped {} windows with denormal bases", batch.size() - regionsWithSequence.size());
+        int denormalWindows = batch.size() - preprocessedRegions.size();
+        GU_LOGGER.debug("Skipped {} windows with denormal bases", denormalWindows);
 
         GU_LOGGER.debug("Running BWA-MEM alignment");
-        List<byte[]> sequences = regionsWithSequence.stream().map(RegionWithSequence::sequence).toList();
+        List<byte[]> sequences = preprocessedRegions.stream().map(RegionWithSequence::sequence).toList();
         List<List<BwaMemAlignment>> alignments = mAligner.alignSeqs(sequences);
         if (alignments.size() != sequences.size()) {
             // Presumably this shouldn't occur, but we'll check to give a nicer error just in case.
@@ -269,9 +319,11 @@ public class OffTargetRiskProfiler
         List<RiskModelResult> riskModelResults = alignments.stream().map(this::computeRiskModel).toList();
 
         GU_LOGGER.debug("Writing results");
-        for (int i = 0; i < regionsWithSequence.size(); ++i) {
-            writeWindowResult(regionsWithSequence.get(i).region, riskModelResults.get(i));
+        for (int i = 0; i < preprocessedRegions.size(); ++i) {
+            writeWindowResult(preprocessedRegions.get(i).region, riskModelResults.get(i));
         }
+
+        return new ProcessingStats(batch.size(), preprocessedRegions.size(), denormalWindows);
     }
 
     private record RegionWithSequence(ChrBaseRegion region, byte[] sequence) {}
@@ -320,27 +372,6 @@ public class OffTargetRiskProfiler
         double effectiveOffTargetMatchLength = (double) riskScore / (mBaseWindowLength - mMatchScoreThreshold + mMatchScoreOffset);
         double qualityScore = 1 / (1 + effectiveOffTargetMatchLength);
         return new RiskModelResult(riskScore, qualityScore);
-    }
-
-    private BufferedWriter initialiseOutputWriter(String path)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(path, false);
-
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END)
-                    .add(FLD_RISK_SCORE).add(FLD_QUALITY_SCORE);
-            writer.write(sj.toString());
-            writer.newLine();
-
-            return writer;
-        }
-        catch(IOException e)
-        {
-            GU_LOGGER.error("failed to initialise output file: {}", e.toString());
-            return null;
-        }
     }
 
     private void writeWindowResult(ChrBaseRegion region, RiskModelResult risk)
