@@ -101,7 +101,7 @@ public class RatioSupplier
                 readRatios = new TargetedRatioMapper(targetRegionEnrichment).mapRatios(readRatios);
             }
 
-            gcNormalizedRatioMapper = new GcNormalizedRatioMapper();
+            gcNormalizedRatioMapper = new GcNormalizedRatioMapper(targetRegionEnrichment != null);
             readRatios = gcNormalizedRatioMapper.mapRatios(readRatios);
 
             switch (sparseBucketPolicy)
@@ -181,7 +181,7 @@ public class RatioSupplier
         mTumorDepths = tumorDepths;
         mChromosomePosCodec = chromosomePosCodec;
     }
-    
+
     public void setTargetRegionEnrichment(final Table targetRegionEnrichment)
     {
         mTargetRegionEnrichment = targetRegionEnrichment;

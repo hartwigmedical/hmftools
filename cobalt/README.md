@@ -19,13 +19,13 @@ The reference sample ratios have a further ‘diploid’ normalization applied t
 This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for 
 male sex chromosomes in addition to the following exceptions:
 
-| Aberration                | Chromosome    | Normalized Ratio   |
-|---------------------------|---------------|--------------------|
-| `MOSAIC_X`                | X             | use median X ratio |
-| `KLINEFELTER`             | X             | 1                  |
-| `KLINEFELTER`             | Y             | 0.5                |
+| Aberration                   | Chromosome       | Normalized Ratio   |
+|------------------------------|------------------|--------------------|
+| `MOSAIC_X`                   | X                | use median X ratio |
+| `KLINEFELTER`                | X                | 1                  |
+| `KLINEFELTER`                | Y                | 0.5                |
 | `TRISOMY_[X,21,13,18,15,9P]` | X,21,13,18,15,9P | 1.5                |
-| `TETRASOMY_9P` | 9P | 1.5                |
+| `TETRASOMY_9P`               | 9P               | 1.5                |
 
 ### Depth window consolidation
 Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
@@ -44,7 +44,7 @@ Post GC normalization, COBALT is able to detect the following germline chromosom
 |---------------------------|--------|--------------------------------------------------|
 | `MOSAIC_X`                | FEMALE | X ratio < min(0.8, minAutosomeMedianDepthRatio*) |
 | `KLINEFELTER` (XXY)       | MALE   | X ratio >= 0.65                                  |
-| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.35                          |
+| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.35                         |
 
 *By checking against autosomes we rule out very high GC bias in the reference.  
 
