@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEFAULT_PON_DISTANCE;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_MAX_INS_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_SHORT_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_SHORT_INDEL_MAX_REPEATS;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_SHORT_INDEL_MAX_REPEAT_PON_DISTANCE;
@@ -199,8 +200,14 @@ public class PonCache
         int marginStart = min(breakend.ConfidenceInterval.Start, -inexactHomology);
         int marginEnd = max(breakend.ConfidenceInterval.End, inexactHomology);
 
-        marginStart -= breakend.InsertSequence.length();
-        marginEnd += breakend.InsertSequence.length();
+        if(!breakend.isSgl())
+        {
+            int maxInsSeqLength = min(breakend.InsertSequence.length(), PON_MAX_INS_SEQ_LENGTH);
+            if(breakend.Orient.isForward())
+                marginEnd += maxInsSeqLength;
+            else
+                marginStart -= maxInsSeqLength;
+        }
 
         return new MarginPositions(marginStart, marginEnd);
     }

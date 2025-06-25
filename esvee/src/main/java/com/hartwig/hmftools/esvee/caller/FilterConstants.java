@@ -64,6 +64,7 @@ public class FilterConstants
     public static final String CFG_PON_DISTANCE = "pon_distance";
 
     public static final int PON_SHORT_INDEL_LENGTH = 200;
+    public static final int PON_MAX_INS_SEQ_LENGTH = 100;
     public static final int PON_SHORT_INDEL_PON_DISTANCE = 10;
     public static final int PON_SHORT_INDEL_MAX_REPEAT_PON_DISTANCE = 20;
     public static final int PON_SHORT_INDEL_MAX_REPEATS = 11;
