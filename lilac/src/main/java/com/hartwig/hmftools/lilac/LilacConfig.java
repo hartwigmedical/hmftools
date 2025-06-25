@@ -92,6 +92,7 @@ public class LilacConfig
     public final int FatalTotalLowCoveragePositions;
     public final int MaxEliminationCandidates;
     public final boolean LogPerfCalcs;
+    public final int StackSampleRate;
 
     // optional: pre-determine sample alleles, forced to be the final solution so coverage can be reported
     public final List<HlaAllele> ActualAlleles;
@@ -127,6 +128,7 @@ public class LilacConfig
     public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
     public static final String FATAL_TOTAL_LOW_COVERAGE_POSITIONS = "fatal_total_low_coverage_positions";
     public static final String LOG_PERF_CALCS = "log_perf";
+    public static final String STACK_SAMPLE_RATE = "stack_sample_rate";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);
 
@@ -224,6 +226,7 @@ public class LilacConfig
         DebugPhasing = configBuilder.hasFlag(DEBUG_PHASING);
         RunValidation = configBuilder.hasFlag(RUN_VALIDATION);
         LogPerfCalcs = configBuilder.hasFlag(LOG_PERF_CALCS);
+        StackSampleRate = configBuilder.getInteger(STACK_SAMPLE_RATE);
 
         if(!checkCreateOutputDir(OutputDir))
         {
@@ -311,6 +314,7 @@ public class LilacConfig
         DebugPhasing = false;
         RunValidation = true;
         LogPerfCalcs = false;
+        StackSampleRate = 0;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -349,6 +353,7 @@ public class LilacConfig
         configBuilder.addFlag(DEBUG_PHASING, "More detailed logging of phasing");
         configBuilder.addFlag(RUN_VALIDATION, "Run validation checks");
         configBuilder.addFlag(LOG_PERF_CALCS, "Log performance metrics");
+        configBuilder.addInteger(STACK_SAMPLE_RATE, "Stack sampling rate", 0);
         ResultsWriter.registerConfig(configBuilder);
 
         BamUtils.addValidationStringencyOption(configBuilder);
