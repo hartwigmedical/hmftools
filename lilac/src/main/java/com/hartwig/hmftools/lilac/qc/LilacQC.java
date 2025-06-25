@@ -35,7 +35,7 @@ public final class LilacQC
     public final double ScoreMargin;
     public final String NextSolutionInfo;
     public final HlaAllele HlaYAllele;
-    public final int MedianBaseQual;
+    public final byte MedianBaseQual;
 
     public final AminoAcidQC AminoAcidQC;
     public final BamQC BamQC;
@@ -44,7 +44,7 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            double scoreMargin, final String nextSolutionInfo, int medianBaseQual, final HlaAllele hlaYAllele,
+            final double scoreMargin, final String nextSolutionInfo, final byte medianBaseQual, final HlaAllele hlaYAllele,
             final AminoAcidQC aminoAcidQC, final BamQC bamQC,
             final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {

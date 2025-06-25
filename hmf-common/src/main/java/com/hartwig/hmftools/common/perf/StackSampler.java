@@ -55,7 +55,10 @@ public class StackSampler implements AutoCloseable
 
     private boolean threadNameFilter(final String threadName)
     {
-        if(threadName.equals(STACK_SAMPLER_THREAD_NAME) || threadName.equals(STACK_PROCESSOR_THREAD_NAME))
+        if(threadName.equals(STACK_SAMPLER_THREAD_NAME))
+            return false;
+
+        if(threadName.equals(STACK_PROCESSOR_THREAD_NAME))
             return true;
 
         return threadName.toLowerCase().matches("^(main|thread-.*|gc_thread.*|g1_conc.*)$");
