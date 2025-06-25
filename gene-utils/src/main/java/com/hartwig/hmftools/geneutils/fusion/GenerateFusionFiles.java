@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_DOWN_D
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_IG_RANGE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENHANCER_TARGET;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -78,6 +79,9 @@ public class GenerateFusionFiles
         for(int i = 0; i < fusionRefData.size() - 1; ++i)
         {
             FusionRefData ref1 = fusionRefData.get(i);
+
+            if(ref1.Type == PROMISCUOUS_ENHANCER_TARGET)
+                continue;
 
             for(int j = i + 1; j < fusionRefData.size(); ++j)
             {
@@ -504,7 +508,7 @@ public class GenerateFusionFiles
         }
         catch(IOException e)
         {
-            GU_LOGGER.error("failed to read fusion file: {}", e.toString());
+            GU_LOGGER.error("failed to read fusion file({}): {}", mKnownFusionDbFile, e.toString());
             return Collections.emptyList();
         }
     }
