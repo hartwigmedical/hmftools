@@ -49,10 +49,9 @@ public class Highlights
 
     public static void populateKnownSites(final RefGenomeVersion refGenomeVersion)
     {
-        List<String> resourceLines;
-
-        resourceLines = RefGenomeCoordinates.readCentromereGaps(refGenomeVersion);
-        loadConfigFile(resourceLines, refGenomeVersion, TSV_DELIM).forEach(x -> CENTROMERES.add(x.genomeRegion()));
+        List<String> resourceLines = RefGenomeCoordinates.readCentromereGaps(refGenomeVersion)
+                .stream().map(x -> x.replaceFirst("^hs", "")).toList(); // Strip circos style chromosome prefix
+        loadConfigFile(resourceLines, null, TSV_DELIM).forEach(x -> CENTROMERES.add(x.genomeRegion()));
 
         resourceLines = new BufferedReader(new InputStreamReader(
                 Highlights.class.getResourceAsStream(fragileSitesResourceFile(refGenomeVersion))))
