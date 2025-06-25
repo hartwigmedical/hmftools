@@ -50,7 +50,12 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
-// TODO: doc
+// Tool for helping with panel probe design. It produces a file which annotates the genome with information informing how likely a probe is
+// to hybridise with off-target genome regions.
+// The genome is partitioned into small base windows which are scored according to a probe off-target risk model.
+// The model uses BWA-MEM alignments as a heuristic for the chance of off-target hybridisation, based on the assumption that hybridisation
+// occurs with a sufficiently long exact match. The model was developed and validated against data from a previous panel design.
+// Output is a TSV file containing scores for each window in the genome.
 public class OffTargetRiskProfiler
 {
     private final RefGenomeSource mRefGenome;
@@ -352,7 +357,7 @@ public class OffTargetRiskProfiler
         // Higher is higher chance of off-target match.
         long riskScore,
         // Range: [0, 1].
-        // Roughly reciprocal to the number of perfect match alignments. E.g. 1 means no off-target, 0.5 means 1 off-target.
+        // Roughly reciprocal to the number of exact match alignments. E.g. 1 means no off-target, 0.5 means 1 off-target.
         double qualityScore
     ) {}
 
