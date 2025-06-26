@@ -29,6 +29,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -82,8 +83,10 @@ public class OffTargetRiskProfiler
     private final BwaMemAligner mAligner;
 
     private final BufferedWriter mOutputWriter;
-
-    private static final String CFG_OUTPUT_FILE = "output_file";
+    // If true, output more information than just the final quality score. Useful for debugging.
+    private final boolean mVerboseOutput;
+    // Number of decimals included in the quality score.
+    private static final int QUALITY_SCORE_PRECISION = 4;
 
     private static final String CFG_BASE_WINDOW_LENGTH = "window_length";
     private static final int DEFAULT_WINDOW_LENGTH = 40;
@@ -100,8 +103,14 @@ public class OffTargetRiskProfiler
     private static final String CFG_BATCH_SIZE = "batch_size";
     private static final int DEFAULT_BATCH_SIZE = 100000;
 
-    private static final String FLD_RISK_SCORE = "RiskScore";
+    private static final String CFG_OUTPUT_FILE = "output_file";
+
+    private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
+
     private static final String FLD_QUALITY_SCORE = "QualityScore";
+    private static final String FLD_RISK_SCORE = "RiskScore";
+    private static final String FLD_OFF_TARGET_COUNT = "OffTargetCount";
+    private static final String FLD_OFF_TARGET_SCORE_SUM = "OffTargetScoreSum";
 
     public OffTargetRiskProfiler(final ConfigBuilder configBuilder)
     {
@@ -138,6 +147,8 @@ public class OffTargetRiskProfiler
         if (mThreads < 1) {
             throw new RuntimeException(String.format("%s must be >= 1", THREADS));
         }
+
+        mVerboseOutput = configBuilder.hasFlag(CFG_VERBOSE_OUTPUT);
 
         String refGenomeImageFile = configBuilder.getValue(REF_GENOME) + ".img";
 
@@ -211,7 +222,12 @@ public class OffTargetRiskProfiler
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END)
-                    .add(FLD_RISK_SCORE).add(FLD_QUALITY_SCORE);
+                    .add(FLD_QUALITY_SCORE);
+            if (mVerboseOutput) {
+                sj.add(FLD_RISK_SCORE);
+                sj.add(FLD_OFF_TARGET_COUNT);
+                sj.add(FLD_OFF_TARGET_SCORE_SUM);
+            }
             writer.write(sj.toString());
             writer.newLine();
 
@@ -299,6 +315,7 @@ public class OffTargetRiskProfiler
 
     private ProcessingStats processBaseWindowBatch(List<ChrBaseRegion> batch) {
         GU_LOGGER.debug("Processing base window batch of size {}", batch.size());
+        GU_LOGGER.debug("First base window: {}", batch.get(0).toString());
 
         GU_LOGGER.debug("Retrieving base window sequences");
         // Somewhat awkward stream processing here because we need the base sequence to filter on
@@ -353,30 +370,36 @@ public class OffTargetRiskProfiler
     }
 
     private record RiskModelResult(
+        // Range: [0, 1].
+        // Roughly reciprocal to the number of exact match alignments. E.g. 1 means no off-target, 0.5 means 1 off-target.
+        double qualityScore,
         // Range: [0, +inf].
         // Higher is higher chance of off-target match.
         long riskScore,
-        // Range: [0, 1].
-        // Roughly reciprocal to the number of exact match alignments. E.g. 1 means no off-target, 0.5 means 1 off-target.
-        double qualityScore
+        // Number of alignments contributing to the risk score (i.e. above the threshold).
+        int offTargetCount,
+        // Raw sum of alignment scores of alignments contributing to the risk score.
+        long offTargetScoreSum
     ) {}
 
     private RiskModelResult computeRiskModel(List<BwaMemAlignment> alignments) {
-        List<BwaMemAlignment> offTarget = alignments.stream()
+        List<Integer> offTarget = alignments.stream()
+                // Only need the alignment scores. The alignment score from BWA-MEM is effectively a similarity score.
+                .map(BwaMemAlignment::getAlignerScore)
                 // Order by best match first.
-                .sorted(Comparator.comparing(BwaMemAlignment::getAlignerScore, Comparator.reverseOrder()))
+                .sorted(Comparator.reverseOrder())
                 // Drop the first alignment which is assumed to be the on-target exact match.
                 .skip(1)
                 // Keep only alignments with score above the configured threshold.
-                .filter(a -> a.getAlignerScore() >= mMatchScoreThreshold)
+                .takeWhile(score -> score >= mMatchScoreThreshold)
                 .toList();
-        long offTargetScoreSum = offTarget.stream().mapToLong(BwaMemAlignment::getAlignerScore).sum();
-        long offTargetCount = offTarget.size();
-        long riskScore = offTargetScoreSum - offTargetCount * (mMatchScoreThreshold - mMatchScoreOffset);
+        int offTargetCount = offTarget.size();
+        long offTargetScoreSum = offTarget.stream().mapToLong(s -> s).sum();
+        long riskScore = offTargetScoreSum - (long)offTargetCount * (mMatchScoreThreshold - mMatchScoreOffset);
         // This value is the approximate equivalent total count of exact match alignments.
         double effectiveOffTargetMatchLength = (double) riskScore / (mBaseWindowLength - mMatchScoreThreshold + mMatchScoreOffset);
         double qualityScore = 1 / (1 + effectiveOffTargetMatchLength);
-        return new RiskModelResult(riskScore, qualityScore);
+        return new RiskModelResult(qualityScore, riskScore, offTargetCount, offTargetScoreSum);
     }
 
     private void writeWindowResult(ChrBaseRegion region, RiskModelResult risk)
@@ -385,7 +408,12 @@ public class OffTargetRiskProfiler
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(region.chromosome()).add(String.valueOf(region.start())).add(String.valueOf(region.end()))
-                    .add(String.valueOf(risk.riskScore)).add(String.valueOf((float)risk.qualityScore));
+                    .add(String.valueOf(formatQualityScore(risk.qualityScore)));
+            if (mVerboseOutput) {
+                sj.add(String.valueOf(risk.riskScore));
+                sj.add(String.valueOf(risk.offTargetCount));
+                sj.add(String.valueOf(risk.offTargetScoreSum));
+            }
             mOutputWriter.write(sj.toString());
             mOutputWriter.newLine();
         }
@@ -393,6 +421,13 @@ public class OffTargetRiskProfiler
         {
             GU_LOGGER.error("failed to write output file: {}", e.toString());
         }
+    }
+
+    private String formatQualityScore(double qualityScore) {
+        DecimalFormat format = new DecimalFormat();
+        format.setMinimumFractionDigits(0);
+        format.setMaximumFractionDigits(QUALITY_SCORE_PRECISION);
+        return format.format(qualityScore);
     }
 
     public static void main(String[] args)
@@ -413,6 +448,7 @@ public class OffTargetRiskProfiler
         addThreadOptions(configBuilder);
 
         configBuilder.addConfigItem(CFG_OUTPUT_FILE, true, "Output filename");
+        configBuilder.addFlag(CFG_VERBOSE_OUTPUT, "Output more risk info (useful for debugging)");
 
         addLoggingOptions(configBuilder);
 
