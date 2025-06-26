@@ -2,9 +2,7 @@ package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_DESC;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.READ_LENGTH;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.REGIONS_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
@@ -17,7 +15,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegionList;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
@@ -26,7 +24,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
@@ -183,8 +181,6 @@ public class SliceConfig
 
         addRefGenomeFile(configBuilder, true);;
         configBuilder.addConfigItem(OUTPUT_PREFIX, "File prefix for BAM and read TSV");
-
-        configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAX_PARTITION_READS, "Max partition reads (perf-only)", 0);

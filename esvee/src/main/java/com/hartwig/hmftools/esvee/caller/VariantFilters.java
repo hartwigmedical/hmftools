@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
@@ -17,6 +18,9 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_LEN
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MAX_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_MIN_AF;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEL_ARTEFACT_SHORT_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_EXCLUDED_FILTERS;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_MIN_UPS;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_AF_RATIO;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_MIN_AF;
@@ -30,9 +34,12 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_RATE_L
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_STD_DEV_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_1;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_2;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_1;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_2;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
@@ -382,9 +389,11 @@ public class VariantFilters
 
             double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
 
-            if(strandBias == 1.0 && var.insertSequence().contains(PON_INS_SEQ_FWD_STRAND))
+            String insSequence = var.insertSequence();
+
+            if(strandBias == 1.0 && (insSequence.contains(PON_INS_SEQ_FWD_STRAND_1) || insSequence.contains(PON_INS_SEQ_FWD_STRAND_2)))
                 hasFailing = true;
-            else if(strandBias == 0 && var.insertSequence().contains(PON_INS_SEQ_REV_STRAND))
+            else if(strandBias == 0 && (insSequence.contains(PON_INS_SEQ_REV_STRAND_1) || insSequence.contains(PON_INS_SEQ_REV_STRAND_2)))
                 hasFailing = true;
             else
                 hasPassing = true;
@@ -394,6 +403,95 @@ public class VariantFilters
             return true;
 
         return false;
+    }
+
+    public void applyAdjacentFilters(final Map<String,List<Breakend>> chromosomeBreakends)
+    {
+        // filter INVs which are short, unchained and isolated from other variants (exlcuding other similar INVs)
+        for(List<Breakend> breakends : chromosomeBreakends.values())
+        {
+            for(int i = 0; i < breakends.size(); ++i)
+            {
+                Breakend breakend = breakends.get(i);
+
+                if(breakend.sv().filters().contains(INV_SHORT_ISOLATED))
+                    continue;
+
+                if(!isCandidateIsolatedInv(breakend.sv()))
+                    continue;
+
+                // search forwards and backwards for an adjacent non-artefact breakend
+                boolean hasValidAdjacent = false;
+
+                for(int j = 0; j <= 1; ++j)
+                {
+                    boolean searchUp = (j == 0);
+                    int k = searchUp ? i + 1 : i - 1;
+
+                    while(k >= 0 && k < breakends.size())
+                    {
+                        Breakend otherBreakend = breakends.get(k);
+
+                        if(abs(otherBreakend.Position - breakend.Position) > INV_ADJACENT_LENGTH * 2) // stop the search
+                            break;
+
+                        if(hasAdjacentNonArtefact(breakend, otherBreakend))
+                        {
+                            hasValidAdjacent = true;
+                            break;
+                        }
+
+                        k += searchUp ? 1 : -1;
+                    }
+
+                    if(hasValidAdjacent)
+                        break;
+                }
+
+                if(hasValidAdjacent)
+                    continue;
+
+                breakend.sv().addFilter(INV_SHORT_ISOLATED);
+            }
+        }
+    }
+
+    private static boolean isCandidateIsolatedInv(final Variant var)
+    {
+        // a short INV which either isn't in a chain or has low UFP evidence
+        return var.type() == INV && var.svLength() <= INV_ADJACENT_LENGTH
+            && (!var.inChainedAssembly() || var.maxUniqueFragmentPositions() < INV_ADJACENT_MIN_UPS);
+    }
+
+    private static boolean hasAdjacentNonArtefact(final Breakend breakend, final Breakend otherBreakend)
+    {
+        if(otherBreakend == breakend.otherBreakend())
+            return false;
+
+        if(breakend.Orient == otherBreakend.Orient) // must be facing away
+            return false;
+
+        if(isCandidateIsolatedInv(otherBreakend.sv()))
+            return false;
+
+        // skip if the next breakend is also an artefact (including PON)
+        if(otherBreakend.sv().filters().stream().anyMatch(x -> INV_ADJACENT_EXCLUDED_FILTERS.contains(x)))
+            return false;
+
+        // within close range
+        int maxLowerPosition, minUpperPosition;
+        if(breakend.Position < otherBreakend.Position)
+        {
+            maxLowerPosition = breakend.Position + breakend.InexactHomology.End;
+            minUpperPosition = otherBreakend.Position + otherBreakend.InexactHomology.Start;
+        }
+        else
+        {
+            maxLowerPosition = otherBreakend.Position + otherBreakend.InexactHomology.End;
+            minUpperPosition = breakend.Position + breakend.InexactHomology.Start;
+        }
+
+        return maxLowerPosition >= minUpperPosition - INV_ADJACENT_LENGTH;
     }
 
     public static void logFilterTypeCounts(final List<Variant> variantList)

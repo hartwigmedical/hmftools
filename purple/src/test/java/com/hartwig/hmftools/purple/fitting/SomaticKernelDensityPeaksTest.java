@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class SomaticKernelDensityPeaksTest
 {
-
     private static final double EPSILON = 1e-10;
 
     @Test

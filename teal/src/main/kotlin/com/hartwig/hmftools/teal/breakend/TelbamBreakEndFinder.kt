@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.teal.breakend
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import com.hartwig.hmftools.teal.telbam.TelbamReader
 import org.apache.logging.log4j.LogManager
 
@@ -20,7 +21,10 @@ class TelbamBreakEndFinder(config: BreakEndParams, telbamFile: java.io.File, ext
         mLogger.info("reading telbam file: {}", mTelbamFile.path)
 
         // first we want to find the read groups
-        val telbamReader = TelbamReader(mTelbamFile, mConfig.excludedGenomeRegions, mConfig.includedGenomeRegions)
+        val telbamReader = TelbamReader(mTelbamFile, mConfig.excludedGenomeRegions,
+            mConfig.includedGenomeRegions?.map {
+                r -> ChrBaseRegion(r.chromosome(), r.start(), r.end())
+            })
         telbamReader.read()
 
         val readGroups = telbamReader.readGroups.values

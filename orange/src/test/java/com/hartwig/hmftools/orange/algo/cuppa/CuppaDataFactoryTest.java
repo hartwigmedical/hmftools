@@ -3,14 +3,17 @@ package com.hartwig.hmftools.orange.algo.cuppa;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.cuppa.ClassifierName;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
@@ -123,6 +126,30 @@ public class CuppaDataFactoryTest
         int featureValue = CuppaDataFactory.getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
         int expectedFeatureValue = 8;
         assertEquals(expectedFeatureValue, featureValue);
+    }
+
+    @Test
+    public void canAssignCuppaModeFromFileWithoutRna() throws Exception
+    {
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_WITHOUT_RNA_TSV);
+        CuppaMode mode = CuppaDataFactory.getCuppaMode(cuppaPredictions.MainCombinedClassifierName);
+        CuppaMode expectedMode = CuppaMode.WGS;
+        assertEquals(expectedMode, mode);
+    }
+
+    @Test
+    public void canAssignCuppaModeFromFileWithRna() throws Exception
+    {
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_WITH_RNA_TSV);
+        CuppaMode mode = CuppaDataFactory.getCuppaMode(cuppaPredictions.MainCombinedClassifierName);
+        CuppaMode expectedMode = CuppaMode.WGTS;
+        assertEquals(expectedMode, mode);
+    }
+
+    @Test
+    public void canThrowExceptionForInvalidMainCombinedClassifierName()
+    {
+        assertThrows(IllegalArgumentException.class, ()-> CuppaDataFactory.getCuppaMode(ClassifierName.ALT_SJ));
     }
 
     private static void assertCuppaPredictions(@NotNull String inputFileName,

@@ -27,7 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;

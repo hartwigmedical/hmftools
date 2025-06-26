@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.junit.Test;
 

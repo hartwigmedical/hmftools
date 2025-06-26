@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.APP_NAME;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 

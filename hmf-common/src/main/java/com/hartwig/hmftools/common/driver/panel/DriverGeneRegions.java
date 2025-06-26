@@ -136,6 +136,10 @@ public final class DriverGeneRegions
             {
                 // LOGGER.debug("chr({}) merged {} regions from overlaps", chromosomeStr, regionsRemoved);
             }
+
+            List<BaseRegion> chrRegions = chrPanelRegions.stream().map(x -> new BaseRegion(x.start(), x.end())).collect(Collectors.toList());
+            chrRegionsMap.put(chromosomeStr, chrRegions);
+
         }
 
         return chrRegionsMap;

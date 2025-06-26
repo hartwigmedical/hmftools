@@ -2,13 +2,9 @@ package com.hartwig.hmftools.cobalt.diploid;
 
 import static junit.framework.TestCase.assertEquals;
 
-import java.util.List;
-
-import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.samtools.util.Locatable;

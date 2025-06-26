@@ -45,7 +45,7 @@ import com.hartwig.hmftools.common.genome.region.Window;
 import com.hartwig.hmftools.common.immune.ImmuneRegions;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.purple.segment.PurpleSupportSegment;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -100,7 +100,7 @@ public class ObservedRegionFactory
     }
 
     public List<ObservedRegion> formObservedRegions(
-            final List<PurpleSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
+            final List<PurpleSupportSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
             final Map<Chromosome,List<CobaltRatio>> ratios, final Multimap<Chromosome,GCProfile> gcProfiles)
     {
         List<ObservedRegion> observedRegions = Lists.newArrayList();
@@ -111,7 +111,7 @@ public class ObservedRegionFactory
 
         List<Integer> candidateGermlineAmpDelRegions = Lists.newArrayList();
 
-        for(PurpleSegment region : regions)
+        for(PurpleSupportSegment region : regions)
         {
             final BAFAccumulator baf = new BAFAccumulator();
             final CobaltAccumulator cobalt = new CobaltAccumulator(mWindowSize, region);
@@ -155,7 +155,7 @@ public class ObservedRegionFactory
         return observedRegions;
     }
 
-    private GermlineStatus getGermlineStatus(final PurpleSegment region, double normalRatio, double tumorRatio, int depthWindowCount)
+    private GermlineStatus getGermlineStatus(final PurpleSupportSegment region, double normalRatio, double tumorRatio, int depthWindowCount)
     {
         if(EXCLUDED_IMMUNE_REGIONS.stream()
                 .anyMatch(x -> x.Chromosome.equals(region.Chromosome) && positionsWithin(region.start(), region.end(), x.start(), x.end())))
@@ -173,7 +173,7 @@ public class ObservedRegionFactory
     }
 
     private boolean isGermlineAmpDelCandidate(
-            final PurpleSegment region, final GermlineStatus germlineStatus, double rawNormalRatio, double normalRatio)
+            final PurpleSupportSegment region, final GermlineStatus germlineStatus, double rawNormalRatio, double normalRatio)
     {
         if(germlineStatus != DIPLOID || normalRatio <= 0 || HumanChromosome.fromString(region.Chromosome).isAllosome())
             return false;

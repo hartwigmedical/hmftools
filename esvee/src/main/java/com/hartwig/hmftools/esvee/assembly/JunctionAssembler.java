@@ -2,9 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -13,44 +11,46 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPL
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_DISTINCT_FRAGS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.buildIndelFrequencies;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findMaxFrequencyIndelReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
-import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.checkRefSideSoftClips;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.checkSupportVsRefSideSoftClip;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.assembly.read.ReadFilters;
 
 public class JunctionAssembler
 {
     private Junction mJunction;
+    private final RefGenomeInterface mRefGenome;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome)
     {
         mJunction = junction;
+        mRefGenome = refGenome;
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -88,7 +88,7 @@ public class JunctionAssembler
             // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
             for(Read read : rawReads)
             {
-                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, mJunction))
+                if(!readSoftClipsAndCrossesJunction(read, mJunction, mRefGenome))
                 {
                     mNonJunctionReads.add(read);
                     continue;
@@ -98,12 +98,20 @@ public class JunctionAssembler
                 {
                     int softClipJunctionExtension = readJunctionExtensionLength(read, mJunction);
 
-                    hasMinLengthSoftClipRead |= softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH
-                            || (read.hasLineTail() && softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH);
-
-                    if(softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH)
+                    if(read.hasLineTail())
                     {
-                        extensionReads.add(read);
+                        hasMinLengthSoftClipRead |= softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH;
+
+                        if(softClipJunctionExtension >= LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH)
+                            extensionReads.add(read);
+                    }
+                    else
+                    {
+
+                        hasMinLengthSoftClipRead |= softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+
+                        if(softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH)
+                            extensionReads.add(read);
                     }
                 }
 
@@ -131,7 +139,7 @@ public class JunctionAssembler
                 extensionSeqBuilder.repeatInfo());
 
         // filter LINE source-type sites marked by opposition orientation poly A/T sequences
-        if(LineUtils.hasLineSourceSequence(firstAssembly))
+        if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
             return Collections.emptyList();
 
         firstAssembly.setExtBaseBuildInfo(extensionSeqBuilder.buildInformation());
@@ -142,6 +150,17 @@ public class JunctionAssembler
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
+
+        if(firstAssembly.hasLineSequence())
+        {
+            if(isLineWithLocalAlignedInsert(firstAssembly))
+            {
+                firstAssembly.unmarkLineSequence();
+
+                if(firstAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                    return Collections.emptyList();
+            }
+        }
 
         // test for a second well-supported, alternative assembly at the same junction
         JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
@@ -154,7 +173,7 @@ public class JunctionAssembler
             // call routine to purge reads likely add to multiple assemblies and breaching a dominant RSSC
             // NOTE: this could be done for all assemblies, not just split ones
             if(assemblies.size() > 1)
-                checkRefSideSoftClips(assembly);
+                checkSupportVsRefSideSoftClip(assembly);
 
             RefBaseSeqBuilder refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
             assembly.setRefBases(refBaseSeqBuilder);
@@ -445,6 +464,9 @@ public class JunctionAssembler
 
     private boolean passDistinctFragmentsFilter(final List<SupportRead> support)
     {
+        if(mJunction.Hotspot)
+            return true;
+
         Set<Integer> readPositions = Sets.newHashSet();
         Set<Integer> readEndPositions = null;
 
@@ -452,7 +474,7 @@ public class JunctionAssembler
         {
             if(read.isPairedRead())
             {
-                readPositions.add(read.cachedRead().fragmentEnd());
+                readPositions.add(read.cachedRead().fivePrimeFragmentPosition());
 
                 if(readPositions.size() >= ASSEMBLY_MIN_DISTINCT_FRAGS)
                     return true;
@@ -471,5 +493,11 @@ public class JunctionAssembler
         }
 
         return false;
+    }
+
+    @VisibleForTesting
+    public JunctionAssembler(final Junction junction)
+    {
+        this(junction, null);
     }
 }

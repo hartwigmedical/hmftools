@@ -2,12 +2,15 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
+
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +22,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentChecker;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -148,6 +151,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mSupplementaryRepeats.clear();
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
+        List<JunctionAssembly> dedupedIndels = Lists.newArrayList();
 
         RefBaseExtender refBaseExtender = new RefBaseExtender();
 
@@ -157,7 +161,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             Junction junction = junctionGroup.junctions().get(i);
 
-            JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
+            JunctionAssembler junctionAssembler = new JunctionAssembler(junction, mConfig.RefGenome);
 
             // doesn't seem to be making a big difference, but this is inefficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
@@ -189,7 +193,7 @@ public class JunctionGroupAssembler extends ThreadTask
             }
 
             // dedup assemblies with close junction positions, same orientation
-            dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);
+            dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies, dedupedIndels);
 
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)
@@ -228,10 +232,14 @@ public class JunctionGroupAssembler extends ThreadTask
 
     private void processRecord(final SAMRecord record)
     {
-        mConfig.logReadId(record, "JunctionGroupAssembler:processRecord");
+        // mConfig.logReadId(record, "JunctionGroupAssembler:processRecord");
 
         // temporary checking of repeated (ie identical) supplementaries from SvPrep
         if(ignoreIdenticalSupplementary(record))
+            return;
+
+        // old samples can be have invalid CIGARs
+        if(!record.getReadUnmappedFlag() && record.getCigar().getCigarElements().stream().noneMatch(x -> x.getOperator() == M))
             return;
 
         if(ReadFilters.filterLowQualRead(record))

@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.redux.umi.UmiConfig.extractUmiIdFromReadId;
 import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.buildUmiGroups;
 import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.hasDuplexUmiMatch;
 import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
-import static com.hartwig.hmftools.redux.umi.UmiUtils.trimPolyGTail;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -200,23 +199,6 @@ public class UmiGroupsTest
         FragmentCoords fragmentCoords = createFragmentCoords(fragments.get(0));
         List<DuplicateGroup> groups = buildUmiGroups(fragmentCoords, fragments, umiConfig);
         assertEquals(3, groups.size());
-    }
-
-    @Test
-    public void testTrimPolyGTail()
-    {
-        String umiId = "TCCTATG_CGGGGGG";
-        String actualTrimmedUmiId = trimPolyGTail(umiId);
-        String expectedTrimmedUmiId = "TCCTATG_C";
-        assertEquals(expectedTrimmedUmiId, actualTrimmedUmiId);
-
-        umiId = "TCCTATG_CGGGGGA";
-        String trimmedUmiId = trimPolyGTail(umiId);
-        assertEquals(umiId, trimmedUmiId);
-
-        umiId = "";
-        trimmedUmiId = trimPolyGTail(umiId);
-        assertEquals(umiId, trimmedUmiId);
     }
 
     /*

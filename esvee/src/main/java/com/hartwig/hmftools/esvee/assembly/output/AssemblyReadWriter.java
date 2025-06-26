@@ -170,8 +170,8 @@ public class AssemblyReadWriter
 
                 sj.add(support.breakendSupportType() != null ? support.breakendSupportType().toString() : "NONE");
 
-                sj.add(String.valueOf(support.junctionMatches()));
-                sj.add(String.valueOf(support.junctionMismatches()));
+                sj.add(String.valueOf(support.extensionBaseMatches()));
+                sj.add(String.valueOf(support.extensionBaseMismatches()));
                 sj.add(String.valueOf(support.referenceMismatches()));
                 sj.add(String.valueOf(support.trimCount()));
                 sj.add(String.valueOf(support.hasLineTail()));

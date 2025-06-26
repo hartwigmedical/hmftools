@@ -108,7 +108,7 @@ public final class BamOperations
         commandArgs.add(SORT_COMMAND);
         addThreadsArg(toolName, commandArgs, threads);
 
-        // default memory per thread according to samtools doco is 768MB, could configure as a function of max heap used by MarkDups
+        // default memory per thread according to samtools doco is 768MB, could configure as a function of max heap used by calling app
         // commandArgs.add("-m");
         // commandArgs.add("1G");
 

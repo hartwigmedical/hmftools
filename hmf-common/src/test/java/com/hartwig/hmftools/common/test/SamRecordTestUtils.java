@@ -2,19 +2,21 @@ package com.hartwig.hmftools.common.test;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome.MT_LENGTH;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome.MT_LENGTH;
 
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFlag;
+import htsjdk.samtools.SAMLineParser;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -189,5 +191,19 @@ public final class SamRecordTestUtils
     {
         flags |= flag.intValue();
         return flags;
+    }
+
+    public static SAMRecord parseSamString(final String samString, final SAMSequenceDictionary sequenceDictionary)
+    {
+        SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
+        SAMFileHeader samHeader = recordBuilder.getHeader();
+        samHeader.setSequenceDictionary(sequenceDictionary);
+        SAMLineParser samLineParser = new SAMLineParser(samHeader);
+        return samLineParser.parseLine(samString);
+    }
+
+    public static SAMRecord parseSamString(final String samString)
+    {
+        return parseSamString(samString, SAM_DICTIONARY_V37);
     }
 }

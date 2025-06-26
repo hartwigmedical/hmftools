@@ -20,7 +20,6 @@ public final class CommonUtils
 
     // constants
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1_000_000;
-    public static final int DEFAULT_READ_LENGTH = 151;
 
     // config strings
     public static final String BAM_FILE = "bam_file";

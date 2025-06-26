@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
+import static java.lang.String.format;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -36,6 +38,7 @@ public class MdTag
     }
 
     public boolean hasMismatches() { return mElements.stream().anyMatch(x -> x.Type != MdTagType.MATCH); }
+    public int mismatchCount() { return (int)mElements.stream().filter(x -> x.Type != MdTagType.MATCH).count(); }
 
     public static final byte MATCH_BYTE = (byte)MdTagType.MATCH.ordinal();
 
@@ -158,46 +161,9 @@ public class MdTag
         return Nucleotides.baseIndex(c) >= 0;
     }
 
-    @Deprecated
-    private byte[] extractSubSequenceOld(final int seqIndexStart, final int seqIndexEnd, boolean reverse)
+    public String toString()
     {
-        // establish the sequence start of the MD tag
-        StringBuilder sb = new StringBuilder();
-
-        int seqIndex = 0;
-
-        List<MdTagElement> elements;
-
-        if(reverse)
-        {
-            elements = Lists.newArrayList(mElements);
-            Collections.reverse(elements);
-        }
-        else
-        {
-            elements = mElements;
-        }
-
-        for(MdTagElement element : elements)
-        {
-            for(int i = 0; i < element.Length; ++i)
-            {
-                if(element.Type != MdTagType.DEL)
-                {
-                    if(seqIndex >= seqIndexStart)
-                        sb.append(element.Base);
-
-                    ++seqIndex;
-                }
-
-                if(seqIndex > seqIndexEnd)
-                    break;
-            }
-
-            if(seqIndex > seqIndexEnd)
-                break;
-        }
-
-        return sb.toString().getBytes();
+        return format("%s mismatches(snv=%d del=%d)",
+                mTag, mElements.stream().filter(x -> x.isSnv()).count(), mElements.stream().filter(x -> x.isIndel()).count());
     }
 }

@@ -4,7 +4,7 @@ AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided
 When using paired reference/tumor data, AMBER is also able to: 
   - detect evidence of contamination in the tumor from homozygous sites in the reference
   - facilitate sample matching / patient deduplication by recording SNPs in the germline
-  - identify long regions of homozygosty and consanguinity
+  - identify long regions of homozygosity and consanguinity
 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 

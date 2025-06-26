@@ -2,37 +2,78 @@ package com.hartwig.hmftools.esvee.utils;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.BLACKLIST_BED;
-import static com.hartwig.hmftools.esvee.prep.PrepConfig.READ_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.PrepConfig.PARTITION_SIZE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.gripss.RepeatMaskData;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.prep.BlacklistLocations;
 
@@ -44,17 +85,31 @@ public class BlacklistRepeatAnalyser
 
     private final BlacklistLocations mBlacklistLocations;
     private final RepeatMaskAnnotations mRepeatMaskAnnotations;
+    private final Map<String,List<UnmappingRegion>> mUnmapRegionsMap;
     private final BufferedWriter mWriter;
-    private final RefGenomeInterface mRefGenome;
-    public final RefGenomeVersion mRefGenVersion;
-    private final int mReadLength;
-    private final double mMinRepeatPercent;
+    private final RefGenomeSource mRefGenome;
+    private final RefGenomeVersion mRefGenVersion;
 
-    private static final String MIN_REPEAT_PERC = "min_repeat_percent";
+    private final int mBaseWindowLength;
+    private final double mMinDominantPercent;
+
+    private final boolean mRemoveGeneOverlaps;
+    private final boolean mWriteBlacklistBed;
+    private final Map<String,List<GeneInfo>> mChrGenicRegions;
+    private final List<ChrBaseRegion> mFinalBlacklistRegions;
+
+    private final int mPartitionSize;
+    private final int mThreads;
+    private final SpecificRegions mSpecificChrRegions;
+
     private static final String OUTPUT_FILE = "output_file";
+    private static final String MIN_DOMINANT_PERC = "min_dominant_perc";
+    protected static final String BASE_WINDOW_LENGTH = "base_window_length";
+    private static final String REMOVE_GENE_OVERLAPS = "remove_gene_overlaps";
+    private static final String WRITE_BLACKLIST_BED = "write_blacklist_bed";
 
-    private static final int MIN_REPEAT_BASES = 30;
-    private static final double DEFAULT_MIN_REPEAT_PERC = 0.7;
+    private static final int DEFAULT_BASE_WINDOW_LENGTH = 100;
+    private static final double DEFAULT_MIN_DOMINANT_PERC = 0.95;
 
     public BlacklistRepeatAnalyser(final ConfigBuilder configBuilder)
     {
@@ -63,9 +118,7 @@ public class BlacklistRepeatAnalyser
         mWriter = initialiseWriter();
 
         mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
-        mRefGenVersion = RefGenomeVersion.from(configBuilder);
-        mReadLength = configBuilder.getInteger(READ_LENGTH);
-        mMinRepeatPercent = configBuilder.getDecimal(MIN_REPEAT_PERC);
+        mRefGenVersion = deriveRefGenomeVersion(mRefGenome);
 
         mRepeatMaskAnnotations = new RepeatMaskAnnotations();
         if(configBuilder.hasValue(REPEAT_MASK_FILE))
@@ -74,174 +127,372 @@ public class BlacklistRepeatAnalyser
                 System.exit(1);
         }
 
+        if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
+        {
+            mUnmapRegionsMap = UnmappedRegions.loadUnmapRegions(configBuilder.getValue(UNMAP_REGIONS_FILE));
+        }
+        else
+        {
+            mUnmapRegionsMap = Collections.emptyMap();
+        }
+
+        mChrGenicRegions = Maps.newHashMap();
+        loadGenicInfo(configBuilder);
+
+        mFinalBlacklistRegions = Lists.newArrayList();
+
+        mPartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+        mBaseWindowLength = configBuilder.getInteger(BASE_WINDOW_LENGTH);
+        mMinDominantPercent = configBuilder.getDecimal(MIN_DOMINANT_PERC);
+        mRemoveGeneOverlaps = configBuilder.hasFlag(REMOVE_GENE_OVERLAPS);
+        mWriteBlacklistBed = configBuilder.hasFlag(WRITE_BLACKLIST_BED);
+
+        mThreads = parseThreads(configBuilder);
+        mSpecificChrRegions = SpecificRegions.from(configBuilder);
     }
 
     public void run()
     {
-        SV_LOGGER.info("analysing repeats in {} blacklist locations", mBlacklistLocations.size());
+        SV_LOGGER.info("analysing blacklist regions");
 
-        int regionCount = 0;
+        long startTimeMs = System.currentTimeMillis();
+
+        RefGenomeCoordinates coordinates = mRefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chrStr = mRefGenVersion.versionedChromosome(chromosome.toString());
 
-            List<BaseRegion> regions = mBlacklistLocations.getRegions(chrStr);
-
-            if(regions == null)
+            if(mSpecificChrRegions.excludeChromosome(chrStr))
                 continue;
 
-            for(BaseRegion region : regions)
-            {
-                processRegion(chrStr, region);
-                ++regionCount;
+            List<ChrBaseRegion> chrRegions = buildPartitions(chrStr, coordinates.length(chrStr), mPartitionSize);
 
-                if((regionCount % 1000) == 0)
-                {
-                    SV_LOGGER.debug("processed {} regions", regionCount);
-                }
+            for(ChrBaseRegion region : chrRegions)
+            {
+                if(mSpecificChrRegions.hasFilters() && !mSpecificChrRegions.includeRegion(region))
+                    continue;
+
+                regions.add(region);
             }
         }
+
+        List<RegionTask> regionTasks = regions.stream().map(x -> new RegionTask(x)).collect(Collectors.toList());
+
+        List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
+        if(!TaskExecutor.executeTasks(callableList, mThreads))
+            System.exit(1);
 
         closeBufferedWriter(mWriter);
 
-        SV_LOGGER.info("blacklist analysis complete");
-    }
-
-    private void processRegion(final String chromosome, final BaseRegion region)
-    {
-        List<RepeatData> repeats = Lists.newArrayList();
-
-        String refBases = mRefGenome.getBaseString(chromosome, region.start(), region.end());
-        int refBaseLength = refBases.length();
-        int readShift = 1; // mReadLength / 10;
-
-        RepeatData currentRepeat = null;
-        int readIndex = 0;
-
-        List<RepeatMaskData> rmMatches = mRepeatMaskAnnotations.findMatches(chromosome, region);
-
-        while(readIndex < refBaseLength)
+        if(mWriteBlacklistBed)
         {
-            boolean atRegionEnd = readIndex + mReadLength >= refBaseLength;
-            String readRefBases = refBases.substring(readIndex, min(readIndex + mReadLength, refBaseLength));
+            ChrBaseRegion.checkMergeOverlaps(mFinalBlacklistRegions, true);
 
-            if(readRefBases.length() < MIN_REPEAT_BASES)
-                break;
-
-            int[] baseCounts = calcNucleotideCounts(readRefBases);
-
-            int minRepeatCount = max((int)round(mMinRepeatPercent * readRefBases.length()), MIN_REPEAT_BASES);
-
-            char repeatedBase = 0;
-            int repeatCount = 0;
-
-            for(int b = 0; b < baseCounts.length; ++b)
+            try
             {
-                if(baseCounts[b] >= minRepeatCount)
-                {
-                    repeatedBase = Nucleotides.DNA_BASES[b];
-                    repeatCount = baseCounts[b];
-                    break;
-                }
-            }
+                String outputBed = mOutputFile.replaceAll(TSV_EXTENSION, ".bed");
 
-            if(repeatedBase > 0)
+                BufferedWriter writer = createBufferedWriter(outputBed, false);
+
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+                sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
+
+                writer.write(sj.toString());
+                writer.newLine();
+
+                for(ChrBaseRegion region : mFinalBlacklistRegions)
+                {
+                    StringJoiner regionData = new StringJoiner(TSV_DELIM);
+                    regionData.add(region.Chromosome);
+                    regionData.add(String.valueOf(region.start() - 1));  // write as a BED file, so note the -1 on the start
+                    regionData.add(String.valueOf(region.end()));
+                    writer.write(regionData.toString());
+                    writer.newLine();
+                }
+
+                writer.close();
+            }
+            catch(IOException e)
             {
-                int repeatRegionStart = region.start() + readIndex;
-                int repeatRegionEnd = repeatRegionStart + readRefBases.length() - 1;
-
-                if(currentRepeat == null || repeatRegionStart > currentRepeat.Region.end())
-                {
-                    BaseRegion repeatRegion = new BaseRegion(repeatRegionStart, repeatRegionEnd);
-                    currentRepeat = new RepeatData(repeatRegion, String.valueOf(repeatedBase));
-                    currentRepeat.MinCount = currentRepeat.MaxCount = repeatCount;
-                    repeats.add(currentRepeat);
-                }
-                else
-                {
-                    currentRepeat.Region.setEnd(repeatRegionEnd);
-                    currentRepeat.MaxCount = max(currentRepeat.MaxCount, repeatCount);
-                    currentRepeat.MinCount = min(currentRepeat.MinCount, repeatCount);
-                }
+                SV_LOGGER.error(" failed to write final BED file: {}", e.toString());
+                System.exit(1);
             }
-
-            if(atRegionEnd)
-                break;
-
-            readIndex += readShift;
         }
 
-        if(!repeats.isEmpty() || !rmMatches.isEmpty())
-            writeRegionData(chromosome, region, repeats, rmMatches);
+        SV_LOGGER.info("Blacklist region analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private int[] calcNucleotideCounts(final String bases)
+    private class RegionTask implements Callable
     {
-        int[] baseCounts = new int[Nucleotides.DNA_BASES.length];
+        private final ChrBaseRegion mRegion;
 
-        for(int i = 0; i < bases.length(); ++i)
+        private final List<RepeatMaskData> mRepeatMaskRegions;
+        private final List<BaseRegion> mBlackListRegions;
+        private final List<UnmappingRegion> mUnmapRegions;
+        private final List<GeneInfo> mGeneRegions;
+
+        public RegionTask(final ChrBaseRegion region)
         {
-            char base = bases.charAt(i);
-            int baseIndex = Nucleotides.baseIndex(base);
+            mRegion = region;
+            mRepeatMaskRegions = mRepeatMaskAnnotations.findMatches(region);
 
-            if(baseIndex >= 0)
-                ++baseCounts[baseIndex];
-        }
+            mBlackListRegions = Lists.newArrayList();
+            List<BaseRegion> chrBlacklistRegions = mBlacklistLocations.getRegions(region.Chromosome);
 
-        return baseCounts;
-    }
-
-    private class RepeatData
-    {
-        public final BaseRegion Region;
-        public String Repeat;
-        public int MinCount;
-        public int MaxCount;
-
-        public RepeatData(final BaseRegion region, final String repeat)
-        {
-            Region = region;
-            Repeat = repeat;
-            MinCount = 0;
-            MaxCount = 0;
-        }
-    }
-
-    private void writeRegionData(
-            final String chromosome, final BaseRegion region, final List<RepeatData> repeats, final List<RepeatMaskData> rmMatches)
-    {
-        try
-        {
-            String regionStr = format("%s\t%d\t%d", chromosome, region.start(), region.end());
-
-            for(RepeatData repeatData : repeats)
+            if(chrBlacklistRegions != null)
             {
-                mWriter.write(format("%s\t%s\t%s\t%d\t%d\t%d\t%s",
-                        regionStr, "BASE_REPEAT", repeatData.Repeat, repeatData.Region.start(), repeatData.Region.end(),
-                        repeatData.MaxCount, format("MinCount=%d",repeatData.MinCount)));
-                mWriter.newLine();
+                chrBlacklistRegions.stream()
+                        .filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
+                        .forEach(x -> mBlackListRegions.add(x));
             }
 
-            // log once per class type
-            Set<String> processedClasses = Sets.newHashSet();
+            mUnmapRegions = Lists.newArrayList();
+            List<UnmappingRegion> chrUnmapRegions = mUnmapRegionsMap.get(region.Chromosome);
 
-            for(RepeatMaskData rmData : rmMatches)
+            if(chrUnmapRegions != null)
             {
-                if(processedClasses.contains(rmData.ClassType))
+                chrUnmapRegions.stream()
+                        .filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
+                        .forEach(x -> mUnmapRegions.add(x));
+            }
+
+            mGeneRegions = Lists.newArrayList();
+            List<GeneInfo> chrGeneRegions = mChrGenicRegions.get(region.Chromosome);
+
+            if(chrGeneRegions != null)
+            {
+                chrGeneRegions.stream()
+                        .filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
+                        .forEach(x -> mGeneRegions.add(x));
+            }
+        }
+
+        @Override
+        public Long call()
+        {
+            int currentWindowStart = mRegion.start();
+            int windowEnd = currentWindowStart + mBaseWindowLength - 1;
+
+            int minRegionEnd = mRegion.end() - (int)(mBaseWindowLength * 0.1);
+
+            while(windowEnd <= minRegionEnd)
+            {
+                analyseWindow(new BaseRegion(currentWindowStart, min(windowEnd, mRegion.end())));
+
+                currentWindowStart = windowEnd + 1;
+                windowEnd = currentWindowStart + mBaseWindowLength - 1;
+            }
+
+            return (long)0;
+        }
+
+        private void analyseWindow(final BaseRegion region)
+        {
+            // ignore regions already covered by an unmapping region
+            for(UnmappingRegion unmapRegion : mUnmapRegions)
+            {
+                // check for same required overlap as used in Redux to skip a read
+                if(hasSufficientOverlap(region, unmapRegion, 0.9))
                     continue;
+            }
 
-                processedClasses.add(rmData.ClassType);
+            byte[] refBases = mRefGenome.getBases(mRegion.Chromosome, region.start(), region.end());
 
-                mWriter.write(format("%s\t%s\t%s\t%d\t%d\t%d\t%s",
-                        regionStr, "REPEAT_MASK", rmData.ClassType,
-                        rmData.Region.start(), rmData.Region.end(), 0, format("Id=%s", rmData.Id)));
-                mWriter.newLine();
+            short[] baseCounts = new short[Nucleotides.DNA_BASES.length];
+
+            for(int i = 0; i < refBases.length; ++i)
+            {
+                int baseIndex = Nucleotides.baseIndex(refBases[i]);
+
+                if(baseIndex >= 0 && baseIndex < baseCounts.length)
+                    ++baseCounts[baseIndex];
+            }
+
+            char topBase = 0;
+            char secondBase = 0;
+            float topBaseCount = 0;
+            float secondBaseCount = 0;
+
+            for(int i = 0; i < baseCounts.length; ++i)
+            {
+                if(baseCounts[i] > topBaseCount)
+                {
+                    if(topBaseCount > secondBaseCount)
+                    {
+                        secondBaseCount = topBaseCount;
+                        secondBase = topBase;
+                    }
+
+                    topBaseCount = baseCounts[i];
+                    topBase = Nucleotides.DNA_BASES[i];
+                }
+                else if(baseCounts[i] == topBaseCount || baseCounts[i] > secondBaseCount)
+                {
+                    secondBaseCount = baseCounts[i];
+                    secondBase = Nucleotides.DNA_BASES[i];
+                }
+            }
+
+            String dominantBases;
+            double dominantBasePercent;
+
+            double topBasePerc = topBaseCount / (double)mBaseWindowLength;
+            double topAndSecondBasePerc = (topBaseCount + secondBaseCount) / (double)mBaseWindowLength;
+
+            if(topBasePerc >= mMinDominantPercent)
+            {
+                dominantBases = String.valueOf(topBase);
+                dominantBasePercent = topBasePerc;
+            }
+            else if(topAndSecondBasePerc >= mMinDominantPercent)
+            {
+                dominantBases = format("%c_%c", topBase, secondBase);
+                dominantBasePercent = topAndSecondBasePerc;
+            }
+            else
+            {
+                return;
+            }
+
+            List<RepeatMaskData> repeatMasks = mRepeatMaskRegions.stream()
+                    .filter(x -> hasSufficientOverlap(region, x.Region, 0.5)).collect(Collectors.toList());
+
+            List<BaseRegion> blacklistRegions = mBlackListRegions.stream()
+                    .filter(x -> hasSufficientOverlap(region, x, 0.5)).collect(Collectors.toList());
+
+            List<GeneInfo> genicOverlaps = mGeneRegions.stream()
+                    .filter(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end())).collect(Collectors.toList());
+
+            writeRegionData(mRegion.Chromosome, region, dominantBases, dominantBasePercent, repeatMasks, blacklistRegions, genicOverlaps);
+
+            if(mWriteBlacklistBed)
+            {
+                if(!mRemoveGeneOverlaps || genicOverlaps.isEmpty())
+                {
+                    addBlacklistRegion(new ChrBaseRegion(mRegion.Chromosome, region.start(), region.end()));
+                }
             }
         }
-        catch(IOException e)
+    }
+
+    private synchronized void addBlacklistRegion(final ChrBaseRegion region)
+    {
+        mFinalBlacklistRegions.add(region);
+    }
+
+    private boolean hasSufficientOverlap(final BaseRegion window, final BaseRegion otherRegion, final double requiredPerc)
+    {
+        if(!otherRegion.overlaps(window))
+            return false;
+
+        int overlap = min(otherRegion.end(), window.end()) - max(otherRegion.start(), window.start()) + 1;
+        return overlap >= requiredPerc * mBaseWindowLength;
+    }
+
+    private void loadGenicInfo(final ConfigBuilder configBuilder)
+    {
+        if(!configBuilder.hasValue(ENSEMBL_DATA_DIR))
+            return;
+
+        List<DriverGene> driverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
+        KnownFusionCache knownFusionCache = new KnownFusionCache();
+        knownFusionCache.loadFile(configBuilder.getValue(KNOWN_FUSIONS_FILE));
+
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(configBuilder.getValue(ENSEMBL_DATA_DIR), mRefGenVersion);
+        ensemblDataCache.setRequiredData(true, false, false, true);
+        ensemblDataCache.load(false);
+
+        Set<String> addedGenes = driverGenes.stream().map(x -> x.gene()).collect(Collectors.toSet());
+
+        List<KnownFusionData> knownFusionData = knownFusionCache.getDataByType(KNOWN_PAIR);
+
+        if(knownFusionData != null)
         {
-            SV_LOGGER.error("failed to write output file: {}", e.toString());
+            knownFusionData.forEach(x -> addedGenes.add(x.FiveGene));
+            knownFusionData.forEach(x -> addedGenes.add(x.ThreeGene));
         }
+
+        for(String geneName : addedGenes)
+        {
+            GeneData geneData = ensemblDataCache.getGeneDataByName(geneName);
+
+            if(geneData == null)
+                continue;
+
+            TranscriptData transcriptData = ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId);
+
+            if(transcriptData == null)
+                continue;
+
+            List<GeneInfo> geneRegions = mChrGenicRegions.get(geneData.Chromosome);
+
+            if(geneRegions == null)
+            {
+                geneRegions = Lists.newArrayList();
+                mChrGenicRegions.put(geneData.Chromosome, geneRegions);
+            }
+
+            if(transcriptData.posStrand())
+            {
+                geneRegions.add(new GeneInfo(transcriptData.
+                        TransStart - 10000, transcriptData.TransStart - 1, format("%s_UPSTREAM", geneName)));
+            }
+            else
+            {
+                geneRegions.add(new GeneInfo(transcriptData.
+                        TransEnd + 1, transcriptData.TransEnd + 10000, format("%s_UPSTREAM", geneName)));
+            }
+
+            for(int i = 0; i < transcriptData.exons().size(); ++i)
+            {
+                ExonData exonData = transcriptData.exons().get(i);
+
+                geneRegions.add(new GeneInfo(exonData.Start, exonData.End, format("%s_EXON_%d", geneName, exonData.Rank)));
+
+                if(i < transcriptData.exons().size() - 1)
+                {
+                    ExonData nextExon = transcriptData.exons().get(i + 1);
+
+                    geneRegions.add(new GeneInfo(
+                            exonData.End + 1, nextExon.Start - 1, format("%s_INTRON_%d", geneName, exonData.Rank)));
+                }
+            }
+        }
+
+        // manually create genic regions for IG
+        List<String> igGenes = List.of("IGH", "IGK", "IGL");
+
+        for(String geneName : igGenes)
+        {
+            ChrBaseRegion igRegion = getIgRegion(geneName, mRefGenVersion);
+
+            List<GeneInfo> geneRegions = mChrGenicRegions.get(igRegion.Chromosome);
+
+            if(geneRegions == null)
+            {
+                geneRegions = Lists.newArrayList();
+                mChrGenicRegions.put(igRegion.Chromosome, geneRegions);
+            }
+
+            geneRegions.add(new GeneInfo(igRegion.start(), igRegion.end(), geneName));
+        }
+    }
+
+    private class GeneInfo extends BaseRegion
+    {
+        public final String Info;
+
+        public GeneInfo(final int posStart, final int posEnd, final String info)
+        {
+            super(posStart, posEnd);
+            Info = info;
+        }
+
+        public String toString() { return format("%s:%d-%d", Info, start(), end()); }
     }
 
     private BufferedWriter initialiseWriter()
@@ -250,7 +501,13 @@ public class BlacklistRepeatAnalyser
         {
             BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
-            writer.write("Chromosome\tPosStart\tPosEnd\tRepeatType\tRepeatInfo\tRepeatPosStart\tRepeatPosEnd\tCount\tOtherInfo");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END);
+
+            sj.add("DominantBases").add("Concentration").add("BlacklistRegions").add("RepeatInfo").add("GeneInfo");
+
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -262,19 +519,63 @@ public class BlacklistRepeatAnalyser
         }
     }
 
+    private synchronized void writeRegionData(
+            final String chromosome, final BaseRegion region, final String dominantBases, final double basePercent,
+            final List<RepeatMaskData> repeatMasks, final List<BaseRegion> blacklistRegions, final List<GeneInfo> genicOverlaps)
+    {
+        try
+        {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(chromosome).add(String.valueOf(region.start())).add(String.valueOf(region.end()));
+
+            sj.add(dominantBases).add(String.format("%.2f", basePercent));
+
+            String blacklistInfo = blacklistRegions.stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
+
+            String repeatInfo = repeatMasks.stream()
+                    .map(x -> format("%s:%d-%d", x.ClassType, x.Region.start(), x.Region.end())).collect(Collectors.joining(ITEM_DELIM));
+
+            String geneOverlaps = genicOverlaps.stream()
+                    .map(x -> format("%s_%d:%d", x.Info, x.start(), x.end())).collect(Collectors.joining(ITEM_DELIM));
+
+            sj.add(blacklistInfo).add(repeatInfo).add(geneOverlaps);
+
+            mWriter.write(sj.toString());
+            mWriter.newLine();
+
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error("failed to write output file: {}", e.toString());
+        }
+    }
+
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        addRefGenomeConfig(configBuilder, true);
+        addRefGenomeFile(configBuilder, true);
         configBuilder.addPath(BLACKLIST_BED, false, "Blacklist BED file");
-        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
-        configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
-        configBuilder.addDecimal(MIN_REPEAT_PERC, "Min repeat perecent of read", DEFAULT_MIN_REPEAT_PERC);
+        UnmappedRegions.registerConfig(configBuilder);
         RepeatMaskAnnotations.addConfig(configBuilder);
+
+        addGenePanelOption(configBuilder, false);
+        addKnownFusionFileOption(configBuilder);
+        addEnsemblDir(configBuilder);
+
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addInteger(PARTITION_SIZE, "Read length", DEFAULT_CHR_PARTITION_SIZE);
+
+        configBuilder.addInteger(BASE_WINDOW_LENGTH, "Base window length for analysis", DEFAULT_BASE_WINDOW_LENGTH);
+        configBuilder.addDecimal(MIN_DOMINANT_PERC, "Min dominant concerntration of 1 or 2 bases", DEFAULT_MIN_DOMINANT_PERC);
+        configBuilder.addFlag(REMOVE_GENE_OVERLAPS, "Remove regions which overlap a genic region");
+        configBuilder.addFlag(WRITE_BLACKLIST_BED, "Write blacklist BED file for use in Esvee Prep");
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 

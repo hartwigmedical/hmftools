@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
-import static com.hartwig.hmftools.sage.common.Microhomology.findHomology;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
@@ -18,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.candidate.RefContextCache;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;

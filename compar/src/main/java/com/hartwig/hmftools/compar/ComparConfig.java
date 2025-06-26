@@ -16,8 +16,8 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.compar.common.Category.ALL_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.Category.DRIVER;
 import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;

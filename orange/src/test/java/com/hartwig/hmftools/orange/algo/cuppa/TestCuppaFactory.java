@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
@@ -25,8 +26,9 @@ public final class TestCuppaFactory
         predictions.add(prediction);
 
         return ImmutableCuppaData.builder()
-                .bestPrediction(prediction)
+                .mode(CuppaMode.WGS)
                 .predictions(predictions)
+                .bestPrediction(prediction)
                 .simpleDups32To200B(0)
                 .maxComplexSize(0)
                 .telomericSGLs(0)

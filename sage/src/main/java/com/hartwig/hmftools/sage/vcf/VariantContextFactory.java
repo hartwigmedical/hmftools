@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_FLAG;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.log10;
@@ -8,6 +9,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
@@ -152,6 +154,7 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_JITTER, counter.jitter().summary())
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
+                .attribute(AVG_RAW_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(AVG_MODIFIED_BASE_QUAL, avgAltModifiedBaseQuality)
                 .attribute(AVG_MODIFIED_ALT_MAP_QUAL, avgAltModifiedMapQuality)
                 .attribute(
@@ -160,11 +163,16 @@ public final class VariantContextFactory
                         READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasNonAlt().bias(), counter.readStrandBiasAlt().bias()))
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .attribute(SIMPLE_ALT_COUNT, counter.simpleAltMatches())
+                .attribute(MIN_COORDS_FLAG, counter.fragmentCoords().minCount())
                 .alleles(NO_CALL);
 
         if(counter.umiTypeCounts() != null)
         {
             builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
+        }
+        else
+        {
+            builder.attribute(UMI_TYPE_COUNTS, new int[] {counter.depth(), 0, 0, counter.altSupport(), 0, 0});
         }
 
         return builder.make();

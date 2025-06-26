@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 
 public class ObservedRegion implements GenomeRegion
 {
@@ -196,5 +197,26 @@ public class ObservedRegion implements GenomeRegion
                 mChromosome, mPosStart, mPosEnd, mRatioSupport, mSupport, mGermlineStatus, mBafCount, mObservedBAF,
                 mTumorCopyNumber, mRefNormalisedCopyNumber, mTumorBAF, mFittedTumorCopyNumber, mFittedBAF,
                 mMinStart, mMaxStart);
+    }
+
+    public PurpleSegment toSegment()
+    {
+        return new PurpleSegment(
+                chromosome(), start(), end(), ratioSupport(), support(), bafCount(), observedBAF(), depthWindowCount(),
+                observedTumorRatio(), observedNormalRatio(), unnormalisedObservedNormalRatio(), germlineStatus(), false,
+                gcContent(), minStart(), maxStart(), minorAlleleCopyNumberDeviation(), majorAlleleCopyNumberDeviation(),
+                deviationPenalty(), eventPenalty(), refNormalisedCopyNumber(), tumorCopyNumber(), tumorBAF(),
+                fittedTumorCopyNumber(), fittedBAF());
+    }
+
+    public static ObservedRegion fromSegment(final PurpleSegment segment)
+    {
+        return new ObservedRegion(segment.Chromosome, segment.PosStart, segment.PosEnd, segment.RatioSupport,
+                segment.Support, segment.BafCount, segment.ObservedBAF, segment.DepthWindowCount,
+                segment.ObservedTumorRatio, segment.ObservedNormalRatio, segment.UnnormalisedObservedNormalRatio,
+                segment.GermlineState, false, segment.GcContent, segment.MinStart, segment.MaxStart,
+                segment.MinorAlleleCopyNumberDeviation, segment.MajorAlleleCopyNumberDeviation, segment.DeviationPenalty,
+                segment.EventPenalty, segment.RefNormalisedCopyNumber, segment.TumorCopyNumber, segment.TumorBAF,
+                segment.FittedTumorCopyNumber, segment.FittedBAF);
     }
 }

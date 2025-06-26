@@ -1,18 +1,24 @@
 package com.hartwig.hmftools.esvee.depth;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
+import static com.hartwig.hmftools.common.sv.SvUtils.isIndel;
+import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -22,6 +28,7 @@ public class VariantInfo
     public final int PositionMin;
     public final int PositionMax;
     public final boolean IsSgl;
+    public final boolean IsShortIndel;
     public final Orientation Orient;
 
     public final RefSupportCounts[] SampleSupportCounts;
@@ -31,6 +38,27 @@ public class VariantInfo
         Position = variant.getStart();
         IsSgl = isSingleBreakend(variant);
         Orient = Orientation.fromByte(IsSgl ? parseSingleOrientation(variant) : parseSvOrientation(variant));
+
+        if(!IsSgl)
+        {
+            StructuralVariantType svType = StructuralVariantType.fromContext(variant);
+
+            if(isIndel(svType))
+            {
+                String ref = variant.getAlleles().get(0).getDisplayString();
+                VariantAltInsertCoords altInsertCoords = fromRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
+                int svLength = abs(Position - altInsertCoords.OtherPosition);
+                IsShortIndel = isShortLocalDelDupIns(svType, svLength);
+            }
+            else
+            {
+                IsShortIndel = false;
+            }
+        }
+        else
+        {
+            IsShortIndel = false;
+        }
 
         final int[] homology = { 0, 0 };
 
@@ -69,11 +97,6 @@ public class VariantInfo
         }
 
         return totalCounts;
-    }
-
-    private static byte getOrientation(final VariantContext variant)
-    {
-        return isSingleBreakend(variant) ? parseSingleOrientation(variant) : parseSvOrientation(variant);
     }
 
     public String toString()

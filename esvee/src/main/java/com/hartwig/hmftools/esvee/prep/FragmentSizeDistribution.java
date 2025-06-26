@@ -21,8 +21,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_PER
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_SAMPLE_SIZE;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
 
-import static htsjdk.samtools.CigarOperator.M;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +32,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicer;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.prep.types.LengthFrequency;

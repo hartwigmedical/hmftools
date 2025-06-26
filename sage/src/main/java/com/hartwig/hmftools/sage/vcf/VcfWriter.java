@@ -19,14 +19,15 @@ public class VcfWriter
     private final List<CompleteVariants> mCompletedVariants;
 
     public VcfWriter(
-            final SageConfig config, final List<String> tumorIds, final List<String> referenceIds, final IndexedFastaSequenceFile refGenome)
+            final SageConfig config, final List<String> tumorIds, final List<String> referenceIds,
+            final IndexedFastaSequenceFile refGenome, boolean runTinc)
     {
         mTumorIds = tumorIds;
         mReferenceIds = referenceIds;
 
         List<String> sampleIds = Lists.newArrayList(referenceIds);
         sampleIds.addAll(tumorIds);
-        mVcfFile = new VariantVCF(refGenome, config.Version, sampleIds, config.OutputFile);
+        mVcfFile = new VariantVCF(refGenome, config.Version, sampleIds, config.OutputFile, runTinc);
         mCompletedVariants = Lists.newArrayList();
         mLastWrittenIndex = -1;
     }

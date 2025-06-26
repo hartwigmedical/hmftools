@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePar
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,8 +27,6 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMFileWriterImpl;
 
 public class FileWriterCache
 {
@@ -81,7 +78,7 @@ public class FileWriterCache
 
             mUnmappingWriter = (BamWriterSync)bamWriter;
             mFullUnmappedWriter = (BamWriterSync)bamWriter;
-            mUnmappingSortedBamFilename = "";
+            mUnmappingSortedBamFilename = null;
             mFinalBamFilename = "";
             return;
         }
@@ -93,15 +90,21 @@ public class FileWriterCache
             String unmappingFilename = formBamFilename(null, UNMAPPING);
             mUnmappingWriter = (BamWriterSync)createBamWriter(unmappingFilename, true);
             mUnmappingSortedBamFilename = formBamFilename(null, UNMAPPING_SORTED);
-
-            String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
-            mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
         }
         else
         {
             mUnmappingWriter = null;
+            mUnmappingSortedBamFilename = null;
+        }
+
+        if(mConfig.SkipFullyUnmappedReads)
+        {
             mFullUnmappedWriter = null;
-            mUnmappingSortedBamFilename = "";
+        }
+        else
+        {
+            String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
+            mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
         }
     }
 
@@ -239,7 +242,6 @@ public class FileWriterCache
     public boolean finaliseBams()
     {
         mReadDataWriter.close();
-
         if(mFullUnmappedWriter != null)
             mFullUnmappedWriter.close();
 
@@ -268,7 +270,8 @@ public class FileWriterCache
         List<String> orderPartitionBams = mBamWriters.stream()
                 .filter(x -> x.isSorted()).map(x -> x.filename()).collect(Collectors.toList());
 
-        orderPartitionBams.add(mFullUnmappedWriter.filename());
+        if(mFullUnmappedWriter != null)
+            orderPartitionBams.add(mFullUnmappedWriter.filename());
 
         RD_LOGGER.debug("concatenating {} BAMs", orderPartitionBams.size());
 
@@ -288,7 +291,8 @@ public class FileWriterCache
         List<String> interimBams = Lists.newArrayList();
 
         bamWriters().stream().filter(x -> !x.filename().equals(mFinalBamFilename)).forEach(x -> interimBams.add(x.filename()));
-        interimBams.add(mUnmappingSortedBamFilename);
+        if(mUnmappingSortedBamFilename != null)
+            interimBams.add(mUnmappingSortedBamFilename);
 
         try
         {

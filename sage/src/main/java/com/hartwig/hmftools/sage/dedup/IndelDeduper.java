@@ -24,7 +24,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
@@ -476,15 +476,6 @@ public class IndelDeduper
         public boolean allowByFilter()
         {
             return Variant.isPassing();
-
-            /* no inclusion of germline filtered variants any longer
-            if(Variant.isPassing())
-                return true;
-
-            // must only have the germline filters below
-            return Variant.filters().stream()
-                    .allMatch(x -> x.equals(MAX_GERMLINE_VAF) || x.equals(MAX_GERMLINE_RELATIVE_VAF) || x.equals(MAX_GERMLINE_ALT_SUPPORT));
-            */
         }
 
         public int indelScore()
@@ -500,7 +491,15 @@ public class IndelDeduper
             if(position() == other.position())
             {
                 if(ref().length() == other.ref().length())
-                    return 0;
+                {
+                    int altSupport = ReadCounter.altSupport();
+                    int otherAltSupport = other.ReadCounter.altSupport();
+
+                    if(altSupport == otherAltSupport)
+                        return 0;
+
+                    return altSupport > otherAltSupport ? -1 : 1;
+                }
 
                 return ref().length() < other.ref().length() ? -1 : 1;
             }

@@ -58,10 +58,17 @@ public class RemoteReadExtractor
     public int remoteReadsSearch() { return mTotalRemoteReadsSearch; }
     public int remoteReadsMatched() { return mTotalRemoteReadsMatched; }
 
+    public void resetCounts()
+    {
+        mTotalRemoteReadsSearch = 0;
+        mTotalRemoteReadsMatched = 0;
+        mTotalRemoteReadSlices = 0;
+    }
+
     public static List<RemoteRegion> collectCandidateRemoteRegions(
             final JunctionAssembly assembly, final List<JunctionAssembly> phasedAssemblies, boolean checkAssemblyMatches)
     {
-        List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
+        List<RemoteRegion> remoteRegions = Lists.newArrayList();
 
         // ignore remote regions which overlap an assembly in this phase group with any matching reads
         for(RemoteRegion remoteRegion : assembly.remoteRegions())
@@ -71,7 +78,7 @@ public class RemoteReadExtractor
 
             if(!checkAssemblyMatches)
             {
-                combinedRemoteRegions.add(remoteRegion);
+                remoteRegions.add(remoteRegion);
                 continue;
             }
 
@@ -109,18 +116,23 @@ public class RemoteReadExtractor
                     if(readsChecked > MAX_MATCHED_READ_CHECK)
                         break;
                 }
+
+                if(matchesAssembly)
+                    break;
             }
 
             if(!matchesAssembly)
-                combinedRemoteRegions.add(remoteRegion);
+                remoteRegions.add(remoteRegion);
         }
 
-        return combinedRemoteRegions;
+        return remoteRegions;
     }
 
-    private static final int HIGH_REMOTE_REGION_TOTAL_READ_COUNT = 1000;
-    private static final int HIGH_REMOTE_REGION_READ_COUNT = 200;
     private static final int MAX_MATCHED_READ_CHECK = 100;
+
+    private static final int MAX_REGIONS = 100;
+    private static final int MAX_TOTAL_READS = 5000;
+    private static final int MAX_REGION_READS = 1000;
 
     public List<Read> extractRemoteRegionReads(final int phaseGroupId, final List<RemoteRegion> remoteRegions, boolean applyThresholds)
     {
@@ -128,8 +140,11 @@ public class RemoteReadExtractor
         // first merges overlapping reads to avoid repeated reads
         RemoteRegion.mergeRegions(remoteRegions);
 
+        Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.readCount()));
+
         int minRemoteRegionReadCount = 1;
-        int maxRemoteRegionReadCount = 0;
+        int remoteRegionSliceCount = 0;
+        int remoteRegionReadCount = 0;
 
         // reset for this phase group
         mRemoteReadsMatched = 0;
@@ -137,22 +152,13 @@ public class RemoteReadExtractor
 
         int totalRemoteReads = remoteRegions.stream().mapToInt(x -> x.readCount()).sum();
 
+        applyThresholds |= remoteRegions.size() > MAX_REGIONS;
+
         // impose restrictions on which remote regions are used - excluding those with 1 or very few reads relatively, eg for 1000 then
         // a region will be required to have 2+ reads
-        if(applyThresholds && totalRemoteReads >= HIGH_REMOTE_REGION_TOTAL_READ_COUNT)
+        if(applyThresholds && totalRemoteReads >= MAX_REGION_READS)
         {
             minRemoteRegionReadCount = (int)floor(log10(totalRemoteReads));
-            Collections.sort(remoteRegions, Comparator.comparingInt(x -> -x.readCount()));
-
-            maxRemoteRegionReadCount = HIGH_REMOTE_REGION_TOTAL_READ_COUNT;
-
-            int cappedTotalRemoteReads = remoteRegions.stream().mapToInt(x -> min(x.readCount(), HIGH_REMOTE_REGION_READ_COUNT)).sum();
-
-            if(cappedTotalRemoteReads > HIGH_REMOTE_REGION_TOTAL_READ_COUNT)
-            {
-                double cappedFraction = HIGH_REMOTE_REGION_TOTAL_READ_COUNT/(double)cappedTotalRemoteReads;
-                maxRemoteRegionReadCount = (int)round(cappedFraction * maxRemoteRegionReadCount);
-            }
         }
 
         List<Read> remoteRegionReads = Lists.newArrayList();
@@ -162,28 +168,42 @@ public class RemoteReadExtractor
             if(minRemoteRegionReadCount > 1 && remoteRegion.readCount() < minRemoteRegionReadCount)
                 break;
 
-            List<Read> remoteReads = extractRemoteReads(phaseGroupId, remoteRegion);
-
-            // finally as a way of down-sample, restrict a single region's read contribution
-            if(maxRemoteRegionReadCount > 0 && remoteReads.size() > maxRemoteRegionReadCount)
-            {
-                remoteReads = remoteReads.subList(0, maxRemoteRegionReadCount);
-            }
+            List<Read> remoteReads = extractRemoteReads(phaseGroupId, remoteRegion, MAX_REGION_READS);
 
             remoteRegionReads.addAll(remoteReads);
+
+            ++remoteRegionSliceCount;
+            remoteRegionReadCount += remoteReads.size();
+
+            if(remoteRegionSliceCount >= MAX_REGIONS || remoteRegionReadCount >= MAX_TOTAL_READS)
+                break;
         }
 
         return remoteRegionReads;
     }
 
-    private List<Read> extractRemoteReads(final int phaseGroupId, final RemoteRegion remoteRegion)
+    private List<Read> extractRemoteReads(final int phaseGroupId, final RemoteRegion remoteRegion, int maxReadCount)
     {
         mRemoteRegion = remoteRegion;
 
         mSourceReadIds.clear();
-        mSourceReadIds.addAll(remoteRegion.readIds());
 
-        mTotalRemoteReadsSearch += remoteRegion.readIds().size();
+        if(remoteRegion.readCount() <= maxReadCount)
+        {
+            mSourceReadIds.addAll(remoteRegion.readIds());
+        }
+        else
+        {
+            for(String readId : remoteRegion.readIds())
+            {
+                mSourceReadIds.add(readId);
+
+                if(mSourceReadIds.size() >= maxReadCount)
+                    break;
+            }
+        }
+
+        mTotalRemoteReadsSearch += mSourceReadIds.size();
 
         if(mBamReader != null)
         {
@@ -193,8 +213,8 @@ public class RemoteReadExtractor
 
             mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
 
-            // SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
-            //        mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
+            SV_LOGGER.trace("remote region({}) sourcedReads(matched={} orig={})",
+                    mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
 
             mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
             mRemoteReadsMatched += mMatchedRemoteReads.size();
@@ -234,11 +254,29 @@ public class RemoteReadExtractor
     {
         // purge any read which is a supplementary of an existing junction read
         List<SupportRead> junctionSupplementaries = assembly.support()
-                .stream().filter(x -> x.isSupplementary()).collect(Collectors.toList());
+                .stream().filter(x -> x.supplementaryData() != null).collect(Collectors.toList());
 
         if(junctionSupplementaries.isEmpty())
             return;
 
+        if(junctionSupplementaries.size() > MAX_REGION_READS || remoteReads.size() > MAX_REGION_READS)
+        {
+            // remove all remote reads with supp data on the assumption they are linked with a matching assembly read
+            int index = 0;
+            while(index < remoteReads.size())
+            {
+                Read read = remoteReads.get(index);
+
+                if(read.supplementaryData() != null)
+                    remoteReads.remove(index);
+                else
+                    ++index;
+            }
+
+            return;
+        }
+
+        // otherwise look for matches on read ID
         int index = 0;
         while(index < remoteReads.size())
         {

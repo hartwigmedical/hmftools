@@ -2,12 +2,15 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -186,7 +189,12 @@ public class SageVariant
     public boolean isDelete() { return variant().ref().length() > variant().alt().length(); }
     public boolean isInsert() { return variant().ref().length() < variant().alt().length(); }
 
-    public boolean isLongInsert() { return SimpleVariant.isLongInsert(mCandidate.variant()); }
+    public boolean isLongInsert() { return isLongInsert(mCandidate.variant()); }
+
+    public static boolean isLongInsert(final SimpleVariant variant)
+    {
+        return variant.isInsert() && variant.indelLength() >= LONG_INSERT_LENGTH;
+    }
 
     public String toString()
     {

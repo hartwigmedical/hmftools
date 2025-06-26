@@ -6,7 +6,9 @@ import static com.hartwig.hmftools.pave.annotation.ClinvarAnnotation.CLNSIGCONF;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.StringCache;
+import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
+import com.hartwig.hmftools.common.perf.StringCache;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.pave.VariantData;
 
 public class ClinvarChrCache
@@ -31,7 +33,12 @@ public class ClinvarChrCache
                 position, mStringCache.intern(ref), mStringCache.intern(alt), stripBrackets(significance), stripBrackets(conflict)));
     }
 
+    public void addEntry(final ClinvarEntry entry) { mEntries.add(entry); }
+
     public void clear() { mEntries.clear(); }
+    public void resetSearch() { mCurrentIndex = 0; }
+    public List<ClinvarEntry> entries() { return mEntries; }
+    public int entryCount() { return mEntries.size(); }
 
     private static String stripBrackets(final String clinvarStr)
     {
@@ -41,11 +48,28 @@ public class ClinvarChrCache
 
     public void annotateVariant(final VariantData variant)
     {
-        if(mEntries.isEmpty() || mEntries.get(mEntries.size() - 1).Position < variant.Position)
-            return;
+        ClinvarEntry matchedEntry = findClinvarEntry(variant.Position, variant.Ref, variant.Alt);
 
-        int position = variant.Position;
+        if(matchedEntry != null)
+        {
+            variant.context().getCommonInfo().putAttribute(CLNSIG, matchedEntry.Significance);
+
+            if(!matchedEntry.Conflict.isEmpty())
+                variant.context().getCommonInfo().putAttribute(CLNSIGCONF, matchedEntry.Conflict);
+        }
+    }
+
+    private ClinvarEntry findClinvarEntry(final int position, final String ref, final String alt)
+    {
+        if(mEntries.isEmpty() || mEntries.get(mEntries.size() - 1).Position < position)
+            return null;
+
+        if(mCurrentIndex < mEntries.size() && position < mEntries.get(mCurrentIndex).Position)
+            return null;
+
         int firstPosMatchIndex = -1;
+
+        ClinvarEntry matchedEntry = null;
 
         for(; mCurrentIndex < mEntries.size(); ++mCurrentIndex)
         {
@@ -55,18 +79,27 @@ public class ClinvarChrCache
                 continue;
 
             if(entry.Position > position)
-                break;
+            {
+                if(firstPosMatchIndex == -1)
+                {
+                    // no match on position was found - move index back to prior entry
+                    if(mCurrentIndex > 0)
+                        --mCurrentIndex;
+                }
+                else
+                {
+                    mCurrentIndex = firstPosMatchIndex;
+                }
+
+                return null;
+            }
 
             if(firstPosMatchIndex == -1)
                 firstPosMatchIndex = mCurrentIndex;
 
-            if(entry.matches(variant))
+            if(entry.matches(position, ref, alt))
             {
-                variant.context().getCommonInfo().putAttribute(CLNSIG, entry.Significance);
-
-                if(!entry.Conflict.isEmpty())
-                    variant.context().getCommonInfo().putAttribute(CLNSIGCONF, entry.Conflict);
-
+                matchedEntry = entry;
                 break;
             }
         }
@@ -74,33 +107,18 @@ public class ClinvarChrCache
         // move the index back to the prior position or the first at this position
         if(firstPosMatchIndex >= 0)
             mCurrentIndex = firstPosMatchIndex;
-        else if(mCurrentIndex > 0)
-            --mCurrentIndex;
+
+        return matchedEntry;
     }
 
-    private class ClinvarEntry
+    public Pathogenicity findPathogenicity(final SimpleVariant variant)
     {
-        public final int Position;
-        public final String Ref;
-        public final String Alt;
-        public final String Significance;
-        public final String Conflict;
+        ClinvarEntry matchedEntry = findClinvarEntry(variant.Position, variant.Ref, variant.Alt);
 
-        public ClinvarEntry(final int position, final String ref, final String alt, final String significance, final String conflict)
-        {
-            Position = position;
-            Ref = ref;
-            Alt = alt;
-            Significance = significance;
-            Conflict = conflict;
-        }
+        if(matchedEntry != null)
+            return Pathogenicity.fromClinvarAnnotation(matchedEntry.Significance, matchedEntry.Conflict);
 
-        public boolean matches(final VariantData variant)
-        {
-            return variant.Position == Position && variant.Ref.equals(Ref) && variant.Alt.equals(Alt);
-        }
-
-        public String toString() { return String.format("%d %s>%s details(%s - %s)",
-                Position, Ref, Alt, Significance, Conflict); }
+        return null;
     }
+
 }

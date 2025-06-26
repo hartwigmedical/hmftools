@@ -112,13 +112,14 @@ public class HlaYCoverage
         // only test heterozygous locations in A since HLA-Y matches its exon boundaries
         for(Fragment fragment : fragments)
         {
-            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
-                    .filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcidsByLoci().keySet().stream()
+                    .filter(x -> mAminoAcidHetLoci.contains(x))
+                    .collect(Collectors.toList());
 
             if(fragAminoAcidLoci.isEmpty())
                 continue;
 
-            List<Integer> fragNucleotideLoci = fragment.nucleotideLoci();
+            Set<Integer> fragNucleotideLoci = fragment.nucleotidesByLoci().keySet();
 
             boolean matchesY = false;
             FragmentAlleles matchedFrag = null;
@@ -198,13 +199,14 @@ public class HlaYCoverage
 
         for(Fragment fragment : fragments)
         {
-            List<Integer> fragAminoAcidLoci = fragment.aminoAcidLoci().stream()
-                    .filter(x -> mAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
+            List<Integer> fragAminoAcidLoci = fragment.aminoAcidsByLoci().keySet().stream()
+                    .filter(x -> mAminoAcidHetLoci.contains(x))
+                    .collect(Collectors.toList());
 
             if(fragAminoAcidLoci.isEmpty())
                 continue;
 
-            List<Integer> fragNucleotideLoci = fragment.nucleotideLoci();
+            Set<Integer> fragNucleotideLoci = fragment.nucleotidesByLoci().keySet();
 
             List<HlaAllele> matchedAlleles = Lists.newArrayList();
 
@@ -278,14 +280,14 @@ public class HlaYCoverage
 
     private void updateMiscCounts(final Fragment fragment, final int[] miscCounts)
     {
-        if(fragment.aminoAcidLoci().contains(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
+        if(fragment.aminoAcidsByLoci().containsKey(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
             ++miscCounts[Y0101_X];
 
         List<Integer> hlaAExonBoundaries = getAminoAcidExonBoundaries(HLA_A);
         int exon3Start = hlaAExonBoundaries.get(1) + 1;
         int exon3End = hlaAExonBoundaries.get(2);
 
-        if(fragment.aminoAcidLoci().get(0) >= exon3Start && fragment.aminoAcidLoci().get(fragment.aminoAcidLoci().size() - 1) <= exon3End)
+        if(fragment.minAminoAcidLocus() >= exon3Start && fragment.maxAminoAcidLocus() <= exon3End)
             ++miscCounts[EXON_3];
     }
 

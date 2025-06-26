@@ -25,11 +25,18 @@ public class StartEndPair<A>
         return "Pair[" + Start + "," + End + "]";
     }
 
+    @Override
     public boolean equals(Object other)
     {
         return other instanceof StartEndPair<?>
                 && Objects.equals(Start, ((StartEndPair)other).Start)
                 && Objects.equals(End, ((StartEndPair)other).End);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(Start, End);
     }
 
     public static <A,B> StartEndPair<A> of(A a, A b)

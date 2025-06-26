@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
@@ -9,10 +10,11 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -42,7 +44,6 @@ public class Breakend
     public final boolean IsLineInsertion;
 
     private final Variant mVariant;
-    private int mChrLocationIndex;
 
     private Breakend mLineSiteBreakend;
 
@@ -64,7 +65,7 @@ public class Breakend
         ConfidenceInterval = Interval.fromCiposTag(context.getAttributeAsIntList(CIPOS, 0));
 
         String ref = context.getAlleles().get(0).getDisplayString();
-        final VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
+        VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
         InsertSequence = altInsertCoords.InsertSequence;
 
         IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
@@ -80,7 +81,6 @@ public class Breakend
         }
 
         mLineSiteBreakend = null;
-        mChrLocationIndex = -1;
     }
 
     public static Breakend from(
@@ -110,6 +110,10 @@ public class Breakend
 
     public double calcAllelicFrequency(final Genotype genotype)
     {
+        // set in the depth annotator, which has the same logic as here - so can remove this in future
+        if(genotype.hasExtendedAttribute(ALLELE_FRACTION))
+            return getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
+
         int readPairSupport = (mVariant.isSgl() || !mVariant.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
         int refSupport = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0);
 
@@ -130,12 +134,6 @@ public class Breakend
     public boolean isSgl() { return mVariant.isSgl(); }
     public StructuralVariantType type() { return mVariant.type(); }
 
-    public int minPosition() { return Position + ConfidenceInterval.Start; }
-    public int maxPosition() { return Position + ConfidenceInterval.End; }
-
-    public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
-    public int chrLocationIndex() { return mChrLocationIndex; }
-
     public boolean isLine() { return IsLineInsertion || Context.hasAttribute(LINE_SITE); }
     public void setLineSiteBreakend(final Breakend breakend) { mLineSiteBreakend = breakend; }
     public Breakend lineSiteBreakend() { return mLineSiteBreakend; }
@@ -146,6 +144,7 @@ public class Breakend
     {
         return Context.getAttributeAsInt(SEG_REPEAT_LENGTH, 0);
     }
+    public int uniqueFragmentPositions() { return Context.getAttributeAsInt(UNIQUE_FRAG_POSITIONS, 0); }
 
     public String toString()
     {

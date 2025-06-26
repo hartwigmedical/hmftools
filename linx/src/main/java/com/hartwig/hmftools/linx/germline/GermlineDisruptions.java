@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.driver.DriverType.GERMLINE_HOM_DUP_DIS
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
@@ -72,7 +73,7 @@ public class GermlineDisruptions
     private final Set<SvVarData> mReportableSgls;
 
     private static final int MAX_DELETE_LENGTH = 3000000;
-    private static final int MAX_PON_COUNT = 3;
+    private static final int MAX_PON_COUNT = 10;
     private static final int MAX_SGL_MAPPED_LENGTH = 500000;
     private static final String FILTER_PSEUDOGENE = "PSEUDOGENE";
 
@@ -527,6 +528,9 @@ public class GermlineDisruptions
             return false;
 
         if(var.getSvData().ponCount() > MAX_PON_COUNT)
+            return false;
+
+        if(disruptionData.CodingType == UTR_3P)
             return false;
 
         DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);

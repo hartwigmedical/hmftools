@@ -3,6 +3,7 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.INDEL_ERROR_RATE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
@@ -22,6 +23,7 @@ import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVAL
 
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
@@ -46,7 +48,8 @@ public class SomaticPurityEstimator
     }
 
     public SomaticPurityResult calculatePurity(
-            final String sampleId, final List<SomaticVariant> variants, final int totalVariantCount, final int chipVariants)
+            final String sampleId, final List<SomaticVariant> variants, final int totalVariantCount,
+            final List<SomaticVariant> outlierVariants)
     {
         FragmentTotals fragmentTotals = new FragmentTotals();
         FragmentTotals dualFragmentTotals = new FragmentTotals();
@@ -190,7 +193,25 @@ public class SomaticPurityEstimator
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
 
-        return new SomaticPurityResult(true, totalVariantCount, chipVariants, fragmentTotals, umiTypeCounts, purityCalcData);
+        StringJoiner sjOutlier = new StringJoiner(ITEM_DELIM);
+
+        for(SomaticVariant outlier : outlierVariants)
+        {
+            GenotypeFragments sampleFragData = outlier.findGenotypeData(sampleId);
+            GenotypeFragments tumorFragData = outlier.findGenotypeData(mSample.TumorId);
+
+            FragmentTotals variantFragTotals = new FragmentTotals();
+
+            variantFragTotals.addVariantData(
+                    outlier.CopyNumber, outlier.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
+                    tumorFragData.Depth, sampleFragData.Depth);
+
+            double impliedTF = estimatedPurity(variantFragTotals.rawSampleVaf(), noiseRate, variantFragTotals);
+
+            sjOutlier.add(format("%s %.2f %s", outlier, sampleFragData.vaf(), formatPurityValue(impliedTF)));
+        }
+
+        return new SomaticPurityResult(true, totalVariantCount, sjOutlier.toString(), fragmentTotals, umiTypeCounts, purityCalcData);
     }
 
     public double getBqrErrorRate(final SomaticVariant variant)

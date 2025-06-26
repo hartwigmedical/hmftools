@@ -4,13 +4,14 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -42,10 +43,11 @@ public class CohortGenePercentiles
 
         try
         {
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
+            String header = fileReader.readLine();
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
 
             int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
             int cancerIndex = fieldsIndexMap.get("CancerType");
@@ -56,7 +58,8 @@ public class CohortGenePercentiles
             Map<String,double[]> percentilesMap = null;
             Map<String,Double> medianMap = null;
 
-            for(String line : lines)
+            String line = null;
+            while((line = fileReader.readLine()) != null)
             {
                 final String[] items = line.split(DELIMITER, -1);
 

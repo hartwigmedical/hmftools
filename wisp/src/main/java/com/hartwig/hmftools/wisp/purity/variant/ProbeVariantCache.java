@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.wisp.probe.CategoryType;
 
@@ -80,10 +81,9 @@ public class ProbeVariantCache
 
                     String[] coords = parts[0].split(":");
                     String[] mutation = parts[1].split(">", 2);
-                    VariantType type = VariantType.valueOf(parts[2]);
 
                     sampleVariants.add(new SimpleVariant(
-                            coords[0], Integer.parseInt(coords[1]), mutation[0], mutation[1], type));
+                            coords[0], Integer.parseInt(coords[1]), mutation[0], mutation[1]));
                 }
             }
 

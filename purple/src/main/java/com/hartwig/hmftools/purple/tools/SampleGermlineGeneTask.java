@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.SegmentFile;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 
 public class SampleGermlineGeneTask implements Callable
 {
@@ -158,25 +158,25 @@ public class SampleGermlineGeneTask implements Callable
             List<PurpleCopyNumber> allCopyNumbers = PurpleCopyNumberFile.read(
                     PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDir, sampleId));
 
-            List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(samplePurpleDir, sampleId)).stream()
-                .filter(x -> x.germlineStatus() == HET_DELETION || x.germlineStatus() == HOM_DELETION)
+            List<PurpleSegment> segments = PurpleSegment.read(PurpleSegment.generateFilename(samplePurpleDir, sampleId)).stream()
+                .filter(x -> x.GermlineState == HET_DELETION || x.GermlineState == HOM_DELETION)
                 .collect(Collectors.toList());
 
-            for(ObservedRegion region : fittedRegions)
+            for(PurpleSegment segment : segments)
             {
-                List<ObservedRegion> regions = fittedRegionMap.get(region.chromosome());
+                List<ObservedRegion> regions = fittedRegionMap.get(segment.Chromosome);
 
                 if(regions == null)
                 {
                     regions = Lists.newArrayList();
-                    fittedRegionMap.put(region.chromosome(), regions);
+                    fittedRegionMap.put(segment.Chromosome, regions);
 
                     copyNumberMap.put(
-                            region.chromosome(),
-                            allCopyNumbers.stream().filter(x -> x.chromosome().equals(region.chromosome())).collect(Collectors.toList()));
+                            segment.Chromosome,
+                            allCopyNumbers.stream().filter(x -> x.chromosome().equals(segment.Chromosome)).collect(Collectors.toList()));
                 }
 
-                regions.add(region);
+                regions.add(ObservedRegion.fromSegment(segment));
             }
 
             PPL_LOGGER.debug("sample({}) read {} het-hom deletion regions",

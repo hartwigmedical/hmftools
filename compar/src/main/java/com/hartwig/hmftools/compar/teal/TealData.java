@@ -53,6 +53,11 @@ public class TealData implements ComparableItem
     public boolean reportable() { return true; }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final TelomereLength otherTelomereLength = ((TealData) other).TelomereLength;
@@ -70,7 +75,7 @@ public class TealData implements ComparableItem
 
         checkDiff(diffs, FLD_TELOMERE_LENGTH, TelomereLength.finalTelomereLength(), otherTelomereLength.finalTelomereLength(), thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     public String toString()

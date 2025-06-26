@@ -11,8 +11,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.pave.GeneCacheIndexing;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.VariantData;
-import com.hartwig.hmftools.pave.impact.ImpactClassifier;
-import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -37,8 +35,7 @@ public final class PaveUtils
             // analyse against each of the genes and their transcripts
             for(GeneData geneData : geneCandidates)
             {
-                List<TranscriptData> transDataList =
-                        geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
+                List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
 
                 // non-coding transcripts are skipped for now
                 if(transDataList.isEmpty())
@@ -47,6 +44,7 @@ public final class PaveUtils
                 for(TranscriptData transData : transDataList)
                 {
                     VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+                    VariantTransImpact selectedTransImpact = transImpact;
                     processed = true;
 
                     // check right-alignment if the variant has microhomology
@@ -57,12 +55,18 @@ public final class PaveUtils
                         if(raTransImpact != null)
                         {
                             variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
-                            transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+                            selectedTransImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+
+                            if(selectedTransImpact == transImpact && transImpact.TransData.posStrand())
+                            {
+                                // use the right-aligned coding string regardless of which variant is prioritised if on the positive strand
+                                transImpact.codingContext().Hgvs = raTransImpact.codingContext().Hgvs;
+                            }
                         }
                     }
 
-                    if(transImpact != null)
-                        variant.addImpact(geneData.GeneName, transImpact);
+                    if(selectedTransImpact != null)
+                        variant.addImpact(geneData.GeneName, selectedTransImpact);
                 }
             }
         }
@@ -82,7 +86,7 @@ public final class PaveUtils
 
     public static VariantData createRightAlignedVariant(final VariantData variant, final RefGenomeInterface refGenome)
     {
-        if(variant.isBaseChange()) // to be confirmed
+        if(variant.isBaseChange())
             return null;
 
         if(variant.microhomology().isEmpty() || variant.microhomology().equals("."))
@@ -166,4 +170,10 @@ public final class PaveUtils
         return raVariant;
     }
 
+    public static int codonForBase(int codingBase)
+    {
+        // both coding base and amino acid position start at 1, so eg coding base of 1-3 = amino acid 1, 4-6 = 2 etc
+        // this CodonIndex may precede the first alt-base for INDELs for the reason described above
+        return  (codingBase - 1) / 3 + 1;
+    }
 }

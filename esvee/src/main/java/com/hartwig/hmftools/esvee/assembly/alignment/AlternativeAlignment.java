@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 
 public class AlternativeAlignment
 {
@@ -104,10 +105,12 @@ public class AlternativeAlignment
 
     public static List<AlternativeAlignment> fromVcfTag(final String vcfTag)
     {
-        if(vcfTag.isEmpty())
+        String trimmedTag = StructuralVariantFactory.trimStringListValue(vcfTag);
+
+        if(trimmedTag.isEmpty())
             return Collections.emptyList();
 
-        final String[] altAlignmentStr = vcfTag.split(ITEM_DELIM, -1);
+        final String[] altAlignmentStr = trimmedTag.split(ITEM_DELIM, -1);
 
         List<AlternativeAlignment> alignments = Lists.newArrayList();
 

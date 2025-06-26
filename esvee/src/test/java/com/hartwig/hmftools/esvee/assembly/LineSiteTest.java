@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineExtensionEndIndex;
@@ -22,9 +24,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -99,6 +104,53 @@ public class LineSiteTest
     }
 
     @Test
+    public void testLineJunctionAssembly()
+    {
+        String polyA = "TGTTTATTTTTTTTTTTT"; // allows for 2 non-bases
+
+        String extraBases = "GTAGTGCTGT";
+
+        Junction junction = new Junction(CHR_1, 100, FORWARD);
+
+        // reads with poly-A tails of various lengths but all supporting the junction
+        String refBases = REF_BASES_400.substring(51, 101);
+
+        String extBases1 = polyA + extraBases;
+        String readBases1 = refBases + extBases1;
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases1, makeCigarString(readBases1, 0, extBases1.length()));
+        Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        String extBases2 = polyA + "TT" + extraBases;
+        String readBases2 = refBases.substring(1) + extBases2;
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 52, readBases2, makeCigarString(readBases2, 0, extBases2.length()));
+
+        String extBases3 = polyA + "T" + extraBases;
+        String readBases3 = refBases + extBases3;
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases3, makeCigarString(readBases3, 0, extBases3.length()));
+
+        // too short to be marked as line but supports the junction
+        String extBases4 = polyA.substring(0, 12);
+        String readBases4 = refBases + extBases4;
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases4, makeCigarString(readBases4, 0, extBases4.length()));
+
+        List<Read> reads = List.of(read1, read1b, read2, read3, read4);
+        reads.forEach(x -> ReadAdjustments.markLineSoftClips(x));
+
+        assertFalse(read4.hasLineTail());
+
+        JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
+
+        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(reads);
+        assertEquals(1, assemblies.size());
+
+        JunctionAssembly assembly = assemblies.get(0);
+
+        assertTrue(assembly.hasLineSequence());
+        assertEquals(5, assembly.supportCount());
+        assertEquals(extBases3, assembly.formJunctionSequence()); // based on taking the median T length
+    }
+
+    @Test
     public void testLineAssemblyLinks()
     {
         String firstRefBases = REF_BASES_200.substring(0, 100);
@@ -111,20 +163,20 @@ public class LineSiteTest
         Junction firstJunction = new Junction(CHR_1, 100, FORWARD);
         Junction secondJunction = new Junction(CHR_1, 110, REVERSE);
 
-        String extraBases = "GTAGTGCTGTCGA";
+        String extraBases = "GTAGTGCTGTCGC";
 
         String firstExtBases = extraBases + polyA;
         String firstAssemblyBases = firstRefBases + firstExtBases;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
 
-        JunctionAssembly firstAssembly =
-                new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
+        JunctionAssembly firstAssembly = new JunctionAssembly(
+                firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
 
         String secondExtBases = polyA;
         String secondAssemblyBases = secondExtBases + secondRefBases;
 
-        JunctionAssembly secondAssembly =
-                new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());
+        JunctionAssembly secondAssembly = new JunctionAssembly(
+                secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());
         secondAssembly.markLineSequence();
 
         AssemblyLink link = LineUtils.tryLineSequenceLink(firstAssembly, secondAssembly, false, false);
@@ -169,7 +221,8 @@ public class LineSiteTest
 
         link = LineUtils.tryLineSequenceLink(firstAssembly, secondAssembly, true, false);
         assertNotNull(link);
-        assertEquals(firstExtBases, link.insertedBases());
+        String firstExtBasesRev = Nucleotides.reverseComplementBases(firstExtBases);
+        assertEquals(firstExtBasesRev, link.insertedBases());
         assertEquals(INV, link.svType());
 
         // first assembly has the poly-T sequence
@@ -181,7 +234,7 @@ public class LineSiteTest
         firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, firstRefBases.length() - 1);
         firstAssembly.markLineSequence();
 
-        secondExtBases = polyT + extraBases;
+        secondExtBases = polyT + extraBases2 + polyT + extraBases;
         secondAssemblyBases = secondExtBases + secondRefBases;
 
         secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, secondExtBases.length());

@@ -16,7 +16,8 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIFF_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.permittedRepeatCount;
@@ -25,7 +26,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.getRepeatCoun
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
@@ -190,8 +191,6 @@ public class ExtensionSeqBuilder
 
     public int mismatches() { return (int)mReads.stream().filter(x -> x.exceedsMaxMismatches()).count(); }
 
-    protected static int DNA_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // allows for Ns
-
     private void buildSequence(boolean isInitial)
     {
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
@@ -220,6 +219,7 @@ public class ExtensionSeqBuilder
         boolean checkReadRepeats = false;
         boolean readRepeatsComplete = false;
         byte[] currentReadBases = new byte[mReads.size()]; // each read's base at this index if valid and above min qual
+        int basesAdded = 0;
 
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
@@ -384,36 +384,37 @@ public class ExtensionSeqBuilder
             else
                 --extensionIndex;
 
-            if(mHasLineSequence && !lineBasesSet)
+            ++basesAdded;
+
+            if(mHasLineSequence && !lineBasesSet && (basesAdded + 1) >= LINE_POLY_AT_REQ)
             {
-                setLineExtensionBases(extensionIndex);
+                int remainingLineBases = mLineExtensionLength - basesAdded + 1; // excluding the ref base
+                setLineExtensionBases(extensionIndex, remainingLineBases);
                 lineBasesSet = true;
 
                 if(mIsForward)
-                    extensionIndex += mLineExtensionLength;
+                    extensionIndex += remainingLineBases;
                 else
-                    extensionIndex -= mLineExtensionLength;
+                    extensionIndex -= remainingLineBases;
             }
         }
     }
 
     private byte lineBase() { return mJunction.isForward() ? LINE_BASE_T : LINE_BASE_A; }
 
-    private void setLineExtensionBases(int extensionIndex)
+    private void setLineExtensionBases(int extensionIndex, int remainingLineBases)
     {
         // build out line bases if identified
         byte lineBase = lineBase();
 
-        int remainingBases = mLineExtensionLength;
-
-        while(extensionIndex >= 0 && extensionIndex < mBases.length && remainingBases > 0)
+        while(extensionIndex >= 0 && extensionIndex < mBases.length && remainingLineBases > 0)
         {
             mBases[extensionIndex] = lineBase;
             mBaseQuals[extensionIndex] = (byte)LOW_BASE_QUAL_THRESHOLD;
 
             extensionIndex += mIsForward ? 1 : -1;
 
-            --remainingBases;
+            --remainingLineBases;
         }
 
         // move each read to the end of its poly A/T sequence
@@ -465,7 +466,7 @@ public class ExtensionSeqBuilder
                     maxRefRepeatCount = readRefRepeat;
 
                     // exit the search if the ref base repeat exceeds the threshold to impact required extension high-qual overlaps
-                    if(maxRefRepeatCount + startingRepeat.Count >= REPEAT_2_DIFF_COUNT)
+                    if(maxRefRepeatCount + startingRepeat.Count >= REPEAT_3_DIFF_COUNT)
                         break;
                 }
             }
@@ -799,8 +800,10 @@ public class ExtensionSeqBuilder
 
         int extensionIndex = mIsForward ? 0 : mBases.length - 1;
 
-        if(mHasLineSequence)
+        if(mHasLineSequence && read.hasLineTail())
+        {
             extensionIndex += mIsForward ? (mLineExtensionLength + 1) : -(mLineExtensionLength + 1);
+        }
 
         int repeatIndexStart = -1;
         int repeatSkipCount = 0;
@@ -817,9 +820,12 @@ public class ExtensionSeqBuilder
             if(readRepeatCount != READ_REPEAT_COUNT_INVALID && abs(readRepeatCount - mMaxRepeat.Count) <= permittedCountDiff)
                 repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.baseLength();
         }
-        else if(mJunction.indelCoords() != null && read.indelCoords() != null && mJunction.indelCoords().isDelete())
+        else if(mJunction.indelCoords() != null && read.indelCoords() != null
+        && mJunction.indelCoords().isDelete() && read.indelCoords().isDelete())
         {
-            if(mJunction.indelCoords().Length != read.indelCoords().Length)
+            // the read must cover the assembly INDEL entirely
+            if(read.alignmentStart() < mJunction.indelCoords().PosStart && read.alignmentEnd() > mJunction.indelCoords().PosEnd
+            && mJunction.indelCoords().Length != read.indelCoords().Length)
             {
                 // a shorter delete means more ref bases need to be skipped
                 repeatSkipCount = mJunction.indelCoords().Length - read.indelCoords().Length;
@@ -844,6 +850,14 @@ public class ExtensionSeqBuilder
         {
             if(read.exhausted() || read.exceedsMaxMismatches())
                 break;
+
+            /*
+            if(read.currentIndex() >= read.read().basesLength())
+            {
+                SV_LOGGER.error("read({}) invalid state", read);
+                break;
+            }
+            */
 
             byte base = read.currentBase();
             byte qual = read.currentQual();
@@ -895,7 +909,7 @@ public class ExtensionSeqBuilder
         boolean hasMinLengthSoftClipRead = false;
 
         int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH / 2 : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
         for(ExtReadParseState read : mReads)
         {

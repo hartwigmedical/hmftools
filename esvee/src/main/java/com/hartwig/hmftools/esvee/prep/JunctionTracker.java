@@ -13,14 +13,17 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasWellAnchoredRead;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.markSupplementaryDuplicates;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_CHECK;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO_DISCORDANT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
 import java.util.Collections;
@@ -33,7 +36,7 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
@@ -56,6 +59,7 @@ public class JunctionTracker
     private final List<BaseRegion> mBlacklistRegions;
     private final List<KnownHotspot> mKnownHotspots;
     private final BlacklistLocations mBlacklist;
+    private final DepthTracker mDepthTracker;
 
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
     private final Set<String> mExpectedReadIds; // as indicated by another partition
@@ -86,12 +90,14 @@ public class JunctionTracker
     };
 
     public JunctionTracker(
-            final ChrBaseRegion region, final PrepConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
+            final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker,
+            final HotspotCache hotspotCache, final BlacklistLocations blacklist)
     {
         mRegion = region;
         mConfig = config;
         mFilterConfig = config.ReadFiltering.config();
 
+        mDepthTracker = depthTracker;
         mKnownHotspots = hotspotCache.findRegionHotspots(region);
 
         mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
@@ -867,6 +873,9 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
+        if(!junctionData.hotspot() && !junctionAboveMinDepth(junctionData))
+            return false;
+
         if(junctionData.discordantGroup())
             return true;
 
@@ -885,33 +894,31 @@ public class JunctionTracker
 
         if(!junctionData.internalIndel())
         {
-            boolean hasPassingAlignedRead = false;
-
-            for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
-            {
-                if(aboveRepeatTrimmedAlignmentThreshold(read, mFilterConfig.MinCalcAlignmentScore, true))
-                {
-                    hasPassingAlignedRead = true;
-                    break;
-                }
-            }
-
-            if(!hasPassingAlignedRead)
+            if(!hasWellAnchoredRead(junctionData, mFilterConfig))
                 return false;
         }
 
         if(junctionFrags + exactSupportCount < mFilterConfig.MinJunctionSupport)
             return false;
 
-        /*
-        purgeSupplementaryDuplicates(junctionData);
-
-        // re-assessed after duplicate assessment
-        junctionFrags = junctionData.junctionFragmentCount();
-        exactSupportCount = junctionData.exactSupportFragmentCount();
-        */
-
         return junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport;
+    }
+
+    private boolean junctionAboveMinDepth(final JunctionData junctionData)
+    {
+        int regionDepth = mDepthTracker.calcDepth(junctionData.Position);
+
+        if(regionDepth < DEPTH_MIN_CHECK)
+            return true;
+
+        double requiredSupportRatio = junctionData.discordantGroup() ? DEPTH_MIN_SUPPORT_RATIO_DISCORDANT : DEPTH_MIN_SUPPORT_RATIO;
+
+        int junctionSupport = junctionData.junctionFragmentCount() + junctionData.exactSupportFragmentCount();
+
+        if(junctionData.discordantGroup())
+            junctionSupport += junctionData.supportingFragmentCount();
+
+        return junctionSupport >= regionDepth * requiredSupportRatio;
     }
 
     private void perfCounterStart(final PerfCounters pc)

@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.filter.SoftFilterConfig;

@@ -98,6 +98,7 @@ class PurityDAO
                 .amberMeanDepth(0) // not persisted to database
                 .lohPercent(0)
                 .tincLevel(0)
+                .chimerismPercentage(0)
                 .build();
 
         return ImmutablePurityContext.builder()

@@ -8,10 +8,10 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
 import static com.hartwig.hmftools.esvee.assembly.alignment.HomologyData.NO_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
 
 import java.util.Collections;
@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.SvUtils;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 public class Breakend implements Comparable<Breakend>
@@ -49,6 +50,7 @@ public class Breakend implements Comparable<Breakend>
     private int mNonPrimaryAssemblyFragmentCount;
 
     private Set<Integer> mFragmentPositions;
+    private int mMaxLocalRepeat;
 
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
@@ -78,6 +80,7 @@ public class Breakend implements Comparable<Breakend>
         mNonPrimaryAssemblyFragmentCount = 0;
 
         mFragmentPositions = null;
+        mMaxLocalRepeat = 0;
     }
 
     public int id() { return mId; }
@@ -103,6 +106,9 @@ public class Breakend implements Comparable<Breakend>
     }
 
     public int uniqueFragmentPositionCount() { return mFragmentPositions != null ? mFragmentPositions.size() : 0; }
+
+    public void setMaxLocalRepeat(int maxLocalRepeat) { mMaxLocalRepeat = maxLocalRepeat; }
+    public int maxLocalRepeat() { return mMaxLocalRepeat; }
 
     public List<AlternativeAlignment> alternativeAlignments()
     {
@@ -140,6 +146,11 @@ public class Breakend implements Comparable<Breakend>
     public int averageFragmentLength()
     {
         return mFragmentLengthCount > 0 ? (int)round(mFragmentLengthTotal / (double)mFragmentLengthCount) : 0;
+    }
+
+    public double validFragmentLengthPercent()
+    {
+        return mFragmentLengthCount > 0 ? mFragmentLengthCount / (double)(mFragmentLengthCount + mIncompleteFragmentCount) : 0;
     }
 
     public int incompleteFragmentCount() { return mIncompleteFragmentCount; }
@@ -182,7 +193,7 @@ public class Breakend implements Comparable<Breakend>
         return svType() == DUP ? posLength + 1 : posLength;
     }
 
-    public boolean isShortLocalDelDupIns() { return CommonUtils.isShortLocalDelDupIns(svType(), svLength()); }
+    public boolean isShortLocalDelDupIns() { return SvUtils.isShortLocalDelDupIns(svType(), svLength()); }
 
     public int minPosition() { return Position + Homology.ExactStart; }
     public int maxPosition() { return Position + Homology.ExactEnd; }

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
 public class Candidate

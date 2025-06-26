@@ -33,13 +33,6 @@ public class LowCoverageRatioMapper implements RatioMapper
 
     private final ChromosomePositionCodec mChromosomePositionCodec;
 
-
-    public LowCoverageRatioMapper(int consolidationCount, final ChromosomePositionCodec chromosomePosCodec)
-    {
-        mConsolidationCount = consolidationCount;
-        mChromosomePositionCodec = chromosomePosCodec;
-    }
-
     public LowCoverageRatioMapper(
             final @NotNull Multimap<String, LowCovBucket> consolidateBoundaries,
             final @NotNull ChromosomePositionCodec chromosomePosCodec)

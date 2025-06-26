@@ -7,8 +7,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.HOMOZYGOUS_SCORE_PENALTY;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_POPULATION_FREQUENCY;
 import static com.hartwig.hmftools.lilac.LilacConstants.RECOVERY_SCORE_PENALTY;
-import static com.hartwig.hmftools.lilac.LilacConstants.WILDCARD_SCORE_PENALTY;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -131,7 +131,7 @@ public class ComplexCoverageRanking
         for(HlaAllele allele : alleles)
         {
             double frequency = cohortFrequency.getAlleleFrequency(allele);
-            double cohortPenalty = log10(max(frequency, 0.0001));
+            double cohortPenalty = log10(max(frequency, MIN_POPULATION_FREQUENCY));
 
             cohortFrequencyTotal += cohortPenalty;
 
@@ -149,8 +149,7 @@ public class ComplexCoverageRanking
         double score = totalCoverage
                 + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage
                 + complexCoverage.homozygousCount() * HOMOZYGOUS_SCORE_PENALTY * totalCoverage
-                - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * totalCoverage
-                - complexCoverage.wildcardCount() * WILDCARD_SCORE_PENALTY * totalCoverage;
+                - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * totalCoverage;
 
         complexCoverage.setScore(score);
     }

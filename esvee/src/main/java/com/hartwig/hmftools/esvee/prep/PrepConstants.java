@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
@@ -20,13 +22,15 @@ public final class PrepConstants
     public static final String FLD_EXTRA_INFO = "ExtraInfo";
 
     // region processing
-    public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
+    public static final int DEFAULT_CHR_PARTITION_SIZE = 1_000_000;
 
     public static final int DEFAULT_READ_LENGTH = 151;
 
     // candidate junction fragments
     public static final int MIN_ALIGNMENT_BASES = 50;
     public static final int MIN_CALC_ALIGNMENT_SCORE = 40;
+    public static final int MIN_CALC_ALIGNMENT_LOWER_SCORE = 35;
+    public static final int MIN_ALIGNMENT_SCORE_DIFF = 15;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
     public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
     public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
@@ -44,6 +48,12 @@ public final class PrepConstants
     public static final int MAX_SUPPORT_FRAGMENT_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
     public static final double MIN_EXACT_BASE_PERC = 0.25;
+
+    // depth tracking and filter
+    public static final int DEPTH_WINDOW_SIZE = 1000;
+    public static final double DEPTH_MIN_SUPPORT_RATIO = 0.005;
+    public static final double DEPTH_MIN_SUPPORT_RATIO_DISCORDANT = 0.01;
+    public static final double DEPTH_MIN_CHECK = 2 / DEPTH_MIN_SUPPORT_RATIO_DISCORDANT;
 
     // discordant groups
     public static final int DISCORDANT_GROUP_MIN_FRAGMENTS = 3;

@@ -2,24 +2,12 @@ package com.hartwig.hmftools.common.variant.pon;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
-import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ_DESC;
-
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.StringCache;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import htsjdk.variant.vcf.VCFFilterHeaderLine;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import com.hartwig.hmftools.common.perf.StringCache;
 
 public class GnomadChrCache
 {

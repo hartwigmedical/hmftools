@@ -53,6 +53,11 @@ public class TumorFlagstatData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample
@@ -69,6 +74,6 @@ public class TumorFlagstatData implements ComparableItem
 
         checkDiff(diffs, FLD_MAPPED_PROPORTION, mFlagstat.mappedProportion(), otherData.mFlagstat.mappedProportion(), thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

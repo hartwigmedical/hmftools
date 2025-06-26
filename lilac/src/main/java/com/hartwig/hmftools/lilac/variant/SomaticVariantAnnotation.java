@@ -2,6 +2,13 @@ package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -15,16 +22,9 @@ import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-
-import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
 
 import htsjdk.variant.variantcontext.VariantContext;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class SomaticVariantAnnotation
 {
@@ -61,14 +61,8 @@ public class SomaticVariantAnnotation
 
             int variantAminoAcidLoci = variantNucleotideLoci / 3;
 
+            mGeneVariantLoci.computeIfAbsent(variant.Gene, k -> Lists.newArrayList());
             List<Integer> geneLoci = mGeneVariantLoci.get(variant.Gene);
-
-            if(geneLoci == null)
-            {
-                geneLoci = Lists.newArrayList();
-                mGeneVariantLoci.put(variant.Gene, geneLoci);
-            }
-
             geneLoci.add(variantAminoAcidLoci);
         }
     }
@@ -83,8 +77,8 @@ public class SomaticVariantAnnotation
         if(fragments.isEmpty())
             return coverages;
 
-        fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));
-        fragments.forEach(x -> x.buildAminoAcids());
+        fragments.forEach(Fragment::removeLowQualBases);
+        fragments.forEach(Fragment::buildAminoAcids);
 
         // take all variants in this gene together, and then ignore those loci
         List<Integer> variantLoci = mGeneVariantLoci.get(variant.Gene);
@@ -103,7 +97,6 @@ public class SomaticVariantAnnotation
             {
                 boolean matches = true;
                 int matchCount = 0;
-
                 for(int locus = fragment.minAminoAcidLocus(); locus <= fragment.maxAminoAcidLocus(); ++locus)
                 {
                     if(locus >= sequenceLoci.length())
@@ -112,12 +105,12 @@ public class SomaticVariantAnnotation
                     if(variantLoci.contains(locus))
                         continue;
 
-                    int index = fragment.aminoAcidLoci().indexOf(locus);
-                    String fragmentAA = "";
+                    AminoAcid aminoAcid = fragment.aminoAcidsByLoci().get(locus);
+                    String fragmentAA;
 
-                    if(index >= 0)
+                    if(aminoAcid != null)
                     {
-                        fragmentAA = fragment.aminoAcids().get(index);
+                        fragmentAA = aminoAcid.acid();
                     }
                     else
                     {

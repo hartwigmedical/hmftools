@@ -48,7 +48,7 @@ public class MultiBiopsyData
         SvId = Integer.parseInt(inputItems[1]);
 
         String svType = inputItems[2];
-        Type = svType.equals(NONE.toString()) ? SGL : StructuralVariantType.fromAttribute(svType);
+        Type = svType.equals(NONE.toString()) ? SGL : StructuralVariantType.valueOf(svType);
         ChrStart = inputItems[3];
         PosStart = Long.parseLong(inputItems[4]);
         OrientStart = Byte.parseByte(inputItems[5]);

@@ -165,7 +165,7 @@ public class SpecialFusions
             gene.setSvData(var.getSvData(), var.jcn());
 
             TranscriptData transData = new TranscriptData(
-                    0, "", "", false, POS_STRAND, 0, 0, null, null, "");
+                    0, "", "", false, POS_STRAND, 0, 0, null, null, "", null);
 
             BreakendTransData transcript = new BreakendTransData(
                     gene, transData,  0, 0, PHASE_NONE, PHASE_NONE, 0, 0);
@@ -205,7 +205,7 @@ public class SpecialFusions
 
                 transData = new TranscriptData(
                         0, "", knownFusionData.ThreeGene, false, geneStrand,
-                        geneRegion.start(), geneRegion.end(), null, null, "");
+                        geneRegion.start(), geneRegion.end(), null, null, "", null);
             }
 
             BreakendGeneData gene = new BreakendGeneData(var.id(), seIndex == SE_START, geneData);

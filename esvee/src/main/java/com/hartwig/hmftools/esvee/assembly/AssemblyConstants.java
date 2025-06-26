@@ -18,13 +18,11 @@ public final class AssemblyConstants
 
     // read adjustments
     public static final int INDEL_TO_SC_MIN_SIZE_SOFTCLIP = MIN_INDEL_SUPPORT_LENGTH;
-    public static final int INDEL_TO_SC_MAX_SIZE_SOFTCLIP = MIN_VARIANT_LENGTH - 1;
     public static final int POLY_G_TRIM_LENGTH = 4;
     public static final double LOW_BASE_TRIM_PERC = 0.35;
     public static final int UNMAPPED_TRIM_THRESHOLD = 40;
 
     // primary assembly
-    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
     public static final int DECOY_MAX_MISMATCHES = 3;
     public static final double DECOY_MIN_SCORE_FACTOR = 0.9;
     public static final int ASSEMBLY_MIN_READ_SUPPORT = 2;
@@ -38,6 +36,11 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
     public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
     public static final int ASSEMBLY_MIN_DISTINCT_FRAGS = 2;
+    public static final int ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH = 85;
+    public static final int ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH = 50;
+    public static final double ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC = 0.33;
+    public static final int ASSEMBLY_DEDUP_JITTER_MAX_DIST = 20;
+    public static final int ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO = 50;
 
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
@@ -45,6 +48,7 @@ public final class AssemblyConstants
 
     // sequence comparison
     public static final int REPEAT_2_DIFF_COUNT = 11;
+    public static final int REPEAT_3_DIFF_COUNT = 16;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
@@ -57,6 +61,7 @@ public final class AssemblyConstants
     // assembly extension
     public static final int ASSEMBLY_READ_OVERLAP_BASES = 20;
     public static final int ASSEMBLY_LINK_OVERLAP_BASES = 50;
+    public static final int ASSEMBLY_READ_TRIMMED_OVERLAP_BASES = 30;
     public static final int ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES = ASSEMBLY_READ_OVERLAP_BASES;
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int ASSEMBLY_REF_BASE_MAX_GAP = 200;
@@ -81,7 +86,10 @@ public final class AssemblyConstants
 
     // alignment
     public static final int BWA_PENALTY_ADJUST = 2;
+    public static final int BWA_ZDROP = 20;
+    public static final int BWA_GAP_OPEN_PENALTY = 6 + BWA_PENALTY_ADJUST;
     public static final int ALIGNMENT_MIN_SOFT_CLIP = MIN_VARIANT_LENGTH;
+    public static final int ALIGNMENT_INDEL_RECOVERY_MIN_MAP_QUAL = 50;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 10;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA = 5;
     public static final int ALIGNMENT_CALC_SCORE_FACTOR = 15;
@@ -92,8 +100,9 @@ public final class AssemblyConstants
     public static final int ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH = MIN_ANCHOR_LENGTH;
     public static final int ALIGNMENT_PROXIMATE_DISTANCE = 1000;
     public static final int ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH = 50;
+    public static final int ALIGNMENT_RECOVERY_MAX_MD_ERRORS = 4;
 
-    public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
+    public static final double BREAKEND_REQ_VALID_FRAGMENT_LENGTH_PERC = 0.33;
 
     // DUX-4 regions
     public static final List<ChrBaseRegion> MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37 = List.of(

@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.LOW_QUA
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SKIPPED;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SOFT_CLIP;
 
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;

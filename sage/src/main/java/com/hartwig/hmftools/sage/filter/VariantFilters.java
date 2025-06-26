@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_A
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -194,6 +197,9 @@ public class VariantFilters
             if(belowMinTumorQual(config, tier, primaryTumor, mIsGermline))
                 filters.add(SoftFilter.MIN_TUMOR_QUAL);
 
+            if(belowMinMapQualFactor(config, tier, primaryTumor))
+                filters.add(SoftFilter.MIN_MAP_QUAL_FACTOR);
+
             if(belowMinTumorVaf(config, primaryTumor))
                 filters.add(SoftFilter.MIN_TUMOR_VAF);
         }
@@ -218,10 +224,12 @@ public class VariantFilters
             filters.add(SoftFilter.MIN_TUMOR_SUPPORT);
         }
 
+        /* NOTE: disabled due to impact on ctDNA samples
         if(exceedsAltFragmentLength(primaryTumor))
         {
             filters.add(SoftFilter.FRAGMENT_LENGTH);
         }
+        */
 
         if(exceedsRealignedPercentage(primaryTumor))
         {
@@ -297,8 +305,6 @@ public class VariantFilters
 
         double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
 
-        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, strongSupport);
-
         if(isGermline)
         {
             BinomialDistribution hetGermlineDistribution = new BinomialDistribution(depth, GERMLINE_HET_MIN_EXPECTED_VAF);
@@ -311,22 +317,34 @@ public class VariantFilters
         }
 
         primaryTumor.setTumorQualProbability(prob);
-        primaryTumor.setMapQualFactor(mapQualFactor);
-
-        if(mapQualFactor < config.MapQualFactor)
-            return true;
 
         double scoreCutoff = config.QualPScore;
         return prob >= scoreCutoff;
     }
 
+    private static boolean belowMinMapQualFactor(
+            final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor)
+    {
+        int depth = primaryTumor.depth();
+        int altSupport = primaryTumor.altSupport();
+
+        if(depth == 0 || altSupport == 0)
+            return false;
+
+        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, primaryTumor.strongAltSupport());
+
+        primaryTumor.setMapQualFactor(mapQualFactor);
+
+        return mapQualFactor < config.MapQualFactor;
+    }
+
     private static double calcMapQualFactor(
-            final VariantTier tier, final ReadContextCounter primaryTumor, final int depth, final int altSupport, final int strongSupport)
+            final VariantTier tier, final ReadContextCounter primaryTumor, int depth, int altSupport, int strongSupport)
     {
         double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
 
-        double avgMapQual = primaryTumor.mapQualityTotal() / depth;
-        double avgAltMapQual = primaryTumor.altMapQualityTotal() / altSupport;
+        double avgMapQual = primaryTumor.mapQualityTotal() / (double)depth;
+        double avgAltMapQual = primaryTumor.altMapQualityTotal() / (double)altSupport;
 
         double mapQualDiffPenalty = max(2 * (avgMapQual - avgAltMapQual), 0);
 
@@ -359,7 +377,11 @@ public class VariantFilters
         {
             BinomialDistribution distribution = new BinomialDistribution(readStrandBiasAlt.depth(), 0.5);
             double probability = 2 * distribution.cumulativeProbability((int)round(readStrandBiasAlt.depth() * readStrandBiasAlt.minBias()));
-            readStrandBiasPenalty = -10 * log10(probability);
+
+            if(probability > 0)
+                readStrandBiasPenalty = -10 * log10(probability);
+            else
+                readStrandBiasPenalty = MAP_QUAL_READ_BIAS_CAP; // fall-back to apply a penalty for extreme bias
         }
 
         double avgEdgeDistance = primaryTumor.readEdgeDistance().avgDistanceFromEdge();
@@ -378,7 +400,7 @@ public class VariantFilters
         if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1
         && primaryTumor.readContext().MaxRepeat.repeatLength() * primaryTumor.readContext().MaxRepeat.Count >= 15)
         {
-            int maxPenalty = primaryTumor.isIndel() ? 18 : 24;
+            int maxPenalty = primaryTumor.isIndel() ? MAP_QUAL_INDEL_REPEAT_PENALTY : MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
             repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, maxPenalty);
         }
 
@@ -402,6 +424,9 @@ public class VariantFilters
         int supportCount = primaryTumor.strongAltSupport();
 
         double altBaseQualAvg = primaryTumor.averageAltRecalibratedBaseQuality();
+
+        if(boostNovelIndel(primaryTumor.tier(), primaryTumor))
+            altBaseQualAvg += DEFAULT_BASE_QUAL_FIXED_PENALTY;
 
         // SupportCount * min(AvgBQ[ALT] / AvgBQ[DP], 1)
         int adjustedAltSupportCount = supportCount * (int)round(min(altBaseQualAvg / baseQualAvg, 1));
@@ -489,7 +514,7 @@ public class VariantFilters
         else if(primaryTumor.altSupport() >= REQUIRED_UNIQUE_FRAG_COORDS_AD_1)
             minRequiredUniqueFrags = REQUIRED_UNIQUE_FRAG_COORDS_1;
 
-        return min(primaryTumor.fragmentCoords().lowerCount(), primaryTumor.fragmentCoords().upperCount()) < minRequiredUniqueFrags;
+        return primaryTumor.fragmentCoords().minCount() < minRequiredUniqueFrags;
     }
 
     private boolean exceedsRealignedPercentage(final ReadContextCounter primaryTumor)
@@ -636,7 +661,7 @@ public class VariantFilters
 
         if(isMnv || isLongInsert)
         {
-            double altSupportPerc = refDepth > 0 ? refAltSupport / refDepth : 0;
+            double altSupportPerc = refDepth > 0 ? refAltSupport / (double)refDepth : 0;
             return altSupportPerc >= MAX_INDEL_GERMLINE_ALT_SUPPORT;
         }
 

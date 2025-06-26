@@ -162,7 +162,7 @@ Any non-hotspot variant found 3 or more times with a qual (TQP) of > 40 and modi
 To generate this file all the Pave PonBuilder to make the additional PON file:
 
 ```
-java -cp pave.jar com.hartwig.hmftools.pave.resources.PonBuilder \
+java -cp pave.jar com.hartwig.hmftools.pave.pon_gen.PonBuilder \
   -sample_id_file training_sample_ids.csv \
   -vcf_path "/training_sample_data/*.sage.vcf.gz" \
   -ref_genome_version V38 \

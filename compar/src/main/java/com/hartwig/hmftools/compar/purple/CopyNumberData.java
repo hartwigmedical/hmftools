@@ -70,6 +70,11 @@ public class CopyNumberData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final CopyNumberData otherCn = (CopyNumberData) other;
@@ -94,6 +99,6 @@ public class CopyNumberData implements ComparableItem
         checkDiff(diffs, FLD_MAJOR_ALLELE_CN, CopyNumber.majorAlleleCopyNumber(), otherCn.CopyNumber.majorAlleleCopyNumber(), thresholds);
         checkDiff(diffs, FLD_METHOD, CopyNumber.method().toString(), otherCn.CopyNumber.method().toString());
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

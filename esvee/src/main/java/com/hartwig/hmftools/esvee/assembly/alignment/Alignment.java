@@ -4,12 +4,13 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasDominantIndelReadAssembly;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.isWeakIndelBasedUnlinkedAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
 import java.util.ArrayList;
@@ -21,21 +22,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
 import org.checkerframework.checker.units.qual.A;
 
-import htsjdk.samtools.CigarElement;
+
 import htsjdk.samtools.CigarOperator;
 
 public class Alignment
@@ -65,11 +64,8 @@ public class Alignment
             return true;
         }
 
-        if(!assembly.junction().indelBased() && (assembly.outcome() == UNSET || assembly.outcome() == NO_LINK))
-        {
-            if(hasDominantIndelReadAssembly(assembly))
-                return true;
-        }
+        if(isWeakIndelBasedUnlinkedAssembly(assembly))
+            return true;
 
         return false;
     }
@@ -185,11 +181,15 @@ public class Alignment
                     .map(x -> AlignData.from(x, mConfig.RefGenVersion))
                     .filter(x -> x != null).collect(Collectors.toList());
 
+            // set the orientation-adjusted sequence coordinates - done here since used in requery logic
+            String fullSequence = assemblyAlignment.fullSequence();
+            alignments.forEach(x -> x.setFullSequenceData(fullSequence, assemblyAlignment.fullSequenceLength()));
+
             List<AlignData> requeriedAlignments = Lists.newArrayList();
 
             alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
 
-            alignments = requerySoftClipAlignments(assemblyAlignment, alignments, requeriedAlignments);
+            alignments = requerySoftClipAlignments(assemblyAlignment, alignments);
 
             processAlignmentResults(assemblyAlignment, alignments);
 
@@ -199,10 +199,9 @@ public class Alignment
             writeAssemblyData(assemblyAlignment, alignments, requeriedAlignments);
         }
 
-        private List<AlignData> requerySoftClipAlignments(
-                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
+        private List<AlignData> requerySoftClipAlignments(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
-            // re-align supplementaries to get a more reliable map quality
+            // re-align long soft-clipped sequences add attach them to the original alignment
             if(alignments.size() != 1)
                 return alignments;
 
@@ -230,6 +229,13 @@ public class Alignment
                 newCigar = alignment.cigar().substring(0, alignment.cigar().lastIndexOf(CigarOperator.M.toString()) + 1);
             }
 
+            if(newCigar == null || newCigar.isEmpty())
+            {
+                SV_LOGGER.warn("assembly({}) error forming new cigar(orig={} new={})",
+                        assemblyAlignment, alignment.cigar(), newCigar);
+                return alignments;
+            }
+
             ++mRequeriedSoftClipCount;
 
             List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(softClipBases.getBytes());
@@ -241,18 +247,56 @@ public class Alignment
             if(newAlignments.isEmpty())
                 return alignments;
 
-            requeriedAlignments.add(alignment);
-
             SV_LOGGER.trace("assembly({}) requeried single alignment({}) with long soft-clip", assemblyAlignment, alignment);
 
-            AlignData refAlignment = new AlignData(
-                    alignment.refLocation(), alignment.rawSequenceStart(), alignment.rawSequenceEnd(),
-                    alignment.mapQual(), alignment.score(), alignment.flags(), newCigar, alignment.nMatches(), alignment.xaTag(), alignment.mdTag());
+            int softClipSeqIndexStart;
+
+            if(isLeftClip == alignment.orientation().isForward())
+                softClipSeqIndexStart = max(alignment.sequenceStart() - softClipLength, 0);
+            else
+                softClipSeqIndexStart = alignment.sequenceEnd() + 1;
+
+            for(AlignData rqAlignment : newAlignments)
+            {
+                // adjust values to be in terms of the original sequence, and then ordered within the soft-clip bounds
+                int adjSequenceStart, adjSequenceEnd;
+
+                if(rqAlignment.orientation().isForward())
+                {
+                    adjSequenceStart = softClipSeqIndexStart + rqAlignment.sequenceStart();
+                    adjSequenceEnd = softClipSeqIndexStart + rqAlignment.sequenceEnd();
+                }
+                else
+                {
+                    int newSequenceStart = (softClipLength - 1) - (rqAlignment.rawSequenceEnd() - 1);
+                    int newSequenceEnd = newSequenceStart + rqAlignment.segmentLength() - 1;
+
+                    adjSequenceStart = softClipSeqIndexStart + newSequenceStart;
+                    adjSequenceEnd = softClipSeqIndexStart + newSequenceEnd;
+                }
+
+                /*
+                int adjSequenceStart = softClipSeqIndexStart + rqAlignment.sequenceStart();
+                int adjSequenceEnd = softClipSeqIndexStart + rqAlignment.sequenceEnd();
+
+                if(rqAlignment.orientation().isReverse())
+                {
+                    int newSequenceStart = (softClipLength - 1) - (rqAlignment.rawSequenceEnd() - 1);
+                    int newSequenceEnd = newSequenceStart + rqAlignment.segmentLength() - 1;
+                    // int newSequenceEnd = (softClipLength - 1) - adjSequenceStart;
+
+                    adjSequenceStart = max(newSequenceStart, 0);
+                    adjSequenceEnd = newSequenceEnd;
+                }
+                */
+
+                rqAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
+            }
 
             if(isLeftClip)
-                newAlignments.add(refAlignment);
+                newAlignments.add(alignment);
             else
-                newAlignments.add(0, refAlignment);
+                newAlignments.add(0, alignment);
 
             return newAlignments;
         }
@@ -261,7 +305,7 @@ public class Alignment
                 final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final List<AlignData> requeriedAlignments)
         {
             // re-align supplementaries to get a more reliable map quality
-            if(alignments.stream().noneMatch(x -> x.isSupplementary()))
+            if(alignments.stream().noneMatch(x -> x.isSupplementary()) || alignments.stream().allMatch(x -> x.isSupplementary()))
                 return alignments;
 
             List<AlignData> newAlignments = Lists.newArrayList();
@@ -340,6 +384,39 @@ public class Alignment
 
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
+
+            // final filters on assembly and alignment results
+            if(isWeakSingleReadExtensionAssembly(assemblyAlignment))
+            {
+                assemblyAlignment.breakends().clear();
+            }
+        }
+
+        private static boolean isWeakSingleReadExtensionAssembly(final AssemblyAlignment assemblyAlignment)
+        {
+            if(assemblyAlignment.assemblies().size() != 1 || assemblyAlignment.breakends().isEmpty())
+                return false;
+
+            // check not a short indel
+            if(assemblyAlignment.breakends().size() == 2)
+            {
+                Breakend breakend = assemblyAlignment.breakends().get(0);
+                if(isShortLocalDelDupIns(breakend.svType(), breakend.svLength()))
+                    return false;
+            }
+
+            JunctionAssembly assembly = assemblyAlignment.assemblies().get(0);
+
+            if(assembly.stats().MaxExtBaseMatchCount < ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH)
+                return false;
+
+            if(assembly.hasLineSequence() || assembly.junction().DiscordantOnly || assembly.junction().indelBased()) // simple split junction
+                return false;
+
+            if(assembly.stats().SoftClipSecondMaxLength >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH) // only 1 read above the min length
+                return false;
+
+            return true;
         }
     }
 

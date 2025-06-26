@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 
 import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.RawContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.sync.FragmentData;

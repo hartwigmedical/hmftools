@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPP
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsUnmapRegion;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
-import com.hartwig.hmftools.common.utils.TaskQueue;
 
 import java.io.File;
 import java.util.Collections;
@@ -21,6 +20,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.UnmappingRegion;
 import com.hartwig.hmftools.redux.BamReader;
@@ -174,7 +174,7 @@ public class RegionUnmapper extends Thread
         if(region == UNMAPPED_READS)
         {
             RD_LOGGER.trace("extracting fully-unmapped region");
-            processFullyUnmappedReads();
+            processFullyUnmappedReads(mConfig, mFullyUnmappedBamWriter);
             return;
         }
 
@@ -246,21 +246,21 @@ public class RegionUnmapper extends Thread
         }
     }
 
-    private boolean processFullyUnmappedReads()
+    public static void processFullyUnmappedReads(final ReduxConfig config, final BamWriterSync fullyUnmappedBamWriter)
     {
         int totalUnmappedReads = 0;
 
-        for(String bamFilename : mConfig.BamFiles)
+        for(String bamFilename : config.BamFiles)
         {
             SamReader samReader = SamReaderFactory.makeDefault()
-                    .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFilename));
+                    .referenceSequence(new File(config.RefGenomeFile)).open(new File(bamFilename));
 
             SAMRecordIterator iterator = samReader.queryUnmapped();
 
             while(iterator.hasNext())
             {
                 SAMRecord record = iterator.next();
-                mFullyUnmappedBamWriter.writeRecordSync(record);
+                fullyUnmappedBamWriter.writeRecordSync(record);
                 ++totalUnmappedReads;
             }
         }
@@ -268,9 +268,7 @@ public class RegionUnmapper extends Thread
         if(totalUnmappedReads > 0)
         {
             RD_LOGGER.debug("extracted {} fully-unmapped reads", totalUnmappedReads);
-            mReadUnmapper.stats().ExistingUnmapped.addAndGet(totalUnmappedReads);
+            config.UnmapRegions.stats().ExistingUnmapped.addAndGet(totalUnmappedReads);
         }
-
-        return true;
     }
 }

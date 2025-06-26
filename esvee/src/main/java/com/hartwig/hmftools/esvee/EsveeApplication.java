@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
@@ -28,23 +28,46 @@ public class EsveeApplication
         long startTimeMs = System.currentTimeMillis();
 
         // run prep
-        PrepApplication prepApplication = new PrepApplication(mConfigBuilder);
-        prepApplication.run();
+        runPrep();
 
         // run assembly
+        runAssembly();
+
+        // run depth annotation
+        runDepthAnnotation();
+
+        // run calling
+        runCaller();
+
+        SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private void runPrep()
+    {
+        PrepApplication prepApplication = new PrepApplication(mConfigBuilder);
+        prepApplication.run();
+        System.gc();
+    }
+
+    private void runAssembly()
+    {
         AssemblyApplication assemblyApplication = new AssemblyApplication(mConfigBuilder);
         assemblyApplication.run();
         assemblyApplication.close();
+        System.gc();
+    }
 
-        // run depth annotation
+    private void runDepthAnnotation()
+    {
         DepthAnnotator depthAnnotator = new DepthAnnotator(mConfigBuilder);
         depthAnnotator.run();
+        System.gc();
+    }
 
-        // run calling
+    private void runCaller()
+    {
         CallerApplication callerApplication = new CallerApplication(mConfigBuilder);
         callerApplication.run();
-
-        SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(final String[] args)

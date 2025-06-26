@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.linx.ImmutableLinxLink;
 import com.hartwig.hmftools.common.linx.ImmutableLinxSvAnnotation;

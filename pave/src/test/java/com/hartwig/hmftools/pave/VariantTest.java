@@ -19,7 +19,7 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.StringCache;
+import com.hartwig.hmftools.common.perf.StringCache;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;

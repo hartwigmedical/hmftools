@@ -395,14 +395,14 @@ public class OrangeAlgo
             throws IOException
     {
         OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
-        String sageGermlineGeneCoverageTsv = orangeWGSRefConfig != null ? orangeWGSRefConfig.sageGermlineGeneCoverageTsv() : null;
-        if(sageGermlineGeneCoverageTsv == null)
+        String germlineGeneCoverageTsv = orangeWGSRefConfig != null ? orangeWGSRefConfig.germlineGeneCoverageTsv() : null;
+        if(germlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
             return null;
         }
 
-        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(sageGermlineGeneCoverageTsv, driverGenes);
+        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(germlineGeneCoverageTsv, driverGenes);
         LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
 
         return mvlhPerGene;
@@ -628,8 +628,8 @@ public class OrangeAlgo
         LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.wgsRefConfig().peachGenotypeTsv());
-
-        return peachGenotypes;
+        List<PeachGenotype> filterUGT1A1FromPeachGenotypes = peachGenotypes.stream().filter(genotype -> !genotype.gene().equals("UGT1A1")).toList();
+        return filterUGT1A1FromPeachGenotypes;
     }
 
     @Nullable

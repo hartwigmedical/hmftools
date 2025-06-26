@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.esvee.vcfcompare.common.VariantBreakend;
+import com.hartwig.hmftools.esvee.vcfcompare.Breakend;
 
 public class LineLinker
 {
@@ -19,18 +19,17 @@ public class LineLinker
     private static final int POLY_A_TO_OTHER_SITE_UPPER_DISTANCE = 40;
     private static final int POLY_A_TO_OTHER_SITE_LOWER_DISTANCE = 30;
 
-    public static boolean hasPolyATail(VariantBreakend breakend)
+    public static boolean hasPolyATail(final Breakend breakend)
     {
-        return
-                (breakend.Orientation == -1 && breakend.InsertSequence.endsWith(POLY_A_SEQUENCE)) ||
-                (breakend.Orientation == 1 && breakend.InsertSequence.startsWith(POLY_T_SEQUENCE));
+        return (breakend.Orient.isReverse() && breakend.InsertSequence.endsWith(POLY_A_SEQUENCE))
+            || (breakend.Orient.isForward() && breakend.InsertSequence.startsWith(POLY_T_SEQUENCE));
     }
 
-    private static boolean breakendPairMeetsLineCriteria(VariantBreakend maybeInsertSite, VariantBreakend maybeLinkedSite)
+    private static boolean breakendPairMeetsLineCriteria(final Breakend maybeInsertSite, final Breakend maybeLinkedSite)
     {
         boolean meetsPolyACriteria = (
-                maybeInsertSite.Orientation == -1 &&
-                maybeLinkedSite.Orientation == 1 &&
+                maybeInsertSite.Orient.isReverse() &&
+                maybeLinkedSite.Orient.isForward() &&
                 maybeInsertSite.InsertSequence.endsWith(POLY_A_SEQUENCE) &&
                 maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
                 positionWithin(
@@ -41,8 +40,8 @@ public class LineLinker
         );
 
         boolean meetsPolyTCriteria = (
-                maybeInsertSite.Orientation == 1 &&
-                maybeLinkedSite.Orientation == -1 &&
+                maybeInsertSite.Orient.isForward() &&
+                maybeLinkedSite.Orient.isReverse() &&
                 maybeInsertSite.InsertSequence.startsWith(POLY_T_SEQUENCE) &&
                 maybeInsertSite.Chromosome.equals(maybeLinkedSite.Chromosome) &&
                 positionWithin(
@@ -55,20 +54,20 @@ public class LineLinker
         return meetsPolyACriteria || meetsPolyTCriteria;
     }
 
-    public static Map<String, List<VariantBreakend>> dedupBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
+    public static Map<String,List<Breakend>> dedupBreakends(final  Map<String,List<Breakend>> chrBreakendMap)
     {
         SV_LOGGER.debug("selecting unique variants by coords");
 
-        Map<String, List<VariantBreakend>> chrBreakendMapDeduped = new LinkedHashMap<>();
+        Map<String, List<Breakend>> chrBreakendMapDeduped = new LinkedHashMap<>();
         int selectedCount = 0;
 
         for(String chromosome : chrBreakendMap.keySet())
         {
-            List<VariantBreakend> chrBreakends = chrBreakendMap.get(chromosome);
+            List<Breakend> chrBreakends = chrBreakendMap.get(chromosome);
 
             // Group breakends by exact coords
-            Map<String, List<VariantBreakend>> coordsBreakendsMap = new LinkedHashMap<>();
-            for(VariantBreakend breakend : chrBreakends)
+            Map<String, List<Breakend>> coordsBreakendsMap = new LinkedHashMap<>();
+            for(Breakend breakend : chrBreakends)
             {
                 String coords = breakend.coordStr();
 
@@ -77,21 +76,21 @@ public class LineLinker
             }
 
             // Dedup each breakend group
-            List<VariantBreakend> chrBreakendsDeduped = new ArrayList<>();
+            List<Breakend> chrBreakendsDeduped = new ArrayList<>();
 
-            for(List<VariantBreakend> sameCoordBreakends : coordsBreakendsMap.values())
+            for(List<Breakend> sameCoordBreakends : coordsBreakendsMap.values())
             {
-                VariantBreakend selectedBreakend = sameCoordBreakends.get(0);
+                Breakend selectedBreakend = sameCoordBreakends.get(0);
 
                 if(sameCoordBreakends.size() > 1)
                 {
                     for(int nextIndex = 1; nextIndex < sameCoordBreakends.size(); nextIndex++)
                     {
-                        VariantBreakend nextBreakend = sameCoordBreakends.get(nextIndex);
+                        Breakend nextBreakend = sameCoordBreakends.get(nextIndex);
 
                         // Prefer variant with poly A, then highest qual
-                        if((nextBreakend.hasPolyATail() && !selectedBreakend.hasPolyATail()) ||
-                                nextBreakend.qual() > selectedBreakend.qual())
+                        if((nextBreakend.hasPolyATail() && !selectedBreakend.hasPolyATail())
+                        || nextBreakend.sv().qual() > selectedBreakend.sv().qual())
                         {
                             selectedBreakend = nextBreakend;
                         }
@@ -111,17 +110,17 @@ public class LineLinker
         return chrBreakendMapDeduped;
     }
 
-    public static void linkBreakends(Map<String, List<VariantBreakend>> chrBreakendMap)
+    public static void linkBreakends(final Map<String,List<Breakend>> chrBreakendMap)
     {
         SV_LOGGER.info("linking breakends with LINE characteristics");
 
         int linkCount = 0;
 
-        for(List<VariantBreakend> breakends : chrBreakendMap.values())
+        for(List<Breakend> breakends : chrBreakendMap.values())
         {
-            for(VariantBreakend maybePolyASite : breakends)
+            for(Breakend maybePolyASite : breakends)
             {
-                for(VariantBreakend maybeOtherSite : breakends)
+                for(Breakend maybeOtherSite : breakends)
                 {
                     LineLink lineLink = null;
 
@@ -134,8 +133,8 @@ public class LineLinker
                     if(breakendPairMeetsLineCriteria(maybePolyASite, maybeOtherSite))
                     {
                         lineLink = new LineLink(maybePolyASite, maybeOtherSite, LineLinkType.LINKED);
-                        maybePolyASite.LinkedLineBreakends = lineLink;
-                        maybeOtherSite.LinkedLineBreakends = lineLink;
+                        maybePolyASite.setLineLink(lineLink, false);
+                        maybeOtherSite.setLineLink(lineLink, false);
                     }
 
                     if(lineLink != null)
@@ -151,7 +150,7 @@ public class LineLinker
     }
 
     public static void inferLinksBetweenBreakendSets(
-            final Map<String,List<VariantBreakend>> chrMaybePolyASitesMap, final Map<String,List<VariantBreakend>> chrMaybeOtherSitesMap,
+            final Map<String,List<Breakend>> chrMaybePolyASitesMap, final Map<String,List<Breakend>> chrMaybeOtherSitesMap,
             final LineLinkType linkType)
     {
         SV_LOGGER.debug("inferring LINE links between sets of breakends: {}", linkType);
@@ -160,18 +159,18 @@ public class LineLinker
 
         for(String chromosome : chrMaybePolyASitesMap.keySet())
         {
-            List<VariantBreakend> maybePolyASitesList = chrMaybePolyASitesMap.get(chromosome);
-            List<VariantBreakend> maybeOtherSitesList = chrMaybeOtherSitesMap.get(chromosome);
+            List<Breakend> maybePolyASitesList = chrMaybePolyASitesMap.get(chromosome);
+            List<Breakend> maybeOtherSitesList = chrMaybeOtherSitesMap.get(chromosome);
 
             if(maybeOtherSitesList == null)
                 continue;
 
-            for(VariantBreakend maybePolyASite : maybePolyASitesList)
+            for(Breakend maybePolyASite : maybePolyASitesList)
             {
                 if(!maybePolyASite.hasPolyATail())
                     continue;
 
-                for(VariantBreakend maybeOtherSite : maybeOtherSitesList)
+                for(Breakend maybeOtherSite : maybeOtherSitesList)
                 {
                     LineLink lineLink = null;
 
@@ -181,7 +180,7 @@ public class LineLinker
                     if(breakendPairMeetsLineCriteria(maybePolyASite, maybeOtherSite))
                     {
                         lineLink = new LineLink(maybePolyASite, maybeOtherSite, linkType);
-                        maybePolyASite.InferredLinkedLineBreakends = lineLink;
+                        maybePolyASite.setLineLink(lineLink, true);
                     }
 
                     if(lineLink != null)

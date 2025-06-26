@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.plot;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.purple.region.ObservedRegionFactory.EXCLUDED_IMMUNE_REGIONS;
 
 import java.io.BufferedReader;
@@ -20,6 +22,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -155,9 +159,23 @@ public class CircosCharts
 
     private void writeCopyNumbers(final List<PurpleCopyNumber> copyNumbers) throws IOException
     {
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".map.circos", copyNumbers, x -> x.minorAlleleCopyNumber() - 1);
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".cnv.circos", copyNumbers, x -> x.averageTumorCopyNumber() - 2);
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".map.circos",
+                copyNumbers.stream().filter(x -> !Double.isNaN(x.minorAlleleCopyNumber())).collect(Collectors.toList()),
+                x -> x.minorAlleleCopyNumber() - 1
+        );
+
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".cnv.circos",
+                copyNumbers.stream().filter(x -> !Double.isNaN(x.averageTumorCopyNumber())).collect(Collectors.toList()),
+                x -> x.averageTumorCopyNumber() - 2
+        );
+
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".baf.circos",
+                copyNumbers,
+                PurpleCopyNumber::averageActualBAF
+        );
     }
 
     private void writeEnrichedSomatics(final List<VariantContextDecorator> somaticVariants) throws IOException
@@ -171,14 +189,8 @@ public class CircosCharts
     {
         writeConfig(gender, "circos");
         writeConfig(gender, "input");
-        if(mIsHg38)
-        {
-            copyResourceToCircos("gaps.38.txt", "gaps.txt");
-        }
-        else
-        {
-            copyResourceToCircos("gaps.37.txt", "gaps.txt");
-        }
+
+        copyCentromereGapsToCircos(mIsHg38 ? V38 : V37);
     }
 
     private void writeConfig(final Gender gender, final String type) throws IOException
@@ -197,12 +209,12 @@ public class CircosCharts
         Files.write(new File(confFile(type)).toPath(), content.getBytes(charset));
     }
 
-    private void copyResourceToCircos(final String inputName, final String outputName) throws IOException
+    private void copyCentromereGapsToCircos(final RefGenomeVersion refGenomeVersion) throws IOException
     {
-        Charset charset = StandardCharsets.UTF_8;
-        final String content = readResource("/circos/" + inputName);
-        final String outputFilename = mConfig.CircosDirectory + outputName;
-        Files.write(new File(outputFilename).toPath(), content.getBytes(charset));
+        List<String> centromereGapsStrings = RefGenomeCoordinates.readCentromereGaps(refGenomeVersion);
+
+        final String outputFilename = mConfig.CircosDirectory + "gaps.txt";
+        Files.write(new File(outputFilename).toPath(), centromereGapsStrings);
     }
 
     private String readResource(final String resource) throws IOException

@@ -1,29 +1,22 @@
 package com.hartwig.hmftools.teal
 
-import com.beust.jcommander.*
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepthFile
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket
 import com.hartwig.hmftools.common.metrics.BamMetricsSummary
 import com.hartwig.hmftools.common.purple.PurityContextFile
-import com.hartwig.hmftools.common.utils.config.LoggingOptions
-import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder
+import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
 
-class TealPipelineApp
+class TealPipelineApp(configBuilder: ConfigBuilder)
 {
-    @ParametersDelegate
-    val pipelineParams = TealPipelineParams()
-
-    @ParametersDelegate
-    val loggingOptions = LoggingOptions()
+    val pipelineParams = TealPipelineParams(configBuilder)
 
     fun run(): Int
     {
         pipelineParams.validate()
-        loggingOptions.setLogLevel()
-        val standaloneMode = TealApplication()
-        standaloneMode.params = readPipelineFiles()
+        val standaloneMode = TealApplication(params = readPipelineFiles())
         return standaloneMode.run()
     }
 
@@ -88,27 +81,11 @@ class TealPipelineApp
         @JvmStatic
         fun main(args: Array<String>)
         {
-            // here we have some voodoo to work out if we are being used in pipeline mode or the standalone mode
-            val tealApp = TealPipelineApp()
-            val commander = JCommander.newBuilder()
-                .addObject(tealApp)
-                .build()
-
-            // use unix style formatter
-            commander.usageFormatter = UnixStyleUsageFormatter(commander)
-            commander.parameterDescriptionComparator = DeclaredOrderParameterComparator(tealApp.javaClass)
-
-            try
-            {
-                commander.parse(*args)
-                exitProcess(tealApp.run())
-            }
-            catch (paramException: ParameterException)
-            {
-                println("${paramException.message}")
-                commander.usage()
-                exitProcess(1)
-            }
+            val configBuilder = ConfigBuilder("Teal")
+            TealPipelineParams.registerConfig(configBuilder)
+            configBuilder.checkAndParseCommandLine(args)
+            val tealApp = TealPipelineApp(configBuilder)
+            exitProcess(tealApp.run())
         }
     }
 }

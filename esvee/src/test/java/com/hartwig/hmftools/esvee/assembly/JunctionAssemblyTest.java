@@ -15,8 +15,9 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAndCrossesJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -84,7 +85,7 @@ public class JunctionAssemblyTest
     @Test
     public void testPosJunctionExtensionSequence()
     {
-        String refBases = REF_BASES_200.substring(0, 20);
+        String refBases = REF_BASES_200.substring(10, 30);
         String extBases = REF_BASES_200.substring(100, 140);
 
         Junction junction = new Junction(CHR_1, 29, FORWARD);
@@ -102,13 +103,17 @@ public class JunctionAssemblyTest
         // a read without soft-clip but mismatches agreeing with the extension
         String alignedMatchingBases = readBases.substring(0, 22);
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), 10, alignedMatchingBases, makeCigarString(alignedMatchingBases, 0, 0));
-        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
-        assertTrue(recordSoftClipsAndCrossesJunction(read4, junction));
 
-        // similar but too long and matching the ref
-        readBases = REF_BASES_200.substring(0, 30);
+        MockRefGenome refGenome = new MockRefGenome();
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_200);
+
+        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
+        assertTrue(readSoftClipsAndCrossesJunction(read4, junction, refGenome));
+
+        // similar but matches the ref
+        readBases = REF_BASES_200.substring(10, 40);
         Read read5 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, 0));
-        assertFalse(recordSoftClipsAndCrossesJunction(read5, junction));
+        assertFalse(readSoftClipsAndCrossesJunction(read5, junction, refGenome));
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
@@ -167,8 +172,6 @@ public class JunctionAssemblyTest
 
         String alignedMatchingBases = readBases.substring(readBases.length() - 22);
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition - 2, alignedMatchingBases, makeCigarString(alignedMatchingBases, 0, 0));
-        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
-        assertTrue(recordSoftClipsAndCrossesJunction(read4, junction));
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
@@ -243,7 +246,7 @@ public class JunctionAssemblyTest
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
     }
 
     @Test
@@ -290,7 +293,7 @@ public class JunctionAssemblyTest
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
     }
 
     @Test
@@ -338,7 +341,7 @@ public class JunctionAssemblyTest
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
 
         String buildInfo = extSeqBuilder.buildInformation();
         assertEquals("5;5;0;true;28:CAG:4:10;2:2:1:0", buildInfo);
@@ -385,7 +388,7 @@ public class JunctionAssemblyTest
 
         supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(4, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.junctionMismatches() == 0).count());
+        assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
     }
 
     @Test
@@ -435,10 +438,88 @@ public class JunctionAssemblyTest
         assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
         assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
 
-        AssemblyDeduper.dedupJunctionAssemblies(assemblies);
+        assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly2));
+        assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly3));
+        assertFalse(SequenceCompare.matchedAssemblySequences(assembly1, assembly4));
+        assertTrue(SequenceCompare.matchedAssemblySequences(assembly1, assembly5));
+    }
 
-        assertEquals(2, assemblies.size());
-        assertEquals(3, assemblies.get(0).mergedAssemblyCount());
+    @Test
+    public void testAssemblyNoDedupWithSharedReads()
+    {
+        Junction indelJunctionNeg = new Junction(CHR_1, 130, REVERSE, false, true, false);
+        Junction indelJunctionPos = new Junction(CHR_1, 131, FORWARD, false, true, false);
+
+        String leftExtBases = REF_BASES_400.substring(200, 240);
+        String rightExtBases = REF_BASES_400.substring(260, 300);
+        String leftRefBases = REF_BASES_400.substring(100, 131);
+        String rightRefBases = REF_BASES_400.substring(131, 171);
+        String insertBases =rightRefBases; // a duplication
+
+        String indelReadBases = leftExtBases + leftRefBases + insertBases + rightRefBases + rightExtBases;
+
+        // both pairs of junctions share a read which supports them both, so are not deduped
+        Read indelRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 100,
+                indelReadBases,
+                "40S31M40I40M40S", CHR_1, 300, true);
+
+        JunctionAssembly indelAssemblyPos = new JunctionAssembly(
+                indelJunctionPos, indelRead.getBases(), indelRead.getBaseQuality(),
+                leftExtBases.length() + leftRefBases.length());
+
+        indelAssemblyPos.addJunctionRead(indelRead);
+        indelAssemblyPos.setIndelCoords(indelRead.indelCoords());
+
+        JunctionAssembly indelAssemblyNeg = new JunctionAssembly(
+                indelJunctionNeg, indelRead.getBases(), indelRead.getBaseQuality(),
+                leftExtBases.length() + leftRefBases.length() + 1);
+
+        indelAssemblyNeg.addJunctionRead(indelRead);
+        indelAssemblyNeg.setIndelCoords(indelRead.indelCoords());
+
+        Junction splitJunctionPos = new Junction(CHR_1, 170, FORWARD);
+        Junction splitJunctionNeg = new Junction(CHR_1, 100, REVERSE);
+
+        JunctionAssembly splitAssemblyNeg = new JunctionAssembly(
+                splitJunctionNeg, indelRead.getBases(), indelRead.getBaseQuality(), leftExtBases.length());
+        splitAssemblyNeg.addJunctionRead(indelRead);
+
+        JunctionAssembly splitAssemblyPos = new JunctionAssembly(
+                splitJunctionPos, indelRead.getBases(), indelRead.getBaseQuality(),
+                indelRead.basesLength() - rightExtBases.length() - 1);
+        splitAssemblyPos.addJunctionRead(indelRead);
+
+        List<JunctionAssembly> existingAssemblies = Lists.newArrayList(splitAssemblyPos, splitAssemblyNeg);
+        List<JunctionAssembly> newAssemblies = Lists.newArrayList(indelAssemblyPos, indelAssemblyNeg);
+        List<JunctionAssembly> dedupIndels = Lists.newArrayList();
+
+        dedupProximateAssemblies(existingAssemblies, newAssemblies, dedupIndels);
+
+        assertEquals(2, existingAssemblies.size());
+        assertEquals(2, newAssemblies.size());
+
+        // again without a shared read and they are deduped
+        Read splitRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 100,
+                indelReadBases, "40S31M30M70S", CHR_1, 300, true);
+
+        splitAssemblyNeg = new JunctionAssembly(
+                splitJunctionNeg, splitRead.getBases(), splitRead.getBaseQuality(), leftExtBases.length());
+        splitAssemblyNeg.addJunctionRead(splitRead);
+
+        splitAssemblyPos = new JunctionAssembly(
+                splitJunctionPos, splitRead.getBases(), splitRead.getBaseQuality(),
+                splitRead.basesLength() - rightExtBases.length() - 1);
+        splitAssemblyPos.addJunctionRead(splitRead);
+
+        existingAssemblies = Lists.newArrayList(splitAssemblyPos, splitAssemblyNeg);
+        newAssemblies = Lists.newArrayList(indelAssemblyPos, indelAssemblyNeg);
+
+        dedupProximateAssemblies(existingAssemblies, newAssemblies, dedupIndels);
+
+        assertEquals(2, newAssemblies.size());
+        assertTrue(existingAssemblies.isEmpty()); // the indel assemblies are kept
     }
 
     @Test

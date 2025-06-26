@@ -29,6 +29,9 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public final class AssemblyUtils
 {
+    public static final int DNA_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // allows for Ns
+    public static final byte NO_BASE = 0;
+
     public static int mismatchesPerComparisonLength(final int sequenceLength)
     {
         if(sequenceLength < 15)
@@ -280,5 +283,17 @@ public final class AssemblyUtils
             range[1] = bases.length - 1;
 
         return emptyRanges;
+    }
+
+    public static String nonNullBaseStr(final byte[] bases)
+    {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < bases.length; ++i)
+        {
+            if(bases[i] != 0)
+                sb.append((char)bases[i]);
+        }
+
+        return sb.toString();
     }
 }

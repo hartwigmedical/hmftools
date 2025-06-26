@@ -95,6 +95,7 @@ public class SampleLoaderTask implements Callable
         if(mDbAccess == null)
         {
             ISF_LOGGER.error("invalid DB connection");
+            System.exit(1);
             mRnaDAO = null;
         }
         else

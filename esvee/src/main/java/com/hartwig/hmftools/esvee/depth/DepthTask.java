@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.depth;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -16,7 +15,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
@@ -34,7 +33,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -170,6 +169,9 @@ public class DepthTask implements Callable
             VariantContext variant = mVariantsList.get(i);
             VariantInfo variantInfo = mVariantInfoList.get(i);
 
+            // NOTE: SGLs and short indels do not consider ref-pair support for AF
+            boolean skipRefPairSupport = variantInfo.IsSgl || variantInfo.IsShortIndel;
+
             for(int s = 0; s < mConfig.SampleIds.size(); ++s)
             {
                 String sampleId = mConfig.SampleIds.get(s);
@@ -182,19 +184,23 @@ public class DepthTask implements Callable
                     continue;
 
                 genotype.getExtendedAttributes().put(refVcfTag, sampleCounts.RefSupport);
-                genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
 
                 int variantFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
 
-                double total = variantFrags + sampleCounts.total();
-                double af = variantFrags / total;
+                int refPairSupport = skipRefPairSupport ? 0 : sampleCounts.RefPairSupport;
+
+                double total = variantFrags + sampleCounts.RefSupport + refPairSupport;
+
+                genotype.getExtendedAttributes().put(refPairVcfTag, refPairSupport);
+
+                double af = total > 0 ? variantFrags / total : 0;
 
                 genotype.getExtendedAttributes().put(ALLELE_FRACTION, af);
             }
 
             RefSupportCounts totalCounts = variantInfo.totalSupport();
             setRefDepthValue(variant, totalCounts.RefSupport, refVcfTag);
-            setRefDepthValue(variant, totalCounts.RefPairSupport, refPairVcfTag);
+            setRefDepthValue(variant, skipRefPairSupport ? 0 : totalCounts.RefPairSupport, refPairVcfTag);
         }
 
         SV_LOGGER.info("chr({}) complete for {} variants, total reads({})", mChromosome, processed, mTotalReadCount);

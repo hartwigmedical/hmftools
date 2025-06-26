@@ -87,7 +87,7 @@ public class FittedPurityFactory
         }
 
         mTotalBAFCount = accumulatedBafCount;
-        mAverageFittingRatio = accumulatedWeightedRatio / accumulatedBafCount;
+        mAverageFittingRatio = accumulatedBafCount > 0 ? accumulatedWeightedRatio / accumulatedBafCount : 0;
 
         List<SomaticVariant> downsampleVariants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
 
@@ -99,6 +99,8 @@ public class FittedPurityFactory
             filteredVariantSelector.select(regionData.Region, regionData::addVariant);
         }
     }
+
+    public boolean validDataForFit() { return mAverageFittingRatio > 0; }
 
     public List<FittedPurity> getFittedPurities() { return mFittedPurities; }
 
@@ -216,12 +218,6 @@ public class FittedPurityFactory
                 .ploidy(averagePloidy)
                 .somaticPenalty(somaticPenalty)
                 .build();
-    }
-
-    public static RegionFitCalculator createFittedRegionFactory(
-            final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig)
-    {
-        return new RegionFitCalculator(cobaltChromosomes, fitScoreConfig, averageTumorDepth);
     }
 
     private static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)

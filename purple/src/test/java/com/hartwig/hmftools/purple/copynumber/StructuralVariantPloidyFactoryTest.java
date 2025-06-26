@@ -5,7 +5,7 @@ import static java.util.Collections.singleton;
 import static com.hartwig.hmftools.purple.copynumber.StructuralVariantLegsFactoryTest.createLeg;
 import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.CHROMOSOME;
 import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.PURE;
-import static com.hartwig.hmftools.purple.MiscTestUtils.buildPurityAdjuster;
+import static com.hartwig.hmftools.purple.FittingTestUtils.buildPurityAdjuster;
 
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;

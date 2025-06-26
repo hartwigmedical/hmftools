@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.teal
 
-import com.beust.jcommander.*
-import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
-import com.hartwig.hmftools.common.utils.config.LoggingOptions
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder
+import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.version.VersionInfo
 import com.hartwig.hmftools.teal.telbam.TelbamApp
@@ -14,18 +13,13 @@ import kotlin.system.exitProcess
 // this is special mode which only process the bam and create telbams for the
 // pipeline run. The reason for splitting into two part is for performance reasons.
 // It allows us to avoid reprocessing the full bam.
-class TealPipelineTelbamApp
+class TealPipelineTelbamApp(configBuilder: ConfigBuilder)
 {
-    @ParametersDelegate
-    val tealCommonParams = TealCommonParams()
-
-    @ParametersDelegate
-    val loggingOptions = LoggingOptions()
+    val tealCommonParams = TealCommonParams(configBuilder)
 
     fun run(): Int
     {
         tealCommonParams.validate()
-        loggingOptions.setLogLevel()
 
         if (!FileWriterUtils.checkCreateOutputDir(tealCommonParams.outputDir))
         {
@@ -93,27 +87,11 @@ class TealPipelineTelbamApp
         @JvmStatic
         fun main(args: Array<String>)
         {
-            // here we have some voodoo to work out if we are being used in pipeline mode or the standalone mode
-            val app = TealPipelineTelbamApp()
-            val jCommander = JCommander.newBuilder()
-                .addObject(app)
-                .build()
-
-            // use unix style formatter
-            jCommander.usageFormatter = UnixStyleUsageFormatter(jCommander)
-            jCommander.parameterDescriptionComparator = DeclaredOrderParameterComparator(app.javaClass)
-
-            try
-            {
-                jCommander.parse(*args)
-                exitProcess(app.run())
-            }
-            catch (paramException: ParameterException)
-            {
-                println("${paramException.message}")
-                jCommander.usage()
-                exitProcess(1)
-            }
+            val configBuilder = ConfigBuilder("Teal")
+            TealCommonParams.registerConfig(configBuilder)
+            configBuilder.checkAndParseCommandLine(args)
+            val app = TealPipelineTelbamApp(configBuilder)
+            exitProcess(app.run())
         }
     }
 }

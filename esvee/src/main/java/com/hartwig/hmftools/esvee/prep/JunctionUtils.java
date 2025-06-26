@@ -4,11 +4,21 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_SCORE_DIFF;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_LOWER_SCORE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
+import static com.hartwig.hmftools.esvee.prep.ReadFilters.calcRepeatTrimmedAlignmentScore;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.FragmentData.unclippedPosition;
 import static com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus.DUPLICATE;
@@ -30,6 +40,7 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMFlag;
 
 public final class JunctionUtils
 {
@@ -282,6 +293,37 @@ public final class JunctionUtils
             double baseMatchPerc = baseMatches / (double)endIndex;
             return baseMatchPerc > MIN_EXACT_BASE_PERC;
         }
+    }
+
+    public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)
+    {
+        for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
+        {
+            double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, MIN_CALC_ALIGNMENT_SCORE, true);
+
+            if(adjustedAlignScore < 0)
+                continue;
+
+            if(adjustedAlignScore >= MIN_CALC_ALIGNMENT_SCORE)
+                return true;
+
+            if(adjustedAlignScore >= MIN_CALC_ALIGNMENT_LOWER_SCORE && aboveAlignedScoreDifference(read, filterConfig.MinAlignmentBases))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static boolean aboveAlignedScoreDifference(final PrepRead read, int minAlignScore)
+    {
+        Integer asScore = read.record().getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+
+        if(asScore == null || asScore < minAlignScore)
+            return false;
+
+        Integer xsScore = read.record().getIntegerAttribute(XS_ATTRIBUTE);
+
+        return xsScore != null && asScore - xsScore >= MIN_ALIGNMENT_SCORE_DIFF;
     }
 
     public static int markSupplementaryDuplicates(final Map<String,ReadGroup> readGroupMap, final ReadIdTrimmer readIdTrimmer)

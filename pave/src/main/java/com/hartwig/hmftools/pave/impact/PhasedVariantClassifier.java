@@ -138,7 +138,21 @@ public class PhasedVariantClassifier
                     }
                 }
 
-                reclassifyImpacts(phasedVariants.LocalPhaseId, variants, transImpacts, refGenome);
+                try
+                {
+                    reclassifyImpacts(phasedVariants.LocalPhaseId, variants, transImpacts, refGenome);
+                }
+                catch(Exception e)
+                {
+                    String variantsInfo = variants.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+                    PV_LOGGER.error("failed to phase variants({}): {}", variantsInfo, e.toString());
+
+                    for(VariantTransImpact vtImpact : transImpacts)
+                    {
+                        PV_LOGGER.error("transImpact({}) coding({}) protein({})",
+                                vtImpact.toString(), vtImpact.codingContext(), vtImpact.proteinContext());
+                    }
+                }
             }
         }
     }
@@ -323,26 +337,27 @@ public class PhasedVariantClassifier
                     prevAltBasesTrimmed = 0;
                 }
 
-                if(combinedAltCodons.length() - prevAltBasesTrimmed <= 0)
+                if(combinedAltCodons.length() - prevAltBasesTrimmed > 0)
                 {
-                    PV_LOGGER.warn("phasing variants LPS({}) var({}) combinedAltCodons({}) prevAltBasesTrimmed({})",
+                    String previousExtraAltBases = "";
+
+                    if(lastRefCodonEnd > refCodonEnd)
+                    {
+                        previousExtraAltBases = combinedAltCodons.substring(lastRefCodonEnd - refCodonEnd + 1);
+                    }
+
+                    combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - prevAltBasesTrimmed);
+
+                    combinedAltCodons += transImpact.proteinContext().AltCodonBases.substring(currentAltBasesTrimmed);
+
+                    // restore the trimmed ref bases which the previous variant(s) had
+                    combinedAltCodons += previousExtraAltBases;
+                }
+                else
+                {
+                    PV_LOGGER.trace("phasing variants LPS({}) var({}) skip adjusting combinedAltCodons({}) prevAltBasesTrimmed({})",
                             localPhaseSet, variant, combinedAltCodons, prevAltBasesTrimmed);
-                    return;
                 }
-
-                String previousExtraAltBases = "";
-
-                if(lastRefCodonEnd > refCodonEnd)
-                {
-                    previousExtraAltBases = combinedAltCodons.substring(lastRefCodonEnd - refCodonEnd + 1);
-                }
-
-                combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - prevAltBasesTrimmed);
-
-                combinedAltCodons += transImpact.proteinContext().AltCodonBases.substring(currentAltBasesTrimmed);
-
-                // restore the trimmed ref bases which the previous variant(s) had
-                combinedAltCodons += previousExtraAltBases;
             }
             else
             {
@@ -405,7 +420,7 @@ public class PhasedVariantClassifier
             combinedPc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseComplementBases(combinedAltCodons));
         }
 
-        trimAminoAcids(combinedPc, true, true, false);
+        trimAminoAcids(combinedPc, posStrand, true, true, false);
 
         if(indelBaseTotal == 0)
         {

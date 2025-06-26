@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignment;
@@ -16,6 +15,8 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.READ_ID_TRIMMER;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.LOW_QUAL_SCORE;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -50,8 +51,6 @@ public class Read
     private int mAlignmentEnd;
     private int mUnclippedStart;
     private int mUnclippedEnd;
-    private Integer mSnvCount;
-    private Integer mTotalIndelBases;
     private Integer mMateAlignmentEnd;
     private byte[] mBases;
     private byte[] mBaseQuals;
@@ -87,8 +86,6 @@ public class Read
         mCigarElements = cigarElementsFromStr(mOrigCigarString);
 
         setBoundaries(mRecord.getAlignmentStart());
-        mSnvCount = null;
-        mTotalIndelBases = null;
         mBases = null;
         mBaseQuals = null;
         mMateAlignmentEnd = null;
@@ -177,7 +174,7 @@ public class Read
     public int unclippedStart()  { return mUnclippedStart; }
     public int unclippedEnd() { return mUnclippedEnd; }
 
-    public int fragmentEnd() { return positiveStrand() ? mUnclippedStart : mUnclippedEnd; }
+    public int fivePrimeFragmentPosition() { return positiveStrand() ? mUnclippedStart : mUnclippedEnd; }
 
     // convenience
     public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart || mIndelInferredUnclippedStart != null; }
@@ -310,39 +307,6 @@ public class Read
     public int getReadIndexAtReferencePosition(final int refPosition, boolean allowExtrapolation)
     {
         return ReadUtils.getReadIndexAtReferencePosition(this, refPosition, allowExtrapolation);
-    }
-
-    public int totalIndelBases()
-    {
-        if(mTotalIndelBases == null)
-            calcNumberOfEvents();
-
-        return mTotalIndelBases;
-    }
-
-    public int snvCount()
-    {
-        if(mSnvCount == null)
-            calcNumberOfEvents();
-
-        return mSnvCount;
-    }
-
-    public int numOfEvents() { return snvCount() + totalIndelBases(); }
-
-    private void calcNumberOfEvents()
-    {
-        Object numOfEvents = mRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE);
-
-        if(numOfEvents == null)
-        {
-            mTotalIndelBases = 0;
-            mSnvCount = 0;
-            return;
-        }
-
-        mTotalIndelBases = mCigarElements.stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
-        mSnvCount = max((int)numOfEvents - mTotalIndelBases, 0);
     }
 
     public IndelCoords indelCoords()
@@ -533,55 +497,48 @@ public class Read
         return mIndelInferredUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelInferredUnclippedEnd);
     }
 
-    /*
-    public void setIndelUnclippedBounds(int leftSoftClipBases, int rightSoftClipBases)
+    public synchronized void trimLowQualBases()
     {
-        // expand the potential soft-clipped bounds from the internal indel but leave alignment and the CIGAR unch
+        if(lowQualTrimmed())
+            return;
 
-        // inserted bases - unclipped start/end = -/+ inserted base length
-        // delete bases - implied alignment moves in by outer M and deleted base length, then add delete length back to unclipped pos
+        boolean fromStart = negativeStrand();
 
-        if(leftSoftClipBases > 0)
+        int baseLength = basesLength();
+        int baseIndex = fromStart ? 0 : baseLength - 1;
+
+        int checkedBases = 0;
+
+        double lowestScore = 0;
+        double currentScore = 0;
+        int lastLowestScoreIndex = 0;
+
+        while(baseIndex >= 0 && baseIndex < baseLength)
         {
-            boolean isDelete = mCigarElements.get(1).getOperator() == D;
-            mIndelImpliedAlignmentStart = mAlignmentStart + mCigarElements.get(0).getLength();
+            ++checkedBases;
 
-            if(isDelete)
-                mIndelImpliedAlignmentStart += mCigarElements.get(1).getLength();
+            if(belowMinQual(getBaseQuality()[baseIndex]))
+            {
+                currentScore -= LOW_QUAL_SCORE;
 
-            mIndelImpliedUnclippedStart = mIndelImpliedAlignmentStart - leftSoftClipBases;
+                if(currentScore < lowestScore)
+                    lastLowestScoreIndex = checkedBases;
+            }
+            else
+            {
+                ++currentScore;
+            }
+
+            if(fromStart)
+                ++baseIndex;
+            else
+                --baseIndex;
         }
 
-        if(rightSoftClipBases > 0)
+        if(lastLowestScoreIndex > 0)
         {
-            int lastIndex = mCigarElements.size() - 1;
-            boolean isDelete = mCigarElements.get(lastIndex - 1).getOperator() == D;
-
-            mIndelImpliedAlignmentEnd = mAlignmentEnd - mCigarElements.get(lastIndex).getLength();
-
-            if(isDelete)
-                mIndelImpliedAlignmentEnd -= mCigarElements.get(lastIndex - 1).getLength();
-
-            mIndelImpliedUnclippedEnd = mIndelImpliedAlignmentEnd + rightSoftClipBases;
+            trimBases(lastLowestScoreIndex, fromStart);
+            markLowQualTrimmed();
         }
     }
-
-    public int indelImpliedAlignmentStart() { return mIndelImpliedAlignmentStart != null ? mIndelImpliedAlignmentStart : 0; }
-    public int indelImpliedAlignmentEnd() { return mIndelImpliedAlignmentEnd != null ? mIndelImpliedAlignmentEnd : 0; }
-    public int indelImpliedUnclippedStart() { return mIndelImpliedUnclippedStart != null ? mIndelImpliedUnclippedStart : 0; }
-    public int indelImpliedUnclippedEnd() { return mIndelImpliedUnclippedEnd != null ? mIndelImpliedUnclippedEnd : 0; }
-
-    // take indel implied read ends into consideration for methods requiring the maximum possible read soft-clip extension
-    // note: converted INDELs from deletes may have their unclipped position inside the alignment
-    public int minUnclippedStart()
-    {
-        return mIndelImpliedUnclippedStart == null ? mUnclippedStart : min(mUnclippedStart, mIndelImpliedUnclippedStart);
-    }
-
-    public int maxUnclippedEnd()
-    {
-        return mIndelImpliedUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelImpliedUnclippedEnd);
-    }
-    */
-
 }

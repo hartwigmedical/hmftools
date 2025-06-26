@@ -21,14 +21,14 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_BQR_MIN_QUAL;
 import static com.hartwig.hmftools.wisp.purity.SampleData.sampleIdsFromStr;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
-import static com.hartwig.hmftools.wisp.purity.variant.SimpleVariant.loadSimpleVariants;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -42,8 +42,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.wisp.purity.variant.ProbeVariantCache;
-import com.hartwig.hmftools.wisp.purity.variant.SimpleVariant;
 
 public class PurityConfig
 {
@@ -129,7 +129,20 @@ public class PurityConfig
         }
 
         SomaticVcf = configBuilder.getValue(SOMATIC_VCF);
-        SomaticDir = checkAddDirSeparator(configBuilder.getValue(SOMATIC_DIR, SampleDataDir));
+
+        if(configBuilder.hasValue(SOMATIC_DIR))
+        {
+            SomaticDir = checkAddDirSeparator(configBuilder.getValue(SOMATIC_DIR));
+        }
+        else if(SampleDataDir != null)
+        {
+            SomaticDir = SampleDataDir;
+        }
+        else
+        {
+            SomaticDir = pathFromFile(SomaticVcf);
+        }
+
         PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir));
         AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIR_CFG, SampleDataDir));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir));
@@ -193,7 +206,18 @@ public class PurityConfig
 
         if(configBuilder.hasValue(EXCLUDED_SOMATICS_FILE))
         {
-            ExcludedSomatics = loadSimpleVariants(configBuilder.getValue(EXCLUDED_SOMATICS_FILE));
+            ExcludedSomatics = Lists.newArrayList();
+
+            try
+            {
+                ExcludedSomatics.addAll(SimpleVariant.loadSimpleVariants(configBuilder.getValue(EXCLUDED_SOMATICS_FILE)));
+            }
+            catch(Exception e)
+            {
+                CT_LOGGER.error("failed to load excluded variants: {}", e.toString());
+                System.exit(1);
+            }
+
             CT_LOGGER.info("excluding {} somatic variants", ExcludedSomatics.size());
         }
         else

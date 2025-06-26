@@ -602,7 +602,7 @@ public class FrontPageChapter implements ReportChapter
                 haplotypes.add(haplotype + " (" + genotype.function() + ")");
             }
         }
-        return !haplotypes.isEmpty() ? concat(haplotypes) : NONE;
+        return !haplotypes.isEmpty() ? concat(haplotypes) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull

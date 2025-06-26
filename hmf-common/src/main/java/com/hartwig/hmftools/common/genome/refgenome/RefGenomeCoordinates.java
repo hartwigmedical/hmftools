@@ -80,4 +80,15 @@ public enum RefGenomeCoordinates
 
         return result;
     }
+
+    public static List<String> readCentromereGaps(final RefGenomeVersion refGenomeVersion)
+    {
+        String centromereGapsFile = String.format("/refgenome/centromere_gaps.%s.tsv", refGenomeVersion.identifier());
+
+        InputStream in = RefGenomeCoordinates.class.getResourceAsStream(centromereGapsFile);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+
+        return reader.lines().toList();
+    }
+
 }

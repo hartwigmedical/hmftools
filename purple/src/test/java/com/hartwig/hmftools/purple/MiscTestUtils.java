@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT;
@@ -19,6 +21,7 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -42,6 +45,22 @@ public final class MiscTestUtils
     public static final String SAMPLE_ID = "SAMPLE_ID";
     public static final String REF_SAMPLE_ID = "REF_SAMPLE_ID";
     private static final String TEST_GENE_01 = "GENE_01";
+
+    public static ConfigBuilder buildDefaultConfigBuilder()
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        PurpleConfig.registerConfig(configBuilder);
+
+        configBuilder.setValue(TUMOR, SAMPLE_ID);
+        configBuilder.setValue(REFERENCE, REF_SAMPLE_ID);
+
+        return configBuilder;
+    }
+
+    public static PurpleConfig buildPurpleConfig(final ConfigBuilder configBuilder)
+    {
+        return new PurpleConfig("version", configBuilder);
+    }
 
     public static SomaticVariant createVariant(
             final VariantType type, final CodingEffect codingEffect, int repeatCount, Hotspot hotspot, double vaf)
@@ -129,41 +148,5 @@ public final class MiscTestUtils
                 .log10PError(logError)
                 .unfiltered()
                 .make(true);
-    }
-
-    public static ObservedRegion createDefaultFittedRegion(final String chromosome, final int start, final int end)
-    {
-        return new ObservedRegion(
-                chromosome, start, end, true, SegmentSupport.NONE, 1, 0.5, 1,
-                1, 1, 1, GermlineStatus.DIPLOID, false,
-                0.93, 0, 0, 0, 0, 0,
-                0, 2, 2, 0.5, 0, 0);
-    }
-
-    public static PurityAdjuster buildPurityAdjuster(final Gender gender, final double purity, final double normFactor)
-    {
-        Map<String,Double> observedRatioMap = Maps.newHashMap();
-
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            if(chromosome.isAutosome())
-            {
-                observedRatioMap.put(chromosome.toString(), 1.0);
-            }
-            else if(chromosome.equals(HumanChromosome._X))
-            {
-                if(gender == Gender.MALE)
-                    observedRatioMap.put(chromosome.toString(), 0.5);
-                else
-                    observedRatioMap.put(chromosome.toString(), 1.0);
-            }
-            else if(chromosome.equals(HumanChromosome._Y))
-            {
-                if(gender == Gender.MALE)
-                    observedRatioMap.put(chromosome.toString(), 0.5);
-            }
-        }
-
-        return new PurityAdjuster(observedRatioMap, purity, normFactor);
     }
 }

@@ -25,9 +25,6 @@ import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public final class HgvsProtein
 {
-    /* Rules and conventions
-     */
-
     private static final String PROTEIN_ID = "p.";
     private static final String HGVS_FRAMESHIFT = "fs";
     private static final String HGVS_STOP_LOST = "ext*?";
@@ -303,6 +300,7 @@ public final class HgvsProtein
                 }
 
                 int aaStartIndex = proteinContext.CodonIndex + i;
+
                 int aaEndIndex = aaStartIndex + 1;
 
                 // conservative: only an insert, no deleted AAs so quote the range

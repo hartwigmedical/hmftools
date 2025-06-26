@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -21,11 +23,13 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -96,6 +100,8 @@ public class BreakendBuilder
             // otherwise handle multiple alignments
             formMultipleBreakends(validAlignments, lowQualAlignments);
         }
+
+        setMaxLocalRepeat();
     }
 
     private boolean formIndelBreakends(final AlignData alignment)
@@ -132,7 +138,12 @@ public class BreakendBuilder
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
 
-        int indelSeqStart = alignment.sequenceStart() + indelCoords.PosStart - alignment.positionStart();
+        int indelSeqStart = alignment.sequenceStart() + getReadIndexFromPosition(
+                alignment.positionStart(), alignment.cigarElements(),  indelCoords.PosStart, true, false);
+
+        if(alignment.cigarElements().get(0).getOperator() == S) // back out soft-clip since the method above includes that
+            indelSeqStart -= alignment.cigarElements().get(0).getLength();
+
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
         if(!isChained)
@@ -168,12 +179,39 @@ public class BreakendBuilder
 
                 if(!homology.Homology.isEmpty())
                 {
+                    // convert an INS to a DUP and reassess homology
                     int totalInexactHomology = homology.InexactEnd - homology.InexactStart;
-                    insertedBases = insertedBases.substring(totalInexactHomology);
+
                     indelSeqStart += totalInexactHomology;
-                    indelPosEnd += totalInexactHomology;
+                    indelPosStart += 1;
+                    indelPosEnd += totalInexactHomology - 1;
                     lowerOrient = REVERSE;
                     upperOrient = FORWARD;
+                    int newHomologyLength = 0;
+                    if(totalInexactHomology == insertedBases.length())
+                    {
+                        String postIndelBases = mRefGenome.getBaseString(
+                                alignment.chromosome(), indelPosEnd + 1, indelPosEnd + insertedBases.length());
+
+                        while(newHomologyLength < insertedBases.length() && newHomologyLength < postIndelBases.length()
+                        && insertedBases.charAt(newHomologyLength) == postIndelBases.charAt(newHomologyLength))
+                        {
+                            ++newHomologyLength;
+                        }
+                    }
+
+                    if(newHomologyLength > 0)
+                    {
+                        String newHomologyBases = insertedBases.substring(0, newHomologyLength);
+
+                        homology = new HomologyData(newHomologyBases, 0, newHomologyLength, 0, newHomologyLength);
+                    }
+                    else
+                    {
+                        homology = null;
+                    }
+
+                    insertedBases = insertedBases.substring(totalInexactHomology);
                 }
             }
         }
@@ -483,6 +521,17 @@ public class BreakendBuilder
                 breakend.addFacingBreakend(nextBreakend);
                 nextBreakend.addFacingBreakend(breakend);
             }
+            else if(nextBreakend.svType() == DUP && nextBreakend.Orient.isReverse() && i < mAssemblyAlignment.breakends().size() - 2)
+            {
+                // handle links to the upper breakend of a short DUP
+                Breakend dupOtherBreakend = mAssemblyAlignment.breakends().get(i + 2);
+
+                if(dupOtherBreakend == nextBreakend.otherBreakend() && areFacingBreakends(breakend, dupOtherBreakend))
+                {
+                    breakend.addFacingBreakend(dupOtherBreakend);
+                    dupOtherBreakend.addFacingBreakend(breakend);
+                }
+            }
         }
 
         // add links for any assemblies with multiple facing breakends in the phase set
@@ -572,5 +621,29 @@ public class BreakendBuilder
         relatedAlignments.forEach(x -> altAlignments.addAll(x.allAlignments()));
 
         return altAlignments;
+    }
+
+    private void setMaxLocalRepeat()
+    {
+        // maximum repeat at the junction is used by the caller for filtering
+        if(mAssemblyAlignment.breakends().size() != 2)
+            return;
+
+        if(!mAssemblyAlignment.breakends().stream().allMatch(x -> x.isShortLocalDelDupIns()))
+            return;
+
+        int maxRepeatLength = 0;
+
+        for(JunctionAssembly assembly : mAssemblyAlignment.assemblies())
+        {
+            if(assembly.repeatInfo() != null)
+            {
+                int maxRepeat = assembly.repeatInfo().stream().mapToInt(x -> x.Count).max().orElse(0);
+                maxRepeatLength = max(maxRepeatLength, maxRepeat);
+            }
+        }
+
+        int maxLocalRepeat = maxRepeatLength;
+        mAssemblyAlignment.breakends().forEach(x -> x.setMaxLocalRepeat(maxLocalRepeat));
     }
 }

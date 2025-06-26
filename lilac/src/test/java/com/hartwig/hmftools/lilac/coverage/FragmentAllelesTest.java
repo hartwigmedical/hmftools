@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetSequence
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +24,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
+import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
 import org.junit.Test;
 
@@ -36,9 +38,8 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq1 = new HlaSequenceLoci(allele1, Lists.newArrayList("A", "B", "C", "D"));
         List<HlaSequenceLoci> sequences = Lists.newArrayList(seq1);
 
-        String readInfo = "";
         List<String> emptyNucs = Lists.newArrayList();
-        List<Integer> emptyQuals = Lists.newArrayList();
+        List<Byte> emptyQuals = Lists.newArrayList();
         List<Integer> emptyLoci = Lists.newArrayList();
         Set<String> aGenes = Sets.newHashSet(HLA_A);
         Set<String> bGenes = Sets.newHashSet(HLA_B);
@@ -57,7 +58,10 @@ public class FragmentAllelesTest
 
         // basic match
         Fragment frag1 = new Fragment(createReadRecord("01"), HLA_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
-        frag1.setAminoAcids(Lists.newArrayList(0, 2, 3), Lists.newArrayList("A", "C", "D"));
+        frag1.setAminoAcids(Lists.newArrayList(
+                new AminoAcid(0, "A"),
+                new AminoAcid(2, "C"),
+                new AminoAcid(3, "D")));
         List<Fragment> fragments = Lists.newArrayList(frag1);
 
         FragmentAlleleMapper mapper = new FragmentAlleleMapper(geneHetLociMap, refNucleotideHetLoci, refNucleotides);
@@ -77,7 +81,11 @@ public class FragmentAllelesTest
         sequences = Lists.newArrayList(seq2);
 
         Fragment frag2 = new Fragment(createReadRecord("02"), GENE_B, bGenes, emptyLoci, emptyQuals, emptyNucs);
-        frag2.setAminoAcids(Lists.newArrayList(0, 1, 2, 3), Lists.newArrayList("L", "B", "L", "D"));
+        frag2.setAminoAcids(Lists.newArrayList(
+                new AminoAcid(0, "L"),
+                new AminoAcid(1, "B"),
+                new AminoAcid(2, "L"),
+                new AminoAcid(3, "D")));
         fragments = Lists.newArrayList(frag2);
 
         mapper.setHetAminoAcidLoci(geneHetLociMap);
@@ -92,7 +100,11 @@ public class FragmentAllelesTest
         sequences = Lists.newArrayList(seq3);
 
         Fragment frag3 = new Fragment(createReadRecord("03"), GENE_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
-        frag3.setAminoAcids(Lists.newArrayList(0, 1, 2, 3), Lists.newArrayList("A", "B", "C", "D"));
+        frag3.setAminoAcids(Lists.newArrayList(
+                new AminoAcid(0, "A"),
+                new AminoAcid(1, "B"),
+                new AminoAcid(2, "C"),
+                new AminoAcid(3, "D")));
         fragments = Lists.newArrayList(frag3);
 
         fragAlleles = mapper.createFragmentAlleles(fragments, sequences, candidateNucSequences);
@@ -117,7 +129,6 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq1 = new HlaSequenceLoci(allele1, Lists.newArrayList("A", "P", "C", "D"));
         List<HlaSequenceLoci> sequences = Lists.newArrayList(seq1);
 
-        String readInfo = "";
         Set<String> aGenes = Sets.newHashSet(HLA_A);
 
         final Map<String,Map<Integer,Set<String>>> geneHetLociMap = Maps.newHashMap();
@@ -136,20 +147,20 @@ public class FragmentAllelesTest
         String sequence = "GCTCCCTGCGAC";
         List<Integer> nucLoci = buildLoci(sequence);
         List<String> nucleotides = buildTargetSequences(sequence, nucLoci);
-        List<Integer> nucQuals = nucLoci.stream().map(x -> 30).collect(Collectors.toList());
+        List<Byte> nucQuals = nucLoci.stream().map(x -> (byte) 30).collect(Collectors.toList());
 
         // mark 1st, 2nd and 4th AAs with low-qual bases
-        nucQuals.set(1, 2);
-        nucQuals.set(4, 2);
-        nucQuals.set(11, 2);
+        nucQuals.set(1, (byte) 2);
+        nucQuals.set(4, (byte) 2);
+        nucQuals.set(11, (byte) 2);
         Fragment frag1 = new Fragment(createReadRecord("01"), GENE_A, aGenes, nucLoci, nucQuals, nucleotides);
 
         assertTrue(frag1.validate());
 
-        frag1.qualityFilter(30);
+        frag1.removeLowQualBases();
         frag1.buildAminoAcids();
-        assertEquals(9, frag1.nucleotideLoci().size());
-        assertEquals(1, frag1.aminoAcidLoci().size());
+        assertEquals(9, frag1.nucleotidesByLoci().size());
+        assertEquals(1, frag1.aminoAcidsByLoci().size());
 
         List<Fragment> fragments = Lists.newArrayList(frag1);
 
@@ -160,7 +171,9 @@ public class FragmentAllelesTest
         assertTrue(fragAlleles.get(0).getFull().contains(allele1));
 
         // again but with the low-qual bases not forming the correct amino acid, but still accepted as a match
-        frag1.rawNucleotides().set(1, "A");
+        int secondRawLocus = Lists.newArrayList(frag1.rawNucleotidesByLoci().keySet()).get(1);
+        Nucleotide.Builder secondRawNuc = frag1.rawNucleotidesByLoci().get(secondRawLocus).builder();
+        frag1.rawNucleotidesByLoci().put(secondRawLocus, secondRawNuc.setBases("A").build());
 
         fragAlleles = mapper.createFragmentAlleles(fragments, sequences, candidateNucSequences);
 

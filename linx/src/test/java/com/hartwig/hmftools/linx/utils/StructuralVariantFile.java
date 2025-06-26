@@ -37,7 +37,7 @@ public class StructuralVariantFile
                 .adjustedEndCopyNumberChange(getDoubleValue(values[index++]))
                 .insertSequence(values[index++]);
 
-        StructuralVariantType type = StructuralVariantType.fromAttribute(values[index++]);
+        StructuralVariantType type = StructuralVariantType.valueOf(values[index++]);
         final String filterStr = values[index++];
         if(type == SGL && filterStr.equals(INFERRED))
             type = INF;

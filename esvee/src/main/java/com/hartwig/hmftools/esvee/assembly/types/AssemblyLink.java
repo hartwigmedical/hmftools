@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.types;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
+import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
 
 import java.util.List;
 

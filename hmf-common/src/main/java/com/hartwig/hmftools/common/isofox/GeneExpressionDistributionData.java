@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -39,11 +41,12 @@ public class GeneExpressionDistributionData
 
     private void loadCohortFile(final String filename) throws IOException
     {
-        final List<String> lines = Files.readAllLines(Paths.get(filename));
+        BufferedReader fileReader = createBufferedReader(filename);
+
+        String header = fileReader.readLine();
 
         String fileDelim = inferFileDelimiter(filename);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
-        lines.remove(0);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
         int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
         int cancerIndex = fieldsIndexMap.get("CancerType");
@@ -54,7 +57,8 @@ public class GeneExpressionDistributionData
         Map<String, double[]> percentilesMap = null;
         Map<String, Double> medianMap = null;
 
-        for(String line : lines)
+        String line = null;
+        while((line = fileReader.readLine()) != null)
         {
             final String[] items = line.split(fileDelim, -1);
 

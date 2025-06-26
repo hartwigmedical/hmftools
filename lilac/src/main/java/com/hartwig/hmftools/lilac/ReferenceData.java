@@ -237,13 +237,13 @@ public class ReferenceData
         for(HlaSequenceLoci sequence : AminoAcidSequences)
         {
             List<Integer> exonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
-            sequence.setExonBoundaryWildcardsWildcards(exonBoundaries);
+            sequence.setExonBoundaryWildcards(exonBoundaries);
         }
 
         for(HlaSequenceLoci sequence : NucleotideSequences)
         {
             List<Integer> exonBoundaries = getNucleotideExonBoundaries(sequence.Allele.Gene);
-            sequence.setExonBoundaryWildcardsWildcards(exonBoundaries);
+            sequence.setExonBoundaryWildcards(exonBoundaries);
         }
     }
 
@@ -303,7 +303,7 @@ public class ReferenceData
     {
         Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
 
-        String transcriptsFile = refGenomeVersion.is37() ? "/alleles/hla_transcripts_v37.csv" : "/alleles/hla_transcripts_v38.csv";
+        String transcriptsFile = refGenomeVersion.is37() ? "/transcripts/hla_transcripts_v37.csv" : "/transcripts/hla_transcripts_v38.csv";
 
         final List<String> hlaTranscriptData = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream(transcriptsFile))).lines().collect(Collectors.toList());
@@ -350,7 +350,7 @@ public class ReferenceData
                 currentTrans = new TranscriptData(
                         transId, items[transNameIndex], geneId, true, Byte.parseByte(items[strandIndex]),
                         Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
-                        codingStart, codingEnd, items[biotypeIndex]);
+                        codingStart, codingEnd, items[biotypeIndex], null);
 
                 hlaTranscriptMap.put(geneName, currentTrans);
 

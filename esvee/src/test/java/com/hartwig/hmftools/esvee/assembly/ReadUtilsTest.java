@@ -1,13 +1,24 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferredUnclippedPositions;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 import org.junit.Test;
 
@@ -75,4 +86,71 @@ public class ReadUtilsTest
         assertEquals(40, read.bamRecord().getReadPositionAtReferencePosition(60)); // base after insert
         assertEquals(49, read.bamRecord().getReadPositionAtReferencePosition(69)); // final aligned base
     }
+
+    @Test
+    public void testReadJunctionConditions()
+    {
+        Junction posJunction = new Junction(CHR_1, 30, FORWARD);
+        String readBases = REF_BASES_200.substring(10, 20);
+        String readId = "READ_01";
+
+        MockRefGenome refGenome = new MockRefGenome();
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_200.substring(1, 100));
+
+        Read read = createRead(readId, 21, readBases, "10M10S");
+        assertTrue(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
+
+        read = createRead(readId, 23, readBases, "10M10S");
+        assertTrue(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
+
+        read = createRead(readId, 19, readBases, "10M10S");
+        assertTrue(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
+
+        // alignment too far from junction
+        read = createRead(readId, 24, readBases, "10M10S");
+        assertFalse(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
+
+        // any realigned indel that crosses the junction is permitted
+        read = createRead(readId, 10, readBases, "10M10I10M");
+        assertTrue(calcIndelInferredUnclippedPositions(read));
+        assertTrue(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
+
+        // a read with a low count of SNVs
+        readBases = REF_BASES_200.substring(20, 30) + "GGGGG";
+        read = createRead(readId, 20, readBases, "15M");
+        read.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
+        assertTrue(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
+
+        Junction negJunction = new Junction(CHR_1, 30, REVERSE);
+
+        read = createRead(readId, 30, readBases, "10S10M");
+        assertTrue(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
+
+        read = createRead(readId, 28, readBases, "10S10M");
+        assertTrue(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
+
+        read = createRead(readId, 32, readBases, "10S10M");
+        assertTrue(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
+
+        // alignment too far from junction
+        read = createRead(readId, 33, readBases, "10S10M");
+        assertFalse(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
+
+        // any realigned indel that crosses the junction is permitted
+        read = createRead(readId, 10, readBases, "10M10I10M");
+        assertTrue(calcIndelInferredUnclippedPositions(read));
+        assertTrue(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
+
+
+        // a read with a low count of SNVs
+        readBases = "GGGG" + REF_BASES_200.substring(30, 50);
+        read = createRead(readId, 26, readBases, "34M");
+        read.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
+        assertTrue(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
+
+        readBases = REF_BASES_200.substring(27, 51);
+        read = createRead(readId, 26, readBases, "34M");
+        assertFalse(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
+    }
+
 }

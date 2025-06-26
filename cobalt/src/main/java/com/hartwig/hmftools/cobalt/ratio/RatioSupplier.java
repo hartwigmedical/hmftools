@@ -101,7 +101,7 @@ public class RatioSupplier
                 readRatios = new TargetedRatioMapper(targetRegionEnrichment).mapRatios(readRatios);
             }
 
-            gcNormalizedRatioMapper = new GcNormalizedRatioMapper();
+            gcNormalizedRatioMapper = new GcNormalizedRatioMapper(targetRegionEnrichment != null);
             readRatios = gcNormalizedRatioMapper.mapRatios(readRatios);
 
             switch (sparseBucketPolicy)
@@ -181,7 +181,7 @@ public class RatioSupplier
         mTumorDepths = tumorDepths;
         mChromosomePosCodec = chromosomePosCodec;
     }
-    
+
     public void setTargetRegionEnrichment(final Table targetRegionEnrichment)
     {
         mTargetRegionEnrichment = targetRegionEnrichment;
@@ -203,11 +203,14 @@ public class RatioSupplier
                 mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy,
                 null, mOutputDir, mChromosomePosCodec).getRatios();
 
-        // filter tumor ratios by the diploid regions
-        // we use inner join to remove any tumor ratios that are not in the diploid regions
-        tumorRatios = tumorRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS)
-                .inner(diploidRegions.selectColumns(CobaltColumns.ENCODED_CHROMOSOME_POS))
-                .sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
+        if (diploidRegions.rowCount() > 0)
+        {
+            // filter tumor ratios by the diploid regions
+            // we use inner join to remove any tumor ratios that are not in the diploid regions
+            tumorRatios = tumorRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS)
+                    .inner(diploidRegions.selectColumns(CobaltColumns.ENCODED_CHROMOSOME_POS))
+                    .sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
+        }
 
         // merge this ratios together into one cobalt ratio
         return mergeRatios(null, mTumorDepths, null, tumorRatios, null);
@@ -274,7 +277,6 @@ public class RatioSupplier
             @Nullable Table referenceDiploidRatios)
     {
         CB_LOGGER.info("start merging ratios");
-
         // get all the chromosome positions from the counts
         Table result = Table.create(LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS));
 

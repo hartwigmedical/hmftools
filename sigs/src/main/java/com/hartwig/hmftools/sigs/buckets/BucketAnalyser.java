@@ -22,7 +22,6 @@ import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_ST
 import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.BA_PREDEFINED_SIGS;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.CANCER_TYPE_OTHER;
@@ -69,7 +68,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sigs.common.CommonUtils;
 import com.hartwig.hmftools.sigs.nmf.NmfConfig;

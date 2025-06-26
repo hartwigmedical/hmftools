@@ -19,12 +19,12 @@ public class GnomadAnnotation extends AnnotationData implements Callable
 
     public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
 
-    public GnomadAnnotation(final ConfigBuilder configBuilder)
+    public GnomadAnnotation(final ConfigBuilder configBuilder, boolean loadFiles)
     {
         mGnomadCache = new GnomadCache(
                 RefGenomeVersion.from(configBuilder),
-                configBuilder.getValue(GNOMAD_FREQUENCY_FILE),
-                configBuilder.getValue(GNOMAD_FREQUENCY_DIR));
+                loadFiles ? configBuilder.getValue(GNOMAD_FREQUENCY_FILE) : null,
+                loadFiles ? configBuilder.getValue(GNOMAD_FREQUENCY_DIR) : null);
 
         mNoFilter = configBuilder.hasFlag(GNOMAD_NO_FILTER);
     }

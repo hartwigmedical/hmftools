@@ -79,10 +79,10 @@ public class HlaSequenceLociTest
         assertFalse(seqLoci.hasDeletes());
         assertTrue(seqLoci.hasWildcards());
 
-        seqLoci.setExonBoundaryWildcardsWildcards(Lists.newArrayList(2));
+        seqLoci.setExonBoundaryWildcards(Lists.newArrayList(2));
         assertFalse(seqLoci.hasExonBoundaryWildcards());
 
-        seqLoci.setExonBoundaryWildcardsWildcards(Lists.newArrayList(5));
+        seqLoci.setExonBoundaryWildcards(Lists.newArrayList(5));
         assertTrue(seqLoci.hasExonBoundaryWildcards());
     }
 

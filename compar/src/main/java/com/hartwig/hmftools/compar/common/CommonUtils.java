@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
@@ -312,19 +313,49 @@ public class CommonUtils
     }
 
     public static Mismatch createMismatchFromDiffs(final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
-            final boolean includeMatches)
+            final MatchLevel matchLevel, final boolean includeMatches)
     {
-        if(!diffs.isEmpty())
+        if(diffs.isEmpty() && !includeMatches)
         {
-            return new Mismatch(refItem, newItem, VALUE, diffs);
+            return null;
         }
-        else if(includeMatches)
+
+        boolean refCountsAsCalled = countsAsCalled(refItem, matchLevel);
+        boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
+        MismatchType mismatchType;
+        if(refCountsAsCalled && !newCountsAsCalled)
         {
-            return new Mismatch(refItem, newItem, FULL_MATCH, diffs);
+            mismatchType = REF_ONLY;
+        }
+        else if(!refCountsAsCalled && newCountsAsCalled)
+        {
+            mismatchType = NEW_ONLY;
+        }
+        else if(refCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
+        {
+            mismatchType = VALUE;
+        }
+        else if(refCountsAsCalled && newCountsAsCalled && includeMatches)
+        {
+            mismatchType = FULL_MATCH;
         }
         else
         {
-            return null;
+            // should be impossible due to earlier filters
+            mismatchType = INVALID_ERROR;
+        }
+        return new Mismatch(refItem, newItem, mismatchType, diffs);
+    }
+
+    public static boolean countsAsCalled(final ComparableItem item, final MatchLevel matchLevel)
+    {
+        if(matchLevel == REPORTABLE)
+        {
+            return item.reportable();
+        }
+        else
+        {
+            return item.isPass();
         }
     }
 }

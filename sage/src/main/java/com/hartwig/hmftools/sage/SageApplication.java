@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -62,7 +62,7 @@ public class SageApplication implements AutoCloseable
 
         mPhaseSetCounter = new PhaseSetCounter();
 
-        mVcfWriter = new VcfWriter(mConfig.Common, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData.RefGenome);
+        mVcfWriter = new VcfWriter(mConfig.Common, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData.RefGenome, mConfig.RunTinc);
 
         mFragmentLengths = new FragmentLengthWriter(mConfig.Common);
 

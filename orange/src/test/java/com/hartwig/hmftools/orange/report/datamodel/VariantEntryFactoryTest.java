@@ -48,7 +48,7 @@ public class VariantEntryFactoryTest
 
         PurpleVariant nonDriverVariant = TestPurpleVariantFactory.builder()
                 .gene("gene 2")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsProteinImpact("impact 3").build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().transcript("transcript 3").hgvsProteinImpact("impact 3").build())
                 .build();
 
         PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
@@ -180,6 +180,72 @@ public class VariantEntryFactoryTest
 
         VariantEntry entry4 = findByGeneAndImpact(entries, "gene 1", "impact 4");
         assertFalse(entry4.isCanonical());
+    }
+
+    @Test
+    public void canHandleNonCanonicalDriverWithoutCanonicalImpactAndCanonicalDriver()
+    {
+        PurpleVariant driverVariant1 = TestPurpleVariantFactory.builder()
+                .gene("gene 1")
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
+                        .transcript("")
+                        .hgvsCodingImpact("")
+                        .hgvsProteinImpact("")
+                        .affectedExon(null)
+                        .affectedExon(null)
+                        .reported(false)
+                        .build())
+                .addOtherImpacts(TestPurpleVariantFactory.impactBuilder()
+                        .transcript("transcript 2")
+                        .hgvsProteinImpact("impact 2")
+                        .reported(true)
+                        .build())
+                .build();
+
+        PurpleVariant driverVariant2 = TestPurpleVariantFactory.builder()
+                .gene("gene 1")
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
+                        .transcript("transcript 1")
+                        .hgvsProteinImpact("impact 3")
+                        .reported(true)
+                        .build())
+                .addOtherImpacts(TestPurpleVariantFactory.impactBuilder()
+                        .transcript("transcript 2")
+                        .hgvsProteinImpact("impact 4")
+                        .reported(true)
+                        .build())
+                .build();
+
+        PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.MUTATION)
+                .gene("gene 1")
+                .transcript("transcript 1")
+                .isCanonical(true)
+                .driverLikelihood(0.5)
+                .build();
+
+        PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.MUTATION)
+                .gene("gene 1")
+                .transcript("transcript 2")
+                .isCanonical(false)
+                .driverLikelihood(0.4)
+                .build();
+
+        List<PurpleVariant> variants = Lists.newArrayList(driverVariant1, driverVariant2);
+        List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
+
+        List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
+
+        assertEquals(3, entries.size());
+        VariantEntry entry1 = findByGeneAndImpact(entries, "gene 1", "impact 2");
+        assertFalse(entry1.isCanonical());
+
+        VariantEntry entry2 = findByGeneAndImpact(entries, "gene 1", "impact 3");
+        assertTrue(entry2.isCanonical());
+
+        VariantEntry entry3 = findByGeneAndImpact(entries, "gene 1", "impact 4");
+        assertFalse(entry3.isCanonical());
     }
 
     @NotNull

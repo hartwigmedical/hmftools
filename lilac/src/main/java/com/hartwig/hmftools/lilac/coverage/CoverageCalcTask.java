@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
 public class CoverageCalcTask implements Callable<Long>
 {

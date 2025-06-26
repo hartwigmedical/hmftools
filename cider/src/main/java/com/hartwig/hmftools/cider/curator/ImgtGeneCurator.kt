@@ -7,6 +7,7 @@ import com.beust.jcommander.UnixStyleUsageFormatter
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
+import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
 import com.hartwig.hmftools.cider.blastn.BlastnUtil
 import com.hartwig.hmftools.cider.blastn.BlastnUtil.PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
@@ -19,8 +20,8 @@ import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.jAnchorSignatures
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.liftOverBlacklist
 import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.cider.genes.IgTcrGeneFile
 import com.hartwig.hmftools.common.blastn.BlastnMatch
+import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
 import com.hartwig.hmftools.common.gene.GeneData
@@ -93,7 +94,7 @@ class ImgtGeneCurator
     lateinit var outputV37: String
 
     @Parameter(names = ["-threads"], description = "Number of threads")
-    var threadCount = CiderParams.DEFAULT_THREADS
+    var threadCount = 1
 
     @Parameter(names = ["-workdir"], description = "Number of threads")
     lateinit var workdir: String
@@ -139,8 +140,8 @@ class ImgtGeneCurator
         sLogger.info("validating V37 anchor locations")
         validateAnchorLocations(igTcrGeneListV37, refGenomeV37)
 
-        IgTcrGeneFile.write(outputV38, igTcrGeneListV38)
-        IgTcrGeneFile.write(outputV37, igTcrGeneListV37)
+        IgTcrGeneFile.write(outputV38, igTcrGeneListV38.map { o -> toCommonIgTcrGene(o) })
+        IgTcrGeneFile.write(outputV37, igTcrGeneListV37.map { o -> toCommonIgTcrGene(o) })
 
         return 0
     }

@@ -175,6 +175,7 @@ public class JunctionAssembly
 
     public boolean hasLineSequence() { return mHasLineSequence; }
     public void markLineSequence() { mHasLineSequence = true; }
+    public void unmarkLineSequence() { mHasLineSequence = false; }
 
     public List<SupportRead> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }
@@ -352,7 +353,7 @@ public class JunctionAssembly
         {
             int trimLength = newRefBasePosition - mRefBasePosition;
 
-            if(trimLength <= 0)
+            if(trimLength <= 0 || trimLength >= mBases.length - 1)
                 return;
 
             mBases = subsetArray(mBases, trimLength, mBases.length - 1);
@@ -363,7 +364,7 @@ public class JunctionAssembly
         {
             int trimLength = mRefBasePosition - newRefBasePosition;
 
-            if(trimLength <= 0)
+            if(trimLength <= 0 || trimLength >= mBases.length - 1)
                 return;
 
             mBases = subsetArray(mBases, 0, mBases.length - 1 - trimLength);
@@ -849,10 +850,12 @@ public class JunctionAssembly
         // positive if on the lower side of the junction
         int junctionReadStartDistance = mJunction.Position - read.unclippedStart();
 
-        SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, read.basesLength(), 0);
+        // assume all extension bases match
+        int extensionBases = mJunction.isForward() ? read.unclippedEnd() - mJunction.Position : mJunction.Position - read.unclippedStart();
+
+        SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, extensionBases, 0);
         support.setReferenceMismatches(0);
         mSupport.add(support);
-        // mStats.addRead(support, mJunction, read); // add through standard clearing routine
     }
 
     @VisibleForTesting

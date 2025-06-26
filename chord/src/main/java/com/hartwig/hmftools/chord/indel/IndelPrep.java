@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.chord.prep.VcfFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContext.Type;
 
 public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
 {
@@ -26,7 +28,9 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
 
     private final RefGenomeSource mRefGenome;
 
-    List<IndelDetails> mIndelDetailsList = new ArrayList<>();
+    private final List<IndelDetails> mIndelDetailsList = new ArrayList<>();
+    private final Map<Type, Integer> mSkippedVariantTypeCounts = new HashMap<>();
+
 
     private static final String INDEL_DETAILS_FILE_SUFFIX = ".chord.indel.details.tsv";
 
@@ -54,20 +58,25 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
         List<VariantContext> variants = vcfFile.loadVariants();
 
         List<IndelVariant> indels = new ArrayList<>();
+
         for(VariantContext variantContext : variants)
         {
-            if(!variantContext.isSNP() && !variantContext.isIndel())
+            if(!variantContext.isIndel())
             {
-                // SNVs and indels are often included in the same VCF, so allow both to be present
-                throw new IllegalStateException(String.format("Unexpected non SNV/indel variant: variantType(%s) variant(%s)",
-                        variantContext.getType(), variantContext));
+                if(CHORD_LOGGER.isDebugEnabled())
+                {
+                    mSkippedVariantTypeCounts.put(
+                            variantContext.getType(),
+                            mSkippedVariantTypeCounts.getOrDefault(variantContext.getType(), 0) + 1
+                    );
+                }
+
+                CHORD_LOGGER.trace("{}Skipped variant: {}", mLogPrefix, variantContext);
+
+                continue;
             }
 
-            if(!variantContext.isIndel())
-                continue;
-
             SmallVariant smallVariant = new SmallVariant(variantContext);
-
             IndelVariant indel = new IndelVariant(smallVariant);
 
             indels.add(indel);
@@ -86,11 +95,17 @@ public class IndelPrep implements VariantTypePrep<IndelVariant>, LoggingOptions
             List<IndelVariant> indels = loadVariants(sampleId);
             CHORD_LOGGER.debug("{}Found {} indels", mLogPrefix, indels.size());
 
+            if(!mSkippedVariantTypeCounts.isEmpty())
+            {
+                CHORD_LOGGER.debug("{}Skipped variants: {}", mLogPrefix, mSkippedVariantTypeCounts);
+            }
+
             Map<String, Integer> contextCountsMap = IndelContext.initializeCounts();
 
             for(IndelVariant indel : indels)
             {
                 IndelDetails indelDetails = IndelDetails.from(sampleId, indel, mRefGenome);
+
                 if(mConfig.WriteDetailedFiles)
                 {
                     mIndelDetailsList.add(indelDetails);

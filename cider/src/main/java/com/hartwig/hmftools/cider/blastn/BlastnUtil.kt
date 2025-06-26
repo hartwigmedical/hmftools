@@ -23,6 +23,9 @@ object BlastnUtil
 
     const val WORD_SIZE = 9
 
+    // This limits the number of hit each query can get. Necessary to protect against edge cases
+    const val MAX_TARGET_SEQUENCES = 5000
+
     // val REF_GENOME_NAME = "GRCh38.p13"
     val CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
     val PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
@@ -76,6 +79,7 @@ object BlastnUtil
             .withExpectedValueCutoff(expectedValueCutoff)
             .withNumThreads(numThreads)
             .withSubjectBestHit(true)
+            .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
             .build()
             .run(sequences)
     }

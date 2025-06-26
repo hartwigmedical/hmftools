@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
-import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
+import static java.lang.Math.max;
+
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.I;
@@ -183,6 +187,14 @@ public final class IndelBuilder
         return false;
     }
 
+    public static boolean indelAssembliesMatch(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        if(first.indelCoords() == null || second.indelCoords() == null || first.isForwardJunction() == second.isForwardJunction())
+            return false;
+
+        return first.indelCoords().matches(second.indelCoords());
+    }
+
     public static String findInsertedBases(final Read read)
     {
         final IndelCoords indelCoords = read.indelCoords();
@@ -215,57 +227,49 @@ public final class IndelBuilder
         return "";
     }
 
-    public static void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
+    public static boolean isWeakIndelBasedUnlinkedAssembly(final JunctionAssembly assembly)
     {
-        int maxIndelLength = read.indelCoords() != null ? read.indelCoords().Length : maxIndelLength(read.cigarElements());
+        if(assembly.junction().indelBased()) // only applicable to soft-clipped assemblies
+            return false;
 
-        if(maxIndelLength >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
-        {
-            List<Read> lengthReads = indelLengthReads.get(maxIndelLength);
-            if(lengthReads == null)
-            {
-                lengthReads = Lists.newArrayList();
-                indelLengthReads.put(maxIndelLength, lengthReads);
-            }
+        if(assembly.outcome() != UNSET && assembly.outcome() != NO_LINK)
+            return false;
 
-            lengthReads.add(read);
-        }
-    }
+        if(assembly.extensionLength() >= ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH)
+            return false;
 
-    public static List<Read> findMaxFrequencyIndelReads(final Map<Integer,List<Read>> indelLengthReads)
-    {
-        if(indelLengthReads.isEmpty())
-            return Collections.emptyList();
-
-        int maxFrequency = 0;
-        int indelLength = 0;
-
-        for(Map.Entry<Integer,List<Read>> entry : indelLengthReads.entrySet())
-        {
-            if(entry.getValue().size() > maxFrequency)
-            {
-                indelLength = entry.getKey();
-                maxFrequency = entry.getValue().size();
-            }
-        }
-
-        return indelLengthReads.get(indelLength);
-    }
-
-    public static boolean hasDominantIndelReadAssembly(final JunctionAssembly assembly)
-    {
-        int indelReads = 0;
+        // classify as weak if has the top 2 indel reads have the longest extensions
         int totalJuncReads = 0;
+        int maxNonIndelLength = 0;
+        List<Integer> indelReadLengths = Lists.newArrayList();
 
         for(SupportRead read : assembly.support())
         {
             if(read.type().isSplitSupport())
+            {
+                int extensionLength = read.extensionBaseMatches();
                 ++totalJuncReads;
 
-            if(read.type() == SupportType.INDEL)
-                ++indelReads;
+                if(read.type() == SupportType.INDEL)
+                {
+                    indelReadLengths.add(extensionLength);
+                }
+                else
+                {
+                    maxNonIndelLength = max(maxNonIndelLength, extensionLength);
+                }
+            }
         }
 
-        return indelReads >= 0.5 * totalJuncReads;
+        if(indelReadLengths.size() >= ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC * totalJuncReads)
+            return true;
+
+        if(indelReadLengths.size() < 2)
+            return false;
+
+        Collections.sort(indelReadLengths);
+        int secondLongestIndel = indelReadLengths.get(indelReadLengths.size() - 2);
+
+        return secondLongestIndel > maxNonIndelLength;
     }
 }

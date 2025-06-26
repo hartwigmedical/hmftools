@@ -175,7 +175,7 @@ public class TransClassificationTest
         String transName1 = "TRANS01";
 
         TranscriptData transData = new TranscriptData(TRANS_1, transName1, GENE_NAME_1, true, (byte) 1,
-                1000, 5000, null, null, "");
+                1000, 5000, null, null, "", null);
 
         transData.exons().add(new ExonData(TRANS_1, 1000, 1200, 1, -1, -1));
         transData.exons().add(new ExonData(TRANS_1, 2000, 2500, 2, -1, -1));
@@ -230,7 +230,7 @@ public class TransClassificationTest
         String transName1 = "TRANS01";
 
         TranscriptData transData1 = new TranscriptData(TRANS_1, transName1, GENE_NAME_1, true, (byte) 1,
-                1000, 5000, null, null, "");
+                1000, 5000, null, null, "", null);
 
         transData1.exons().add(new ExonData(TRANS_1, 1000, 1200, 1, -1, -1));
         transData1.exons().add(new ExonData(TRANS_1, 2000, 2500, 2, -1, -1));

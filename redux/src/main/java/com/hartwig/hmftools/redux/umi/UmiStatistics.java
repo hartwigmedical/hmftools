@@ -100,11 +100,11 @@ public class UmiStatistics
         if(frequency <= 10)
             return frequency;
         else if(frequency <= 100)
-            return round(frequency/10) * 10;
+            return round(1.0f * frequency / 10) * 10;
         else if(frequency <= 1000)
-            return round(frequency/100) * 100;
+            return round(1.0f * frequency / 100) * 100;
         else
-            return round(frequency/1000) * 1000;
+            return round(1.0f * frequency / 1000) * 1000;
     }
 
     private PositionFragmentCounts getOrCreatePositionFragmentData(int uniqueCoordCount, int uniqueFragmentCount)
@@ -203,7 +203,7 @@ public class UmiStatistics
         UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.readCount());
         ++umiGroupStats.GroupCount;
 
-        for(SAMRecord read : umiGroup.reads())
+        for(SAMRecord read : umiGroup.allReads())
         {
             int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId());
 
@@ -222,7 +222,7 @@ public class UmiStatistics
             DuplicateGroup testGroup = groupIndex == 0 ? group1 : group2;
             DuplicateGroup readsGroup = groupIndex == 0 ? group2 : group1;
 
-            for(SAMRecord read : readsGroup.reads())
+            for(SAMRecord read : readsGroup.allReads())
             {
                 int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umiId());
 

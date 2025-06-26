@@ -6,7 +6,6 @@ import org.junit.Test;
 
 public class ExpectedBAFTest
 {
-
     private static final double EPSILON = 1e-8;
 
     @Test

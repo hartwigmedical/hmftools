@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
@@ -93,7 +93,7 @@ public class LilacAppendRna
 
         List<HlaAllele> winningAlleles = aminoAcidSequences.stream().map(x -> x.Allele).collect(Collectors.toList());
 
-        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mConfig.MinBaseQual, mRefData);
+        NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mRefData);
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, Collections.emptyList());
 
@@ -140,7 +140,9 @@ public class LilacAppendRna
 
         BamRecordReader rnaBamReader = new BamRecordReader(rnaBam, config, GENE_CACHE.GeneTranscriptMap, nucleotideFragFactory);
 
-        List<Fragment> rnaNucleotideFrags = nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaBamReader.findGeneFragments());
+        List<Fragment> rnaNucleotideFrags = rnaBamReader.findGeneFragments();
+
+        nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 

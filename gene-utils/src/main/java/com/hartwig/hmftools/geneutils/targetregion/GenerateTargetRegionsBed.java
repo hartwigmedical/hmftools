@@ -293,9 +293,16 @@ public class GenerateTargetRegionsBed
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(SOURCE_DIR, true, "Path to all input and output files");
-        configBuilder.addPrefixedPath(CODING_GENE_FILE, true, "Panel definition BED", SOURCE_DIR);
-        configBuilder.addPath(SPECIFIC_REGIONS_FILE, false,"Additional regions beyond panel definition BED");
-        configBuilder.addPath(TRANS_TSL_FILE, false, "Ensembl valid TSL transcript IDs");
+
+        configBuilder.addPrefixedPath(
+                CODING_GENE_FILE, true, "Panel definition BED", SOURCE_DIR);
+
+        configBuilder.addPrefixedPath(
+                SPECIFIC_REGIONS_FILE, false,"Additional regions beyond panel definition BED", SOURCE_DIR);
+
+        configBuilder.addPrefixedPath(
+                TRANS_TSL_FILE, false, "Ensembl valid TSL transcript IDs", SOURCE_DIR);
+
         configBuilder.addFlag(INCLUDE_UTR, "Include UTR in bed regions");
         configBuilder.addFlag(CANONICAL_ONLY, "Form from canonical transcripts only");
 

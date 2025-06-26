@@ -4,9 +4,10 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.collect.Multimaps
 import com.hartwig.hmftools.cider.*
+import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.blastn.BlastnUtil.toGenomicLocation
-import com.hartwig.hmftools.cider.genes.IgTcrGeneFile
 import com.hartwig.hmftools.common.blastn.BlastnMatch
+import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.utils.Doubles
 import org.apache.logging.log4j.LogManager
@@ -44,6 +45,7 @@ class BlastnAnnotator
 
         // since we use V38 for blast
         val igTcrGenes = IgTcrGeneFile.read(CiderConstants.BLAST_REF_GENOME_VERSION)
+            .map { o -> fromCommonIgTcrGene(o) }
 
         // find all the genes that are we need
         for (geneData in igTcrGenes)

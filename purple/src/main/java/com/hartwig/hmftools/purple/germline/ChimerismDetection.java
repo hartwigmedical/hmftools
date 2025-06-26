@@ -38,10 +38,12 @@ public class ChimerismDetection
     private final List<RegionBafData> mRegionBafData;
 
     // results
+    private double mWeightedAverage;
     private double mChimerismLevel;
 
     public ChimerismDetection(
-            final AmberData amberData, final CobaltData cobaltData, List<ObservedRegion> observedRegions, final RefGenomeVersion refGenomeVersion)
+            final AmberData amberData, final CobaltData cobaltData, List<ObservedRegion> observedRegions,
+            final RefGenomeVersion refGenomeVersion)
     {
         mAmberData = amberData;
         mCobaltData = cobaltData;
@@ -54,21 +56,37 @@ public class ChimerismDetection
                 .filter(x -> x.bafCount() >= CHIMERISM_MIN_BAF_COUNT)
                 .collect(Collectors.toList());
 
+        mWeightedAverage = 0;
         mChimerismLevel = 0;
     }
 
-    public boolean isDetected() { return mChimerismLevel > CHIMERISM_SAMPLE_CUTOFF; }
+    public boolean isDetected()
+    {
+        return mWeightedAverage > CHIMERISM_SAMPLE_CUTOFF;
+    }
+    public double chimerismLevel()
+    {
+        return mChimerismLevel;
+    }
 
     public void run()
     {
-        detectChrimerism();
+        detectChimerism();
+
+        if(!isDetected())
+        {
+            PPL_LOGGER.debug(format("chimerism analysis: weighted-mean(%.3f)", mWeightedAverage));
+            return;
+        }
 
         applyFit();
+
+        PPL_LOGGER.info(format("chimerism detected: weighted-mean(%.3f) chimerism level(%.3f)", mWeightedAverage, mChimerismLevel));
     }
 
-    private void detectChrimerism()
+    private void detectChimerism()
     {
-        Map<String,List<ObservedRegion>> chrFilteredRegions = Maps.newHashMap();
+        Map<String, List<ObservedRegion>> chrFilteredRegions = Maps.newHashMap();
 
         for(ObservedRegion region : mFilteredRegions)
         {
@@ -90,9 +108,11 @@ public class ChimerismDetection
             List<ObservedRegion> filteredRegions = chrFilteredRegions.get(chrStr);
 
             if(filteredRegions == null)
+            {
                 continue;
+            }
 
-            List<AmberBAF> amberBAFs = mAmberData.ChromosomeBafs.get(chromosome).stream().collect(Collectors.toList());
+            List<AmberBAF> amberBAFs = mAmberData.ChromosomeBafs.get(chromosome).stream().toList();
 
             int amberBafIndex = 0;
 
@@ -105,7 +125,9 @@ public class ChimerismDetection
                     AmberBAF amberBAF = amberBAFs.get(amberBafIndex);
 
                     if(amberBAF.Position > regionBafData.end())
+                    {
                         break;
+                    }
 
                     if(amberBAF.Position >= regionBafData.start())
                     {
@@ -132,27 +154,27 @@ public class ChimerismDetection
             countsTotal += pcfRegion.bafCount();
         }
 
-        mChimerismLevel = weightedBafTotal / countsTotal;
+        mWeightedAverage = weightedBafTotal / countsTotal;
     }
 
     private void applyFit()
     {
         final KernelEstimator estimator = new KernelEstimator(0.001, CHIMERISM_KDE_BANDWIDTH);
-
         List<Double> bafValues = Lists.newArrayList();
 
-        for(ObservedRegion region : mFilteredRegions)
+        for(RegionBafData regionBafData : mRegionBafData)
         {
-            // TODO: get cobalt data, calculate a BAF
-            double baf = 0;
-
-            bafValues.add(baf);
-            estimator.addValue(baf, 1.0);
+            for(AmberBAF amberBAF : regionBafData.AmberBAFs)
+            {
+                bafValues.add(amberBAF.tumorModifiedBAF());
+                estimator.addValue(amberBAF.tumorModifiedBAF(), 1.0);
+            }
         }
 
-        double[] bafs = IntStream.rangeClosed(0, 51).mapToDouble(x -> x / 100d).toArray();
+        double[] bafs = IntStream.rangeClosed(50, 100).mapToDouble(x -> x / 100d).toArray();
         double[] densities = DoubleStream.of(bafs).map(estimator::getProbability).toArray();
 
+        double max = 0;
         for(int i = 1; i < densities.length - 1; i++)
         {
             double density = densities[i];
@@ -163,8 +185,13 @@ public class ChimerismDetection
                 int peakCount = count(baf, bafValues);
 
                 PPL_LOGGER.debug(format("discovered peak: count(%d) baf(%.3f)", peakCount, baf));
+
+                if(baf > max)
+                    max = baf;
             }
         }
+
+        mChimerismLevel = 2 * (1 - max);
     }
 
     private static int count(double peak, final List<Double> values)
@@ -197,7 +224,9 @@ public class ChimerismDetection
         public double bafStandardDeviation()
         {
             if(mStandardDeviation != null)
+            {
                 return mStandardDeviation;
+            }
 
             double[] doubles = new double[AmberBAFs.size()];
 
@@ -210,8 +239,14 @@ public class ChimerismDetection
             return mStandardDeviation;
         }
 
-        public int bafCount() { return AmberBAFs.size(); }
+        public int bafCount()
+        {
+            return AmberBAFs.size();
+        }
 
-        public String toString() { return format("region(%s) points(%d)", super.toString(), AmberBAFs.size()); }
+        public String toString()
+        {
+            return format("region(%s) points(%d)", super.toString(), AmberBAFs.size());
+        }
     }
 }

@@ -534,7 +534,7 @@ public class FusionFinder
     {
         TranscriptData transData = new TranscriptData(
                 0, String.format("@%s", knownFusionData.FiveGene), gene.geneId(), false, gene.strand(),
-                knownFusionData.geneRegion().start(), knownFusionData.geneRegion().end(), null, null, "");
+                knownFusionData.geneRegion().start(), knownFusionData.geneRegion().end(), null, null, "", null);
 
         BreakendTransData transcript = new BreakendTransData(
                 gene, transData,  -1, -1, PHASE_NONE, PHASE_NONE, 0, 0);

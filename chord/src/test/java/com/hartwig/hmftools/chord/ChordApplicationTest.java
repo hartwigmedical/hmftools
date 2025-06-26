@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.chord;
 
-import static com.hartwig.hmftools.chord.ChordTestUtils.EMPTY_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.DUMMY_GENOME_FASTA;
-import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
-import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.EMPTY_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.DUMMY_GENOME_FASTA;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.INPUT_VCF_DIR;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.MINIMAL_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.TMP_OUTPUT_DIR;
 
 import static org.junit.Assert.assertTrue;
 

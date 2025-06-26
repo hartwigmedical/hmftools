@@ -42,7 +42,7 @@ class StructuralVariantDAO
 
         for(Record record : result)
         {
-            StructuralVariantType type = StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE));
+            StructuralVariantType type = StructuralVariantType.valueOf(record.getValue(STRUCTURALVARIANT.TYPE));
 
             String filterStr = record.getValue(STRUCTURALVARIANT.FILTER);
 

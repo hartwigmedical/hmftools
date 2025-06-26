@@ -58,6 +58,11 @@ public class TumorBamMetricsData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample
@@ -76,6 +81,6 @@ public class TumorBamMetricsData implements ComparableItem
         checkDiff(diffs, FLD_PERCENTAGE_30X, Metrics.coveragePercent(30), otherData.Metrics.coveragePercent(30), thresholds);
         checkDiff(diffs, FLD_PERCENTAGE_60X, Metrics.coveragePercent(60), otherData.Metrics.coveragePercent(60), thresholds);
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

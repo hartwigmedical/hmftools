@@ -91,7 +91,7 @@ public class AlignmentChecker
         if(mAligner == null)
             return false;
 
-        if(mConfig.AssemblyMapQualThreshold == 0 || assembly.stats().avgMapQual() >= mConfig.AssemblyMapQualThreshold)
+        if(mConfig.AssemblyMapQualThreshold == 0 || averageAssemblySupportMapQual(assembly) >= mConfig.AssemblyMapQualThreshold)
             return false;
 
         // realign the ref base sequence and exclude if the results are too varied
@@ -111,6 +111,12 @@ public class AlignmentChecker
         }
 
         return true;
+    }
+
+    private double averageAssemblySupportMapQual(final JunctionAssembly assembly)
+    {
+        int totalMapQual = assembly.support().stream().mapToInt(x -> x.mapQual()).sum();
+        return assembly.supportCount() > 0 ? totalMapQual / (double)assembly.supportCount() : 0;
     }
 
     public static BufferedWriter initialiseWriter(final AssemblyConfig config)

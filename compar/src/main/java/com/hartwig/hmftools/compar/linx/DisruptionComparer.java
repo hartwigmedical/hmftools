@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFileLoader.fromGridssFile;
 import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
@@ -80,11 +79,6 @@ public class DisruptionComparer implements ItemComparer
             String vcfFile = PurpleCommon.purpleSomaticSvFile(fileSources.Purple, sampleId);
 
             List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
-
-            if(variants.stream().anyMatch(x -> x.startContext().getID().contains("gridss")))
-            {
-                variants = fromGridssFile(vcfFile, new AlwaysPassFilter());
-            }
 
             List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 

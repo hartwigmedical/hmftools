@@ -12,7 +12,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;

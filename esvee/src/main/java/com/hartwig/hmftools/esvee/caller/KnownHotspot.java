@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static java.lang.String.format;
+
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -38,4 +40,8 @@ public class KnownHotspot
         return false;
     }
 
+    public String toString()
+    {
+        return format("%s %s:%d - %s:%d", GeneInfo, RegionStart, OrientStart.asByte(), RegionEnd, OrientEnd.asByte());
+    }
 }

@@ -85,7 +85,7 @@ public final class PhaseSetMerger
             String otherSequence = otherOrientation == FORWARD ?
                     otherFullSequence : Nucleotides.reverseComplementBases(otherFullSequence);
 
-            int[] matchIndices = findMergeIndices(primaryAssembly, primarySequence, otherAssembly, otherSequence);
+            int[] matchIndices = findMergeIndices(primaryAssembly, primarySequence, otherAssembly, otherSequence, otherOrientation.isReverse());
 
             if(matchIndices != null)
             {
@@ -103,7 +103,7 @@ public final class PhaseSetMerger
 
     private static int[] findMergeIndices(
             final AssemblyAlignment firstAssembly, final String firstSequence,
-            final AssemblyAlignment secondAssembly, final String secondSequence)
+            final AssemblyAlignment secondAssembly, final String secondSequence, boolean secondReversed)
     {
         // if a match is found, returns the first and seconds' match start indices
         // one or the other will have a value of zero, meaning the start of its sequence matches within the other
@@ -180,7 +180,8 @@ public final class PhaseSetMerger
                 continue;
 
             if(!canMergePhaseSets(
-                    firstAssembly, firstMatchIndexStart, firstMatchIndexEnd, secondAssembly, secondMatchIndexStart, secondMatchIndexEnd))
+                    firstAssembly, firstMatchIndexStart, firstMatchIndexEnd,
+                    secondAssembly, secondMatchIndexStart, secondMatchIndexEnd, secondReversed))
             {
                 continue;
             }
@@ -193,12 +194,12 @@ public final class PhaseSetMerger
 
     private static boolean canMergePhaseSets(
             final AssemblyAlignment first, int firstOverlapStart, int firstOverlapEnd,
-            final AssemblyAlignment second, final int secondOverlapStart, final int secondOverlapEnd)
+            final AssemblyAlignment second, final int secondOverlapStart, final int secondOverlapEnd, boolean secondReversed)
     {
-        if(matchSequenceOverlapsJunctions(first, firstOverlapStart, firstOverlapEnd))
+        if(matchSequenceOverlapsJunctions(first, firstOverlapStart, firstOverlapEnd, false))
             return true;
 
-        if(matchSequenceOverlapsJunctions(second, secondOverlapStart, secondOverlapEnd))
+        if(matchSequenceOverlapsJunctions(second, secondOverlapStart, secondOverlapEnd, secondReversed))
             return true;
 
         for(JunctionAssembly firstAssembly : first.assemblies())
@@ -215,13 +216,22 @@ public final class PhaseSetMerger
         return false;
     }
 
-    private static boolean matchSequenceOverlapsJunctions(final AssemblyAlignment assemblyAlignment, int overlapStart, int overlapEnd)
+    private static boolean matchSequenceOverlapsJunctions(
+            final AssemblyAlignment assemblyAlignment, int overlapStart, int overlapEnd, boolean reversed)
     {
         // the overlap must cover a break junction by the standard overlap distance too
         int juncBoundaryStart = overlapStart + ASSEMBLY_LINK_OVERLAP_BASES;
         int juncBoundaryEnd = overlapEnd - ASSEMBLY_LINK_OVERLAP_BASES;
 
-        return assemblyAlignment.linkIndices().stream().anyMatch(x -> positionWithin(x, juncBoundaryStart, juncBoundaryEnd));
+        for(Integer linkIndex : assemblyAlignment.linkIndices())
+        {
+            int adjustedLinkIndex = !reversed ? linkIndex : assemblyAlignment.fullSequenceLength() - linkIndex;
+
+            if(positionWithin(adjustedLinkIndex, juncBoundaryStart, juncBoundaryEnd))
+                return true;
+        }
+
+        return false;
     }
 
     public static void mergeAssemblyAlignments(

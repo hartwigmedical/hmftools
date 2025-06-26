@@ -2,12 +2,12 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
-import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
+import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.SAMRecord;
@@ -22,7 +22,7 @@ public class Realignment
         if(readIndex == realignedReadIndex)
             return RealignedType.NONE;
 
-        ReadContextMatch match = NONE;
+        ReadMatchInfo readMatchInfo = ReadMatchInfo.NO_MATCH;
 
         if(readIndex < 0 && !readContext.variant().isDelete())
             return RealignedType.NONE;
@@ -36,7 +36,7 @@ public class Realignment
             if(realignedReadIndex < 0 || realignedReadIndex >= splitReadSegment.length())
                 return RealignedType.NONE;
 
-            match = checkMatch(
+            readMatchInfo = checkMatch(
                     readContextMatcher, splitReadSegment.ReadBases, splitReadSegment.ReadQuals, realignedReadIndex, realignmentOffset);
         }
         else
@@ -44,12 +44,14 @@ public class Realignment
             if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
                 return RealignedType.NONE;
 
-            match = checkMatch(
+            readMatchInfo = checkMatch(
                     readContextMatcher, record.getReadBases(), record.getBaseQualities(), realignedReadIndex, realignmentOffset);
         }
 
-        if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
-            return RealignedType.EXACT;
+        if(readMatchInfo.MatchType == ReadContextMatch.FULL || readMatchInfo.MatchType == ReadContextMatch.PARTIAL_CORE)
+        {
+            return readMatchInfo.ExactMatch ? RealignedType.EXACT : RealignedType.LOW_QUAL_MISMATCHES;
+        }
 
         // otherwise check jitter
         JitterMatch jitterMatch = checkJitter(readContext, readContextMatcher, record, realignedReadIndex);
@@ -62,13 +64,13 @@ public class Realignment
         return RealignedType.NONE;
     }
 
-    private static ReadContextMatch checkMatch(
+    private static ReadMatchInfo checkMatch(
             final ReadContextMatcher readContextMatcher, final byte[] readBases, final byte[] readQuals, final int readVarIndex,
             int realignmentOffset)
     {
         readContextMatcher.setRealignmentIndexOffset(realignmentOffset);
 
-        ReadContextMatch match = readContextMatcher.determineReadMatch(readBases, readQuals, readVarIndex, true);
+        ReadMatchInfo match = readContextMatcher.determineReadMatchInfo(readBases, readQuals, readVarIndex, true);
 
         readContextMatcher.clearRealignmentIndexOffset();
 

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.KNOWN_HOTSPOT_FILE;
@@ -13,11 +12,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -36,19 +35,6 @@ public class HotspotCache
         }
     }
 
-    public void addHotspot(final KnownHotspot hotspot)
-    {
-        List<KnownHotspot> hotspots = mHotspotRegions.get(hotspot.RegionStart.Chromosome);
-
-        if(hotspots == null)
-        {
-            hotspots = Lists.newArrayList();
-            mHotspotRegions.put(hotspot.RegionStart.Chromosome, hotspots);
-        }
-
-        hotspots.add(hotspot);
-    }
-
     public boolean isHotspotVariant(final Variant var)
     {
         // check hotspot rescue
@@ -61,22 +47,6 @@ public class HotspotCache
         return matchesHotspot(var.chromosomeStart(), var.chromosomeEnd(), var.posStart(), var.posEnd(), var.orientStart(), var.orientEnd());
     }
 
-    public boolean isHotspotVariant(final StructuralVariant sv)
-    {
-        // check hotspot rescue
-        if(sv.type() == SGL)
-            return false;
-
-        if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
-            return false;
-
-        return matchesHotspot(
-                sv.chromosome(true), sv.chromosome(false),
-                sv.position(true).intValue(), sv.position(false).intValue(),
-                Orientation.fromByte(sv.orientation(true)), Orientation.fromByte(sv.orientation(false)));
-    }
-
-
     private static boolean isPolyATSequence(final VariantContext variant)
     {
         final String homology = variant.getAttributeAsString(HOMSEQ, "");
@@ -84,7 +54,7 @@ public class HotspotCache
     }
 
     private boolean matchesHotspot(
-            final String chrStart, final String chrEnd, int posStart, int posEnd, Orientation orientStart, Orientation orientEnd)
+            final String chrStart, final String chrEnd, int posStart, int posEnd, final Orientation orientStart, final Orientation orientEnd)
     {
         List<KnownHotspot> regions = mHotspotRegions.get(chrStart);
         if(regions != null)
@@ -92,22 +62,6 @@ public class HotspotCache
             for(KnownHotspot region : regions)
             {
                 if(region.matches(chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd))
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean matchesHotspotBreakend(final String chromosome, int position)
-    {
-        List<KnownHotspot> regions = mHotspotRegions.get(chromosome);
-
-        if(regions != null)
-        {
-            for(KnownHotspot region : regions)
-            {
-                if(region.RegionStart.containsPosition(position) || region.RegionEnd.containsPosition(position))
                     return true;
             }
         }
@@ -184,4 +138,19 @@ public class HotspotCache
     {
         configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion BED file");
     }
+
+    @VisibleForTesting
+    public void addHotspot(final KnownHotspot hotspot)
+    {
+        List<KnownHotspot> hotspots = mHotspotRegions.get(hotspot.RegionStart.Chromosome);
+
+        if(hotspots == null)
+        {
+            hotspots = Lists.newArrayList();
+            mHotspotRegions.put(hotspot.RegionStart.Chromosome, hotspots);
+        }
+
+        hotspots.add(hotspot);
+    }
+
 }

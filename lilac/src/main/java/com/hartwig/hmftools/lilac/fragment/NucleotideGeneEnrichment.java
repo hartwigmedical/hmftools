@@ -3,97 +3,107 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
-import org.apache.commons.math3.util.Pair;
-
 public class NucleotideGeneEnrichment
 {
-    private final int mAbMinBoundary;
-    private final int mAcMinBoundary;
-    private final int mBcMinBoundary;
+    private final int mAbMinUniqueProteinExonBoundary;
+    private final int mAcMinUniqueProteinExonBoundary;
+    private final int mBcMinUniqueProteinExonBoundary;
 
     public NucleotideGeneEnrichment(final List<Integer> aBoundaries, final List<Integer> bBoundaries, final List<Integer> cBoundaries)
     {
         // determine the minimum unique exon boundary for each pair
-        Set<Integer> abUnique = Sets.newHashSet();
-        Set<Integer> acUnique = Sets.newHashSet();
-        Set<Integer> bcUnique = Sets.newHashSet();
-
-        aBoundaries.stream().filter(x -> !bBoundaries.contains(x)).forEach(x -> abUnique.add(x));
-        bBoundaries.stream().filter(x -> !aBoundaries.contains(x)).forEach(x -> abUnique.add(x));
-        mAbMinBoundary = abUnique.stream().mapToInt(x -> x).min().orElse(0);
-
-        aBoundaries.stream().filter(x -> !cBoundaries.contains(x)).forEach(x -> acUnique.add(x));
-        cBoundaries.stream().filter(x -> !aBoundaries.contains(x)).forEach(x -> acUnique.add(x));
-        mAcMinBoundary = acUnique.stream().mapToInt(x -> x).min().orElse(0);
-
-        bBoundaries.stream().filter(x -> !cBoundaries.contains(x)).forEach(x -> bcUnique.add(x));
-        cBoundaries.stream().filter(x -> !bBoundaries.contains(x)).forEach(x -> bcUnique.add(x));
-        mBcMinBoundary = bcUnique.stream().mapToInt(x -> x).min().orElse(0);
+        mAbMinUniqueProteinExonBoundary = getMinUniqueBoundary(aBoundaries, bBoundaries);
+        mAcMinUniqueProteinExonBoundary = getMinUniqueBoundary(aBoundaries, cBoundaries);
+        mBcMinUniqueProteinExonBoundary = getMinUniqueBoundary(bBoundaries, cBoundaries);
     }
 
-    public final int getAFilterB() { return mAbMinBoundary; }
-    public final int getAFilterC()
+    private static int getMinUniqueBoundary(final List<Integer> boundariesGene1, final List<Integer> boundariesGene2)
     {
-        return mAcMinBoundary;
-    }
-    public final int getBFilterA()
-    {
-        return mAbMinBoundary;
-    }
-    public final int getBFilterC()
-    {
-        return mBcMinBoundary;
-    }
-    public final int getCFilterA()
-    {
-        return mAcMinBoundary;
-    }
-    public final int getCFilterB()
-    {
-        return mBcMinBoundary;
+        Set<Integer> uniqueBoundaries = Sets.newHashSet();
+
+        boundariesGene1.stream().filter(x -> !boundariesGene2.contains(x)).forEach(x -> uniqueBoundaries.add(x));
+        boundariesGene2.stream().filter(x -> !boundariesGene1.contains(x)).forEach(x -> uniqueBoundaries.add(x));
+
+        return uniqueBoundaries.stream().mapToInt(x -> x).min().orElse(0);
     }
 
-    public List<Fragment> checkAddAdditionalGenes(final List<Fragment> fragments)
+    public final int getAFilterB() { return mAbMinUniqueProteinExonBoundary; }
+    public final int getAFilterC() { return mAcMinUniqueProteinExonBoundary; }
+    public final int getBFilterA() { return mAbMinUniqueProteinExonBoundary; }
+    public final int getBFilterC() { return mBcMinUniqueProteinExonBoundary; }
+    public final int getCFilterA() { return mAcMinUniqueProteinExonBoundary; }
+    public final int getCFilterB() { return mBcMinUniqueProteinExonBoundary; }
+
+    public void checkAddAdditionalGenes(final List<Fragment> fragments)
     {
-        return fragments.stream().map(x -> checkAddAdditionalGenes(x)).collect(Collectors.toList());
+        fragments.forEach(x -> checkAdditionalGenes(x));
     }
 
     @VisibleForTesting
-    public final Fragment checkAddAdditionalGenes(final Fragment fragment)
+    public void checkAdditionalGenes(final Fragment fragment)
     {
         if(fragment.containsIndel())
-            return fragment;
+            return;
 
-        // add an extra gene for consideration if the fragment's max loci is within the minimum unique boundary for either pair
-        if(!fragment.containsGene(HLA_A) && matchToGene(fragment, Pair.create(HLA_B, mAbMinBoundary), Pair.create(HLA_C, mAcMinBoundary)))
-            fragment.addGene(HLA_A);
+        // logic: for any gene which isn't yet associated with the fragment, test if it could be by check its max nucleotide locus
+        // versus the first unique nucelotide for the gene pair
+        //
+        // example: a fragment isn't associated with gene A, is with A, and the fragments max base is within the unique base of A and B,
+        // so cannot it be distinguished between them - then add it to A as well
+        int maxFragmentNucleotideLocus = fragment.maxNucleotideLocus();
+        if(considerAddingGene(fragment, HLA_A, maxFragmentNucleotideLocus))
+        {
+            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mAbMinUniqueProteinExonBoundary)
+            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mAcMinUniqueProteinExonBoundary))
+            {
+                fragment.addGene(HLA_A);
+            }
+        }
 
-        if(!fragment.containsGene(HLA_B) && matchToGene(fragment, Pair.create(HLA_A, mAbMinBoundary), Pair.create(HLA_C, mBcMinBoundary)))
-            fragment.addGene(HLA_B);
+        if(considerAddingGene(fragment, HLA_B, maxFragmentNucleotideLocus))
+        {
+            // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
+            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAbMinUniqueProteinExonBoundary)
+            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mBcMinUniqueProteinExonBoundary))
+            {
+                fragment.addGene(HLA_B);
+            }
+        }
 
-        if(!fragment.containsGene(HLA_C) && matchToGene(fragment, Pair.create(HLA_A, mAcMinBoundary), Pair.create(HLA_B, mBcMinBoundary)))
-            fragment.addGene(HLA_C);
-
-        return fragment;
+        if(considerAddingGene(fragment, HLA_C, maxFragmentNucleotideLocus))
+        {
+            // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
+            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAcMinUniqueProteinExonBoundary)
+            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mBcMinUniqueProteinExonBoundary))
+            {
+                fragment.addGene(HLA_C);
+            }
+        }
     }
 
-    private boolean matchToGene(
-            final Fragment fragment, final Pair<String,Integer> otherGene1, final Pair<String,Integer> otherGene2)
+    private boolean considerAddingGene(final Fragment fragment, final String gene, int maxFragmentNucleotideLocus)
     {
-        if(fragment.containsGene(otherGene1.getFirst()) && fragment.maxNucleotideLocus() < 3 * otherGene1.getSecond())
-            return true;
+        if(fragment.containsGene(gene))
+            return false;
 
-        if(fragment.containsGene(otherGene2.getFirst()) && fragment.maxNucleotideLocus() < 3 * otherGene2.getSecond())
-            return true;
+        // the max supported read locus cannot be past the end of the gene's range
+        return maxFragmentNucleotideLocus <= GENE_CACHE.NucleotideLengths.get(gene);
+    }
 
-        return false;
+    private boolean checkAddAdditionalGene(
+            final Fragment fragment, int maxFragmentNucleotideLocus, final String otherGene, int geneComboUniqueAminoAcidBoundary)
+    {
+        if(!fragment.containsGene(otherGene))
+            return false;
+
+        return maxFragmentNucleotideLocus < geneComboUniqueAminoAcidBoundary * 3;
     }
 }

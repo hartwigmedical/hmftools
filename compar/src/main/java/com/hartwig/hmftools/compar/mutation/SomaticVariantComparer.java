@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.CommonUtils.countsAsCalled;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
@@ -269,9 +269,7 @@ public class SomaticVariantComparer implements ItemComparer
 
     private boolean includeMismatchWithVariant(SomaticVariantData variant, MatchLevel matchLevel)
     {
-        boolean reportabilityIsFine = (matchLevel != REPORTABLE || variant.reportable());
-        boolean isInGene = !variant.Gene.isEmpty();
-        return reportabilityIsFine && isInGene;
+        return countsAsCalled(variant, matchLevel);
     }
 
     private Map<String,List<SomaticVariantData>> buildVariantMap(final List<SomaticVariantData> variants)

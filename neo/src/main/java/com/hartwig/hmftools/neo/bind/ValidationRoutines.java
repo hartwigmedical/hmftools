@@ -2,12 +2,12 @@ package com.hartwig.hmftools.neo.bind;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
@@ -26,7 +26,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.stats.AucCalc;
 import com.hartwig.hmftools.common.stats.AucData;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.Level;
