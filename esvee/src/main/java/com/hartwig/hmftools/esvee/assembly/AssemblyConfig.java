@@ -182,7 +182,7 @@ public class AssemblyConfig
             ReferenceBams = Collections.emptyList();
         }
 
-        if(TumorIds.isEmpty() || TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
+        if(TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
         {
             SV_LOGGER.error("tumor and reference IDs must match BAM files");
             System.exit(1);
@@ -324,7 +324,7 @@ public class AssemblyConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(TUMOR, false, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(TUMOR_BAM, false, TUMOR_BAMS_DESC);
 
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);

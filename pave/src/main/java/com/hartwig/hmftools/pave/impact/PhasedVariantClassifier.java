@@ -145,11 +145,11 @@ public class PhasedVariantClassifier
                 catch(Exception e)
                 {
                     String variantsInfo = variants.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
-                    PV_LOGGER.error("failed to phase variants({}): {}", variantsInfo, e.toString());
+                    PV_LOGGER.warn("failed to phase variants({}): {}", variantsInfo, e.toString());
 
                     for(VariantTransImpact vtImpact : transImpacts)
                     {
-                        PV_LOGGER.error("transImpact({}) coding({}) protein({})",
+                        PV_LOGGER.warn("transImpact({}) coding({}) protein({})",
                                 vtImpact.toString(), vtImpact.codingContext(), vtImpact.proteinContext());
                     }
                 }
