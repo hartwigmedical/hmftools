@@ -43,6 +43,7 @@ import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
@@ -128,7 +129,8 @@ public class SomaticVariantComparer implements ItemComparer
                 SomaticVariantData matchedVariant = null;
 
                 // shift index2 back to index at or before first potentially matching variant
-                while(index2 > 0 && (index2 >= chromosomeNewVariants.size() || chromosomeNewVariants.get(index2).Position >= refVariant.comparisonPosition()))
+                while(index2 > 0 && (index2 >= chromosomeNewVariants.size()
+                        || chromosomeNewVariants.get(index2).Position >= refVariant.comparisonPosition()))
                 {
                     --index2;
                 }
@@ -293,7 +295,7 @@ public class SomaticVariantComparer implements ItemComparer
         {
             String sourceGermlineSampleId = mConfig.sourceGermlineSampleId(sourceName, sampleId);
             FileSources fileSources = mConfig.FileSources.get(sourceName);
-            return loadVariants(sourceSampleId, FileSources.sampleInstance(fileSources, sourceSampleId, sourceGermlineSampleId));
+            return loadVariants(sourceSampleId, SampleFileSources.fromFileSources(fileSources, sourceSampleId, sourceGermlineSampleId));
         }
     }
 
@@ -326,20 +328,21 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> items = Lists.newArrayList();
         loadVariants(sampleId, fileSources).forEach(x -> items.add(x));
         return items;
     }
 
-    private List<SomaticVariantData> loadVariants(final String sampleId, final FileSources fileSources)
+    private List<SomaticVariantData> loadVariants(final String sampleId, final SampleFileSources fileSources)
     {
         final List<SomaticVariantData> variants = Lists.newArrayList();
 
         // use the Purple suffix if not specified
-        boolean usePurpleVcf = fileSources.SomaticVcf.isEmpty();
-        String vcfFile = usePurpleVcf ? PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId) : fileSources.SomaticVcf;
+
+        boolean usePurpleVcf = fileSources.somaticVcf().isEmpty();
+        String vcfFile = usePurpleVcf ? PurpleCommon.purpleSomaticVcfFile(fileSources.purple(), sampleId) : fileSources.somaticVcf();
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -354,7 +357,8 @@ public class SomaticVariantComparer implements ItemComparer
             if(variantContext.isFiltered())
                 continue;
 
-            SomaticVariantData variant = SomaticVariantData.fromContext(variantContext, sampleId, false, usePurpleVcf, fileSources.Source, mConfig);
+            SomaticVariantData variant =
+                    SomaticVariantData.fromContext(variantContext, sampleId, false, usePurpleVcf, fileSources.source(), mConfig);
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
@@ -362,20 +366,20 @@ public class SomaticVariantComparer implements ItemComparer
             variants.add(variant);
         }
 
-        CMP_LOGGER.debug("sample({}) loaded {} {} somatic variants", sampleId, fileSources.Source, variants.size());
+        CMP_LOGGER.debug("sample({}) loaded {} {} somatic variants", sampleId, fileSources.source(), variants.size());
 
         // prepare the unfiltered file source if configured
-        if(!fileSources.SomaticUnfilteredVcf.isEmpty())
+        if(!fileSources.somaticUnfilteredVcf().isEmpty())
         {
-            VcfFileReader unfilteredVcfReader = new VcfFileReader(fileSources.SomaticUnfilteredVcf);
+            VcfFileReader unfilteredVcfReader = new VcfFileReader(fileSources.somaticUnfilteredVcf());
 
             if(!unfilteredVcfReader.fileValid())
             {
-                CMP_LOGGER.error("failed to read somatic unfiltered VCF file({})", fileSources.SomaticUnfilteredVcf);
+                CMP_LOGGER.error("failed to read somatic unfiltered VCF file({})", fileSources.somaticUnfilteredVcf());
                 return null;
             }
 
-            mUnfilteredVcfReaders.put(fileSources.Source, unfilteredVcfReader);
+            mUnfilteredVcfReaders.put(fileSources.source(), unfilteredVcfReader);
         }
 
         return variants;

@@ -3,10 +3,7 @@ package com.hartwig.hmftools.compar.cider;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.CDR3_LOCUS_SUMMARY;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
-
 import java.io.UncheckedIOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,8 +14,8 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class Cdr3LocusSummaryComparer implements ItemComparer
@@ -60,11 +57,11 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         try
         {
-            return Cdr3LocusSummaryFile.read(Cdr3LocusSummaryFile.generateFilename(fileSources.Cider, sampleId))
+            return Cdr3LocusSummaryFile.read(Cdr3LocusSummaryFile.generateFilename(fileSources.cider(), sampleId))
                     .stream()
                     .map(Cdr3LocusSummaryData::new)
                     .collect(Collectors.toList());

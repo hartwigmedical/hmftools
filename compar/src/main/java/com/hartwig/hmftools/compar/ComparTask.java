@@ -17,9 +17,9 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 
 public class ComparTask implements Callable<Void>
@@ -119,11 +119,12 @@ public class ComparTask implements Callable<Void>
             String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
             String sourceGermlineSampleId = mConfig.sourceGermlineSampleId(sourceName, sampleId);
 
-            FileSources fileSources = FileSources.sampleInstance(mConfig.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
+            SampleFileSources fileSources =
+                    SampleFileSources.fromFileSources(mConfig.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
 
             try
             {
-                String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sourceSampleId);
+                String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.purple(), sourceSampleId);
 
                 DriverCatalogFile.read(purpleDriverFile).stream()
                         .filter(x -> x.driver() == AMP || x.driver() == PARTIAL_AMP || x.driver() == DEL)

@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -21,10 +20,10 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GermlineSvComparer implements ItemComparer
@@ -62,7 +61,7 @@ public class GermlineSvComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         List<ComparableItem> items = Lists.newArrayList();
 
@@ -72,10 +71,10 @@ public class GermlineSvComparer implements ItemComparer
 
         try
         {
-            String germlineSvFile = LinxGermlineDisruption.generateFilename(fileSources.LinxGermline, sampleId);
+            String germlineSvFile = LinxGermlineDisruption.generateFilename(fileSources.linxGermline(), sampleId);
             List<LinxGermlineDisruption> germlineSvs = null; // loads on demand
 
-            String germlineBreakendFile = LinxBreakend.generateFilename(fileSources.LinxGermline, sampleId, true);
+            String germlineBreakendFile = LinxBreakend.generateFilename(fileSources.linxGermline(), sampleId, true);
 
             boolean reportedOnly = matchLevel == MatchLevel.REPORTABLE;
 
@@ -111,7 +110,7 @@ public class GermlineSvComparer implements ItemComparer
                 int position = usesStart ? var.PositionStart : var.PositionEnd;
 
                 BasePosition comparisonPosition = determineComparisonGenomePosition(
-                        chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                        chromosome, position, fileSources.source(), mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
                 BreakendData breakendData = new BreakendData(
                         breakend, var.VcfId, var.Type, chromosome, position,

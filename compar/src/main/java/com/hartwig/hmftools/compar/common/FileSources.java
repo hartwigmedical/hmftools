@@ -22,40 +22,25 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.pipeline.reference.api.PipelineOutputStructure;
+import com.hartwig.pipeline.reference.api.PipelineVersion;
 
-public class FileSources
+public record FileSources(String source, String sampleDir, String linx, String purple, String linxGermline, String cuppa, String lilac,
+                          String chord, String peach, String virus, String somaticVcf, String somaticUnfilteredVcf, String tumorFlagstat,
+                          String germlineFlagstat, String tumorBamMetrics, String germlineBamMetrics, String snpGenotype, String cider,
+                          String teal, PipelineVersion pipelineVersion, PipelineOutputStructure pipelineOutputStructure)
 {
-    public final String Source;
-    public final String Linx;
-    public final String LinxGermline;
-    public final String Purple;
-    public final String Cuppa;
-    public final String Lilac;
-    public final String Chord;
-    public final String Peach;
-    public final String Virus;
-    public final String SomaticVcf;
-    public final String SomaticUnfilteredVcf;
-    public final String TumorFlagstat;
-    public final String GermlineFlagstat;
-    public final String TumorBamMetrics;
-    public final String GermlineBamMetrics;
-    public final String SnpGenotype;
-
-    public final String Cider;
-
-    public final String Teal;
-
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
@@ -65,60 +50,10 @@ public class FileSources
     private static final String GERMLINE_BAM_METRICS = "germline_bam_metrics_dir";
     private static final String SNP_GENOTYPE = "snp_genotype_dir";
 
-    public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
-            final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
-            final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal)
-    {
-        Source = source;
-        Linx = linx;
-        LinxGermline = linxGermline;
-        Purple = purple;
-        Cuppa = cuppa;
-        Lilac = lilac;
-        Chord = chord;
-        Peach = peach;
-        Virus = virus;
-        SomaticVcf = somaticVcf;
-        SomaticUnfilteredVcf = somaticUnfilteredVcf;
-        TumorFlagstat = tumorFlagstat;
-        GermlineFlagstat = germlineFlagstat;
-        TumorBamMetrics = tumorBamMetrics;
-        GermlineBamMetrics = germlineBamMetrics;
-        SnpGenotype = snpGenotype;
-        Cider = cider;
-        Teal = teal;
-    }
+    private static final String PIPELINE_VERSION = "pipeline_version";
+    private static final String PIPELINE_OUTPUT_STRUCTURE = "pipeline_output_structure";
 
-    public static FileSources sampleInstance(final FileSources fileSources, final String sampleId, final String germlineSampleId)
-    {
-        return new FileSources(
-                fileSources.Source,
-                convertWildcardSamplePath(fileSources.Linx, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Purple, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.LinxGermline, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Cuppa, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Lilac, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Chord, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Peach, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Virus, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.SomaticVcf, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.TumorFlagstat, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.GermlineFlagstat, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.TumorBamMetrics, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.GermlineBamMetrics, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.SnpGenotype, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Cider, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.Teal, sampleId, germlineSampleId));
-    }
-
-    private static void addPathConfig(final ConfigBuilder configBuilder, final String toolDir, final String toolDesc, final String sourceName)
-    {
-        configBuilder.addPrefixedPath(
-                formSourceConfig(toolDir, sourceName), false, formSourceDescription(toolDesc, sourceName),
-                formSourceConfig(SAMPLE_DIR, sourceName));
-    }
+    private static final Map<String, String> PIPELINE_VERSION_VALUE_TRANSLATIONS = Map.of("2.0", "6.0", "5.34", "5.34", "6.0", "6.0");
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
@@ -153,7 +88,27 @@ public class FileSources
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_UNFILTERED_VCF, sourceName), false,
                     formSourceDescription("VCF to search for filtered variants", sourceName));
+
+            configBuilder.addConfigItem(formSourceConfig(PIPELINE_VERSION, sourceName), false, formSourceDescription(
+                    "Pipeline version for deriving tool directories from sample directory in non-default format. '" + PIPELINE_OUTPUT_STRUCTURE
+                            + "' needs to also be set for this to work. Options: " + optionList(PIPELINE_VERSION_VALUE_TRANSLATIONS.keySet()), sourceName));
+            configBuilder.addConfigItem(formSourceConfig(PIPELINE_OUTPUT_STRUCTURE, sourceName), false, formSourceDescription(
+                    "Pipeline type for deriving tool directories from sample directory in non-default format. '" + PIPELINE_VERSION
+                            + "' needs to also be set for this to work. Options: PIPELINE5, ONCOANALYSER, DATABASE", sourceName));
         }
+    }
+
+    private static String optionList(final Set<String> options)
+    {
+        return options.stream().sorted().collect(Collectors.joining(", "));
+    }
+
+    private static void addPathConfig(final ConfigBuilder configBuilder, final String toolDir, final String toolDesc,
+            final String sourceName)
+    {
+        configBuilder.addPrefixedPath(
+                formSourceConfig(toolDir, sourceName), false, formSourceDescription(toolDesc, sourceName),
+                formSourceConfig(SAMPLE_DIR, sourceName));
     }
 
     private static String formSourceDescription(final String desc, final String sourceName)
@@ -173,59 +128,59 @@ public class FileSources
 
     public static FileSources fromConfig(final String sourceName, final ConfigBuilder configBuilder)
     {
-        String sampleDir = checkAddDirSeparator(getConfigValue(configBuilder, SAMPLE_DIR, sourceName));
-
-        String linxDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.LINX_SOMATIC_DIR, LINX_DIR_CFG, sourceName);
-
-        String linxGermlineDir = getDirectory(
-                configBuilder, sampleDir, PipelineToolDirectories.LINX_GERMLINE_DIR, LINX_GERMLINE_DIR_CFG, sourceName);
-
-        String purpleDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.PURPLE_DIR, PURPLE_DIR_CFG, sourceName);
-        String cuppaDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CUPPA_DIR, CUPPA_DIR_CFG, sourceName);
-        String lilacDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.LILAC_DIR, LILAC_DIR_CFG, sourceName);
-        String chordDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CHORD_DIR, CHORD_DIR_CFG, sourceName);
-        String peachDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.PEACH_DIR, PEACH_DIR_CFG, sourceName);
-        String virusDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.VIRUS_INTERPRETER_DIR, VIRUS_DIR_CFG, sourceName);
-
-        String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
-        String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
-
-        String tumorFlagstat = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_FLAGSTAT, sourceName);
-        String germlineFlagstat = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_FLAGSTAT, sourceName);
-        String tumorBamMetrics = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_BAM_METRICS, sourceName);
-        String germlineBamMetrics = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_BAM_METRICS, sourceName);
-        String snpGenotype = getDirectory(configBuilder, sampleDir, "$/snp_genotype", SNP_GENOTYPE, sourceName);
-        String ciderDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CIDER_DIR, CIDER_DIR_CFG, sourceName);
-        String tealDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.TEAL_DIR, TEAL_DIR_CFG, sourceName);
-
-        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
-                somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
-                ciderDir, tealDir);
+        return new FileSources(sourceName,
+                checkAddDirSeparator(getConfigValue(configBuilder, SAMPLE_DIR, sourceName)),
+                getConfigValue(configBuilder, LINX_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, PURPLE_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, LINX_GERMLINE_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, CUPPA_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, LILAC_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, CHORD_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, PEACH_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, VIRUS_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, SOMATIC_VCF, sourceName),
+                getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName),
+                getConfigValue(configBuilder, TUMOR_FLAGSTAT, sourceName),
+                getConfigValue(configBuilder, GERMLINE_FLAGSTAT, sourceName),
+                getConfigValue(configBuilder, TUMOR_BAM_METRICS, sourceName),
+                getConfigValue(configBuilder, GERMLINE_BAM_METRICS, sourceName),
+                getConfigValue(configBuilder, SNP_GENOTYPE, sourceName),
+                getConfigValue(configBuilder, CIDER_DIR_CFG, sourceName),
+                getConfigValue(configBuilder, TEAL_DIR_CFG, sourceName),
+                resolvePipelineVersion(getConfigValue(configBuilder, PIPELINE_VERSION, sourceName)),
+                resolvePipelineOutputStructure(getConfigValue(configBuilder, PIPELINE_OUTPUT_STRUCTURE, sourceName))
+        );
     }
 
-    private static String getDirectory(
-            final ConfigBuilder configBuilder, final String sampleDir, final String toolDefaultDir,
-            final String config, final String sourceName)
+    private static PipelineVersion resolvePipelineVersion(String pipelineVersion)
     {
-        // if a tool directory is specified in config, then it overrides the default pipeline directory
-        // if the root sample directory is specified, then the tool directory is relative to that, otherwise is absolute
-
-        String configStr = formSourceConfig(config, sourceName);
-
-        if(!configBuilder.hasValue(configStr) && sampleDir.isEmpty())
-            return "";
-
-        String toolDir = configBuilder.getValue(configStr, toolDefaultDir);
-
-        String directory = "";
-
-        if(sampleDir.isEmpty())
-            directory = toolDir;
-        else if(toolDir.isEmpty())
-            directory = sampleDir;
+        if(pipelineVersion.isEmpty())
+        {
+            return null;
+        }
+        else if(PIPELINE_VERSION_VALUE_TRANSLATIONS.containsKey(pipelineVersion))
+        {
+            return PipelineVersion.fromString(PIPELINE_VERSION_VALUE_TRANSLATIONS.get(pipelineVersion));
+        }
         else
-            directory = format("%s%s", sampleDir, toolDir);
+        {
+            throw new IllegalArgumentException("Pipeline version " + pipelineVersion + " is not one of the allowed options: "
+                    + optionList(PIPELINE_VERSION_VALUE_TRANSLATIONS.keySet()));
+        }
+    }
 
-        return checkAddDirSeparator(directory);
+    private static PipelineOutputStructure resolvePipelineOutputStructure(String pipelineOutputStructure)
+    {
+        if(pipelineOutputStructure.isEmpty())
+            return null;
+
+        try
+        {
+            return PipelineOutputStructure.valueOf(pipelineOutputStructure);
+        }
+        catch(IllegalArgumentException e)
+        {
+            throw new IllegalArgumentException("Invalid pipeline output structure: " + pipelineOutputStructure);
+        }
     }
 }

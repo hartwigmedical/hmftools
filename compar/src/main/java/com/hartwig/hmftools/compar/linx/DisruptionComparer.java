@@ -28,10 +28,10 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DisruptionComparer implements ItemComparer
@@ -70,13 +70,13 @@ public class DisruptionComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         try
         {
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
-            String vcfFile = PurpleCommon.purpleSomaticSvFile(fileSources.Purple, sampleId);
+            String vcfFile = PurpleCommon.purpleSomaticSvFile(fileSources.purple(), sampleId);
 
             List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
 
@@ -89,11 +89,11 @@ public class DisruptionComparer implements ItemComparer
                 svDataList.add(convertSvData(variant, svId++)); // valid to set ID again since read this way in Linx
             }
 
-            List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(fileSources.Linx, sampleId));
+            List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(fileSources.linx(), sampleId));
 
             CMP_LOGGER.debug("sample({}) loaded {} SVs {} breakends",sampleId, svDataList.size(), breakends.size());
 
-            return buildBreakends(svDataList, breakends, fileSources.Source);
+            return buildBreakends(svDataList, breakends, fileSources.source());
 
         }
         catch(IOException e)

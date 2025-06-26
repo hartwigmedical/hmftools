@@ -19,9 +19,9 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GermlineDeletionComparer implements ItemComparer
@@ -66,13 +66,14 @@ public class GermlineDeletionComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {
-            List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(GermlineDeletion.generateFilename(fileSources.Purple, sampleId));
+            List<GermlineDeletion> germlineDeletions =
+                    GermlineDeletion.read(GermlineDeletion.generateFilename(fileSources.purple(), sampleId));
             germlineDeletions.forEach(x -> comparableItems.add(createGermlineDeletionData(x)));
         }
         catch(IOException e)

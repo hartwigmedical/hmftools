@@ -45,16 +45,18 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 
 ### Optional configuration
 
-| Argument                                                | Description                                                                                                   |
-|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                          |
-| output_id                                               | Outfile file suffix                                                                                           |
-| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons |
-| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                      |
-| write_detailed                                          | Write a file per compared category                                                                            |
-| somatic_unfiltered_vcf_ref & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                 |
-| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)      |
-| include_matches                                         | Also include matching entries in output file(s)                                                               |
+| Argument                                                      | Description                                                                                                                                                                                                                                    |
+|---------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| germline_sample                                               | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                                                                                                                                                           |
+| output_id                                                     | Outfile file suffix                                                                                                                                                                                                                            |
+| driver_gene_panel                                             | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                                                                                                                  |
+| restrict_to_drivers                                           | Limit analysis to genes within the panel                                                                                                                                                                                                       |
+| write_detailed                                                | Write a file per compared category                                                                                                                                                                                                             |
+| somatic_unfiltered_vcf_ref & somatic_unfiltered_vcf_new       | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                                                                                                                  |
+| liftover                                                      | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                                                                                                                       |
+| include_matches                                               | Also include matching entries in output file(s)                                                                                                                                                                                                |
+| pipeline_version_ref & pipeline_version_new                   | Pipeline version for deriving tool directories from sample_data arguments. Only works when corresponding pipeline_output_structure argument is also set. If not set, hardcoded defaults are used. Allowed values: 2.0, 5.34, 6.0               |
+| pipeline_output_structure_ref & pipeline_output_structure_new | Pipeline output type for deriving tool directories from sample_data arguments. Only works when corresponding pipeline_version argument is also set. If not set, hardcoded defaults are used. Allowed values: ONCOANALYSER, DATABASE, PIPELINE5 |
 
 ### Sample ID Mappings
 If the same patient has different sample IDs for different runs and these are used for all filenames, then specify these mappings in the sample ID file, eg:

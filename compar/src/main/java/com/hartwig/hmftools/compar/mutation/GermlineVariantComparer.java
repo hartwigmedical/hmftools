@@ -23,9 +23,9 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO;
 
@@ -89,11 +89,11 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
-        String vcfFile = PurpleCommon.purpleGermlineVcfFile(fileSources.Purple, sampleId);
+        String vcfFile = PurpleCommon.purpleGermlineVcfFile(fileSources.purple(), sampleId);
 
         try
         {
@@ -103,12 +103,12 @@ public class GermlineVariantComparer implements ItemComparer
                 if(!variant.isFiltered())
                 {
                     BasePosition comparisonPosition = determineComparisonGenomePosition(
-                            variant.chromosome(), variant.position(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                            variant.chromosome(), variant.position(), fileSources.source(), mConfig.RequiresLiftover, mConfig.LiftoverCache);
                     comparableItems.add(new GermlineVariantData(variant, comparisonPosition));
                 }
             }
 
-            CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.Source, comparableItems.size());
+            CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.source(), comparableItems.size());
         }
         catch(Exception e)
         {

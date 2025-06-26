@@ -21,9 +21,9 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GeneCopyNumberComparer implements ItemComparer
@@ -81,7 +81,7 @@ public class GeneCopyNumberComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> items = Lists.newArrayList();
 
@@ -95,7 +95,7 @@ public class GeneCopyNumberComparer implements ItemComparer
         try
         {
             List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(
-                    fileSources.Purple, sampleId));
+                    fileSources.purple(), sampleId));
 
             copyNumbers.stream().filter(x -> driverGenes.contains(x.geneName())).forEach(x -> items.add(new GeneCopyNumberData(x)));
         }

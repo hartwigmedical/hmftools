@@ -190,8 +190,8 @@ public class CommonUtils
             }
             else
             {
-                FileSources fileSources =
-                        FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
+                SampleFileSources fileSources =
+                        SampleFileSources.fromFileSources(config.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
                 items = comparer.loadFromFile(sourceSampleId, sourceGermlineSampleId, fileSources);
             }
 

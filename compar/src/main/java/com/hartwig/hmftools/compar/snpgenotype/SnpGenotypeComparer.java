@@ -18,8 +18,8 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import htsjdk.tribble.CloseableTribbleIterator;
@@ -62,9 +62,9 @@ public class SnpGenotypeComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
-        String vcfFile = checkAddDirSeparator(fileSources.SnpGenotype) + FILE_NAME;
+        String vcfFile = checkAddDirSeparator(fileSources.snpGenotype()) + FILE_NAME;
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -93,7 +93,7 @@ public class SnpGenotypeComparer implements ItemComparer
                 String genotype = variantContext.getGenotype(vcfSampleId).getType().name();
 
                 BasePosition comparisonPosition = determineComparisonGenomePosition(
-                        chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                        chromosome, position, fileSources.source(), mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
                 items.add(new SnpGenotypeData(chromosome, position, ref, alt, genotype, vcfSampleId, comparisonPosition));
             }

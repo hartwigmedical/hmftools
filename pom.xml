@@ -96,6 +96,8 @@
         <v-cuppa.version>0.1</v-cuppa.version>
         <wisp.version>1.2</wisp.version>
 
+        <pipeline-reference-data.version>0.14.1</pipeline-reference-data.version>
+
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.9.3</immutables.version>
         <htsjdk.version>2.23.0</htsjdk.version>
@@ -232,6 +234,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>orange-datamodel</artifactId>
                 <version>${orange-datamodel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig.pipeline</groupId>
+                <artifactId>pipeline-reference-data</artifactId>
+                <version>${pipeline-reference-data.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.samtools</groupId>
@@ -418,4 +425,29 @@
             <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
         </repository>
     </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>oss-sonatype</id>
+            <name>oss-sonatype</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>hmf-maven-repository-release</id>
+            <url>gs://hmf-maven-repository/release</url>
+        </repository>
+        <repository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>

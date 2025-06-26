@@ -19,9 +19,9 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CopyNumberComparer implements ItemComparer
@@ -68,16 +68,16 @@ public class CopyNumberComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {
             List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(
-                    fileSources.Purple, sampleId));
+                    fileSources.purple(), sampleId));
 
-            copyNumbers.forEach(x -> comparableItems.add(createCopyNumberData(x, fileSources.Source)));
+            copyNumbers.forEach(x -> comparableItems.add(createCopyNumberData(x, fileSources.source())));
         }
         catch(IOException e)
         {

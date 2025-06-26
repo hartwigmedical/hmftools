@@ -21,9 +21,9 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class ChordComparer implements ItemComparer
@@ -70,7 +70,7 @@ public class ChordComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
@@ -88,10 +88,10 @@ public class ChordComparer implements ItemComparer
         return comparableItems;
     }
 
-    private static String determineChordFilePath(final String sampleId, final FileSources fileSources)
+    private static String determineChordFilePath(final String sampleId, final SampleFileSources fileSources)
     {
-        final String currentFilePath = ChordDataFile.generateFilename(fileSources.Chord, sampleId);
-        final String oldFilePath = checkAddDirSeparator(fileSources.Chord) + sampleId + OLD_CHORD_FILE_EXTENSION;
+        final String currentFilePath = ChordDataFile.generateFilename(fileSources.chord(), sampleId);
+        final String oldFilePath = checkAddDirSeparator(fileSources.chord()) + sampleId + OLD_CHORD_FILE_EXTENSION;
 
         if(!fileExists(currentFilePath) && fileExists(oldFilePath))
         {

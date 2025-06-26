@@ -20,8 +20,8 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class PeachComparer implements ItemComparer
@@ -58,7 +58,7 @@ public class PeachComparer implements ItemComparer
         return genotypes.stream().map(g -> new PeachData(g)).collect(Collectors.toList());
     }
 
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
@@ -75,10 +75,10 @@ public class PeachComparer implements ItemComparer
         return comparableItems;
     }
 
-    private static String determineFileName(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    private static String determineFileName(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
-        final String currentFileName = PeachGenotypeFile.generateFileName(fileSources.Peach, germlineSampleId);
-        final String oldFileName = PeachGenotypeFile.generateOldPythonFileName(fileSources.Peach, sampleId);
+        final String currentFileName = PeachGenotypeFile.generateFileName(fileSources.peach(), germlineSampleId);
+        final String oldFileName = PeachGenotypeFile.generateOldPythonFileName(fileSources.peach(), sampleId);
         if(!fileExists(currentFileName) && fileExists(oldFileName))
         {
             return oldFileName;

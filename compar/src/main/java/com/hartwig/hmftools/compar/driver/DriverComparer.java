@@ -25,9 +25,9 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverComparer implements ItemComparer
@@ -71,15 +71,15 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {
             // use Linx if present, otherwise Purple drivers
-            String linxDriverFile = LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true);
-            String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sampleId);
+            String linxDriverFile = LinxDriver.generateCatalogFilename(fileSources.linx(), sampleId, true);
+            String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.purple(), sampleId);
 
             List<DriverCatalog> drivers = Lists.newArrayList();
 
@@ -97,8 +97,8 @@ public class DriverComparer implements ItemComparer
             }
 
             // add germline as well if present
-            String purpleGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
-            String linxGermlineDriverFile = LinxDriver.generateCatalogFilename(fileSources.LinxGermline, sampleId, false);
+            String purpleGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(fileSources.purple(), sampleId);
+            String linxGermlineDriverFile = LinxDriver.generateCatalogFilename(fileSources.linxGermline(), sampleId, false);
 
             if(Files.exists(Paths.get(purpleGermlineDriverFile)))
             {

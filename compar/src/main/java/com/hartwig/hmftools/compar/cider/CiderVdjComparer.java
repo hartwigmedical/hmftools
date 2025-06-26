@@ -13,8 +13,8 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CiderVdjComparer implements ItemComparer
@@ -50,11 +50,11 @@ public class CiderVdjComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         try
         {
-            return Cdr3SequenceFile.read(Cdr3SequenceFile.generateFilename(fileSources.Cider, sampleId)).stream()
+            return Cdr3SequenceFile.read(Cdr3SequenceFile.generateFilename(fileSources.cider(), sampleId)).stream()
                     .filter(seq -> seq.filter().equals("PASS") || seq.filter().equals("PARTIAL"))
                     .map(CiderVdjData::new)
                     .collect(Collectors.toList());

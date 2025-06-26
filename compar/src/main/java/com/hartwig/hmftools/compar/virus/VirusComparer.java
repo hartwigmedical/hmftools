@@ -20,8 +20,8 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SampleFileSources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +68,7 @@ public class VirusComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final SampleFileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
@@ -85,12 +85,12 @@ public class VirusComparer implements ItemComparer
     }
 
     @NotNull
-    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    private static String determineFileName(final String sampleId, final SampleFileSources fileSources)
     {
         // dirty hack to get old virus directory working automatically most of the time
-        final String currentFileName = AnnotatedVirusFile.generateFileName(fileSources.Virus, sampleId);
+        final String currentFileName = AnnotatedVirusFile.generateFileName(fileSources.virus(), sampleId);
         final String oldFileName =
-                AnnotatedVirusFile.generateFileName(fileSources.Virus.replaceAll(VIRUS_INTERPRETER_DIR, "virus_interpreter"), sampleId);
+                AnnotatedVirusFile.generateFileName(fileSources.virus().replaceAll(VIRUS_INTERPRETER_DIR, "virus_interpreter"), sampleId);
 
         if(!fileExists(currentFileName) && fileExists(oldFileName))
         {

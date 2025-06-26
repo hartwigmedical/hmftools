@@ -410,7 +410,7 @@ public class ComparConfig
                 return false;
             }
 
-            FileSources.put(fileSources.Source, fileSources);
+            FileSources.put(fileSources.source(), fileSources);
         }
 
         return true;
