@@ -118,6 +118,9 @@ public class OffTargetRiskProfiler
         mRefGenVersion = deriveRefGenomeVersion(mRefGenome);
 
         mSpecificChrRegions = SpecificRegions.from(configBuilder);
+        if (mSpecificChrRegions == null) {
+            throw new RuntimeException("Invalid config");
+        }
 
         mBaseWindowLength = configBuilder.getInteger(CFG_BASE_WINDOW_LENGTH);
         if (mBaseWindowLength < 10) {
@@ -178,7 +181,6 @@ public class OffTargetRiskProfiler
             aligner.setMaxSeedOccurencesOption(10000);
             // Other minor params to encourage more alignments to be found.
             aligner.setBandwidthOption(mBaseWindowLength);
-            aligner.setZDropOption(500);
             aligner.setSplitFactorOption(0.5f);
             aligner.setDropRatioOption(0.1f);
             // Performance params.
@@ -192,7 +194,7 @@ public class OffTargetRiskProfiler
             GU_LOGGER.debug("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
             GU_LOGGER.debug("  DropRatio: {}", aligner.getDropRatioOption());
             GU_LOGGER.debug("  Match: {}", aligner.getMatchScoreOption());
-            GU_LOGGER.debug("  Mismatch: {}", aligner.getXADropRatio());
+            GU_LOGGER.debug("  Mismatch: {}", aligner.getMismatchPenaltyOption());
             GU_LOGGER.debug("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
             GU_LOGGER.debug("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
             GU_LOGGER.debug("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
@@ -265,7 +267,7 @@ public class OffTargetRiskProfiler
                 .map(chr -> mRefGenVersion.versionedChromosome(chr.toString()))
                 .filter(mSpecificChrRegions::includeChromosome)
                 .flatMap(chr -> createWindowRegions(chr, coordinates.length(chr)))
-                .filter(region -> !mSpecificChrRegions.hasFilters() || mSpecificChrRegions.includeRegion(region));
+                .filter(mSpecificChrRegions::includeRegion);
     }
 
     private Stream<ChrBaseRegion> createWindowRegions(String chromosome, int chromosomeLength) {
