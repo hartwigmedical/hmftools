@@ -260,7 +260,7 @@ public class OffTargetRiskProfiler
 
         long startTimeMs = System.currentTimeMillis();
 
-        Stream<ChrBaseRegion> regions = getWindowRegions();
+        Stream<ChrBaseRegion> regions = createBaseWindowRegions();
         ProcessingStats stats = processBaseWindows(regions);
 
         closeBufferedWriter(mOutputWriter);
@@ -272,20 +272,24 @@ public class OffTargetRiskProfiler
         GU_LOGGER.info("  Denormal: {}", stats.denormalWindows);
     }
 
-    private Stream<ChrBaseRegion> getWindowRegions() {
-        GU_LOGGER.info("Creating base window regions");
+    private Stream<ChrBaseRegion> createBaseWindowRegions() {
+        GU_LOGGER.info("Creating base window region stream");
         RefGenomeCoordinates coordinates = mRefGenomeVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         return Arrays.stream(HumanChromosome.values())
                 .map(chr -> mRefGenomeVersion.versionedChromosome(chr.toString()))
                 .filter(mSpecificChrRegions::includeChromosome)
-                .flatMap(chr -> createWindowRegions(chr, coordinates.length(chr)))
-                .filter(mSpecificChrRegions::includeRegion);
+                .flatMap(chr -> createBaseWindowRegions(chr, coordinates.length(chr)));
     }
 
-    private Stream<ChrBaseRegion> createWindowRegions(String chromosome, int chromosomeLength) {
+    private Stream<ChrBaseRegion> createBaseWindowRegions(String chromosome, int chromosomeLength) {
+        GU_LOGGER.debug("Creating base window stream for chromosome: {}", chromosome);
+        // Get just the specific regions for this chromosome to improve performance, compared to filtering against the full list.
+        List<ChrBaseRegion> specificRegions = mSpecificChrRegions.Regions.stream()
+                .filter(region -> region.chromosome().equals(chromosome)).toList();
         return IntStream.iterate(1, start -> true, start -> start + mBaseWindowSpacing)
                 .mapToObj(start -> new ChrBaseRegion(chromosome, start, start + mBaseWindowLength - 1))
-                .takeWhile(region -> region.end() <= chromosomeLength);
+                .takeWhile(region -> region.end() <= chromosomeLength)
+                .filter(region -> specificRegions.stream().anyMatch(s -> s.overlaps(region)));
     }
 
     private record ProcessingStats(
