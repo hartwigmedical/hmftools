@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.geneutils.utils;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
@@ -11,10 +10,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
@@ -43,6 +38,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -60,7 +56,7 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 public class OffTargetRiskProfiler
 {
     private final RefGenomeSource mRefGenome;
-    private final RefGenomeVersion mRefGenVersion;
+    private final RefGenomeVersion mRefGenomeVersion;
     // Genome region filtering.
     private final SpecificRegions mSpecificChrRegions;
 
@@ -114,8 +110,11 @@ public class OffTargetRiskProfiler
 
     public OffTargetRiskProfiler(final ConfigBuilder configBuilder)
     {
-        mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
-        mRefGenVersion = deriveRefGenomeVersion(mRefGenome);
+        String refGenome = configBuilder.getValue(REF_GENOME);
+        GU_LOGGER.debug("Ref genome: {}", refGenome);
+        mRefGenome = loadRefGenome(refGenome);
+        mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
+        GU_LOGGER.debug("Ref genome version: {}", mRefGenomeVersion);
 
         mSpecificChrRegions = SpecificRegions.from(configBuilder);
         if (mSpecificChrRegions == null) {
@@ -123,42 +122,55 @@ public class OffTargetRiskProfiler
         }
 
         mBaseWindowLength = configBuilder.getInteger(CFG_BASE_WINDOW_LENGTH);
-        if (mBaseWindowLength < 10) {
-            // Less than 10 bases probably doesn't make such sense, and BWA-MEM is designed for longer reads.
+        if (mBaseWindowLength < 15) {
+            // Less than 15 bases probably doesn't make much sense and will cause issues trying to find appropriate params for BWA-MEM.
             throw new RuntimeException(String.format("%s must be >= 10", CFG_BASE_WINDOW_LENGTH));
         }
+        GU_LOGGER.debug("Base window length: {}", mBaseWindowLength);
+
         mBaseWindowSpacing = configBuilder.getInteger(CFG_BASE_WINDOW_SPACING);
         if (mBaseWindowSpacing < 1) {
             throw new RuntimeException(String.format("%s must be >= 1", CFG_BASE_WINDOW_SPACING));
         }
+        GU_LOGGER.debug("Base window spacing: {}", mBaseWindowSpacing);
+
         mMatchScoreThreshold = configBuilder.getInteger(CFG_MATCH_SCORE_THRESHOLD);
         if (mMatchScoreThreshold > mBaseWindowLength) {
             // If this is true then all alignments will be excluded which is useless.
             throw new RuntimeException(String.format("%s must be <= %s", CFG_MATCH_SCORE_THRESHOLD, CFG_BASE_WINDOW_LENGTH));
         }
+        GU_LOGGER.debug("Match score threshold: {}", mMatchScoreThreshold);
+
         mMatchScoreOffset = configBuilder.getInteger(CFG_MATCH_SCORE_OFFSET);
         if (mMatchScoreOffset < 0) {
             // Negative values will break the risk model maths.
             throw new RuntimeException(String.format("%s must be >= 0", CFG_MATCH_SCORE_OFFSET));
         }
+        GU_LOGGER.debug("Match score offset: {}", mMatchScoreOffset);
 
         mBatchSize = configBuilder.getInteger(CFG_BATCH_SIZE);
         if (mBatchSize < 1) {
             throw new RuntimeException(String.format("%s must be >= 1", CFG_BATCH_SIZE));
         }
-        mThreads = parseThreads(configBuilder);
+        GU_LOGGER.debug("Batch size: {}", mBatchSize);
+
+        mThreads = TaskExecutor.parseThreads(configBuilder);
         if (mThreads < 1) {
-            throw new RuntimeException(String.format("%s must be >= 1", THREADS));
+            throw new RuntimeException(String.format("%s must be >= 1", TaskExecutor.THREADS));
         }
+        GU_LOGGER.debug("Threads: {}", mThreads);
 
         mVerboseOutput = configBuilder.hasFlag(CFG_VERBOSE_OUTPUT);
+        GU_LOGGER.debug("Verbose output: {}", mVerboseOutput);
 
-        String refGenomeImageFile = configBuilder.getValue(REF_GENOME) + ".img";
+        String refGenomeImageFile = refGenome + ".img";
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
         mAligner = initialiseBwaAligner(refGenomeImageFile);
 
-        mOutputWriter = initialiseOutputWriter(configBuilder.getValue(CFG_OUTPUT_FILE));
+        String outputFile = configBuilder.getValue(CFG_OUTPUT_FILE);
+        GU_LOGGER.debug("Output file: {}", outputFile);
+        mOutputWriter = initialiseOutputWriter(outputFile);
     }
 
     private BwaMemAligner initialiseBwaAligner(final String refGenomeImageFile)
@@ -171,11 +183,11 @@ public class OffTargetRiskProfiler
             BwaMemIndex index = new BwaMemIndex(refGenomeImageFile);
             BwaMemAligner aligner = new BwaMemAligner(index);
 
-            // Ensure we can find alignments of the specified window size.
-            aligner.setMinSeedLengthOption(min(19, mBaseWindowLength / 2));
+            // Ensure we can find alignments fitting our parameters.
+            aligner.setMinSeedLengthOption(min(min(19, mMatchScoreThreshold + 10), mBaseWindowLength / 2));
             // Output many alignments per query.
             aligner.setFlagOption(aligner.getFlagOption() | BwaMemAligner.MEM_F_ALL);
-            aligner.setOutputScoreThresholdOption(max(1, mBaseWindowLength - 5));
+            aligner.setOutputScoreThresholdOption(mMatchScoreThreshold);
             // Don't prune seeds with many occurrences in the genome. This is a key performance tuning parameter.
             aligner.setMaxMemIntvOption(2000);
             aligner.setMaxSeedOccurencesOption(10000);
@@ -262,9 +274,9 @@ public class OffTargetRiskProfiler
 
     private Stream<ChrBaseRegion> getWindowRegions() {
         GU_LOGGER.info("Creating base window regions");
-        RefGenomeCoordinates coordinates = mRefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        RefGenomeCoordinates coordinates = mRefGenomeVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         return Arrays.stream(HumanChromosome.values())
-                .map(chr -> mRefGenVersion.versionedChromosome(chr.toString()))
+                .map(chr -> mRefGenomeVersion.versionedChromosome(chr.toString()))
                 .filter(mSpecificChrRegions::includeChromosome)
                 .flatMap(chr -> createWindowRegions(chr, coordinates.length(chr)))
                 .filter(mSpecificChrRegions::includeRegion);
@@ -437,7 +449,7 @@ public class OffTargetRiskProfiler
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addRefGenomeFile(configBuilder, true);
-        addSpecificChromosomesRegionsConfig(configBuilder);
+        SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
@@ -447,7 +459,7 @@ public class OffTargetRiskProfiler
         configBuilder.addInteger(CFG_MATCH_SCORE_OFFSET, "Points contributed when alignment score = threshold", DEFAULT_MATCH_SCORE_OFFSET);
 
         configBuilder.addInteger(CFG_BATCH_SIZE, "Number of windows to align simultaneously", DEFAULT_BATCH_SIZE);
-        addThreadOptions(configBuilder);
+        TaskExecutor.addThreadOptions(configBuilder);
 
         configBuilder.addConfigItem(CFG_OUTPUT_FILE, true, "Output filename");
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, "Output more risk info (useful for debugging)");
