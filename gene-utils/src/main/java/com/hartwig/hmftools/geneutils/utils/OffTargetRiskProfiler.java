@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.geneutils.utils;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
@@ -31,6 +32,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -283,13 +285,33 @@ public class OffTargetRiskProfiler
 
     private Stream<ChrBaseRegion> createBaseWindowRegions(String chromosome, int chromosomeLength) {
         GU_LOGGER.debug("Creating base window stream for chromosome: {}", chromosome);
-        // Get just the specific regions for this chromosome to improve performance, compared to filtering against the full list.
-        List<ChrBaseRegion> specificRegions = mSpecificChrRegions.Regions.stream()
-                .filter(region -> region.chromosome().equals(chromosome)).toList();
-        return IntStream.iterate(1, start -> true, start -> start + mBaseWindowSpacing)
-                .mapToObj(start -> new ChrBaseRegion(chromosome, start, start + mBaseWindowLength - 1))
-                .takeWhile(region -> region.end() <= chromosomeLength)
-                .filter(region -> specificRegions.stream().anyMatch(s -> s.overlaps(region)));
+        // Generate the windows from the configured specific regions, rather than enumerating all windows and filtering, for performance.
+        List<ChrBaseRegion> regions = mSpecificChrRegions.Regions.stream()
+                .filter(region -> region.chromosome().equals(chromosome)).collect(Collectors.toList());
+        if (regions.isEmpty()) {
+            regions.add(new ChrBaseRegion(chromosome, 1, chromosomeLength - 1));
+        }
+        return regions.stream()
+                .flatMap(this::createBaseWindowRegions)
+                // Might be a better way to handle the end of chromosomes, for now exclude them if the window doesn't line up.
+                .takeWhile(region -> region.end() <= chromosomeLength);
+    }
+
+    // Create base window regions which fully cover the specified region.
+    private Stream<ChrBaseRegion> createBaseWindowRegions(ChrBaseRegion region) {
+        GU_LOGGER.debug("Creating base window stream for region: {}", region);
+        // First window may start before the start of the specified region.
+        int initial = baseWindowStartCoveringPosition(region.start());
+        // Last window could extend past the end of the specified region.
+        return IntStream.iterate(initial, start -> start <= region.end(), start -> start + mBaseWindowSpacing)
+                .mapToObj(start -> new ChrBaseRegion(region.chromosome(), start, start + mBaseWindowLength - 1));
+    }
+
+    // Finds the start position of the nearest base window which covers the given position.
+    private int baseWindowStartCoveringPosition(int position) {
+        int position0Idx = position - 1;
+        int mod = position0Idx % mBaseWindowSpacing;
+        return max(position - mod, 1);
     }
 
     private record ProcessingStats(
