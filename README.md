@@ -9,7 +9,7 @@ The current release of the WiGiTs pipeline is v2.0. Release notes are [here](./p
 We recommend running WiGiTS with [Oncoanalyser](https://nf-co.re/oncoanalyser), a Nextflow implementation of the WiGiTS pipeline.
 
 A detailed list of the resource files used to run the WiGiTs pipeline is [here](./pipeline/README_RESOURCES.md).
-The files themselves are available for download [here](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/pipeline/oncoanalyser/).
+Download links to the resource files can be found on the [Oncoanalyser page](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls).
 
 The pipeline can be run on a targeted panel eg TSO500 - see detailed information [here](./pipeline/README_TARGETED.md).
 
