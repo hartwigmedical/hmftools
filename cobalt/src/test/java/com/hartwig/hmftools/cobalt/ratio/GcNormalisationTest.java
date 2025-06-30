@@ -33,7 +33,7 @@ public class GcNormalisationTest
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
                 DoubleColumn.create(CobaltColumns.RATIO),
-                DoubleColumn.create(CobaltColumns.GC_CONTENT),
+                DoubleColumn.create(CobaltColumns.READ_GC_CONTENT),
                 BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
                 BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
@@ -68,7 +68,7 @@ public class GcNormalisationTest
         row.setString(CobaltColumns.CHROMOSOME, chromosome);
         row.setInt(CobaltColumns.POSITION, position);
         row.setDouble(CobaltColumns.RATIO, ratio);
-        row.setDouble(CobaltColumns.GC_CONTENT, gcContent);
+        row.setDouble(CobaltColumns.READ_GC_CONTENT, gcContent);
         row.setBoolean(CobaltColumns.IS_MAPPABLE, isMappable);
         row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(chromosome).isAutosome());
     }

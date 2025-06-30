@@ -42,15 +42,14 @@ public class RatioSupplierTest
                 DoubleColumn.create(CobaltColumns.READ_DEPTH),
                 DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
 
-        addReadDepth(readDepths, "chr1", 2001, 10.0);
-        addReadDepth(readDepths, "chr2", 3001, 5.0);
-        addReadDepth(readDepths, "chr2", 4001, 7.0);
+        addReadDepth(readDepths, "chr1", 2001, 10.0, 0.45);
+        addReadDepth(readDepths, "chr2", 3001, 5.0, 0.5);
+        addReadDepth(readDepths, "chr2", 4001, 7.0, 0.5);
         chromosomePosCodec.addEncodedChrPosColumn(readDepths, false);
 
         gcProfiles = Table.create("gcProfiles",
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
-                DoubleColumn.create(CobaltColumns.GC_CONTENT),
                 BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
                 BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
@@ -119,13 +118,13 @@ public class RatioSupplierTest
         assertDoubleEquals(0.95454545, ratio.getDouble(TUMOR_GC_RATIO));
     }
 
-    private static void addReadDepth(Table readCountTable, String chromosome, int position, double readDepth)
+    private static void addReadDepth(Table readCountTable, String chromosome, int position, double readDepth, double readGcContent)
     {
         Row row = readCountTable.appendRow();
         row.setString(CobaltColumns.CHROMOSOME, chromosome);
         row.setInt(CobaltColumns.POSITION, position);
         row.setDouble(CobaltColumns.READ_DEPTH, readDepth);
-        row.setDouble(CobaltColumns.READ_GC_CONTENT, 0.5);
+        row.setDouble(CobaltColumns.READ_GC_CONTENT, readGcContent);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -134,7 +133,6 @@ public class RatioSupplierTest
         Row row = table.appendRow();
         row.setString(CobaltColumns.CHROMOSOME, chromosome);
         row.setInt(CobaltColumns.POSITION, position);
-        row.setDouble(CobaltColumns.GC_CONTENT, gcContent);
         row.setBoolean(CobaltColumns.IS_MAPPABLE, isMappable);
         row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(chromosome).isAutosome());
     }
