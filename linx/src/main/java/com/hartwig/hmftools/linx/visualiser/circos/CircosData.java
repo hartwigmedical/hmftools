@@ -145,14 +145,14 @@ public class CircosData
         DisruptedGeneRegions = positionScaler.interpolateRegions(unadjustedDisruptedGeneRegions);
         Exons = positionScaler.interpolateExons(unadjustedGeneExons);
 
-        List<AmberBAF> amberBAFsScaled = positionScaler.interpolateAmberBAFs(unadjustedAmberBAFs);
-        List<AmberBAF> amberBAFsDownsampled = downsampleList(amberBAFsScaled, DOWNSAMPLE_TARGET);
-        AmberBAFs = amberBAFsDownsampled;
+        List<AmberBAF> amberBAFsDownsampled = Downsampler.downsampleWithMinimumPerContig(unadjustedAmberBAFs, positionsToScale);
+        List<AmberBAF> amberBAFsScaled = positionScaler.interpolateAmberBAFs(amberBAFsDownsampled);
+        AmberBAFs = amberBAFsScaled;
 
-        List<CobaltRatio> cobaltRatiosBreakpointAligned = alignCobaltPositionsToBreakpoints(unadjustedCobaltRatios, positionsToScale);
+        List<CobaltRatio> cobaltRatiosDownsampled = Downsampler.downsampleWithMinimumPerContig(unadjustedCobaltRatios, positionsToScale);
+        List<CobaltRatio> cobaltRatiosBreakpointAligned = alignCobaltPositionsToBreakpoints(cobaltRatiosDownsampled, positionsToScale);
         List<CobaltRatio> cobaltRatiosScaled = positionScaler.interpolateCobaltRatios(cobaltRatiosBreakpointAligned);
-        List<CobaltRatio> cobaltRatiosDownsampled = downsampleList(cobaltRatiosScaled, DOWNSAMPLE_TARGET);
-        CobaltRatios = cobaltRatiosDownsampled;
+        CobaltRatios = cobaltRatiosScaled;
 
         PurpleSegments = positionScaler.interpolatePurpleSegments(unadjustedPurpleSegments);
 
@@ -232,28 +232,6 @@ public class CircosData
         }
 
         return realignedCobaltRatios;
-    }
-
-    private static final int DOWNSAMPLE_TARGET = 5000;
-    private static <T> List<T> downsampleList(List<T> list, int sampleCount) {
-
-        if(list.size() <= sampleCount)
-            return list;
-
-        double step = (double) list.size() / sampleCount;
-
-        List<T> subsampledList = Lists.newArrayList();
-
-        for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
-            int newSampleIndex = (int) Math.floor(sampleIndex * step);
-
-            if (newSampleIndex >= list.size())
-                break;
-
-            subsampledList.add(list.get(newSampleIndex));
-        }
-
-        return subsampledList;
     }
 
     public List<Connector> connectors()
