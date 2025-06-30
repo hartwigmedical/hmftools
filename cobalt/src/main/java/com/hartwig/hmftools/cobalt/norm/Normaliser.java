@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class Normaliser
@@ -61,7 +62,14 @@ public class Normaliser
                 sampleReadDepths.add(readCount);
                 sampleReadCountTotal += readCount;
 
-                List<Double> bucketDepths = gcBucketReadDepths.computeIfAbsent(regionData.gcBucket(), k -> new ArrayList<>());
+                // take the GC bucket from the sample's region data, not the GC profile
+                List<Double> bucketDepths = gcBucketReadDepths.get(sampleRegionData.PanelGcBucket);
+
+                if(bucketDepths == null)
+                {
+                    bucketDepths = Lists.newArrayList();
+                    gcBucketReadDepths.put(sampleRegionData.PanelGcBucket, bucketDepths);
+                }
 
                 bucketDepths.add(readCount);
             }
@@ -97,7 +105,7 @@ public class Normaliser
             {
                 SampleRegionData sampleRegionData = regionData.getSampleData(sampleIndex);
 
-                Double gcBucketMedian = normCalcData.GcBucketMedians.get(regionData.gcBucket());
+                Double gcBucketMedian = normCalcData.GcBucketMedians.get(sampleRegionData.PanelGcBucket);
 
                 if(gcBucketMedian == null || gcBucketMedian == 0)
                     continue;
@@ -122,7 +130,7 @@ public class Normaliser
         if(sampleRegionData.ReadDepth < 0)
             return false;
 
-        return regionData.gcBucket() >= GC_BUCKET_MIN && regionData.gcBucket() <= GC_BUCKET_MAX;
+        return sampleRegionData.PanelGcBucket >= GC_BUCKET_MIN && sampleRegionData.PanelGcBucket <= GC_BUCKET_MAX;
     }
 
     public static void calcRelativeEnrichment(final Map<String,List<RegionData>> chrRegionData, double minEnrichmentRatio)
@@ -135,8 +143,8 @@ public class Normaliser
 
                 for(SampleRegionData sampleRegionData : regionData.getSamples())
                 {
-                    double relativeEnrichment = sampleRegionData.GcRatioWgs > 0 ?
-                            sampleRegionData.adjustedGcRatio() / sampleRegionData.GcRatioWgs : 0;
+                    double relativeEnrichment = sampleRegionData.WgsGcRatio > 0 ?
+                            sampleRegionData.adjustedGcRatio() / sampleRegionData.WgsGcRatio : 0;
 
                     sampleRelativeEnrichment.add(relativeEnrichment);
                 }

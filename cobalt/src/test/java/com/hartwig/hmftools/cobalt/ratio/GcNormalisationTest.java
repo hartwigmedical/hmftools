@@ -43,7 +43,7 @@ public class GcNormalisationTest
         addReadRatio(ratios, "chr1", 12001, 19, 0.501, true);
         addReadRatio(ratios, "chr2", 23001, 1, 0.496, true);
         addReadRatio(ratios, "chr2", 24001, 2, 0.19, true); // gc bucket too low
-        addReadRatio(ratios, "chr2", 25001, 3, 0.61, true); // gc bucket too high
+        addReadRatio(ratios, "chr2", 25001, 3, 0.70, true); // gc bucket too high
         addReadRatio(ratios, "chr3", 8001, 2, 0.45, false); // unmappable
         addReadRatio(ratios, "chrX", 7001, 2, 0.45, true); // allosome, not included in median calc
 

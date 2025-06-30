@@ -86,7 +86,9 @@ public class NormalisationFileTest
     {
         RegionData regionData = new RegionData(position);
         regionData.setGcProfile(gcBucket, mappability);
-        regionData.addSampleRegionData(new SampleRegionData(readCount, gcRatioPanel, 1));
+
+        double gcContent = gcBucket / 100.0;
+        regionData.addSampleRegionData(new SampleRegionData(readCount, gcContent, gcRatioPanel, 1));
         return regionData;
     }
 

@@ -6,8 +6,8 @@ public class CobaltConstants
 
     public static final int INVALID_VALUE_INDICATOR = -1;
 
-    public static final double DEFAULT_GC_RATIO_MIN = 0.2;
-    public static final double DEFAULT_GC_RATIO_MAX = 0.6;
+    public static final double DEFAULT_GC_RATIO_MIN = 0.24;
+    public static final double DEFAULT_GC_RATIO_MAX = 0.68;
 
     public static double GC_RATIO_MIN = DEFAULT_GC_RATIO_MIN;
     public static double GC_RATIO_MAX = DEFAULT_GC_RATIO_MAX;
