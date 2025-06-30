@@ -19,8 +19,8 @@ public class LilacConstants
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
     public static final double DEFAULT_TOP_SCORE_THRESHOLD = 0.005;
 
-    public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.008;
-    public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.004;
+    public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.006;
+    public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.003;
     public static final int DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH = 10;
     public static final int DEFAULT_MAX_REF_FRAGMENTS = 1000;
 
