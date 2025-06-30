@@ -360,7 +360,7 @@ public class SageConfig
         configBuilder.addInteger(MAX_PARTITION_SLICES, "Max slices per partition", DEFAULT_MAX_PARTITION_SLICES);
 
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
-        configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel or high depth mode", DEFAULT_MAX_READ_DEPTH_PANEL);
+        configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
         configBuilder.addFlag(GERMLINE, "Run with germline filters disabled");
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
@@ -407,7 +407,7 @@ public class SageConfig
         IsGermline = false;
         RegionSliceSize = DEFAULT_SLICE_SIZE;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
-        MaxReadDepth = highDepthMode ? DEFAULT_MAX_READ_DEPTH_PANEL : DEFAULT_MAX_READ_DEPTH;
+        MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankLength = DEFAULT_FLANK_LENGTH;
         mReadLength = DEFAULT_READ_LENGTH;
