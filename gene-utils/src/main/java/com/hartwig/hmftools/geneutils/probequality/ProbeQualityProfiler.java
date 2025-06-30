@@ -54,29 +54,33 @@ public class ProbeQualityProfiler
     // Number of decimals included in the quality score.
     private static final int QUALITY_SCORE_PRECISION = 4;
 
-    private static final String CFG_BASE_WINDOW_LENGTH = "window_length";
-    private static final int DEFAULT_WINDOW_LENGTH = 40;
+    private static final String BASE_WINDOW_LENGTH_CONFIG = "window_length";
+    private static final String BASE_WINDOW_LENGTH_DESC = "Base window length for analysis";
+    private static final int BASE_WINDOW_LENGTH_DEFAULT = 40;
 
-    private static final String CFG_BASE_WINDOW_SPACING = "window_spacing";
-    private static final int DEFAULT_WINDOW_SPACING = 20;
+    private static final String BASE_WINDOW_SPACING_CONFIG = "window_spacing";
+    private static final String BASE_WINDOW_SPACING_DESC = "Offset through the genome of each base window";
+    private static final int BASE_WINDOW_SPACING_DEFAULT = 20;
 
-    private static final String CFG_MATCH_SCORE_THRESHOLD = "match_score_threshold";
-    private static final int DEFAULT_MATCH_SCORE_THRESHOLD = 24;    // Determined empirically via experiment
+    private static final String MATCH_SCORE_THRESHOLD_CONFIG = "match_score_threshold";
+    private static final String MATCH_SCORE_THRESHOLD_DESC = "Minimum alignment score to consider a match against the window";
+    private static final int MATCH_SCORE_THRESHOLD_DEFAULT = 24;    // Determined empirically via experiment
 
-    private static final String CFG_MATCH_SCORE_OFFSET = "match_score_offset";
-    private static final int DEFAULT_MATCH_SCORE_OFFSET = 26;   // Determined empirically via experiment
+    private static final String MATCH_SCORE_OFFSET_CONFIG = "match_score_offset";
+    private static final String MATCH_SCORE_OFFSET_DESC = "Risk points contributed when alignment score = threshold";
+    private static final int MATCH_SCORE_OFFSET_DEFAULT = 26;   // Determined empirically via experiment
 
-    private static final String CFG_BATCH_SIZE = "batch_size";
-    private static final int DEFAULT_BATCH_SIZE = 100000;
+    private static final String BATCH_SIZE_CONFIG = "batch_size";
+    private static final int BATCH_SIZE_DEFAULT = 100000;
 
-    private static final String CFG_OUTPUT_FILE = "output_file";
+    private static final String OUTPUT_FILE_CONFIG = "output_file";
 
-    private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
+    private static final String VERBOSE_OUTPUT_CONFIG = "verbose_output";
 
-    private static final String FLD_QUALITY_SCORE = "QualityScore";
-    private static final String FLD_RISK_SCORE = "RiskScore";
-    private static final String FLD_OFF_TARGET_COUNT = "OffTargetCount";
-    private static final String FLD_OFF_TARGET_SCORE_SUM = "OffTargetScoreSum";
+    private static final String QUALITY_SCORE_FIELD = "QualityScore";
+    private static final String RISK_SCORE_FIELD = "RiskScore";
+    private static final String OFF_TARGET_COUNT_FIELD = "OffTargetCount";
+    private static final String OFF_TARGET_SCORE_SUM_FIELD = "OffTargetScoreSum";
 
     public ProbeQualityProfiler(final ConfigBuilder configBuilder)
     {
@@ -89,33 +93,33 @@ public class ProbeQualityProfiler
             throw new RuntimeException("Invalid config");
         }
 
-        int baseWindowLength = configBuilder.getInteger(CFG_BASE_WINDOW_LENGTH);
+        int baseWindowLength = configBuilder.getInteger(BASE_WINDOW_LENGTH_CONFIG);
         if (baseWindowLength < 15) {
             // Less than 15 bases probably doesn't make much sense and will cause issues trying to find appropriate params for BWA-MEM.
-            throw new RuntimeException(String.format("%s must be >= 10", CFG_BASE_WINDOW_LENGTH));
+            throw new RuntimeException(String.format("%s must be >= 10", BASE_WINDOW_LENGTH_CONFIG));
         }
         GU_LOGGER.debug("Base window length: {}", baseWindowLength);
 
-        int baseWindowSpacing = configBuilder.getInteger(CFG_BASE_WINDOW_SPACING);
+        int baseWindowSpacing = configBuilder.getInteger(BASE_WINDOW_SPACING_CONFIG);
         if (baseWindowSpacing < 1) {
-            throw new RuntimeException(String.format("%s must be >= 1", CFG_BASE_WINDOW_SPACING));
+            throw new RuntimeException(String.format("%s must be >= 1", BASE_WINDOW_SPACING_CONFIG));
         }
         GU_LOGGER.debug("Base window spacing: {}", baseWindowSpacing);
 
-        int batchSize = configBuilder.getInteger(CFG_BATCH_SIZE);
+        int batchSize = configBuilder.getInteger(BATCH_SIZE_CONFIG);
         if (batchSize < 1) {
-            throw new RuntimeException(String.format("%s must be >= 1", CFG_BATCH_SIZE));
+            throw new RuntimeException(String.format("%s must be >= 1", BATCH_SIZE_CONFIG));
         }
         GU_LOGGER.debug("Batch size: {}", batchSize);
 
-        int matchScoreThreshold = configBuilder.getInteger(CFG_MATCH_SCORE_THRESHOLD);
+        int matchScoreThreshold = configBuilder.getInteger(MATCH_SCORE_THRESHOLD_CONFIG);
         if (matchScoreThreshold > baseWindowLength) {
             // If this is true then all alignments will be excluded which is useless.
-            throw new RuntimeException(String.format("%s must be <= %s", CFG_MATCH_SCORE_THRESHOLD, CFG_BASE_WINDOW_LENGTH));
+            throw new RuntimeException(String.format("%s must be <= %s", MATCH_SCORE_THRESHOLD_CONFIG, BASE_WINDOW_LENGTH_CONFIG));
         }
         GU_LOGGER.debug("Match score threshold: {}", matchScoreThreshold);
 
-        int matchScoreOffset = configBuilder.getInteger(CFG_MATCH_SCORE_OFFSET);
+        int matchScoreOffset = configBuilder.getInteger(MATCH_SCORE_OFFSET_CONFIG);
         GU_LOGGER.debug("Match score offset: {}", matchScoreOffset);
 
         int threads = TaskExecutor.parseThreads(configBuilder);
@@ -128,10 +132,10 @@ public class ProbeQualityProfiler
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
         Supplier<BwaMemAligner> alignerFactory = () -> createAligner(refGenomeImageFile, threads);
 
-        mVerboseOutput = configBuilder.hasFlag(CFG_VERBOSE_OUTPUT);
+        mVerboseOutput = configBuilder.hasFlag(VERBOSE_OUTPUT_CONFIG);
         GU_LOGGER.debug("Verbose output: {}", mVerboseOutput);
 
-        String outputFile = configBuilder.getValue(CFG_OUTPUT_FILE);
+        String outputFile = configBuilder.getValue(OUTPUT_FILE_CONFIG);
         GU_LOGGER.debug("Output file: {}", outputFile);
 
         mBaseWindowGenerator = new BaseWindowGenerator(mRefGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
@@ -162,11 +166,11 @@ public class ProbeQualityProfiler
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END)
-                    .add(FLD_QUALITY_SCORE);
+                    .add(QUALITY_SCORE_FIELD);
             if (verboseOutput) {
-                sj.add(FLD_RISK_SCORE);
-                sj.add(FLD_OFF_TARGET_COUNT);
-                sj.add(FLD_OFF_TARGET_SCORE_SUM);
+                sj.add(RISK_SCORE_FIELD);
+                sj.add(OFF_TARGET_COUNT_FIELD);
+                sj.add(OFF_TARGET_SCORE_SUM_FIELD);
             }
             writer.write(sj.toString());
             writer.newLine();
@@ -286,16 +290,16 @@ public class ProbeQualityProfiler
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
-        configBuilder.addInteger(CFG_BASE_WINDOW_LENGTH, "Base window length for analysis", DEFAULT_WINDOW_LENGTH);
-        configBuilder.addInteger(CFG_BASE_WINDOW_SPACING, "Offset through the genome of each base window", DEFAULT_WINDOW_SPACING);
-        configBuilder.addInteger(CFG_MATCH_SCORE_THRESHOLD, "Minimum alignment score to consider a match against the window", DEFAULT_MATCH_SCORE_THRESHOLD);
-        configBuilder.addInteger(CFG_MATCH_SCORE_OFFSET, "Risk points contributed when alignment score = threshold", DEFAULT_MATCH_SCORE_OFFSET);
+        configBuilder.addInteger(BASE_WINDOW_LENGTH_CONFIG, BASE_WINDOW_LENGTH_DESC, BASE_WINDOW_LENGTH_DEFAULT);
+        configBuilder.addInteger(BASE_WINDOW_SPACING_CONFIG, BASE_WINDOW_SPACING_DESC, BASE_WINDOW_SPACING_DEFAULT);
+        configBuilder.addInteger(MATCH_SCORE_THRESHOLD_CONFIG, MATCH_SCORE_THRESHOLD_DESC, MATCH_SCORE_THRESHOLD_DEFAULT);
+        configBuilder.addInteger(MATCH_SCORE_OFFSET_CONFIG, MATCH_SCORE_OFFSET_DESC, MATCH_SCORE_OFFSET_DEFAULT);
 
-        configBuilder.addInteger(CFG_BATCH_SIZE, "Number of windows to align simultaneously", DEFAULT_BATCH_SIZE);
+        configBuilder.addInteger(BATCH_SIZE_CONFIG, "Number of windows to align simultaneously", BATCH_SIZE_DEFAULT);
         TaskExecutor.addThreadOptions(configBuilder);
 
-        configBuilder.addConfigItem(CFG_OUTPUT_FILE, true, "Output filename");
-        configBuilder.addFlag(CFG_VERBOSE_OUTPUT, "Output more risk info (useful for debugging)");
+        configBuilder.addConfigItem(OUTPUT_FILE_CONFIG, true, "Output filename");
+        configBuilder.addFlag(VERBOSE_OUTPUT_CONFIG, "Output more risk info (useful for debugging)");
 
         addLoggingOptions(configBuilder);
 
