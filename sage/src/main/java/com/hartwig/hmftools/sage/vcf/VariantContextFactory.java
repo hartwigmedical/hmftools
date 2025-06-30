@@ -81,9 +81,7 @@ public final class VariantContextFactory
     {
         VariantContextBuilder builder = CandidateSerialisation.toContext(variant.candidate());
 
-        double tqp = min(max(variant.tumorReadCounters().get(0).tumorQualProbability(), 0), 1);
-        double logTqp = log10(max(tqp, TQP_QUAL_LOG_MIN));
-        builder.log10PError((double)round(logTqp * 10d) / 10d);
+        builder.log10PError((double)round(variant.tumorReadCounters().get(0).logTqp() * 10d) / 10d);
 
         builder.genotypes(genotypes);
         builder.filters(variant.filtersStringSet());

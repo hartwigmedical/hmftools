@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.sage.SageConstants.LONG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS_2;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+import static com.hartwig.hmftools.sage.SageConstants.TQP_QUAL_LOG_MIN;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatcher.isSimpleAltMatch;
 import static com.hartwig.hmftools.sage.evidence.JitterMatch.checkJitter;
@@ -679,6 +681,11 @@ public class ReadContextCounter
 
     public double tumorQualProbability() { return mTumorQualProbability; }
     public void setTumorQualProbability(double probability) { mTumorQualProbability = probability; }
+    public double logTqp()
+    {
+        double tqp = min(max(tumorQualProbability(), 0), 1);
+        return log10(max(tqp, TQP_QUAL_LOG_MIN));
+    }
 
     public double mapQualFactor() { return mMapQualFactor; }
     public void setMapQualFactor(double factor) { mMapQualFactor = factor; }

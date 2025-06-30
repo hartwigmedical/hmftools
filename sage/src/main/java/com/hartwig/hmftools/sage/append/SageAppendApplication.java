@@ -144,6 +144,11 @@ public class SageAppendApplication
                     continue;
                 }
             }
+            else if(mConfig.Common.SpecificChrRegions.hasFilters())
+            {
+                if(!mConfig.Common.SpecificChrRegions.includePosition(variant.getContig(), variant.getStart()))
+                    continue;
+            }
 
             existingVariants.add(variant);
         }
