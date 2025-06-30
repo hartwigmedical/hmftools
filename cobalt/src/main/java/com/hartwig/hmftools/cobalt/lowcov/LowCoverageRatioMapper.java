@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cobalt.lowcov;
 
+import static com.hartwig.hmftools.cobalt.CobaltColumns.READ_GC_CONTENT;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
 import java.util.ArrayList;
@@ -159,7 +160,7 @@ public class LowCoverageRatioMapper implements RatioMapper
         //
         Table lowCovRatio = rawRatios.summarize(
                 CobaltColumns.RATIO,
-                CobaltColumns.GC_CONTENT,
+                READ_GC_CONTENT,
                 AggregateFunctions.mean).by(BUCKET_ID_COLUMN);
 
         CB_LOGGER.debug("low cov table: {}", lowCovRatio);
@@ -167,7 +168,7 @@ public class LowCoverageRatioMapper implements RatioMapper
         //
         // lowCovBucketId  |   Mean [gcContent]    |  Mean [bucketEncodedChrPos]  |      Mean [ratio]
         // fix up the column names
-        lowCovRatio.column("Mean [gcContent]").setName(CobaltColumns.GC_CONTENT);
+        lowCovRatio.column("Mean [" + READ_GC_CONTENT + "]").setName(READ_GC_CONTENT);
         lowCovRatio.column("Mean [ratio]").setName(CobaltColumns.RATIO);
 
         // add is mappable column, we are not sure if this is needed yet. But if we want to pass

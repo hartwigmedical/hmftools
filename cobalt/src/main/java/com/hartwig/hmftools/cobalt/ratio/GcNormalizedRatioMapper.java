@@ -42,7 +42,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
         // add a gc bucket column if not already have one
         if(!inputRatios.containsColumn(CobaltColumns.GC_BUCKET))
         {
-            inputRatios.addColumns(inputRatios.doubleColumn(CobaltColumns.GC_CONTENT)
+            inputRatios.addColumns(inputRatios.doubleColumn(READ_GC_CONTENT)
                     .multiply(100).round().asIntColumn().setName(CobaltColumns.GC_BUCKET));
         }
 

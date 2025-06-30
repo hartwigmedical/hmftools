@@ -156,7 +156,8 @@ public class CobaltApplication
     {
         Table gcProfileTable = Table.create("gcProfiles",
                 LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
-                DoubleColumn.create(CobaltColumns.GC_CONTENT),
+//                DoubleColumn.create(CobaltColumns.PROFILE_GC_CONTENT),
+                DoubleColumn.create("unused"),
                 BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
                 BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
@@ -177,7 +178,8 @@ public class CobaltApplication
                 throw new RuntimeException("Unknown chromosome: " + gcProfile.chromosome());
             }
 
-            row.setDouble(CobaltColumns.GC_CONTENT, gcProfile.gcContent());
+//            row.setDouble(CobaltColumns.PROFILE_GC_CONTENT, gcProfile.gcContent());
+            row.setDouble("unused", gcProfile.gcContent());
             row.setBoolean(CobaltColumns.IS_MAPPABLE, gcProfile.isMappable());
             row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
         }
