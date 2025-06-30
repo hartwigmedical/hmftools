@@ -1,6 +1,9 @@
-package com.hartwig.hmftools.common.region;
+package com.hartwig.hmftools.common.mappability;
 
 import static java.lang.String.format;
+
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class UnmappingRegion extends BaseRegion
 {

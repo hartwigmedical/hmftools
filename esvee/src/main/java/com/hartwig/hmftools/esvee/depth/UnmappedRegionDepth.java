@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappedRegions;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;

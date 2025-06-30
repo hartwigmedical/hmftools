@@ -10,7 +10,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 
 public class UnmapRegion extends ChrBaseRegion
 {

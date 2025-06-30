@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.redux.BamReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.write.BamWriterSync;

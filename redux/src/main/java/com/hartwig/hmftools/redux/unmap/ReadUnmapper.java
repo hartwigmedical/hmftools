@@ -32,8 +32,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappedRegions;
 
 import htsjdk.samtools.SAMRecord;
 

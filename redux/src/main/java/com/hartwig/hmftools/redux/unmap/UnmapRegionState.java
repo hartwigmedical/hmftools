@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 
 public class UnmapRegionState
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.region;
+package com.hartwig.hmftools.common.mappability;
 
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionEndFieldIndex;
