@@ -2,28 +2,23 @@ package com.hartwig.hmftools.geneutils.probequality;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 
 // Partitions the genome into small windows of bases to be analysed individually.
 public class BaseWindowGenerator
 {
-    private final RefGenomeSource mRefGenome;
+    private final RefGenomeInterface mRefGenome;
     private final SpecificRegions mSpecificRegions;
     // Genome is partitioned into windows of this many bases.
     private final int mBaseWindowLength;
@@ -34,7 +29,8 @@ public class BaseWindowGenerator
     private final int mBatchSize;
 
     public BaseWindowGenerator(
-            final RefGenomeSource mRefGenome, final SpecificRegions mSpecificRegions,
+            final RefGenomeInterface mRefGenome,
+            final SpecificRegions mSpecificRegions,
             final int mBaseWindowLength, final int mBaseWindowSpacing, final int mBatchSize)
     {
         this.mRefGenome = mRefGenome;
@@ -53,7 +49,13 @@ public class BaseWindowGenerator
         this.mBatchSize = mBatchSize;
     }
 
-    public record BaseWindow(ChrBaseRegion region, byte[] sequence) {}
+    public record BaseWindow(ChrBaseRegion region, byte[] sequence) {
+        public BaseWindow {
+            if (region.baseLength() != sequence.length) {
+                throw new RuntimeException("BaseWindow region and sequence must be same length");
+            }
+        }
+    }
 
     public Stream<List<BaseWindow>> createBaseWindowBatches() {
         return createBaseWindowRegionBatches()
@@ -64,21 +66,20 @@ public class BaseWindowGenerator
     }
 
     private Stream<List<ChrBaseRegion>> createBaseWindowRegionBatches() {
-        return partitionRegionsIntoBatches(createBaseWindowRegions());
+        return batchRegions(createBaseWindowRegions());
     }
 
     private Stream<ChrBaseRegion> createBaseWindowRegions() {
         GU_LOGGER.info("Creating base window region stream");
-        RefGenomeVersion refGenomeVersion = deriveRefGenomeVersion(mRefGenome);
-        RefGenomeCoordinates coordinates = refGenomeVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-        return Arrays.stream(HumanChromosome.values())
-                .map(chr -> refGenomeVersion.versionedChromosome(chr.toString()))
+
+        return mRefGenome.chromosomeLengths().keySet().stream().sorted()
                 .filter(mSpecificRegions::includeChromosome)
-                .flatMap(chr -> createBaseWindowRegions(chr, coordinates.length(chr)));
+                .flatMap(this::createBaseWindowRegions);
     }
 
-    private Stream<ChrBaseRegion> createBaseWindowRegions(final String chromosome, final int chromosomeLength) {
+    private Stream<ChrBaseRegion> createBaseWindowRegions(final String chromosome) {
         GU_LOGGER.debug("Creating base window stream for chromosome: {}", chromosome);
+        int chromosomeLength = mRefGenome.getChromosomeLength(chromosome);
         // Generate the windows from the configured specific regions, rather than enumerating all windows and filtering, for performance.
         List<ChrBaseRegion> regions = mSpecificRegions.Regions.stream()
                 .filter(region -> region.chromosome().equals(chromosome)).collect(Collectors.toList());
@@ -109,7 +110,7 @@ public class BaseWindowGenerator
     }
 
     // Batches the stream into lists of fixed size for immediate processing.
-    private Stream<List<ChrBaseRegion>> partitionRegionsIntoBatches(Stream<ChrBaseRegion> regions) {
+    public Stream<List<ChrBaseRegion>> batchRegions(Stream<ChrBaseRegion> regions) {
         Iterator<ChrBaseRegion> iterator = regions.iterator();
         return Stream.generate(() -> {
             List<ChrBaseRegion> batch = new ArrayList<>(mBatchSize);

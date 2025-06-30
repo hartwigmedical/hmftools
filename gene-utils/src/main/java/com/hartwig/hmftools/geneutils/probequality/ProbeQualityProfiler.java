@@ -84,9 +84,9 @@ public class ProbeQualityProfiler
 
     public ProbeQualityProfiler(final ConfigBuilder configBuilder)
     {
-        String refGenome = configBuilder.getValue(REF_GENOME);
-        GU_LOGGER.debug("Ref genome: {}", refGenome);
-        final RefGenomeSource mRefGenome = loadRefGenome(refGenome);
+        String refGenomePath = configBuilder.getValue(REF_GENOME);
+        GU_LOGGER.debug("Ref genome: {}", refGenomePath);
+        RefGenomeSource refGenome = loadRefGenome(refGenomePath);
 
         SpecificRegions specificRegions = SpecificRegions.from(configBuilder);
         if (specificRegions == null) {
@@ -128,7 +128,7 @@ public class ProbeQualityProfiler
         }
         GU_LOGGER.debug("Threads: {}", threads);
 
-        String refGenomeImageFile = refGenome + ".img";
+        String refGenomeImageFile = refGenomePath + ".img";
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
         Supplier<BwaMemAligner> alignerFactory = () -> createAligner(refGenomeImageFile, threads);
 
@@ -138,7 +138,7 @@ public class ProbeQualityProfiler
         String outputFile = configBuilder.getValue(OUTPUT_FILE_CONFIG);
         GU_LOGGER.debug("Output file: {}", outputFile);
 
-        mBaseWindowGenerator = new BaseWindowGenerator(mRefGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
+        mBaseWindowGenerator = new BaseWindowGenerator(refGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
         mProbeQualityModel = new ProbeQualityModel(alignerFactory, baseWindowLength, matchScoreThreshold, matchScoreOffset);
         mOutputWriter = initialiseOutputWriter(outputFile, mVerboseOutput);
     }
