@@ -55,7 +55,7 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 // The model uses BWA-MEM alignments as a heuristic for the chance of off-target hybridisation, based on the assumption that hybridisation
 // occurs with a sufficiently long exact match. The model was developed and validated against data from a previous panel design.
 // Output is a TSV file containing scores for each window in the genome.
-public class ProbeOffTargetRiskProfiler
+public class ProbeQualityProfiler
 {
     private final RefGenomeSource mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
@@ -110,7 +110,7 @@ public class ProbeOffTargetRiskProfiler
     private static final String FLD_OFF_TARGET_COUNT = "OffTargetCount";
     private static final String FLD_OFF_TARGET_SCORE_SUM = "OffTargetScoreSum";
 
-    public ProbeOffTargetRiskProfiler(final ConfigBuilder configBuilder)
+    public ProbeQualityProfiler(final ConfigBuilder configBuilder)
     {
         String refGenome = configBuilder.getValue(REF_GENOME);
         GU_LOGGER.debug("Ref genome: {}", refGenome);
@@ -494,7 +494,7 @@ public class ProbeOffTargetRiskProfiler
 
         configBuilder.checkAndParseCommandLine(args);
 
-        ProbeOffTargetRiskProfiler probeOffTargetRiskProfiler = new ProbeOffTargetRiskProfiler(configBuilder);
-        probeOffTargetRiskProfiler.run();
+        ProbeQualityProfiler probeQualityProfiler = new ProbeQualityProfiler(configBuilder);
+        probeQualityProfiler.run();
     }
 }
