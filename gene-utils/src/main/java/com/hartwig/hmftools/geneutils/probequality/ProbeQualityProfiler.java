@@ -49,10 +49,11 @@ public class ProbeQualityProfiler
     private final ProbeQualityModel mProbeQualityModel;
 
     private final BufferedWriter mOutputWriter;
-    // If true, output more information than just the final quality score. Useful for debugging.
+    // If true, output more information than usual. Useful for debugging.
     private final boolean mVerboseOutput;
     // Number of decimals included in the quality score.
-    private static final int QUALITY_SCORE_PRECISION = 4;
+    private static final int QUALITY_SCORE_PRECISION = 2;
+    private static final int QUALITY_SCORE_PRECISION_VERBOSE = 6;
 
     private static final String BASE_WINDOW_LENGTH_CONFIG = "window_length";
     private static final String BASE_WINDOW_LENGTH_DESC = "Base window length for analysis";
@@ -171,10 +172,11 @@ public class ProbeQualityProfiler
             BufferedWriter writer = createBufferedWriter(path, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END)
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START)
                     .add(QUALITY_SCORE_FIELD);
             if(verboseOutput)
             {
+                sj.add(FLD_POSITION_END);
                 sj.add(RISK_SCORE_FIELD);
                 sj.add(OFF_TARGET_COUNT_FIELD);
                 sj.add(OFF_TARGET_SCORE_SUM_FIELD);
@@ -271,10 +273,11 @@ public class ProbeQualityProfiler
         try
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(region.chromosome()).add(String.valueOf(region.start())).add(String.valueOf(region.end()))
+            sj.add(region.chromosome()).add(String.valueOf(region.start()))
                     .add(String.valueOf(formatQualityScore(result.qualityScore())));
             if(mVerboseOutput)
             {
+                sj.add(String.valueOf(region.end()));
                 sj.add(String.valueOf(result.riskScore()));
                 sj.add(String.valueOf(result.offTargetCount()));
                 sj.add(String.valueOf(result.offTargetScoreSum()));
@@ -292,7 +295,7 @@ public class ProbeQualityProfiler
     {
         DecimalFormat format = new DecimalFormat();
         format.setMinimumFractionDigits(0);
-        format.setMaximumFractionDigits(QUALITY_SCORE_PRECISION);
+        format.setMaximumFractionDigits(mVerboseOutput ? QUALITY_SCORE_PRECISION_VERBOSE : QUALITY_SCORE_PRECISION);
         return format.format(qualityScore);
     }
 
