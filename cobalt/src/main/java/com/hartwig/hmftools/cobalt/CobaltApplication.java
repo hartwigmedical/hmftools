@@ -84,10 +84,10 @@ public class CobaltApplication
                     mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir, gcProfiles, referenceReadDepths, tumorReadDepths,
                     chromosomePosCodec);
 
-            if(mConfig.TargetRegionPath != null)
+            if(mConfig.TargetRegionNormFile != null)
             {
                 CsvReadOptions options = CsvReadOptions.builder(
-                        mConfig.TargetRegionPath)
+                        mConfig.TargetRegionNormFile)
                         .separator(TSV_DELIM.charAt(0))
                         .columnTypesPartial(Map.of("chromosome", ColumnType.STRING)).build();
 

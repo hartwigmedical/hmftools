@@ -44,7 +44,8 @@ public class CobaltConfig
     private static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
     private static final String MIN_MAPPING_QUALITY = "min_quality";
     private static final String PCF_GAMMA = "pcf_gamma";
-    private static final String TARGET_REGION_NORM_FILE = "target_region";
+
+    private static final String TARGET_REGION_NORM_FILE = "target_region_norm_file";
     private static final String INCLUDE_DUPLICATES = "include_duplicates";
 
     public static final String GC_RATIO_MIN = "gc_ratio_min";
@@ -72,7 +73,7 @@ public class CobaltConfig
     public final boolean SkipPcfCalc;
 
     public final String TumorOnlyDiploidBed;
-    public final String TargetRegionPath;
+    public final String TargetRegionNormFile;
 
     public static final Logger CB_LOGGER = LogManager.getLogger(CobaltConfig.class);
 
@@ -87,7 +88,7 @@ public class CobaltConfig
         GcProfilePath = configBuilder.getValue(GC_PROFILE);
 
         TumorOnlyDiploidBed = configBuilder.getValue(TUMOR_ONLY_DIPLOID_BED);
-        TargetRegionPath = configBuilder.getValue(TARGET_REGION_NORM_FILE);
+        TargetRegionNormFile = configBuilder.getValue(TARGET_REGION_NORM_FILE);
         RefGenomePath = configBuilder.getValue(REF_GENOME);
 
         // set global constants
