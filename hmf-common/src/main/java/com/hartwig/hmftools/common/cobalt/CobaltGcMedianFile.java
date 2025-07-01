@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.gc;
+package com.hartwig.hmftools.common.cobalt;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
@@ -11,9 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
+import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 
-public final class GCMedianReadDepthFile
+public final class CobaltGcMedianFile
 {
     private static final String EXTENSION = ".cobalt.gc.median.tsv";
     private static final int ASSUMED_READ_LENGTH = 151;
@@ -23,17 +25,17 @@ public final class GCMedianReadDepthFile
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static GCMedianReadDepth read(final String filename) throws IOException
+    public static GcMedianReadDepth read(final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(final String fileName, final GCMedianReadDepth gcMedianReadDepth) throws IOException
+    public static void write(final String fileName, final GcMedianReadDepth gcMedianReadDepth) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(gcMedianReadDepth));
     }
 
-    private static GCMedianReadDepth fromLines(final List<String> lines)
+    private static GcMedianReadDepth fromLines(final List<String> lines)
     {
         boolean useReadDepth = true;
         double mean = 0;
@@ -85,10 +87,10 @@ public final class GCMedianReadDepthFile
                     entry -> convertReadCount(entry.getValue())));
         }
 
-        return new GCMedianReadDepth(mean, median, medianPerBucket);
+        return new GcMedianReadDepth(mean, median, medianPerBucket);
     }
 
-    private static List<String> toLines(final GCMedianReadDepth gcMedianReadDepth)
+    private static List<String> toLines(final GcMedianReadDepth gcMedianReadDepth)
     {
         final List<String> lines = new ArrayList<>();
         lines.add("#sampleMean" + TSV_DELIM + "sampleMedian");

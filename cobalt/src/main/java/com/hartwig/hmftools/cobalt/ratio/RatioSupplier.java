@@ -19,8 +19,8 @@ import com.hartwig.hmftools.cobalt.lowcov.LowCoverageRatioMapper;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRatioMapper;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
-import com.hartwig.hmftools.common.cobalt.MedianRatioFile;
-import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepthFile;
+import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
+import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
@@ -131,8 +131,8 @@ public class RatioSupplier
             if(outputDir != null)
             {
                 CB_LOGGER.info("persisting {} gc read count to {}", sampleId, outputDir);
-                final String tumorGCMedianFilename = GCMedianReadDepthFile.generateFilename(outputDir, sampleId);
-                GCMedianReadDepthFile.write(tumorGCMedianFilename, gcNormalizedRatioMapper.gcMedianReadDepth());
+                final String tumorGCMedianFilename = CobaltGcMedianFile.generateFilename(outputDir, sampleId);
+                CobaltGcMedianFile.write(tumorGCMedianFilename, gcNormalizedRatioMapper.gcMedianReadDepth());
             }
         }
     }
@@ -158,8 +158,8 @@ public class RatioSupplier
             final List<MedianRatio> medianRatios = MedianRatioFactory.createFromReadRatio(toCommonChromosomeMap(getRatios()));
 
             CB_LOGGER.info("persisting {} gc ratio medians to {}", referenceId, outputDir);
-            final String ratioMedianFilename = MedianRatioFile.generateFilename(outputDir, referenceId);
-            MedianRatioFile.write(ratioMedianFilename, medianRatios);
+            final String ratioMedianFilename = CobaltMedianRatioFile.generateFilename(outputDir, referenceId);
+            CobaltMedianRatioFile.write(ratioMedianFilename, medianRatios);
 
             CB_LOGGER.info("applying ratio diploid normalisation");
             gcDiploidRatios = calcDiploidRatioResults(getRatios(), medianRatios);

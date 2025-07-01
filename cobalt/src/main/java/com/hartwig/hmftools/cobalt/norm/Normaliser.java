@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cobalt.norm;
 
-import static com.hartwig.hmftools.cobalt.norm.NormConstants.GC_BUCKET_MAX;
-import static com.hartwig.hmftools.cobalt.norm.NormConstants.GC_BUCKET_MIN;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MIN;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAPPABILITY_THRESHOLD;
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 

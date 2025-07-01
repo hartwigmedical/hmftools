@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt;
 
+import static com.hartwig.hmftools.common.genome.gc.GCBucket.calcGcBucket;
+
 public class CobaltConstants
 {
     public static final String APP_NAME = "Cobalt";
@@ -11,6 +13,9 @@ public class CobaltConstants
 
     public static double GC_RATIO_MIN = DEFAULT_GC_RATIO_MIN;
     public static double GC_RATIO_MAX = DEFAULT_GC_RATIO_MAX;
+
+    public static int GC_BUCKET_MIN = calcGcBucket(DEFAULT_GC_RATIO_MIN);
+    public static int GC_BUCKET_MAX = calcGcBucket(DEFAULT_GC_RATIO_MAX);
 
     public static final int WINDOW_SIZE = 1000;
     public static final int PARTITION_SIZE = 100_000_000;

@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class MedianRatioFile
+public final class CobaltMedianRatioFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
@@ -64,7 +64,7 @@ public final class MedianRatioFile
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        ratio.stream().map(MedianRatioFile::toString).forEach(lines::add);
+        ratio.stream().map(CobaltMedianRatioFile::toString).forEach(lines::add);
         return lines;
     }
 
