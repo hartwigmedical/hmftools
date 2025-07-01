@@ -145,11 +145,11 @@ public class CircosData
         DisruptedGeneRegions = positionScaler.interpolateRegions(unadjustedDisruptedGeneRegions);
         Exons = positionScaler.interpolateExons(unadjustedGeneExons);
 
-        List<AmberBAF> amberBAFsDownsampled = Downsampler.downsampleWithMinimumPerContig(unadjustedAmberBAFs, positionsToScale);
+        List<AmberBAF> amberBAFsDownsampled = Downsampler.downsampleWithMinimumPerRegion(unadjustedAmberBAFs, positionsToScale);
         List<AmberBAF> amberBAFsScaled = positionScaler.interpolateAmberBAFs(amberBAFsDownsampled);
         AmberBAFs = amberBAFsScaled;
 
-        List<CobaltRatio> cobaltRatiosDownsampled = Downsampler.downsampleWithMinimumPerContig(unadjustedCobaltRatios, positionsToScale);
+        List<CobaltRatio> cobaltRatiosDownsampled = Downsampler.downsampleWithMinimumPerRegion(unadjustedCobaltRatios, positionsToScale);
         List<CobaltRatio> cobaltRatiosBreakpointAligned = alignCobaltPositionsToBreakpoints(cobaltRatiosDownsampled, positionsToScale);
         List<CobaltRatio> cobaltRatiosScaled = positionScaler.interpolateCobaltRatios(cobaltRatiosBreakpointAligned);
         CobaltRatios = cobaltRatiosScaled;
