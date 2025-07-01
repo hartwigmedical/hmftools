@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.mappability;
 
-import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 
@@ -42,17 +42,26 @@ public class ProbeQualityProfile
         Map<String, List<ProbeQualityWindow>> result = new HashMap<>();
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
+            int chromosomeField = reader.getColumnIndex(FLD_CHROMOSOME);
+            int startField = reader.getColumnIndex(FLD_POSITION_START);
+            int qualityScoreField = reader.getColumnIndex(QUALITY_SCORE_FIELD);
             for(DelimFileReader.Row row : reader)
             {
-                String chromosome = row.get(FLD_CHROMOSOME);
-                int start = row.getInt(FLD_POSITION_START);
-                double qualityScore = row.getDouble(QUALITY_SCORE_FIELD);
+                String chromosome = row.get(chromosomeField);
+                int start = row.getInt(startField);
+                double qualityScore = row.getDouble(qualityScoreField);
                 int end = start + BASE_WINDOW_LENGTH;
                 ProbeQualityWindow window = new ProbeQualityWindow(start, end, (float) qualityScore);
-                result.computeIfAbsent(chromosome, k -> new ArrayList<>()).add(window);
+                List<ProbeQualityWindow> windows = result.get(chromosome);
+                // Not using computeIfAbsent() because that is much slower.
+                if (windows == null) {
+                    windows = new ArrayList<>();
+                    result.put(chromosome, windows);
+                }
+                windows.add(window);
             }
         }
-        LOGGER.info("Loading complete, mins({})", runTimeMinsStr(startTimeMs));
+        LOGGER.info("Loading complete, secs({})", secondsSinceNow(startTimeMs));
         return result;
     }
 }
