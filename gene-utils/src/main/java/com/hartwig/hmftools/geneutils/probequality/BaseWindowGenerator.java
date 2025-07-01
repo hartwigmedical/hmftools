@@ -2,8 +2,6 @@ package com.hartwig.hmftools.geneutils.probequality;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -16,6 +14,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 // Partitions the genome into small windows of bases to be analysed individually.
@@ -30,6 +30,8 @@ public class BaseWindowGenerator
     private final int mBaseWindowSpacing;
     // How many windows to yield at once.
     private final int mBatchSize;
+
+    private static final Logger LOGGER = LogManager.getLogger(BaseWindowGenerator.class);
 
     public BaseWindowGenerator(
             final RefGenomeInterface mRefGenome,
@@ -102,14 +104,14 @@ public class BaseWindowGenerator
 
     public Stream<ChrBaseRegion> createBaseWindowRegions()
     {
-        GU_LOGGER.info("Creating base window region stream");
+        LOGGER.info("Creating base window region stream");
 
         return mRefGenome.chromosomeLengths().keySet().stream().sorted().flatMap(this::createBaseWindowRegions);
     }
 
     public Stream<ChrBaseRegion> createBaseWindowRegions(final String chromosome)
     {
-        GU_LOGGER.debug("Creating base window stream for chromosome: {}", chromosome);
+        LOGGER.debug("Creating base window stream for chromosome: {}", chromosome);
 
         // Note if any chromosomes are specified then only those chromosome are examined, regardless of other filters.
         if(!mSpecificRegions.includeChromosome(chromosome))
@@ -150,7 +152,7 @@ public class BaseWindowGenerator
     // Create base window regions which fully cover the specified region.
     public Stream<ChrBaseRegion> createBaseWindowRegions(final ChrBaseRegion region)
     {
-        GU_LOGGER.debug("Creating base window stream for region: {}", region);
+        LOGGER.debug("Creating base window stream for region: {}", region);
         if(region.baseLength() <= 1)
         {
             return Stream.empty();

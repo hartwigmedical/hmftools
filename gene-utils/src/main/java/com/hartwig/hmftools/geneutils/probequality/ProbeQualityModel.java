@@ -2,12 +2,12 @@ package com.hartwig.hmftools.geneutils.probequality;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
@@ -23,6 +23,8 @@ public class ProbeQualityModel
     // Amount that 1 alignment match counts towards the risk score.
     // E.g. value of 10 means an alignment with score = mMatchScoreThreshold contributes 10 risk score points.
     private final int mMatchScoreOffset;
+
+    private static final Logger LOGGER = LogManager.getLogger(ProbeQualityModel.class);
 
     public ProbeQualityModel(final Supplier<BwaMemAligner> alignerFactory, final int mTargetProbeLength, final int mMatchScoreThreshold,
             final int mMatchScoreOffset)
@@ -71,14 +73,14 @@ public class ProbeQualityModel
             }
         });
 
-        GU_LOGGER.debug("Running BWA-MEM alignment");
+        LOGGER.debug("Running BWA-MEM alignment");
         List<List<BwaMemAlignment>> alignments = mAligner.alignSeqs(probes);
         if(alignments.size() != probes.size())
         {
             // Presumably this shouldn't occur, but we'll check to give a nicer error just in case.
             throw new RuntimeException("Alignment failed");
         }
-        GU_LOGGER.debug("Running risk model");
+        LOGGER.debug("Running risk model");
         return alignments.stream().map(this::computeFromAlignments).toList();
     }
 
@@ -123,25 +125,25 @@ public class ProbeQualityModel
 
     private static void logBwaMemParams(BwaMemAligner aligner)
     {
-        GU_LOGGER.debug("BWA-MEM options:");
-        GU_LOGGER.debug("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
-        GU_LOGGER.debug("  SplitFactor: {}", aligner.getSplitFactorOption());
-        GU_LOGGER.debug("  SplitWidth: {}", aligner.getSplitWidthOption());
-        GU_LOGGER.debug("  MaxSeedOccurrences: {}", aligner.getMaxSeedOccurencesOption());
-        GU_LOGGER.debug("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
-        GU_LOGGER.debug("  DropRatio: {}", aligner.getDropRatioOption());
-        GU_LOGGER.debug("  Match: {}", aligner.getMatchScoreOption());
-        GU_LOGGER.debug("  Mismatch: {}", aligner.getMismatchPenaltyOption());
-        GU_LOGGER.debug("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
-        GU_LOGGER.debug("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
-        GU_LOGGER.debug("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
-        GU_LOGGER.debug("  DGapExtend: {}", aligner.getDGapExtendPenaltyOption());
-        GU_LOGGER.debug("  Clip3: {}", aligner.getClip3PenaltyOption());
-        GU_LOGGER.debug("  Clip5: {}", aligner.getClip5PenaltyOption());
-        GU_LOGGER.debug("  Bandwidth: {}", aligner.getBandwidthOption());
-        GU_LOGGER.debug("  ZDrop: {}", aligner.getZDropOption());
-        GU_LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
-        GU_LOGGER.debug("  Flags: {}", aligner.getFlagOption());
-        GU_LOGGER.debug("  Threads: {}", aligner.getNThreadsOption());
+        LOGGER.debug("BWA-MEM options:");
+        LOGGER.debug("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
+        LOGGER.debug("  SplitFactor: {}", aligner.getSplitFactorOption());
+        LOGGER.debug("  SplitWidth: {}", aligner.getSplitWidthOption());
+        LOGGER.debug("  MaxSeedOccurrences: {}", aligner.getMaxSeedOccurencesOption());
+        LOGGER.debug("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
+        LOGGER.debug("  DropRatio: {}", aligner.getDropRatioOption());
+        LOGGER.debug("  Match: {}", aligner.getMatchScoreOption());
+        LOGGER.debug("  Mismatch: {}", aligner.getMismatchPenaltyOption());
+        LOGGER.debug("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
+        LOGGER.debug("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
+        LOGGER.debug("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
+        LOGGER.debug("  DGapExtend: {}", aligner.getDGapExtendPenaltyOption());
+        LOGGER.debug("  Clip3: {}", aligner.getClip3PenaltyOption());
+        LOGGER.debug("  Clip5: {}", aligner.getClip5PenaltyOption());
+        LOGGER.debug("  Bandwidth: {}", aligner.getBandwidthOption());
+        LOGGER.debug("  ZDrop: {}", aligner.getZDropOption());
+        LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
+        LOGGER.debug("  Flags: {}", aligner.getFlagOption());
+        LOGGER.debug("  Threads: {}", aligner.getNThreadsOption());
     }
 }

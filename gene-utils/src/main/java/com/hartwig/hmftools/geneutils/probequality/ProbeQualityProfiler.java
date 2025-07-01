@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,6 +32,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
@@ -86,10 +87,12 @@ public class ProbeQualityProfiler
     private static final String OFF_TARGET_COUNT_FIELD = "OffTargetCount";
     private static final String OFF_TARGET_SCORE_SUM_FIELD = "OffTargetScoreSum";
 
+    private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfiler.class);
+
     public ProbeQualityProfiler(final ConfigBuilder configBuilder)
     {
         String refGenomePath = configBuilder.getValue(REF_GENOME);
-        GU_LOGGER.debug("Ref genome: {}", refGenomePath);
+        LOGGER.debug("Ref genome: {}", refGenomePath);
         RefGenomeSource refGenome = loadRefGenome(refGenomePath);
 
         SpecificRegions specificRegions = SpecificRegions.from(configBuilder);
@@ -104,21 +107,21 @@ public class ProbeQualityProfiler
             // Less than 15 bases probably doesn't make much sense and will cause issues trying to find appropriate params for BWA-MEM.
             throw new RuntimeException(String.format("%s must be >= 10", BASE_WINDOW_LENGTH_CONFIG));
         }
-        GU_LOGGER.debug("Base window length: {}", baseWindowLength);
+        LOGGER.debug("Base window length: {}", baseWindowLength);
 
         int baseWindowSpacing = configBuilder.getInteger(BASE_WINDOW_SPACING_CONFIG);
         if(baseWindowSpacing < 1)
         {
             throw new RuntimeException(String.format("%s must be >= 1", BASE_WINDOW_SPACING_CONFIG));
         }
-        GU_LOGGER.debug("Base window spacing: {}", baseWindowSpacing);
+        LOGGER.debug("Base window spacing: {}", baseWindowSpacing);
 
         int batchSize = configBuilder.getInteger(BATCH_SIZE_CONFIG);
         if(batchSize < 1)
         {
             throw new RuntimeException(String.format("%s must be >= 1", BATCH_SIZE_CONFIG));
         }
-        GU_LOGGER.debug("Batch size: {}", batchSize);
+        LOGGER.debug("Batch size: {}", batchSize);
 
         int matchScoreThreshold = configBuilder.getInteger(MATCH_SCORE_THRESHOLD_CONFIG);
         if(matchScoreThreshold > baseWindowLength)
@@ -126,27 +129,27 @@ public class ProbeQualityProfiler
             // If this is true then all alignments will be excluded which is useless.
             throw new RuntimeException(String.format("%s must be <= %s", MATCH_SCORE_THRESHOLD_CONFIG, BASE_WINDOW_LENGTH_CONFIG));
         }
-        GU_LOGGER.debug("Match score threshold: {}", matchScoreThreshold);
+        LOGGER.debug("Match score threshold: {}", matchScoreThreshold);
 
         int matchScoreOffset = configBuilder.getInteger(MATCH_SCORE_OFFSET_CONFIG);
-        GU_LOGGER.debug("Match score offset: {}", matchScoreOffset);
+        LOGGER.debug("Match score offset: {}", matchScoreOffset);
 
         int threads = TaskExecutor.parseThreads(configBuilder);
         if(threads < 1)
         {
             throw new RuntimeException(String.format("%s must be >= 1", TaskExecutor.THREADS));
         }
-        GU_LOGGER.debug("Threads: {}", threads);
+        LOGGER.debug("Threads: {}", threads);
 
         String refGenomeImageFile = refGenomePath + ".img";
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
         Supplier<BwaMemAligner> alignerFactory = () -> createAligner(refGenomeImageFile, threads);
 
         mVerboseOutput = configBuilder.hasFlag(VERBOSE_OUTPUT_CONFIG);
-        GU_LOGGER.debug("Verbose output: {}", mVerboseOutput);
+        LOGGER.debug("Verbose output: {}", mVerboseOutput);
 
         String outputFile = configBuilder.getValue(OUTPUT_FILE_CONFIG);
-        GU_LOGGER.debug("Output file: {}", outputFile);
+        LOGGER.debug("Output file: {}", outputFile);
 
         mBaseWindowGenerator = new BaseWindowGenerator(refGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
         mProbeQualityModel = new ProbeQualityModel(alignerFactory, baseWindowLength, matchScoreThreshold, matchScoreOffset);
@@ -190,14 +193,14 @@ public class ProbeQualityProfiler
         }
         catch(IOException e)
         {
-            GU_LOGGER.error("failed to initialise output file: {}", e.toString());
+            LOGGER.error("failed to initialise output file: {}", e.toString());
             return null;
         }
     }
 
     public void run()
     {
-        GU_LOGGER.info("Starting");
+        LOGGER.info("Starting");
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -205,11 +208,11 @@ public class ProbeQualityProfiler
 
         closeBufferedWriter(mOutputWriter);
 
-        GU_LOGGER.info("Analysis complete, mins({})", runTimeMinsStr(startTimeMs));
-        GU_LOGGER.info("Window stats:");
-        GU_LOGGER.info("  Total: {}", stats.totalWindows);
-        GU_LOGGER.info("  Analysed: {}", stats.totalWindows);
-        GU_LOGGER.info("  Denormal: {}", stats.denormalWindows);
+        LOGGER.info("Analysis complete, mins({})", runTimeMinsStr(startTimeMs));
+        LOGGER.info("Window stats:");
+        LOGGER.info("  Total: {}", stats.totalWindows);
+        LOGGER.info("  Analysed: {}", stats.totalWindows);
+        LOGGER.info("  Denormal: {}", stats.denormalWindows);
     }
 
     private record ProcessingStats(
@@ -238,7 +241,7 @@ public class ProbeQualityProfiler
 
     private ProcessingStats processBaseWindowBatches(Stream<List<BaseWindowGenerator.BaseWindow>> baseWindows)
     {
-        GU_LOGGER.info("Processing base windows");
+        LOGGER.info("Processing base windows");
         return baseWindows
                 .map(this::processBaseWindowBatch)
                 .reduce(new ProcessingStats(), ProcessingStats::add);
@@ -246,22 +249,22 @@ public class ProbeQualityProfiler
 
     private ProcessingStats processBaseWindowBatch(List<BaseWindowGenerator.BaseWindow> batch)
     {
-        GU_LOGGER.debug("Processing base window batch of size {}", batch.size());
-        GU_LOGGER.debug("First base window: {}", batch.get(0).region().toString());
+        LOGGER.debug("Processing base window batch of size {}", batch.size());
+        LOGGER.debug("First base window: {}", batch.get(0).region().toString());
 
-        GU_LOGGER.debug("Retrieving base window sequences");
+        LOGGER.debug("Retrieving base window sequences");
         // Somewhat awkward stream processing here because we need the base sequence to filter on
         // and also need to keep the region info for later.
         List<BaseWindowGenerator.BaseWindow> filteredWindows = batch.stream()
                 .filter(window -> BaseWindowGenerator.isSequenceNormal(window.sequence()))
                 .toList();
         int denormalWindows = batch.size() - filteredWindows.size();
-        GU_LOGGER.debug("Skipped {} windows with denormal bases", denormalWindows);
+        LOGGER.debug("Skipped {} windows with denormal bases", denormalWindows);
 
         List<byte[]> sequences = filteredWindows.stream().map(BaseWindowGenerator.BaseWindow::sequence).toList();
         List<ProbeQualityModel.Result> modelResults = mProbeQualityModel.compute(sequences);
 
-        GU_LOGGER.debug("Writing results");
+        LOGGER.debug("Writing results");
         for(int i = 0; i < filteredWindows.size(); ++i)
         {
             writeBaseWindowResult(filteredWindows.get(i).region(), modelResults.get(i));
@@ -288,7 +291,7 @@ public class ProbeQualityProfiler
         }
         catch(IOException e)
         {
-            GU_LOGGER.error("failed to write output file: {}", e.toString());
+            LOGGER.error("failed to write output file: {}", e.toString());
         }
     }
 
