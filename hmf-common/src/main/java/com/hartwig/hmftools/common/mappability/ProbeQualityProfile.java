@@ -19,8 +19,8 @@ import org.apache.logging.log4j.Logger;
 // See that class for more context.
 public class ProbeQualityProfile
 {
-    public static final String PROBE_QUALITY_FILE_CONFIG = "probe_quality_profile.tsv";
-    public static final String PROBE_QUALITY_FILE_DESC = "Genome regions to unmap reads";
+    public static final String PROBE_QUALITY_FILE_CONFIG = "probe_quality_profile";
+    public static final String PROBE_QUALITY_FILE_DESC = "Genome regions to probe quality";
 
     // Must match the config used for generating the file
     private static final int BASE_WINDOW_LENGTH = 40;
