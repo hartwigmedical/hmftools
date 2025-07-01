@@ -247,7 +247,7 @@ public class LilacApplication
         geneTasks.add(
                 new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaC()));
 
-        List<Callable> callableList = Lists.newArrayList(geneTasks);
+        List<Callable<Void>> callableList = Lists.newArrayList(geneTasks);
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
         {

@@ -60,7 +60,7 @@ public class ChordDataPrep
             sampleTasks.add(sampleTask);
         }
 
-        List<Callable> callableTasks = new ArrayList<>(sampleTasks);
+        List<Callable<Void>> callableTasks = new ArrayList<>(sampleTasks);
         TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
 
         ChordDataWriter writer = new ChordDataWriter(mOutputFile);

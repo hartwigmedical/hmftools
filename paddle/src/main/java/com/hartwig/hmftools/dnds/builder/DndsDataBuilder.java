@@ -104,7 +104,7 @@ public class DndsDataBuilder
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
 
             if(!TaskExecutor.executeTasks(callableList, mThreads))
                 System.exit(1);
@@ -122,7 +122,7 @@ public class DndsDataBuilder
         DN_LOGGER.info("DNDS sample data building complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;
@@ -137,7 +137,7 @@ public class DndsDataBuilder
         public void addSamples(final List<String> sampleIds) { mSampleIds.addAll(sampleIds); }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < mSampleIds.size(); ++i)
             {
@@ -155,7 +155,7 @@ public class DndsDataBuilder
                 DN_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
             }
 
-            return (long)0;
+            return null;
         }
 
         private void processSample(final String sampleId)

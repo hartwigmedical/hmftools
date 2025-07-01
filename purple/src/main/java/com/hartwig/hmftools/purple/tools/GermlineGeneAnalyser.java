@@ -94,7 +94,7 @@ public class GermlineGeneAnalyser
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mThreads);
         }
         else

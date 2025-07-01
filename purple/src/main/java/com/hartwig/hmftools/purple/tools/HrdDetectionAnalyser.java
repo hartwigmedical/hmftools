@@ -3,25 +3,25 @@ package com.hartwig.hmftools.purple.tools;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
@@ -36,12 +36,12 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordData;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.purple.HrdData;
+import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -106,7 +106,7 @@ public class HrdDetectionAnalyser
             ++taskIndex;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mThreads);
 
         closeBufferedWriter(mWriter);
@@ -114,7 +114,7 @@ public class HrdDetectionAnalyser
         PPL_LOGGER.info("Purple HRD analysis complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final int mTaskId;
         public final List<String> SampleIds;
@@ -126,7 +126,7 @@ public class HrdDetectionAnalyser
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < SampleIds.size(); ++i)
             {
@@ -137,7 +137,7 @@ public class HrdDetectionAnalyser
 
             }
 
-            return (long)0;
+            return null;
         }
 
         private void processSample(final String sampleId)
@@ -150,7 +150,7 @@ public class HrdDetectionAnalyser
             {
                 if(mChordDir != null)
                 {
-                    String sampleChordDirectory =  convertWildcardSamplePath(mChordDir, sampleId);
+                    String sampleChordDirectory = convertWildcardSamplePath(mChordDir, sampleId);
                     chordData = ChordDataFile.read(ChordDataFile.generateFilename(sampleChordDirectory, sampleId));
                 }
                 else

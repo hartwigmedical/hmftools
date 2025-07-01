@@ -23,10 +23,10 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
-public class SampleGermlineGeneTask implements Callable
+public class SampleGermlineGeneTask implements Callable<Void>
 {
     private final int mTaskId;
     private final BufferedWriter mWriter;
@@ -51,7 +51,7 @@ public class SampleGermlineGeneTask implements Callable
     public List<String> getSampleIds() { return mSampleIds; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         for(int i = 0; i < mSampleIds.size(); ++i)
         {
@@ -67,17 +67,17 @@ public class SampleGermlineGeneTask implements Callable
 
         PPL_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
 
-        return (long)0;
+        return null;
     }
 
     private void processSample(final String sampleId)
     {
-        final Map<String,List<PurpleCopyNumber>> copyNumberMap = Maps.newHashMap();
-        final Map<String,List<ObservedRegion>> fittedRegionMap = Maps.newHashMap();
+        final Map<String, List<PurpleCopyNumber>> copyNumberMap = Maps.newHashMap();
+        final Map<String, List<ObservedRegion>> fittedRegionMap = Maps.newHashMap();
 
         loadPurpleData(sampleId, copyNumberMap, fittedRegionMap);
 
-        for(Map.Entry<String,List<ObservedRegion>> entry : fittedRegionMap.entrySet())
+        for(Map.Entry<String, List<ObservedRegion>> entry : fittedRegionMap.entrySet())
         {
             String chromosome = entry.getKey();
 
@@ -94,7 +94,7 @@ public class SampleGermlineGeneTask implements Callable
 
                 // find the overlapping / matching copy number region
                 PurpleCopyNumber matchedCopyNumber = copyNumbers.stream()
-                        .filter(x -> positionsOverlap((int)x.start(), (int)x.end(), (int)region.start(), (int)region.end()))
+                        .filter(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end()))
                         .findFirst().orElse(null);
 
                 if(matchedCopyNumber == null)
@@ -148,8 +148,8 @@ public class SampleGermlineGeneTask implements Callable
     }
 
     private void loadPurpleData(
-            final String sampleId, final Map<String,List<PurpleCopyNumber>> copyNumberMap,
-            final Map<String,List<ObservedRegion>> fittedRegionMap)
+            final String sampleId, final Map<String, List<PurpleCopyNumber>> copyNumberMap,
+            final Map<String, List<ObservedRegion>> fittedRegionMap)
     {
         String samplePurpleDir = mPurpleDir.contains("*") ? mPurpleDir.replaceAll("\\*", sampleId) : mPurpleDir;
 
@@ -159,8 +159,8 @@ public class SampleGermlineGeneTask implements Callable
                     PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDir, sampleId));
 
             List<PurpleSegment> segments = PurpleSegment.read(PurpleSegment.generateFilename(samplePurpleDir, sampleId)).stream()
-                .filter(x -> x.GermlineState == HET_DELETION || x.GermlineState == HOM_DELETION)
-                .collect(Collectors.toList());
+                    .filter(x -> x.GermlineState == HET_DELETION || x.GermlineState == HOM_DELETION)
+                    .collect(Collectors.toList());
 
             for(PurpleSegment segment : segments)
             {

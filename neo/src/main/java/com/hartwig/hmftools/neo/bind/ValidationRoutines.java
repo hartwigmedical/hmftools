@@ -3,11 +3,11 @@ package com.hartwig.hmftools.neo.bind;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.stats.AucCalc;
 import com.hartwig.hmftools.common.stats.AucData;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.Level;
@@ -113,7 +113,7 @@ public class ValidationRoutines
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = alleleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = alleleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -201,15 +201,15 @@ public class ValidationRoutines
         }
     }
 
-    private class LeaveOutAlleleTask implements Callable
+    private class LeaveOutAlleleTask implements Callable<Void>
     {
         private final int mTaskId;
         private final TrainConfig mConfig;
         private final List<String> mAlleles;
 
-        private final Map<String,Map<Integer,List<BindData>>> mAlleleTrainingData;
+        private final Map<String, Map<Integer, List<BindData>>> mAlleleTrainingData;
 
-        private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
+        private final Map<String, Map<Integer, BindCountData>> mAlleleBindCounts; // counts data by peptide length>
 
         private final PosWeightModel mPosWeightModel;
         private final RandomPeptideDistribution mRandomDistribution;
@@ -238,7 +238,7 @@ public class ValidationRoutines
         public final List<String> getAlleles() { return mAlleles; }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < mAlleles.size(); ++i)
             {
@@ -255,7 +255,7 @@ public class ValidationRoutines
                 }
             }
 
-            return (long)0;
+            return null;
         }
 
         private void testWithExcludedAllele(final String targetAllele)
@@ -352,7 +352,7 @@ public class ValidationRoutines
 
         private void runScoring(
                 final String targetAllele, final Map<String, Map<Integer, BindScoreMatrix>> alleleBindMatrices,
-                final FlankScores flankScores, BindingLikelihood bindingLikelihood)
+                final FlankScores flankScores, final BindingLikelihood bindingLikelihood)
         {
             NE_LOGGER.debug("{}: scoring targeted allele({})", mTaskId, targetAllele);
 
@@ -419,8 +419,8 @@ public class ValidationRoutines
         }
     }
 
-    public synchronized static void writeSummaryResults(
-            final BufferedWriter writer, final String excludedAllele, final String peptideLength, double tpr, double auc)
+    public static synchronized void writeSummaryResults(
+            final BufferedWriter writer, final String excludedAllele, final String peptideLength, final double tpr, final double auc)
     {
         try
         {
@@ -453,7 +453,7 @@ public class ValidationRoutines
         }
     }
 
-    public synchronized static void writePeptideResults(final BufferedWriter writer, final String excludedAllele, final BindData bindData)
+    public static synchronized void writePeptideResults(final BufferedWriter writer, final String excludedAllele, final BindData bindData)
     {
         try
         {

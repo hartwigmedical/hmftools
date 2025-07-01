@@ -3,11 +3,14 @@ package com.hartwig.hmftools.isofox;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_FIT;
@@ -17,9 +20,6 @@ import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_NOVEL_
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_READS;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_TOTAL;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
-import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -28,10 +28,12 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
+import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -39,10 +41,8 @@ import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
-import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
-import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
-import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
+import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.ChromosomeFusions;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
@@ -50,7 +50,7 @@ import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
-public class ChromosomeTaskExecutor implements Callable
+public class ChromosomeTaskExecutor implements Callable<Void>
 {
     private final String mChromosome;
     private final IsofoxConfig mConfig;
@@ -79,7 +79,7 @@ public class ChromosomeTaskExecutor implements Callable
     private final GcRatioCounts mGcRatioCounts;
 
     private TaskType mCurrentTaskType;
-    private boolean mIsValid;
+    private final boolean mIsValid;
 
     private final PerformanceCounter[] mPerfCounters;
 
@@ -117,7 +117,7 @@ public class ChromosomeTaskExecutor implements Callable
         mPerfCounters = PerformanceTracking.createPerfCounters();
 
         mChromosomeFusions = mConfig.runFunction(FUSIONS) ? new ChromosomeFusions(
-                        config, chromosome, fusionManager, mBamFragmentAllocator.getChimericReadTracker(),mPerfCounters[PERF_FUSIONS]) : null;
+                config, chromosome, fusionManager, mBamFragmentAllocator.getChimericReadTracker(), mPerfCounters[PERF_FUSIONS]) : null;
 
         mIsValid = true;
     }
@@ -133,12 +133,12 @@ public class ChromosomeTaskExecutor implements Callable
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         if(mCurrentTaskType == null)
         {
             ISF_LOGGER.error(" no chromosome-gene task set for execution");
-            return (long)0;
+            return null;
         }
 
         switch(mCurrentTaskType)
@@ -155,7 +155,7 @@ public class ChromosomeTaskExecutor implements Callable
                 break;
         }
 
-        return (long)1; // return value not used
+        return null;
     }
 
     public void assignTranscriptCounts()
@@ -192,7 +192,7 @@ public class ChromosomeTaskExecutor implements Callable
                 }
                 else
                 {
-                    int endOfChromosome = (int)getChromosomeLength(mChromosome, mConfig.RefGenVersion);
+                    int endOfChromosome = (int) getChromosomeLength(mChromosome, mConfig.RefGenVersion);
                     int endNonGenicPosition = max(geneCollection.getNonGenicPositions()[SE_START] + 1, endOfChromosome - 1000);
                     geneCollection.setNonGenicPosition(SE_END, endNonGenicPosition);
                     geneCollection.setEndOfChromosome();
@@ -363,7 +363,7 @@ public class ChromosomeTaskExecutor implements Callable
 
             mPerfCounters[PERF_FIT].start();
 
-            final Map<Integer,String> transIdMap = Maps.newHashMap();
+            final Map<Integer, String> transIdMap = Maps.newHashMap();
             geneCollection.getTranscripts().forEach(x -> transIdMap.put(x.TransId, x.TransName));
             mExpTransRates.runTranscriptEstimation(transIdMap, geneCollectionSummary, expRatesData, false);
 
@@ -457,7 +457,7 @@ public class ChromosomeTaskExecutor implements Callable
             final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
             geneSummaryData.applyGcAdjustments(gcAdjustments);
 
-            final Map<Integer,String> transIdMap = Maps.newHashMap();
+            final Map<Integer, String> transIdMap = Maps.newHashMap();
             geneSummaryData.TranscriptResults.forEach(x -> transIdMap.put(x.Trans.TransId, x.Trans.TransName));
             mExpTransRates.runTranscriptEstimation(transIdMap, geneSummaryData, null, true);
 

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.utils;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
@@ -15,8 +17,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.prep.BlacklistLocations;
 
@@ -100,7 +100,7 @@ public class BlacklistVcfMatcher
                 taskIndex = 0;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mThreads))
             System.exit(1);
 
@@ -180,7 +180,7 @@ public class BlacklistVcfMatcher
         }
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;
@@ -197,7 +197,7 @@ public class BlacklistVcfMatcher
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             SV_LOGGER.info("{}: processing {} samples", mTaskId, mSampleIds.size());
 
@@ -217,7 +217,7 @@ public class BlacklistVcfMatcher
 
             SV_LOGGER.debug("{}: complete", mTaskId);
 
-            return (long) 0;
+            return null;
         }
 
         private void processSample(final String sampleId)

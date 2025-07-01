@@ -13,10 +13,9 @@ import com.hartwig.hmftools.chord.snv.SnvPrep;
 import com.hartwig.hmftools.chord.sv.SvPrep;
 
 import org.apache.logging.log4j.Level;
-
 import org.jetbrains.annotations.Nullable;
 
-public class SamplePrepTask implements Callable<Long>
+public class SamplePrepTask implements Callable<Void>
 {
     private final ChordConfig mConfig;
 
@@ -48,7 +47,7 @@ public class SamplePrepTask implements Callable<Long>
     public void processSample()
     {
         String logPrefix = mConfig.isMultiSample() ?
-                String.format("%s/%s: sample(%s): ", mSampleIndex+1, mConfig.SampleIds.size(), mSampleId) :
+                String.format("%s/%s: sample(%s): ", mSampleIndex + 1, mConfig.SampleIds.size(), mSampleId) :
                 "";
 
         boolean showCoarseProgress = mConfig.isMultiSample() &&
@@ -85,9 +84,9 @@ public class SamplePrepTask implements Callable<Long>
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         processSample();
-        return (long) 0;
+        return null;
     }
 }

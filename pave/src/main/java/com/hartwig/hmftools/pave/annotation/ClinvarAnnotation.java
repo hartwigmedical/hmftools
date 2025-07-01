@@ -19,9 +19,9 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class ClinvarAnnotation extends AnnotationData implements Callable
+public class ClinvarAnnotation extends AnnotationData implements Callable<Void>
 {
-    private final Map<String,ClinvarChrCache> mChrCacheMap;
+    private final Map<String, ClinvarChrCache> mChrCacheMap;
     private final StringCache mStringCache;
     private boolean mHasValidData;
     private final String mFilename;
@@ -70,14 +70,14 @@ public class ClinvarAnnotation extends AnnotationData implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         if(mFilename != null)
         {
             loadEntries(mFilename);
         }
 
-        return (long)0;
+        return null;
     }
 
     public void loadData() { loadEntries(mFilename);}
@@ -147,7 +147,7 @@ public class ClinvarAnnotation extends AnnotationData implements Callable
         }
         catch(Exception e)
         {
-            PV_LOGGER.error("failed to read Clinvar VCF file: {}",  e.toString());
+            PV_LOGGER.error("failed to read Clinvar VCF file: {}", e.toString());
             mHasValidData = false;
         }
     }

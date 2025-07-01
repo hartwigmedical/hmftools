@@ -72,7 +72,7 @@ public class Compar
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = new ArrayList<>(sampleTasks);
+            final List<Callable<Void>> callableList = new ArrayList<>(sampleTasks);
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
