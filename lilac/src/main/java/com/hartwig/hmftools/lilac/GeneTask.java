@@ -94,6 +94,6 @@ public class GeneTask implements Callable
         final String gene = mCandidatesAlleles.get(0).Gene;
 
         mRefData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
-                .filter(x -> x.Gene.equals(gene)).forEach(x -> allAlleles.add(x));
+                .filter(x -> x.Gene.equals(gene)).forEach(allAlleles::add);
     }
 }

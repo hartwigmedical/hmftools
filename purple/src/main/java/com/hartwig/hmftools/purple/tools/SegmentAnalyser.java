@@ -3,11 +3,11 @@ package com.hartwig.hmftools.purple.tools;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.PurpleSegment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -48,7 +48,7 @@ public class SegmentAnalyser
     private enum AnalysisType
     {
         GERMLINE_AMP_DEL,
-        CHR_Y;
+        CHR_Y
     }
 
     private static final String ANALYSIS_TYPE = "analysis_type";
@@ -138,7 +138,6 @@ public class SegmentAnalyser
                     PPL_LOGGER.error("sample({}) failed to load Purple segment file form {}: {}", sampleId, samplePurpleDir, e.toString());
                 }
 
-
                 if(i > 0 && (i % 100) == 0)
                 {
                     PPL_LOGGER.debug("{}: processed {} samples", mTaskId, i);
@@ -147,7 +146,7 @@ public class SegmentAnalyser
 
             PPL_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
 
-            return (long)0;
+            return 0L;
         }
 
         private void findGermlineAmpDels(final String sampleId, final List<ObservedRegion> fittedRegions)
@@ -238,7 +237,6 @@ public class SegmentAnalyser
 
             writer.write("SampleId\tChromosome\tRegionStart\tRegionEnd\tGermlineStatus\tBafCount\tDepthWindows");
             writer.write("\tObsTumorRatio\tObsNormalRatio\tObsUnnormalisedNormalRatio\tRegionRefNormalisedCN");
-
 
             writer.newLine();
 

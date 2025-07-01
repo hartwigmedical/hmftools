@@ -124,7 +124,7 @@ public class QualityControlTest
         Assert.assertEquals(10, qc.UnusedAminoAcidMaxFrags);
     }
 
-    private HlaSequenceLoci createSequenceLoci(final String allele, final String sequenceStr)
+    private static HlaSequenceLoci createSequenceLoci(final String allele, final String sequenceStr)
     {
         HlaSequence sequence = new HlaSequence(HlaAllele.fromString(allele), sequenceStr);
         return HlaSequenceLoci.create(sequence.Allele, sequence.getRawSequence(), sequence.getRawSequence());
