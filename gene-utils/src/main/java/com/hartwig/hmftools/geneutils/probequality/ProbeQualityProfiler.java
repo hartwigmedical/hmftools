@@ -72,11 +72,14 @@ public class ProbeQualityProfiler
     private static final int MATCH_SCORE_OFFSET_DEFAULT = 26;   // Determined empirically via experiment
 
     private static final String BATCH_SIZE_CONFIG = "batch_size";
+    private static final String BATCH_SIZE_DESC = "Number of windows to align simultaneously";
     private static final int BATCH_SIZE_DEFAULT = 100000;
 
     private static final String OUTPUT_FILE_CONFIG = "output_file";
+    private static final String OUTPUT_FILE_DESC = "Output filename";
 
     private static final String VERBOSE_OUTPUT_CONFIG = "verbose_output";
+    private static final String VERBOSE_OUTPUT_DESC = "Output more risk info (useful for debugging)";
 
     private static final String QUALITY_SCORE_FIELD = "QualityScore";
     private static final String RISK_SCORE_FIELD = "RiskScore";
@@ -313,11 +316,11 @@ public class ProbeQualityProfiler
         configBuilder.addInteger(MATCH_SCORE_THRESHOLD_CONFIG, MATCH_SCORE_THRESHOLD_DESC, MATCH_SCORE_THRESHOLD_DEFAULT);
         configBuilder.addInteger(MATCH_SCORE_OFFSET_CONFIG, MATCH_SCORE_OFFSET_DESC, MATCH_SCORE_OFFSET_DEFAULT);
 
-        configBuilder.addInteger(BATCH_SIZE_CONFIG, "Number of windows to align simultaneously", BATCH_SIZE_DEFAULT);
+        configBuilder.addInteger(BATCH_SIZE_CONFIG, BATCH_SIZE_DESC, BATCH_SIZE_DEFAULT);
         TaskExecutor.addThreadOptions(configBuilder);
 
-        configBuilder.addConfigItem(OUTPUT_FILE_CONFIG, true, "Output filename");
-        configBuilder.addFlag(VERBOSE_OUTPUT_CONFIG, "Output more risk info (useful for debugging)");
+        configBuilder.addConfigItem(OUTPUT_FILE_CONFIG, true, OUTPUT_FILE_DESC);
+        configBuilder.addFlag(VERBOSE_OUTPUT_CONFIG, VERBOSE_OUTPUT_DESC);
 
         addLoggingOptions(configBuilder);
 
