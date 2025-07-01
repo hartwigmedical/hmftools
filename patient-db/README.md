@@ -5,9 +5,9 @@
 The following commands will create a user with write permissions, a user with read permissions and a database.  
 
 ```
-mysql> ​CREATE USER 'writer'@'localhost' IDENTIFIED WITH mysql_native_password BY 'writer_password'; 
+mysql> CREATE USER 'writer'@'localhost' IDENTIFIED WITH mysql_native_password BY 'writer_password'; 
 Query OK, 0 rows affected (0.00 sec)
-mysql> ​CREATE USER 'reader'@'localhost' IDENTIFIED WITH mysql_native_password BY 'reader_password'; 
+mysql> CREATE USER 'reader'@'localhost' IDENTIFIED WITH mysql_native_password BY 'reader_password'; 
 Query OK, 0 rows affected (0.00 sec)
 mysql> CREATE DATABASE patientdb; 
 Query OK, 1 row affected (0.00 sec)
