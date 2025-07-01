@@ -43,7 +43,7 @@ public class SomaticVariantDAO
         this.context = context;
     }
 
-    public BufferedWriter<SomaticVariant> writer(String tumorSample)
+    public BufferedWriter<SomaticVariant> writer(final String tumorSample)
     {
         BufferedWriterConsumer<SomaticVariant> consumer = new BufferedWriterConsumer<SomaticVariant>()
         {
@@ -63,7 +63,7 @@ public class SomaticVariantDAO
         return new BufferedWriter<>(consumer, DB_BATCH_INSERT_SIZE);
     }
 
-    public List<SomaticVariant> read(final String sample, VariantType type)
+    public List<SomaticVariant> read(final String sample, final VariantType type)
     {
         List<SomaticVariant> variants = Lists.newArrayList();
 
@@ -144,7 +144,7 @@ public class SomaticVariantDAO
     }
 
 
-    void writeAll(final Timestamp timestamp, final String sample, final List<SomaticVariant> variants)
+    private void writeAll(final Timestamp timestamp, final String sample, final List<SomaticVariant> variants)
     {
         final InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
                 SOMATICVARIANT.SAMPLEID,
@@ -196,7 +196,8 @@ public class SomaticVariantDAO
         inserter.execute();
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String sample, SomaticVariant variant)
+    private static void addRecord(
+            final Timestamp timestamp, final InsertValuesStepN inserter, final String sample, final SomaticVariant variant)
     {
         // append reportable status for each transcript where non-canonical may be reportable
         String otherReportedEffects = variant.otherReportedEffects();
