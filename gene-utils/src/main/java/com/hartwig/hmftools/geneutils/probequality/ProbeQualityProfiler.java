@@ -175,8 +175,7 @@ public class ProbeQualityProfiler
             BufferedWriter writer = createBufferedWriter(path, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START)
-                    .add(QUALITY_SCORE_FIELD);
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(QUALITY_SCORE_FIELD);
             if(verboseOutput)
             {
                 sj.add(FLD_POSITION_END);
@@ -276,8 +275,7 @@ public class ProbeQualityProfiler
         try
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(region.chromosome()).add(String.valueOf(region.start()))
-                    .add(String.valueOf(formatQualityScore(result.qualityScore())));
+            sj.add(region.chromosome()).add(String.valueOf(region.start())).add(formatQualityScore(result.qualityScore()));
             if(mVerboseOutput)
             {
                 sj.add(String.valueOf(region.end()));
