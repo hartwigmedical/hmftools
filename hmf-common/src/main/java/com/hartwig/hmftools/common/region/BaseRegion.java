@@ -3,13 +3,12 @@ package com.hartwig.hmftools.common.region;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 public class BaseRegion implements Cloneable, Comparable<BaseRegion>
 {
@@ -178,6 +177,37 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
                 ++index;
             }
         }
+    }
+
+    // Faster than checkMergeOverlaps() at the cost of more memory.
+    public static ArrayList<BaseRegion> checkMergeOverlapsFast(List<BaseRegion> regions, boolean sort)
+    {
+        if (regions.isEmpty())
+        {
+            return new ArrayList<>();
+        }
+
+        if(sort)
+        {
+            regions = regions.stream().sorted().toList();
+        }
+
+        ArrayList<BaseRegion> result = new ArrayList<>(regions.size());
+        result.add(regions.get(0));
+        for(int i = 1; i < regions.size(); ++i)
+        {
+            BaseRegion region = regions.get(i);
+            BaseRegion last = result.get(result.size() - 1);
+            if(last.overlaps(region))
+            {
+                last.setEnd(region.end());
+            }
+            else
+            {
+                result.add(region);
+            }
+        }
+        return result;
     }
 
     public static <E extends BaseRegion> int binarySearch(int readStart, final List<E> regions)
