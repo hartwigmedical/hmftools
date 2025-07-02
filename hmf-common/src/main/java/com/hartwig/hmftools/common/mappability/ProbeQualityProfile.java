@@ -143,22 +143,21 @@ public class ProbeQualityProfile
     }
 
     // Compute the final quality score from windows which overlap the probe.
-    // Returns empty optional if there are no windows.
     private static double aggregateQualityScore(Stream<ProbeQualityWindow> windows, BaseRegion probe)
     {
         // Using a soft minimum function to aggregate the scores proved to be a good estimator in experiment.
+        final double AGGREGATE_SHARPNESS = 10;
+        final double EXP_NORMALISATION = -AGGREGATE_SHARPNESS / BASE_WINDOW_LENGTH;
         double[] sums = new double[2];
         windows.forEach(window ->
         {
             float value = window.getQualityScore();
             int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
-            double weight = exp(-(AGGREGATE_SHARPNESS * value * overlap / BASE_WINDOW_LENGTH));
+            double weight = exp(EXP_NORMALISATION * overlap * value);
             sums[0] += value * weight;
             sums[1] += weight;
         });
         double qualityScore = sums[0] / sums[1];
         return qualityScore;
     }
-
-    private static final double AGGREGATE_SHARPNESS = 10;   // Determined empirically via experiment
 }
