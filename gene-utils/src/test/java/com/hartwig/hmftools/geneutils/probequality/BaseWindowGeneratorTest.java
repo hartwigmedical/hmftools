@@ -35,8 +35,8 @@ public class BaseWindowGeneratorTest
         // Include all of chr 10
         specificRegions.Chromosomes.add("10");
         // Include part of chr 15
-        specificRegions.addRegion(new ChrBaseRegion("15", 3, 9));
-        specificRegions.addRegion(new ChrBaseRegion("15", 5, 9));
+        specificRegions.addRegion(new ChrBaseRegion("15", 3, 8));
+        specificRegions.addRegion(new ChrBaseRegion("15", 5, 9));   // Check overlap behaviour
         specificRegions.addRegion(new ChrBaseRegion("15", 20, 24));
         // Exclude all of chr 17
 

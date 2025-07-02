@@ -140,7 +140,7 @@ public class BaseWindowGenerator
         });
 
         // Merge overlapping regions otherwise we could generate some windows more than once.
-        regions = mergeOverlappingRegions(regions);
+        ChrBaseRegion.checkMergeOverlaps(regions, true);
 
         return regions.stream()
                 .flatMap(this::createBaseWindowRegions)
@@ -189,25 +189,6 @@ public class BaseWindowGenerator
             }
             return batch;
         }).takeWhile(b -> !b.isEmpty());
-    }
-
-    private List<ChrBaseRegion> mergeOverlappingRegions(List<ChrBaseRegion> regions)
-    {
-        regions = regions.stream().sorted().toList();
-        List<ChrBaseRegion> result = new ArrayList<>(regions.size());
-        regions.forEach(region ->
-        {
-            ChrBaseRegion last = result.isEmpty() ? null : result.get(result.size() - 1);
-            if(last != null && last.overlaps(region))
-            {
-                last.setEnd(region.end());
-            }
-            else
-            {
-                result.add(region);
-            }
-        });
-        return result;
     }
 
     // Checks if a base sequence is "normal" for the purposes of this analysis.
