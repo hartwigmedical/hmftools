@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
@@ -25,6 +26,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
@@ -75,6 +77,9 @@ public class CobaltConfig
     public final String TumorOnlyDiploidBed;
     public final String TargetRegionNormFile;
 
+    // debug
+    public final SpecificRegions SpecificChrRegions;
+
     public static final Logger CB_LOGGER = LogManager.getLogger(CobaltConfig.class);
 
     public CobaltConfig(final ConfigBuilder configBuilder)
@@ -104,6 +109,8 @@ public class CobaltConfig
         Threads = parseThreads(configBuilder);
 
         SkipPcfCalc = configBuilder.hasFlag(SKIP_PCF_CALC);
+
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -126,6 +133,8 @@ public class CobaltConfig
         configBuilder.addInteger(PCF_GAMMA, "Gamma value for copy number PCF", DEFAULT_PCF_GAMMA);
         configBuilder.addFlag(INCLUDE_DUPLICATES, "Include duplicate reads in depth counts");
         configBuilder.addFlag(SKIP_PCF_CALC, "Skip final PCF output");
+
+        addSpecificChromosomesRegionsConfig(configBuilder);
 
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);

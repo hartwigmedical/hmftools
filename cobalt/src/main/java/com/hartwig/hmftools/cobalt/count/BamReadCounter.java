@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cobalt.ChromosomeData;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
@@ -36,6 +37,8 @@ import tech.tablesaw.api.*;
 
 public class BamReadCounter
 {
+    private final CobaltConfig mConfig;
+
     private final int mMinMappingQuality;
     private final boolean mIncludeDuplicates;
 
@@ -45,7 +48,7 @@ public class BamReadCounter
     private final ExecutorService mExecutorService;
     private final SamReaderFactory mReaderFactory;
 
-    private Collection<ChromosomeData> mChromosomes = null;
+    private final List<ChromosomeData> mChromosomes;
 
     private final ReadDepthAccumulator mRefReadDepthAccumulator;
     private final ReadDepthAccumulator mTumorReadDepthAccumulator;
@@ -60,6 +63,8 @@ public class BamReadCounter
             final ExecutorService executorService, final SamReaderFactory readerFactory,
             final ChromosomePositionCodec chromosomePosCodec)
     {
+        mConfig = config;
+
         mMinMappingQuality = config.MinMappingQuality;
         mIncludeDuplicates = config.IncludeDuplicates;
         mExecutorService = executorService;
@@ -67,19 +72,17 @@ public class BamReadCounter
         mChromosomePosCodec = chromosomePosCodec;
         mRefReadDepthAccumulator = new ReadDepthAccumulator(windowSize);
         mTumorReadDepthAccumulator = new ReadDepthAccumulator(windowSize);
+        mChromosomes = Lists.newArrayList();
     }
 
-    public void generateDepths(
-            @Nullable final String referenceBam, @Nullable final String tumorBam)
-            throws ExecutionException, InterruptedException, IOException
-    {
-        if(referenceBam == null && tumorBam == null)
-        {
-            CB_LOGGER.error("no bam file supplied");
-            return;
-        }
+    public List<ChromosomeData> chromosomes() { return mChromosomes; }
 
-        mChromosomes = loadChromosomes(mReaderFactory, referenceBam, tumorBam);
+    public void generateDepths()throws ExecutionException, InterruptedException, IOException
+    {
+        String referenceBam = mConfig.ReferenceBamPath;
+        String tumorBam = mConfig.TumorBamPath;
+
+        loadChromosomes(mReaderFactory, referenceBam, tumorBam);
 
         List<Future<?>> tasks = new ArrayList<>();
         List<SamReader> samReaders = Collections.synchronizedList(new ArrayList<>());
@@ -126,7 +129,7 @@ public class BamReadCounter
         // add all the chromosomes
         for(ChromosomeData chromosome : mChromosomes)
         {
-            readDepthCounter.addChromosome(chromosome.Contig, chromosome.Length);
+            readDepthCounter.addChromosome(chromosome.Name, chromosome.Length);
         }
 
         final File bamFile = new File(bamFilePath);
@@ -214,14 +217,14 @@ public class BamReadCounter
                 DoubleColumn.create(CobaltColumns.READ_DEPTH),
                 DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
 
-        for (ChromosomeData chromosome : mChromosomes)
+        for(ChromosomeData chromosome : mChromosomes)
         {
-            List<ReadDepth> readDepths = readDepthAccumulator.getChromosomeReadDepths(chromosome.Contig);
+            List<ReadDepth> readDepths = readDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
             Objects.requireNonNull(readDepths);
             for (ReadDepth readDepth : readDepths)
             {
                 Row row = readDepthTable.appendRow();
-                row.setString(CobaltColumns.CHROMOSOME, chromosome.Contig);
+                row.setString(CobaltColumns.CHROMOSOME, chromosome.Name);
                 row.setInt(CobaltColumns.POSITION, readDepth.StartPosition);
                 row.setDouble(CobaltColumns.READ_DEPTH, readDepth.ReadDepth);
                 row.setDouble(CobaltColumns.READ_GC_CONTENT, readDepth.ReadGcContent);
@@ -233,15 +236,14 @@ public class BamReadCounter
         return readDepthTable;
     }
 
-    private Collection<ChromosomeData> loadChromosomes(final SamReaderFactory readerFactory,
-            @Nullable final String referenceBam,
-            @Nullable final String tumorBam) throws IOException
+    private void loadChromosomes(
+            final SamReaderFactory readerFactory,  @Nullable final String referenceBam, @Nullable final String tumorBam) throws IOException
     {
         Collection<ChromosomeData> chromosomes = new ArrayList<>();
 
         Validate.isTrue(referenceBam != null || tumorBam != null);
 
-        try (SamReader reader = readerFactory.open(new File(referenceBam != null ? referenceBam : tumorBam)))
+        try(SamReader reader = readerFactory.open(new File(referenceBam != null ? referenceBam : tumorBam)))
         {
             SAMSequenceDictionary dictionary = reader.getFileHeader().getSequenceDictionary();
 
@@ -249,14 +251,15 @@ public class BamReadCounter
             {
                 String sequenceName = samSequenceRecord.getSequenceName();
 
-                if(HumanChromosome.contains(sequenceName))
-                {
-                    chromosomes.add(new ChromosomeData(sequenceName, samSequenceRecord.getSequenceLength()));
-                }
+                if(!HumanChromosome.contains(sequenceName))
+                    continue;
+
+                if(mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificChrRegions.excludeChromosome(sequenceName))
+                    continue;
+
+                mChromosomes.add(new ChromosomeData(sequenceName, samSequenceRecord.getSequenceLength()));
             }
         }
-
-        return chromosomes;
     }
 
     private List<ChrBaseRegion> partitionGenome()
@@ -264,13 +267,10 @@ public class BamReadCounter
         List<ChrBaseRegion> partitions = new ArrayList<>();
         for(ChromosomeData chromosome : mChromosomes)
         {
-            /*if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
-                continue; */
-
             for(int startPos = 1; startPos < chromosome.Length; startPos += PARTITION_SIZE)
             {
                 int endPos = Math.min(startPos + PARTITION_SIZE - 1, chromosome.Length);
-                partitions.add(new ChrBaseRegion(chromosome.Contig, startPos, endPos));
+                partitions.add(new ChrBaseRegion(chromosome.Name, startPos, endPos));
             }
         }
         return partitions;

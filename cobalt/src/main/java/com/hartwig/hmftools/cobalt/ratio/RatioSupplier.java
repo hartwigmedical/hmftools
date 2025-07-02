@@ -130,7 +130,7 @@ public class RatioSupplier
 
             if(outputDir != null)
             {
-                CB_LOGGER.info("persisting {} gc read count to {}", sampleId, outputDir);
+                CB_LOGGER.info("persisting {} GC read count to {}", sampleId, outputDir);
                 final String tumorGCMedianFilename = CobaltGcMedianFile.generateFilename(outputDir, sampleId);
                 CobaltGcMedianFile.write(tumorGCMedianFilename, gcNormalizedRatioMapper.gcMedianReadDepth());
             }
