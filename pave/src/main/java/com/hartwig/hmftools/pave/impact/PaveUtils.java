@@ -96,18 +96,14 @@ public final class PaveUtils
         if(variant.Ref.charAt(0) != variant.Alt.charAt(0))
             return null;
 
-        // repeat count can only be used where the alt bases match the microhomology and repeat sequence
-        // otherwise shift by the microhomology
+        // repeat count can only be used where the alt bases match the microhomology (MH) and repeat sequence
+        // otherwise shift by the MH
 
-        /*
-        if the microhomology == ins/del sequence and the MH==repeatSeq, then you can extend to the end of the repeat (-1 repeat sequences for the del case)
+        // if MH = ins/del sequence and MH = repeatSeq, then extend to the end of the repeat (-1 repeat sequences for the del case)
+        // if MH = ins/del sequence and MH = N*repeatSeq, then extend to the end of the repeat ( -N repeat sequences for the del case),
+        // where N = any multiple of the repeat sequence
 
-        instead:
-        if the microhomology == ins/del sequence   and the MH==N*repeatSeq, then you can extend to the end of the repeat ( -N repeat sequences for the del case)
-        where N = any multiple of the repeat sequence (in this example N=2)
-        */
-
-        String altBases = variant.isDeletion() ? variant.Ref.substring(1) : variant.Alt.substring(1);
+        String altBases = variant.isDeletion() ? altBases = variant.Ref.substring(1) : variant.Alt.substring(1);
 
         int mcLength = variant.microhomology().length();
 

@@ -242,9 +242,6 @@ public class VariantData
     public VariantContext context() { return mVariantContext; }
     public void setContext(final VariantContext context) { mVariantContext = context; }
 
-    public boolean reported() { return mReportable; }
-    public void markReported() { mReportable = true; }
-
     public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequece, final int repeatCount)
     {
         mLocalPhaseSetId = localPhaseSet;
