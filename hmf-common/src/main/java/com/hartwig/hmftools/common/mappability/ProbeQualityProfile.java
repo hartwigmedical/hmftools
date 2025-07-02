@@ -54,14 +54,15 @@ public class ProbeQualityProfile
                 ProbeQualityWindow window = new ProbeQualityWindow(start, end, (float) qualityScore);
                 List<ProbeQualityWindow> windows = result.get(chromosome);
                 // Not using computeIfAbsent() because that is much slower.
-                if (windows == null) {
+                if(windows == null)
+                {
                     windows = new ArrayList<>();
                     result.put(chromosome, windows);
                 }
                 windows.add(window);
             }
         }
-        LOGGER.info("Loading complete, secs({})", secondsSinceNow(startTimeMs));
+        LOGGER.debug("Loading complete, secs({})", secondsSinceNow(startTimeMs));
         return result;
     }
 }
