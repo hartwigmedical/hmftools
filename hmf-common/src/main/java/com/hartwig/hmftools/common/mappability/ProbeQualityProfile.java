@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -129,52 +129,36 @@ public class ProbeQualityProfile
         // sorting by start (done previously) implies sorting by end.
         int windowsStart = Collections.binarySearch(
                 windows,
-                new BaseRegion(0, probe.start()),   // Dummy interval, only `end` is used
+                new BaseRegion(0, probe.start()),   // Dummy interval, only end is used
                 Comparator.comparingInt(BaseRegion::end)
         );
         if(windowsStart < 0)
         {
             windowsStart = -windowsStart - 1;
         }
-        List<ProbeQualityWindow> overlappingWindows =
-                windows.stream().skip(windowsStart).takeWhile(window -> window.overlaps(probe)).toList();
+        Stream<ProbeQualityWindow> overlappingWindows =
+                windows.stream().skip(windowsStart).takeWhile(window -> window.start() <= probe.end());
         double qualityScore = aggregateQualityScore(overlappingWindows, probe.baseRegion());
         return Optional.of(qualityScore);
     }
 
     // Compute the final quality score from windows which overlap the probe.
     // Returns empty optional if there are no windows.
-    private static double aggregateQualityScore(List<ProbeQualityWindow> windows, BaseRegion probe)
+    private static double aggregateQualityScore(Stream<ProbeQualityWindow> windows, BaseRegion probe)
     {
-        assert !windows.isEmpty();
-        assert windows.get(0).start() <= probe.start();
-        assert windows.get(windows.size() - 1).end() >= probe.end();
-
-        int[] overlaps = windows.stream().mapToInt(
-                window -> min(window.end(), probe.end()) - max(window.start(), probe.start())).toArray();
-        long totalOverlap = Arrays.stream(overlaps).asLongStream().sum();
-        double[] weights = Arrays.stream(overlaps).asDoubleStream().map(overlap -> overlap / totalOverlap).toArray();
-        double[] qualityScores = windows.stream().mapToDouble(ProbeQualityWindow::getQualityScore).toArray();
         // Using a soft minimum function to aggregate the scores proved to be a good estimator in experiment.
-        double qualityScore = softMin(qualityScores, weights, AGGREGATE_SHARPNESS);
+        double[] sums = new double[2];
+        windows.forEach(window ->
+        {
+            float value = window.getQualityScore();
+            int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
+            double weight = exp(-(AGGREGATE_SHARPNESS * value * overlap / BASE_WINDOW_LENGTH));
+            sums[0] += value * weight;
+            sums[1] += weight;
+        });
+        double qualityScore = sums[0] / sums[1];
         return qualityScore;
     }
 
     private static final double AGGREGATE_SHARPNESS = 10;   // Determined empirically via experiment
-
-    private static double softMin(double[] values, double[] weights, double sharpness)
-    {
-        assert values.length == weights.length;
-        assert values.length > 0;
-
-        double sum1 = 0;
-        double sum2 = 0;
-        for(int i = 0; i < values.length; ++i)
-        {
-            double w = weights[i] * exp(-(sharpness * values[i] * weights[i]));
-            sum1 += values[i] * w;
-            sum2 += w;
-        }
-        return sum1 / sum2;
-    }
 }
