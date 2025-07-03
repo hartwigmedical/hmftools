@@ -123,10 +123,11 @@ public class ProbeQualityProfile
 
         List<ProbeQualityWindow> windows = mWindows.get(probe.chromosome());
         assert windows != null;
-        int windowsStart = findFirstWindowCovering(windows, probe.start());
-        Stream<ProbeQualityWindow> overlappingWindows =
-                windows.stream().skip(windowsStart).takeWhile(window -> window.start() <= probe.end());
-        double qualityScore = aggregateQualityScore(overlappingWindows, probe.baseRegion());
+        int windowsStart = findFirstWindowOverlapping(windows, probe.start());
+        // For some reason using Stream skip() and takeWhile() here is extremely slow compared to List.subList().
+        int windowsEnd = scanWhileOverlap(windows, windowsStart, probe.baseRegion());   // Inclusive
+        List<ProbeQualityWindow> overlappingWindows = windows.subList(windowsStart, windowsEnd + 1);
+        double qualityScore = aggregateQualityScore(overlappingWindows.stream(), probe.baseRegion());
         return Optional.of(qualityScore);
     }
 
@@ -138,7 +139,7 @@ public class ProbeQualityProfile
     }
 
     // Efficiently finds the index of the first window that overlaps a position.
-    private static int findFirstWindowCovering(final List<ProbeQualityWindow> windows, int position)
+    private static int findFirstWindowOverlapping(final List<ProbeQualityWindow> windows, int position)
     {
         // We are able to find the first window that overlaps using Collections.binarySearch() because, since the windows are of equal size,
         // sorting by start (done previously) implies sorting by end.
@@ -169,11 +170,13 @@ public class ProbeQualityProfile
             sums[0] += value * weight;
             sums[1] += weight;
         });
+        assert sums[1] > 0;
         double qualityScore = sums[0] / sums[1];
         return qualityScore;
     }
 
     // TODO: best interface?
+    // TODO: allow restricting the probes to no extend too far from the target
     // Covers a target region with nonoverlapping probes such that the probe quality scores are optimised.
     public Optional<List<BaseRegion>> createBestProbesForRegion(final ChrBaseRegion target, int probeLength, double minQualityScore,
             int tilingSpacing)
@@ -187,6 +190,7 @@ public class ProbeQualityProfile
             // If this is true then we could end up with gaps in the probe tiling, which is not valid.
             throw new IllegalArgumentException("tilingSpacing must be <= probeLength");
         }
+
         if(target.baseLength() < 1)
         {
             return Optional.of(List.of());
@@ -203,16 +207,19 @@ public class ProbeQualityProfile
         // Algorithm is to try probe tilings starting from the leftmost possible position. There will be <= probeLength-1 possible tilings.
         // Pick the one with the highest sum of quality scores where no quality score is lower than minQualityScore.
 
+        long qualityScoreCalcs = 0;
+
         int initialFirstProbeStart = target.start() - probeLength + 1;
         List<BaseRegion> bestProbes = null;
         double bestScore = 0;
         // Maintain the index of the start of the range of windows which overlap with the probes.
-        int windowsStart = findFirstWindowCovering(windows, initialFirstProbeStart);
+        int windowsStart = findFirstWindowOverlapping(windows, initialFirstProbeStart);
         for(int firstProbeStart = initialFirstProbeStart; firstProbeStart <= target.start(); firstProbeStart += tilingSpacing)
         {
-            LOGGER.debug("Checking probe tiling starting at {}", firstProbeStart);
             List<BaseRegion> probes = tileProbes(firstProbeStart, target.end(), probeLength);
+//            LOGGER.debug("Checking probe tiling starting at {} with {} probes", firstProbeStart, probes.size());
 
+            // Advance the range of windows to overlap the first probe.
             scanUntilOverlap(windows, windowsStart, probes.get(0));
 
             boolean qualityOk = true;
@@ -222,11 +229,13 @@ public class ProbeQualityProfile
             {
                 // Efficiently find the windows that overlap the probe.
                 probeWindowsStart = scanUntilOverlap(windows, probeWindowsStart, probe);
-                int probeWindowsEnd = scanWhileOverlap(windows, probeWindowsStart, probe);
-                Stream<ProbeQualityWindow> probeWindows = windows.stream()
-                        .skip(probeWindowsStart)
-                        .limit(probeWindowsEnd - probeWindowsStart + 1);
-                double probeQuality = aggregateQualityScore(probeWindows, probe);
+                int probeWindowsEnd = scanWhileOverlap(windows, probeWindowsStart, probe);  // Inclusive
+                // For some reason using Stream skip() and limit() here is extremely slow compared to List.subList().
+                List<ProbeQualityWindow> probeWindows = windows.subList(probeWindowsStart, probeWindowsEnd + 1);
+
+                double probeQuality = aggregateQualityScore(probeWindows.stream(), probe);
+                ++qualityScoreCalcs;
+
                 if(probeQuality >= minQualityScore)
                 {
                     score += probeQuality;
@@ -244,6 +253,8 @@ public class ProbeQualityProfile
             }
         }
 
+//        LOGGER.debug("Probe quality score calculations: {}", qualityScoreCalcs);
+
         if(bestProbes == null)
         {
             return Optional.empty();
@@ -254,8 +265,8 @@ public class ProbeQualityProfile
         }
     }
 
-    // Gets the first index after `index` in `windows` which overlaps `region`.
-    private int scanUntilOverlap(final List<ProbeQualityWindow> windows, int index, final BaseRegion region)
+    // Gets the first index >= `index` in `windows` which overlaps `region`.
+    private static int scanUntilOverlap(final List<ProbeQualityWindow> windows, int index, final BaseRegion region)
     {
         while(!windows.get(index).overlaps(region))
         {
@@ -264,8 +275,8 @@ public class ProbeQualityProfile
         return index;
     }
 
-    // Gets the last index after `index` in `windows` which overlaps `region`.
-    private int scanWhileOverlap(final List<ProbeQualityWindow> windows, int index, final BaseRegion region)
+    // Gets the last index >= `index` in `windows` which overlaps `region`.
+    private static int scanWhileOverlap(final List<ProbeQualityWindow> windows, int index, final BaseRegion region)
     {
         while(index + 1 < windows.size() && windows.get(index + 1).overlaps(region))
         {
@@ -275,7 +286,7 @@ public class ProbeQualityProfile
     }
 
     // Create consecutive probes starting exactly at `start` and covering `end`.
-    private List<BaseRegion> tileProbes(int start, int end, int probeLength)
+    private static List<BaseRegion> tileProbes(int start, int end, int probeLength)
     {
         return IntStream.iterate(start, i -> i + probeLength)
                 .mapToObj(s -> new BaseRegion(s, s + probeLength - 1))
