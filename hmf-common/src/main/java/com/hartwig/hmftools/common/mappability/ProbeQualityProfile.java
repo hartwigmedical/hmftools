@@ -31,9 +31,11 @@ import org.apache.logging.log4j.Logger;
 // See ProbeQualityProfiler class for more context.
 public class ProbeQualityProfile
 {
-    private final Map<String, List<ProbeQualityWindow>> mWindows;
-    // Precomputed region coverage so we can tell if the profile covers a probe region. In typical usage this should cover the whole genome.
-    private final Map<String, List<BaseRegion>> mCoverage;
+    // Keyed by chromosome.
+    public final Map<String, List<ProbeQualityWindow>> mWindows;
+    // Precomputed region coverage so we can tell if the profile covers a probe region.
+    // In typical usage this should cover most of the genome.
+    public final Map<String, List<BaseRegion>> mCoverage;
 
     public static final String PROBE_QUALITY_FILE_CONFIG = "probe_quality_profile";
     public static final String PROBE_QUALITY_FILE_DESC = "Genome regions to probe quality";
@@ -48,8 +50,18 @@ public class ProbeQualityProfile
 
     public ProbeQualityProfile(final String filePath)
     {
-        mWindows = loadProbeQualityWindows(filePath);
-        mCoverage = computeWindowCoverage(mWindows);
+        this(loadProbeQualityWindows(filePath));
+    }
+
+    private ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows)
+    {
+        this(windows, computeWindowCoverage(windows));
+    }
+
+    private ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows, final Map<String, List<BaseRegion>> coverage)
+    {
+        mWindows = windows;
+        mCoverage = coverage;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -105,7 +117,9 @@ public class ProbeQualityProfile
 
     private static List<BaseRegion> computeWindowCoverage(final List<ProbeQualityWindow> windows)
     {
-        List<BaseRegion> regions = windows.stream().map(BaseRegion::clone).collect(Collectors.toList());
+        List<BaseRegion> regions = windows.stream()
+                .map(window -> new BaseRegion(window.start(), window.end()))
+                .collect(Collectors.toList());
         regions = BaseRegion.checkMergeOverlapsFast(regions, false);
         return regions;
     }
@@ -114,6 +128,10 @@ public class ProbeQualityProfile
     // Returns empty optional if the profile doesn't cover the probe region.
     public Optional<Double> computeQualityScore(final ChrBaseRegion probe)
     {
+        if (probe.baseLength() < 1) {
+            throw new IllegalArgumentException("probe length must be >= 1");
+        }
+
         // If the profile doesn't completely cover the probe then we say we can't assess its quality
         // (since the uncovered region could affect the quality significantly).
         if(!coversRegion(probe))
@@ -217,7 +235,7 @@ public class ProbeQualityProfile
         for(int firstProbeStart = initialFirstProbeStart; firstProbeStart <= target.start(); firstProbeStart += tilingSpacing)
         {
             List<BaseRegion> probes = tileProbes(firstProbeStart, target.end(), probeLength);
-//            LOGGER.debug("Checking probe tiling starting at {} with {} probes", firstProbeStart, probes.size());
+            //            LOGGER.debug("Checking probe tiling starting at {} with {} probes", firstProbeStart, probes.size());
 
             // Advance the range of windows to overlap the first probe.
             scanUntilOverlap(windows, windowsStart, probes.get(0));
@@ -253,7 +271,7 @@ public class ProbeQualityProfile
             }
         }
 
-//        LOGGER.debug("Probe quality score calculations: {}", qualityScoreCalcs);
+        //        LOGGER.debug("Probe quality score calculations: {}", qualityScoreCalcs);
 
         if(bestProbes == null)
         {
