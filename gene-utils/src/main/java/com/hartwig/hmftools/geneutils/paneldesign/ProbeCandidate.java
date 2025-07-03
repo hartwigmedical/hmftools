@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.Double.NaN;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.geneutils.paneldesign.BlastnResult.INVALID_SCORE;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -14,7 +15,7 @@ public class ProbeCandidate
     private final String mSequence;
     private final double mGcContent;
 
-    private double mSumBlastnBitScore = Double.NaN;
+    private Optional<Double> mQualityScore = Optional.empty();
     private String mFilterReason = "";
 
     public ProbeCandidate(final ChrBaseRegion chrBaseRegion, final String sequence, final double gcContent)
@@ -22,7 +23,6 @@ public class ProbeCandidate
         mChrBaseRegion = chrBaseRegion;
         mSequence = sequence;
         mGcContent = gcContent;
-        mSumBlastnBitScore = INVALID_SCORE;
     }
 
     public ChrBaseRegion region()
@@ -34,6 +34,7 @@ public class ProbeCandidate
     {
         return mChrBaseRegion.start();
     }
+
     public int getEnd()
     {
         return mChrBaseRegion.end();
@@ -49,14 +50,13 @@ public class ProbeCandidate
         return mGcContent;
     }
 
-    public double getSumBlastnBitScore()
+    public Optional<Double> getQualityScore()
     {
-        return mSumBlastnBitScore;
+        return mQualityScore;
     }
 
-    public void setSumBlastnBitScore(final double sumBlastnBitScore)
-    {
-        mSumBlastnBitScore = sumBlastnBitScore;
+    public void setQualityScore(double qualityScore) {
+        mQualityScore = Optional.of(qualityScore);
     }
 
     public void setFilterReason(final String filterReason)
@@ -71,7 +71,7 @@ public class ProbeCandidate
 
     public String toString()
     {
-        return format("region(%s) gc(%.3f) score(%.3f) sequence(%s)", mChrBaseRegion, mGcContent, mSumBlastnBitScore, mSequence);
+        return format("region(%s) gc(%.3f) score(%.3f) sequence(%s)", mChrBaseRegion, mGcContent, mQualityScore.orElse(NaN), mSequence);
     }
 
     public static ProbeCandidate createProbeCandidate(final ChrBaseRegion chrBaseRegion, final RefGenomeInterface refGenome)

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.Double.NaN;
+
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -57,7 +59,7 @@ public class DataWriter
         ProbeStart,
         ProbeEnd,
         ProbeGcContent,
-        ProbeSumBitScore,
+        ProbeQualityScore,
         ProbeSequence
     }
 
@@ -83,7 +85,7 @@ public class DataWriter
                             row.set(GeneRegionColumn.ProbeStart, selectedProbe.getStart());
                             row.set(GeneRegionColumn.ProbeEnd, selectedProbe.getEnd());
                             row.set(GeneRegionColumn.ProbeGcContent, selectedProbe.getGcContent());
-                            row.set(GeneRegionColumn.ProbeSumBitScore, selectedProbe.getSumBlastnBitScore());
+                            row.set(GeneRegionColumn.ProbeQualityScore, selectedProbe.getQualityScore().orElse(NaN));
                         }
                     }
                 });
@@ -104,7 +106,7 @@ public class DataWriter
         ProbeStart,
         ProbeEnd,
         ProbeGcContent,
-        ProbeSumBitScore,
+        ProbeQualityScore,
         Selected,
         ProbeSequence
     }
@@ -127,7 +129,7 @@ public class DataWriter
                         row.set(GeneProbeCandidateColumn.ProbeStart, r.getRight().getStart());
                         row.set(GeneProbeCandidateColumn.ProbeEnd, r.getRight().getEnd());
                         row.set(GeneProbeCandidateColumn.ProbeGcContent, r.getRight().getGcContent());
-                        row.set(GeneProbeCandidateColumn.ProbeSumBitScore, r.getRight().getSumBlastnBitScore());
+                        row.set(GeneProbeCandidateColumn.ProbeQualityScore, r.getRight().getQualityScore().orElse(NaN));
                         row.set(GeneProbeCandidateColumn.Selected, Boolean.toString(r.getLeft().getSelectedProbe() == r.getRight()));
                         row.set(GeneProbeCandidateColumn.ProbeSequence, r.getRight().getSequence());
                     });

@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKB
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_GNMOD_FREQ_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_MAPPABILITY;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_PARTITION_SIZE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MAX_PROBE_SUM_BLASTN_BITSCORE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MIN_PROBE_QUALITY_SCORE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeCandidate.createProbeCandidate;
 
@@ -25,12 +25,14 @@ import java.io.BufferedReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -38,15 +40,15 @@ public class CopyNumberBackbone
 {
     private final PanelConfig mConfig;
     private final PanelCache mPanelCache;
-    private final BlastnMapper mBlastnMapper;
+    private final ProbeQualityProfile mProbeQualityProfile;
 
     private final Map<String,List<Partition>> mChrPartitionsMap;
 
-    public CopyNumberBackbone(final PanelConfig config, final PanelCache panelCache, final BlastnMapper blastnMapper)
+    public CopyNumberBackbone(final PanelConfig config, final PanelCache panelCache, final ProbeQualityProfile probeQualityProfile)
     {
         mConfig = config;
         mPanelCache = panelCache;
-        mBlastnMapper = blastnMapper;
+        mProbeQualityProfile = probeQualityProfile;
 
         mChrPartitionsMap = Maps.newHashMap();
 
@@ -85,7 +87,7 @@ public class CopyNumberBackbone
     private void selectSiteProbes()
     {
         List<AmberSite> amberSites = Lists.newArrayList();
-        List<String> sequences = Lists.newArrayList();
+        List<ChrBaseRegion> regions = Lists.newArrayList();
 
         for(List<Partition> partitions : mChrPartitionsMap.values())
         {
@@ -105,31 +107,26 @@ public class CopyNumberBackbone
                     amberSite.setProbe(probe);
 
                     amberSites.add(amberSite);
-                    sequences.add(probe.getSequence());
+                    regions.add(probe.region());
                 }
             }
         }
 
         if(amberSites.isEmpty())
         {
-            GU_LOGGER.info("no valid Amber sites found", sequences.size());
+            GU_LOGGER.info("no valid Amber sites found");
             return;
         }
 
-        GU_LOGGER.info("calling Blastn on {} Amber site probes", sequences.size());
+        GU_LOGGER.info("Computing quality scores for {} Amber site probes", regions.size());
 
-        List<BlastnResult> results = mBlastnMapper.mapSequences(sequences);
-
-        GU_LOGGER.info("finished Blastn on {} Amber site probes", sequences.size());
+        List<Optional<Double>> qualityScores = regions.stream().map(mProbeQualityProfile::computeQualityScore).toList();
 
         for(int i = 0; i < amberSites.size(); ++i)
         {
             AmberSite amberSite = amberSites.get(i);
             ProbeCandidate probe = amberSite.probe();
-            BlastnResult blastnResult = results.get(i);
-
-            if(blastnResult.isValid())
-                probe.setSumBlastnBitScore(blastnResult.SumBitScore);
+            qualityScores.get(i).ifPresent(probe::setQualityScore);
         }
 
         // take the lowest scoring site for each partition
@@ -140,19 +137,19 @@ public class CopyNumberBackbone
                 if(partition.HasExistingProbes)
                     continue;
 
-                double lowestScore = MAX_PROBE_SUM_BLASTN_BITSCORE;
+                double bestScore = MIN_PROBE_QUALITY_SCORE;
                 AmberSite topAmberSite = null;
 
                 for(AmberSite amberSite : partition.Sites)
                 {
                     ProbeCandidate probe = amberSite.probe();
 
-                    if(probe.getSumBlastnBitScore() == BlastnResult.INVALID_SCORE)
+                    if(probe.getQualityScore().isEmpty())
                         continue;
 
-                    if(topAmberSite == null || probe.getSumBlastnBitScore() < lowestScore)
+                    if(topAmberSite == null || probe.getQualityScore().get() > bestScore)
                     {
-                        lowestScore = probe.getSumBlastnBitScore();
+                        bestScore = probe.getQualityScore().get();
                         topAmberSite = amberSite;
                     }
                 }
@@ -163,7 +160,7 @@ public class CopyNumberBackbone
 
                     PanelRegion amberProbe = new PanelRegion(
                             probe.region(), RegionType.CN_BACKBONE, format("%s:%d", topAmberSite.Chromosome, topAmberSite.Position),
-                            probe.getSequence(), probe.getGcContent(), probe.getSumBlastnBitScore());
+                            probe.getSequence(), probe.getGcContent(), probe.getQualityScore().get());
 
                     mPanelCache.addRegion(amberProbe);
                 }

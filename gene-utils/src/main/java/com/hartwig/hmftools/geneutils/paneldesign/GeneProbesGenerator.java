@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_LON
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX_CANDIDATE_PROBES;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MIN_INTRON_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MAX_PROBE_SUM_BLASTN_BITSCORE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MIN_PROBE_QUALITY_SCORE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_LENGTH;
@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.ProbeCandidate.createPr
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
@@ -53,17 +54,17 @@ public class GeneProbesGenerator
 
     private final PanelConfig mConfig;
     private final PanelCache mPanelCache;
-    private final BlastnMapper mBlastnMapper;
+    private final ProbeQualityProfile mProbeQualityProfile;
 
     private final EnsemblDataCache mEnsemblDataCache;
 
     private final List<GeneNameTranscriptId> mGeneNameTranscriptIds;
 
-    public GeneProbesGenerator(final PanelConfig config, final PanelCache panelCache, final BlastnMapper blastnMapper)
+    public GeneProbesGenerator(final PanelConfig config, final PanelCache panelCache, final ProbeQualityProfile probeQualityProfile)
     {
         mConfig = config;
         mPanelCache = panelCache;
-        mBlastnMapper = blastnMapper;
+        mProbeQualityProfile = probeQualityProfile;
 
         mGeneNameTranscriptIds = new ArrayList<>();
 
@@ -132,7 +133,7 @@ public class GeneProbesGenerator
             populateCandidateProbes(targetedGene);
         }
 
-        runBlastnOnProbeCandidates(targetedGenes);
+        computeCandidateProbeQualityScores(targetedGenes);
 
         // now choose probes for each region
         selectProbeCandidates(targetedGenes);
@@ -164,7 +165,7 @@ public class GeneProbesGenerator
 
                     panelRegion = new PanelRegion(
                             region, RegionType.GENE, sourceInfo,
-                            probeCandidate.getSequence(), probeCandidate.getGcContent(), probeCandidate.getSumBlastnBitScore());
+                            probeCandidate.getSequence(), probeCandidate.getGcContent(), probeCandidate.getQualityScore().get());
                 }
 
                 mPanelCache.addRegion(panelRegion);
@@ -297,7 +298,7 @@ public class GeneProbesGenerator
         }
     }
 
-    public void runBlastnOnProbeCandidates(final List<TargetedGene> targetedGeneList)
+    public void computeCandidateProbeQualityScores(final List<TargetedGene> targetedGeneList)
     {
         List<ProbeCandidate> probeCandidates = Lists.newArrayList();
 
@@ -318,21 +319,14 @@ public class GeneProbesGenerator
         if(probeCandidates.isEmpty())
             return;
 
-        List<String> sequences = probeCandidates.stream().map(x -> x.getSequence()).collect(Collectors.toList());
-
-        GU_LOGGER.info("calling Blastn on {} gene probes", sequences.size());
-
-        List<BlastnResult> results = mBlastnMapper.mapSequences(sequences);
-
-        GU_LOGGER.info("finished Blastn on {} gene probes", sequences.size());
+        GU_LOGGER.info("Computing quality scores of gene probes");
+        List<Optional<Double>> qualityScores = probeCandidates.stream()
+                .map(probe -> mProbeQualityProfile.computeQualityScore(probe.region())).toList();
 
         for(int i = 0; i < probeCandidates.size(); ++i)
         {
             ProbeCandidate probeCandidate = probeCandidates.get(i);
-            BlastnResult blastnResult = results.get(i);
-
-            if(blastnResult.isValid())
-                probeCandidate.setSumBlastnBitScore(blastnResult.SumBitScore);
+            qualityScores.get(i).ifPresent(probeCandidate::setQualityScore);
         }
     }
 
@@ -354,8 +348,8 @@ public class GeneProbesGenerator
                         continue;
                     }
 
-                    if(!Double.isNaN(probeCandidate.getSumBlastnBitScore()) &&
-                       (selectedProbe == null || probeCandidate.getSumBlastnBitScore() < selectedProbe.getSumBlastnBitScore()))
+                    if(probeCandidate.getQualityScore().isPresent() &&
+                       (selectedProbe == null || probeCandidate.getQualityScore().get() > selectedProbe.getQualityScore().get()))
                     {
                         selectedProbe = probeCandidate;
                     }
@@ -388,9 +382,9 @@ public class GeneProbesGenerator
         {
             probeCandidate.setFilterReason(format("gc >= %.2f", PROBE_GC_MAX));
         }
-        else if(probeCandidate.getSumBlastnBitScore() >= MAX_PROBE_SUM_BLASTN_BITSCORE)
+        else if(probeCandidate.getQualityScore().orElse(0d) < MIN_PROBE_QUALITY_SCORE)
         {
-            probeCandidate.setFilterReason(format("sum(bitscore) >= %g", MAX_PROBE_SUM_BLASTN_BITSCORE));
+            probeCandidate.setFilterReason(format("quality < %g", MIN_PROBE_QUALITY_SCORE));
         }
     }
 }

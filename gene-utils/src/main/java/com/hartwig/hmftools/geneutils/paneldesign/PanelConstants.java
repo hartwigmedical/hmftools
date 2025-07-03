@@ -23,11 +23,6 @@ public class PanelConstants
     public static final int GENE_FLANKING_DISTANCE = 1000;
     public static final int GENE_CANDIDATE_REGION_SIZE = PROBE_LENGTH * GENE_MAX_CANDIDATE_PROBES;
 
-    // BlastN settings
-    public static final int BLASTN_WORD_SIZE = 15;
-    public static final int MIN_BLAST_ALIGNMENT_LENGTH = 30;
-
-    // BlastN results
-    public static final double MAX_PROBE_SUM_BLASTN_BITSCORE = 2500;
-
+    // Probe quality scoring
+    public static final double MIN_PROBE_QUALITY_SCORE = 0.3;
 }
