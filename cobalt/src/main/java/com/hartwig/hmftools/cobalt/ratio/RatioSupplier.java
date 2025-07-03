@@ -7,34 +7,42 @@ import static com.hartwig.hmftools.cobalt.ratio.DiploidRatioSupplier.calcDiploid
 import java.io.IOException;
 import java.util.List;
 
-import tech.tablesaw.api.*;
-import tech.tablesaw.columns.Column;
-
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.CobaltConstants;
 import com.hartwig.hmftools.cobalt.lowcov.LowCovBucket;
 import com.hartwig.hmftools.cobalt.lowcov.LowCoverageRatioMapper;
-import com.hartwig.hmftools.cobalt.targeted.TargetedRatioMapper;
+import com.hartwig.hmftools.cobalt.targeted.TargetedRegionNormaliser;
+import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsFilter;
+import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
+import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
-import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
-import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import tech.tablesaw.api.DoubleColumn;
+import tech.tablesaw.api.IntColumn;
+import tech.tablesaw.api.LongColumn;
+import tech.tablesaw.api.Row;
+import tech.tablesaw.api.Table;
+import tech.tablesaw.columns.Column;
+
 public class RatioSupplier
 {
     private final String mTumorId;
     private final String mReferenceId;
-    @Nullable private final String mOutputDir;
+    @Nullable
+    private final String mOutputDir;
 
     private final Table mGcProfiles;
-    @Nullable private final Table mReferenceDepths;
-    @Nullable private final Table mTumorDepths;
+    @Nullable
+    private final Table mReferenceDepths;
+    @Nullable
+    private final Table mTumorDepths;
 
     // a table with chromosome, position, relativeEnrichment
     private Table mTargetRegionEnrichment = null;
@@ -58,7 +66,10 @@ public class RatioSupplier
         // chromosomePositionIndex, ratio
         Table readRatios;
 
-        Table getRatios() { return readRatios; }
+        Table getRatios()
+        {
+            return readRatios;
+        }
 
         SampleRatios(
                 final String sampleId,
@@ -81,7 +92,7 @@ public class RatioSupplier
 
             // set column as ratio, but filter out unmappable regions
             DoubleColumn ratioColumn = DoubleColumn.create(CobaltColumns.RATIO);
-            for (Row row : readRatios)
+            for(Row row : readRatios)
             {
                 if(!row.isMissing(CobaltColumns.IS_MAPPABLE) && row.getBoolean(CobaltColumns.IS_MAPPABLE))
                 {
@@ -94,17 +105,25 @@ public class RatioSupplier
             }
             readRatios.addColumns(ratioColumn);
 
-            // on target ratios
+            // Filter out the off-target regions if in target regions (panel) mode.
             if(targetRegionEnrichment != null)
             {
-                CB_LOGGER.info("using targeted ratio");
-                readRatios = new TargetedRatioMapper(targetRegionEnrichment).mapRatios(readRatios);
+                CB_LOGGER.info("filtering out off-target reads");
+                readRatios = new TargetedRegionsFilter(targetRegionEnrichment).mapRatios(readRatios);
             }
 
+            // Normalize by bucket, mean, median etc
             gcNormalizedRatioMapper = new GcNormalizedRatioMapper(targetRegionEnrichment != null);
             readRatios = gcNormalizedRatioMapper.mapRatios(readRatios);
 
-            switch (sparseBucketPolicy)
+            // Normalise by target regions if in target regions (panel) mode
+            if(targetRegionEnrichment != null)
+            {
+                CB_LOGGER.info("using targeted ratio");
+                readRatios = new TargetedRegionNormaliser().mapRatios(readRatios);
+            }
+
+            switch(sparseBucketPolicy)
             {
                 case DO_NOT_CONSOLIDATE:
                     this.consolidatedBuckets = null;
@@ -126,6 +145,24 @@ public class RatioSupplier
             {
                 CB_LOGGER.info("using low coverage ratio");
                 readRatios = new LowCoverageRatioMapper(this.consolidatedBuckets, chromosomePosCodec).mapRatios(readRatios);
+            }
+
+            // In panel mode we do a further round of normalisation so that the average ratio is 1.
+            if(targetRegionEnrichment != null)
+            {
+                double autosomeReadsMean = readRatios.where(
+                                readRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThan(0.0)
+                                        .and(readRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
+                                        .and(readRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()))
+                        .doubleColumn(CobaltColumns.RATIO).mean();
+                CB_LOGGER.info("Mean of autosome reads: {}", autosomeReadsMean);
+
+                DoubleColumn normalisedRatios = readRatios.doubleColumn(CobaltColumns.RATIO)
+                        .divide(autosomeReadsMean)
+                        .map(d -> Double.isFinite(d) ? d : Double.NaN) // protect against division by 0
+                        .setName(CobaltColumns.RATIO);
+
+                readRatios.replaceColumn(normalisedRatios);
             }
 
             if(outputDir != null)
@@ -203,7 +240,7 @@ public class RatioSupplier
                 mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy,
                 null, mOutputDir, mChromosomePosCodec).getRatios();
 
-        if (diploidRegions.rowCount() > 0)
+        if(diploidRegions.rowCount() > 0)
         {
             // filter tumor ratios by the diploid regions
             // we use inner join to remove any tumor ratios that are not in the diploid regions
@@ -356,15 +393,15 @@ public class RatioSupplier
         result = result.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
         // set any missing value to -1
-        for (Column<?> c: result.columns())
+        for(Column<?> c : result.columns())
         {
             if(c instanceof IntColumn)
             {
-                ((IntColumn)c).setMissingTo(CobaltConstants.INVALID_VALUE_INDICATOR);
+                ((IntColumn) c).setMissingTo(CobaltConstants.INVALID_VALUE_INDICATOR);
             }
             else if(c instanceof DoubleColumn)
             {
-                ((DoubleColumn)c).setMissingTo((double)CobaltConstants.INVALID_VALUE_INDICATOR);
+                ((DoubleColumn) c).setMissingTo((double) CobaltConstants.INVALID_VALUE_INDICATOR);
                 // ((DoubleColumn)c).map(d -> Double.isFinite(d) ? d : -1.0);
             }
         }

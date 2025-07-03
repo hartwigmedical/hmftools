@@ -16,13 +16,13 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriv
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
+import static com.hartwig.hmftools.common.mappability.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.mappability.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
@@ -68,12 +68,12 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.gripss.RepeatMaskData;
+import com.hartwig.hmftools.common.mappability.UnmappedRegions;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.mappability.UnmappedRegions;
-import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.prep.BlacklistLocations;
 
@@ -85,7 +85,7 @@ public class BlacklistRepeatAnalyser
 
     private final BlacklistLocations mBlacklistLocations;
     private final RepeatMaskAnnotations mRepeatMaskAnnotations;
-    private final Map<String,List<UnmappingRegion>> mUnmapRegionsMap;
+    private final Map<String, List<UnmappingRegion>> mUnmapRegionsMap;
     private final BufferedWriter mWriter;
     private final RefGenomeSource mRefGenome;
     private final RefGenomeVersion mRefGenVersion;
@@ -95,7 +95,7 @@ public class BlacklistRepeatAnalyser
 
     private final boolean mRemoveGeneOverlaps;
     private final boolean mWriteBlacklistBed;
-    private final Map<String,List<GeneInfo>> mChrGenicRegions;
+    private final Map<String, List<GeneInfo>> mChrGenicRegions;
     private final List<ChrBaseRegion> mFinalBlacklistRegions;
 
     private final int mPartitionSize;
@@ -181,7 +181,7 @@ public class BlacklistRepeatAnalyser
 
         List<RegionTask> regionTasks = regions.stream().map(x -> new RegionTask(x)).collect(Collectors.toList());
 
-        List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
+        List<Callable<Void>> callableList = regionTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mThreads))
             System.exit(1);
 
@@ -226,7 +226,7 @@ public class BlacklistRepeatAnalyser
         SV_LOGGER.info("Blacklist region analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private class RegionTask implements Callable
+    private class RegionTask implements Callable<Void>
     {
         private final ChrBaseRegion mRegion;
 
@@ -272,12 +272,12 @@ public class BlacklistRepeatAnalyser
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             int currentWindowStart = mRegion.start();
             int windowEnd = currentWindowStart + mBaseWindowLength - 1;
 
-            int minRegionEnd = mRegion.end() - (int)(mBaseWindowLength * 0.1);
+            int minRegionEnd = mRegion.end() - (int) (mBaseWindowLength * 0.1);
 
             while(windowEnd <= minRegionEnd)
             {
@@ -287,7 +287,7 @@ public class BlacklistRepeatAnalyser
                 windowEnd = currentWindowStart + mBaseWindowLength - 1;
             }
 
-            return (long)0;
+            return null;
         }
 
         private void analyseWindow(final BaseRegion region)
@@ -340,8 +340,8 @@ public class BlacklistRepeatAnalyser
             String dominantBases;
             double dominantBasePercent;
 
-            double topBasePerc = topBaseCount / (double)mBaseWindowLength;
-            double topAndSecondBasePerc = (topBaseCount + secondBaseCount) / (double)mBaseWindowLength;
+            double topBasePerc = topBaseCount / (double) mBaseWindowLength;
+            double topAndSecondBasePerc = (topBaseCount + secondBaseCount) / (double) mBaseWindowLength;
 
             if(topBasePerc >= mMinDominantPercent)
             {
@@ -492,7 +492,7 @@ public class BlacklistRepeatAnalyser
             Info = info;
         }
 
-        public String toString() { return format("%s:%d-%d", Info, start(), end()); }
+        @Override public String toString() { return format("%s:%d-%d", Info, start(), end()); }
     }
 
     private BufferedWriter initialiseWriter()
@@ -529,7 +529,7 @@ public class BlacklistRepeatAnalyser
 
             sj.add(chromosome).add(String.valueOf(region.start())).add(String.valueOf(region.end()));
 
-            sj.add(dominantBases).add(String.format("%.2f", basePercent));
+            sj.add(dominantBases).add(format("%.2f", basePercent));
 
             String blacklistInfo = blacklistRegions.stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
 

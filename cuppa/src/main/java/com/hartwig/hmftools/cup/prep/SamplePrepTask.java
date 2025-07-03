@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jetbrains.annotations.Nullable;
 
-public class SamplePrepTask implements Callable
+public class SamplePrepTask implements Callable<Void>
 {
     private final PrepConfig mConfig;
     private final int mSampleIndex;
@@ -25,7 +25,7 @@ public class SamplePrepTask implements Callable
             final int sampleIndex,
             final PrepConfig prepConfig,
             final CategoryPrep categoryPrep,
-            @Nullable final ConcurrentHashMap<DataItem.Index,String[]> featureBySampleMatrix)
+            @Nullable final ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix)
     {
         mConfig = prepConfig;
         mCategoryPrep = categoryPrep;
@@ -86,9 +86,9 @@ public class SamplePrepTask implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         run();
-        return (long) 0;
+        return null;
     }
 }

@@ -23,7 +23,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 
 import htsjdk.samtools.SAMException;
 
-public class ExpectedGcRatiosGenerator implements Callable
+public class ExpectedGcRatiosGenerator implements Callable<Void>
 {
     private final RefDataConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
@@ -51,10 +51,10 @@ public class ExpectedGcRatiosGenerator implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         generateExpectedCounts();
-        return (long)0;
+        return null;
     }
 
     private void generateExpectedCounts()
@@ -142,7 +142,7 @@ public class ExpectedGcRatiosGenerator implements Callable
         {
             return mConfig.RefGenome.getBaseString(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd);
         }
-        catch (SAMException e)
+        catch(SAMException e)
         {
             ISF_LOGGER.warn("gene({}) bases beyond ref genome", geneData);
             return "";
@@ -206,14 +206,14 @@ public class ExpectedGcRatiosGenerator implements Callable
             if(nextRegionStart + remainingReadBases - 1 <= exon.End)
             {
                 int regionEnd = nextRegionStart + remainingReadBases - 1;
-                readRegions.add(new int[] {nextRegionStart, regionEnd});
+                readRegions.add(new int[] { nextRegionStart, regionEnd });
                 return readRegions;
             }
 
             int regionEnd = exon.End;
-            int regionLength = (int)(regionEnd - nextRegionStart + 1);
+            int regionLength = regionEnd - nextRegionStart + 1;
             remainingReadBases -= regionLength;
-            readRegions.add(new int[] {nextRegionStart, regionEnd});
+            readRegions.add(new int[] { nextRegionStart, regionEnd });
 
             if(i == exonCount - 1)
             {

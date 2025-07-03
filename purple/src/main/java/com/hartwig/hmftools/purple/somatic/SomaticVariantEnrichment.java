@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.CLONALITY_BIN_WIDTH;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -10,12 +10,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.PurpleVcfTags;
 import com.hartwig.hmftools.purple.PurpleConfig;
-import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
 import com.hartwig.hmftools.purple.ReferenceData;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
 
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticVariantEnrichment implements Callable
+public class SomaticVariantEnrichment implements Callable<Void>
 {
     private final KataegisEnrichment mKataegisEnrichment;
     private final SubclonalLikelihoodEnrichment mSubclonalLikelihoodEnrichment;
@@ -40,7 +40,7 @@ public class SomaticVariantEnrichment implements Callable
     public void addVariant(final SomaticVariant variant) { mVariants.add(variant); }
 
     @Override
-    public Long call()
+    public Void call()
     {
         int flushCount = 100000;
         // int gcCount = 250000;
@@ -64,7 +64,7 @@ public class SomaticVariantEnrichment implements Callable
 
         flush(); // finalise any enrichment routines with queued variants
 
-        return (long)0;
+        return null;
     }
 
     public void enrich(final SomaticVariant variant)

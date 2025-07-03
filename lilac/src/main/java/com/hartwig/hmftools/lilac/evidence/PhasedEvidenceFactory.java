@@ -117,6 +117,7 @@ public class PhasedEvidenceFactory
 
     private static class PhasedEvidenceSorter implements Comparator<PhasedEvidence>
     {
+        @Override
         public int compare(final PhasedEvidence first, final PhasedEvidence second)
         {
             int firstAA = first.getAminoAcidLoci().get(0);

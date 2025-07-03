@@ -21,17 +21,17 @@ public class NucleotideFiltering
 {
     private final int mMinFilterDepth;
     private final double mMinFactor;
-    private final List<Integer> mAminoAcidBoundaries;
+    private final Iterable<Integer> mAminoAcidBoundaries;
 
-    public NucleotideFiltering(final int minFilterDepth, final double minFactor, final List<Integer> aminoAcidBoundaries)
+    public NucleotideFiltering(final int minFilterDepth, final double minFactor, final Iterable<Integer> aminoAcidBoundaries)
     {
         mMinFilterDepth = minFilterDepth;
         mMinFactor = minFactor;
         mAminoAcidBoundaries = aminoAcidBoundaries;
     }
 
-    public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
-            final List<HlaSequenceLoci> candidates, final List<Fragment> fragments)
+    public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(final Collection<HlaSequenceLoci> candidates,
+            final Iterable<Fragment> fragments)
     {
         List<HlaSequenceLoci> results = Lists.newArrayList();
         results.addAll(candidates);
@@ -59,7 +59,7 @@ public class NucleotideFiltering
                 && seqLoci.consistentWithAny(endSequences, Lists.newArrayList(startLoci + 1, startLoci + 2));
     }
 
-    private final List<String> nucleotideSequence(final List<Fragment> fragments, final List<Integer> nucleotideIndices)
+    private List<String> nucleotideSequence(final Iterable<Fragment> fragments, final Collection<Integer> nucleotideIndices)
     {
         Multiset<String> sequenceCounts = HashMultiset.create();
         int coverage = 0;
@@ -74,13 +74,6 @@ public class NucleotideFiltering
             String nucleotides = fragment.nucleotides(nucleotideIndices);
             sequenceCounts.add(nucleotides);
             coverage++;
-        }
-
-        if(coverage < mMinFilterDepth)
-        {
-            return sequenceCounts.entrySet().stream()
-                    .map(Multiset.Entry::getElement)
-                    .collect(Collectors.toList());
         }
 
         int minCount = (int) ceil(mMinFactor * coverage);
@@ -109,7 +102,8 @@ public class NucleotideFiltering
             }
 
             hetLociMap.put(gene,
-                    refNucleotideHetLoci.stream().filter(x -> nucleotideExonBoundaries.contains(x)).collect(Collectors.toList()));
+                    refNucleotideHetLoci.stream().filter(nucleotideExonBoundaries::contains)
+                            .collect(Collectors.toList()));
 
         }
 

@@ -20,12 +20,12 @@ import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 
-public class FusionCohortTask implements Callable
+public class FusionCohortTask implements Callable<Void>
 {
     private final int mTaskId;
     private final CohortConfig mConfig;
 
-    private final Map<String,Path> mSampleFileMap;
+    private final Map<String, Path> mSampleFileMap;
     private final PassingFusions mFilters;
     private final BufferedWriter mCombinedFusionWriter;
     private final FusionCollection mFusionCollection;
@@ -52,14 +52,14 @@ public class FusionCohortTask implements Callable
     public final Set<String> getSamples() { return mSampleFileMap.keySet(); }
 
     @Override
-    public Long call()
+    public Void call()
     {
         ISF_LOGGER.info("task {}: processing {} sample fusion files", mTaskId, mSampleFileMap.size());
 
         int totalProcessed = 0;
 
         // load each sample's fusions and consolidate into a single list
-        for(Map.Entry<String,Path> entry : mSampleFileMap.entrySet())
+        for(Map.Entry<String, Path> entry : mSampleFileMap.entrySet())
         {
             final String sampleId = entry.getKey();
             final Path fusionFile = entry.getValue();
@@ -97,7 +97,7 @@ public class FusionCohortTask implements Callable
 
         ISF_LOGGER.info("task {}: task complete", mTaskId, mSampleFileMap.size());
 
-        return (long)0;
+        return null;
     }
 
     private void writeFilteredFusion(final String sampleId, final List<FusionData> sampleFusions)

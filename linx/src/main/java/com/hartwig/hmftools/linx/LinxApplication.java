@@ -132,7 +132,7 @@ public class LinxApplication
                 sampleAnalysers.get(i).setSampleIds(saSampleLists.get(i));
             }
 
-            final List<Callable> callableList = sampleAnalysers.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleAnalysers.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -150,13 +150,13 @@ public class LinxApplication
         if(config.hasMultipleSamples())
         {
             // combine and log performance counters
-            Map<String,PerformanceCounter> combinedPerfCounters = sampleAnalysers.get(0).getPerfCounters();
+            Map<String, PerformanceCounter> combinedPerfCounters = sampleAnalysers.get(0).getPerfCounters();
 
             for(int i = 1; i < sampleAnalysers.size(); ++i)
             {
-                Map<String,PerformanceCounter> saPerfCounters = sampleAnalysers.get(i).getPerfCounters();
+                Map<String, PerformanceCounter> saPerfCounters = sampleAnalysers.get(i).getPerfCounters();
 
-                for(Map.Entry<String,PerformanceCounter> entry : combinedPerfCounters.entrySet())
+                for(Map.Entry<String, PerformanceCounter> entry : combinedPerfCounters.entrySet())
                 {
                     PerformanceCounter combinedPc = entry.getValue();
                     PerformanceCounter saPc = saPerfCounters.get(entry.getKey());
@@ -166,7 +166,7 @@ public class LinxApplication
                 }
             }
 
-            for(Map.Entry<String,PerformanceCounter> entry : combinedPerfCounters.entrySet())
+            for(Map.Entry<String, PerformanceCounter> entry : combinedPerfCounters.entrySet())
             {
                 entry.getValue().logStats();
             }

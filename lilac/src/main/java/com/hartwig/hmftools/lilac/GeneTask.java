@@ -16,7 +16,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-public class GeneTask implements Callable
+public class GeneTask implements Callable<Void>
 {
     private final LilacConfig mConfig;
     private final ReferenceData mRefData;
@@ -53,7 +53,7 @@ public class GeneTask implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         // determine un-phased Candidates
         List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
@@ -75,7 +75,7 @@ public class GeneTask implements Callable
         // gather all phased candidates
         mCandidatesAlleles.addAll(mCandidateFactory.phasedCandidates(mHlaContext, unphasedCandidates, mPhasedEvidence));
 
-        return 0L;
+        return null;
     }
 
     public void addPhasedCandidates(final List<HlaAllele> allAlleles)
@@ -94,6 +94,6 @@ public class GeneTask implements Callable
         final String gene = mCandidatesAlleles.get(0).Gene;
 
         mRefData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
-                .filter(x -> x.Gene.equals(gene)).forEach(x -> allAlleles.add(x));
+                .filter(x -> x.Gene.equals(gene)).forEach(allAlleles::add);
     }
 }

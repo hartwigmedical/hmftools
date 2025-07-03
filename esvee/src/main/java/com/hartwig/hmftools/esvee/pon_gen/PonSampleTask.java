@@ -20,7 +20,7 @@ import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class PonSampleTask implements Callable
+public class PonSampleTask implements Callable<Void>
 {
     private final List<String> mSampleVcfFiles;
     private final PonConfig mConfig;
@@ -49,14 +49,14 @@ public class PonSampleTask implements Callable
     public void addSampleVcf(final String sampleVcf) { mSampleVcfFiles.add(sampleVcf); }
 
     @Override
-    public Long call()
+    public Void call()
     {
         for(String sampleVcf : mSampleVcfFiles)
         {
             processVcf(sampleVcf);
         }
 
-        return (long)0;
+        return null;
     }
 
     private void processVcf(final String sampleVcf)

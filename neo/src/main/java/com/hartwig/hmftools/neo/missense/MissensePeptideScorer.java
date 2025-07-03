@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.neo.missense;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -136,7 +134,7 @@ public class MissensePeptideScorer
                 }
             }
 
-            final List<Callable> callableList = geneTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = geneTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
@@ -152,7 +150,7 @@ public class MissensePeptideScorer
         NE_LOGGER.info("missense peptide generation complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private class GeneTask implements Callable
+    private class GeneTask implements Callable<Void>
     {
         public final List<String> GeneIds;
         public final List<String> Alleles;
@@ -168,7 +166,7 @@ public class MissensePeptideScorer
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             int geneCount = 0;
 
@@ -213,7 +211,7 @@ public class MissensePeptideScorer
                 }
             }
 
-            return (long)0;
+            return null;
         }
     }
 
