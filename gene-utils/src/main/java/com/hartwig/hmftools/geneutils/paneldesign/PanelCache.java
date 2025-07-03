@@ -8,7 +8,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PanelCache
 {
@@ -25,8 +24,6 @@ public class PanelCache
     {
         return mChrRegionsMap.containsKey(chromosome) ? mChrRegionsMap.get(chromosome) : Collections.emptyList();
     }
-
-    public int regionCount() { return mChrRegionsMap.values().stream().mapToInt(x -> x.size()).sum(); }
 
     public void addRegion(final PanelRegion panelRegion) { addRegion(panelRegion, true); }
 
@@ -59,11 +56,5 @@ public class PanelCache
     {
         List<PanelRegion> regions = mChrRegionsMap.get(chromosome);
         return regions != null && regions.stream().anyMatch(x -> x.overlaps(chromosome, positionStart, positionEnd));
-    }
-
-    public boolean overlapsExisting(final ChrBaseRegion region)
-    {
-        List<PanelRegion> regions = mChrRegionsMap.get(region.Chromosome);
-        return regions != null && regions.stream().anyMatch(x -> x.overlaps(region));
     }
 }

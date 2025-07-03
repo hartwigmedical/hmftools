@@ -63,10 +63,7 @@ public class ProbeCandidate
     {
         this.mFilterReason = filterReason;
     }
-    public String getFilterReason()
-    {
-        return mFilterReason;
-    }
+
     public boolean passFilter()
     {
         return mFilterReason.isEmpty();
