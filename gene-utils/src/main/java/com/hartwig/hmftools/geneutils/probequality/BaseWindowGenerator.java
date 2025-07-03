@@ -104,7 +104,7 @@ public class BaseWindowGenerator
 
     public Stream<ChrBaseRegion> createBaseWindowRegions()
     {
-        LOGGER.info("Creating base window region stream");
+        LOGGER.debug("Creating base window region stream");
 
         return mRefGenome.chromosomeLengths().keySet().stream().sorted().flatMap(this::createBaseWindowRegions);
     }
