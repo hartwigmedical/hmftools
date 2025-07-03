@@ -63,7 +63,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
         mSampleMedianReadDepth = aggFunc.summarize(gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO));
         mSampleMeanReadDepth = gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO).mean();
 
-        // groupby gcBucket and apply median, to create a table with columns
+        // group by gcBucket and apply median, to create a table with columns
         // gcBucket, gcMedianCount, windowCount
         gcMedianCalcDf = gcMedianCalcDf.retainColumns(CobaltColumns.GC_BUCKET, CobaltColumns.RATIO)
                 .summarize(CobaltColumns.RATIO, aggFunc, AggregateFunctions.count)
@@ -80,6 +80,8 @@ public class GcNormalizedRatioMapper implements RatioMapper
         Table ratiosWithMedianCount = inputRatios
                 .where(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                 .joinOn(CobaltColumns.GC_BUCKET).inner(gcMedianCalcDf);
+        // resort it, the join messes up with the ordering
+        ratiosWithMedianCount = ratiosWithMedianCount.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
         double medianNormalisation = mSampleMedianReadDepth / mSampleMeanReadDepth;
 
