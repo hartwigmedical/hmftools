@@ -198,7 +198,7 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         {
             BaseRegion region = regions.get(i);
             BaseRegion last = result.get(result.size() - 1);
-            if(last.overlaps(region))
+            if(region.start() - 1 <= last.end())
             {
                 last.setEnd(region.end());
             }
