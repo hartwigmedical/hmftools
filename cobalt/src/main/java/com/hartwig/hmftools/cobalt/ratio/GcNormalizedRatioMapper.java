@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.cobalt.CobaltColumns.READ_GC_CONTENT;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
@@ -63,8 +61,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
         mSampleMedianReadDepth = aggFunc.summarize(gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO));
         mSampleMeanReadDepth = gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO).mean();
 
-        // group by gcBucket and apply median, to create a table with columns
-        // gcBucket, gcMedianCount, windowCount
+        // group by gcBucket and apply median, to create a table with columns: gcBucket, gcMedianCount, windowCount
         gcMedianCalcDf = gcMedianCalcDf.retainColumns(CobaltColumns.GC_BUCKET, CobaltColumns.RATIO)
                 .summarize(CobaltColumns.RATIO, aggFunc, AggregateFunctions.count)
                 .by(CobaltColumns.GC_BUCKET);
@@ -80,8 +77,6 @@ public class GcNormalizedRatioMapper implements RatioMapper
         Table ratiosWithMedianCount = inputRatios
                 .where(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                 .joinOn(CobaltColumns.GC_BUCKET).inner(gcMedianCalcDf);
-        // resort it, the join messes up with the ordering
-        ratiosWithMedianCount = ratiosWithMedianCount.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
         double medianNormalisation = mSampleMedianReadDepth / mSampleMeanReadDepth;
 
@@ -98,29 +93,19 @@ public class GcNormalizedRatioMapper implements RatioMapper
         // In panel mode we need to filter out regions that have a high GC content in the sample.
         if(mPanelMode)
         {
-            double lower = GC_RATIO_MIN - 0.02;
-            double upper = GC_RATIO_MAX + 0.02;
+            double lowerBound = GC_RATIO_MIN - 0.02;
+            double upperBound = GC_RATIO_MAX + 0.02;
+
             ratiosWithMedianCount = ratiosWithMedianCount.where(
-                    ratiosWithMedianCount.doubleColumn(READ_GC_CONTENT).isBetweenInclusive(lower, upper)
-            );
+                    ratiosWithMedianCount.doubleColumn(READ_GC_CONTENT).isBetweenInclusive(lowerBound, upperBound));
         }
         mGCMedianReadDepth = gcMedianCalcDf;
         return ratiosWithMedianCount;
     }
 
-    public Table gcMedianReadDepthTable()
-    {
-        return mGCMedianReadDepth;
-    }
-
     public double getSampleMedianReadDepth()
     {
         return mSampleMedianReadDepth;
-    }
-
-    public double getSampleMeanReadDepth()
-    {
-        return mSampleMeanReadDepth;
     }
 
     // convert the gc median read count table to the object representation
