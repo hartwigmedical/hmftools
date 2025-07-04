@@ -4,7 +4,7 @@ WiGiTS is a universal open source suite of genome and transcriptome analysis too
 
 ![HMF_Pipeline](./pipeline/wigits.png)
 
-The current release of the WiGiTs pipeline is v2.0. Release notes are [here](./pipeline/docs/v2_0/WiGiTs_v2.0_ReleaseNotes.pdf).
+The current release of the WiGiTs pipeline is v2.1. Release notes are [here](./pipeline/docs/v2_1/WiGiTs_v2.1_ReleaseNotes.pdf).
 
 We recommend running WiGiTS with [Oncoanalyser](https://nf-co.re/oncoanalyser), a Nextflow implementation of the WiGiTS pipeline.
 
