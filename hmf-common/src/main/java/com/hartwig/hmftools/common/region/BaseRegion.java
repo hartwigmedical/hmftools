@@ -224,40 +224,6 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         }
     }
 
-    // Faster than checkMergeOverlaps() at the cost of more memory.
-    public static ArrayList<BaseRegion> checkMergeOverlapsFast(List<BaseRegion> regions, boolean sort)
-    {
-        // checkMergeOverlaps() removes from the original list, which is O(n) per call (total O(n^2)).
-        // Here we append to a new list, which is O(1) per call (total O(n)), but uses O(n) memory.
-
-        if(regions.isEmpty())
-        {
-            return new ArrayList<>();
-        }
-
-        if(sort)
-        {
-            regions = regions.stream().sorted().toList();
-        }
-
-        ArrayList<BaseRegion> result = new ArrayList<>(regions.size());
-        result.add(regions.get(0));
-        for(int i = 1; i < regions.size(); ++i)
-        {
-            BaseRegion region = regions.get(i);
-            BaseRegion last = result.get(result.size() - 1);
-            if(region.start() - 1 <= last.end())
-            {
-                last.setEnd(region.end());
-            }
-            else
-            {
-                result.add(region);
-            }
-        }
-        return result;
-    }
-
     public static <E extends BaseRegion> int binarySearch(int readStart, final List<E> regions)
     {
         // Returns index of the last region in regions with start pos less than or equal to readStart
