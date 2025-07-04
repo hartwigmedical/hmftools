@@ -185,7 +185,7 @@ public class GeneProbesGenerator
 
         // write the outputs
         DataWriter.writeCandidates(mConfig.formOutputFilename(CANDIDATE_FILE_EXTENSION), targetedGeneRegions);
-        DataWriter.writeTargertedGeneRegions(mConfig.formOutputFilename(GENE_REGION_FILE_EXTENSION), targetedGeneRegions);
+        DataWriter.writeTargetedGeneRegions(mConfig.formOutputFilename(GENE_REGION_FILE_EXTENSION), targetedGeneRegions);
     }
 
     /*

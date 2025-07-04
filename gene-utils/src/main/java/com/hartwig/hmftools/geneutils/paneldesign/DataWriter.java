@@ -64,7 +64,7 @@ public class DataWriter
         ProbeSequence
     }
 
-    public static void writeTargertedGeneRegions(final String filename, final List<TargetedGeneRegion> targetedGeneRegions)
+    public static void writeTargetedGeneRegions(final String filename, final List<TargetedGeneRegion> targetedGeneRegions)
     {
         try(BufferedWriter writer = createBufferedWriter(filename))
         {
