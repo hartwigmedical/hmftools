@@ -424,7 +424,7 @@ public class SomaticVariants
 
             for(SomaticVariant variant : outlierVariants)
             {
-                CT_LOGGER.debug(format("sample(%s) chip variant(%s) normalised ad(%.1f) vs sampleTotal(%.1f)",
+                CT_LOGGER.debug(format("sample(%s) outlier variant(%s) normalised ad(%.1f) vs sampleTotal(%.1f)",
                         sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount / variant.variantCnFloored(), sampleTotalAD));
 
                 filteredVariants.remove(variant);

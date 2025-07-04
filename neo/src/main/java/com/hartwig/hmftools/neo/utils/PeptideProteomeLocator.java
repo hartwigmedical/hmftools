@@ -4,6 +4,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
@@ -13,8 +15,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
@@ -48,12 +48,12 @@ public class PeptideProteomeLocator
     private final int mThreads;
     private final boolean mFindRepeats;
 
-    private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+    private final Map<String, TranscriptAminoAcids> mTransAminoAcidMap;
     private final TranscriptExpression mTranscriptExpression;
 
     private final List<String> mPeptides;
 
-    private BufferedWriter mWriter;
+    private final BufferedWriter mWriter;
 
     private static final String FLANK_LENGTH = "flank_length";
     private static final String PEPTIDE_FILE = "peptide_file";
@@ -103,7 +103,7 @@ public class PeptideProteomeLocator
             }
 
             int taskIndex = 0;
-            for (final String peptide : mPeptides)
+            for(final String peptide : mPeptides)
             {
                 taskPeptideLists.get(taskIndex).add(peptide);
                 ++taskIndex;
@@ -112,7 +112,7 @@ public class PeptideProteomeLocator
                     taskIndex = 0;
             }
 
-            final List<Callable> callableList = searchTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = searchTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -149,7 +149,7 @@ public class PeptideProteomeLocator
         }
     }
 
-    protected synchronized static void writeData(
+    protected static synchronized void writeData(
             final BufferedWriter writer, final String geneNames, final String transNames, final String peptide,
             int aaPosition, final String upFlank, final String downFlank, int repeatCount, double tpmTotal)
     {
@@ -162,7 +162,7 @@ public class PeptideProteomeLocator
             }
             else
             {
-                writer.write(String.format("%s,NONE,NONE,-1,-,-,0,0",peptide));
+                writer.write(String.format("%s,NONE,NONE,-1,-,-,0,0", peptide));
             }
 
             writer.newLine();
@@ -173,10 +173,10 @@ public class PeptideProteomeLocator
         }
     }
 
-    private class PeptideSearchTask implements Callable
+    private class PeptideSearchTask implements Callable<Void>
     {
         private final int mTaskId;
-        private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+        private final Map<String, TranscriptAminoAcids> mTransAminoAcidMap;
         private final TranscriptExpression mTranscriptExpression;
         private final List<String> mPeptides;
         private final int mFlankLength;
@@ -199,10 +199,10 @@ public class PeptideProteomeLocator
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             run();
-            return (long)1;
+            return null;
         }
 
         public int peptidesFound() { return mFound; }

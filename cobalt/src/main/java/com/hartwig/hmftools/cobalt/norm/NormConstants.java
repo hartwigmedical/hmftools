@@ -9,8 +9,5 @@ public class NormConstants
 
     public static final double MAPPABILITY_THRESHOLD = MIN_MAPPABLE_PERCENTAGE;
 
-    public static int GC_BUCKET_MIN = 20;
-    public static int GC_BUCKET_MAX = 60;
-
     public static final double MIN_ENRICHMENT_RATIO = 0.1;
 }

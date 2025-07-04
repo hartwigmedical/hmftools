@@ -72,7 +72,7 @@ public class SomaticPurityResult
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("SNV_MRD");
         sj.add("TotalVariants");
-        sj.add("ChipVariants");
+        sj.add("CalcVariants");
         sj.add("SNVPurity");
         sj.add("RawSNVPurity");
         sj.add("SNVPValue");
@@ -135,7 +135,6 @@ public class SomaticPurityResult
         sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidth));
         sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthLow));
         sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthHigh));
-
 
         sj.add(OutlierVariantInfo);
 

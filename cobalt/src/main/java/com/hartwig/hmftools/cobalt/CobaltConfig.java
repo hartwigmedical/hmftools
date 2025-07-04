@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
@@ -25,6 +26,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
@@ -44,7 +46,8 @@ public class CobaltConfig
     private static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
     private static final String MIN_MAPPING_QUALITY = "min_quality";
     private static final String PCF_GAMMA = "pcf_gamma";
-    private static final String TARGET_REGION_NORM_FILE = "target_region";
+
+    private static final String TARGET_REGION_NORM_FILE = "target_region_norm_file";
     private static final String INCLUDE_DUPLICATES = "include_duplicates";
 
     public static final String GC_RATIO_MIN = "gc_ratio_min";
@@ -72,7 +75,10 @@ public class CobaltConfig
     public final boolean SkipPcfCalc;
 
     public final String TumorOnlyDiploidBed;
-    public final String TargetRegionPath;
+    public final String TargetRegionNormFile;
+
+    // debug
+    public final SpecificRegions SpecificChrRegions;
 
     public static final Logger CB_LOGGER = LogManager.getLogger(CobaltConfig.class);
 
@@ -87,7 +93,7 @@ public class CobaltConfig
         GcProfilePath = configBuilder.getValue(GC_PROFILE);
 
         TumorOnlyDiploidBed = configBuilder.getValue(TUMOR_ONLY_DIPLOID_BED);
-        TargetRegionPath = configBuilder.getValue(TARGET_REGION_NORM_FILE);
+        TargetRegionNormFile = configBuilder.getValue(TARGET_REGION_NORM_FILE);
         RefGenomePath = configBuilder.getValue(REF_GENOME);
 
         // set global constants
@@ -103,6 +109,8 @@ public class CobaltConfig
         Threads = parseThreads(configBuilder);
 
         SkipPcfCalc = configBuilder.hasFlag(SKIP_PCF_CALC);
+
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -125,6 +133,8 @@ public class CobaltConfig
         configBuilder.addInteger(PCF_GAMMA, "Gamma value for copy number PCF", DEFAULT_PCF_GAMMA);
         configBuilder.addFlag(INCLUDE_DUPLICATES, "Include duplicate reads in depth counts");
         configBuilder.addFlag(SKIP_PCF_CALC, "Skip final PCF output");
+
+        addSpecificChromosomesRegionsConfig(configBuilder);
 
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);

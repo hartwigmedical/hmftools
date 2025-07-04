@@ -2,12 +2,12 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.common.rna.RnaStatistics.SPLICE_GENE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
-import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PANEL_LOW_COVERAGE_FACTOR;
@@ -34,16 +34,16 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.common.BamReadCounter;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
@@ -103,7 +103,7 @@ public class Isofox
         long startTimeMs = System.currentTimeMillis();
 
         // all other routines split work by chromosome
-        Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
+        Map<String, List<GeneData>> chrGeneMap = getChromosomeGeneLists();
 
         if(chrGeneMap.isEmpty())
         {
@@ -133,7 +133,7 @@ public class Isofox
         return true;
     }
 
-    private boolean allocateBamFragments(final Map<String,List<GeneData>> chrGeneMap)
+    private boolean allocateBamFragments(final Map<String, List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
 
@@ -155,7 +155,7 @@ public class Isofox
         }
 
         final List<ChromosomeTaskExecutor> chrTasks = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Void>> callableList = Lists.newArrayList();
         final List<String> chromosomes = Lists.newArrayList();
 
         // process any enriched genes first, then add the rest in order of decreasing length
@@ -212,7 +212,7 @@ public class Isofox
         return true;
     }
 
-    private void processBamFragments(final List<ChromosomeTaskExecutor> chrTasks, final List<Callable> callableList)
+    private void processBamFragments(final List<ChromosomeTaskExecutor> chrTasks, final List<Callable<Void>> callableList)
     {
         FragmentTypeCounts totalFragmentCounts = new FragmentTypeCounts();
 
@@ -295,8 +295,8 @@ public class Isofox
             {
                 // could be adjusted for the specific panel
                 double panelGeneCoverage = mConfig.Filters.RestrictedGeneIds.size() / 37000.0; // total gene count
-                lowCoverageThreshold = (int)(lowCoverageThreshold * panelGeneCoverage * PANEL_LOW_COVERAGE_FACTOR);
-                splicedGeneThreshold = (int)(panelGeneCoverage * SPLICE_GENE_THRESHOLD);
+                lowCoverageThreshold = (int) (lowCoverageThreshold * panelGeneCoverage * PANEL_LOW_COVERAGE_FACTOR);
+                splicedGeneThreshold = (int) (panelGeneCoverage * SPLICE_GENE_THRESHOLD);
             }
 
             final RnaStatistics summaryStats = createSummaryStats(
@@ -311,7 +311,7 @@ public class Isofox
     }
 
     private void applyGcAdjustments(
-            final List<ChromosomeTaskExecutor> chrTasks, final List<Callable> callableList, final GcRatioCounts actualGcCounts)
+            final List<ChromosomeTaskExecutor> chrTasks, final List<Callable<Void>> callableList, final GcRatioCounts actualGcCounts)
     {
         ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
 
@@ -329,12 +329,12 @@ public class Isofox
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
-    private Map<String,List<GeneData>> getChromosomeGeneLists()
+    private Map<String, List<GeneData>> getChromosomeGeneLists()
     {
         if(!mConfig.Filters.SpecificChrRegions.hasFilters())
             return mGeneTransCache.getChrGeneDataMap();
 
-        final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
+        final Map<String, List<GeneData>> chrGeneMap = Maps.newHashMap();
 
         if(mConfig.Filters.SpecificChrRegions.Regions.isEmpty())
         {
@@ -360,20 +360,20 @@ public class Isofox
         return chrGeneMap;
     }
 
-    private void calcFragmentLengths(final Map<String,List<GeneData>> chrGeneMap)
+    private void calcFragmentLengths(final Map<String, List<GeneData>> chrGeneMap)
     {
         int requiredFragCount = mConfig.FragmentLengthSamplingCount / chrGeneMap.size(); // split evenly amongst chromosomes
 
         final List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
 
-        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
         {
             FragmentSizeCalcs fragSizeCalc = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
             fragSizeCalc.initialise(entry.getKey(), entry.getValue(), requiredFragCount);
             fragSizeCalcs.add(fragSizeCalc);
         }
 
-        final List<Callable> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
         boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(!validExecution)
@@ -407,14 +407,14 @@ public class Isofox
         combinedPc.logStats();
     }
 
-    private boolean countBamReads(final Map<String,List<GeneData>> chrGeneMap)
+    private boolean countBamReads(final Map<String, List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("basic BAM read counts");
 
         final List<BamReadCounter> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Void>> callableList = Lists.newArrayList();
 
-        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
         {
             BamReadCounter bamReaderTask = new BamReadCounter(mConfig, mResultsWriter);
             bamReaderTask.initialise(entry.getKey(), entry.getValue());

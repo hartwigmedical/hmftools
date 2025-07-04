@@ -19,10 +19,10 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class Mappability extends AnnotationData implements Callable
+public class Mappability extends AnnotationData implements Callable<Void>
 {
     private BufferedReader mFileReader;
-    private final Map<String,MappabilityChrCache> mChrCacheMap;
+    private final Map<String, MappabilityChrCache> mChrCacheMap;
     private boolean mHasValidData;
 
     public static final String MAPPABILITY_BED = "mappability_bed";
@@ -75,14 +75,14 @@ public class Mappability extends AnnotationData implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         for(String chromosome : mInitialChromosomes)
         {
             loadEntries(chromosome);
         }
 
-        return (long)0;
+        return null;
     }
 
     public static void addHeader(final VCFHeader header)

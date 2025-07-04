@@ -99,7 +99,7 @@ public class ReferenceData
 
     public void initialiseChromosomeData(final List<String> chromosomes, int threads)
     {
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Void>> callableList = Lists.newArrayList();
 
         for(AnnotationData annotationData : Annotators)
         {
@@ -108,7 +108,7 @@ public class ReferenceData
                 annotationData.registerInitialChromosomes(chromosomes);
 
                 if(annotationData instanceof Callable)
-                    callableList.add((Callable)annotationData);
+                    callableList.add((Callable<Void>) annotationData);
             }
         }
 

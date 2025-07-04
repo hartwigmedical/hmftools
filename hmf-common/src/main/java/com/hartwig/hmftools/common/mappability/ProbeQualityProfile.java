@@ -42,8 +42,10 @@ public class ProbeQualityProfile
     // Must match the config used for generating the file
     private static final int BASE_WINDOW_LENGTH = 40;
     private static final int BASE_WINDOW_SPACING = 20;
-
     private static final String QUALITY_SCORE_FIELD = "QualityScore";
+
+    private static final double AGGREGATE_SHARPNESS = 10;
+    private static final double AGGREGATE_EXP_NORM = -AGGREGATE_SHARPNESS / BASE_WINDOW_LENGTH;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
@@ -127,7 +129,8 @@ public class ProbeQualityProfile
     // Returns empty optional if the profile doesn't cover the probe region.
     public Optional<Double> computeQualityScore(final ChrBaseRegion probe)
     {
-        if (probe.baseLength() < 1) {
+        if(probe.baseLength() < 1)
+        {
             throw new IllegalArgumentException("probe length must be >= 1");
         }
 
@@ -139,7 +142,6 @@ public class ProbeQualityProfile
         }
 
         List<ProbeQualityWindow> windows = mWindows.get(probe.chromosome());
-        assert windows != null;
         int windowsStart = findFirstWindowOverlapping(windows, probe.start());
         // For some reason using Stream skip() and takeWhile() here is extremely slow compared to List.subList().
         int windowsEnd = scanWhileOverlap(windows, windowsStart, probe.baseRegion());   // Inclusive
@@ -173,23 +175,28 @@ public class ProbeQualityProfile
     }
 
     // Compute the final quality score from windows which overlap the probe.
+    // `windows` should not be empty.
     private static double aggregateQualityScore(final Stream<ProbeQualityWindow> windows, final BaseRegion probe)
     {
         // Using a soft minimum function to aggregate the scores proved to be a good estimator in experiment.
-        final double AGGREGATE_SHARPNESS = 10;
-        final double EXP_NORMALISATION = -AGGREGATE_SHARPNESS / BASE_WINDOW_LENGTH;
         double[] sums = new double[2];
         windows.forEach(window ->
         {
             float value = window.getQualityScore();
             int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
-            double weight = exp(EXP_NORMALISATION * overlap * value);
+            double weight = exp(AGGREGATE_EXP_NORM * overlap * value);
             sums[0] += value * weight;
             sums[1] += weight;
         });
-        assert sums[1] > 0;
-        double qualityScore = sums[0] / sums[1];
-        return qualityScore;
+        if(sums[1] > 0)
+        {
+            return sums[0] / sums[1];
+        }
+        else
+        {
+            // Shouldn't occur if windows is nonempty but don't want to return a NaN or inf.
+            return 0;
+        }
     }
 
     // Gets the last index >= `index` in `windows` which overlaps `region`.

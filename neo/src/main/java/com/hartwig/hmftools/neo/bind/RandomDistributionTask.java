@@ -18,19 +18,19 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.neo.PeptideData;
 
-public class RandomDistributionTask implements Callable
+public class RandomDistributionTask implements Callable<Void>
 {
     private final String mAllele;
 
-    private final Map<Integer,List<PeptideData>> mRandomPeptideMap; // by length and with flanking data
-    private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoreDistributions;
+    private final Map<Integer, List<PeptideData>> mRandomPeptideMap; // by length and with flanking data
+    private final Map<String, Map<Integer, List<ScoreDistributionData>>> mAlleleScoreDistributions;
     private final FlankScores mFlankScores;
-    private final Map<Integer,BindScoreMatrix> mPeptideLengthMatrixMap;
+    private final Map<Integer, BindScoreMatrix> mPeptideLengthMatrixMap;
 
     private final int mTaskType;
 
     // outputs
-    private final Map<Integer,List<ScoreDistributionData>> mPeptideLengthDistributions; // peptide length to distribution
+    private final Map<Integer, List<ScoreDistributionData>> mPeptideLengthDistributions; // peptide length to distribution
     private final List<ScoreDistributionData> mLikelihoodDistributions; // distribution of likelihoods
 
     private final BindingLikelihood mBindingLikelihood;
@@ -46,17 +46,17 @@ public class RandomDistributionTask implements Callable
 
     // instantiate one of 2 tasks
     public RandomDistributionTask(
-            final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
-            final Map<Integer,List<PeptideData>> randomPeptideMap, final FlankScores flankScores)
+            final String allele, final Map<Integer, BindScoreMatrix> peptideLengthMatrixMap,
+            final Map<Integer, List<PeptideData>> randomPeptideMap, final FlankScores flankScores)
     {
         this(TASK_TYPE_SCORE_RANK, allele, peptideLengthMatrixMap, randomPeptideMap, flankScores,
                 null, null, null);
     }
 
     public RandomDistributionTask(
-            final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
-            final Map<Integer,List<PeptideData>> randomPeptideMap, final FlankScores flankScores,
-            final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions,
+            final String allele, final Map<Integer, BindScoreMatrix> peptideLengthMatrixMap,
+            final Map<Integer, List<PeptideData>> randomPeptideMap, final FlankScores flankScores,
+            final Map<String, Map<Integer, List<ScoreDistributionData>>> alleleScoreDistributions,
             final BindingLikelihood bindingLikelihood, final ExpressionLikelihood expressionLikelihood)
     {
         this(TASK_TYPE_LIKELIHOOD_RANK, allele, peptideLengthMatrixMap, randomPeptideMap, flankScores,
@@ -64,9 +64,9 @@ public class RandomDistributionTask implements Callable
     }
 
     private RandomDistributionTask(
-            final int taskType, final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
-            final Map<Integer,List<PeptideData>> randomPeptideMap, final FlankScores flankScores,
-            final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions,
+            final int taskType, final String allele, final Map<Integer, BindScoreMatrix> peptideLengthMatrixMap,
+            final Map<Integer, List<PeptideData>> randomPeptideMap, final FlankScores flankScores,
+            final Map<String, Map<Integer, List<ScoreDistributionData>>> alleleScoreDistributions,
             final BindingLikelihood bindingLikelihood, final ExpressionLikelihood expressionLikelihood)
     {
         mTaskType = taskType;
@@ -86,28 +86,28 @@ public class RandomDistributionTask implements Callable
 
     public static List<double[]> generateDistributionBuckets()
     {
-        List<double[]> discreteScoreData = Lists.newArrayList();;
-        discreteScoreData.add(new double[] {0.0001, 0.01});
-        discreteScoreData.add(new double[] {0.001, 0.1});
-        discreteScoreData.add(new double[] {0.01, 0.25});
-        discreteScoreData.add(new double[] {0.05, 1.0});
+        List<double[]> discreteScoreData = Lists.newArrayList();
+        discreteScoreData.add(new double[] { 0.0001, 0.01 });
+        discreteScoreData.add(new double[] { 0.001, 0.1 });
+        discreteScoreData.add(new double[] { 0.01, 0.25 });
+        discreteScoreData.add(new double[] { 0.05, 1.0 });
         return discreteScoreData;
     }
 
     public final String allele() { return mAllele; }
 
-    public Map<Integer,List<ScoreDistributionData>> getPeptideLengthScoreDistributions() { return mPeptideLengthDistributions; }
+    public Map<Integer, List<ScoreDistributionData>> getPeptideLengthScoreDistributions() { return mPeptideLengthDistributions; }
     public List<ScoreDistributionData> getLikelihoodDistributions() { return mLikelihoodDistributions; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         if(mTaskType == TASK_TYPE_SCORE_RANK)
             buildScoreDistribution();
         else
             buildLikelihoodDistribution();
 
-        return (long)0;
+        return null;
     }
 
     private void buildScoreDistribution()

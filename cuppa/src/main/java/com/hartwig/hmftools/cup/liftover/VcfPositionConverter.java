@@ -28,7 +28,7 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class VcfPositionConverter implements Callable
+public class VcfPositionConverter implements Callable<Void>
 {
     private final LiftoverConfig mConfig;
     private final String mSampleId;
@@ -62,12 +62,12 @@ public class VcfPositionConverter implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         if(mConfig.KeepExisting && Files.exists(Paths.get(mOutputFile)))
         {
             CUP_LOGGER.info("sample({}) output exists, skipping", mSampleId);
-            return (long)0;
+            return null;
         }
 
         mWriter = initialiseWriter();
@@ -102,7 +102,7 @@ public class VcfPositionConverter implements Callable
 
         closeBufferedWriter(mWriter);
 
-        return (long)0;
+        return null;
     }
 
     @VisibleForTesting
@@ -140,7 +140,7 @@ public class VcfPositionConverter implements Callable
             writer.newLine();
             return writer;
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             CUP_LOGGER.error("failed to create output file: {}", e.toString());
             return null;
@@ -161,7 +161,7 @@ public class VcfPositionConverter implements Callable
                     variant.Gene, variant.TrinucleotideContext, variant.RepeatCount, variant.Position));
             mWriter.newLine();
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             CUP_LOGGER.error("failed to write variant: {}", e.toString());
         }

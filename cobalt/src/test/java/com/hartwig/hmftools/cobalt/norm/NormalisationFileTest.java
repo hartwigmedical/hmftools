@@ -62,7 +62,7 @@ public class NormalisationFileTest
 
         List<RegionData> regions = Lists.newArrayList();
         regions.add(createRegion(1001, 15, 1.0, 10, 0.5)); // filtered
-        regions.add(createRegion(2001, 20, 1.0, 20, 0.5));
+        regions.add(createRegion(2001, 25, 1.0, 20, 0.5));
         regions.add(createRegion(3001, 30, 1.0, 30, 0.5));
         regions.add(createRegion(3001, 30, 1.0, -1, 0.5)); // filtered
         regions.add(createRegion(4001, 40, 1.0, 40, 0.5));

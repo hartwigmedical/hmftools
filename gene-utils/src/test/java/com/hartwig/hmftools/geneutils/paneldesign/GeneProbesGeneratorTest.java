@@ -175,7 +175,7 @@ public class GeneProbesGeneratorTest
     @Test
     public void testPopulateCandidateProbes()
     {
-        final MockRefGenome refGenome = new MockRefGenome();
+        MockRefGenome refGenome = new MockRefGenome();
 
         // make it such that probe GC is 33.333%
         refGenome.RefGenomeMap.put("X", StringUtils.repeat("ATGTTCAAGTAC", 1000));
@@ -209,7 +209,6 @@ public class GeneProbesGeneratorTest
         assertEquals(8, region.getProbeCandidates().size());
 
         checkProbeCandidates(region.getProbeCandidates(), region.getStart(), region.getEnd(), 8, 120);
-
     }
 
     private void checkProbeCandidates(List<ProbeCandidate> probeCandidates, int start, int end, int numProbes, int probeLength)
@@ -223,6 +222,4 @@ public class GeneProbesGeneratorTest
             probeStart += probeLength;
         }
     }
-
-
 }

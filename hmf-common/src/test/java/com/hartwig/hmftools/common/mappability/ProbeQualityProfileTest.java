@@ -24,7 +24,7 @@ public class ProbeQualityProfileTest
     }
 
     @Test
-    public void test_constructor()
+    public void testConstructor()
     {
         Map<String, List<ProbeQualityWindow>> expectedWindows = Map.of(
                 "1", List.of(
@@ -74,7 +74,7 @@ public class ProbeQualityProfileTest
     }
 
     @Test
-    public void test_computeQualityScore_covered()
+    public void testComputeQualityScoreCovered()
     {
         Optional<Double> actual;
 
@@ -96,7 +96,7 @@ public class ProbeQualityProfileTest
     }
 
     @Test
-    public void test_computeQualityScore_notCovered()
+    public void testComputeQualityScoreNotCovered()
     {
         // Nonexistent chromosome.
         assertEquals(Optional.empty(), mProfile.computeQualityScore(new ChrBaseRegion("50", 30, 50)));

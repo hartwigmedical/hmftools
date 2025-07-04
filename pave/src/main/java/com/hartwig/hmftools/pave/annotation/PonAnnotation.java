@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 import com.hartwig.hmftools.pave.VariantData;
 
-public class PonAnnotation extends AnnotationData implements Callable
+public class PonAnnotation extends AnnotationData implements Callable<Void>
 {
     private final String mPonFilename;
 
@@ -56,14 +56,14 @@ public class PonAnnotation extends AnnotationData implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         for(String chromosome : mInitialChromosomes)
         {
             mPonCache.loadPonEntries(chromosome);
         }
 
-        return (long)0;
+        return null;
     }
 
     public void annotateVariant(final VariantData variant, final PonChrCache chrCache)

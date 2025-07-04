@@ -156,6 +156,9 @@ public class PartitionChecker
 
                 if(fragment.receivedSupplementaryCount() > 0)
                     ++mCurrentStats.FragmentsWithSupplementaries;
+
+                if(fragment.requiredMateCigarFix())
+                    ++mCurrentStats.MateCigarFixed;
             }
         }
     }

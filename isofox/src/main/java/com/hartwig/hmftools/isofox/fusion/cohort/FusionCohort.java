@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 
@@ -62,9 +62,9 @@ public class FusionCohort
     public void processFusionFiles()
     {
         if(!mConfig.Fusions.GenerateCohort
-        && mConfig.Fusions.ComparisonSource == null
-        && !mConfig.Fusions.WriteFilteredFusions
-        && !mConfig.Fusions.FindUnknownSplice)
+                && mConfig.Fusions.ComparisonSource == null
+                && !mConfig.Fusions.WriteFilteredFusions
+                && !mConfig.Fusions.FindUnknownSplice)
         {
             ISF_LOGGER.warn("no fusion functions configured");
             return;
@@ -81,11 +81,11 @@ public class FusionCohort
 
         int taskId = 0;
         int sampleCount = 0;
-        int pairsPerThread = mConfig.Threads > 1 ? (int)ceil(totalSampleCount / (double)mConfig.Threads) : totalSampleCount;
+        int pairsPerThread = mConfig.Threads > 1 ? (int) ceil(totalSampleCount / (double) mConfig.Threads) : totalSampleCount;
 
         List<FusionCohortTask> fusionTasks = Lists.newArrayList();
 
-        Map<String,Path> sampleFileMap = null;
+        Map<String, Path> sampleFileMap = null;
 
         for(int i = 0; i < totalSampleCount; ++i)
         {
@@ -114,7 +114,7 @@ public class FusionCohort
 
         ISF_LOGGER.info("loading ({}) sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
 
-        final List<Callable> callableList = fusionTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = fusionTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(mConfig.Fusions.GenerateCohort)
@@ -152,14 +152,14 @@ public class FusionCohort
         }
     }
 
-    public synchronized static void writeCombinedFusions(final BufferedWriter writer, final String sampleId, final List<FusionData> fusions)
+    public static synchronized void writeCombinedFusions(final BufferedWriter writer, final String sampleId, final List<FusionData> fusions)
     {
         if(writer == null)
             return;
 
         try
         {
-            for (FusionData fusion : fusions)
+            for(FusionData fusion : fusions)
             {
                 writer.write(String.format("%s,%s", sampleId, fusion.toCsv(true)));
                 writer.newLine();

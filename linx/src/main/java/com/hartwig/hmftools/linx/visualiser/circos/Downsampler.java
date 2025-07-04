@@ -84,7 +84,7 @@ public class Downsampler
     {
         List<String> chromosomes = positionsToScale.stream().map(x -> x.chromosome()).distinct().toList();
 
-        List<GenomeRegion> contigs = Lists.newArrayList();
+        List<GenomeRegion> regions = Lists.newArrayList();
 
         for(String chromosome : chromosomes)
         {
@@ -92,6 +92,7 @@ public class Downsampler
                     .filter(x -> x.chromosome().equals(chromosome))
                     .collect(Collectors.toList());
 
+            // Assume that the start and end chromosome positions might not exist
             positions.add(GenomePositions.create(chromosome, 1));
             positions.add(GenomePositions.create(chromosome, Integer.MAX_VALUE));
 
@@ -103,57 +104,60 @@ public class Downsampler
                 if(start == 1) start = 0; // Convert to 0-based coordinates
 
                 int end = positions.get(i).position();
-                GenomeRegion contig = GenomeRegions.create(chromosome, start, end);
-                contigs.add(contig);
+                GenomeRegion region = GenomeRegions.create(chromosome, start, end);
+                regions.add(region);
             }
         }
 
-        return contigs;
+        return regions;
     }
 
-    public static <T extends GenomePosition> List<T> downsampleWithMinimumPerContig(List<T> dataPoints, List<GenomePosition> positionsToScale)
+    public static <T extends GenomePosition> List<T> downsampleWithMinimumPerRegion(List<T> dataPoints, List<GenomePosition> positionsToScale)
     {
         if(dataPoints.size() < DEFAULT_DOWNSAMPLE_TARGET)
             return dataPoints;
 
-        List<GenomeRegion> contigs = regionsFromPositions(positionsToScale);
+        List<GenomeRegion> regions = regionsFromPositions(positionsToScale);
 
         List<List<T>> dataPointsGrouped = Lists.newArrayList();
-        for(GenomeRegion contig : contigs)
+        for(GenomeRegion region : regions)
         {
-            List<T> contigAmberBAFs = dataPoints.stream()
+            List<T> regionDataPoints = dataPoints.stream()
                     .filter(x ->
-                            x.chromosome().equals(contig.chromosome()) &&
-                            x.position() > contig.start() && x.position() <= contig.end()
+                            x.chromosome().equals(region.chromosome()) &&
+                            x.position() > region.start() && x.position() <= region.end()
                     ).toList();
 
-            dataPointsGrouped.add(contigAmberBAFs);
+            dataPointsGrouped.add(regionDataPoints);
         }
 
         List<Integer> groupSizes = dataPointsGrouped.stream().map(x -> x.size()).toList();
         int[] groupDownsampleTargets = calcGroupDownsampleTargets(groupSizes, DEFAULT_DOWNSAMPLE_TARGET, DEFAULT_MIN_PRESERVED);
 
-        List<T> result = Lists.newArrayList();
-        for(int i = 0; i < contigs.size(); i++)
+        String dataType = dataPoints.get(0).getClass().getSimpleName().replace("Immutable", "");
+
+        List<T> dataPointsDownsampled = Lists.newArrayList();
+        for(int i = 0; i < regions.size(); i++)
         {
             List<T> groupDataPoints = dataPointsGrouped.get(i);
             int groupDownsampleTarget = groupDownsampleTargets[i];
 
             List<T> groupDataPointsDownsampled = downsampleList(groupDataPoints, groupDownsampleTarget);
-            result.addAll(groupDataPointsDownsampled);
+            dataPointsDownsampled.addAll(groupDataPointsDownsampled);
 
             boolean isDownsampled = groupDataPoints.size() > groupDownsampleTarget;
             if(isDownsampled)
             {
-                VIS_LOGGER.trace("region {}:{}-{} downsampled {} -> {}, first data point: {}",
-                        contigs.get(i).chromosome(), contigs.get(i).start(), contigs.get(i).end(),
-                        groupDataPoints.size(), groupDataPointsDownsampled.size(),
-                        dataPoints.get(0)
+                VIS_LOGGER.trace("downsampled dataType({}) region({}:{}-{}): {} -> {}",
+                        dataType, regions.get(i).chromosome(), regions.get(i).start(), regions.get(i).end(),
+                        groupDataPoints.size(), groupDataPointsDownsampled.size()
                 );
             }
         }
 
-        return result;
+        VIS_LOGGER.debug("downsampled dataType({}): {} -> {}", dataType, dataPoints.size(), dataPointsDownsampled.size());
+
+        return dataPointsDownsampled;
     }
 
 }

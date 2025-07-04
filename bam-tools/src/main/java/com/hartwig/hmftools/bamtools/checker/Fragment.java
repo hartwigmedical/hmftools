@@ -30,6 +30,8 @@ public class Fragment
     private String mFirstPrimaryCigar;
     private String mSecondPrimaryCigar;
 
+    private boolean mMateCigarFixed;
+
     public Fragment(final SAMRecord read)
     {
         mReadId = read.getReadName();
@@ -39,6 +41,7 @@ public class Fragment
         mReceivedSupplementaryCount = 0;
         mFirstPrimaryCigar = null;
         mSecondPrimaryCigar = null;
+        mMateCigarFixed = false;
 
         addRead(read);
     }
@@ -82,6 +85,7 @@ public class Fragment
     }
 
     public boolean hasPrimaryInfo() { return mFirstPrimaryCigar != null && mSecondPrimaryCigar != null; }
+    public boolean requiredMateCigarFix() { return mMateCigarFixed; }
 
     public boolean isComplete()
     {
@@ -142,6 +146,8 @@ public class Fragment
     {
         for(SAMRecord read : mReads)
         {
+            mMateCigarFixed |= !read.hasAttribute(MATE_CIGAR_ATTRIBUTE);
+
             if(read.getFirstOfPairFlag())
             {
                 read.setAttribute(MATE_CIGAR_ATTRIBUTE, mSecondPrimaryCigar);

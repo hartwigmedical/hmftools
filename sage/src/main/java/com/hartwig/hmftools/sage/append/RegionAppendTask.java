@@ -16,16 +16,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
-import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.AppendVariantPhaser;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 
@@ -34,7 +34,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class RegionAppendTask implements Callable
+public class RegionAppendTask implements Callable<Void>
 {
     private final ChrBaseRegion mRegion;
     private final int mTaskId;
@@ -78,7 +78,7 @@ public class RegionAppendTask implements Callable
     public List<VariantContext> finalVariants() { return mFinalVariants; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         SG_LOGGER.trace("{}: region({}) finding evidence", mTaskId, mRegion);
 
@@ -134,7 +134,7 @@ public class RegionAppendTask implements Callable
 
         mSamSlicerFactory.closeSamReaders();
 
-        return (long)0;
+        return null;
     }
 
     public void createFinalVariants(final ReadContextCounters readContextCounters, final List<String> sampleIds)

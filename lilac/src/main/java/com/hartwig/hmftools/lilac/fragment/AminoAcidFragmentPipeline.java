@@ -2,8 +2,8 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
-import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,10 +35,10 @@ public class AminoAcidFragmentPipeline
 
     private final List<Fragment> mOriginalRefFragments; // copied and used for phasing only, will remain unchanged
 
-    public AminoAcidFragmentPipeline(final LilacConfig config, final List<Fragment> referenceFragments)
+    public AminoAcidFragmentPipeline(final LilacConfig config, final Collection<Fragment> referenceFragments)
     {
         mConfig = config;
-        mOriginalRefFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
+        mOriginalRefFragments = referenceFragments.stream().map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
 
@@ -60,7 +60,7 @@ public class AminoAcidFragmentPipeline
         return mRefAminoAcidCounts;
     }
 
-    private List<Fragment> createHighQualAminoAcidFragments(final List<Fragment> fragments)
+    private static List<Fragment> createHighQualAminoAcidFragments(final Iterable<Fragment> fragments)
     {
         List<Fragment> aminoAcidFragments = Lists.newArrayList();
 
@@ -110,21 +110,15 @@ public class AminoAcidFragmentPipeline
         String gene = context.geneName();
 
         // start with the unfiltered fragments again
-        List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream()
-                .filter(x -> x.containsGene(gene))
-                .collect(Collectors.toList());
-
+        List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream().filter(x -> x.containsGene(gene)).toList();
         if(geneRefNucFrags.isEmpty())
         {
             return Collections.emptyList();
         }
 
-        List<Fragment> highQualFrags = geneRefNucFrags.stream()
-                .map(x -> copyNucleotideFragment(x))
-                .collect(Collectors.toList());
-
-        highQualFrags.forEach(x -> x.removeLowQualBases());
-        highQualFrags = highQualFrags.stream().filter(x -> x.hasNucleotides()).collect(Collectors.toList());
+        List<Fragment> highQualFrags = geneRefNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
+        highQualFrags.forEach(Fragment::removeLowQualBases);
+        highQualFrags = highQualFrags.stream().filter(Fragment::hasNucleotides).toList();
 
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
                 mMinVafFilterDepth, mMinEvidenceFactor, mMinHighQualEvidenceFactor, geneRefNucFrags, highQualFrags);
@@ -154,7 +148,7 @@ public class AminoAcidFragmentPipeline
         mRefAminoAcidCounts.put(gene, refAminoAcidCounts);
     }
 
-    public List<Fragment> calcComparisonCoverageFragments(final List<Fragment> comparisonFragments)
+    public List<Fragment> calcComparisonCoverageFragments(final Iterable<Fragment> comparisonFragments)
     {
         List<Fragment> highQualFragments = createHighQualAminoAcidFragments(comparisonFragments);
 
@@ -183,8 +177,8 @@ public class AminoAcidFragmentPipeline
         return variantFilteredTumorAminoAcids;
     }
 
-    private static boolean containsVariant(
-            final Fragment fragment, final List<SequenceCountDiff> nucelotideVariants, final List<SequenceCountDiff> aminoAcidVariants)
+    private static boolean containsVariant(final Fragment fragment, final Collection<SequenceCountDiff> nucelotideVariants,
+            final Collection<SequenceCountDiff> aminoAcidVariants)
     {
         return nucelotideVariants.stream().anyMatch(x -> containsNucleotideVariant(fragment, x))
                 || aminoAcidVariants.stream().anyMatch(x -> containsAminoAcidVariant(fragment, x));

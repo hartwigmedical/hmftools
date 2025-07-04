@@ -4,6 +4,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.registerCommonConfig;
+import static com.hartwig.hmftools.common.genome.gc.GCBucket.calcGcBucket;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -30,6 +31,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cobalt.CobaltConfig;
+import com.hartwig.hmftools.cobalt.CobaltConstants;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -73,11 +75,8 @@ public class NormalisationConfig
         DetailedFile = configBuilder.getValue(DETAILED_OUTPUT);
 
         // set global constants
-        double gcRatioMin = configBuilder.getDecimal(CobaltConfig.GC_RATIO_MIN);
-        double gcRatioMax = configBuilder.getDecimal(CobaltConfig.GC_RATIO_MAX);
-
-        NormConstants.GC_BUCKET_MIN = (int)round(gcRatioMin * 100);
-        NormConstants.GC_BUCKET_MAX = (int)round(gcRatioMax * 100);
+        CobaltConstants.GC_BUCKET_MIN = calcGcBucket(configBuilder.getDecimal(CobaltConfig.GC_RATIO_MIN));
+        CobaltConstants.GC_BUCKET_MAX = calcGcBucket(configBuilder.getDecimal(CobaltConfig.GC_RATIO_MAX));
     }
 
     public String getWgsSampleId(final String sampleId)

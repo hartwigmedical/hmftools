@@ -195,6 +195,7 @@ public class LoadPurpleData
         BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(dbSampleId);
 
         SomaticVariantFactory somaticVariantFactory = new SomaticVariantFactory();
+        somaticVariantFactory.setDropDuplicates();
 
         somaticVariantFactory.fromVCFFile(sampleId, referenceId, rnaId, somaticVcf, referenceId != null, somaticWriter);
         somaticWriter.close();

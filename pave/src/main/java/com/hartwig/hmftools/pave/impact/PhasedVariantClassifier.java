@@ -112,7 +112,8 @@ public class PhasedVariantClassifier
 
             for(VariantTransImpact transImpact : entry.getValue())
             {
-                if(!transImpact.hasCodingBases() || !transImpact.proteinContext().validRefCodon())
+                // realigned impacts are ignored for the purposes of phasing variants
+                if(!transImpact.hasCodingBases() || !transImpact.proteinContext().validRefCodon() || transImpact.realigned())
                     continue;
 
                 List<VariantTransImpact> transImpacts = Lists.newArrayList(transImpact);

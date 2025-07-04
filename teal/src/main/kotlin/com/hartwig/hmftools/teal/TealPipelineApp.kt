@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.teal
 
-import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepthFile
+import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket
 import com.hartwig.hmftools.common.metrics.BamMetricsSummary
 import com.hartwig.hmftools.common.purple.PurityContextFile
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
-import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
 
@@ -37,8 +36,8 @@ class TealPipelineApp(configBuilder: ConfigBuilder)
             if (pipelineParams.commonParams.tumorSampleId != null)
             {
                 val tumorGCMedianFilename =
-                    GCMedianReadDepthFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.tumorSampleId!!)
-                val tumorGCMedianReadDepth = GCMedianReadDepthFile.read(tumorGCMedianFilename)
+                    CobaltGcMedianFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.tumorSampleId!!)
+                val tumorGCMedianReadDepth = CobaltGcMedianFile.read(tumorGCMedianFilename)
                 tealParams.tumorMeanReadDepth = tumorGCMedianReadDepth.meanReadDepth()
                 tealParams.tumorGc50ReadDepth = tumorGCMedianReadDepth.medianReadDepth(ImmutableGCBucket(50))
             }
@@ -46,8 +45,8 @@ class TealPipelineApp(configBuilder: ConfigBuilder)
             if (pipelineParams.commonParams.referenceSampleId != null)
             {
                 val referenceGCMedianFilename =
-                    GCMedianReadDepthFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.referenceSampleId!!)
-                val referenceGCMedianReadDepth = GCMedianReadDepthFile.read(referenceGCMedianFilename)
+                    CobaltGcMedianFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.referenceSampleId!!)
+                val referenceGCMedianReadDepth = CobaltGcMedianFile.read(referenceGCMedianFilename)
 
                 tealParams.germlineMeanReadDepth = referenceGCMedianReadDepth.meanReadDepth()
                 tealParams.germlineGc50ReadDepth = referenceGCMedianReadDepth.medianReadDepth(ImmutableGCBucket(50))

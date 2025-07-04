@@ -12,10 +12,10 @@ import static com.hartwig.hmftools.pave.PaveConstants.PON_MEAN_READ_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_REPEAT_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_SAMPLE_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_VAF_THRESHOLD;
-import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
-import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 
 import java.util.List;
 import java.util.Map;
@@ -43,7 +43,7 @@ import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class ChromosomeTask implements Callable
+public class ChromosomeTask implements Callable<Void>
 {
     private final HumanChromosome mChromosome;
     private final String mChromosomeStr;
@@ -86,7 +86,7 @@ public class ChromosomeTask implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         int variantCount = 0;
 
@@ -134,7 +134,7 @@ public class ChromosomeTask implements Callable
 
         mVcfWriter.onChromosomeComplete(mChromosome);
 
-        return (long)0;
+        return null;
     }
 
     private void processVariant(final VariantContext variantContext)

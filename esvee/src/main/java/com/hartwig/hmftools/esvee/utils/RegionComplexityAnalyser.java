@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_S
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
@@ -107,7 +106,7 @@ public class RegionComplexityAnalyser
                 taskIndex = 0;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mThreads))
             System.exit(1);
 
@@ -124,7 +123,7 @@ public class RegionComplexityAnalyser
         SV_LOGGER.info("Region complexity analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final List<String> mSampleIds;
         private final WindowDataMap mWindowDataMap;
@@ -139,10 +138,11 @@ public class RegionComplexityAnalyser
         {
             return mSampleIds;
         }
+
         public WindowDataMap windowDataMap() { return mWindowDataMap; }
 
         @Override
-        public Long call()
+        public Void call()
         {
             SV_LOGGER.info("processing {} samples", mSampleIds.size());
 
@@ -162,7 +162,7 @@ public class RegionComplexityAnalyser
 
             SV_LOGGER.debug("complete");
 
-            return (long) 0;
+            return null;
         }
 
         private void processSample(final String sampleId)
@@ -201,7 +201,7 @@ public class RegionComplexityAnalyser
                 int windowIndex = windowDataIndex(position);
 
                 if(!chromosome.equals(currentChromosome) || currentWindow == null
-                || currentWindow.Index != windowIndex)
+                        || currentWindow.Index != windowIndex)
                 {
                     currentChromosome = chromosome;
 
@@ -298,18 +298,18 @@ public class RegionComplexityAnalyser
 
     private class WindowDataMap
     {
-        private final Map<String,Map<Integer,WindowData>> mChrWindowDataMap;
+        private final Map<String, Map<Integer, WindowData>> mChrWindowDataMap;
 
         public WindowDataMap()
         {
             mChrWindowDataMap = Maps.newHashMap();
         }
 
-        public Map<String,Map<Integer,WindowData>> chrWindowDataMap() { return mChrWindowDataMap; }
+        public Map<String, Map<Integer, WindowData>> chrWindowDataMap() { return mChrWindowDataMap; }
 
         public WindowData getOrCreateWindow(final String chromosome, final int position)
         {
-            Map<Integer,WindowData> windows = mChrWindowDataMap.get(chromosome);
+            Map<Integer, WindowData> windows = mChrWindowDataMap.get(chromosome);
 
             if(windows == null)
             {
@@ -332,13 +332,13 @@ public class RegionComplexityAnalyser
 
         public void mergeOther(final WindowDataMap other)
         {
-            for(Map.Entry<String,Map<Integer,WindowData>> chrEntry : other.chrWindowDataMap().entrySet())
+            for(Map.Entry<String, Map<Integer, WindowData>> chrEntry : other.chrWindowDataMap().entrySet())
             {
                 String chromosome = chrEntry.getKey();
 
-                for(Map.Entry<Integer,WindowData> windowEntry : chrEntry.getValue().entrySet())
+                for(Map.Entry<Integer, WindowData> windowEntry : chrEntry.getValue().entrySet())
                 {
-                    Map<Integer,WindowData> windows = mChrWindowDataMap.get(chromosome);
+                    Map<Integer, WindowData> windows = mChrWindowDataMap.get(chromosome);
 
                     if(windows == null)
                     {
@@ -371,7 +371,7 @@ public class RegionComplexityAnalyser
             BreakendCount = breakendCount;
         }
 
-        public String toString() { return format("sampleId(%s) breakends(%d)", SampleId, BreakendCount); }
+        @Override public String toString() { return format("sampleId(%s) breakends(%d)", SampleId, BreakendCount); }
     }
 
     private void writeWindowData(final WindowDataMap windowDataMap)
@@ -389,7 +389,7 @@ public class RegionComplexityAnalyser
             writer.write(sj.toString());
             writer.newLine();
 
-            for(Map.Entry<String,Map<Integer,WindowData>> chrEntry : windowDataMap.chrWindowDataMap().entrySet())
+            for(Map.Entry<String, Map<Integer, WindowData>> chrEntry : windowDataMap.chrWindowDataMap().entrySet())
             {
                 String chromosome = chrEntry.getKey();
 

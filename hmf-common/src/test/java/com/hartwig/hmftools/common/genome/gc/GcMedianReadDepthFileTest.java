@@ -5,10 +5,12 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
+import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 
 import org.junit.Test;
 
-public class GCMedianReadDepthFileTest
+public class GcMedianReadDepthFileTest
 {
     private static final double DELTA = 1e-2;
 
@@ -18,7 +20,7 @@ public class GCMedianReadDepthFileTest
         @SuppressWarnings("UnstableApiUsage")
         final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.cobalt.gc.median").getPath();
 
-        final GCMedianReadDepth readDepth = GCMedianReadDepthFile.read(GC_MEDIAN_PATH);
+        final GcMedianReadDepth readDepth = CobaltGcMedianFile.read(GC_MEDIAN_PATH);
         validateReadDepth(readDepth);
     }
 
@@ -28,11 +30,11 @@ public class GCMedianReadDepthFileTest
         @SuppressWarnings("UnstableApiUsage")
         final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.cobalt.gc.median.oldversion").getPath();
 
-        final GCMedianReadDepth readDepth = GCMedianReadDepthFile.read(GC_MEDIAN_PATH);
+        final GcMedianReadDepth readDepth = CobaltGcMedianFile.read(GC_MEDIAN_PATH);
         validateReadDepth(readDepth);
     }
 
-    private void validateReadDepth(final GCMedianReadDepth readDepth)
+    private void validateReadDepth(final GcMedianReadDepth readDepth)
     {
         assertEquals(145.11, readDepth.meanReadDepth(), DELTA);
         assertEquals(141.79, readDepth.medianReadDepth(), DELTA);

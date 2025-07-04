@@ -262,7 +262,7 @@ public class GeneProbesGenerator
     }
 
     // from the targeted gene regions, we find the probes
-    void populateCandidateProbes(TargetedGene targetedGene)
+    protected void populateCandidateProbes(TargetedGene targetedGene)
     {
         for(TargetedGeneRegion region : targetedGene.getRegions())
         {
@@ -270,7 +270,7 @@ public class GeneProbesGenerator
         }
     }
 
-    static void populateCandidateProbes(final TargetedGeneRegion region, final RefGenomeInterface refGenomeInterface)
+    protected static void populateCandidateProbes(final TargetedGeneRegion region, final RefGenomeInterface refGenomeInterface)
     {
         switch(region.getType())
         {

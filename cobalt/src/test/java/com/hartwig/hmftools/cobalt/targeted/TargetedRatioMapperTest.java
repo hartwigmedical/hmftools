@@ -51,13 +51,13 @@ public class TargetedRatioMapperTest
                 BooleanColumn.create("offTarget"));
 
         Row row = targetEnrichmentRatios.appendRow();
-        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Contig);
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Name);
         row.setInt(CobaltColumns.POSITION, 2001);
         row.setDouble(CobaltColumns.RELATIVE_ENRICHMENT, 2.0);
         row.setBoolean("offTarget", false);
 
         row = targetEnrichmentRatios.appendRow();
-        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Contig);
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Name);
         row.setInt(CobaltColumns.POSITION, 12001);
         row.setDouble(CobaltColumns.RELATIVE_ENRICHMENT, 10.0);
         row.setBoolean("offTarget", false);
@@ -99,7 +99,7 @@ public class TargetedRatioMapperTest
     private static void addReadRatio(Table table, int position, double ratio, int gcBucket)
     {
         Row row = table.appendRow();
-        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Contig);
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Name);
         row.setInt(CobaltColumns.POSITION, position);
         row.setDouble(CobaltColumns.RATIO, ratio);
         row.setDouble(CobaltColumns.PROFILE_GC_CONTENT, gcBucket / 100.0);

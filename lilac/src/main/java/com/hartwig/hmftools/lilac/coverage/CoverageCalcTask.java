@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
@@ -12,11 +11,11 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
-public class CoverageCalcTask implements Callable<Long>
+public class CoverageCalcTask implements Callable<Void>
 {
     private final int mId;
     private final List<HlaComplex> mComplexes;
-    private List<ComplexCoverage> mCoverageResults;
+    private final List<ComplexCoverage> mCoverageResults;
 
     private final FragmentAlleleMatrix mFragAlleleMatrix;
     private final double mTopScorePercDiff;
@@ -29,7 +28,7 @@ public class CoverageCalcTask implements Callable<Long>
     private static final int CULL_COMPLEX_COUNT = 100000;
     private static final int MIN_FRAG_DIFF = 40;
 
-    public CoverageCalcTask(final int id, final List<HlaComplex> complexes, FragmentAlleleMatrix fragAlleleMatrix, double topScoreThreshold)
+    public CoverageCalcTask(final int id, final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix, double topScoreThreshold)
     {
         mId = id;
         mComplexes = complexes;
@@ -47,7 +46,7 @@ public class CoverageCalcTask implements Callable<Long>
     public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         boolean checkCull = mComplexes.size() >= CULL_COMPLEX_COUNT;
 
@@ -77,10 +76,10 @@ public class CoverageCalcTask implements Callable<Long>
 
         mPerfCounter.stop();
 
-        return (long)0;
+        return null;
     }
 
-    private int calcTotalFragments(List<AlleleCoverage> alleleCoverage)
+    private int calcTotalFragments(final List<AlleleCoverage> alleleCoverage)
     {
         int unique = 0;
         double shared = 0.0;
@@ -93,7 +92,7 @@ public class CoverageCalcTask implements Callable<Long>
             wild += coverage.WildCoverage;
         }
 
-        return unique + (int)round(shared) + (int)round(wild);
+        return unique + (int) round(shared) + (int) round(wild);
     }
 
     private boolean canCull(final int totalCoverage)

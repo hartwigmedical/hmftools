@@ -2,8 +2,8 @@ package com.hartwig.hmftools.cup.prep;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
-import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
+import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +41,7 @@ public class CuppaDataPrep
         mConfig = prepConfig;
     }
 
-    public CategoryPrep createCategoryPrep(CategoryType categoryType)
+    public CategoryPrep createCategoryPrep(final CategoryType categoryType)
     {
         switch(categoryType)
         {
@@ -68,7 +68,7 @@ public class CuppaDataPrep
         }
     }
 
-    public String getOutputPath(@Nullable CategoryType categoryType)
+    public String getOutputPath(@Nullable final CategoryType categoryType)
     {
         String path = mConfig.OutputDir + "/";
 
@@ -112,7 +112,7 @@ public class CuppaDataPrep
         DataItemsIO.writeDataItemList(dataItems, outputPath);
     }
 
-    public DataItemMatrix extractMultiSampleOneCategory(CategoryType categoryType)
+    public DataItemMatrix extractMultiSampleOneCategory(final CategoryType categoryType)
     {
         CUP_LOGGER.info("Extracting category({})", categoryType);
 
@@ -125,7 +125,7 @@ public class CuppaDataPrep
             sampleTasks.add(new SamplePrepTask(sampleIndex, mConfig, categoryPrep, featureBySampleMatrix));
         }
 
-        List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
+        List<Callable<Void>> callableTasks = sampleTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
 
         DataItemMatrix matrix = new DataItemMatrix(mConfig.SampleIds, featureBySampleMatrix);
@@ -134,7 +134,7 @@ public class CuppaDataPrep
         return matrix;
     }
 
-    public void extractMultiSample(boolean keepDataItems)
+    public void extractMultiSample(final boolean keepDataItems)
     {
         CUP_LOGGER.info("Extracting CUPPA features in multi sample mode: {} samples, {} threads",
                 mConfig.SampleIds.size(), mConfig.Threads);
@@ -179,7 +179,9 @@ public class CuppaDataPrep
         if(mConfig.isSingleSample())
         {
             extractSingleSample(keepDataItems);
-        } else {
+        }
+        else
+        {
             extractMultiSample(keepDataItems);
         }
 
