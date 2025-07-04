@@ -35,8 +35,7 @@ public class PanelBuilder
 
         mPanelCache = new PanelCache();
 
-        // TODO
-        mProbeQualityProfile = new ProbeQualityProfile();
+        mProbeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
     }
 
     public void run()

@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
@@ -28,8 +29,11 @@ public class PanelConfig
     public final RefGenomeInterface RefGenome;
     public final RefGenomeVersion RefGenVersion;
 
-    public final int Threads;
     public final String EnsemblDir;
+
+    public final String ProbeQualityProfileFile;
+
+    public final int Threads;
 
     private static final String AMBER_SITES_FILE = "amber_sites_file";
     private static final String GENE_TRANSCRIPT_FILE = "gene_transcript_file";
@@ -48,6 +52,8 @@ public class PanelConfig
         RefGenVersion = deriveRefGenomeVersion((RefGenomeSource)RefGenome);
 
         EnsemblDir = configBuilder.getValue(EnsemblDataCache.ENSEMBL_DATA_DIR);
+
+        ProbeQualityProfileFile = configBuilder.getValue(ProbeQualityProfile.PROBE_QUALITY_FILE_CONFIG);
 
         OutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
         OutputDir = parseOutputDir(configBuilder);
@@ -68,6 +74,8 @@ public class PanelConfig
         EnsemblDataCache.addEnsemblDir(configBuilder, true);
 
         addRefGenomeFile(configBuilder, true);
+
+        ProbeQualityProfile.registerConfig(configBuilder);
 
         configBuilder.addConfigItem(OUTPUT_PREFIX, true, "prefix of output BED filename");
         addOutputDir(configBuilder);

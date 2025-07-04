@@ -67,7 +67,7 @@ public class ProbeQualityProfile
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(PROBE_QUALITY_FILE_CONFIG, false, PROBE_QUALITY_FILE_DESC);
+        configBuilder.addPath(PROBE_QUALITY_FILE_CONFIG, true, PROBE_QUALITY_FILE_DESC);
     }
 
     private static Map<String, List<ProbeQualityWindow>> loadProbeQualityWindows(final String filePath)
