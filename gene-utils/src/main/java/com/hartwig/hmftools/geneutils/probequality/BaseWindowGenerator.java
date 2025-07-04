@@ -122,8 +122,9 @@ public class BaseWindowGenerator
         int chromosomeLength = mRefGenome.getChromosomeLength(chromosome);
 
         // Generate the windows from the configured specific regions, rather than enumerating all windows and filtering, for performance.
-        List<ChrBaseRegion> regions = mSpecificRegions.Regions.stream()
-                .filter(region -> region.chromosome().equals(chromosome)).collect(Collectors.toList());
+        ArrayList<ChrBaseRegion> regions = mSpecificRegions.Regions.stream()
+                .filter(region -> region.chromosome().equals(chromosome))
+                .collect(Collectors.toCollection(ArrayList::new));
         // If no specific regions then add the whole chromosome.
         if(regions.isEmpty())
         {

@@ -120,7 +120,7 @@ public class ProbeQualityProfile
     {
         List<BaseRegion> regions = windows.stream()
                 .map(window -> new BaseRegion(window.start(), window.end()))
-                .collect(Collectors.toList());
+                .toList();
         regions = BaseRegion.checkMergeOverlapsFast(regions, false);
         return regions;
     }
