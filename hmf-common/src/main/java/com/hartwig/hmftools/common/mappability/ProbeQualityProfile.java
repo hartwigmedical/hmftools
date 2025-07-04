@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -32,9 +31,6 @@ public class ProbeQualityProfile
 {
     // Keyed by chromosome.
     public final Map<String, List<ProbeQualityWindow>> mWindows;
-    // Precomputed region coverage so we can tell if the profile covers a probe region.
-    // In typical usage this should cover most of the genome.
-    public final Map<String, List<BaseRegion>> mCoverage;
 
     public static final String PROBE_QUALITY_FILE_CONFIG = "probe_quality_profile";
     public static final String PROBE_QUALITY_FILE_DESC = "Genome regions to probe quality";
@@ -56,13 +52,7 @@ public class ProbeQualityProfile
 
     private ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows)
     {
-        this(windows, computeWindowCoverage(windows));
-    }
-
-    private ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows, final Map<String, List<BaseRegion>> coverage)
-    {
         mWindows = windows;
-        mCoverage = coverage;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -106,25 +96,6 @@ public class ProbeQualityProfile
         return result;
     }
 
-    private static Map<String, List<BaseRegion>> computeWindowCoverage(final Map<String, List<ProbeQualityWindow>> windows)
-    {
-        LOGGER.debug("Computing profile window coverage");
-        long startTimeMs = System.currentTimeMillis();
-        Map<String, List<BaseRegion>> result = windows.entrySet().stream().collect(
-                Collectors.toMap(Map.Entry::getKey, entry -> computeWindowCoverage(entry.getValue())));
-        LOGGER.debug("Coverage complete, secs({})", secondsSinceNow(startTimeMs));
-        return result;
-    }
-
-    private static List<BaseRegion> computeWindowCoverage(final List<ProbeQualityWindow> windows)
-    {
-        List<BaseRegion> regions = windows.stream()
-                .map(window -> new BaseRegion(window.start(), window.end()))
-                .collect(Collectors.toList());
-        regions = BaseRegion.checkMergeOverlapsFast(regions, false);
-        return regions;
-    }
-
     // Compute the final quality score from the probe quality profile.
     // Returns empty optional if the profile doesn't cover the probe region.
     public Optional<Double> computeQualityScore(final ChrBaseRegion probe)
@@ -136,29 +107,32 @@ public class ProbeQualityProfile
 
         // If the profile doesn't completely cover the probe then we say we can't assess its quality
         // (since the uncovered region could affect the quality significantly).
-        if(!coversRegion(probe))
-        {
-            return Optional.empty();
-        }
 
         List<ProbeQualityWindow> windows = mWindows.get(probe.chromosome());
-        int windowsStart = findFirstWindowOverlapping(windows, probe.start());
+        if(windows == null)
+        {
+            // Probe chromosome not covered at all.
+            return Optional.empty();
+        }
+        Optional<Integer> windowsStart = findFirstWindowContaining(windows, probe.start());
+        if (windowsStart.isEmpty()) {
+            // Probe start position not covered.
+            return Optional.empty();
+        }
         // For some reason using Stream skip() and takeWhile() here is extremely slow compared to List.subList().
-        int windowsEnd = scanWhileOverlap(windows, windowsStart, probe.baseRegion());   // Inclusive
-        List<ProbeQualityWindow> overlappingWindows = windows.subList(windowsStart, windowsEnd + 1);
+        int windowsEnd = scanWhileOverlap(windows, windowsStart.get(), probe.baseRegion());   // Inclusive
+        List<ProbeQualityWindow> overlappingWindows = windows.subList(windowsStart.get(), windowsEnd + 1);
+        if(!overlappingWindows.get(overlappingWindows.size() - 1).containsPosition(probe.end()))
+        {
+            // Probe middle or end not covered.
+            return Optional.empty();
+        }
         double qualityScore = aggregateQualityScore(overlappingWindows.stream(), probe.baseRegion());
         return Optional.of(qualityScore);
     }
 
-    // Checks if this probe quality profile fully covers the specified region.
-    private boolean coversRegion(final ChrBaseRegion region)
-    {
-        List<BaseRegion> coverage = mCoverage.get(region.chromosome());
-        return coverage != null && coverage.stream().anyMatch(r -> r.containsRegion(region));
-    }
-
-    // Efficiently finds the index of the first window that overlaps a position.
-    private static int findFirstWindowOverlapping(final List<ProbeQualityWindow> windows, int position)
+    // Efficiently finds the index of the first window that contains a position.
+    private static Optional<Integer> findFirstWindowContaining(final List<ProbeQualityWindow> windows, int position)
     {
         // We are able to find the first window that overlaps using Collections.binarySearch() because, since the windows are of equal size,
         // sorting by start (done previously) implies sorting by end.
@@ -171,7 +145,14 @@ public class ProbeQualityProfile
         {
             index = -index - 1;
         }
-        return index;
+        if(index < windows.size() && windows.get(index).containsPosition(position))
+        {
+            return Optional.of(index);
+        }
+        else
+        {
+            return Optional.empty();
+        }
     }
 
     // Compute the final quality score from windows which overlap the probe.

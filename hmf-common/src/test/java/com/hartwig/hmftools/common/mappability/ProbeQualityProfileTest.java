@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.junit.Test;
@@ -52,25 +51,7 @@ public class ProbeQualityProfileTest
                         new ProbeQualityWindow(1, 41, 1.0f)
                 )
         );
-        Map<String, List<BaseRegion>> expectedCoverage = Map.of(
-                "1", List.of(
-                        new BaseRegion(101, 241)
-                ),
-                "2", List.of(
-                        new BaseRegion(221, 321)
-                ),
-                "10", List.of(
-                        new BaseRegion(761, 821),
-                        new BaseRegion(841, 881),
-                        new BaseRegion(901, 961),
-                        new BaseRegion(981, 1021)
-                ),
-                "11", List.of(
-                        new BaseRegion(1, 41)
-                )
-        );
         assertEquals(expectedWindows, mProfile.mWindows);
-        assertEquals(expectedCoverage, mProfile.mCoverage);
     }
 
     @Test
