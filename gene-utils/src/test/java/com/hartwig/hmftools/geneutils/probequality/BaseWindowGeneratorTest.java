@@ -35,8 +35,8 @@ public class BaseWindowGeneratorTest
         // Include all of chr 10
         specificRegions.Chromosomes.add("10");
         // Include part of chr 15
-        specificRegions.addRegion(new ChrBaseRegion("15", 3, 9));
-        specificRegions.addRegion(new ChrBaseRegion("15", 5, 9));
+        specificRegions.addRegion(new ChrBaseRegion("15", 3, 8));
+        specificRegions.addRegion(new ChrBaseRegion("15", 5, 9));   // Check overlap behaviour
         specificRegions.addRegion(new ChrBaseRegion("15", 20, 24));
         // Exclude all of chr 17
 
@@ -49,10 +49,11 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_createBaseWindowBatches() {
+    public void testCreateBaseWindowBatches()
+    {
         List<List<BaseWindowGenerator.BaseWindow>> expected = List.of(
                 List.of(
-                    new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("10", 1, 5), "AACCG".getBytes()),
+                        new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("10", 1, 5), "AACCG".getBytes()),
                         new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("10", 4, 8), "CGGTT".getBytes()),
                         new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("10", 7, 11), "TTAAC".getBytes())
                 ),
@@ -60,7 +61,7 @@ public class BaseWindowGeneratorTest
                         new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("10", 10, 14), "ACCGG".getBytes()),
                         new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("15", 1, 5), "TTGGC".getBytes()),
                         new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("15", 4, 8), "GCCAA".getBytes())
-                        ),
+                ),
                 List.of(
                         new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("15", 7, 11), "AATTG".getBytes()),
                         new BaseWindowGenerator.BaseWindow(new ChrBaseRegion("15", 19, 23), "GGCCA".getBytes())
@@ -71,7 +72,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_createBaseWindowRegions_chromosome_all()
+    public void testCreateBaseWindowRegionsChromosomeAll()
     {
         String chr = "10";
         List<ChrBaseRegion> expected = List.of(
@@ -86,7 +87,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_createBaseWindowRegions_chromosome_part()
+    public void testCreateBaseWindowRegionsChromosomePart()
     {
         String chr = "15";
         List<ChrBaseRegion> expected = List.of(
@@ -101,7 +102,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_createBaseWindowRegions_chromosome_excluded()
+    public void testCreateBaseWindowRegionsChromosomeExcluded()
     {
         List<ChrBaseRegion> expected = List.of();
         List<ChrBaseRegion> actual = mGen.createBaseWindowRegions("17").toList();
@@ -109,7 +110,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_createBaseWindowRegions_region_empty()
+    public void testCreateBaseWindowRegionsRegionEmpty()
     {
         ChrBaseRegion region = new ChrBaseRegion("10", 11, 10);
         List<ChrBaseRegion> expected = List.of();
@@ -118,7 +119,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_createBaseWindowRegions_region_single()
+    public void testCreateBaseWindowRegionsRegionSingle()
     {
         String chr = "10";
         ChrBaseRegion region = new ChrBaseRegion(chr, 11, 12);
@@ -130,7 +131,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_createBaseWindowRegions_region_multiple()
+    public void testCreateBaseWindowRegionsRegionMultiple()
     {
         String chr = "10";
         ChrBaseRegion region = new ChrBaseRegion(chr, 12, 30);
@@ -148,7 +149,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_baseWindowStartCoveringPosition()
+    public void testBaseWindowStartCoveringPosition()
     {
         assertEquals(1, mGen.baseWindowStartCoveringPosition(1));
         assertEquals(1, mGen.baseWindowStartCoveringPosition(2));
@@ -163,7 +164,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_batchRegions_single()
+    public void testBatchRegionsSingle()
     {
         List<ChrBaseRegion> regions = List.of(
                 new ChrBaseRegion("1", 1, 10),
@@ -177,7 +178,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_batchRegions_multiple()
+    public void testBatchRegionsMultiple()
     {
         List<ChrBaseRegion> regions = List.of(
                 new ChrBaseRegion("1", 1, 10),
@@ -198,7 +199,7 @@ public class BaseWindowGeneratorTest
     }
 
     @Test
-    public void test_isSequenceNormal()
+    public void testIsSequenceNormal()
     {
         assertTrue(BaseWindowGenerator.isSequenceNormal("AAAAGCTaGtCAGTgcgtacg".getBytes()));
         assertFalse(BaseWindowGenerator.isSequenceNormal("GGGGGNNNNNNNNNNTCTC".getBytes()));
