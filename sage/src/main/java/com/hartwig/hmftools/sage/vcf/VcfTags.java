@@ -32,9 +32,6 @@ public final class VcfTags
     public static final String MAX_READ_EDGE_DISTANCE = "MED";
     public static final String MAX_READ_EDGE_DISTANCE_DESC = "Max read edge distance";
 
-    public static final String AVG_READ_EDGE_DISTANCE = "AED";
-    public static final String AVG_READ_EDGE_DISTANCE_DESC = "Average read edge distance [alt,total]";
-
     public static final String FRAG_STRAND_BIAS = "SB";
     public static final String FRAG_STRAND_BIAS_DESC = "Fragment strand bias - percentage of forward-orientation fragments (ref,alt)";
 

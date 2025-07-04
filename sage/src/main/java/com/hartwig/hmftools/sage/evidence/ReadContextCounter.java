@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
@@ -559,17 +560,24 @@ public class ReadContextCounter
 
     private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, double quality)
     {
+        boolean supportsAlt = false;
+        boolean supportsAltStrong = false;
+
+        if(support != null)
+        {
+            supportsAltStrong = support == FULL || support == VariantReadSupport.PARTIAL_CORE || support == REALIGNED;
+            supportsAlt = supportsAltStrong || support == CORE;
+        }
+
+        // update UMI counts prior to read counts so if they need to be initialised, they do not double-count the current read
+        countUmiType(record, supportsAltStrong);
+
         mCounts.addSupport(support, 1);
         mQualities.addSupport(support, (int) quality);
 
-        boolean supportsVariant = support != null
-                && (support == FULL || support == VariantReadSupport.PARTIAL_CORE || support == CORE || support == REALIGNED);
-
-        countUmiType(record, supportsVariant);
-
-        if(mFragmentLengthData != null && (support == REF || supportsVariant))
+        if(mFragmentLengthData != null && (support == REF || supportsAlt))
         {
-            mFragmentLengthData.addLength(abs(record.getInferredInsertSize()), supportsVariant);
+            mFragmentLengthData.addLength(abs(record.getInferredInsertSize()), supportsAlt);
         }
 
         if(support != null && (support == FULL || support == VariantReadSupport.PARTIAL_CORE))
@@ -588,6 +596,9 @@ public class ReadContextCounter
 
             // 3 total depth values followed by the 3 variant support values
             mUmiTypeCounts = new int[UMI_TYPE_COUNT];
+
+            mUmiTypeCounts[UmiReadType.NONE.ordinal()] = depth();
+            mUmiTypeCounts[UmiReadType.NONE.ordinal() + 3] = strongAltSupport();
         }
 
         UmiReadType umiReadType = extractUmiType(record);

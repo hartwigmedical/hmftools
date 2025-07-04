@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
@@ -256,7 +257,7 @@ public class SomaticVariants
 
             if(alleleCount > 0)
             {
-                final String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
+                String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
                         .split(LIST_SEPARATOR, -1);
 
                 for(int i = 0; i <= VariantReadSupport.REALIGNED.ordinal(); ++i)
@@ -285,7 +286,8 @@ public class SomaticVariants
                 umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
             }
 
-            somaticVariant.Samples.add(new GenotypeFragments(genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts));
+            somaticVariant.Samples.add(new GenotypeFragments(
+                    genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts, genotype));
         }
     }
 
@@ -362,7 +364,8 @@ public class SomaticVariants
         if(variant.context().isFiltered())
             filters.add(NO_PASS);
 
-        if(variant.repeatCount() > PurityConstants.MAX_REPEAT_COUNT)
+        int maxRepeatCount = max(variant.repeatCount(), variant.altRepeatCount());
+        if(maxRepeatCount > PurityConstants.MAX_REPEAT_COUNT)
             filters.add(REPEAT_COUNT);
 
         if(mConfig.ApplyRefVariantFilters) // no others are applied
@@ -465,7 +468,7 @@ public class SomaticVariants
             sj.add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
             sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD");
-            sj.add("SeqGcRatio").add("BqrErrorRate");
+            sj.add("SeqGcRatio").add("BqrErrorRate").add("AvgReadDistance");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -518,6 +521,7 @@ public class SomaticVariants
             sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
             sj.add(format("%.6f", sampleFragData.bqrErrorRate()));
+            sj.add(format("%d", sampleFragData.averageReadDistance()));
 
             writer.write(sj.toString());
 

@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationStrin
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -317,7 +317,7 @@ public class VariantVis
 
         List<String> headers = Lists.newArrayList("SAMPLE", "RAW_QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
         headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextMatch::name).collect(Collectors.toList()));
-        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_RAW_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT", MIN_COORDS_FLAG, UMI_TYPE_COUNTS));
+        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_RAW_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT", MIN_COORDS_COUNT, UMI_TYPE_COUNTS));
 
         List<DomContent> headerColumns = Lists.newArrayList();
         for(int i = 0; i < headers.size(); i++)

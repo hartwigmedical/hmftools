@@ -242,6 +242,8 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT, 0);
     }
 
+    public int altRepeatCount() { return mContext.getAttributeAsInt(SageVcfTags.READ_CONTEXT_REPEAT_COUNT, 0); }
+
     public String repeatSequence()
     {
         return mContext.getAttributeAsString(SageVcfTags.REPEAT_SEQUENCE, Strings.EMPTY);

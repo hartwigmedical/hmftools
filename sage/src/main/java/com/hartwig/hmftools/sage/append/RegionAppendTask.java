@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.CandidateSerialisation.PRE_v3_5_FLANK_EXTENSION_LENGTH;
+import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.checkGenotypeFields;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 
 import java.util.Collections;
@@ -144,15 +145,22 @@ public class RegionAppendTask implements Callable<Void>
             VariantContext origVariant = mOriginalVariants.get(i);
 
             List<ReadContextCounter> sampleCounters = readContextCounters.getReadCounters(i);
+
             mFinalVariants.add(addGenotype(origVariant, sampleCounters, sampleIds));
         }
     }
 
     private static VariantContext addGenotype(
-            final VariantContext parent, final List<ReadContextCounter> readCounters, final List<String> sampleIds)
+            final VariantContext variantContext, final List<ReadContextCounter> readCounters, final List<String> sampleIds)
     {
-        final VariantContextBuilder builder = new VariantContextBuilder(parent);
-        final List<Genotype> genotypes = Lists.newArrayList(parent.getGenotypes());
+        VariantContextBuilder builder = new VariantContextBuilder(variantContext);
+
+        List<Genotype> genotypes = Lists.newArrayList();
+
+        for(Genotype genotype : variantContext.getGenotypes())
+        {
+            genotypes.add(checkGenotypeFields(genotype));
+        }
 
         for(int i = 0; i < readCounters.size(); ++i)
         {
