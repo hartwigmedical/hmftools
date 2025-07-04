@@ -11,41 +11,48 @@ The output from the pipeline largely matches that of WGS/WTS but with some modul
 
 For each panel a set of custom resources is required to fit and normalise the biases inherent to that specific panel. These are described in detail below.
 
-[OncoAnalyser](./pipeline/README_ONCOANALYSER.md) can be used to run any targeted panel.
+[Oncoanalyser](https://nf-co.re/oncoanalyser/docs/usage/#panel-reference-data) can be used to run any targeted panel.
 
 ## Panel-specific resources files
 
-To run in targeted mode, panel specific resources first need to be generated. As indicated in the below diagram, some of these are configured and some of these can be trained by first running oncoanalyser on a representative set of aligned BAMs from samples captured with the panel and then running a set of normalisation scripts that are described below.  Here is a schematic of this process
+To run in targeted mode, panel specific resources first need to be generated. As indicated in the below diagram, some of these are 
+configured and some of these can be trained by first running `oncoanalyser` on a representative set of aligned BAMs from samples captured 
+with the panel and then running a set of normalisation scripts that are described below. Here is a schematic of this process
 <p align="center">
 <img width="428"  alt="image" src="https://github.com/user-attachments/assets/03ec7de5-80df-4e8b-9b13-51735e37f00a">
 </p>
 
-### Manually configured resource files
+### Manually configured files
 
-The following files define the panel and are typically compiled manually and represent a basic definition of the PANEL:
+The below files represent a basic definition of the panel and are to be created manually. Some of these files are used as inputs to the 
+[panel training procedure](#training-procedure-to-build-panel-specific-resource-files). Note that the RNA resource files are only required
+if your panel supports RNA data.
 
-| File Name             | Tool(s)  | Purpose                                                                                                 |
-|-----------------------|----------|---------------------------------------------------------------------------------------------------------|
-| Panel regions BED | Multiple | Defines the targeted regions of the bed file.  Other regions are ignored in the training. May include gene exons or other regions of interest.  The bed file must be sorted and exclude any ALT contigs or non standard human chromosomes |
-| MSI Indels TSV | Purple | List of {chromosome,position} of MSI loci to consider in MSI model |
-| TMB/MSI Configuration TSV    | Purple | Configuration for TMB/L estimation<sup>2</sup>|
-| Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc). See [Driver_Catalog](https://github.com/hartwigmedical/hmftools/blob/master/purple/DriverCatalog.md) for details of this file |
-1. 
-2. These BED files are intended to match the exonic regions of the genes specified driver gene panel.  These can be generated automatically from the panel Driver Gene Panel TSV using the routine in the [GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section: "Generating the Sage gene panel regions files"
-2. The default TMB/MSI configuration of this file is shown below
+| Data type | File name                              | Oncoanalyser config        | Input for training? | Tool(s)  | Description                                                                                                                                                                                                                                                             |
+|:----------|:---------------------------------------|:---------------------------|:--------------------|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| DNA       | Driver gene panel TSV                  | `driver_gene_panel`        | Yes                 | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc). For column descriptions, see [Purple: Driver Catalog](https://github.com/hartwigmedical/hmftools/blob/master/purple/DriverCatalog.md#gene-panel-configuration) |
+| DNA       | Panel regions BED                      | `target_region_bed`        | Yes                 | Multiple | Standard BED file defining the panel regions. Other regions are ignored in the training. May include gene exons or other regions of interest. The bed file must be sorted and exclude any ALT contigs or non standard human chromosomes                                 |
+| DNA       | MSI indels TSV                         | `target_region_msi_indels` | Yes                 | PURPLE   | List of MSI loci to consider in MSI model. Columns: Chromosome, Position                                                                                                                                                                                                |
+| DNA       | TMB/MSI configuration TSV <sup>1</sup> | `target_region_ratios`     |                     | PURPLE   | Configuration for normalising TMB/MSI values from panel levels to WGS levels                                                                                                                                                                                            |
+| RNA       | RNA panel genes CSV                    | `isofox_gene_ids`          | Yes                 | ISOFOX   | Ensembl gene IDs and gene names for genes in the RNA panel. Note: these genes may not necessarily match genes covered by `target_region_bed`                                                                                                                            |
+| RNA       | Expected counts CSV                    | `isofox_counts`            |                     | ISOFOX   | Pre-computed expected counts per transcript and gene. Recommended to use the `read_151_exp_counts.*.csv` from the [WiGiTS reference data](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls)                                                                |
+| RNA       | Expected GC ratios CSV                 | `isofox_gc_ratios`         |                     | ISOFOX   | Pre-computed expected GC ratio counts per transcript. Recommended to use the `read_100_exp_gc_ratios.*.csv` from the [WiGiTS reference data](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls)                                                             |
+
+1. The default TMB/MSI configuration of this file is shown below:
 ```
 TmbRatio	TmlRatio	MsiIndelRatio	Msi23BaseAF	Msi4BaseAF	CodingBaseFactor
 0.05	0.74	220	0.15	0.08	150000
 ```
-### Resources files generated by training procedure
+
+### Output files training procedure
 
 The following files are the output of the training process described below:
 
-| File Name                        | Tool(s) | Purpose                                                   |
-|----------------------------------|--------|-----------------------------------------------------------|
-| Target Regions Normalisation TSV | Cobalt | Normalise copy number regions and mask off-target regions |
-| Panel Artefact PON | Pave   | Panel-specific PON to apply in addition to standard WGS PON |
-| TPM Normalisation | Isofox | Normalise TPM for genes in panel (only required for panels with targeted RNA content;Not required for PANEL+WTS)|
+| Data type | File name                        | Config name                   | Tool(s) | Description                                                                                                        |
+|:----------|:---------------------------------|:------------------------------|:--------|:-------------------------------------------------------------------------------------------------------------------|
+| DNA       | Target regions normalisation TSV | `target_region_normalisation` | COBALT  | Normalise copy number regions and mask off-target regions                                                          |
+| DNA       | Panel artefact PON TSV           | `pon_artefacts`               | PAVE    | Panel-specific PON to apply in addition to standard WGS PON                                                        |
+| RNA       | TPM normalisation CSV            | `isofox_tpm_norm`             | ISOFOX  | Normalise TPM for genes in panel (only required for panels with targeted RNA content). Not required for PANEL+WTS) |
 
 These files are then used by the pipeline in panel mode to produce well-calibrated, accurate results ideally without panel-specific biases.
 
