@@ -49,7 +49,7 @@ public class PanelConfig
 
         final String refGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(refGenomeFile);
-        RefGenVersion = deriveRefGenomeVersion((RefGenomeSource)RefGenome);
+        RefGenVersion = deriveRefGenomeVersion((RefGenomeSource) RefGenome);
 
         EnsemblDir = configBuilder.getValue(EnsemblDataCache.ENSEMBL_DATA_DIR);
 

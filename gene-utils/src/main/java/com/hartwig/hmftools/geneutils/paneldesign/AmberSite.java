@@ -12,6 +12,13 @@ public class AmberSite extends BasePosition
         mProbe = null;
     }
 
-    public ProbeCandidate probe() { return mProbe; }
-    public void setProbe(final ProbeCandidate candidate) { mProbe = candidate; }
+    public ProbeCandidate probe()
+    {
+        return mProbe;
+    }
+
+    public void setProbe(final ProbeCandidate candidate)
+    {
+        mProbe = candidate;
+    }
 }

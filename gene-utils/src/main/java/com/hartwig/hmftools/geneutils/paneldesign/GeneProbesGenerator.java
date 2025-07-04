@@ -48,8 +48,15 @@ public class GeneProbesGenerator
             TranscriptName = transcriptName;
         }
 
-        public boolean useCanonical() { return TranscriptName.isEmpty(); }
-        public String toString() { return format("%s:%s", GeneName, useCanonical() ? "canonical" : TranscriptName); }
+        public boolean useCanonical()
+        {
+            return TranscriptName.isEmpty();
+        }
+
+        public String toString()
+        {
+            return format("%s:%s", GeneName, useCanonical() ? "canonical" : TranscriptName);
+        }
     }
 
     private final PanelConfig mConfig;
@@ -161,7 +168,9 @@ public class GeneProbesGenerator
                     ProbeCandidate probeCandidate = targetedGeneRegion.getSelectedProbe();
 
                     if(probeCandidate == null)
+                    {
                         continue;
+                    }
 
                     panelRegion = new PanelRegion(
                             region, RegionType.GENE, sourceInfo,
@@ -201,7 +210,9 @@ public class GeneProbesGenerator
         // first we create a region 1-2kb upstream of the gene
         TranscriptData transcript = targetedGene.getTranscriptData();
 
-        targetedGene.addRegion(targetedGene.getGeneData().forwardStrand() ? TargetedGeneRegion.Type.UP_STREAM : TargetedGeneRegion.Type.DOWN_STREAM,
+        targetedGene.addRegion(targetedGene.getGeneData().forwardStrand()
+                        ? TargetedGeneRegion.Type.UP_STREAM
+                        : TargetedGeneRegion.Type.DOWN_STREAM,
                 transcript.TransStart - GENE_FLANKING_DISTANCE - GENE_CANDIDATE_REGION_SIZE,
                 transcript.TransStart - GENE_FLANKING_DISTANCE - 1);
 
@@ -256,7 +267,9 @@ public class GeneProbesGenerator
             lastExonEnd = exonData.End;
         }
 
-        targetedGene.addRegion(targetedGene.getGeneData().forwardStrand() ? TargetedGeneRegion.Type.DOWN_STREAM : TargetedGeneRegion.Type.UP_STREAM,
+        targetedGene.addRegion(targetedGene.getGeneData().forwardStrand()
+                        ? TargetedGeneRegion.Type.DOWN_STREAM
+                        : TargetedGeneRegion.Type.UP_STREAM,
                 transcript.TransEnd + 1 + GENE_FLANKING_DISTANCE,
                 transcript.TransEnd + GENE_FLANKING_DISTANCE + GENE_CANDIDATE_REGION_SIZE);
     }
@@ -317,7 +330,9 @@ public class GeneProbesGenerator
         }
 
         if(probeCandidates.isEmpty())
+        {
             return;
+        }
 
         GU_LOGGER.info("Computing quality scores of gene probes");
         List<Optional<Double>> qualityScores = probeCandidates.stream()
@@ -349,7 +364,7 @@ public class GeneProbesGenerator
                     }
 
                     if(probeCandidate.getQualityScore().isPresent() &&
-                       (selectedProbe == null || probeCandidate.getQualityScore().get() > selectedProbe.getQualityScore().get()))
+                            (selectedProbe == null || probeCandidate.getQualityScore().get() > selectedProbe.getQualityScore().get()))
                     {
                         selectedProbe = probeCandidate;
                     }

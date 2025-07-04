@@ -55,7 +55,8 @@ public class ProbeCandidate
         return mQualityScore;
     }
 
-    public void setQualityScore(double qualityScore) {
+    public void setQualityScore(double qualityScore)
+    {
         mQualityScore = Optional.of(qualityScore);
     }
 

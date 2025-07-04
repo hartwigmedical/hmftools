@@ -42,7 +42,7 @@ public class CopyNumberBackbone
     private final PanelCache mPanelCache;
     private final ProbeQualityProfile mProbeQualityProfile;
 
-    private final Map<String,List<Partition>> mChrPartitionsMap;
+    private final Map<String, List<Partition>> mChrPartitionsMap;
 
     public CopyNumberBackbone(final PanelConfig config, final PanelCache panelCache, final ProbeQualityProfile probeQualityProfile)
     {
@@ -67,7 +67,7 @@ public class CopyNumberBackbone
 
     private void markCoveredPartitions()
     {
-        for(Map.Entry<String,List<Partition>> entry : mChrPartitionsMap.entrySet())
+        for(Map.Entry<String, List<Partition>> entry : mChrPartitionsMap.entrySet())
         {
             String chromosome = entry.getKey();
             List<Partition> partitions = entry.getValue();
@@ -76,7 +76,7 @@ public class CopyNumberBackbone
 
             for(Partition partition : partitions)
             {
-                if(panelRegions.stream().anyMatch(x -> partition.Region.overlaps(x)))
+                if(panelRegions.stream().anyMatch(partition.Region::overlaps))
                 {
                     partition.HasExistingProbes = true;
                 }
@@ -94,7 +94,9 @@ public class CopyNumberBackbone
             for(Partition partition : partitions)
             {
                 if(partition.HasExistingProbes)
+                {
                     continue;
+                }
 
                 for(AmberSite amberSite : partition.Sites)
                 {
@@ -135,7 +137,9 @@ public class CopyNumberBackbone
             for(Partition partition : partitions)
             {
                 if(partition.HasExistingProbes)
+                {
                     continue;
+                }
 
                 double bestScore = MIN_PROBE_QUALITY_SCORE;
                 AmberSite topAmberSite = null;
@@ -145,7 +149,9 @@ public class CopyNumberBackbone
                     ProbeCandidate probe = amberSite.probe();
 
                     if(probe.getQualityScore().isEmpty())
+                    {
                         continue;
+                    }
 
                     if(topAmberSite == null || probe.getQualityScore().get() > bestScore)
                     {
@@ -168,7 +174,7 @@ public class CopyNumberBackbone
         }
     }
 
-    private class Partition
+    private static class Partition
     {
         public final BaseRegion Region;
         public final List<AmberSite> Sites;
@@ -181,7 +187,10 @@ public class CopyNumberBackbone
             HasExistingProbes = false;
         }
 
-        public String toString() { return format("region(%s) sites(%d) hasExistingProbes(%s)", Region, Sites.size(), HasExistingProbes); }
+        public String toString()
+        {
+            return format("region(%s) sites(%d) hasExistingProbes(%s)", Region, Sites.size(), HasExistingProbes);
+        }
     }
 
     private void createPartitions()
@@ -204,7 +213,9 @@ public class CopyNumberBackbone
             for(ChrBaseRegion region : regions)
             {
                 if(region.overlaps(chrStr, centromereMin, centromereMax))
+                {
                     continue;
+                }
 
                 chrPartitions.add(new Partition(new BaseRegion(region.start(), region.end())));
             }
@@ -227,13 +238,11 @@ public class CopyNumberBackbone
 
     public void loadSites()
     {
-        try
+        try(BufferedReader reader = createBufferedReader(mConfig.AmberSitesFile))
         {
-            BufferedReader reader = createBufferedReader(mConfig.AmberSitesFile);
-
             String header = reader.readLine();
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
@@ -282,7 +291,9 @@ public class CopyNumberBackbone
                 String chrStr = values[chrIndex];
 
                 if(!HumanChromosome.contains(chrStr))
+                {
                     continue;
+                }
 
                 if(!currentChromosome.equals(chrStr))
                 {

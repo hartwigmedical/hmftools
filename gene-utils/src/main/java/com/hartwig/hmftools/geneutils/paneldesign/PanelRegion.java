@@ -47,7 +47,9 @@ public class PanelRegion extends ChrBaseRegion
     public String extendedSourceInfo()
     {
         if(!IsProbe)
+        {
             return SourceInfo;
+        }
 
         return format("%s;gc=%.3f,qualityScore=%.0f", SourceInfo, GcContent, QualityScore.orElse(NaN));
     }
@@ -55,8 +57,12 @@ public class PanelRegion extends ChrBaseRegion
     public String toString()
     {
         if(IsProbe)
+        {
             return format("region(%s) type(%s) info(%s)", super.toString(), Type, SourceInfo);
+        }
         else
+        {
             return format("region(%s) type(%s) info(%s) qualityScore(%.3f)", super.toString(), Type, SourceInfo, QualityScore.orElse(NaN));
+        }
     }
 }

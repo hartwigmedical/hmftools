@@ -66,7 +66,7 @@ public class PanelBuilder
     {
         List<PanelRegion> panelRegions = Lists.newArrayList();
 
-        mPanelCache.chrRegionsMap().values().forEach(x -> panelRegions.addAll(x));
+        mPanelCache.chrRegionsMap().values().forEach(panelRegions::addAll);
 
         // sort and merge - for now keep the first region's source info and type
         Collections.sort(panelRegions);
