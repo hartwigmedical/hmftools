@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -15,23 +16,42 @@ public final class NucleotideFragmentQualEnrichment
 {
     private NucleotideFragmentQualEnrichment() {}
 
-    public static List<Fragment> qualityFilterFragments(final int minEvidenceDepth, final double minEvidenceFactor, final double minHighQualEvidenceFactor,
-            final List<Fragment> fragments, final List<Fragment> highQualFrags)
+    public static List<Fragment> qualityFilterFragments(final int minEvidenceDepth, final double minEvidenceFactor,
+            final double minHighQualEvidenceFactor, final Collection<Fragment> fragments, final Collection<Fragment> highQualFrags)
     {
         // fragments are all in nucleotide-space
 
+        // group fragments by read gene
+        Map<String, List<Fragment>> fragmentsByReadGene = fragments.stream().collect(Collectors.groupingBy(Fragment::readGene));
+        Map<String, List<Fragment>> highQualFragsByReadGene = highQualFrags.stream().collect(Collectors.groupingBy(Fragment::readGene));
+
         // filter fragments so that each nucleotide has at least 1 base at or above the min-qual threshold, and
         // X fragments (minEvidence) at that base with any qual
-        SequenceCount highQualCounts = SequenceCount.nucleotides(minEvidenceDepth, minHighQualEvidenceFactor, highQualFrags);
-        SequenceCount rawCounts = SequenceCount.nucleotides(minEvidenceDepth, minEvidenceFactor, fragments);
+        Map<String, SequenceCount> highQualCountsByReadGene = highQualFragsByReadGene.entrySet().stream().collect(
+                Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> SequenceCount.nucleotides(minEvidenceDepth, minHighQualEvidenceFactor, entry.getValue())));
 
-        return fragments.stream().map(x -> applyQualityFilter(x, highQualCounts, rawCounts)).collect(Collectors.toList());
+        Map<String, SequenceCount> rawCountsByReadGene = fragmentsByReadGene.entrySet().stream().collect(
+                Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> SequenceCount.nucleotides(minEvidenceDepth, minEvidenceFactor, entry.getValue())));
+
+        List<Fragment> filteredFragments = Lists.newArrayList();
+        for(Fragment fragment : fragments)
+        {
+            String readGene = fragment.readGene();
+            Fragment filteredFragment = applyQualityFilter(fragment, highQualCountsByReadGene.get(readGene), rawCountsByReadGene.get(readGene));
+            filteredFragments.add(filteredFragment);
+        }
+
+        return filteredFragments;
     }
 
     private static Fragment applyQualityFilter(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
     {
-        // checks whether all nucleotides have qual above the required level - if so return this fragment unch, otherwise build a
-        // new fragment just with these filtered loci
+        // checks whether all nucleotides have qual above the required level - if so return this fragment, otherwise build a new fragment
+        // just with these filtered loci
         SortedMap<Integer, Nucleotide> nucleotidesByLoci = fragment.nucleotidesByLoci();
         boolean allPresent = true;
         final List<Nucleotide> filteredNucleotides = Lists.newArrayListWithExpectedSize(nucleotidesByLoci.size());
