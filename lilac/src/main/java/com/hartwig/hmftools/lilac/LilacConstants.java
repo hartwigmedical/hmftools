@@ -42,7 +42,7 @@ public class LilacConstants
     // scoring of allele combinations
     public static final double MIN_POPULATION_FREQUENCY = 0.0001;
     public static final double FREQUENCY_SCORE_PENALTY = 0.0018;
-    public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0036;
+    public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
     // QC thresholds
@@ -73,7 +73,7 @@ public class LilacConstants
             "A*31:135", "A*33:191", "A*02:783", "B*07:282",
 
             // Similar to HLA-Y
-            "A*30:205", "A*30:207", "A*30:225", "A*30:228","A*01:81","A*01:237");
+            "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237");
 
     // common INDEL associated with allele C*04:09N
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
