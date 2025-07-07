@@ -352,6 +352,9 @@ public class GeneProbesGenerator
         {
             for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
             {
+                GU_LOGGER.trace("Selecting probe candidates for gene region: {}:{}-{}",
+                        targetedGeneRegion.getChromosome(), targetedGeneRegion.getStart(), targetedGeneRegion.getEnd());
+
                 ProbeCandidate selectedProbe = null;
 
                 for(ProbeCandidate probeCandidate : targetedGeneRegion.getProbeCandidates())
