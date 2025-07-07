@@ -1,23 +1,25 @@
-# Targeted NGS Analysis with WiGiTS
+# Targeted NGS analysis with WiGiTS
 
-The WiGiTS tool suite fully supports targeted panel sequencing as well as WGS and WTS.  
+In addition to WGS/WTS data, the WiGiTS tool suite fully supports analysis of targeted panel sequencing data via
+[Oncoanalyser](https://nf-co.re/oncoanalyser/docs/usage). This document provides instructions for creating the 
+[panel-specific resource files](#panel-specific-resource-files) that are required before `oncoanalyser` can be run on your custom panel 
+samples.
 
-The output from the pipeline largely matches that of WGS/WTS but with some modules excluded:
-* germline analysis is typically disabled (unless the panel is also run for a normal sample)
-* Cuppa is disabled
-* Chord is disabled and instead Purple is used to estimate HRD
+The targeted pipeline largely matches the WGS/WTS pipeline but with some modules excluded:
+* Germline analysis is typically disabled (unless the panel is also run for a normal sample)
+* [CUPPA](https://github.com/hartwigmedical/hmftools/tree/master/cuppa) is disabled (for tissue of origin prediction)
+* [CHORD](https://github.com/hartwigmedical/hmftools/tree/master/chord) is disabled and instead [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/chord) is used to estimate HRD
 * TMB and MSI have custom calculations routines
-* TPM is normalised to be in line with observed WGS rates 
+* TPM is normalised to be in line with observed WGS rates
 
-For each panel a set of custom resources is required to fit and normalise the biases inherent to that specific panel. These are described in detail below.
+## Panel-specific resource files
 
-[Oncoanalyser](https://nf-co.re/oncoanalyser/docs/usage/#panel-reference-data) can be used to run any targeted panel.
+The [panel-specific resource files](#panel-specific-resources-files) fits and normalises the biases inherent to your panel. 
+[Manual configuration](#manually-configured-files) is required for some of these files, which in turn are used as input for a 
+[training procedure](#training-procedure-to-build-panel-specific-resource-files) that generates the remaining panel-specific resource files 
+from a representative set of sample BAMs from your panel (**at least 20 samples recommended**). The below diagram summarises the generation 
+of panel-specific resource files.
 
-## Panel-specific resources files
-
-To run in targeted mode, panel specific resources first need to be generated. As indicated in the below diagram, some of these are 
-configured and some of these can be trained by first running `oncoanalyser` on a representative set of aligned BAMs from samples captured 
-with the panel and then running a set of normalisation scripts that are described below. Here is a schematic of this process
 <p align="center">
 <img width="428"  alt="image" src="https://github.com/user-attachments/assets/03ec7de5-80df-4e8b-9b13-51735e37f00a">
 </p>
@@ -25,8 +27,8 @@ with the panel and then running a set of normalisation scripts that are describe
 ### Manually configured files
 
 The below files represent a basic definition of the panel and are to be created manually. Some of these files are used as inputs to the 
-[panel training procedure](#training-procedure-to-build-panel-specific-resource-files). Note that the RNA resource files are only required
-if your panel supports RNA data.
+[panel training procedure](#training-procedure-to-build-panel-specific-resource-files). RNA resource files are only required if your panel 
+supports RNA data.
 
 | Data type | File name                                              | Oncoanalyser config        | Input for training? | Tool(s)  | Description                                                                                                                                                                                                                                                             |
 |:----------|:-------------------------------------------------------|:---------------------------|:--------------------|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
