@@ -360,6 +360,7 @@ public class GeneProbesGenerator
 
                     if(!probeCandidate.passFilter())
                     {
+                        GU_LOGGER.trace("Probe candidate filtered: {}", probeCandidate.getFilterReason());
                         continue;
                     }
 

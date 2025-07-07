@@ -60,6 +60,11 @@ public class ProbeCandidate
         mQualityScore = Optional.of(qualityScore);
     }
 
+    public String getFilterReason()
+    {
+        return mFilterReason;
+    }
+
     public void setFilterReason(final String filterReason)
     {
         this.mFilterReason = filterReason;
