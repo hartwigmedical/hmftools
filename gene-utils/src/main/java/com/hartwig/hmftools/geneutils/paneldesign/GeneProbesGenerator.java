@@ -205,7 +205,7 @@ public class GeneProbesGenerator
     |             |                       | - Choose 1 probe  per region with lowest SUM_BLASTN score.                                     |
     |-------------|-----------------------|------------------------------------------------------------------------------------------------|
     */
-    static void populateTargetedGeneRegions(final TargetedGene targetedGene)
+    protected static void populateTargetedGeneRegions(final TargetedGene targetedGene)
     {
         // first we create a region 1-2kb upstream of the gene
         TranscriptData transcript = targetedGene.getTranscriptData();
@@ -311,7 +311,7 @@ public class GeneProbesGenerator
         }
     }
 
-    public void computeCandidateProbeQualityScores(final List<TargetedGene> targetedGeneList)
+    private void computeCandidateProbeQualityScores(final List<TargetedGene> targetedGeneList)
     {
         List<ProbeCandidate> probeCandidates = Lists.newArrayList();
 
@@ -345,7 +345,7 @@ public class GeneProbesGenerator
         }
     }
 
-    public void selectProbeCandidates(Collection<TargetedGene> targetedGeneList)
+    private void selectProbeCandidates(Collection<TargetedGene> targetedGeneList)
     {
         // select top-scoring, valid probe from the set of candidates
         for(TargetedGene targetedGene : targetedGeneList)
@@ -383,12 +383,12 @@ public class GeneProbesGenerator
         }
     }
 
-    public static boolean checkGcContent(ProbeCandidate probeCandidate)
+    private static boolean checkGcContent(ProbeCandidate probeCandidate)
     {
         return probeCandidate.getGcContent() > PROBE_GC_MIN && probeCandidate.getGcContent() < PROBE_GC_MAX;
     }
 
-    public static void checkSetProbeCandidateFilter(ProbeCandidate probeCandidate)
+    private static void checkSetProbeCandidateFilter(ProbeCandidate probeCandidate)
     {
         if(probeCandidate.getGcContent() <= PROBE_GC_MIN)
         {

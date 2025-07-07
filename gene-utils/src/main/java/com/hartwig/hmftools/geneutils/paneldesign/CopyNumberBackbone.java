@@ -236,7 +236,7 @@ public class CopyNumberBackbone
         POPULATED;
     }
 
-    public void loadSites()
+    private void loadSites()
     {
         try(BufferedReader reader = createBufferedReader(mConfig.AmberSitesFile))
         {
