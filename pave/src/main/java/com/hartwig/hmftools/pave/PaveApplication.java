@@ -2,7 +2,7 @@ package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
@@ -26,7 +26,7 @@ public class PaveApplication
     private final PaveConfig mConfig;
     private final ReferenceData mReferenceData;
 
-    private VcfWriter mVcfWriter;
+    private final VcfWriter mVcfWriter;
     private final TranscriptWriter mTranscriptWriter;
 
     public PaveApplication(final ConfigBuilder configBuilder)
@@ -93,7 +93,7 @@ public class PaveApplication
 
         PV_LOGGER.info("sample({}) processing VCF file({})", mConfig.SampleId, mConfig.VcfFile);
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = chromosomeTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
         {
@@ -130,7 +130,7 @@ public class PaveApplication
 
         VcfWriter vcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
 
-        vcfWriter.writeHeader(mReferenceData, mConfig.SetReportable);
+        vcfWriter.writeHeader(mReferenceData, mConfig.SetReportable, mConfig.WriteDetailed);
 
         return vcfWriter;
     }

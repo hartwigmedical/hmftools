@@ -60,6 +60,7 @@ purity_ploidy_range_plot <- function(bestFit, range) {
 fitted_segments_plot <- function(fittedSegments) {
     fittedSegments = fittedSegments %>%
         filter(germlineStatus == "DIPLOID", bafCount > 0) %>%
+        mutate(majorAlleleCopyNumber=tumorBAF*tumorCopyNumber,minorAlleleCopyNumber=tumorCopyNumber-majorAlleleCopyNumber,) %>%
         arrange(majorAlleleCopyNumber) %>%
         mutate(
         Score = deviationPenalty * eventPenalty,

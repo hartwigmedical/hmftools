@@ -11,10 +11,10 @@ steps:
     name: 'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/jdk-mvn-python:1.7.8-beta.1'
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME', '/workspace/github.key', '${_GITHUB_CLIENT_ID}', '${_GITHUB_INSTALLATION_ID}']
-    timeout: 600s
+    timeout: 1800s
   - id: 'Publish Docker image'
     name: 'europe-west4-docker.pkg.dev/hmf-build/hmf-docker/docker-tag'
     entrypoint: sh
     args: ['/workspace/docker.sh']
 logsBucket: 'gs://hmf-build-logs'
-timeout: 1800s
+timeout: 3600s

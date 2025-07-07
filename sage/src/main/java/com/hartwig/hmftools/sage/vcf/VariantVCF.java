@@ -3,16 +3,20 @@ package com.hartwig.hmftools.sage.vcf;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
@@ -42,8 +46,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
@@ -103,7 +105,8 @@ public class VariantVCF implements AutoCloseable
     private final VariantContextWriter mWriter;
 
     public VariantVCF(
-            final IndexedFastaSequenceFile reference, final String sageVersion, final List<String> sampleIds, final String outputVcf)
+            final IndexedFastaSequenceFile reference, final String sageVersion, final List<String> sampleIds, final String outputVcf,
+            boolean runTinc)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
@@ -113,7 +116,7 @@ public class VariantVCF implements AutoCloseable
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        VCFHeader vcfHeader = createHeader(sageVersion, sampleIds);
+        VCFHeader vcfHeader = createHeader(sageVersion, sampleIds, runTinc);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -151,7 +154,7 @@ public class VariantVCF implements AutoCloseable
         mWriter.add(context);
     }
 
-    public static VCFHeader createHeader(final String version, final List<String> allSamples)
+    public static VCFHeader createHeader(final String version, final List<String> allSamples, final boolean runTinc)
     {
         VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
 
@@ -191,7 +194,6 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(AVG_READ_EDGE_DISTANCE, 2, VCFHeaderLineType.Integer, AVG_READ_EDGE_DISTANCE_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(NEARBY_INDEL_FLAG, 0, VCFHeaderLineType.Flag, NEARBY_INDEL_FLAG_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
@@ -199,32 +201,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(TINC_RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, TINC_RECOVERED_DESC));
 
         // genotype fields
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_QUALITY, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
+        addGenotypeHeader(header);
 
         for(SoftFilter filter : SoftFilter.values())
         {
@@ -233,59 +210,57 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
-        GnomadCache.addAnnotationHeader(header);
-        PonCache.addAnnotationHeader(header);
+        if(runTinc)
+        {
+            GnomadCache.addAnnotationHeader(header);
+            PonCache.addAnnotationHeader(header);
+        }
 
         return header;
     }
 
-    public static void appendHeader(final VCFHeader header)
+    public static void addGenotypeHeader(final VCFHeader header)
     {
-        if(!header.hasFormatLine(AVG_BASE_QUAL))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
-        }
+        // call from Sage append as well for new samples, and this handles the additional in later versions of new genotype fields
 
-        if(!header.hasFormatLine(AVG_MAP_QUALITY))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        }
+        // add in alphabetical order
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
-        if(!header.hasFormatLine(UMI_TYPE_COUNTS))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(
-                    UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_READ_EDGE_DISTANCE, 2, VCFHeaderLineType.Integer, AVG_READ_EDGE_DISTANCE_DESC));
 
-        if(!header.hasFormatLine(READ_STRAND_BIAS))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 1, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
 
-        if(!header.hasInfoLine(MAX_READ_EDGE_DISTANCE))
-        {
-            header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
 
-        if(!header.hasInfoLine(AVG_MODIFIED_BASE_QUAL))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
 
-        if(!header.hasInfoLine(AVG_MODIFIED_ALT_MAP_QUAL))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
 
-        if(!header.hasInfoLine(SIMPLE_ALT_COUNT))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_COUNT, 1, VCFHeaderLineType.Integer, MIN_COORDS_COUNT_DESC));
 
-        if(!header.hasFormatLine(LPS_APPEND_INFO))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(LPS_APPEND_INFO, 1, VCFHeaderLineType.String, LPS_APPEND_INFO_DESC));
-        }
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_QUALITY, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
     }
 
     @Override

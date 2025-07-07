@@ -6,22 +6,26 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
-import org.apache.commons.math3.util.Pair;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
+import org.apache.commons.math3.util.Pair;
 
 public class HaplotypeQC
 {
@@ -42,7 +46,7 @@ public class HaplotypeQC
         UnmatchedHaplotypes = haplotypes;
     }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return Lists.newArrayList("UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
     }
@@ -59,9 +63,11 @@ public class HaplotypeQC
         if(!PON_HAPLOTYPES.isEmpty())
             return;
 
-        final List<String> ponHaplotypes = new BufferedReader(new InputStreamReader(
-                HaplotypeQC.class.getResourceAsStream("/pon/haplotypes.csv")))
-                .lines().collect(Collectors.toList());
+        InputStream haplotypeQC = HaplotypeQC.class.getResourceAsStream("/pon/haplotypes.csv");
+        if(haplotypeQC == null)
+            throw new RuntimeException("Cannot load HaplotypeQC from resource /pon/haplotypes.csv");
+
+        final List<String> ponHaplotypes = new BufferedReader(new InputStreamReader(haplotypeQC)).lines().toList();
 
         ponHaplotypes.forEach(x -> PON_HAPLOTYPES.add(Haplotype.fromString(x)));
     }
@@ -80,7 +86,7 @@ public class HaplotypeQC
         List<Haplotype> allUnmatched = Lists.newArrayList();
         evidence.stream()
                 .map(x -> unmatchedHaplotype(x, LOG_UNMATCHED_HAPLOTYPE_SUPPORT, winners, aminoAcidCount, hlaYSequences))
-                .forEach(x -> allUnmatched.addAll(x));
+                .forEach(allUnmatched::addAll);
 
         Collections.sort(allUnmatched, new Haplotype.HaplotypeFragmentSorter());
 
@@ -141,7 +147,7 @@ public class HaplotypeQC
                 .filter(x -> !consistentWithAny(evidence, winners, x.getKey()))
                 .filter(x -> !consistentWithAny(evidence, hlaYSequences, x.getKey()))
                 .filter(x -> x.getValue() >= minEvidence)
-                .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         if(unmatched.isEmpty())
             return Lists.newArrayList();
@@ -178,15 +184,16 @@ public class HaplotypeQC
                 int matchCount = 0;
                 int lowQualMatchCount = 0;
                 boolean hasMismatch = false;
+                SortedMap<Integer, AminoAcid> aminoAcidByLoci = fragment.aminoAcidsByLoci();
 
                 for(int locus = haplotype.StartLocus; locus <= haplotype.EndLocus; ++locus)
                 {
-                    int index = fragment.aminoAcidLoci().indexOf(locus);
-                    String fragmentAA = "";
+                    AminoAcid aminoAcid = aminoAcidByLoci.get(locus);
+                    String fragmentAA;
 
-                    if(index >= 0)
+                    if(aminoAcid != null)
                     {
-                        fragmentAA = fragment.aminoAcids().get(index);
+                        fragmentAA = aminoAcid.acid();
                     }
                     else
                     {
@@ -203,7 +210,7 @@ public class HaplotypeQC
                         break;
                     }
 
-                    if(index >= 0)
+                    if(aminoAcid != null)
                         ++matchCount;
                     else
                         ++lowQualMatchCount;

@@ -1,45 +1,14 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.cider.genes.GenomicLocation.Companion.toChrBaseRegion
 
 // see https://www.imgt.org/IMGTScientificChart/SequenceDescription/IMGTfunctionality.html
-enum class IgTcrFunctionality
-{
-    FUNCTIONAL,
-    ORF, // open reading frame
-    PSEUDOGENE; // pseudogene
+typealias IgTcrFunctionality = com.hartwig.hmftools.common.cider.IgTcrFunctionality
 
-    fun toCode() : String
-    {
-        return when (this)
-        {
-            FUNCTIONAL -> "F"
-            ORF -> "ORF"
-            PSEUDOGENE -> "P"
-        }
-    }
+typealias IgTcrRegion = com.hartwig.hmftools.common.cider.IgTcrRegion
 
-    companion object
-    {
-        fun fromCode(code: String) : IgTcrFunctionality
-        {
-            return when (code)
-            {
-                "F" -> FUNCTIONAL
-                "ORF" -> ORF
-                "P" -> PSEUDOGENE
-                else -> throw IllegalArgumentException("invalid IgTcrFunctionality code: $code")
-            }
-        }
-    }
-}
-
-enum class IgTcrRegion
-{
-    V_REGION, D_REGION, J_REGION, CONSTANT
-}
-
-//
+// use kotlin data class to use the nicer kotlin functionality
 data class IgTcrGene(
     val geneName: String,
     val allele: String, // 01
@@ -52,4 +21,32 @@ data class IgTcrGene(
 {
     val geneAllele: String get() { return "$geneName*$allele" }
     val isFunctional: Boolean get() { return functionality == IgTcrFunctionality.FUNCTIONAL }
+    
+    companion object {
+
+        fun fromCommonIgTcrGene(commonGene: com.hartwig.hmftools.common.cider.IgTcrGene): IgTcrGene = IgTcrGene(
+            geneName = commonGene.geneName,
+            allele = commonGene.allele,
+            region = commonGene.region,
+            functionality = commonGene.functionality,
+            geneLocation = GenomicLocation.fromChrBaseRegionStrand(commonGene.geneLocation, commonGene.geneStrand),
+            anchorSequence = commonGene.anchorSequence,
+            anchorLocation = GenomicLocation.fromChrBaseRegionStrand(commonGene.anchorLocation, commonGene.geneStrand)
+        )
+
+        fun toCommonIgTcrGene(gene: IgTcrGene): com.hartwig.hmftools.common.cider.IgTcrGene
+        {
+            return com.hartwig.hmftools.common.cider.IgTcrGene(
+                gene.geneName,
+                gene.allele,
+                gene.region,
+                gene.functionality,
+                toChrBaseRegion(gene.geneLocation),
+                gene.geneLocation?.strand,
+                gene.geneLocation?.altAssemblyName,
+                gene.anchorSequence,
+                toChrBaseRegion(gene.anchorLocation)
+            )
+        }
+    }
 }

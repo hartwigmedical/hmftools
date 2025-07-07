@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
@@ -28,10 +27,12 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogRead
 import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_DISC_RATE_INCREMENT;
@@ -99,7 +100,7 @@ public class AssemblyConfig
     public final int Threads;
 
     // default value overrides
-    public final int PhaseProcessingLimit;
+    public static int PhaseProcessingLimit;
     public final int AssemblyMapQualThreshold;
     public final boolean DiscordantOnlyDisabled;
     public final double DiscordantRateIncrement;
@@ -108,8 +109,6 @@ public class AssemblyConfig
     public final SpecificRegions SpecificChrRegions;
     public final List<Junction> SpecificJunctions;
 
-    public final boolean PerfDebug;
-    public final double PerfLogTime;
     private final List<String> mLogReadIds;
     private final boolean mCheckLogReadIds;
 
@@ -119,6 +118,8 @@ public class AssemblyConfig
     public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
     public static boolean DevDebug = false;
+    public static boolean PerfDebug;
+    public static double PerfLogTime;
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 
@@ -129,7 +130,6 @@ public class AssemblyConfig
 
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
     private static final String DISC_RATE_INCREMENT = "disc_rate_increment";
-    private static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
     private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
@@ -146,7 +146,16 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
-        OutputDir = parseOutputDir(configBuilder);
+        if(!configBuilder.hasValue(OUTPUT_DIR) && configBuilder.hasValue(TUMOR_BAM))
+        {
+            List<String> tumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
+            OutputDir = pathFromFile(tumorBams.get(0));
+        }
+        else
+        {
+            OutputDir = parseOutputDir(configBuilder);
+        }
+
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
         PrepDir = configBuilder.hasValue(PREP_DIR) ? checkAddDirSeparator(configBuilder.getValue(PREP_DIR)) : OutputDir;
@@ -173,7 +182,7 @@ public class AssemblyConfig
             ReferenceBams = Collections.emptyList();
         }
 
-        if(TumorIds.isEmpty() || TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
+        if(TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
         {
             SV_LOGGER.error("tumor and reference IDs must match BAM files");
             System.exit(1);
@@ -315,7 +324,7 @@ public class AssemblyConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(TUMOR, false, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(TUMOR_BAM, false, TUMOR_BAMS_DESC);
 
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
@@ -341,7 +350,6 @@ public class AssemblyConfig
 
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
-        configBuilder.addFlag(LOG_PHASE_GROUP_LINKS, "Log assembly links to build phase groups");
 
         configBuilder.addInteger(
                 ASSEMBLY_REF_BASE_WRITE_MAX, "Cap assembly ref bases in TSV and VCF, use zero to write all",

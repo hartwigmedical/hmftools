@@ -27,7 +27,6 @@ public final class AmberBAFFile
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
     private static final String AMBER_EXTENSION = ".amber.baf.tsv.gz";
-    private static final String AMBER_EXTENSION_OLD = ".amber.baf.tsv";
 
     public static String generateAmberFilenameForWriting(final String basePath, final String sample)
     {
@@ -36,12 +35,7 @@ public final class AmberBAFFile
 
     public static String generateAmberFilenameForReading(final String basePath, final String sample)
     {
-        String filename = checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION;
-
-        if(Files.exists(Paths.get(filename)))
-            return filename;
-
-        return checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION_OLD;
+        return checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION;
     }
 
     private static final String CHROMOSOME = "chromosome";

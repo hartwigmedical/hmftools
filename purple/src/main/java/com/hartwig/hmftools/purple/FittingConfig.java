@@ -24,9 +24,6 @@ import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAU
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_GC_RATIO_EXPONENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
-import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_MIN_DEFAULT;
-import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT;
-import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -96,19 +93,16 @@ public class FittingConfig
         PloidyPenaltyFactor = configBuilder.getDecimal(PLOIDY_PENALTY_FACTOR);
 
         PloidyPenaltyStandardDeviation = getConfigDecimal(
-                configBuilder, PLOIDY_PENALTY_STANDARD_DEVIATION,
-                targetedMode ? TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT : PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
+                configBuilder, PLOIDY_PENALTY_STANDARD_DEVIATION, PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
 
         PloidyPenaltyMinStandardDeviationPerPloidy = configBuilder.getDecimal(PLOIDY_PENALTY_MIN_STANDARD_DEVIATION);
 
         PloidyPenaltyMajorAlleleSubOneMultiplier = getConfigDecimal(
-                configBuilder, PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER,
-                targetedMode ? TARGETED_PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT : PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
+                configBuilder, PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER,PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
 
         PloidyPenaltyMajorAlleleSubOneAdditional = configBuilder.getDecimal(PLOIDY_PENALTY_SUB_MIN_ADDITIONAL);
 
-        PloidyPenaltyMinDeviation = getConfigDecimal(
-                configBuilder, PLOIDY_PENALTY_MIN, targetedMode ? TARGETED_PLOIDY_PENALTY_MIN_DEFAULT : PLOIDY_PENALTY_MIN_DEFAULT);
+        PloidyPenaltyMinDeviation = getConfigDecimal(configBuilder, PLOIDY_PENALTY_MIN, PLOIDY_PENALTY_MIN_DEFAULT);
 
         RecoveryMinMateQualScore = configBuilder.getInteger(CFG_MIN_MATE_QUAL_SCORE);
         RecoveryMinSglQualScore = configBuilder.getInteger(CFG_MIN_SGL_QUAL_SCORE);
@@ -145,10 +139,10 @@ public class FittingConfig
         configBuilder.addDecimal(
                 PLOIDY_PENALTY_FACTOR, "Penalty factor to apply to the number of copy number events", PLOIDY_PENALTY_FACTOR_DEFAULT);
 
-        addTargetedDecimal(
-                configBuilder, PLOIDY_PENALTY_STANDARD_DEVIATION,
+        configBuilder.addDecimal(
+                PLOIDY_PENALTY_STANDARD_DEVIATION,
                 "Standard deviation of normal distribution modelling ploidy deviation from whole number",
-                PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT, TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
+                PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
 
         configBuilder.addDecimal(
                 PLOIDY_PENALTY_MIN_STANDARD_DEVIATION,
@@ -159,13 +153,12 @@ public class FittingConfig
                 "Additional penalty to apply to major allele < 1 or minor allele < 0",
                 PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT);
 
-        addTargetedDecimal(
-                configBuilder, PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, "Penalty multiplier applied to major allele < 1",
-                PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT, TARGETED_PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
+        configBuilder.addDecimal(
+                PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, "Penalty multiplier applied to major allele < 1",
+                PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
 
-        addTargetedDecimal(
-                configBuilder, PLOIDY_PENALTY_MIN, "Minimum ploidy penalty",
-                PLOIDY_PENALTY_MIN_DEFAULT, TARGETED_PLOIDY_PENALTY_MIN_DEFAULT);
+        configBuilder.addDecimal(
+                PLOIDY_PENALTY_MIN, "Minimum ploidy penalty", PLOIDY_PENALTY_MIN_DEFAULT);
 
         configBuilder.addInteger(
                 CFG_MIN_MATE_QUAL_SCORE, "SV recovery non-SGL min qual score", DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE);

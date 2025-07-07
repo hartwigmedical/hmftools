@@ -96,7 +96,7 @@ public class GeneCache
                     break;
 
                 if(exon.Start <= codingEnd)
-                    withinCoding = true;;
+                    withinCoding = true;
             }
 
             // within the coding region

@@ -16,7 +16,7 @@ public record IgTcrGene(
         @Nullable String anchorSequence,  // only valid for V / J gene
         @Nullable ChrBaseRegion anchorLocation)
 {
-    public String geneAllele()
+    public String getGeneAllele()
     {
         return geneName + "*" + allele;
     }

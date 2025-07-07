@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.MAX_NON_LINE_BASES;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineExtensionEndIndex;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
@@ -128,9 +129,9 @@ public class ExtReadParseState
     public void movePastLineExtension(byte lineBase, boolean countMismatches)
     {
         if(mLineExtensionIndex < 0)
-        {
             return;
-        }
+
+        int permittedLineMismatches = MAX_NON_LINE_BASES;
 
         while(!exhausted() && mCurrentIndex != mLineExtensionIndex)
         {
@@ -143,7 +144,10 @@ public class ExtReadParseState
                 {
                     if(countMismatches)
                     {
-                        ++mMismatches;
+                        if(permittedLineMismatches > 0)
+                            --permittedLineMismatches;
+                        else
+                            ++mMismatches;
                     }
                 }
             }

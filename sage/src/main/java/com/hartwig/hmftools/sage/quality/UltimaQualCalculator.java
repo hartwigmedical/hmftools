@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycl
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import htsjdk.samtools.SAMRecord;
 

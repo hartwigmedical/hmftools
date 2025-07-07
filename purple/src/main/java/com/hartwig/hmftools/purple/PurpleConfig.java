@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPLE_DIR;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
@@ -9,8 +8,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
@@ -82,20 +81,21 @@ public class PurpleConfig
             OutputDir = checkAddDirSeparator(outputDir);
         }
 
-        mIsValid &= createDirectory(OutputDir);
-
-        PPL_LOGGER.info("output directory: {}", OutputDir);
-
         SampleFiles = new SampleDataFiles(configBuilder, TumorId);
 
         Charting = new ChartConfig(configBuilder, OutputDir);
 
-        if(!Charting.Disabled)
+        if(OutputDir != null)
         {
-            if(Charting.CircosBinary != null)
-                mIsValid &= createDirectory(Charting.CircosDirectory);
+            mIsValid &= createDirectory(OutputDir);
 
-            mIsValid &= createDirectory(Charting.PlotDirectory);
+            if(!Charting.Disabled)
+            {
+                if(Charting.CircosBinary != null)
+                    mIsValid &= createDirectory(Charting.CircosDirectory);
+
+                mIsValid &= createDirectory(Charting.PlotDirectory);
+            }
         }
 
         TargetRegionsMode = configBuilder.hasValue(TARGET_REGIONS_BED);
@@ -107,10 +107,6 @@ public class PurpleConfig
         FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
 
-        PPL_LOGGER.info("reference({}) tumor({}) {}",
-                ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
-                TargetRegionsMode ? "running on target-regions only" : "");
-
         TierQualFilters = Maps.newHashMap();
 
         if(configBuilder.hasFlag(TIER_FILTERS))
@@ -121,8 +117,6 @@ public class PurpleConfig
             {
                 String[] tierItems = tierFilter.split("=",-1);
                 TierQualFilters.put(VariantTier.valueOf(tierItems[0]), Integer.parseInt(tierItems[1]));
-
-                PPL_LOGGER.info("applying tier({}) qual({}) filter", tierItems[0], tierItems[1]);
             }
         }
 
@@ -152,8 +146,7 @@ public class PurpleConfig
 
         configBuilder.addConfigItem(
                 OUTPUT_DIR, false,
-                "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/. Default 'purple'",
-                PURPLE_DIR);
+                "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/.");
 
         configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
         configBuilder.addFlag(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");

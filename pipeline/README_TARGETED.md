@@ -30,9 +30,8 @@ The following files define the panel and are typically compiled manually and rep
 | MSI Indels TSV | Purple | List of {chromosome,position} of MSI loci to consider in MSI model |
 | TMB/MSI Configuration TSV    | Purple | Configuration for TMB/L estimation<sup>2</sup>|
 | Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc). See [Driver_Catalog](https://github.com/hartwigmedical/hmftools/blob/master/purple/DriverCatalog.md) for details of this file |
-| Coverage Coding Regions BED<sup>1</sup> | Sage   | Gene regions to assess coverage|
-| Actionable Coding Regions BED<sup>1</sup> | Sage   | Gene coding regions for sensitive variant calling       |
-1. These BED files are intended to match the exonic regions of the genes specified driver gene panel.  These can be generated automatically from the panel Driver Gene Panel TSV using the routine in the [GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section: "Generating the Sage gene panel regions files"
+1. 
+2. These BED files are intended to match the exonic regions of the genes specified driver gene panel.  These can be generated automatically from the panel Driver Gene Panel TSV using the routine in the [GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section: "Generating the Sage gene panel regions files"
 2. The default TMB/MSI configuration of this file is shown below
 ```
 TmbRatio	TmlRatio	MsiIndelRatio	Msi23BaseAF	Msi4BaseAF	CodingBaseFactor
@@ -162,7 +161,7 @@ Any non-hotspot variant found 3 or more times with a qual (TQP) of > 40 and modi
 To generate this file all the Pave PonBuilder to make the additional PON file:
 
 ```
-java -cp pave.jar com.hartwig.hmftools.pave.resources.PonBuilder \
+java -cp pave.jar com.hartwig.hmftools.pave.pon_gen.PonBuilder \
   -sample_id_file training_sample_ids.csv \
   -vcf_path "/training_sample_data/*.sage.vcf.gz" \
   -ref_genome_version V38 \

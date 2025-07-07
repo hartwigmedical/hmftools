@@ -2,12 +2,10 @@ package com.hartwig.hmftools.isofox.common;
 
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-
 import java.util.Arrays;
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class PerformanceTracking

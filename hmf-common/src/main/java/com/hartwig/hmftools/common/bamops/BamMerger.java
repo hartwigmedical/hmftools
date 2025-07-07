@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bamops.BamOperations.BOP_LOGGER;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CRAM_INDEX_EXTENSION;

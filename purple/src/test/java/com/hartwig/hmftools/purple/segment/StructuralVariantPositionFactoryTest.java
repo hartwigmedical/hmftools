@@ -11,7 +11,6 @@ import org.junit.Test;
 
 public class StructuralVariantPositionFactoryTest
 {
-
     @Test
     public void excludeInserts()
     {

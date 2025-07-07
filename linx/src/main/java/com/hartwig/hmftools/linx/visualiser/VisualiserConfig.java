@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.linx.LinxConfig.GERMLINE;
 
 import java.io.File;
@@ -38,6 +38,11 @@ public class VisualiserConfig
 {
     public final String Sample;
     public final String SampleDataDir;
+
+    public final String AmberDir;
+    public final String CobaltDir;
+    public final String PurpleDir;
+
     public final boolean UseCohortFiles;
     public final boolean IsGermline;
 
@@ -53,6 +58,7 @@ public class VisualiserConfig
     public final boolean Debug;
 
     // filters and plotting options
+    public final boolean IncludeFragileSites;
     public final boolean IncludeLineElements;
     public final List<Integer> ClusterIds;
     public final List<Integer> ChainIds;
@@ -64,6 +70,9 @@ public class VisualiserConfig
     public final boolean RestrictClusterByGene;
 
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
+    private static final String AMBER_DIRECTORY = "amber_dir";
+    private static final String COBALT_DIRECTORY = "cobalt_dir";
+    private static final String PURPLE_DIRECTORY = "purple_dir";
     private static final String LOAD_COHORT_FILES = "load_cohort_files";
     private static final String CLUSTER_IDS = "clusterId";
     private static final String CHAIN_IDS = "chainId";
@@ -77,6 +86,7 @@ public class VisualiserConfig
     public static final String RESTRICT_CLUSTERS_BY_GENE = "restrict_cluster_by_gene";
     public static final String PLOT_CLUSTER_GENES = "plot_cluster_genes";
 
+    private static final String INCLUDE_FRAGILE_SITES = "include_fragile_sites";
     private static final String INCLUDE_LINE_ELEMENTS = "include_line_elements";
 
     private static final String DELIM = ",";
@@ -85,6 +95,9 @@ public class VisualiserConfig
     {
         Sample = configBuilder.getValue(SAMPLE);
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(VIS_FILE_DIRECTORY));
+        CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIRECTORY));
+        AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIRECTORY));
+        PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIRECTORY));
 
         OutputPlotPath = checkAddDirSeparator(configBuilder.getValue(PLOT_OUT, SampleDataDir + "plot/"));
         OutputConfPath = checkAddDirSeparator(configBuilder.getValue(DATA_OUT, SampleDataDir + "data/"));
@@ -126,6 +139,7 @@ public class VisualiserConfig
         Threads = parseThreads(configBuilder);
         Debug = configBuilder.hasFlag(DEBUG);
 
+        IncludeFragileSites = configBuilder.hasFlag(INCLUDE_FRAGILE_SITES);
         IncludeLineElements = configBuilder.hasFlag(INCLUDE_LINE_ELEMENTS);
         PlotReportableEvents = configBuilder.hasFlag(PLOT_REPORTABLE);
         RestrictClusterByGene = configBuilder.hasFlag(RESTRICT_CLUSTERS_BY_GENE);
@@ -182,6 +196,10 @@ public class VisualiserConfig
         configBuilder.addPath(
                 VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
 
+        configBuilder.addPath(AMBER_DIRECTORY, false, "Path to directory containing AMBER output");
+        configBuilder.addPath(COBALT_DIRECTORY, false, "Path to directory containing COBALT output");
+        configBuilder.addPath(PURPLE_DIRECTORY, false, "Path to directory containing PURPLE output");
+
         configBuilder.addFlag(LOAD_COHORT_FILES, "Load Linx cohort rather than per-sample vis files");
         configBuilder.addFlag(GERMLINE, "Load Linx germline VIS files");
         addRefGenomeVersion(configBuilder);
@@ -201,6 +219,7 @@ public class VisualiserConfig
 
         // options
         configBuilder.addFlag(RESTRICT_CLUSTERS_BY_GENE, "Only plot clusters with breakends in configured 'gene' list");
+        configBuilder.addFlag(INCLUDE_FRAGILE_SITES, "Include fragile sites in chromosome plots");
         configBuilder.addFlag(INCLUDE_LINE_ELEMENTS, "Include line elements in chromosome plots");
         configBuilder.addFlag(PLOT_REPORTABLE, "Plot all clusters with a fusion, disruption, AMP or DEL");
 

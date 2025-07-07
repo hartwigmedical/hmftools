@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 public class Junction implements Comparable<Junction>
 {
@@ -42,6 +43,7 @@ public class Junction implements Comparable<Junction>
     private boolean mIndelBased;
     public final String mDetails;
     private int mRawDiscordantPosition;
+    private IndelCoords mIndelCoords; // the consensus indel if applicable
 
     public Junction(final String chromosome, final int position, final Orientation orientation)
     {
@@ -76,6 +78,8 @@ public class Junction implements Comparable<Junction>
         {
             mDetails = "";
         }
+
+        mIndelCoords = null;
     }
 
     public boolean isForward() { return Orient.isForward(); }
@@ -83,6 +87,9 @@ public class Junction implements Comparable<Junction>
 
     public void markAsIndel() { mIndelBased = true; }
     public boolean indelBased() { return mIndelBased; }
+
+    public void setIndelCoords(final IndelCoords indelCoords) { mIndelCoords = indelCoords; }
+    public IndelCoords indelCoords() { return mIndelCoords; }
 
     public int rawDiscordantPosition() { return mRawDiscordantPosition; }
     public void setRawDiscordantPosition(int position) { mRawDiscordantPosition = position; }

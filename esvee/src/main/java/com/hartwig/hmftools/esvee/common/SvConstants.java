@@ -39,6 +39,7 @@ public final class SvConstants
 
     // LINE elements
     public static final int LINE_MIN_EXTENSION_LENGTH = LINE_POLY_AT_REQ;
+    public static final int LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH = LINE_MIN_EXTENSION_LENGTH / 2;
     public static final double LINE_REF_BASE_REPEAT_FACTOR = 1.5;
     public static final int LINE_INDEL_MAX_OVERLAP = 40;
     public static final int LINE_INDEL_MAX_GAP = 30;

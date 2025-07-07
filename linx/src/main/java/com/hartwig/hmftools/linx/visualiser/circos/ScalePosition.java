@@ -12,11 +12,15 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
@@ -99,6 +103,65 @@ class ScalePosition
             newCnData.Start = positionMap.scale(cnData.start());
             newCnData.End = positionMap.scale(cnData.end());
             results.add(newCnData);
+        }
+
+        return results;
+    }
+
+    public List<AmberBAF> interpolateAmberBAFs(final List<AmberBAF> amberBAFs)
+    {
+        List<AmberBAF> results = Lists.newArrayList();
+
+        for(AmberBAF amberBAF : amberBAFs)
+        {
+            ScaleContig positionMap = mContigMap.get(amberBAF.Chromosome);
+            int newPosition = positionMap.interpolate(amberBAF.Position);
+
+            AmberBAF newAmberBAF = new AmberBAF(
+                    amberBAF.Chromosome,
+                    newPosition,
+                    amberBAF.TumorBAF,
+                    amberBAF.TumorDepth,
+                    amberBAF.NormalBAF,
+                    amberBAF.NormalDepth
+            );
+
+            results.add(newAmberBAF);
+        }
+
+        return results;
+    }
+
+    public List<CobaltRatio> interpolateCobaltRatios(final List<CobaltRatio> cobaltRatios)
+    {
+        List<CobaltRatio> results = Lists.newArrayList();
+
+        for(CobaltRatio cobaltRatio : cobaltRatios)
+        {
+            ScaleContig positionMap = mContigMap.get(cobaltRatio.chromosome());
+            int newPosition = positionMap.interpolate(cobaltRatio.position());
+            CobaltRatio newCobaltRatio = ImmutableCobaltRatio.builder().from(cobaltRatio).position(newPosition).build();
+            results.add(newCobaltRatio);
+        }
+
+        return results;
+    }
+
+    public List<PurpleSegment> interpolatePurpleSegments(final List<PurpleSegment> purpleSegments)
+    {
+        List<PurpleSegment> results = Lists.newArrayList();
+
+        for(PurpleSegment purpleSegment : purpleSegments)
+        {
+            ScaleContig positionMap = mContigMap.get(purpleSegment.Chromosome);
+
+            PurpleSegment newPurpleSegment = purpleSegment.withModifiedCoordinates(
+                    purpleSegment.Chromosome,
+                    positionMap.interpolate(purpleSegment.PosStart),
+                    positionMap.interpolate(purpleSegment.PosEnd)
+            );
+
+            results.add(newPurpleSegment);
         }
 
         return results;

@@ -34,7 +34,7 @@ public class GeneProbesGeneratorTest
 
         TranscriptData transData = new TranscriptData(
                 transId, transName, geneId, true, Strand.POS_STRAND,
-                11000, 19000 - 1, 13500, 18000 - 1, "");
+                11000, 19000 - 1, 13500, 18000 - 1, "", null);
 
         // first exon is not coding
         transData.exons().add(new ExonData(transId, 11000, 12000 - 1, 1, -1, -1));
@@ -100,7 +100,7 @@ public class GeneProbesGeneratorTest
 
         TranscriptData transData = new TranscriptData(
                 transId, transName, geneId, true, Strand.POS_STRAND,
-                11000, 25000 - 1, 13500, 24000 - 1, "");
+                11000, 25000 - 1, 13500, 24000 - 1, "", null);
 
         // first exon is not coding
         transData.exons().add(new ExonData(transId, 11000, 12000 - 1, 1, -1, -1));
@@ -175,7 +175,7 @@ public class GeneProbesGeneratorTest
     @Test
     public void testPopulateCandidateProbes()
     {
-        final MockRefGenome refGenome = new MockRefGenome();
+        MockRefGenome refGenome = new MockRefGenome();
 
         // make it such that probe GC is 33.333%
         refGenome.RefGenomeMap.put("X", StringUtils.repeat("ATGTTCAAGTAC", 1000));
@@ -189,7 +189,7 @@ public class GeneProbesGeneratorTest
         String transName = "TRANS01";
 
         TranscriptData transData = new TranscriptData(
-                transId, transName, geneId, true, Strand.POS_STRAND, 1, 1000, 1, 1000, "");
+                transId, transName, geneId, true, Strand.POS_STRAND, 1, 1000, 1, 1000, "", null);
 
         // create a targeted gene
         TargetedGene targetedGene = new TargetedGene(geneData, transData);
@@ -209,7 +209,6 @@ public class GeneProbesGeneratorTest
         assertEquals(8, region.getProbeCandidates().size());
 
         checkProbeCandidates(region.getProbeCandidates(), region.getStart(), region.getEnd(), 8, 120);
-
     }
 
     private void checkProbeCandidates(List<ProbeCandidate> probeCandidates, int start, int end, int numProbes, int probeLength)
@@ -223,6 +222,4 @@ public class GeneProbesGeneratorTest
             probeStart += probeLength;
         }
     }
-
-
 }

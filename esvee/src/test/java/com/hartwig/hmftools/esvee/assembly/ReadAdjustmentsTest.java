@@ -203,7 +203,7 @@ public class ReadAdjustmentsTest
         Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
         read.bamRecord().setBaseQualities(baseQualities);
 
-        ReadAdjustments.trimLowQualBases(read);
+        read.trimLowQualBases();
 
         assertTrue(read.lowQualTrimmed());
         assertEquals("90M", read.cigarString());
@@ -214,7 +214,7 @@ public class ReadAdjustmentsTest
         read.bamRecord().setBaseQualities(baseQualities);
         read.bamRecord().setReadNegativeStrandFlag(true);
 
-        ReadAdjustments.trimLowQualBases(read);
+        read.trimLowQualBases();
 
         assertTrue(read.lowQualTrimmed());
         assertEquals("90M", read.cigarString());

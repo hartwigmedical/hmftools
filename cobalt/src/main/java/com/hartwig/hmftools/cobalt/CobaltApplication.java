@@ -1,18 +1,20 @@
 package com.hartwig.hmftools.cobalt;
 
+import static com.hartwig.hmftools.cobalt.CobaltColumns.CHROMOSOME;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.registerConfig;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.APP_NAME;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -46,7 +48,8 @@ public class CobaltApplication
     {
         mConfig = new CobaltConfig(configBuilder);
 
-        try{
+        try
+        {
             mConfig.validate();
         }
         catch(Exception e)
@@ -67,31 +70,40 @@ public class CobaltApplication
 
         try
         {
-            final SamReaderFactory readerFactory = readerFactory(mConfig);
+            SamReaderFactory readerFactory = readerFactory(mConfig);
 
             ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
 
-            final BamReadCounter bamReadCounter = new BamReadCounter(WINDOW_SIZE, mConfig, executorService, readerFactory, chromosomePosCodec);
+            BamReadCounter bamReadCounter = new BamReadCounter(WINDOW_SIZE, mConfig, executorService, readerFactory, chromosomePosCodec);
 
-            bamReadCounter.generateDepths(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
+            bamReadCounter.generateDepths();
 
             Table referenceReadDepths = bamReadCounter.getReferenceDepths();
             Table tumorReadDepths = bamReadCounter.getTumorDepths();
 
-            Table gcProfiles = loadGCContent(chromosomePosCodec);
+            Table gcProfiles = loadGcProfileData(chromosomePosCodec);
 
             RatioSupplier ratioSupplier = new RatioSupplier(
                     mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir, gcProfiles, referenceReadDepths, tumorReadDepths,
                     chromosomePosCodec);
 
-            if(mConfig.TargetRegionPath != null)
+            if(mConfig.TargetRegionNormFile != null)
             {
                 CsvReadOptions options = CsvReadOptions.builder(
-                        mConfig.TargetRegionPath)
+                        mConfig.TargetRegionNormFile)
                         .separator(TSV_DELIM.charAt(0))
-                        .columnTypesPartial(Map.of("chromosome", ColumnType.STRING)).build();
+                        .columnTypesPartial(Map.of(CHROMOSOME, ColumnType.STRING)).build();
 
                 Table targetRegionEnrichment = Table.read().usingOptions(options);
+
+                if(mConfig.SpecificChrRegions.hasFilters())
+                {
+                    List<String> validChromosomes = bamReadCounter.chromosomes().stream().map(x -> x.Name).collect(Collectors.toList());
+
+                    targetRegionEnrichment = targetRegionEnrichment.where(
+                            targetRegionEnrichment.stringColumn(CobaltColumns.CHROMOSOME).isIn(validChromosomes));
+                }
+
                 chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);
                 ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
             }
@@ -152,11 +164,11 @@ public class CobaltApplication
         return readerFactory;
     }
 
-    public Table loadGCContent(ChromosomePositionCodec chromosomePosCodec) throws IOException
+    public Table loadGcProfileData(final ChromosomePositionCodec chromosomePosCodec) throws IOException
     {
         Table gcProfileTable = Table.create("gcProfiles",
                 LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
-                DoubleColumn.create(CobaltColumns.GC_CONTENT),
+                DoubleColumn.create("unused"),
                 BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
                 BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
@@ -166,7 +178,12 @@ public class CobaltApplication
         {
             Row row = gcProfileTable.appendRow();
 
-            long chrPosIndex = chromosomePosCodec.encodeChromosomePosition(gcProfile.chromosome(), gcProfile.start());
+            String chromosome = gcProfile.chromosome();
+
+            if(mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificChrRegions.excludeChromosome(chromosome))
+                continue;
+
+            long chrPosIndex = chromosomePosCodec.encodeChromosomePosition(chromosome, gcProfile.start());
 
             if(chrPosIndex > 0)
             {
@@ -174,12 +191,11 @@ public class CobaltApplication
             }
             else
             {
-                throw new RuntimeException("Unknown chromosome: " + gcProfile.chromosome());
+                throw new RuntimeException("Unknown chromosome: " + chromosome);
             }
 
-            row.setDouble(CobaltColumns.GC_CONTENT, gcProfile.gcContent());
             row.setBoolean(CobaltColumns.IS_MAPPABLE, gcProfile.isMappable());
-            row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
+            row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(chromosome).isAutosome());
         }
 
         return gcProfileTable;

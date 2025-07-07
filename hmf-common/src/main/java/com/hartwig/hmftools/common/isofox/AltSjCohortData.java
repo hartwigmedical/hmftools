@@ -6,14 +6,13 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.rna.RnaCommon;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,17 +36,18 @@ public class AltSjCohortData
 
     private void loadAltSjCohortFile(final String cohortFile) throws IOException
     {
-        BufferedReader fileReader = new BufferedReader(new FileReader(cohortFile));
+        BufferedReader fileReader = createBufferedReader(cohortFile);
 
-        String line = fileReader.readLine();
+        String header = fileReader.readLine();
         String fileDelim = inferFileDelimiter(cohortFile);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, fileDelim);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
         int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
         int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
         int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
         int sampleCountIndex = fieldsIndexMap.get("SampleCount");
 
+        String line = null;
         while((line = fileReader.readLine()) != null)
         {
             String[] items = line.split(fileDelim, -1);

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.teal.telbam
 
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator
-import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import com.hartwig.hmftools.teal.ReadGroup
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SamReaderFactory
@@ -11,8 +11,8 @@ import org.apache.logging.log4j.LogManager
 // read the telbam file and gives the read groups
 class TelbamReader(
     telbamFile: java.io.File,
-    excludedRegions: List<GenomeRegion> = emptyList(),
-    includedRegions: List<GenomeRegion>? = null)
+    excludedRegions: List<ChrBaseRegion> = emptyList(),
+    includedRegions: List<ChrBaseRegion>? = null)
 {
     private val mLogger = LogManager.getLogger(TelbamReader::class.java)
     private val mTelbamFile = telbamFile

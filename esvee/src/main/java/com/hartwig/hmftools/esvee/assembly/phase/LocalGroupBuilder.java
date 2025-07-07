@@ -4,7 +4,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_DEL_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssemblyIndelLink;
 
@@ -17,27 +20,27 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 public class LocalGroupBuilder extends ThreadTask
 {
     private final TaskQueue mJunctionGroups;
-    private final AssemblyConfig mConfig;
     private final PhaseGroupBuildWriter mWriter;
 
     private final Set<PhaseGroup> mPhaseGroupsSets;
 
-    public LocalGroupBuilder(final AssemblyConfig config, final TaskQueue junctionGroups, final PhaseGroupBuildWriter writer)
+    public LocalGroupBuilder(final TaskQueue junctionGroups, final PhaseGroupBuildWriter writer)
     {
         super("LocalPhaseGroups");
 
-        mConfig = config;
         mWriter = writer;
         mJunctionGroups = junctionGroups;
 
@@ -62,7 +65,7 @@ public class LocalGroupBuilder extends ThreadTask
 
                 formLocalPhaseGroups(junctionGroup);
 
-                stopCheckLog(format("juncGroup(%s)", junctionGroup), mConfig.PerfLogTime);
+                stopCheckLog(format("juncGroup(%s)", junctionGroup), AssemblyConfig.PerfLogTime);
             }
             catch(NoSuchElementException e)
             {
@@ -142,33 +145,73 @@ public class LocalGroupBuilder extends ThreadTask
 
     private static boolean isLocalFacingLinkCandidate(final JunctionAssembly first, final JunctionAssembly second)
     {
-        if(first.refSideSoftClips().isEmpty() && second.refSideSoftClips().isEmpty())
+        if(!first.junction().Chromosome.equals(second.junction().Chromosome) || first.junction().Orient == second.junction().Orient)
             return false;
 
+        JunctionAssembly lower = first.junction().Position < second.junction().Position ? first : second;
+        JunctionAssembly upper = first == lower ? second : first;
+
+        if(!lower.junction().isReverse())
+            return false;
+
+        int linkDistance = upper.junction().Position - lower.junction().Position + 1;
+
+        if(linkDistance < PHASED_ASSEMBLY_MIN_TI || linkDistance > PHASED_ASSEMBLY_MAX_TI)
+            return false;
+
+        // finally check supporting reads and mates for ref-side soft-clips which match or extend beyond (thereby disqualifying them)
         for(int i = 0; i <= 1; ++i)
         {
-            JunctionAssembly assembly = (i == 0) ? first : second;
-            JunctionAssembly otherAssembly = (i == 0) ? second : first;
+            JunctionAssembly assembly = (i == 0) ? lower : upper;
+            JunctionAssembly otherAssembly = (i == 0) ? upper : lower;
+            boolean otherIsUpper = (i == 0);
 
-            int otherMinAlignedPosition = otherAssembly.minAlignedPosition();
-            int otherMaxAlignedPosition = otherAssembly.maxAlignedPosition();
+            int otherJunctionPosition = otherAssembly.junction().Position;
 
-            for(RefSideSoftClip refSideSoftClip : assembly.refSideSoftClips())
+            for(SupportRead read : assembly.support())
             {
-                if(!positionWithin(refSideSoftClip.Position, otherMinAlignedPosition, otherMaxAlignedPosition))
+                if(otherIsUpper)
+                {
+                    if(read.isRightClipped() && read.alignmentEnd() == otherJunctionPosition)
+                        return true;
+
+                    if(read.alignmentEnd() > otherJunctionPosition + PROXIMATE_REF_SIDE_SOFT_CLIPS)
+                        return false;
+                }
+                else
+                {
+                    if(read.isLeftClipped() && read.alignmentStart() == otherJunctionPosition)
+                        return true;
+
+                    if(read.alignmentStart() < otherJunctionPosition - PROXIMATE_REF_SIDE_SOFT_CLIPS)
+                        return false;
+                }
+            }
+
+            for(Read read : assembly.candidateSupport())
+            {
+                if(!read.hasJunctionMate())
                     continue;
 
-                for(String readId : refSideSoftClip.readIds())
+                if(otherIsUpper)
                 {
-                    if(otherAssembly.support().stream().anyMatch(x -> x.id().equals(readId)))
+                    if(read.isRightClipped() && read.alignmentEnd() == otherJunctionPosition)
                         return true;
 
-                    if(otherAssembly.candidateSupport().stream().anyMatch(x -> x.id().equals(readId)))
+                    if(read.alignmentEnd() > otherJunctionPosition + PROXIMATE_REF_SIDE_SOFT_CLIPS)
+                        return false;
+                }
+                else
+                {
+                    if(read.isLeftClipped() && read.alignmentStart() == otherJunctionPosition)
                         return true;
+
+                    if(read.alignmentStart() < otherJunctionPosition - PROXIMATE_REF_SIDE_SOFT_CLIPS)
+                        return false;
                 }
             }
         }
 
-        return false;
+        return true;
     }
 }

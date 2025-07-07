@@ -2,12 +2,6 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_GAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_OVERLAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
@@ -15,7 +9,6 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESH
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 import org.jetbrains.annotations.Nullable;
@@ -126,46 +119,6 @@ public final class CommonUtils
         }
 
         return pos1 < pos2 ? -1 : 1;
-    }
-
-    public static StructuralVariantType formSvType(
-            final String chrStart, final String chrEnd, final int posStart, final int posEnd,
-            final Orientation orientStart, final Orientation orientEnd, final boolean hasInsertedBases)
-    {
-        if(!chrStart.equals(chrEnd))
-            return BND;
-
-        if(orientStart != orientEnd)
-        {
-            int posDiff = abs(posStart - posEnd);
-
-            if(posDiff == 1 && hasInsertedBases)
-                return INS;
-
-            if(posDiff == 0)
-                return DUP;
-
-            boolean firstIsLower = posStart < posEnd;
-
-            return (firstIsLower == orientStart.isForward()) ? DEL : DUP;
-        }
-        else
-        {
-            return INV;
-        }
-    }
-
-    public static boolean isIndel(final StructuralVariantType type)
-    {
-        return type == DEL || type == DUP || type == INS;
-    }
-
-    public static boolean isShortLocalDelDupIns(final StructuralVariantType svType, final int svLength)
-    {
-        if(isIndel(svType))
-            return svLength <= SHORT_DEL_DUP_INS_LENGTH;
-        else
-            return false;
     }
 
     public static byte[] createByteArray(final int length, final byte value)

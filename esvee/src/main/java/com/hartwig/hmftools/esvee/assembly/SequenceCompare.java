@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 
 import java.util.Collections;
@@ -77,11 +79,85 @@ public final class SequenceCompare
         if(firstIndexEnd <= firstIndexStart || secondIndexEnd <= secondIndexStart)
             return false;
 
+        // check for a simple match of one assembly's extension bases present in the other and straddling the other's junction
+        String firstFullSequence = first.formFullSequence();
+        String firstOverlapSequence = firstFullSequence.substring(firstIndexStart, firstIndexEnd + 1);
+
+        String secondFullSequence = second.formFullSequence();
+
+        int secondExtBaseIndex = secondFullSequence.indexOf(firstOverlapSequence);
+
+        if(secondExtBaseIndex >= 0)
+        {
+            int secondExtBaseEndIndex = secondExtBaseIndex + firstOverlapSequence.length() - 1;
+            if(secondExtBaseIndex < second.junctionIndex() && secondExtBaseEndIndex > second.junctionIndex())
+                return true;
+        }
+
+        String secondOverlapSequence = secondFullSequence.substring(secondIndexStart, secondIndexEnd + 1);
+
+        int firstExtBaseIndex = firstFullSequence.indexOf(secondOverlapSequence);
+
+        if(firstExtBaseIndex >= 0)
+        {
+            int firstExtBaseEndIndex = firstExtBaseIndex + secondOverlapSequence.length() - 1;
+            if(firstExtBaseIndex < first.junctionIndex() && firstExtBaseEndIndex > first.junctionIndex())
+                return true;
+        }
+
         int mismatchCount = compareSequences(
                 first.bases(), first.baseQuals(), firstIndexStart, firstIndexEnd, first.repeatInfo(),
                 second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), PRIMARY_ASSEMBLY_MERGE_MISMATCH);
 
-        return mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH;
+        if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+            return true;
+
+        /* NOTE: reconsider this once the compareSequences has improved repeat handling logic
+
+        // try subsequence matches to anchor the full comparison
+        int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
+
+        int firstSubSeqIndex = 0;
+
+        int subSeqIterations = (int)floor(firstFullSequence.length() / subsequenceLength);
+
+        for(int i = 0; i < subSeqIterations; ++i)
+        {
+            firstSubSeqIndex = i * subsequenceLength;
+            int matchSeqEndIndex = firstSubSeqIndex + subsequenceLength;
+
+            if(matchSeqEndIndex >= firstFullSequence.length())
+                break;
+
+            String assemblySubSequence = firstFullSequence.substring(firstSubSeqIndex, firstSubSeqIndex + subsequenceLength);
+
+            int secondSubSeqIndex = secondFullSequence.indexOf(assemblySubSequence);
+
+            if(secondSubSeqIndex < 0)
+                continue;
+
+            int minLowerOverlap = min(firstSubSeqIndex, secondSubSeqIndex);
+            int minUpperOverlap = min(firstFullSequence.length() - firstSubSeqIndex - 1, secondFullSequence.length() - secondSubSeqIndex - 1);
+
+            if(minLowerOverlap + minUpperOverlap < PROXIMATE_JUNCTION_DISTANCE)
+                continue;
+
+            firstIndexStart = firstSubSeqIndex - minLowerOverlap;
+            secondIndexStart = secondSubSeqIndex - minLowerOverlap;
+
+            firstIndexEnd = min(firstSubSeqIndex + minUpperOverlap, first.bases().length - 1);
+            secondIndexEnd = min(secondSubSeqIndex + minUpperOverlap, second.bases().length - 1);
+
+            mismatchCount = compareSequences(
+                    first.bases(), first.baseQuals(), firstIndexStart, firstIndexEnd, first.repeatInfo(),
+                    second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), PRIMARY_ASSEMBLY_MERGE_MISMATCH);
+
+            if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+                return true;
+        }
+        */
+
+        return false;
     }
 
     public static int compareSequences(
@@ -185,7 +261,13 @@ public final class SequenceCompare
 
     public static int permittedRepeatCount(final int repeatCount)
     {
-        return repeatCount < REPEAT_2_DIFF_COUNT ? 1 : 2;
+        if(repeatCount >= REPEAT_3_DIFF_COUNT)
+            return 3;
+
+        if(repeatCount >= REPEAT_2_DIFF_COUNT)
+            return 2;
+
+        return 1;
     }
 
     private static int checkRepeatDifference(

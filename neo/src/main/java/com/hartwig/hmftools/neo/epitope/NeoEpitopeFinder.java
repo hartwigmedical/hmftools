@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +62,7 @@ public class NeoEpitopeFinder
 
         if(mConfig.Threads > 1)
         {
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
@@ -92,15 +92,15 @@ public class NeoEpitopeFinder
             writer.newLine();
             return writer;
         }
-        catch (final IOException e)
+        catch(final IOException e)
         {
             NE_LOGGER.error("error initialising neo-epitope output file: {}", e.toString());
             return null;
         }
     }
 
-    public synchronized static void writeNeoepitopes(
-            final BufferedWriter writer, final String sampleId, boolean isCohort,
+    public static synchronized void writeNeoepitopes(
+            final BufferedWriter writer, final String sampleId, final boolean isCohort,
             int neId, final NeoEpitope neData, final Set<String> upTransNames, final Set<String> downTransNames)
     {
         if(writer == null)
@@ -115,7 +115,7 @@ public class NeoEpitopeFinder
             writer.write(NeoEpitopeFile.toString(neFile));
             writer.newLine();
         }
-        catch (final IOException e)
+        catch(final IOException e)
         {
             NE_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
         }

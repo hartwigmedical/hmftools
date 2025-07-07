@@ -4,8 +4,8 @@ import static java.lang.Math.floor;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISC_RATE_DISC_ONLY_INCREMENT;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.assembly.alignment.Alignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
@@ -297,6 +297,7 @@ public class AssemblyApplication
                 ++assemblyCount;
                 junctionReadCount += assembly.supportCount();
                 candidateReadCount += assembly.candidateSupport().size();
+                candidateReadCount += assembly.unmappedReads().size();
             }
         }
 

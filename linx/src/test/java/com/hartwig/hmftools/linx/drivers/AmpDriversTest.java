@@ -68,7 +68,7 @@ public class AmpDriversTest
         int transId = 1;
 
         TranscriptData transData = new TranscriptData(transId, String.format("TRAN%04d", transId), geneId, true, strand, transStart, transEnd,
-            null, null, "");
+            null, null, "", null);
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId, transDataList);

@@ -128,6 +128,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             return ReadIsLower || UnmappedSourced ? OrientLower : OrientUpper;
     }
 
+    public String lowerCoordinate()
+    {
+        return formCoordinate(ChromsomeLower, PositionLower, OrientLower.isForward());
+    }
+
     public String keyNonOriented() { return mKeyNonOriented != null ? mKeyNonOriented : Key; }
 
     private static String formCoordinate(final String chromosome, final int position, final boolean isForward)
@@ -251,14 +256,6 @@ public class FragmentCoords implements Comparable<FragmentCoords>
                     mateChromosome, readChromosome, matePosition, readPosition, mateOrient, readOrient, fragmentOrientation,
                     readIsLower, suppReadInfo, isUnmapped, useFragmentOrientation, !isPaired);
         }
-    }
-
-    public FragmentCoords withFragmentOrientation(final Orientation fragmentOrientation)
-    {
-        if(FragmentOrient == fragmentOrientation)
-            return this;
-
-        return new FragmentCoords(ChromsomeLower, ChromsomeUpper, PositionLower, PositionUpper, OrientLower, OrientUpper, fragmentOrientation, ReadIsLower, SuppReadInfo, UnmappedSourced, true, UnmappedSourced);
     }
 
     @Override

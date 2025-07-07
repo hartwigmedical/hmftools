@@ -4,11 +4,10 @@ import static com.hartwig.hmftools.bamtools.checker.PartitionThread.SORTED_BAM_I
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.UNSORTED_BAM_ID;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.common.PartitionTask.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -32,9 +31,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.utils.TaskQueue;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -170,7 +169,7 @@ public class BamChecker
             sortTasks.add(new BamSortTask(unsortedBamFilename, sortedBamFilename));
         }
 
-        List<Callable> threadTasks = sortTasks.stream().collect(Collectors.toList());
+        List<Callable<Void>> threadTasks = sortTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(threadTasks, mConfig.Threads))
         {
@@ -212,7 +211,7 @@ public class BamChecker
         }
     }
 
-    private class BamSortTask implements Callable
+    private class BamSortTask implements Callable<Void>
     {
         private final String mInputBam;
         private final String mOutputBam;
@@ -224,11 +223,11 @@ public class BamChecker
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             BamToolName toolName = fromPath(mConfig.BamToolPath);
             BamOperations.sortBam(toolName, mConfig.BamToolPath, mInputBam, mOutputBam, 1);
-            return (long)0;
+            return null;
         }
     }
 

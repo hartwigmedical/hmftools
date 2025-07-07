@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_ASSUMED_FRACTION;
 import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
 
@@ -26,21 +26,21 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.purple.DriverSourceData;
-import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
-import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.PurpleConfig;
+import com.hartwig.hmftools.purple.ReferenceData;
+import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
+import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
+import com.hartwig.hmftools.purple.fittingsnv.PeakModelData;
 import com.hartwig.hmftools.purple.plot.RChartData;
 
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -52,7 +52,7 @@ public class SomaticStream
     private final ReferenceData mReferenceData;
     private final PurpleConfig mConfig;
 
-    private boolean mEnabled;
+    private final boolean mEnabled;
     private final String mOutputVCF;
     private final TumorMutationalLoad mTumorMutationalLoad;
     private final SomaticGermlineLikelihood mSomaticGermlineLikelihood;
@@ -110,7 +110,7 @@ public class SomaticStream
 
     public double msiIndelsPerMb() { return mMsiIndelPerMb; }
     public double tumorMutationalBurdenPerMb() { return mTmb; }
-    public int tumorMutationalLoad() { return (int)round(mTml); }
+    public int tumorMutationalLoad() { return (int) round(mTml); }
 
     public MicrosatelliteStatus microsatelliteStatus()
     {
@@ -128,21 +128,21 @@ public class SomaticStream
     }
 
     public List<DriverCatalog> buildDrivers(
-            final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
+            final Map<String, List<GeneCopyNumber>> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
     {
         if(mReferenceData.TargetRegions.hasTargetRegions())
         {
             // override the counts passed to the DNDS calcs
-            int inferredSnvCount = (int)round(mTml * mReferenceData.TargetRegions.tmbRatio() * MB_PER_GENOME);
-            int inferredIndelCount = (int)round(mMsiIndelPerMb * MB_PER_GENOME);
+            int inferredSnvCount = (int) round(mTml * mReferenceData.TargetRegions.tmbRatio() * MB_PER_GENOME);
+            int inferredIndelCount = (int) round(mMsiIndelPerMb * MB_PER_GENOME);
 
-            Map<VariantType,Integer> variantTypeCounts = Maps.newHashMap();
+            Map<VariantType, Integer> variantTypeCounts = Maps.newHashMap();
             variantTypeCounts.put(VariantType.SNP, inferredSnvCount);
             variantTypeCounts.put(VariantType.INDEL, inferredIndelCount);
 
-            Map<VariantType,Integer> variantTypeCountsbiallelic = Maps.newHashMap();
-            variantTypeCountsbiallelic.put(VariantType.SNP, (int)(inferredSnvCount * BIALLELIC_ASSUMED_FRACTION));
-            variantTypeCountsbiallelic.put(VariantType.INDEL, (int)(inferredIndelCount * BIALLELIC_ASSUMED_FRACTION));
+            Map<VariantType, Integer> variantTypeCountsbiallelic = Maps.newHashMap();
+            variantTypeCountsbiallelic.put(VariantType.SNP, (int) (inferredSnvCount * BIALLELIC_ASSUMED_FRACTION));
+            variantTypeCountsbiallelic.put(VariantType.INDEL, (int) (inferredIndelCount * BIALLELIC_ASSUMED_FRACTION));
 
             PPL_LOGGER.debug("target-regions inferred driver variant counts snv({}) indel({})",
                     inferredSnvCount, inferredIndelCount);
@@ -211,7 +211,7 @@ public class SomaticStream
                     enrichers.get(taskIndex).addVariant(variant);
                 }
 
-                final List<Callable> callableList = enrichers.stream().collect(Collectors.toList());
+                final List<Callable<Void>> callableList = enrichers.stream().collect(Collectors.toList());
                 TaskExecutor.executeTasks(callableList, mConfig.Threads);
             }
             else
@@ -302,8 +302,8 @@ public class SomaticStream
     private static boolean hasPhasedEffect(final SomaticVariant variant)
     {
         return variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_INSERTION.effect())
-            || variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_DELETION.effect())
-            || variant.variantImpact().CanonicalEffect.contains(PHASED_MISSENSE.effect());
+                || variant.variantImpact().CanonicalEffect.contains(PHASED_INFRAME_DELETION.effect())
+                || variant.variantImpact().CanonicalEffect.contains(PHASED_MISSENSE.effect());
     }
 
     private void checkPhasedReportableVariants()

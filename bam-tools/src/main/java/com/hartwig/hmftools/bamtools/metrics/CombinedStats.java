@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
 public class CombinedStats
 {

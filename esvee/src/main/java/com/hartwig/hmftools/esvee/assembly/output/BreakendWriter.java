@@ -225,12 +225,7 @@ public class BreakendWriter
                 InsertionType insertionType = getInsertionType(breakend, assemblyAlignment.assemblies(), assemblyAlignment.breakends());
                 sj.add(insertionType.toString());
 
-                int[] uniqueFragPositions = breakend.uniqueFragmentPositionCounts();
-
-                if(uniqueFragPositions != null)
-                    sj.add(format("%d:%d", uniqueFragPositions[0], uniqueFragPositions[1]));
-                else
-                    sj.add("-1:-1");
+                sj.add(String.valueOf(breakend.uniqueFragmentPositionCount()));
 
                 String assemblyMatchStr = getClosestAssembly(breakend, assemblyAlignment.assemblies(), closestAssemblyMap, true);
                 sj.add(assemblyMatchStr);

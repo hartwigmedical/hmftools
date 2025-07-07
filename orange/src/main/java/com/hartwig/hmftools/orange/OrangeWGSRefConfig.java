@@ -27,9 +27,13 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
@@ -68,44 +72,6 @@ public interface OrangeWGSRefConfig
 
     }
 
-    // params for WGS Tumor only
-    @NotNull
-    String annotatedVirusTsv();
-
-    @NotNull
-    String chordPredictionTxt();
-
-    @Nullable
-    String cuppaVisDataTsv();
-
-    @Nullable
-    String cuppaSummaryPlot();
-
-    @NotNull
-    String sigsAllocationTsv();
-
-    // additional params for WGS Ref
-    @Nullable
-    String referenceSampleId();
-
-    @Nullable
-    String sageGermlineGeneCoverageTsv();
-
-    @Nullable
-    String sageSomaticRefSampleBQRPlot();
-
-    @Nullable
-    String linxGermlineDataDirectory();
-
-    @Nullable
-    String peachGenotypeTsv();
-
-    @Nullable
-    String refSampleWGSMetricsFile();
-
-    @Nullable
-    String refSampleFlagstatFile();
-
     @NotNull
     static OrangeWGSRefConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver)
     {
@@ -132,8 +98,20 @@ public interface OrangeWGSRefConfig
             String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
             builder.sageSomaticRefSampleBQRPlot(mandatoryPath(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
 
-            String sageGermlineDir = pathResolver.resolveMandatoryToolDirectory(SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-            builder.sageGermlineGeneCoverageTsv(mandatoryPath(generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
+            String refMetricsDir = pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, METRICS_DIR);
+            String geneCoverageFile = generateGeneCoverageFilename(refMetricsDir, refSampleId);
+
+            if(Files.exists(Paths.get(geneCoverageFile)))
+            {
+                builder.germlineGeneCoverageTsv(geneCoverageFile);
+
+            }
+            else
+            {
+                String sageGermlineDir = pathResolver.resolveMandatoryToolDirectory(SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
+                String legacySageGermlineCoverageFile = generateGeneCoverageFilenameLegacySage(sageGermlineDir, refSampleId);
+                builder.germlineGeneCoverageTsv(legacySageGermlineCoverageFile);
+            }
 
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
@@ -150,11 +128,53 @@ public interface OrangeWGSRefConfig
                 builder.peachGenotypeTsv(peachGenotypeTsv);
             }
 
-            String refMetricsDir = pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, METRICS_DIR);
             builder.refSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(refMetricsDir, refSampleId)));
             builder.refSampleFlagstatFile(mandatoryPath(BamFlagStats.generateFilename(refMetricsDir, refSampleId)));
         }
 
         return builder.build();
     }
+
+    private static String generateGeneCoverageFilenameLegacySage(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ".sage.gene.coverage.tsv";
+    }
+
+    // params for WGS Tumor only
+    @NotNull
+    String annotatedVirusTsv();
+
+    @NotNull
+    String chordPredictionTxt();
+
+    @Nullable
+    String cuppaVisDataTsv();
+
+    @Nullable
+    String cuppaSummaryPlot();
+
+    @NotNull
+    String sigsAllocationTsv();
+
+    // additional params for WGS Ref
+    @Nullable
+    String referenceSampleId();
+
+    @Nullable
+    String germlineGeneCoverageTsv();
+
+    @Nullable
+    String sageSomaticRefSampleBQRPlot();
+
+    @Nullable
+    String linxGermlineDataDirectory();
+
+    @Nullable
+    String peachGenotypeTsv();
+
+    @Nullable
+    String refSampleWGSMetricsFile();
+
+    @Nullable
+    String refSampleFlagstatFile();
 }

@@ -8,23 +8,23 @@ import java.util.concurrent.Callable;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.pon.GnomadChrCache;
 import com.hartwig.hmftools.common.variant.pon.GnomadCache;
+import com.hartwig.hmftools.common.variant.pon.GnomadChrCache;
 import com.hartwig.hmftools.pave.VariantData;
 
-public class GnomadAnnotation extends AnnotationData implements Callable
+public class GnomadAnnotation extends AnnotationData implements Callable<Void>
 {
     private final GnomadCache mGnomadCache;
     private final boolean mNoFilter;
 
     public static final String GNOMAD_NO_FILTER = "gnomad_no_filter";
 
-    public GnomadAnnotation(final ConfigBuilder configBuilder)
+    public GnomadAnnotation(final ConfigBuilder configBuilder, boolean loadFiles)
     {
         mGnomadCache = new GnomadCache(
                 RefGenomeVersion.from(configBuilder),
-                configBuilder.getValue(GNOMAD_FREQUENCY_FILE),
-                configBuilder.getValue(GNOMAD_FREQUENCY_DIR));
+                loadFiles ? configBuilder.getValue(GNOMAD_FREQUENCY_FILE) : null,
+                loadFiles ? configBuilder.getValue(GNOMAD_FREQUENCY_DIR) : null);
 
         mNoFilter = configBuilder.hasFlag(GNOMAD_NO_FILTER);
     }
@@ -68,10 +68,10 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         mGnomadCache.initialise(mInitialChromosomes);
 
-        return (long)0;
+        return null;
     }
 }

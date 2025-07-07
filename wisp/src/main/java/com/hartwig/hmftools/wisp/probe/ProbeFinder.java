@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +41,7 @@ public class ProbeFinder
     private final ProbeConfig mConfig;
     private final List<Variant> mCommonVariants;
     private final RefGenomeInterface mRefGenome;
-    private final Map<String,BufferedWriter> mWriters;
+    private final Map<String, BufferedWriter> mWriters;
 
     public ProbeFinder(final ConfigBuilder configBuilder)
     {
@@ -133,7 +133,7 @@ public class ProbeFinder
                 }
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
@@ -149,7 +149,7 @@ public class ProbeFinder
         CT_LOGGER.info("Probe variation selection complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;
@@ -166,13 +166,13 @@ public class ProbeFinder
         public void addBatchId(final String batchId) { mBatchIds.add(batchId); }
 
         @Override
-        public Long call()
+        public Void call()
         {
             if(!mBatchIds.isEmpty())
             {
                 for(String batchId : mBatchIds)
                 {
-                    Map<String,List<Variant>> sampleVariantMap = Maps.newHashMap();
+                    Map<String, List<Variant>> sampleVariantMap = Maps.newHashMap();
 
                     List<String> sampleIds = mConfig.BatchSampleIds.get(batchId);
 
@@ -189,7 +189,7 @@ public class ProbeFinder
                     finaliseBatchVariants(sampleVariantMap);
                     writeVariants(CategoryType.REFERENCE.toString(), batchId, mCommonVariants);
 
-                    for(Map.Entry<String,List<Variant>> entry : sampleVariantMap.entrySet())
+                    for(Map.Entry<String, List<Variant>> entry : sampleVariantMap.entrySet())
                     {
                         writeVariants(entry.getKey(), batchId, entry.getValue());
                     }
@@ -215,7 +215,7 @@ public class ProbeFinder
                 CT_LOGGER.info("{}: tasks complete for {} samples", mTaskId, max(mSampleIds.size(), mBatchIds.size()));
             }
 
-            return (long)0;
+            return null;
         }
 
         private List<Variant> selectSampleVariants(final String sampleId)
@@ -250,7 +250,7 @@ public class ProbeFinder
             return null;
         }
 
-        private void finaliseBatchVariants(final Map<String,List<Variant>> sampleVariantMap)
+        private void finaliseBatchVariants(final Map<String, List<Variant>> sampleVariantMap)
         {
             // remove ref variants but register their locations for proximity checking
             ProximateLocations registeredLocations = new ProximateLocations();

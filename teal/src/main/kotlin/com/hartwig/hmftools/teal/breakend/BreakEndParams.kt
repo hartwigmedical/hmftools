@@ -47,7 +47,7 @@ class BreakEndParams
         }
 
     var refGenomeVersion = RefGenomeVersion.V37
-    var excludedGenomeRegions: List<GenomeRegion> = emptyList()
+    var excludedGenomeRegions: List<ChrBaseRegion> = emptyList()
 
     @Parameter(names = ["-genome_regions"],
         listConverter = IncludedGenomeRegionsConverter::class,
@@ -56,38 +56,23 @@ class BreakEndParams
 
     companion object
     {
-        private fun loadExcludedRegionBed(refGenomeVersion: RefGenomeVersion): List<GenomeRegion>
+        private fun loadExcludedRegionBed(refGenomeVersion: RefGenomeVersion): List<ChrBaseRegion>
         {
-            val resourcePath = when (refGenomeVersion)
+            if (refGenomeVersion != RefGenomeVersion.V37)
             {
-                RefGenomeVersion.V37 -> "blacklistedTelomereRegions.37.bed"
-                RefGenomeVersion.V38 -> "blacklistedTelomereRegions.38.bed"
-                else -> null
+                // these regions have been removed since HG37
+                return emptyList()
             }
-            if (resourcePath != null)
-            {
-                val bedStream: java.io.InputStream = BreakEndParams::class.java.classLoader.getResourceAsStream(resourcePath)!!
-                // write the resource out to a temp file and read it back
-                val tempFile = java.io.File.createTempFile("teal-region-bed", null)
-                tempFile.deleteOnExit()
 
-                // cannot use readAllBytes since we are still on java8
-                val bytes = ByteArray(bedStream.available())
-                java.io.DataInputStream(bedStream).readFully(bytes)
-                tempFile.writeBytes(bytes)
+            val resourcePath = "blacklistedTelomereRegions.37.bed"
+            val bedStream: java.io.InputStream = BreakEndParams::class.java.classLoader.getResourceAsStream(resourcePath)!!
+            // write the resource out to a temp file and read it back
+            val tempFile = java.io.File.createTempFile("teal-region-bed", null)
+            tempFile.deleteOnExit()
 
-                var regions = ChrBaseRegion.loadChrBaseRegionList(tempFile.path);
+            tempFile.writeBytes(bedStream.readAllBytes())
 
-                val genomeRegions = ArrayList<GenomeRegion>()
-
-                for(region in genomeRegions)
-                {
-                    genomeRegions.add(GenomeRegions.create(region.chromosome(), region.start(), region.end()))
-                }
-
-                return genomeRegions;
-            }
-            return emptyList()
+            return ChrBaseRegion.loadChrBaseRegionList(tempFile.path)
         }
 
         class IncludedGenomeRegionsConverter : IStringConverter<List<GenomeRegion>?>

@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.candidate.EvictingArray;
 import com.hartwig.hmftools.sage.candidate.RefContext;
 import com.hartwig.hmftools.sage.candidate.RegionBlock;

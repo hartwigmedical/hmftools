@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.purple.MiscTestUtils.createDefaultFittedRegion;
-import static com.hartwig.hmftools.purple.MiscTestUtils.buildPurityAdjuster;
+import static com.hartwig.hmftools.purple.FittingTestUtils.buildPurityAdjuster;
+import static com.hartwig.hmftools.purple.FittingTestUtils.createDefaultFittedRegion;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

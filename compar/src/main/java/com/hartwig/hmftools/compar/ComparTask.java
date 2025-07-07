@@ -3,9 +3,9 @@ package com.hartwig.hmftools.compar;
 import static com.hartwig.hmftools.common.driver.DriverType.AMP;
 import static com.hartwig.hmftools.common.driver.DriverType.DEL;
 import static com.hartwig.hmftools.common.driver.DriverType.PARTIAL_AMP;
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
-import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 
-public class ComparTask implements Callable
+public class ComparTask implements Callable<Void>
 {
     private final int mTaskId;
     private final ComparConfig mConfig;
@@ -44,7 +44,7 @@ public class ComparTask implements Callable
     public List<String> getSampleIds() { return mSampleIds; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         for(int i = 0; i < mSampleIds.size(); ++i)
         {
@@ -63,7 +63,7 @@ public class ComparTask implements Callable
             CMP_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
         }
 
-        return (long)0;
+        return null;
     }
 
     private void processSample(final String sampleId)
@@ -78,7 +78,7 @@ public class ComparTask implements Callable
             {
                 if(mConfig.runCopyNumberGeneComparer() && comparer.category() == GENE_COPY_NUMBER)
                 {
-                    ((GeneCopyNumberComparer)comparer).addDriverGenes(loadCombinedCopyNumberDriverGenes(sampleId));
+                    ((GeneCopyNumberComparer) comparer).addDriverGenes(loadCombinedCopyNumberDriverGenes(sampleId));
                 }
 
                 boolean status = comparer.processSample(sampleId, mismatches);

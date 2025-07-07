@@ -12,11 +12,10 @@ import static com.hartwig.hmftools.pave.PaveConstants.PON_MEAN_READ_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_REPEAT_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_SAMPLE_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_VAF_THRESHOLD;
+import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
-import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.pave.VcfWriter.buildVariant;
-import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class ChromosomeTask implements Callable
+public class ChromosomeTask implements Callable<Void>
 {
     private final HumanChromosome mChromosome;
     private final String mChromosomeStr;
@@ -87,7 +86,7 @@ public class ChromosomeTask implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         int variantCount = 0;
 
@@ -135,7 +134,7 @@ public class ChromosomeTask implements Callable
 
         mVcfWriter.onChromosomeComplete(mChromosome);
 
-        return (long)0;
+        return null;
     }
 
     private void processVariant(final VariantContext variantContext)
@@ -145,7 +144,7 @@ public class ChromosomeTask implements Callable
 
         VariantData variant = VariantData.fromContext(variantContext);
 
-        if(mConfig.ReadPassOnly)
+        if(!mConfig.ProcessNonPass)
         {
             if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
                 return;
@@ -191,7 +190,7 @@ public class ChromosomeTask implements Callable
         if(mConfig.WritePassOnly && !variant.filters().isEmpty())
             return;
 
-        VariantContext newVariant = buildVariant(variant.context(), variant, variantImpact);
+        VariantContext newVariant = mVcfWriter.buildVariant(variant.context(), variant, variantImpact);
         mVcfWriter.writeVariant(mChromosome, newVariant);
 
         if(mConfig.WriteTranscriptFile)

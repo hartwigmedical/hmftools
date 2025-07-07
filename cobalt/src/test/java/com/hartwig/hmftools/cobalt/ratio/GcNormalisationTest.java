@@ -33,7 +33,7 @@ public class GcNormalisationTest
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
                 DoubleColumn.create(CobaltColumns.RATIO),
-                DoubleColumn.create(CobaltColumns.GC_CONTENT),
+                DoubleColumn.create(CobaltColumns.READ_GC_CONTENT),
                 BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
                 BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
@@ -43,13 +43,13 @@ public class GcNormalisationTest
         addReadRatio(ratios, "chr1", 12001, 19, 0.501, true);
         addReadRatio(ratios, "chr2", 23001, 1, 0.496, true);
         addReadRatio(ratios, "chr2", 24001, 2, 0.19, true); // gc bucket too low
-        addReadRatio(ratios, "chr2", 25001, 3, 0.61, true); // gc bucket too high
+        addReadRatio(ratios, "chr2", 25001, 3, 0.70, true); // gc bucket too high
         addReadRatio(ratios, "chr3", 8001, 2, 0.45, false); // unmappable
         addReadRatio(ratios, "chrX", 7001, 2, 0.45, true); // allosome, not included in median calc
 
         (new ChromosomePositionCodec()).addEncodedChrPosColumn(ratios, false);
 
-        ratios = new GcNormalizedRatioMapper().mapRatios(ratios);
+        ratios = new GcNormalizedRatioMapper(false).mapRatios(ratios);
 
         // System.out.println(ratios);
 
@@ -68,7 +68,7 @@ public class GcNormalisationTest
         row.setString(CobaltColumns.CHROMOSOME, chromosome);
         row.setInt(CobaltColumns.POSITION, position);
         row.setDouble(CobaltColumns.RATIO, ratio);
-        row.setDouble(CobaltColumns.GC_CONTENT, gcContent);
+        row.setDouble(CobaltColumns.READ_GC_CONTENT, gcContent);
         row.setBoolean(CobaltColumns.IS_MAPPABLE, isMappable);
         row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(chromosome).isAutosome());
     }

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
@@ -35,7 +35,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 // simple BAM read counter, used for experimental purposes at the moment
-public class BamReadCounter implements Callable
+public class BamReadCounter implements Callable<Void>
 {
     private final IsofoxConfig mConfig;
 
@@ -46,7 +46,7 @@ public class BamReadCounter implements Callable
     private final int[] mCurrentGenesRange;
     private int mTotalReadCount;
     private int mCurrentGeneReadCount;
-    private FragmentTypeCounts mFragmentTypeCounts;
+    private final FragmentTypeCounts mFragmentTypeCounts;
     private int mSecondaryReads;
     private String mChromosome;
     private final List<GeneData> mGeneDataList;
@@ -82,10 +82,10 @@ public class BamReadCounter implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         processBam();
-        return (long)0;
+        return null;
     }
 
     private void processBam()
@@ -186,14 +186,14 @@ public class BamReadCounter implements Callable
             writer.newLine();
             return writer;
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             ISF_LOGGER.error("failed to create read data writer: {}", e.toString());
             return null;
         }
     }
 
-    private synchronized static void writeReadData( final BufferedWriter writer, final SAMRecord record, final String geneId)
+    private static synchronized void writeReadData(final BufferedWriter writer, final SAMRecord record, final String geneId)
     {
         try
         {

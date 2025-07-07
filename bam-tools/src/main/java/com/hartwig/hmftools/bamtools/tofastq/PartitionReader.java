@@ -13,7 +13,7 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
 import org.apache.commons.lang3.Validate;
 

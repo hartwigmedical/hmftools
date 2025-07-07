@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.Chromosome;
+import com.hartwig.hmftools.cobalt.ChromosomeData;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
@@ -20,7 +20,7 @@ import tech.tablesaw.api.*;
 
 public class TargetedRatioMapperTest
 {
-    private static final Chromosome CHROMOSOME = new Chromosome("chr1", 10000);
+    private static final ChromosomeData CHROMOSOME = new ChromosomeData("chr1", 10000);
 
     @Test
     public void testOnTargetRatio()
@@ -31,7 +31,7 @@ public class TargetedRatioMapperTest
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
                 DoubleColumn.create(CobaltColumns.RATIO),
-                DoubleColumn.create(CobaltColumns.GC_CONTENT),
+                DoubleColumn.create(CobaltColumns.PROFILE_GC_CONTENT),
                 IntColumn.create(CobaltColumns.GC_BUCKET),
                 BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
                 BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
@@ -51,13 +51,13 @@ public class TargetedRatioMapperTest
                 BooleanColumn.create("offTarget"));
 
         Row row = targetEnrichmentRatios.appendRow();
-        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Name);
         row.setInt(CobaltColumns.POSITION, 2001);
         row.setDouble(CobaltColumns.RELATIVE_ENRICHMENT, 2.0);
         row.setBoolean("offTarget", false);
 
         row = targetEnrichmentRatios.appendRow();
-        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Name);
         row.setInt(CobaltColumns.POSITION, 12001);
         row.setDouble(CobaltColumns.RELATIVE_ENRICHMENT, 10.0);
         row.setBoolean("offTarget", false);
@@ -89,9 +89,9 @@ public class TargetedRatioMapperTest
     }
 
     @NotNull
-    private static ListMultimap<Chromosome, ReadRatio> create(ReadRatio ... readRatios)
+    private static ListMultimap<ChromosomeData, ReadRatio> create(ReadRatio ... readRatios)
     {
-        ListMultimap<Chromosome, ReadRatio> ratios = ArrayListMultimap.create();
+        ListMultimap<ChromosomeData, ReadRatio> ratios = ArrayListMultimap.create();
         ratios.putAll(CHROMOSOME, Arrays.asList(readRatios));
         return ratios;
     }
@@ -99,10 +99,10 @@ public class TargetedRatioMapperTest
     private static void addReadRatio(Table table, int position, double ratio, int gcBucket)
     {
         Row row = table.appendRow();
-        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.contig);
+        row.setString(CobaltColumns.CHROMOSOME, CHROMOSOME.Name);
         row.setInt(CobaltColumns.POSITION, position);
         row.setDouble(CobaltColumns.RATIO, ratio);
-        row.setDouble(CobaltColumns.GC_CONTENT, gcBucket / 100.0);
+        row.setDouble(CobaltColumns.PROFILE_GC_CONTENT, gcBucket / 100.0);
         row.setInt(CobaltColumns.GC_BUCKET, gcBucket);
         row.setBoolean(CobaltColumns.IS_MAPPABLE, true);
         row.setBoolean(CobaltColumns.IS_AUTOSOME, true);

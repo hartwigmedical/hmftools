@@ -38,6 +38,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
@@ -66,6 +68,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BREAKEND_REQ_VALID_FRAGMENT_LENGTH_PERC;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment.toVcfTag;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
@@ -200,7 +203,8 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(SEG_SCORE, 1, VCFHeaderLineType.Integer, SEG_SCORE_DESC));
         metaData.add(new VCFInfoHeaderLine(SEG_REPEAT_LENGTH, 1, VCFHeaderLineType.Integer, SEG_REPEAT_LENGTH_DESC));
 
-        metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 2, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
+        metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 1, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
+        metaData.add(new VCFInfoHeaderLine(MAX_LOCAL_REPEAT, 1, VCFHeaderLineType.Integer, MAX_LOCAL_REPEAT_DESC));
 
         for(FilterType filter : FilterType.values())
         {
@@ -297,7 +301,12 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SPLIT_FRAGS, totalSplitFrags);
         builder.attribute(DISC_FRAGS, totalDiscFrags);
         builder.attribute(TOTAL_FRAGS, totalSplitFrags + totalDiscFrags);
-        builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
+
+        // for SGLs with too few fragments with a valid length, set the calculated value to zero
+        if(breakend.isSingle() && breakend.validFragmentLengthPercent() < BREAKEND_REQ_VALID_FRAGMENT_LENGTH_PERC)
+            builder.attribute(AVG_FRAG_LENGTH, 0);
+        else
+            builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
 
         List<AlternativeAlignment> altAlignments = breakend.alternativeAlignments();
         if(!altAlignments.isEmpty())
@@ -340,10 +349,10 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SEG_SCORE, segments.stream().mapToInt(x -> x.Alignment.score()).max().orElse(0));
         builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
-        int[] uniqueFragmentPositions = breakend.uniqueFragmentPositionCounts();
+        builder.attribute(UNIQUE_FRAG_POSITIONS, breakend.uniqueFragmentPositionCount());
 
-        if(uniqueFragmentPositions != null)
-            builder.attribute(UNIQUE_FRAG_POSITIONS, new int[] { uniqueFragmentPositions[0], uniqueFragmentPositions[1] });
+        if(breakend.maxLocalRepeat() > 0)
+            builder.attribute(MAX_LOCAL_REPEAT, breakend.maxLocalRepeat());
 
         VariantContext variantContext = builder.make();
 

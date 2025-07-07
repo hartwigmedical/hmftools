@@ -56,7 +56,7 @@ public class ExpectedRatesTest
 
         int transId1 = 1;
         TranscriptData transData = new TranscriptData(transId1, "TRANS01", GENE_NAME_1, true, (byte)1,
-                0, 1000, null,null, "");
+                0, 1000, null,null, "", null);
 
         transData.exons().add(new ExonData(transId1, 100, 200, 1, -1, -1));
         transData.exons().add(new ExonData(transId1, 300, 400, 2, -1, -1));
@@ -81,7 +81,7 @@ public class ExpectedRatesTest
         // test for another transcript
         int transId2 = 2;
         TranscriptData transData2 = new TranscriptData(transId2, "TRANS02", GENE_NAME_1, true, POS_STRAND,
-                0, 1000, null,null, "");
+                0, 1000, null,null, "", null);
 
         transData2.exons().add(new ExonData(transId2, 90, 210, 1, -1, -1));
         transData2.exons().add(new ExonData(transId2, 300, 400, 2, -1, -1));
@@ -257,7 +257,7 @@ public class ExpectedRatesTest
 
         int transId3 = 3;
         TranscriptData transData3 = new TranscriptData(transId3, "TRANS03", GENE_NAME_1, true, POS_STRAND,
-                0, 1000, null,null, "");
+                0, 1000, null,null, "", null);
 
         transData3.exons().add(new ExonData(transId3, 100, 239, 1, -1, -1));
 
@@ -298,7 +298,7 @@ public class ExpectedRatesTest
         String transName = "TRANS01";
 
         TranscriptData transData = new TranscriptData(transId, transName, geneId, true, POS_STRAND,
-                100, 414, null,null, "");
+                100, 414, null,null, "", null);
 
         transData.exons().add(new ExonData(transId, 100, 158, 1, -1, -1));
         transData.exons().add(new ExonData(transId, 228, 286, 2, -1, -1));
@@ -366,7 +366,7 @@ public class ExpectedRatesTest
         String transName1 = "TRANS01";
 
         TranscriptData transData1 = new TranscriptData(transId1, transName1, geneId, true, POS_STRAND,
-                100, 600, null,null, "");
+                100, 600, null,null, "", null);
 
         transData1.exons().add(new ExonData(transId1, 100, 200, 1, -1, -1));
         transData1.exons().add(new ExonData(transId1, 300, 400, 2, -1, -1));
@@ -376,7 +376,7 @@ public class ExpectedRatesTest
         String transName2 = "TRANS02";
 
         TranscriptData transData2 = new TranscriptData(transId2, transName2, geneId, true, POS_STRAND,
-                150, 1000, null,null, "");
+                150, 1000, null,null, "", null);
 
         transData2.exons().add(new ExonData(transId2, 150, 200, 1, -1, -1));
         transData2.exons().add(new ExonData(transId2, 300, 450, 2, -1, -1));
@@ -478,7 +478,7 @@ public class ExpectedRatesTest
         String transName1 = "TRANS01";
 
         TranscriptData transData1 = new TranscriptData(transId, transName1, geneId, true, POS_STRAND,
-                100, 300, null,null, "");
+                100, 300, null,null, "", null);
 
         transData1.exons().add(new ExonData(transId, 100, 300, 1, -1, -1));
 
@@ -524,7 +524,7 @@ public class ExpectedRatesTest
         String transName2 = "TRANS02";
 
         TranscriptData transData2 = new TranscriptData(transId2, transName2, geneId, true, POS_STRAND,
-                200, 400, null,null, "");
+                200, 400, null,null, "", null);
 
         transData2.exons().add(new ExonData(transId, 200, 400, 1, -1, -1));
 
@@ -564,7 +564,7 @@ public class ExpectedRatesTest
         String transName1 = "TRANS01";
 
         TranscriptData transData1 = new TranscriptData(transId1, transName1, geneId1, true, (byte) 1,
-                100, 600, null, null, "");
+                100, 600, null, null, "", null);
 
         transData1.exons().add(new ExonData(transId1, 100, 200, 1, -1, -1));
         transData1.exons().add(new ExonData(transId1, 300, 400, 2, -1, -1));
@@ -580,7 +580,7 @@ public class ExpectedRatesTest
         String transName2 = "TRANS02";
 
         TranscriptData transData2 = new TranscriptData(transId2, transName2, geneId2, true, (byte) 1,
-                150, 1000, null, null, "");
+                150, 1000, null, null, "", null);
 
         transData2.exons().add(new ExonData(transId2, 150, 200, 1, -1, -1));
         transData2.exons().add(new ExonData(transId2, 300, 450, 2, -1, -1));

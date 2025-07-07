@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
@@ -14,10 +16,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.patientdb.LoadPurpleData.hasMissingFiles;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.LoadPurpleData.hasMissingFiles;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -32,23 +32,23 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
@@ -123,7 +123,7 @@ public class FileDbLoadChecker
             ++taskIndex;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mThreads);
 
         closeBufferedWriter(mWriter);
@@ -170,7 +170,7 @@ public class FileDbLoadChecker
         }
     }
 
-    public class SampleCheckerTask implements Callable
+    public class SampleCheckerTask implements Callable<Void>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;
@@ -184,7 +184,7 @@ public class FileDbLoadChecker
         public List<String> getSampleIds() { return mSampleIds; }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < mSampleIds.size(); ++i)
             {
@@ -199,7 +199,7 @@ public class FileDbLoadChecker
             }
 
             LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
-            return (long)0;
+            return null;
         }
 
         private void processSample(final String sampleId)
@@ -307,8 +307,8 @@ public class FileDbLoadChecker
                 List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
                 List<DriverCatalog> dbDrivers = mDbAccess.readDriverCatalog(sampleId);
 
-                int fileDriverCount = (int)driverCatalog.stream().filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver())).count();
-                int dbDriverCount = (int)dbDrivers.stream().filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver())).count();
+                int fileDriverCount = (int) driverCatalog.stream().filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver())).count();
+                int dbDriverCount = (int) dbDrivers.stream().filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver())).count();
 
                 if(dbDriverCount != fileDriverCount)
                 {
@@ -357,7 +357,7 @@ public class FileDbLoadChecker
         }
     }
 
-    public static void main(@NotNull String[] args) throws Exception
+    public static void main(@NotNull final String[] args) throws Exception
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 

@@ -35,7 +35,7 @@ public final class LilacQC
     public final double ScoreMargin;
     public final String NextSolutionInfo;
     public final HlaAllele HlaYAllele;
-    public final int MedianBaseQual;
+    public final byte MedianBaseQual;
 
     public final AminoAcidQC AminoAcidQC;
     public final BamQC BamQC;
@@ -44,7 +44,7 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            double scoreMargin, final String nextSolutionInfo, int medianBaseQual, final HlaAllele hlaYAllele,
+            final double scoreMargin, final String nextSolutionInfo, final byte medianBaseQual, final HlaAllele hlaYAllele,
             final AminoAcidQC aminoAcidQC, final BamQC bamQC,
             final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
@@ -63,7 +63,7 @@ public final class LilacQC
         populateStatus();
     }
 
-    public List<String> getHeaderItems()
+    private List<String> getHeaderItems()
     {
         List<String> columns = Lists.newArrayList();
         columns.add(LilacQcData.FLD_QC_STATUS);
@@ -74,12 +74,12 @@ public final class LilacQC
         columns.addAll(BamQC.header());
         columns.addAll(CoverageQC.header());
         columns.addAll(AminoAcidQC.header());
-        columns.addAll(HaplotypeQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.HaplotypeQC.header());
         columns.addAll(SomaticVariantQC.header());
         return columns;
     }
 
-    public List<String> getBodyItems()
+    private List<String> getBodyItems()
     {
         List<String> columns = Lists.newArrayList();
 
@@ -102,14 +102,14 @@ public final class LilacQC
     public String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getHeaderItems().forEach(x -> sj.add(x));
+        getHeaderItems().forEach(sj::add);
         return sj.toString();
     }
 
-    public String body()
+    private String body()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getBodyItems().forEach(x -> sj.add(x));
+        getBodyItems().forEach(sj::add);
         return sj.toString();
     }
 

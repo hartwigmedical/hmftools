@@ -1,23 +1,24 @@
 package com.hartwig.hmftools.lilac.seq;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILDCARD;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DELETION;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILDCARD;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 public class HlaSequenceLoci
 {
@@ -60,7 +61,7 @@ public class HlaSequenceLoci
 
     public boolean hasExonBoundaryWildcards() { return mHasExonBoundaryWildcards; }
 
-    public void setExonBoundaryWildcardsWildcards(final List<Integer> exonBoundaries)
+    public void setExonBoundaryWildcards(final List<Integer> exonBoundaries)
     {
         for(Integer locus : exonBoundaries)
         {
@@ -88,7 +89,7 @@ public class HlaSequenceLoci
         return sj.toString();
     }
 
-    public String sequence(final List<Integer> indices)
+    public String sequence(final Collection<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
 
@@ -122,7 +123,7 @@ public class HlaSequenceLoci
     public boolean consistentWith(final PhasedEvidence evidence)
     {
         return consistentWithAny(
-                evidence.getEvidence().keySet().stream().collect(Collectors.toList()), evidence.getAminoAcidLoci());
+                Lists.newArrayList(evidence.getEvidence().keySet()), evidence.getAminoAcidLoci());
     }
 
     public boolean consistentWithAny(final List<String> targetSequences, final List<Integer> targetIndices)
@@ -160,17 +161,16 @@ public class HlaSequenceLoci
                 .collect(Collectors.toList());
     }
 
-    public SequenceMatchType determineMatchType(final List<String> targetSequences, final List<Integer> targetLoci)
+    public SequenceMatchType determineMatchType(final List<String> targetSequences, final Collection<Integer> targetLoci)
     {
         if(targetLoci.isEmpty())
             return SequenceMatchType.MISMATCH;
 
         boolean hasWildcardMatch = false;
 
-        for(int i = 0; i < targetLoci.size(); ++i)
+        int i = 0;
+        for(Integer locus : targetLoci)
         {
-            Integer locus = targetLoci.get(i);
-
             if(locus >= mSequences.size())
                 return SequenceMatchType.MISMATCH;
 
@@ -180,12 +180,14 @@ public class HlaSequenceLoci
                 hasWildcardMatch = true;
             else if(!sequenceStr.equals(targetSequences.get(i)))
                 return SequenceMatchType.MISMATCH;
+
+            i++;
         }
 
         return hasWildcardMatch ? WILD : FULL;
     }
 
-    public SequenceMatchType determineMatchType(final String targetSequence, final List<Integer> targetIndices)
+    public SequenceMatchType determineMatchType(final String targetSequence, final Collection<Integer> targetIndices)
     {
         if(targetIndices.isEmpty())
             return SequenceMatchType.MISMATCH;
@@ -259,19 +261,19 @@ public class HlaSequenceLoci
     public static HlaSequenceLoci buildAminoAcidSequenceFromNucleotides(
             final HlaSequenceLoci nucSequence, final HlaSequenceLoci sequenceTemplate)
     {
-        String sequence = "";
+        StringBuilder sequence = new StringBuilder();
         for(int i = 0; i < nucSequence.length() - 2; i = i + 3)
         {
             String first = nucSequence.getSequences().get(i);
             String second = nucSequence.getSequences().get(i + 1);
             String third = nucSequence.getSequences().get(i + 2);
 
-            if(first.equals(DEL_STR) || third.equals(DEL_STR) || third.equals(DEL_STR))
-                sequence += DEL_STR;
+            if(first.equals(DEL_STR) || second.equals(DEL_STR) || third.equals(DEL_STR))
+                sequence.append(DEL_STR);
             else
-                sequence += Codons.aminoAcidFromBases(first + second + third);
+                sequence.append(Codons.aminoAcidFromBases(first + second + third));
         }
 
-        return HlaSequenceLoci.create(nucSequence.Allele.asFourDigit(), sequence, sequenceTemplate.sequence());
+        return create(nucSequence.Allele.asFourDigit(), sequence.toString(), sequenceTemplate.sequence());
     }
 }

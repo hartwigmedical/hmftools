@@ -6,19 +6,17 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
-import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
+import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -69,7 +67,7 @@ import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 import org.jooq.Record;
 import org.jooq.Result;
 
-public class SampleLoaderTask implements Callable
+public class SampleLoaderTask implements Callable<Void>
 {
     private final int mTaskId;
     private final DataLoaderConfig mConfig;
@@ -95,6 +93,7 @@ public class SampleLoaderTask implements Callable
         if(mDbAccess == null)
         {
             ISF_LOGGER.error("invalid DB connection");
+            System.exit(1);
             mRnaDAO = null;
         }
         else
@@ -106,10 +105,10 @@ public class SampleLoaderTask implements Callable
     public final List<String> getSampleIds() { return mSampleIds; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         if(mRnaDAO == null)
-            return (long)0;
+            return null;
 
         ISF_LOGGER.info("{}: loading data for {} samples", mTaskId, mSampleIds.size());
 
@@ -130,7 +129,7 @@ public class SampleLoaderTask implements Callable
             ISF_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
         }
 
-        return (long)0;
+        return null;
     }
 
     private void loadSampleData(final String sampleId)
@@ -211,7 +210,6 @@ public class SampleLoaderTask implements Callable
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to load summary statistics data file({}): {}", filename, e.toString());
-            return;
         }
     }
 
@@ -224,7 +222,7 @@ public class SampleLoaderTask implements Callable
 
         final String sampleDataDir = convertWildcardSamplePath(mConfig.GeneDataDir, sampleId);
 
-        final String filename = GeneExpressionFile.generateFilename(sampleDataDir,sampleId);
+        final String filename = GeneExpressionFile.generateFilename(sampleDataDir, sampleId);
 
         try
         {
@@ -384,7 +382,7 @@ public class SampleLoaderTask implements Callable
                         .junctionTypeDown(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_DOWN))])
                         .svType(StructuralVariantType.valueOf(items[fieldsIndexMap.get(FLD_SV_TYPE)]))
                         .splitFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_SPLIT_FRAGS)]))
-                        .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FLAGS )]))
+                        .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FLAGS)]))
                         .discordantFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_DISCORD_FRAGS)]))
                         .depthUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_UP))]))
                         .depthDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_DOWN))]))

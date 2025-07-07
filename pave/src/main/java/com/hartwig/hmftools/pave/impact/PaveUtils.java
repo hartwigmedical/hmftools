@@ -11,8 +11,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.pave.GeneCacheIndexing;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.VariantData;
-import com.hartwig.hmftools.pave.impact.ImpactClassifier;
-import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -37,8 +35,7 @@ public final class PaveUtils
             // analyse against each of the genes and their transcripts
             for(GeneData geneData : geneCandidates)
             {
-                List<TranscriptData> transDataList =
-                        geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
+                List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
 
                 // non-coding transcripts are skipped for now
                 if(transDataList.isEmpty())
@@ -47,6 +44,7 @@ public final class PaveUtils
                 for(TranscriptData transData : transDataList)
                 {
                     VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+                    VariantTransImpact selectedTransImpact = transImpact;
                     processed = true;
 
                     // check right-alignment if the variant has microhomology
@@ -57,12 +55,18 @@ public final class PaveUtils
                         if(raTransImpact != null)
                         {
                             variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
-                            transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+                            selectedTransImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+
+                            if(selectedTransImpact == transImpact && transImpact.TransData.posStrand())
+                            {
+                                // use the right-aligned coding string regardless of which variant is prioritised if on the positive strand
+                                transImpact.codingContext().Hgvs = raTransImpact.codingContext().Hgvs;
+                            }
                         }
                     }
 
-                    if(transImpact != null)
-                        variant.addImpact(geneData.GeneName, transImpact);
+                    if(selectedTransImpact != null)
+                        variant.addImpact(geneData.GeneName, selectedTransImpact);
                 }
             }
         }
@@ -82,7 +86,7 @@ public final class PaveUtils
 
     public static VariantData createRightAlignedVariant(final VariantData variant, final RefGenomeInterface refGenome)
     {
-        if(variant.isBaseChange()) // to be confirmed
+        if(variant.isBaseChange())
             return null;
 
         if(variant.microhomology().isEmpty() || variant.microhomology().equals("."))
@@ -92,18 +96,14 @@ public final class PaveUtils
         if(variant.Ref.charAt(0) != variant.Alt.charAt(0))
             return null;
 
-        // repeat count can only be used where the alt bases match the microhomology and repeat sequence
-        // otherwise shift by the microhomology
+        // repeat count can only be used where the alt bases match the microhomology (MH) and repeat sequence
+        // otherwise shift by the MH
 
-        /*
-        if the microhomology == ins/del sequence and the MH==repeatSeq, then you can extend to the end of the repeat (-1 repeat sequences for the del case)
+        // if MH = ins/del sequence and MH = repeatSeq, then extend to the end of the repeat (-1 repeat sequences for the del case)
+        // if MH = ins/del sequence and MH = N*repeatSeq, then extend to the end of the repeat ( -N repeat sequences for the del case),
+        // where N = any multiple of the repeat sequence
 
-        instead:
-        if the microhomology == ins/del sequence   and the MH==N*repeatSeq, then you can extend to the end of the repeat ( -N repeat sequences for the del case)
-        where N = any multiple of the repeat sequence (in this example N=2)
-        */
-
-        String altBases = variant.isDeletion() ? variant.Ref.substring(1) : variant.Alt.substring(1);
+        String altBases = variant.isDeletion() ? altBases = variant.Ref.substring(1) : variant.Alt.substring(1);
 
         int mcLength = variant.microhomology().length();
 
@@ -166,4 +166,10 @@ public final class PaveUtils
         return raVariant;
     }
 
+    public static int codonForBase(int codingBase)
+    {
+        // both coding base and amino acid position start at 1, so eg coding base of 1-3 = amino acid 1, 4-6 = 2 etc
+        // this CodonIndex may precede the first alt-base for INDELs for the reason described above
+        return  (codingBase - 1) / 3 + 1;
+    }
 }

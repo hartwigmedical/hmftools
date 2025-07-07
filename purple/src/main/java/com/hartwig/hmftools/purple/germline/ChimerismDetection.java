@@ -2,22 +2,29 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.purple.PurpleConstants.CHIMERISM_KDE_BANDWIDTH;
+import static com.hartwig.hmftools.purple.PurpleConstants.CHIMERISM_MIN_BAF_COUNT;
 import static com.hartwig.hmftools.purple.PurpleConstants.CHIMERISM_SAMPLE_CUTOFF;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
+import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
 import com.hartwig.hmftools.purple.AmberData;
 import com.hartwig.hmftools.purple.CobaltData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
@@ -25,66 +32,114 @@ public class ChimerismDetection
 {
     private final AmberData mAmberData;
     private final CobaltData mCobaltData;
+    private List<ObservedRegion> mFilteredRegions;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    private final List<AmberPcfRegion> mAmberPcfRegions;
+    private final List<RegionBafData> mRegionBafData;
 
     // results
-    private boolean mIsDetected;
+    private double mWeightedAverage;
+    private double mChimerismLevel;
 
-    public ChimerismDetection(final AmberData amberData, final CobaltData cobaltData, final RefGenomeVersion refGenomeVersion)
+    public ChimerismDetection(
+            final AmberData amberData, final CobaltData cobaltData, List<ObservedRegion> observedRegions,
+            final RefGenomeVersion refGenomeVersion)
     {
         mAmberData = amberData;
         mCobaltData = cobaltData;
         mRefGenomeVersion = refGenomeVersion;
 
-        mAmberPcfRegions = Lists.newArrayList();
-        mIsDetected = false;
+        mRegionBafData = Lists.newArrayList();
+
+        mFilteredRegions = observedRegions.stream()
+                .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID)
+                .filter(x -> x.bafCount() >= CHIMERISM_MIN_BAF_COUNT)
+                .collect(Collectors.toList());
+
+        mWeightedAverage = 0;
+        mChimerismLevel = 0;
+    }
+
+    public boolean isDetected()
+    {
+        return mWeightedAverage > CHIMERISM_SAMPLE_CUTOFF;
+    }
+    public double chimerismLevel()
+    {
+        return mChimerismLevel;
     }
 
     public void run()
     {
-        detectChrimerism();
+        detectChimerism();
+
+        if(!isDetected())
+        {
+            PPL_LOGGER.debug(format("chimerism analysis: weighted-mean(%.3f)", mWeightedAverage));
+            return;
+        }
+
+        applyFit();
+
+        PPL_LOGGER.info(format("chimerism detected: weighted-mean(%.3f) chimerism level(%.3f)", mWeightedAverage, mChimerismLevel));
     }
 
-    public boolean isDetected() { return mIsDetected; }
-
-    private void detectChrimerism()
+    private void detectChimerism()
     {
+        Map<String, List<ObservedRegion>> chrFilteredRegions = Maps.newHashMap();
+
+        for(ObservedRegion region : mFilteredRegions)
+        {
+            List<ObservedRegion> regions = chrFilteredRegions.get(region.chromosome());
+
+            if(regions == null)
+            {
+                regions = Lists.newArrayList();
+                chrFilteredRegions.put(region.chromosome(), regions);
+            }
+
+            regions.add(region);
+        }
+
         for(Chromosome chromosome : mAmberData.TumorSegments.keySet())
         {
             String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
-            List<BaseRegion> pcfRegions = mAmberData.PcfRegions.get(chrStr);
 
-            List<AmberBAF> amberBAFs = mAmberData.ChromosomeBafs.get(chromosome).stream().collect(Collectors.toList());
+            List<ObservedRegion> filteredRegions = chrFilteredRegions.get(chrStr);
+
+            if(filteredRegions == null)
+            {
+                continue;
+            }
+
+            List<AmberBAF> amberBAFs = mAmberData.ChromosomeBafs.get(chromosome).stream().toList();
 
             int amberBafIndex = 0;
 
-            for(BaseRegion pcfRegion : pcfRegions)
+            for(ObservedRegion region : filteredRegions)
             {
-                if(pcfRegion.baseLength() <= 1)
-                    continue;
-
-                AmberPcfRegion amberPcfRegion = new AmberPcfRegion(chrStr, pcfRegion.start(), pcfRegion.end());
+                RegionBafData regionBafData = new RegionBafData(region);
 
                 while(amberBafIndex < amberBAFs.size())
                 {
                     AmberBAF amberBAF = amberBAFs.get(amberBafIndex);
 
-                    if(amberBAF.Position > pcfRegion.end())
-                        break;
-
-                    if(amberBAF.Position >= pcfRegion.start())
+                    if(amberBAF.Position > regionBafData.end())
                     {
-                        amberPcfRegion.AmberBAFs.add(amberBAF);
+                        break;
+                    }
+
+                    if(amberBAF.Position >= regionBafData.start())
+                    {
+                        regionBafData.AmberBAFs.add(amberBAF);
                     }
 
                     ++amberBafIndex;
                 }
 
-                if(amberPcfRegion.bafCount() >= 2)
+                if(regionBafData.bafCount() >= 2)
                 {
-                    mAmberPcfRegions.add(amberPcfRegion);
+                    mRegionBafData.add(regionBafData);
                 }
             }
         }
@@ -93,26 +148,75 @@ public class ChimerismDetection
         double weightedBafTotal = 0;
         double countsTotal = 0;
 
-        for(AmberPcfRegion pcfRegion : mAmberPcfRegions)
+        for(RegionBafData pcfRegion : mRegionBafData)
         {
             weightedBafTotal += pcfRegion.bafStandardDeviation() * pcfRegion.bafCount();
             countsTotal += pcfRegion.bafCount();
         }
 
-        double sampleAverage = weightedBafTotal / countsTotal;
-
-        mIsDetected = sampleAverage > CHIMERISM_SAMPLE_CUTOFF;
+        mWeightedAverage = weightedBafTotal / countsTotal;
     }
 
-    private class AmberPcfRegion extends ChrBaseRegion
+    private void applyFit()
     {
+        final KernelEstimator estimator = new KernelEstimator(0.001, CHIMERISM_KDE_BANDWIDTH);
+        List<Double> bafValues = Lists.newArrayList();
+
+        for(RegionBafData regionBafData : mRegionBafData)
+        {
+            for(AmberBAF amberBAF : regionBafData.AmberBAFs)
+            {
+                bafValues.add(amberBAF.tumorModifiedBAF());
+                estimator.addValue(amberBAF.tumorModifiedBAF(), 1.0);
+            }
+        }
+
+        double[] bafs = IntStream.rangeClosed(50, 100).mapToDouble(x -> x / 100d).toArray();
+        double[] densities = DoubleStream.of(bafs).map(estimator::getProbability).toArray();
+
+        double max = 0;
+        for(int i = 1; i < densities.length - 1; i++)
+        {
+            double density = densities[i];
+            if(Doubles.greaterThan(density, densities[i - 1]) && Doubles.greaterThan(density, densities[i + 1]))
+            {
+                double baf = bafs[i];
+
+                int peakCount = count(baf, bafValues);
+
+                PPL_LOGGER.debug(format("discovered peak: count(%d) baf(%.3f)", peakCount, baf));
+
+                if(baf > max)
+                    max = baf;
+            }
+        }
+
+        mChimerismLevel = 2 * (1 - max);
+    }
+
+    private static int count(double peak, final List<Double> values)
+    {
+        // TODO: is a buffer around the peak required?
+        return (int) values.stream().filter(vaf -> between(peak, vaf - 0.015, vaf + 0.015)).count();
+    }
+
+    private static boolean between(double victim, double min, double max)
+    {
+        return Doubles.greaterOrEqual(victim, min) && Doubles.lessOrEqual(victim, max);
+    }
+
+    private class RegionBafData extends ChrBaseRegion
+    {
+        public final ObservedRegion Region;
         public final List<AmberBAF> AmberBAFs;
 
         private Double mStandardDeviation;
 
-        public AmberPcfRegion(final String chromosome, final int posStart, final int posEnd)
+        public RegionBafData(final ObservedRegion region)
         {
-            super(chromosome, posStart, posEnd);
+            super(region.chromosome(), region.start(), region.end());
+            Region = region;
+
             AmberBAFs = Lists.newArrayList();
             mStandardDeviation = null;
         }
@@ -120,7 +224,9 @@ public class ChimerismDetection
         public double bafStandardDeviation()
         {
             if(mStandardDeviation != null)
+            {
                 return mStandardDeviation;
+            }
 
             double[] doubles = new double[AmberBAFs.size()];
 
@@ -133,8 +239,14 @@ public class ChimerismDetection
             return mStandardDeviation;
         }
 
-        public int bafCount() { return AmberBAFs.size(); }
+        public int bafCount()
+        {
+            return AmberBAFs.size();
+        }
 
-        public String toString() { return format("region(%s) points(%d)", super.toString(), AmberBAFs.size()); }
+        public String toString()
+        {
+            return format("region(%s) points(%d)", super.toString(), AmberBAFs.size());
+        }
     }
 }

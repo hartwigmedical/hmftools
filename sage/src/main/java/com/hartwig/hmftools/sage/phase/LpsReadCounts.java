@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 public class LpsReadCounts
 {

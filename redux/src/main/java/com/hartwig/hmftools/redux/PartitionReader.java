@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
@@ -26,15 +26,16 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
@@ -50,7 +51,7 @@ public class PartitionReader
     private final ReduxConfig mConfig;
 
     private final BamReader mBamReader;
-    private final ReadCache mReadCache;
+    private final IReadCache mReadCache;
     private final ReadUnmapper mReadUnmapper;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
@@ -76,7 +77,12 @@ public class PartitionReader
         mBamReader = bamReader;
         mReadUnmapper = mConfig.UnmapRegions;
 
-        if(config.Sequencing == ILLUMINA)
+        if(config.Sequencing == ILLUMINA && mConfig.UMIs.Enabled)
+        {
+            mReadCache = new JitterReadCache(new ReadCache(
+                    ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse));
+        }
+        else if(config.Sequencing == ILLUMINA)
         {
             mReadCache = new ReadCache(
                     ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
@@ -373,7 +379,8 @@ public class PartitionReader
         // write single fragments and duplicate groups
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
-            if(mConfig.FormConsensus)
+            // do not form consensus if duplicateGroup only contains one non poly-g umi read
+            if(mConfig.FormConsensus && duplicateGroup.readCount() - duplicateGroup.polyGUmiReads().size() >= 2)
             {
                 duplicateGroup.setPCRClusterCount(mConfig.Sequencing);
                 duplicateGroup.formConsensusRead(mConsensusReads);
@@ -449,8 +456,8 @@ public class PartitionReader
     }
 
     @VisibleForTesting
-    public void clearDuplicateGroupCollapser() { mReadCache.clearDuplicateGroupCollapser(); }
-
-    @VisibleForTesting
-    public ReadCache readCache() { return mReadCache; }
+    public UmiGroupBuilder umiGroupBuilder()
+    {
+        return mDuplicateGroupBuilder.umiGroupBuilder();
+    }
 }

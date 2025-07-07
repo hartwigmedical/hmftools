@@ -48,7 +48,6 @@ public class IndelCoords
         return format("%s(%d - %d) len(%d)", isDelete() ? "delete" : "insert", PosStart, PosEnd, Length);
     }
 
-
     public static IndelCoords findIndelCoords(final int readStart, final List<CigarElement> cigarElements, int minIndelLength)
     {
         int maxIndelLength = 0;

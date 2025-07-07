@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -31,9 +32,9 @@ import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.PROM5_PROM3;
 import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.hasKnownPairGene;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -325,10 +326,11 @@ public class PassingFusions
 
         try
         {
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
+            BufferedReader fileReader = createBufferedReader(filename);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
+            String header = fileReader.readLine();
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
 
             int chrUpIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_UP));
             int chrDownIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_DOWN));
@@ -339,10 +341,12 @@ public class PassingFusions
             int cohortFreqIndex = fieldsIndexMap.get(FLD_COHORT_COUNT);
 
             int fusionCount = 0;
-            for(String data : lines)
+            String line = null;
+
+            while((line = fileReader.readLine()) != null)
             {
                 CohortFusionData fusion = new CohortFusionData(
-                        data, chrUpIndex, chrDownIndex, posUpIndex, posDownIndex, orientUpIndex, orientDownIndex, cohortFreqIndex);
+                        line, chrUpIndex, chrDownIndex, posUpIndex, posDownIndex, orientUpIndex, orientDownIndex, cohortFreqIndex);
 
                 ++fusionCount;
 

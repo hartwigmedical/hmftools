@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.neo.score.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.score.DataLoader.loadPurpleContext;
 import static com.hartwig.hmftools.neo.score.DataLoader.loadRnaNeoData;
 import static com.hartwig.hmftools.neo.score.DataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.neo.score.NeoScorerConfig.RNA_SAMPLE_ID_SUFFIX;
 import static com.hartwig.hmftools.neo.score.TpmCalculator.DEFAULT_PEPTIDE_LENGTH_RANGE;
 
 import java.util.List;
@@ -22,10 +21,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.isofox.TranscriptExpressionLoader;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.rna.TranscriptExpressionFile;
 import com.hartwig.hmftools.neo.bind.BindData;
 
-public class NeoScorerTask implements Callable
+public class NeoScorerTask implements Callable<Void>
 {
     private final int mThreadId;
     private final List<SampleData> mSamples;
@@ -47,7 +45,7 @@ public class NeoScorerTask implements Callable
     public void addSample(final SampleData sampleData) { mSamples.add(sampleData); }
 
     @Override
-    public Long call()
+    public Void call()
     {
         if(mSamples.size() > 1)
         {
@@ -80,7 +78,7 @@ public class NeoScorerTask implements Callable
             NE_LOGGER.info("{}: processing complete", mThreadId, mSamples.size());
         }
 
-        return (long)1;
+        return null;
     }
 
     public void processSample(final SampleData sample)
@@ -103,7 +101,7 @@ public class NeoScorerTask implements Callable
 
         TpmSource tpmSource = null;
 
-        Map<String,Double> sampleTPMs = Maps.newHashMap();
+        Map<String, Double> sampleTPMs = Maps.newHashMap();
 
         if(sample.HasRna)
         {

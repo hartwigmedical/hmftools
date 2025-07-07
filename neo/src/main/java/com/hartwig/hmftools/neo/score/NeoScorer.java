@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +60,7 @@ public class NeoScorer
                 taskIndex = 0;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);

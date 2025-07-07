@@ -60,12 +60,11 @@ public class PartitionReaderTest
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES_REPEAT_40.length());
 
         ReduxConfig config = new ReduxConfig(
-                mRefGenome, true, false, false, new ReadUnmapper(Collections.emptyMap()));
+                mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()));
 
         mWriter = new TestBamWriter(config);
 
         mPartitionReader = createPartitionRead(config, mWriter);
-        mPartitionReader.clearDuplicateGroupCollapser();
     }
 
     @Test
@@ -415,9 +414,13 @@ public class PartitionReaderTest
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
+        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
 
         partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
@@ -433,8 +436,8 @@ public class PartitionReaderTest
 
         partitionReader.postProcessRegion();
 
-        assertEquals(15, writer.nonConsensusWriteCount());
-        assertEquals(3, writer.consensusWriteCount());
+        assertEquals(19, writer.nonConsensusWriteCount());
+        assertEquals(6, writer.consensusWriteCount());
     }
 
     @Test

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -35,12 +36,14 @@ public final class NovelSpliceJunctionLoader
     {
         List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
 
-        BufferedReader fileReader = new BufferedReader(new FileReader(isofoxAltSpliceJunctionFile));
+        BufferedReader fileReader = createBufferedReader(isofoxAltSpliceJunctionFile);
 
-        String line = fileReader.readLine();
+        String header = fileReader.readLine();
+
         String fileDelim = inferFileDelimiter(isofoxAltSpliceJunctionFile);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, fileDelim);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
+        String line = null;
         while((line = fileReader.readLine()) != null)
         {
             String[] items = line.split(fileDelim, -1);

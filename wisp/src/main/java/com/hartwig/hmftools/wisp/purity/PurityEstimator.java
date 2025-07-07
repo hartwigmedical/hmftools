@@ -3,7 +3,7 @@ package com.hartwig.hmftools.wisp.purity;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.WriteType.plotCopyNumber;
@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
@@ -27,14 +28,13 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.wisp.purity.loh.AmberLohCalcs;
-import com.hartwig.hmftools.wisp.purity.loh.AmberLohResult;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile;
+import com.hartwig.hmftools.wisp.purity.loh.AmberLohCalcs;
+import com.hartwig.hmftools.wisp.purity.loh.AmberLohResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariants;
 
@@ -88,7 +88,7 @@ public class PurityEstimator
 
             CT_LOGGER.debug("splitting {} patients across {} threads", mConfig.Samples.size(), purityCalcTasks.size());
 
-            List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
+            List<Callable<Void>> callableList = purityCalcTasks.stream().collect(Collectors.toList());
             if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             {
                 System.exit(1);
@@ -116,7 +116,7 @@ public class PurityEstimator
 
             if(plotTasks.size() > 1)
             {
-                final List<Callable> callableList = plotTasks.stream().collect(Collectors.toList());
+                final List<Callable<Void>> callableList = plotTasks.stream().collect(Collectors.toList());
                 if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
                 {
                     System.exit(1);
@@ -132,7 +132,7 @@ public class PurityEstimator
                 mConfig.Samples.size() > 1 ? format(", mins(%s)", runTimeMinsStr(startTimeMs)) : "");
     }
 
-    private class PurityTask implements Callable
+    private class PurityTask implements Callable<Void>
     {
         public final List<SampleData> Samples;
 
@@ -142,7 +142,7 @@ public class PurityEstimator
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(SampleData sample : Samples)
             {
@@ -158,7 +158,7 @@ public class PurityEstimator
                 }
             }
 
-            return (long)0;
+            return null;
         }
 
         private void processSample(final SampleData sample)
@@ -253,24 +253,25 @@ public class PurityEstimator
                 double ploidy = 2;
 
                 FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                        .purity(purity).normFactor(1).ploidy(ploidy).score(0D).diploidProportion(0D).somaticPenalty(0D)
+                        .purity(purity).normFactor(1).ploidy(ploidy).score(0.0D).diploidProportion(0.0D).somaticPenalty(0.0D)
                         .build();
 
                 PurpleQC purpleQC = ImmutablePurpleQC.builder()
                         .method(FittedPurityMethod.NORMAL).amberMeanDepth(0).copyNumberSegments(1).unsupportedCopyNumberSegments(0)
-                        .deletedGenes(0).purity(purity).contamination(0D).cobaltGender(Gender.FEMALE).amberGender(Gender.FEMALE)
+                        .deletedGenes(0).purity(purity).contamination(0.0D).cobaltGender(Gender.FEMALE).amberGender(Gender.FEMALE)
                         .lohPercent(0)
                         .tincLevel(0)
+                        .chimerismPercentage(0)
                         .build();
 
                 FittedPurityScore fittedPurityScore = ImmutableFittedPurityScore.builder()
-                        .minPurity(0D).maxPurity(0D).minPloidy(0D).maxPloidy(0D).minDiploidProportion(0D).maxDiploidProportion(0D)
+                        .minPurity(0.0D).maxPurity(0.0D).minPloidy(0.0D).maxPloidy(0.0D).minDiploidProportion(0.0D).maxDiploidProportion(0.0D)
                         .build();
 
                 PurityContext genericContext = ImmutablePurityContext.builder()
                         .gender(Gender.FEMALE).runMode(RunMode.TUMOR_GERMLINE).targeted(false).bestFit(fittedPurity)
-                        .method(FittedPurityMethod.NORMAL).score(fittedPurityScore).qc(purpleQC).polyClonalProportion(0D)
-                        .wholeGenomeDuplication(false).microsatelliteIndelsPerMb(0D).tumorMutationalBurdenPerMb(0D)
+                        .method(FittedPurityMethod.NORMAL).score(fittedPurityScore).qc(purpleQC).polyClonalProportion(0.0D)
+                        .wholeGenomeDuplication(false).microsatelliteIndelsPerMb(0.0D).tumorMutationalBurdenPerMb(0.0D)
                         .tumorMutationalLoad(0).svTumorMutationalBurden(0).microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
                         .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN).tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                         .build();
@@ -282,7 +283,7 @@ public class PurityEstimator
         }
     }
 
-    private class PlotTask implements Callable
+    private class PlotTask implements Callable<Void>
     {
         public final List<SampleData> Samples;
 
@@ -292,14 +293,14 @@ public class PurityEstimator
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(SampleData sample : Samples)
             {
                 createSamplePlots(sample);
             }
 
-            return (long)0;
+            return null;
         }
 
         private void createSamplePlots(final SampleData sample)

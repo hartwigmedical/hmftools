@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static java.lang.Math.min;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static java.lang.Math.round;
-import static java.lang.Math.log10;
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
@@ -15,11 +15,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.TQP_QUAL_LOG_MIN;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
@@ -31,8 +29,10 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.evidence.QualCounters;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -79,9 +79,7 @@ public final class VariantContextFactory
     {
         VariantContextBuilder builder = CandidateSerialisation.toContext(variant.candidate());
 
-        double tqp = min(max(variant.tumorReadCounters().get(0).tumorQualProbability(), 0), 1);
-        double logTqp = log10(max(tqp, TQP_QUAL_LOG_MIN));
-        builder.log10PError((double)round(logTqp * 10d) / 10d);
+        builder.log10PError((double)round(variant.tumorReadCounters().get(0).logTqp() * 10d) / 10d);
 
         builder.genotypes(genotypes);
         builder.filters(variant.filtersStringSet());
@@ -106,11 +104,6 @@ public final class VariantContextFactory
 
         builder.attribute(MAX_READ_EDGE_DISTANCE, primaryRcCounter.readEdgeDistance().maxAltDistanceFromEdge());
 
-        builder.attribute(
-                AVG_READ_EDGE_DISTANCE,
-                new int[] { primaryRcCounter.readEdgeDistance().avgDistanceFromEdge(),
-                        primaryRcCounter.readEdgeDistance().avgAltDistanceFromEdge() } );
-
         builder.attribute(TUMOR_QUALITY_PROB, primaryRcCounter.tumorQualProbability());
         builder.attribute(MAP_QUAL_FACTOR, primaryRcCounter.mapQualFactor());
 
@@ -124,6 +117,33 @@ public final class VariantContextFactory
         }
 
         return context;
+    }
+
+    // built in fields: GT:AD:DP, not populated: RAD:RDP
+    // v4.0 attributes: ABQ:    AF:AMBQ:AMMQ:AMQ:         RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RSB:SAC:SB:UMI_CNT
+    // v4.1 attributes: ABQ:AED:AF:AMBQ:AMMQ:AMQ:MUC:RABQ:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RSB:SAC:SB:UMI_CNT
+    private static final Set<String> GENOTYPE_CHECK_ATTRIBUTES = Sets.newHashSet(MIN_COORDS_COUNT, AVG_RAW_BASE_QUAL, AVG_READ_EDGE_DISTANCE);
+
+    // added in v4.1: MIN_COORDS_FLAG, AVG_RAW_BASE_QUAL, AVG_READ_EDGE_DISTANCE
+
+    public static Genotype checkGenotypeFields(final Genotype genotype)
+    {
+        // checks that existing genotype contain all required fields (eg append is adding any new ones) and if not adds defaults
+        if(GENOTYPE_CHECK_ATTRIBUTES.stream().allMatch(x -> genotype.getExtendedAttributes().keySet().contains(x)))
+            return genotype;
+
+        GenotypeBuilder genotypeBuilder = new GenotypeBuilder(genotype);
+
+        if(!genotype.hasExtendedAttribute(AVG_READ_EDGE_DISTANCE))
+            genotypeBuilder.attribute(AVG_READ_EDGE_DISTANCE, new int[] {0, 0});
+
+        if(!genotype.hasExtendedAttribute(MIN_COORDS_COUNT))
+            genotypeBuilder.attribute(MIN_COORDS_COUNT, 0);
+
+        if(!genotype.hasExtendedAttribute(AVG_RAW_BASE_QUAL))
+            genotypeBuilder.attribute(AVG_RAW_BASE_QUAL, 0);
+
+        return genotypeBuilder.make();
     }
 
     public static Genotype createGenotype(final ReadContextCounter counter, final String sampleId)
@@ -144,6 +164,9 @@ public final class VariantContextFactory
         int avgAltModifiedBaseQuality = strongSupport > 0 ? (int)round(qualCounters.modifiedAltBaseQualityTotal() / (double)strongSupport) : 0;
         int avgAltModifiedMapQuality = strongSupport > 0 ? (int)round(qualCounters.altModifiedMapQualityTotal() / (double)strongSupport) : 0;
 
+        // NOTE: any field added to the genotype field should also be added to checkGenotypeFields() above, so that if it is only set in
+        // append-mode, that it will also get valid default values
+
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
@@ -152,6 +175,11 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_JITTER, counter.jitter().summary())
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
+                .attribute(AVG_RAW_BASE_QUAL, (int)counter.averageAltBaseQuality())
+                .attribute(
+                        AVG_READ_EDGE_DISTANCE, new int[] {
+                                counter.readEdgeDistance().avgDistanceFromEdge(),
+                                counter.readEdgeDistance().avgAltDistanceFromEdge() })
                 .attribute(AVG_MODIFIED_BASE_QUAL, avgAltModifiedBaseQuality)
                 .attribute(AVG_MODIFIED_ALT_MAP_QUAL, avgAltModifiedMapQuality)
                 .attribute(
@@ -160,11 +188,16 @@ public final class VariantContextFactory
                         READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasNonAlt().bias(), counter.readStrandBiasAlt().bias()))
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .attribute(SIMPLE_ALT_COUNT, counter.simpleAltMatches())
+                .attribute(MIN_COORDS_COUNT, counter.fragmentCoords().minCount())
                 .alleles(NO_CALL);
 
         if(counter.umiTypeCounts() != null)
         {
             builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
+        }
+        else
+        {
+            builder.attribute(UMI_TYPE_COUNTS, new int[] {counter.depth(), 0, 0, counter.readCounts().strongSupport(), 0, 0});
         }
 
         return builder.make();

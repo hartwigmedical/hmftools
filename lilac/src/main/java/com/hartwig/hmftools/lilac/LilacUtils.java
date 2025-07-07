@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,10 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 
 public class LilacUtils
 {
+    public static boolean aboveMinQual(byte qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean aboveMinQual(int qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean belowMinQual(byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
+
     public static int calcNucelotideLocus(final List<TranscriptData> transcripts, int position)
     {
         for(TranscriptData transData : transcripts)
@@ -35,33 +40,6 @@ public class LilacUtils
 
         return indices;
 
-    }
-
-    public static List<Integer> arrayToList(final int[] array)
-    {
-        List<Integer> list = Lists.newArrayListWithExpectedSize(array.length);
-        Arrays.stream(array).forEach(x -> list.add(x));
-        return list;
-    }
-
-    public static List<Integer> arrayToList(final byte[] array)
-    {
-        List<Integer> list = Lists.newArrayListWithExpectedSize(array.length);
-
-        for(int i = 0; i < array.length; ++i)
-            list.add(Integer.valueOf(array[i]));
-
-        return list;
-    }
-
-    public static List<String> arrayToList(final char[] array)
-    {
-        List<String> list = Lists.newArrayListWithExpectedSize(array.length);
-
-        for(int i = 0; i < array.length; ++i)
-            list.add(String.valueOf(array[i]));
-
-        return list;
     }
 
     public static int listMin(final List<Integer> list)

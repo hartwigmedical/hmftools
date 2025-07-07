@@ -201,6 +201,7 @@ public class InsertCodingContextTest
         altCodonBases = refBases.substring(57, 61) + alt + refBases.substring(71, 75);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
+        assertEquals("p.Asp6delinsValTyr", impact.proteinContext().Hgvs);
 
         // test at phase 0
         pos = 92;

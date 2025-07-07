@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.common.VariantReadContext;

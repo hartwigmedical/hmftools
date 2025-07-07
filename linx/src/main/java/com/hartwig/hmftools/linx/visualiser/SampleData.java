@@ -18,14 +18,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
@@ -45,6 +51,10 @@ public class SampleData
     public final List<VisProteinDomain> ProteinDomains;
     public final List<VisFusion> Fusions;
     public final List<VisGeneExon> Exons;
+
+    public final List<AmberBAF> AmberBAFs = Lists.newArrayList();
+    public final List<CobaltRatio> CobaltRatios = Lists.newArrayList();
+    public final List<PurpleSegment> PurpleSegments = Lists.newArrayList();
 
     private final VisualiserConfig mConfig;
 
@@ -126,15 +136,51 @@ public class SampleData
         ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
                 .filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
-        if(Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty())
+        if(mConfig.AmberDir != null)
         {
-            if(!mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty())
+            final String amberBafFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.AmberDir, mConfig.Sample);
+            Multimap<Chromosome,AmberBAF> amberBafData = AmberBAFFile.read(amberBafFile, true);
+            AmberBAFs.addAll(amberBafData.values());
+        }
+
+        if(mConfig.CobaltDir != null)
+        {
+            final String cobaltRatioFile = CobaltRatioFile.generateFilename(mConfig.CobaltDir, mConfig.Sample);
+            ListMultimap<Chromosome, CobaltRatio> cobaltRatiosUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
+            List<CobaltRatio> cobaltRatiosFiltered = cobaltRatiosUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).toList();
+            CobaltRatios.addAll(cobaltRatiosFiltered);
+        }
+
+        if(mConfig.PurpleDir != null)
+        {
+            final String purpleSegmentFile = PurpleSegment.generateFilename(mConfig.PurpleDir, mConfig.Sample);
+            List<PurpleSegment> purpleSegmentsUnfiltered = PurpleSegment.read(purpleSegmentFile);
+            List<PurpleSegment> purpleSegmentsFiltered = purpleSegmentsUnfiltered.stream()
+                    .filter(x -> x.GermlineState == GermlineStatus.DIPLOID).toList();
+            PurpleSegments.addAll(purpleSegmentsFiltered);
+        }
+
+        boolean clustersOrChainsProvided = !mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty();
+        boolean anyLinxVisDataEmpty = Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty();
+        boolean anyUpstreamCnvDataExists =  !AmberBAFs.isEmpty() || !CobaltRatios.isEmpty() || !PurpleSegments.isEmpty();
+
+        if(clustersOrChainsProvided && anyLinxVisDataEmpty)
+        {
+            VIS_LOGGER.error("sample({}) Cannot plot user specified cluster/chain IDs because Linx VIS data was empty", mConfig.Sample);
+            System.exit(1);
+        }
+
+        if(anyLinxVisDataEmpty)
+        {
+            if(anyUpstreamCnvDataExists)
             {
-                VIS_LOGGER.warn("sample({}) empty Linx VIS input files with specific cluster/chain IDs", mConfig.Sample);
-                System.exit(1);
+                VIS_LOGGER.info("sample({}) Linx VIS data empty, but proceeding to plotting CNV data", mConfig.Sample);
+            }
+            else
+            {
+                VIS_LOGGER.info("sample({}) Linx VIS data and (filtered) CNV data empty - no plots to generate", mConfig.Sample);
             }
 
-            VIS_LOGGER.info("sample({}) empty Linx VIS input files, no plots to generate", mConfig.Sample);
             return;
         }
 
@@ -198,8 +244,6 @@ public class SampleData
                 }
             }
         }
-
-        Exons.addAll(additionalExons(mConfig, mConfig.Genes, Exons, mConfig.ClusterIds));
     }
 
     private boolean matchOnSampleId(final String sampleId)
@@ -254,47 +298,5 @@ public class SampleData
             return Lists.newArrayList();
 
         return VisFusion.read(fileName);
-    }
-
-    private static List<VisGeneExon> additionalExons(
-            final VisualiserConfig config, final Set<String> geneList, final List<VisGeneExon> currentExons, final List<Integer> clusterIds)
-    {
-        final List<VisGeneExon> exonList = Lists.newArrayList();
-
-        if(geneList.isEmpty())
-            return exonList;
-
-        if(config.EnsemblDataDir == null)
-            return exonList;
-
-        final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
-
-        EnsemblDataCache geneTransCache = new EnsemblDataCache(config.EnsemblDataDir, config.RefGenVersion);
-        geneTransCache.setRequiredData(true, false, false, true);
-        geneTransCache.load(false);
-
-        for(final String geneName : geneList)
-        {
-            if(currentExons.stream().anyMatch(x -> x.Gene.equals(geneName) && clusterIds.contains(x.ClusterId)))
-                continue;
-
-            VIS_LOGGER.info("loading exon data for additional gene({})", geneName);
-
-            GeneData geneData = geneTransCache.getGeneDataByName(geneName);
-            TranscriptData transcriptData = geneData != null ? geneTransCache.getCanonicalTranscriptData(geneData.GeneId) : null;
-
-            if(transcriptData == null)
-            {
-                VIS_LOGGER.warn("data not found for specified gene({})", geneName);
-                continue;
-            }
-
-            for(Integer clusterId : allClusterIds)
-            {
-                exonList.addAll(VisExons.extractExonList(config.Sample, clusterId, geneData, transcriptData));
-            }
-        }
-
-        return exonList;
     }
 }

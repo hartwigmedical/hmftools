@@ -2,45 +2,55 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacUtils.aboveMinQual;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.read.ReadRecord;
-
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.IntStream;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.read.Read;
+import com.hartwig.hmftools.lilac.utils.AminoAcid;
+import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
 public class Fragment
 {
-    private final List<ReadRecord> mReads;
+    private final List<Read> mReads;
     private final String mReadGene; // mapped gene
     private final Set<String> mGenes; // other potentially applicable genes
 
     // initial nucleotide values
-    private final List<Integer> mRawNucleotideLoci; // always in ascending order
-    private final List<Integer> mRawNucleotideQuality;
-    private final List<String> mRawNucleotides;
+    private final NavigableMap<Integer, Nucleotide> mRawNucleotidesByLoci;
 
     // values which may be filtered
-    private final List<Integer> mNucleotideLoci;
-    private final List<Integer> mNucleotideQuality;
-    private final List<String> mNucleotides;
+    private final NavigableMap<Integer, Nucleotide> mNucleotidesByLoci;
 
     private boolean mIsQualFiltered;
 
     private int mAminoAcidConversionCount; // set true once nucleotides are converted into amino acids
-    private final List<Integer> mAminoAcidLoci;
-    private final List<String> mAminoAcids;
+    private final NavigableMap<Integer, AminoAcid> mAminoAcidsByLoci;
 
     private FragmentScope mScope;
 
+    public Fragment(final Read read, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
+            final List<Byte> nucleotidesQualities, final List<String> nucleotidesBases)
+    {
+        this(read, readGene, genes,
+                IntStream.range(0, nucleotideLoci.size())
+                        .mapToObj(i -> new Nucleotide(nucleotideLoci.get(i), nucleotidesQualities.get(i), nucleotidesBases.get(i)))
+                        .toList());
+    }
+
     public Fragment(
-            final ReadRecord read, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
-            final List<Integer> qualities, final List<String> nucleotides)
+            final Read read, final String readGene, final Set<String> genes, final Collection<Nucleotide> nucleotides)
     {
         mReads = Lists.newArrayListWithCapacity(2);
         mReads.add(read);
@@ -48,299 +58,306 @@ public class Fragment
         mGenes = genes;
         mReadGene = readGene;
 
-        mNucleotideLoci = Lists.newArrayList(nucleotideLoci);
-        mNucleotideQuality = Lists.newArrayList(qualities);
-        mNucleotides = Lists.newArrayList(nucleotides);
-
-        mRawNucleotideLoci = Lists.newArrayList(nucleotideLoci);
-        mRawNucleotideQuality = Lists.newArrayList(qualities);
-        mRawNucleotides = Lists.newArrayList(nucleotides);
+        mNucleotidesByLoci = Maps.newTreeMap();
+        mRawNucleotidesByLoci = Maps.newTreeMap();
+        for(Nucleotide nucleotide : nucleotides)
+        {
+            mNucleotidesByLoci.put(nucleotide.locus(), nucleotide);
+            mRawNucleotidesByLoci.put(nucleotide.locus(), nucleotide);
+        }
 
         mIsQualFiltered = false;
 
-        mAminoAcidConversionCount = 0;
-        mAminoAcidLoci = Lists.newArrayList();
-        mAminoAcids = Lists.newArrayList();
+        mAminoAcidsByLoci = Maps.newTreeMap();
 
         mScope = UNSET;
-
-        if(mRawNucleotideLoci.size() != mRawNucleotides.size() || mRawNucleotideLoci.size() != mRawNucleotideQuality.size()
-        || mNucleotides.size() != mNucleotideLoci.size() || mNucleotides.size() != mNucleotideQuality.size())
-        {
-            LL_LOGGER.warn("{} has differing raw loci counts(loci={} nuc={} quals={}) or nuc counts(loci={} nuc={} quals={})",
-                    toString(), mNucleotideLoci.size(), mNucleotides.size(), mNucleotideQuality.size(),
-                    mNucleotideLoci.size(), mNucleotides.size(), mNucleotideQuality.size());
-        }
     }
 
-    public void setAminoAcids(final List<Integer> aminoAcidLoci, final List<String> aminoAcids)
+    public String id()
     {
-        mAminoAcidLoci.addAll(aminoAcidLoci);
-        mAminoAcids.addAll(aminoAcids);
+        return mReads.get(0).Id;
     }
 
-    public String id() { return mReads.get(0).Id; }
-
-    public List<ReadRecord> reads() { return mReads; }
+    public List<Read> reads()
+    {
+        return mReads;
+    }
 
     public void addReads(final Fragment other)
     {
-        other.reads().forEach(x -> addRead(x));
+        other.reads().forEach(this::addRead);
     }
 
-    public void addRead(final ReadRecord read)
+    public void addRead(final Read read)
     {
-        if(mReads.stream().anyMatch(x -> x.getSamRecord().getFlags() == read.getSamRecord().getFlags()))
+        if(mReads.stream().anyMatch(x -> x.bamRecord().getFlags() == read.bamRecord().getFlags()))
+        {
             return;
+        }
 
         mReads.add(read);
     }
 
-    public String readInfo() { return mReads.get(0).readInfo(); }
-    public Set<String> genes() { return mGenes; }
-    public void addGene(final String gene) { mGenes.add(gene); }
-    public String readGene() { return mReadGene; }
-    public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
-
-    public List<Integer> nucleotideLoci() { return mNucleotideLoci; }
-    public List<Integer> nucleotideQuality() { return mNucleotideQuality; }
-    public List<String> nucleotides() { return mNucleotides; }
-
-    public List<Integer> rawNucleotideLoci() { return mRawNucleotideLoci; }
-    public List<Integer> rawNucleotideQuality() { return mRawNucleotideQuality; }
-    public List<String> rawNucleotides() { return mRawNucleotides; }
-
-    public void addNucleotideInfo(int nucIndex, int locus, final String nucleotide, int quality)
+    public String readInfo()
     {
-        if(nucIndex < 0 || nucIndex > mNucleotideLoci.size())
-            return;
+        return mReads.get(0).readInfo();
+    }
 
+    public Set<String> genes()
+    {
+        return mGenes;
+    }
+
+    public void addGene(final String gene)
+    {
+        mGenes.add(gene);
+    }
+
+    public String readGene()
+    {
+        return mReadGene;
+    }
+
+    public boolean containsGene(final String gene)
+    {
+        return mGenes.stream().anyMatch(x -> x.equals(gene));
+    }
+
+    public NavigableMap<Integer, Nucleotide> nucleotidesByLoci()
+    {
+        return mNucleotidesByLoci;
+    }
+
+    public NavigableMap<Integer, Nucleotide> rawNucleotidesByLoci()
+    {
+        return mRawNucleotidesByLoci;
+    }
+
+    public void addNucleotide(final Nucleotide nucleotide)
+    {
         // adds an extra base, quality and locus
-        if(nucIndex == mNucleotideLoci.size() || mNucleotideLoci.get(nucIndex) != locus)
+        if(!mNucleotidesByLoci.containsKey(nucleotide.locus()))
         {
-            mNucleotideLoci.add(nucIndex, locus);
-            mNucleotides.add(nucIndex, nucleotide);
-            mNucleotideQuality.add(nucIndex, quality);
-
+            mNucleotidesByLoci.put(nucleotide.locus(), nucleotide);
             if(!mIsQualFiltered)
             {
                 // sets remain the same
-                mRawNucleotideLoci.add(nucIndex, locus);
-                mRawNucleotides.add(nucIndex, nucleotide);
-                mRawNucleotideQuality.add(nucIndex, quality);
+                mRawNucleotidesByLoci.put(nucleotide.locus(), nucleotide);
                 return;
             }
         }
 
-        // filtered indices have changed and are unlikely to match, so find the insertion point for this loci
-        int rawIndex = findLociInsertionIndex(mRawNucleotideLoci, locus);
-
-        if(rawIndex == mRawNucleotideLoci.size() || mRawNucleotideLoci.get(rawIndex) != locus)
+        if(!mRawNucleotidesByLoci.containsKey(nucleotide.locus()))
         {
-            mRawNucleotideLoci.add(rawIndex, locus);
-            mRawNucleotides.add(rawIndex, nucleotide);
-            mRawNucleotideQuality.add(rawIndex, quality);
+            mRawNucleotidesByLoci.put(nucleotide.locus(), nucleotide);
         }
     }
 
-    public void addNucleotideInfo(int locus, final String nucleotide, int quality)
+    public void addNucleotide(final int locus, final String bases, final byte quality)
     {
-        int nucIndex = findLociInsertionIndex(mNucleotideLoci, locus);
-        addNucleotideInfo(nucIndex, locus, nucleotide, quality);
+        Nucleotide nucleotide = new Nucleotide(locus, quality, bases);
+        addNucleotide(nucleotide);
     }
 
-    public static int findLociInsertionIndex(final List<Integer> lociValues, final int locus)
+    public boolean hasNucleotides()
     {
-        int index = Collections.binarySearch(lociValues, locus);
-
-        if(index >= 0 && index < lociValues.size()) // check if matches
-            return index;
-
-        return -(index + 1); // as per insertion point conventions
+        return !mNucleotidesByLoci.isEmpty();
     }
-
-    public static int findLociIndex(final List<Integer> lociValues, final int locus)
-    {
-        int index = findLociInsertionIndex(lociValues, locus);
-
-        if(index < 0 || index >= lociValues.size() || lociValues.get(index) != locus)
-            return -1;
-
-        return index;
-    }
-
-    public boolean hasNucleotides() { return !mNucleotideLoci.isEmpty(); }
 
     public boolean containsIndel()
     {
-        return mNucleotides.stream().anyMatch(x -> x.equals(".") || x.length() > 1);
+        return mNucleotidesByLoci.values().stream().map(Nucleotide::bases).anyMatch(x -> ".".equals(x) || x.length() > 1);
     }
 
-    public boolean containsNucleotide(int locus)
+    public boolean containsNucleotideLocus(final int locus)
     {
-        return mNucleotideLoci.contains(locus);
+        return mNucleotidesByLoci.containsKey(locus);
     }
 
-    public boolean containsAllNucleotides(final List<Integer> loci)
+    public boolean containsAllNucleotideLoci(final Collection<Integer> loci)
     {
-        return !loci.stream().anyMatch(x -> !containsNucleotide(x));
+        return !loci.stream().allMatch(this::containsNucleotideLocus);
     }
 
-    public String nucleotides(final List<Integer> indices)
+    public String nucleotides(final Collection<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
-        indices.stream().forEach(x -> sj.add(nucleotide(x)));
+        loci.forEach(x -> sj.add(nucleotide(x)));
         return sj.toString();
     }
 
-    public String nucleotide(int locus)
+    public String nucleotide(final int locus)
     {
-        int index = findLociIndex(mNucleotideLoci, locus);
-
-        if(index < 0)
+        Nucleotide nuc = mNucleotidesByLoci.get(locus);
+        if(nuc == null)
+        {
             return "";
+        }
 
-        return mNucleotides.get(index);
+        return nuc.bases();
     }
 
-    public int minNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(0) : -1; }
-    public int maxNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1; }
+    public int minNucleotideLocus()
+    {
+        return mNucleotidesByLoci.isEmpty() ? -1 : mNucleotidesByLoci.firstKey();
+    }
 
-    public List<Integer> aminoAcidLoci() { return mAminoAcidLoci; }
-    public List<String> aminoAcids() { return mAminoAcids; }
+    public int maxNucleotideLocus()
+    {
+        return mNucleotidesByLoci.isEmpty() ? -1 : mNucleotidesByLoci.lastKey();
+    }
 
-    public int minAminoAcidLocus() { return !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(0) : -1; }
-    public int maxAminoAcidLocus() { return !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1; }
+    public NavigableMap<Integer, AminoAcid> aminoAcidsByLoci()
+    {
+        return mAminoAcidsByLoci;
+    }
 
-    public void qualityFilter(int minBaseQual)
+    public int minAminoAcidLocus()
+    {
+        return mAminoAcidsByLoci.isEmpty() ? -1 : mAminoAcidsByLoci.firstKey();
+    }
+
+    public int maxAminoAcidLocus()
+    {
+        return mAminoAcidsByLoci.isEmpty() ? -1 : mAminoAcidsByLoci.lastKey();
+    }
+
+    public void removeLowQualBases()
     {
         if(mIsQualFiltered)
+        {
             return;
+        }
 
         mIsQualFiltered = true;
 
         // cull any low-qual bases (they are retained in the raw bases)
-        int index = 0;
-        while(index < mNucleotideQuality.size())
+        List<Integer> lociToRemove = Lists.newArrayList();
+        for(Map.Entry<Integer, Nucleotide> entry : mNucleotidesByLoci.entrySet())
         {
-            if(mNucleotideQuality.get(index) >= minBaseQual)
+            if(!aboveMinQual(entry.getValue().qual()))
             {
-                ++index;
-                continue;
+                lociToRemove.add(entry.getKey());
             }
-
-            mNucleotideQuality.remove(index);
-            mNucleotideLoci.remove(index);
-            mNucleotides.remove(index);
         }
+
+        lociToRemove.forEach(mNucleotidesByLoci::remove);
     }
 
     public void buildAminoAcids()
     {
         ++mAminoAcidConversionCount;
 
-        // build a amino-acid fragment from this nucleotide fragment, by creating amino acids for any complete codon
-        mAminoAcids.clear();
-        mAminoAcidLoci.clear();
+        // build an amino-acid fragment from this nucleotide fragment, by creating amino acids for any complete codon
+        mAminoAcidsByLoci.clear();
 
-        for(int i = 0; i < mNucleotideLoci.size(); ++i)
+        for(Map.Entry<Integer, Nucleotide> entry : mNucleotidesByLoci.entrySet())
         {
-            int locus = mNucleotideLoci.get(i);
-
+            int locus = entry.getKey();
             if(!isCodonMultiple(locus))
+            {
                 continue;
+            }
 
-            // since loci are ordered, can just check the next 2 expected do exist
-            if(i >= mNucleotideLoci.size() - 2)
-                break;
-
-            if(mNucleotideLoci.get(i + 1) == locus + 1 && mNucleotideLoci.get(i + 2) == locus + 2)
+            if(mNucleotidesByLoci.containsKey(locus + 1) && mNucleotidesByLoci.containsKey(locus + 2))
             {
                 int aaLocus = locus / 3;
-                mAminoAcidLoci.add(aaLocus);
-                mAminoAcids.add(formCodonAminoAcid(aaLocus));
+                mAminoAcidsByLoci.put(aaLocus, new AminoAcid(aaLocus, formCodonAminoAcid(aaLocus)));
             }
         }
     }
 
-    public String formCodonAminoAcid(int locus)
+    private String formCodonAminoAcid(final int locus)
     {
-        return FragmentUtils.formCodonAminoAcid(locus, mNucleotideLoci, mNucleotides);
+        return FragmentUtils.formCodonAminoAcid(locus, mNucleotidesByLoci);
     }
 
-    public boolean containsAminoAcids(final List<Integer> loci)
+    public boolean containsAminoAcidLoci(final Collection<Integer> loci)
     {
-        return loci.stream().allMatch(x -> containsAminoAcid(x));
+        return loci.stream().allMatch(this::containsAminoAcidLocus);
     }
 
-    public boolean containsAminoAcid(int locus)
+    public boolean containsAminoAcidLocus(final int locus)
     {
-        return mAminoAcidLoci.contains(locus);
+        return mAminoAcidsByLoci.containsKey(locus);
     }
 
-    public String aminoAcid(int locus)
+    public String aminoAcid(final int locus)
     {
-        int index = mAminoAcidLoci.indexOf(locus);
-
-        if(index < 0)
+        AminoAcid aminoAcid = mAminoAcidsByLoci.get(locus);
+        if(aminoAcid == null)
+        {
             return "";
+        }
 
-        return mAminoAcids.get(index);
+        return aminoAcid.acid();
     }
 
-    public String aminoAcids(final List<Integer> loci)
+    public String aminoAcids(final Collection<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
-        loci.stream().forEach(x -> sj.add(aminoAcid(x)));
+        loci.forEach(x -> sj.add(aminoAcid(x)));
         return sj.toString();
     }
 
-    public void filterOnLoci(final List<Integer> otherAminoAcidLoci)
+    public void filterAminoAcidsOnLoci(final Set<Integer> loci)
     {
-        int index = 0;
-        while(index < mAminoAcidLoci.size())
+        mAminoAcidsByLoci.keySet().removeIf(l -> !loci.contains(l));
+    }
+
+    public String getRawNucleotide(final int locus)
+    {
+        Nucleotide nucleotide = mRawNucleotidesByLoci.get(locus);
+        if(nucleotide == null)
         {
-            int locus = mAminoAcidLoci.get(index);
-
-            if(otherAminoAcidLoci.contains(locus))
-            {
-                ++index;
-                continue;
-            }
-
-            mAminoAcidLoci.remove(index);
-            mAminoAcids.remove(index);
+            return "";
         }
+
+        return nucleotide.bases();
     }
 
-    public String getLowQualNucleotide(int locus)
-    {
-        int index = mRawNucleotideLoci.indexOf(locus);
-        return index >= 0 ? mRawNucleotides.get(index) : "";
-    }
-
-    public String getLowQualAminoAcid(int locus)
+    public String getLowQualAminoAcid(final int locus)
     {
         int startNucleotideLocus = locus * 3;
-
-        int index = mRawNucleotideLoci.indexOf(startNucleotideLocus);
-
-        if(index < 0 || index >= mRawNucleotideLoci.size() - 2)
+        if(!mRawNucleotidesByLoci.containsKey(startNucleotideLocus))
+        {
             return "";
+        }
 
-        if(mRawNucleotideLoci.get(index + 1) != startNucleotideLocus + 1 || mRawNucleotideLoci.get(index + 2) != startNucleotideLocus + 2)
+        if(!mRawNucleotidesByLoci.containsKey(startNucleotideLocus + 1))
+        {
             return "";
+        }
 
-        return FragmentUtils.formCodonAminoAcid(locus, mRawNucleotideLoci, mRawNucleotides);
+        if(!mRawNucleotidesByLoci.containsKey(startNucleotideLocus + 2))
+        {
+            return "";
+        }
+
+        return FragmentUtils.formCodonAminoAcid(locus, mRawNucleotidesByLoci);
     }
 
-    public FragmentScope scope() { return mScope; }
-    public void clearScope() { mScope = UNSET; }
-    public boolean isScopeSet() { return mScope != UNSET; }
+    public FragmentScope scope()
+    {
+        return mScope;
+    }
 
-    public void setScope(FragmentScope scope) { setScope(scope, false); }
+    public void clearScope()
+    {
+        mScope = UNSET;
+    }
 
-    public void setScope(FragmentScope scope, boolean override)
+    public boolean isScopeSet()
+    {
+        return mScope != UNSET;
+    }
+
+    public void setScope(final FragmentScope scope)
+    {
+        setScope(scope, false);
+    }
+
+    public void setScope(final FragmentScope scope, final boolean override)
     {
         if(mScope != UNSET)
         {
@@ -361,8 +378,12 @@ public class Fragment
     }
 
     @VisibleForTesting
-    public int aminoAcidConversionCount() { return mAminoAcidConversionCount; }
+    public int aminoAcidConversionCount()
+    {
+        return mAminoAcidConversionCount;
+    }
 
+    @Override
     public String toString()
     {
         if(mAminoAcidConversionCount == 0)
@@ -376,24 +397,17 @@ public class Fragment
                 minAminoAcidLocus(), maxAminoAcidLocus());
     }
 
-    public boolean validate() { return FragmentUtils.validateFragment(this); }
+    public boolean validate()
+    {
+        return FragmentUtils.validateFragment(this);
+    }
 
     @VisibleForTesting
-    public static int findLociIndexManual(final List<Integer> lociValues, final int locus)
+    public void setAminoAcids(final Collection<AminoAcid> aminoAcids)
     {
-        int index = 0;
-
-        while(index < lociValues.size())
+        for(AminoAcid aminoAcid : aminoAcids)
         {
-            if(locus < lociValues.get(index) || locus == lociValues.get(index))
-                return index;
-
-            if(lociValues.get(index) > locus)
-                break;
-
-            ++index;
+            mAminoAcidsByLoci.put(aminoAcid.locus(), aminoAcid);
         }
-
-        return index;
     }
 }

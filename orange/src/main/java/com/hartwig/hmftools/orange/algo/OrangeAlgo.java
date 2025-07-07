@@ -71,7 +71,7 @@ import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.ChromosomalRearrangementsDeterminer;
-import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
+import com.hartwig.hmftools.orange.algo.purple.GermlineGainDeletionFactory;
 import com.hartwig.hmftools.orange.algo.purple.GermlineLossOfHeterozygosityFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
@@ -187,7 +187,7 @@ public class OrangeAlgo
     public OrangeRecord run(@NotNull OrangeConfig config) throws Exception
     {
         Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
-        String platinumVersion = determinePlatinumVersion(config);
+        String pipelineVersion = determinePipelineVersion(config);
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
@@ -217,11 +217,11 @@ public class OrangeAlgo
         PaveAlgo pave = new PaveAlgo(ensemblDataCache, !suppressGeneWarnings);
 
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
-        GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
+        GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(ensemblDataCache);
         GermlineLossOfHeterozygosityFactory germlineLOHFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
         ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer =
                 ChromosomalRearrangementsDeterminer.createForRefGenomeVersion(config.refGenomeVersion());
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory,
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainDeletionFactory,
                 germlineLOHFactory, driverGenes, linx, chromosomalRearrangementsDeterminer, chord, config.convertGermlineToSomatic());
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
@@ -240,7 +240,7 @@ public class OrangeAlgo
             wildTypeGenes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                     purple.reportableSomaticVariants(),
                     purple.reportableGermlineVariants(),
-                    purple.reportableSomaticGainsLosses(),
+                    purple.reportableSomaticGainsDels(),
                     linx.reportableSomaticFusions(),
                     linx.somaticHomozygousDisruptions(),
                     linx.reportableSomaticBreakends());
@@ -258,7 +258,7 @@ public class OrangeAlgo
                 .experimentType(config.experimentType())
                 .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
                 .refGenomeVersion(config.refGenomeVersion())
-                .platinumVersion(platinumVersion)
+                .pipelineVersion(pipelineVersion)
                 .refSample(refSample)
                 .tumorSample(tumorSample)
                 .germlineMVLHPerGene(mvlhPerGene)
@@ -327,25 +327,25 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static String determinePlatinumVersion(@NotNull OrangeConfig config) throws IOException
+    private static String determinePipelineVersion(@NotNull OrangeConfig config) throws IOException
     {
         String pipelineVersionFile = config.pipelineVersionFile();
         if(pipelineVersionFile == null)
         {
-            LOGGER.warn("No platinum version could be determined as pipeline version file was not passed");
+            LOGGER.warn("No pipeline version could be determined as pipeline version file was not passed");
             return null;
         }
 
-        String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-        if(platinumVersion != null)
+        String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+        if(pipelineVersion != null)
         {
-            LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
+            LOGGER.info("Determined pipeline version to be 'v{}'", pipelineVersion);
         }
         else
         {
-            LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
+            LOGGER.warn("No pipeline version could be determined as version could not be resolved from {}", pipelineVersionFile);
         }
-        return platinumVersion;
+        return pipelineVersion;
     }
 
     @Nullable
@@ -395,14 +395,14 @@ public class OrangeAlgo
             throws IOException
     {
         OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
-        String sageGermlineGeneCoverageTsv = orangeWGSRefConfig != null ? orangeWGSRefConfig.sageGermlineGeneCoverageTsv() : null;
-        if(sageGermlineGeneCoverageTsv == null)
+        String germlineGeneCoverageTsv = orangeWGSRefConfig != null ? orangeWGSRefConfig.germlineGeneCoverageTsv() : null;
+        if(germlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
             return null;
         }
 
-        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(sageGermlineGeneCoverageTsv, driverGenes);
+        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(germlineGeneCoverageTsv, driverGenes);
         LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
 
         return mvlhPerGene;
@@ -628,8 +628,8 @@ public class OrangeAlgo
         LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.wgsRefConfig().peachGenotypeTsv());
-
-        return peachGenotypes;
+        List<PeachGenotype> filterUGT1A1FromPeachGenotypes = peachGenotypes.stream().filter(genotype -> !genotype.gene().equals("UGT1A1")).toList();
+        return filterUGT1A1FromPeachGenotypes;
     }
 
     @Nullable

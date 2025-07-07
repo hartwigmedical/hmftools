@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -8,7 +9,6 @@ import static com.hartwig.hmftools.linx.SvFileLoader.loadVariantsFromVcf;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.IOException;
@@ -22,10 +22,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
-import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.linx.ImmutableLinxLink;
 import com.hartwig.hmftools.common.linx.ImmutableLinxSvAnnotation;
@@ -33,8 +29,13 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.purple.ChromosomeArm;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -46,7 +47,6 @@ import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.linx.gene.BreakendGenePrep;
 import com.hartwig.hmftools.linx.types.ArmCluster;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -59,11 +59,11 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
-public class SampleAnalyser implements Callable
+public class SampleAnalyser implements Callable<Void>
 {
     private final int mId;
     private final LinxConfig mConfig;
-    private List<String> mSampleIds;
+    private final List<String> mSampleIds;
 
     private final ClusterAnalyser mAnalyser;
     private final EnsemblDataCache mEnsemblDataCache;
@@ -83,7 +83,7 @@ public class SampleAnalyser implements Callable
 
     private boolean mIsValid;
 
-    private final Map<String,PerformanceCounter> mPerfCounters;
+    private final Map<String, PerformanceCounter> mPerfCounters;
 
     public static final String PERF_COUNTER_TOTAL = "Total";
     public static final String PERF_COUNTER_PREP = "Preparation";
@@ -144,7 +144,7 @@ public class SampleAnalyser implements Callable
         }
     }
 
-    public Map<String,PerformanceCounter> getPerfCounters() { return mPerfCounters; }
+    public Map<String, PerformanceCounter> getPerfCounters() { return mPerfCounters; }
 
     public void setSampleIds(final List<String> sampleIds)
     {
@@ -153,10 +153,10 @@ public class SampleAnalyser implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         processSamples();
-        return (long)1;
+        return null;
     }
 
     public void processSamples()
@@ -230,7 +230,7 @@ public class SampleAnalyser implements Callable
 
         if(mEnsemblDataCache != null)
         {
-            Map<String,Integer> specificPreGeneDistances = mFusionAnalyser.getSpecialFusions().getSpecificPreGeneDistances();
+            Map<String, Integer> specificPreGeneDistances = mFusionAnalyser.getSpecialFusions().getSpecificPreGeneDistances();
             int preGeneDefaultDistance = mConfig.RunFusions ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
             BreakendGenePrep.setSvGeneData(mAllVariants, mEnsemblDataCache, preGeneDefaultDistance, specificPreGeneDistances);
@@ -391,7 +391,7 @@ public class SampleAnalyser implements Callable
                     LinxDriver.write(driversFile, linxDrivers);
                 }
             }
-            catch (IOException e)
+            catch(IOException e)
             {
                 LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
                 e.printStackTrace();
@@ -439,7 +439,7 @@ public class SampleAnalyser implements Callable
                 VisProteinDomain.write(VisProteinDomain.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
             e.printStackTrace();
@@ -555,14 +555,14 @@ public class SampleAnalyser implements Callable
         {
             final String superType = getClusterCategory(cluster);
 
-                clusterData.add(ImmutableLinxCluster.builder()
-                        .clusterId(cluster.id())
-                        .category(superType)
-                        .synthetic(cluster.isSyntheticType())
-                        .resolvedType(cluster.getResolvedType().toString())
-                        .clusterCount(cluster.getSvCount())
-                        .clusterDesc(cluster.getDesc())
-                        .build());
+            clusterData.add(ImmutableLinxCluster.builder()
+                    .clusterId(cluster.id())
+                    .category(superType)
+                    .synthetic(cluster.isSyntheticType())
+                    .resolvedType(cluster.getResolvedType().toString())
+                    .clusterCount(cluster.getSvCount())
+                    .clusterDesc(cluster.getDesc())
+                    .build());
         }
 
         return clusterData;

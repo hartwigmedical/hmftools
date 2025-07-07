@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.sage.common;
 
-import static java.lang.Math.abs;
 import static java.lang.String.format;
+
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 public class Microhomology
 {

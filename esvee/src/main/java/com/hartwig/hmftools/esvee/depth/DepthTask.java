@@ -1,22 +1,21 @@
 package com.hartwig.hmftools.esvee.depth;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
@@ -30,11 +29,11 @@ import java.util.concurrent.Callable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -42,10 +41,10 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class DepthTask implements Callable
+public class DepthTask implements Callable<Void>
 {
     private final DepthConfig mConfig;
-    private final Map<String,Integer> mSampleVcfGenotypeIds;
+    private final Map<String, Integer> mSampleVcfGenotypeIds;
     private final List<VariantContext> mVariantsList;
     private final List<VariantInfo> mVariantInfoList;
     private final String mChromosome;
@@ -62,7 +61,7 @@ public class DepthTask implements Callable
     private int mCacheRecordCounter;
     private final PerformanceCounter mPerfCounter;
 
-    public DepthTask(final String chromosome, final DepthConfig config, final Map<String,Integer> sampleVcfGenotypeIds)
+    public DepthTask(final String chromosome, final DepthConfig config, final Map<String, Integer> sampleVcfGenotypeIds)
     {
         mConfig = config;
         mChromosome = chromosome;
@@ -111,7 +110,7 @@ public class DepthTask implements Callable
     public PerformanceCounter getPerfCounter() { return mPerfCounter; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         SV_LOGGER.info("chr({}) processing {} variants", mChromosome, mVariantsList.size());
 
@@ -170,6 +169,9 @@ public class DepthTask implements Callable
             VariantContext variant = mVariantsList.get(i);
             VariantInfo variantInfo = mVariantInfoList.get(i);
 
+            // NOTE: SGLs and short indels do not consider ref-pair support for AF
+            boolean skipRefPairSupport = variantInfo.IsSgl || variantInfo.IsShortIndel;
+
             for(int s = 0; s < mConfig.SampleIds.size(); ++s)
             {
                 String sampleId = mConfig.SampleIds.get(s);
@@ -182,25 +184,29 @@ public class DepthTask implements Callable
                     continue;
 
                 genotype.getExtendedAttributes().put(refVcfTag, sampleCounts.RefSupport);
-                genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
 
                 int variantFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
 
-                double total = variantFrags + sampleCounts.total();
-                double af = variantFrags / total;
+                int refPairSupport = skipRefPairSupport ? 0 : sampleCounts.RefPairSupport;
+
+                double total = variantFrags + sampleCounts.RefSupport + refPairSupport;
+
+                genotype.getExtendedAttributes().put(refPairVcfTag, refPairSupport);
+
+                double af = total > 0 ? variantFrags / total : 0;
 
                 genotype.getExtendedAttributes().put(ALLELE_FRACTION, af);
             }
 
             RefSupportCounts totalCounts = variantInfo.totalSupport();
             setRefDepthValue(variant, totalCounts.RefSupport, refVcfTag);
-            setRefDepthValue(variant, totalCounts.RefPairSupport, refPairVcfTag);
+            setRefDepthValue(variant, skipRefPairSupport ? 0 : totalCounts.RefPairSupport, refPairVcfTag);
         }
 
         SV_LOGGER.info("chr({}) complete for {} variants, total reads({})", mChromosome, processed, mTotalReadCount);
         mReadGroups.clear();
 
-        return (long)0;
+        return null;
     }
 
     private static final int READ_CACHE_CLEAR_COUNT = 100000;
@@ -242,7 +248,7 @@ public class DepthTask implements Callable
             SV_LOGGER.trace("sample({}) slice for {} variants", mConfig.SampleIds.get(i), mSliceRegionState.variantCount());
             mBamSlicer.slice(samReader, region, this::processRead);
 
-            times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);
+            times.add((System.nanoTime() - startTime) / NANOS_IN_SECOND);
             readCounts.add(mTotalReadCount - readCount);
 
             mReadGroups.values().forEach(x -> processReadGroup(x));
@@ -250,7 +256,7 @@ public class DepthTask implements Callable
 
         mPerfCounter.stop();
 
-        if(mConfig.PerfLogTime > 0 &&  mPerfCounter.getLastTime() > mConfig.PerfLogTime)
+        if(mConfig.PerfLogTime > 0 && mPerfCounter.getLastTime() > mConfig.PerfLogTime)
         {
             StringJoiner sjTimes = new StringJoiner(",");
             StringJoiner sjCounts = new StringJoiner(",");
@@ -347,18 +353,13 @@ public class DepthTask implements Callable
 
         // determine if mate or supp reads are expected within this current slice region
         boolean expectSupplementaries = read.getSupplementaryAlignmentFlag();
-        boolean expectMate = false;
-
-        if(read.getReadPairedFlag() && !read.getMateUnmappedFlag()
-        && read.getMateReferenceIndex() == read.getReferenceIndex() && read.getMateAlignmentStart() <= maxSlicePosition)
-        {
-            expectMate = true;
-        }
+        boolean expectMate = read.getReadPairedFlag() && !read.getMateUnmappedFlag()
+                && read.getMateReferenceIndex() == read.getReferenceIndex() && read.getMateAlignmentStart() <= maxSlicePosition;
 
         SupplementaryReadData suppReadData = SupplementaryReadData.extractAlignment(read);
 
         if(suppReadData != null && suppReadData.Chromosome.equals(mChromosome)
-        && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))
+                && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))
         {
             expectSupplementaries = true;
         }
@@ -447,7 +448,7 @@ public class DepthTask implements Callable
         }
     }
 
-    private void checkReadGroupSupport(final VariantInfo variant, RefSupportCounts supportCounts, final ReadGroup readGroup)
+    private void checkReadGroupSupport(final VariantInfo variant, final RefSupportCounts supportCounts, final ReadGroup readGroup)
     {
         boolean readSupportsRef = false;
         boolean hasLowerPosRead = false;
@@ -471,7 +472,8 @@ public class DepthTask implements Callable
 
             // check for an exact SC match
             if((variant.Orient.isReverse() && positionWithin(readStart, variant.PositionMin, variant.PositionMax) && leftSoftClipped(read))
-            || (variant.Orient.isForward() && positionWithin(readEnd, variant.PositionMin, variant.PositionMax)) && rightSoftClipped(read))
+                    || (variant.Orient.isForward() && positionWithin(readEnd, variant.PositionMin, variant.PositionMax))
+                    && rightSoftClipped(read))
             {
                 SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) at junction",
                         variant.Position, variant.PositionMin, variant.PositionMax, readStart, readEnd, read.getReadName());
@@ -485,13 +487,13 @@ public class DepthTask implements Callable
                 int fragmentSize = inferredInsertSizeAbs(read);
 
                 if(orientation.isForward() && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
-                && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
+                        && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
                 }
                 else if(orientation.isReverse() && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
-                && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
+                        && fragmentSize < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
@@ -557,7 +559,7 @@ public class DepthTask implements Callable
     }
 
     @VisibleForTesting
-    public Map<String,ReadGroup> readGroups() { return mReadGroups; }
+    public Map<String, ReadGroup> readGroups() { return mReadGroups; }
 
     @VisibleForTesting
     public List<VariantInfo> variantInfos() { return mVariantInfoList; }
@@ -572,4 +574,4 @@ public class DepthTask implements Callable
 
     @VisibleForTesting
     public SliceRegionState sliceRegionState() { return mSliceRegionState; }
-    }
+}

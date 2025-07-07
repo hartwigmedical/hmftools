@@ -27,21 +27,22 @@ public class GenerateGermlineDeletionFrequency
 {
     private final String mCohortFrequencyFile;
     private final String mCohortDeletionsFile;
-    private final int mMinSampleFrequency;
+    private final int mMinSampleCount;
     private final List<String> mSampleIds;
 
     private Map<String,List<DeletionRegionFrequency>> mChrRegionMap;
 
     public static final String COHORT_DEL_FREQ_FILE = "germline_del_freq_file";
 
-    private static final String MIN_FREQUENCY = "min_frequency";
+    private static final String MIN_SAMPLE_COUNT = "min_samples";
     private static final String COHORT_DEL_FILE = "cohort_germline_del_file";
+    private static final int DEFAULT_MIN_SAMPLES = 3;
 
     public GenerateGermlineDeletionFrequency(final ConfigBuilder configBuilder)
     {
         mCohortDeletionsFile = configBuilder.getValue(COHORT_DEL_FILE);
         mCohortFrequencyFile = configBuilder.getValue(COHORT_DEL_FREQ_FILE);
-        mMinSampleFrequency = configBuilder.getInteger(MIN_FREQUENCY);
+        mMinSampleCount = configBuilder.getInteger(MIN_SAMPLE_COUNT);
 
         mChrRegionMap = Maps.newHashMap();
 
@@ -160,7 +161,7 @@ public class GenerateGermlineDeletionFrequency
 
                 for(DeletionRegionFrequency region : entry.getValue())
                 {
-                    if(region.Frequency < mMinSampleFrequency)
+                    if(region.Frequency < mMinSampleCount)
                         continue;
 
                     writer.write(String.format("%s,%d,%d,%d", chromosome, region.Region.start(), region.Region.end(), region.Frequency));
@@ -181,8 +182,8 @@ public class GenerateGermlineDeletionFrequency
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         configBuilder.addPath(COHORT_DEL_FILE, true, "Input germline cohort deletions file");
-        configBuilder.addPath(COHORT_DEL_FREQ_FILE, true, "Output cohort germline deletions frequency file");
-        configBuilder.addInteger(MIN_FREQUENCY, "Min sample frequency to write a region", 2);
+        configBuilder.addPath(COHORT_DEL_FREQ_FILE, false, "Output cohort germline deletions frequency file");
+        configBuilder.addInteger(MIN_SAMPLE_COUNT, "Min sample frequency to write a region", DEFAULT_MIN_SAMPLES);
         configBuilder.addConfigItem(SAMPLE_ID_FILE, true, "Reference de-duped sample IDs");
         addLoggingOptions(configBuilder);
 

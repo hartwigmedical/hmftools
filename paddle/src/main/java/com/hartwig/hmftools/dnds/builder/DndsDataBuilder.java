@@ -2,8 +2,8 @@ package com.hartwig.hmftools.dnds.builder;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.dnds.SampleMutationalLoad;
 import com.hartwig.hmftools.dnds.SomaticVariant;
@@ -104,7 +104,7 @@ public class DndsDataBuilder
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
 
             if(!TaskExecutor.executeTasks(callableList, mThreads))
                 System.exit(1);
@@ -122,7 +122,7 @@ public class DndsDataBuilder
         DN_LOGGER.info("DNDS sample data building complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;
@@ -137,7 +137,7 @@ public class DndsDataBuilder
         public void addSamples(final List<String> sampleIds) { mSampleIds.addAll(sampleIds); }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < mSampleIds.size(); ++i)
             {
@@ -155,7 +155,7 @@ public class DndsDataBuilder
                 DN_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
             }
 
-            return (long)0;
+            return null;
         }
 
         private void processSample(final String sampleId)

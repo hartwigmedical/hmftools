@@ -6,24 +6,14 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.POLY_G_TRIM_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferredUnclippedPositions;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findBaseRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_REPEAT_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
-
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 
 public final class ReadAdjustments
 {
@@ -161,18 +151,22 @@ public final class ReadAdjustments
 
         int baseIndex = fromStart ? 0 : read.basesLength() - 1;
 
-        int lowQualCount = 0;
-        int lastLowQualPercIndex = 0;
+        double lowestScore = 0;
+        double currentScore = 0;
+        int lastLowestScoreIndex = 0;
 
         for(int i = 1; i <= scBaseCount - lineExclusionLength; ++i)
         {
             if(belowMinQual(read.getBaseQuality()[baseIndex]))
             {
-                lowQualCount++;
+                currentScore -= LOW_QUAL_SCORE;
 
-                // avoid a check on very low counts of bases
-                if(lowQualCount / (double)i >= LOW_BASE_TRIM_PERC)
-                    lastLowQualPercIndex = i;
+                if(currentScore < lowestScore)
+                    lastLowestScoreIndex = i;
+            }
+            else
+            {
+                ++currentScore;
             }
 
             if(fromStart)
@@ -181,49 +175,12 @@ public final class ReadAdjustments
                 --baseIndex;
         }
 
-        if(lastLowQualPercIndex == 0)
+        if(lastLowestScoreIndex == 0)
             return false;
 
-        read.trimBases(lastLowQualPercIndex, fromStart);
+        read.trimBases(lastLowestScoreIndex, fromStart);
         return true;
     }
 
-    public synchronized static void trimLowQualBases(final Read read)
-    {
-        if(read.lowQualTrimmed())
-            return;
-
-        boolean fromStart = read.negativeStrand();
-
-        int baseLength = read.basesLength();
-        int baseIndex = fromStart ? 0 : baseLength - 1;
-
-        int lowQualCount = 0;
-        int lastLowQualPercIndex = 0;
-        int checkedBases = 0;
-
-        while(baseIndex >= 0 && baseIndex < baseLength)
-        {
-            ++checkedBases;
-
-            if(belowMinQual(read.getBaseQuality()[baseIndex]))
-            {
-                lowQualCount++;
-
-                if(lowQualCount / (double)checkedBases >= LOW_BASE_TRIM_PERC)
-                    lastLowQualPercIndex = checkedBases;
-            }
-
-            if(fromStart)
-                ++baseIndex;
-            else
-                --baseIndex;
-        }
-
-        if(lastLowQualPercIndex > 0)
-        {
-            read.trimBases(lastLowQualPercIndex, fromStart);
-            read.markLowQualTrimmed();
-        }
-    }
+    protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
 }

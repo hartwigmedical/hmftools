@@ -2,9 +2,11 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
+import static com.hartwig.hmftools.sage.common.ReadContextMatcher.isSimpleAltMatch;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
@@ -25,15 +27,19 @@ import static com.hartwig.hmftools.sage.pipeline.RegionTask.setNearByIndelStatus
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
+import com.hartwig.hmftools.sage.common.ReadContextMatcher;
+import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
@@ -202,6 +208,78 @@ public class MiscEvidenceTest
         readContextCounter.processRead(altRead, 1, null);
 
         assertEquals(48, readContextCounter.qualCounters().altRecalibratedBaseQualityTotal());
+    }
+
+    @Test
+    public void testLowQualMatchTypes()
+    {
+        int position = 100;
+
+        VariantReadContext readContext = createReadContext(position, "A", "G");
+
+        // test reads with low-qual mismatches
+        String refBases = readContext.refBases();
+        refBases = refBases.substring(0, 1) + getNextBase(refBases.charAt(1)) + refBases.substring(2);
+
+        String extraReadBases = REF_BASES_200.substring(0, 10);
+        String readRefBases = extraReadBases + readContext.leftFlankStr() + refBases + readContext.rightFlankStr() + extraReadBases;
+        String readCigar = buildCigarString(readRefBases.length());
+        int readVarIndex = extraReadBases.length() + readContext.VarIndex;
+        int readPosStart = position - readVarIndex;
+
+        SAMRecord refRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, readRefBases, readCigar);
+        int lowQualIndex = extraReadBases.length() + readContext.leftFlankLength() + 1;
+
+        ReadContextMatcher readContextMatcher = new ReadContextMatcher(readContext, true, false);
+
+        refRead.getBaseQualities()[lowQualIndex] = 10;
+        ReadMatchInfo matchInfo = readContextMatcher.determineReadMatchInfo(refRead, readVarIndex);
+
+        assertEquals(ReadContextMatch.REF, matchInfo.MatchType);
+        assertFalse(matchInfo.ExactMatch);
+
+        String altBases = readContext.readBases();
+        altBases = altBases.substring(0, 11) + getNextBase(altBases.charAt(11)) + altBases.substring(12);
+        String altReadBases = extraReadBases + altBases + extraReadBases;
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+
+        altRead.getBaseQualities()[lowQualIndex] = 10;
+        matchInfo = readContextMatcher.determineReadMatchInfo(altRead, readVarIndex);
+
+        assertEquals(ReadContextMatch.FULL, matchInfo.MatchType);
+        assertFalse(matchInfo.ExactMatch);
+
+        Boolean simpleMatch = isSimpleAltMatch(readContext.variant(), altRead, readVarIndex);
+        assertNotNull(simpleMatch);
+        assertTrue(simpleMatch);
+
+        // mismatch in each flank
+        altBases = readContext.readBases();
+        altBases = altBases.substring(0, 5) + getNextBase(altBases.charAt(5)) + altBases.substring(6);
+        altReadBases = extraReadBases + altBases + extraReadBases;
+
+        altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+
+        lowQualIndex = extraReadBases.length() + 5;
+        altRead.getBaseQualities()[lowQualIndex] = 10;
+        matchInfo = readContextMatcher.determineReadMatchInfo(altRead, readVarIndex);
+
+        assertEquals(ReadContextMatch.FULL, matchInfo.MatchType);
+        assertFalse(matchInfo.ExactMatch);
+
+        altBases = readContext.readBases();
+        altBases = altBases.substring(0, 16) + getNextBase(altBases.charAt(16)) + altBases.substring(17);
+        altReadBases = extraReadBases + altBases + extraReadBases;
+
+        altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+
+        lowQualIndex = extraReadBases.length() + 16;
+        altRead.getBaseQualities()[lowQualIndex] = 10;
+        matchInfo = readContextMatcher.determineReadMatchInfo(altRead, readVarIndex);
+
+        assertEquals(ReadContextMatch.FULL, matchInfo.MatchType);
+        assertFalse(matchInfo.ExactMatch);
     }
 
     @Test

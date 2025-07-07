@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.select;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.jetbrains.annotations.NotNull;
 

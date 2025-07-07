@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static java.lang.String.format;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -105,5 +107,10 @@ public class KnownHotspot
         }
 
         return false;
+    }
+
+    public String toString()
+    {
+        return format("genes(%s) start(%s:%d) end(%s:%d)",  GeneInfo, RegionStart, OrientStart.asByte(), RegionEnd, OrientEnd.asByte());
     }
 }

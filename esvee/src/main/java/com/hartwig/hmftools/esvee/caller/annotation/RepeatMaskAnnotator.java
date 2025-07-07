@@ -70,7 +70,6 @@ public class RepeatMaskAnnotator
 
     public RepeatMaskAnnotation annotate(final String insertSequence, final String alignmentsStr)
     {
-        // List<AlignmentData> alignments = fromInsertSequenceAlignments(alignmentsStr);
         List<AlternativeAlignment> alignments = AlternativeAlignment.fromVcfTag(alignmentsStr);
 
         if(alignments == null || alignments.isEmpty())

@@ -30,8 +30,8 @@ public class CobaltData
     public final CobaltChromosomes CobaltChromosomes;
 
     public final Map<Chromosome,List<CobaltRatio>> Ratios;
-    public final Multimap<Chromosome, PCFPosition> TumorSegments;
-    public final Multimap<Chromosome, PCFPosition> ReferenceSegments;
+    public final Multimap<Chromosome,PCFPosition> TumorSegments;
+    public final Multimap<Chromosome,PCFPosition> ReferenceSegments;
 
     public final Gender gender() { return CobaltChromosomes.gender(); }
 
@@ -42,7 +42,7 @@ public class CobaltData
     {
         if(tumorId != null)
         {
-            final String tumorSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, tumorId);
+            String tumorSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, tumorId);
             if(!new File(tumorSegmentFile).exists())
             {
                 throw new ParseException("unable to open Cobalt tumor pcf file: " + tumorSegmentFile);
@@ -56,7 +56,7 @@ public class CobaltData
             TumorSegments = ArrayListMultimap.create();
         }
 
-        final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorId);
+        String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorId);
         if(!new File(cobaltFilename).exists())
         {
             throw new ParseException("unable to open Cobalt ratio file: " + cobaltFilename);
@@ -67,7 +67,7 @@ public class CobaltData
 
         if(referenceId != null)
         {
-            final String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, referenceId);
+            String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, referenceId);
             if(!new File(referenceSegmentFile).exists())
             {
                 throw new ParseException("unable to open Cobalt reference PCF file: " + referenceSegmentFile);

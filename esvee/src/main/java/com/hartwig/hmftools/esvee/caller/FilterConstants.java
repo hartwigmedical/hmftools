@@ -3,15 +3,22 @@ package com.hartwig.hmftools.esvee.caller;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_FRAG_LOW_VAF;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
+import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
+import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 public class FilterConstants
 {
@@ -52,11 +59,14 @@ public class FilterConstants
     public final List<ChrBaseRegion> PolyGcRegions;
     public final ChrBaseRegion LowQualRegion;
 
-    public final int PonDistance;
     public static final int DEFAULT_PON_DISTANCE = 3;
-    public static final String PON_DISTANCE = "pon_distance";
+    public static final int DEFAULT_SGL_PON_DISTANCE = 10;
 
-    public static final int SHORT_CALLING_SIZE = 1000;
+    public static final int PON_SHORT_INDEL_LENGTH = 200;
+    public static final int PON_MAX_INS_SEQ_LENGTH = 100;
+    public static final int PON_SHORT_INDEL_PON_DISTANCE = 10;
+    public static final int PON_SHORT_INDEL_MAX_REPEAT_PON_DISTANCE = 20;
+    public static final int PON_SHORT_INDEL_MAX_REPEATS = 11;
 
     public static final int MIN_TRIMMED_ANCHOR_LENGTH = MIN_ANCHOR_LENGTH;
     public static final int MIN_AVG_FRAG_FACTOR = 3;
@@ -79,14 +89,23 @@ public class FilterConstants
     public static final double INV_SHORT_FRAGMENT_MIN_AF = 0.05;
     public static final int INV_SHORT_FRAGMENT_AF_RATIO = 50;
 
+    public static final int INV_ADJACENT_LENGTH = 100;
+    public static final int INV_ADJACENT_MIN_UPS = 4;
+    public static final Set<FilterType> INV_ADJACENT_EXCLUDED_FILTERS = Sets.newHashSet(
+            PON, INV_SHORT_FRAG_LOW_VAF, INV_SHORT_LOW_VAF_HOM, INV_SHORT_ISOLATED);
+
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
-    public static final String PON_INS_SEQ_FWD_STRAND = "GTGTAGATCTCGGTGGTCGCCGTATCATTAAAAA";
-    public static final String PON_INS_SEQ_REV_STRAND = "TTTTTAATGATACGGCGACCACCGAGATCTACAC";
+    public static final String PON_INS_SEQ_FWD_STRAND_1 = "GCCGTATCATTAAAAA";
+    public static final String PON_INS_SEQ_FWD_STRAND_2 = "GTAGATCTCGGTGGTC";
+    public static final String PON_INS_SEQ_REV_STRAND_1 = "TTTTTAATGATACGGC";
+    public static final String PON_INS_SEQ_REV_STRAND_2 = "GACCACCGAGATCTAC";
 
     public static final double GERMLINE_AF_THRESHOLD = 0.1;
     public static final double GERMLINE_AD_THRESHOLD = 0.01;
+
+    public static final int PANEL_INCLUSION_BUFFER = 1000;
 
     public static FilterConstants from(final ConfigBuilder configBuilder)
     {
@@ -94,7 +113,7 @@ public class FilterConstants
         RefGenomeVersion refGenVersion = RefGenomeVersion.from(configBuilder);
 
         // use targeted panel defaults where applicable
-        boolean filterSgls = targetedMode || configBuilder.hasFlag(FILTER_SGLS);
+        boolean filterSgls = configBuilder.hasFlag(FILTER_SGLS);
 
         int minSupport = configBuilder.getInteger(CFG_MIN_SUPPORT);
         int minSupportHotspot = configBuilder.getInteger(CFG_MIN_SUPPORT_HOTSPOT);
@@ -105,16 +124,13 @@ public class FilterConstants
 
         int minQualHotspot = configBuilder.getInteger(CFG_MIN_QUAL_HOTSPOT);
 
-        int ponDistance = configBuilder.getInteger(PON_DISTANCE);
-
         return new FilterConstants(
                 minQual, minQualHotspot, MIN_VARIANT_LENGTH,
                 minSupport, minSupportSgl, minSupportHotspot,
                 DEFAULT_MIN_AF_JUNCTION, DEFAULT_MIN_AF_SGL, DEFAULT_MIN_AF_HOTSPOT,
                 filterSgls,
                 getPolyGRegions(refGenVersion),
-                refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
-                ponDistance);
+                refGenVersion == V37 ? PMS2_V37 : PMS2_V38);
     }
 
     @VisibleForTesting
@@ -125,15 +141,14 @@ public class FilterConstants
                 DEFAULT_MIN_SUPPORT_JUNCTION, DEFAULT_MIN_SUPPORT_SGL, DEFAULT_MIN_SUPPORT_HOTSPOT,
                 DEFAULT_MIN_AF_JUNCTION, DEFAULT_MIN_AF_SGL, DEFAULT_MIN_AF_HOTSPOT,
                 filterSgls,
-                getPolyGRegions(refGenomeVersion), refGenomeVersion == V37 ? PMS2_V37 : PMS2_V38,
-                ponDistance);
+                getPolyGRegions(refGenomeVersion), refGenomeVersion == V37 ? PMS2_V37 : PMS2_V38);
     }
 
     public FilterConstants(
             final int minQual, final int minQualHotspot,
             final int minLength, final int minSupportJunction, final int minSupportSgl, final int minSupportHotspot,
             final double minAfJunction, final double minAfSgl, final double minAfHotspot,
-            final boolean filterSGLs, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion, final int ponDistance)
+            final boolean filterSGLs, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion)
     {
         MinQual = minQual;
         MinQualHotspot = minQualHotspot;
@@ -147,12 +162,10 @@ public class FilterConstants
         FilterSGLs = filterSGLs;
         PolyGcRegions = polyGcRegions;
         LowQualRegion = lowQualRegion;
-        PonDistance = ponDistance;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addInteger(PON_DISTANCE, "PON permitted margin", DEFAULT_PON_DISTANCE);
         configBuilder.addFlag(FILTER_SGLS, "Filter SGLs from VCF, intended for tumor-only mode, default=true in target panel");
 
         configBuilder.addInteger(CFG_MIN_QUAL,

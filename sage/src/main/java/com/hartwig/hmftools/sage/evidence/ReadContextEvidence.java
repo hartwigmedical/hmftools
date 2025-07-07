@@ -7,12 +7,10 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_ALT_REF_MATCH;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
-
-import static htsjdk.samtools.CigarOperator.N;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT_EXACT;
 
 import java.util.Collections;
 import java.util.List;
@@ -319,10 +317,14 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
             if(mVariantPhaser != null)
             {
-                if(matchType == ALT_SUPPORT)
+                if(matchType == ALT_SUPPORT_EXACT)
+                {
                     posPhasedCounters.add(readCounter);
-                else if(matchType == REF_SUPPORT)
+                }
+                else if(matchType == REF_SUPPORT || matchType == NO_ALT_REF_MATCH)
+                {
                     negPhasedCounters.add(readCounter);
+                }
             }
         }
 

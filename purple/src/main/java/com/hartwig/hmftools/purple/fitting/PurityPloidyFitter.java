@@ -64,11 +64,13 @@ public class PurityPloidyFitter
     private BestFit mBestFit;
     private PurityAdjuster mPurityAdjuster;
 
+    private final boolean mHasChimerism;
     private boolean mIsValid;
 
     public PurityPloidyFitter(
             final PurpleConfig config, final ReferenceData referenceData, final SampleData sampleData, final ExecutorService executorService,
-            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions, final Gender gender)
+            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions, final Gender gender,
+            final boolean hasChimerism)
     {
         mSampleData = sampleData;
         mConfig = config;
@@ -77,6 +79,7 @@ public class PurityPloidyFitter
         mRegionFitCalculator = regionFitCalculator;
         mObservedRegions = observedRegions;
         mGender = gender;
+        mHasChimerism = hasChimerism;
 
         mCopyNumbers = Lists.newArrayList();
         mFittedRegions = Lists.newArrayList();
@@ -123,7 +126,8 @@ public class PurityPloidyFitter
         if(mCopyNumberPurityFit == null)
         {
             PPL_LOGGER.error("failed to find copy number fit");
-            System.exit(1);
+            mIsValid = false;
+            return;
         }
 
         buildCopyNumbers(mCopyNumberPurityFit);
@@ -133,7 +137,8 @@ public class PurityPloidyFitter
         if(mFinalPurityFit == null)
         {
             PPL_LOGGER.error("failed to find final fit");
-            System.exit(1);
+            mIsValid = false;
+            return;
         }
 
         if(mFinalPurityFit != mCopyNumberPurityFit)
@@ -149,6 +154,13 @@ public class PurityPloidyFitter
         FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
                 mConfig, mExecutorService, mSampleData.Cobalt.CobaltChromosomes, mRegionFitCalculator, mObservedRegions,
                 !mConfig.tumorOnlyMode() ? mVariantPurityFitter.fittingSomatics() : Collections.emptyList());
+
+        if(!fittedPurityFactory.validDataForFit())
+        {
+            mIsValid = false;
+            return;
+        }
+
         try
         {
             fittedPurityFactory.fitPurity();
@@ -181,7 +193,7 @@ public class PurityPloidyFitter
 
         if(mConfig.tumorOnlyMode() || mTargetedMode)
         {
-            if(highlyDiploidSomaticOrPanel(mCopyNumberPurityFit))
+            if(mHasChimerism || highlyDiploidSomaticOrPanel(mCopyNumberPurityFit))
             {
                 mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
 
@@ -271,6 +283,9 @@ public class PurityPloidyFitter
 
     private void determineFinalFit()
     {
+        if(mHasChimerism)
+            return;
+
         if(!(mFitMethod == FittedPurityMethod.SOMATIC || mFitMethod == FittedPurityMethod.NO_TUMOR) || mFinalPurityFit == mCopyNumberPurityFit)
             return;
 

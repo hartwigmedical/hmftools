@@ -19,7 +19,9 @@ public class CustomRegions
     public void run()
     {
         if(mConfig.CustomRegionFile != null)
+        {
             loadRegions(mConfig.CustomRegionFile);
+        }
     }
 
     // load file of the form: Chromosome, Position
@@ -33,22 +35,22 @@ public class CustomRegions
 
     private void loadRegions(final String filename)
     {
-        DelimFileReader reader = new DelimFileReader(filename);
-
-        int regionCount = 0;
-
-        for(DelimFileReader.Row row : reader)
+        try(DelimFileReader reader = new DelimFileReader(filename))
         {
-            String chromosome = row.get(Column.Chromosome);
-            int positionStart = row.getInt(Column.PositionStart);
-            int positionEnd = row.getInt(Column.PositionEnd);
-            String sourceInfo = row.get(Column.SourceInfo);
+            int regionCount = 0;
+            for(DelimFileReader.Row row : reader)
+            {
+                String chromosome = row.get(Column.Chromosome);
+                int positionStart = row.getInt(Column.PositionStart);
+                int positionEnd = row.getInt(Column.PositionEnd);
+                String sourceInfo = row.get(Column.SourceInfo);
 
-            PanelRegion region = new PanelRegion(new ChrBaseRegion(chromosome, positionStart, positionEnd), RegionType.CUSTOM, sourceInfo);
-            mPanelCache.addRegion(region);
-            ++regionCount;
+                PanelRegion region =
+                        new PanelRegion(new ChrBaseRegion(chromosome, positionStart, positionEnd), RegionType.CUSTOM, sourceInfo);
+                mPanelCache.addRegion(region);
+                ++regionCount;
+            }
+            GU_LOGGER.info("loaded {} custom panel regions", regionCount);
         }
-
-        GU_LOGGER.info("loaded {} custom panel regions", regionCount);
     }
 }

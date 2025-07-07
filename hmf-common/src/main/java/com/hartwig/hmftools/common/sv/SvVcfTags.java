@@ -76,7 +76,10 @@ public final class SvVcfTags
     public static final String LINE_SITE_DESC = "LINE insertion site";
 
     public static final String UNIQUE_FRAG_POSITIONS = "UFP";
-    public static final String UNIQUE_FRAG_POSITIONS_DESC = "Distinct fragment positinos";
+    public static final String UNIQUE_FRAG_POSITIONS_DESC = "Distinct fragment positions";
+
+    public static final String MAX_LOCAL_REPEAT = "MLR";
+    public static final String MAX_LOCAL_REPEAT_DESC = "Max local indel repeat round breakend";
 
     // per sample
     public static final String SPLIT_FRAGS = "SF";
@@ -102,7 +105,7 @@ public final class SvVcfTags
 
     public static final String VCF_ITEM_DELIM = ",";
 
-    // set by Esvee caller (formerly Gripss)
+    // set by Esvee caller
     public static final String PON_FILTER_PON = "PON";
     public static final String PON_COUNT = "PON_COUNT";
 

@@ -96,7 +96,7 @@ public final class TestOrangeReportFactory
     {
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
-                .platinumVersion("v5.35")
+                .pipelineVersion("v6.1")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
                 .purple(createTestPurpleData())
@@ -167,7 +167,7 @@ public final class TestOrangeReportFactory
                 .allGermlineVariants(Lists.newArrayList())
                 .reportableGermlineVariants(Lists.newArrayList())
                 .additionalSuspectGermlineVariants(Lists.newArrayList())
-                .reportableGermlineFullLosses(Lists.newArrayList())
+                .reportableGermlineFullDels(Lists.newArrayList())
                 .reportableGermlineLossOfHeterozygosities(Lists.newArrayList())
                 .build();
     }

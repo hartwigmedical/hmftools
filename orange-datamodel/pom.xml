@@ -50,7 +50,7 @@
                     <relocations>
                         <relocation>
                             <pattern>com.hartwig.hmftools.datamodel</pattern>
-                            <shadedPattern>com.hartwig.hmftools.datamodel.v2</shadedPattern>
+                            <shadedPattern>com.hartwig.hmftools.datamodel.v3</shadedPattern>
                         </relocation>
                     </relocations>
                     <transformers>

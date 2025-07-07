@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
-import com.hartwig.hmftools.cider.genes.IgTcrGeneFile
+import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import org.apache.logging.log4j.LogManager
 
@@ -12,7 +13,7 @@ object CiderGeneDataLoader
 
     fun loadConstantDiversityRegions(refGenomeVersion: RefGenomeVersion): List<IgTcrConstantDiversityRegion>
     {
-        val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
+        val igTcrGenes: List<IgTcrGene> = IgTcrGeneFile.read(refGenomeVersion).map { o -> fromCommonIgTcrGene(o) }
 
         val igTcrConstantDiversityRegions = ArrayList<IgTcrConstantDiversityRegion>()
         for (geneData in igTcrGenes)
@@ -44,7 +45,7 @@ object CiderGeneDataLoader
 
     fun loadAnchorTemplates(refGenomeVersion: RefGenomeVersion): List<VJAnchorTemplate>
     {
-        val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
+        val igTcrGenes: List<IgTcrGene> = IgTcrGeneFile.read(refGenomeVersion).map { o -> fromCommonIgTcrGene(o) }
 
         val vjAnchorTemplateList: MutableList<VJAnchorTemplate> = ArrayList()
 

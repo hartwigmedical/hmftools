@@ -11,10 +11,10 @@ import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_READ_
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
-import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.SIMPLE_ALT;
-import static com.hartwig.hmftools.sage.common.SimpleVariant.isLongInsert;
+import static com.hartwig.hmftools.sage.common.ReadMatchInfo.NO_MATCH;
+import static com.hartwig.hmftools.sage.common.SageVariant.isLongInsert;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -247,22 +248,32 @@ public class ReadContextMatcher
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)
     {
-        ReadContextMatch matchType = determineReadMatch(record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
-
-        if(matchType == NONE && mIsReference && checkSimpleAltMatch(record, readVarIndex))
-            return SIMPLE_ALT;
-
-        return matchType;
+        return determineReadMatchInfo(record, readVarIndex).MatchType;
     }
 
-    public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean skipRefMatch)
+    public ReadMatchInfo determineReadMatchInfo(final SAMRecord record, final int readVarIndex)
     {
-        if(!skipRefMatch && coreMatchesRef(readBases, readQuals, readVarIndex))
-            return ReadContextMatch.REF;
+        ReadMatchInfo readMatchInfo = determineReadMatchInfo(record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
 
-        ReadContextMatch coreMatch = determineCoreMatch(readBases, readQuals, readVarIndex);
+        if(readMatchInfo == NO_MATCH && mIsReference && isSimpleAltMatch(mContext.variant(), record, readVarIndex))
+            return new ReadMatchInfo(SIMPLE_ALT, true);
 
-        if(coreMatch == NONE)
+        return readMatchInfo;
+    }
+
+    public ReadMatchInfo determineReadMatchInfo(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean skipRefMatch)
+    {
+        if(!skipRefMatch)
+        {
+            ReadMatchInfo matchInfo = coreMatchesRef(readBases, readQuals, readVarIndex);
+
+            if(matchInfo != NO_MATCH)
+                return matchInfo;
+        }
+
+        ReadMatchInfo coreMatch = determineCoreMatch(readBases, readQuals, readVarIndex);
+
+        if(coreMatch == NO_MATCH)
         {
             if(mIsReference && isLongInsert(mContext.variant()))
             {
@@ -272,37 +283,37 @@ public class ReadContextMatcher
                         readBases, mContext.ReadBases, mContext.extendedRefBases(), readVarIndex, mContext.VarIndex, extendedRefIndexStart);
 
                 if(refReadMatches[1] - refReadMatches[0] >= LONG_GERMLINE_INSERT_READ_VS_REF_DIFF)
-                    return PARTIAL_CORE;
+                    return new ReadMatchInfo(PARTIAL_CORE, true);
             }
 
-            return NONE;
+            return NO_MATCH;
         }
 
         BaseMatchType leftMatch = determineFlankMatch(readBases, readQuals, readVarIndex, true);
         BaseMatchType rightMatch = determineFlankMatch(readBases, readQuals, readVarIndex, false);
 
         if(rightMatch == BaseMatchType.MISMATCH || leftMatch == BaseMatchType.MISMATCH)
-            return CORE;
+            return new ReadMatchInfo(CORE, coreMatch.ExactMatch);
+
+        if(!validMatch(leftMatch) && !validMatch(rightMatch)) // incomplete flanks results in a core-only match
+            return new ReadMatchInfo(CORE, coreMatch.ExactMatch);
 
         // flanks either matched or were incomplete
-        if(coreMatch == PARTIAL_CORE)
-        {
-            if(leftMatch == BaseMatchType.MATCH || rightMatch == BaseMatchType.MATCH)
-                return PARTIAL_CORE;
-            else
-                return CORE;
-        }
+        boolean exactBaseMatch = coreMatch.ExactMatch
+                && leftMatch != BaseMatchType.LOW_QUAL_MISMATCHES && rightMatch != BaseMatchType.LOW_QUAL_MISMATCHES;
+
+        if(coreMatch.MatchType == PARTIAL_CORE)
+            return new ReadMatchInfo(PARTIAL_CORE, exactBaseMatch);
         else
-        {
-            // again only one flank needs to be complete to be full (since no mismatches were found)
-            if(leftMatch == BaseMatchType.MATCH || rightMatch == BaseMatchType.MATCH)
-                return FULL;
-            else
-                return CORE;
-        }
+            return new ReadMatchInfo(FULL, exactBaseMatch);
     }
 
-    private boolean coreMatchesRef(final byte[] readBases, final byte[] readQuals, final int readVarIndex)
+    private static ReadMatchInfo readMatchInfo(final ReadContextMatch matchType, final BaseMatchType baseMatchType)
+    {
+        return new ReadMatchInfo(matchType, baseMatchType == BaseMatchType.MATCH);
+    }
+
+    private ReadMatchInfo coreMatchesRef(final byte[] readBases, final byte[] readQuals, final int readVarIndex)
     {
         int refIndexStart = 0;
 
@@ -321,12 +332,14 @@ public class ReadContextMatcher
 
         int compareLength = readIndexEnd - readIndexStart + 1;
 
-        return matches(
+        BaseMatchType matchType = matchType(
                 mContext.RefBases, readBases, readQuals, refIndexStart, readIndexStart, compareLength,
                 mMaxCoreLowQualMatches, mLowQualExclusionRef);
+
+        return validMatch(matchType) ? readMatchInfo(ReadContextMatch.REF, matchType) : NO_MATCH;
     }
 
-    private ReadContextMatch determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex)
+    private ReadMatchInfo determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex)
     {
         int readIndexStart = readVarIndex - mContext.leftCoreLength();
         int readIndexEnd = readVarIndex + mContext.rightCoreLength();
@@ -334,16 +347,11 @@ public class ReadContextMatcher
         // have already checked that the read covers the min alt range
         if(readIndexStart >= 0 && readIndexEnd < readBases.length)
         {
-            if(matches(
+            BaseMatchType matchType = matchType(
                     mContext.ReadBases, readBases, readQuals, mContext.CoreIndexStart, readIndexStart, mContext.coreLength(),
-                    mMaxCoreLowQualMatches, mLowQualExclusionRead))
-            {
-                return CORE;
-            }
-            else
-            {
-                return NONE;
-            }
+                    mMaxCoreLowQualMatches, mLowQualExclusionRead);
+
+            return validMatch(matchType) ? readMatchInfo(CORE, matchType) : NO_MATCH;
         }
         else
         {
@@ -356,24 +364,25 @@ public class ReadContextMatcher
 
             int maxLowQualMismatches = min(mMaxCoreLowQualMatches, calcMaxLowQualMismatches(compareLength));
 
-            if(matches(
+            BaseMatchType matchType = matchType(
                     mContext.ReadBases, readBases, readQuals, coreIndexStart, readIndexStart, compareLength,
-                    maxLowQualMismatches, mLowQualExclusionRead))
-            {
-                return ReadContextMatch.PARTIAL_CORE;
-            }
-            else
-            {
-                return NONE;
-            }
+                    maxLowQualMismatches, mLowQualExclusionRead);
+
+            return validMatch(matchType) ? readMatchInfo(PARTIAL_CORE, matchType) : NO_MATCH;
         }
     }
 
     private enum BaseMatchType
     {
         MATCH,
+        LOW_QUAL_MISMATCHES,
         INCOMPLETE,
         MISMATCH;
+    }
+
+    private static boolean validMatch(final BaseMatchType matchType)
+    {
+        return matchType == BaseMatchType.MATCH || matchType == BaseMatchType.LOW_QUAL_MISMATCHES;
     }
 
     private BaseMatchType determineFlankMatch(final byte[] readBases, final byte[] readQuals, final int readVarIndex, boolean isLeft)
@@ -413,16 +422,17 @@ public class ReadContextMatcher
         if(flankLength <= 0)
             return BaseMatchType.INCOMPLETE;
 
-        boolean flankMatch = matches(
+        BaseMatchType flankMatchType = matchType(
                 mContext.ReadBases, readBases, readQuals, flankStartIndex, readIndexStart, flankLength,
                 FLANK_LOW_QUAL_MISMATCHES, mLowQualExclusionRead);
 
-        if(!flankMatch)
+        if(!validMatch(flankMatchType))
             return BaseMatchType.MISMATCH;
 
-        return isPartial ? BaseMatchType.INCOMPLETE : BaseMatchType.MATCH;
+        return isPartial ? BaseMatchType.INCOMPLETE : flankMatchType;
     }
 
+    /*
     private static boolean matches(
             final byte[] bases, final byte[] readBases, final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
             final int compareLength, final int maxLowQualMismatches, final LowQualExclusion lowQualExclusion)
@@ -431,6 +441,7 @@ public class ReadContextMatcher
                 bases, readBases, readQuals, baseIndexStart, readIndexStart, compareLength,
                 maxLowQualMismatches, lowQualExclusion) == BaseMatchType.MATCH;
     }
+    */
 
     private static BaseMatchType matchType(
             final byte[] bases, final byte[] readBases, @Nullable final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
@@ -472,13 +483,11 @@ public class ReadContextMatcher
             }
         }
 
-        return BaseMatchType.MATCH;
+        return mismatchCount == 0 ? BaseMatchType.MATCH : BaseMatchType.LOW_QUAL_MISMATCHES;
     }
 
-    private boolean checkSimpleAltMatch(final SAMRecord record, final int readVarIndex)
+    public static boolean isSimpleAltMatch(final SimpleVariant variant, final SAMRecord record, final int readVarIndex)
     {
-        SimpleVariant variant = mContext.variant();
-
         if(variant.isIndel())
         {
             // check that the indel exists at this location and matches

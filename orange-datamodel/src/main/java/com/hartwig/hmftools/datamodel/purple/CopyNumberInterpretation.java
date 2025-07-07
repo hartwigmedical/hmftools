@@ -4,6 +4,6 @@ public enum CopyNumberInterpretation
 {
     FULL_GAIN,
     PARTIAL_GAIN,
-    FULL_LOSS,
-    PARTIAL_LOSS
+    FULL_DEL,
+    PARTIAL_DEL
 }

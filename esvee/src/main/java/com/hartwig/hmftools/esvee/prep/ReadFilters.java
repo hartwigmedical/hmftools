@@ -70,6 +70,10 @@ public class ReadFilters
         if(record.getSupplementaryAlignmentFlag() || record.getCigar().getCigarElements().size() > 1)
             return false;
 
+        // invalid cigar
+        if(record.getCigar().getCigarElements().stream().noneMatch(x -> x.getOperator() == M))
+            return false;
+
         if(record.getReadUnmappedFlag() || mateUnmapped(record))
             return false;
 
@@ -304,13 +308,20 @@ public class ReadFilters
 
     public static boolean aboveRepeatTrimmedAlignmentThreshold(final PrepRead read, final int minLength, boolean applyPowerAdjust)
     {
+        double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, minLength, applyPowerAdjust);
+
+        return adjustedAlignScore >= minLength;
+    }
+
+    public static double calcRepeatTrimmedAlignmentScore(final PrepRead read, final int minLength, boolean applyPowerAdjust)
+    {
         // at least one junction supporting read with [AS - Len + TrimmedLen] * (AS/SUM(M))^2 > 50
         int readIndex = 0;
 
         int alignedLength = read.alignedBaseLength();
 
         if(alignedLength < minLength)
-            return false;
+            return -1;
 
         byte[] alignedBases = new byte[alignedLength];
         int alignedIndex = 0;
@@ -359,6 +370,6 @@ public class ReadFilters
         if(applyPowerAdjust)
             adjustedAlignScore *= pow(alignmentScore / (double)alignedLength, 2);
 
-        return adjustedAlignScore >= minLength;
+        return adjustedAlignScore;
     }
 }

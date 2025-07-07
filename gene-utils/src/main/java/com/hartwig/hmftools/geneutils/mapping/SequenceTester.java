@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCoun
 import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SGL_FILE;
 import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.ARTEFACT_PON_BED_SV_FILE;
 import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.GERMLINE_PON_MARGIN;
+import static com.hartwig.hmftools.esvee.caller.annotation.PonCache.GERMLINE_SGL_PON_MARGIN;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
@@ -58,6 +59,7 @@ public class CallerApplication
     private final HotspotCache mHotspotCache;
     private final VariantFilters mVariantFilters;
     private final RepeatMaskAnnotator mRepeatMaskAnnotator;
+    private final boolean mTargetedPanelMode;
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
@@ -84,6 +86,7 @@ public class CallerApplication
         {
             mArtefactPonCache = new PonCache(
                     configBuilder.getInteger(GERMLINE_PON_MARGIN),
+                    configBuilder.getInteger(GERMLINE_SGL_PON_MARGIN),
                     configBuilder.getValue(ARTEFACT_PON_BED_SV_FILE),
                     configBuilder.getValue(ARTEFACT_PON_BED_SGL_FILE),
                     false);
@@ -122,6 +125,7 @@ public class CallerApplication
 
         TargetRegions targetRegions = new TargetRegions(configBuilder.getValue(TARGET_REGIONS_BED), mConfig.RefGenVersion);
         mSvDataCache = new SvDataCache(mConfig, targetRegions);
+        mTargetedPanelMode = targetRegions.hasTargetRegions();
 
         mRepeatMaskAnnotator = new RepeatMaskAnnotator();
 
@@ -198,7 +202,7 @@ public class CallerApplication
         }
         else
         {
-            SV_LOGGER.warn("loaded {} breakeds with unmatched({}) complete({}) hardFiltered({})",
+            SV_LOGGER.warn("loaded {} breakends with unmatched({}) complete({}) hardFiltered({})",
                     mProcessedVariants, mSvDataCache.incompleteSVs(), mSvDataCache.getSvList().size(), mSvDataCache.hardFilteredCount());
         }
 
@@ -228,6 +232,9 @@ public class CallerApplication
 
             mVariantFilters.applyFilters(var);
         }
+
+        if(mTargetedPanelMode)
+            mVariantFilters.applyAdjacentFilters(mSvDataCache.getBreakendMap());
 
         // set germline status and final filters based on LINE
         for(Variant var : mSvDataCache.getSvList())

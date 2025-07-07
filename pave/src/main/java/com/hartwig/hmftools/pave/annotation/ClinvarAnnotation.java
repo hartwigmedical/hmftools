@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.utils.StringCache;
+import com.hartwig.hmftools.common.perf.StringCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -19,9 +19,9 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class ClinvarAnnotation extends AnnotationData implements Callable
+public class ClinvarAnnotation extends AnnotationData implements Callable<Void>
 {
-    private final Map<String,ClinvarChrCache> mChrCacheMap;
+    private final Map<String, ClinvarChrCache> mChrCacheMap;
     private final StringCache mStringCache;
     private boolean mHasValidData;
     private final String mFilename;
@@ -70,15 +70,17 @@ public class ClinvarAnnotation extends AnnotationData implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         if(mFilename != null)
         {
             loadEntries(mFilename);
         }
 
-        return (long)0;
+        return null;
     }
+
+    public void loadData() { loadEntries(mFilename);}
 
     public static void addHeader(final VCFHeader header)
     {
@@ -145,7 +147,7 @@ public class ClinvarAnnotation extends AnnotationData implements Callable
         }
         catch(Exception e)
         {
-            PV_LOGGER.error("failed to read Clinvar VCF file: {}",  e.toString());
+            PV_LOGGER.error("failed to read Clinvar VCF file: {}", e.toString());
             mHasValidData = false;
         }
     }

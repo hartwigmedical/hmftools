@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.sv.SvUtils;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 
 import org.jetbrains.annotations.Nullable;
 

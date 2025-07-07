@@ -6,14 +6,14 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.ChromosomeTaskExecutor.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.bam.BamSlicer;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -44,7 +44,7 @@ import htsjdk.samtools.SamReaderFactory;
 // calculate fragment length distribution for a sample
 // this can be done either independently from fragment counting or lengths can be registering during that process
 
-public class FragmentSizeCalcs implements Callable
+public class FragmentSizeCalcs implements Callable<Void>
 {
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
@@ -59,11 +59,11 @@ public class FragmentSizeCalcs implements Callable
     private final List<FragmentSize> mFragmentLengthsByGene;
     private int mMaxReadLength;
 
-    private BufferedWriter mGeneWriter;
+    private final BufferedWriter mGeneWriter;
 
     private String mCurrentGenes;
     private final int[] mCurrentGenesRange;
-    private List<TranscriptData> mCurrentTransDataList;
+    private final List<TranscriptData> mCurrentTransDataList;
     private int mCurrentFragmentCount;
     private int mTotalFragmentCount;
     private int mProcessedFragments;
@@ -75,7 +75,7 @@ public class FragmentSizeCalcs implements Callable
     private static final int MAX_GENE_FRAGMENT_COUNT = 5000; // to avoid impact of highly enriched genes
     private static final int MAX_FRAGMENT_LENGTH = 5000; // ignored beyond this
 
-    private PerformanceCounter mPerfCounter;
+    private final PerformanceCounter mPerfCounter;
 
     public FragmentSizeCalcs(
             final IsofoxConfig config, final EnsemblDataCache geneTransCache, final BufferedWriter writer)
@@ -122,10 +122,10 @@ public class FragmentSizeCalcs implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         calcSampleFragmentSize();
-        return (long)0;
+        return null;
     }
 
     private void calcSampleFragmentSize()
@@ -175,7 +175,7 @@ public class FragmentSizeCalcs implements Callable
                 continue;
 
             if(mChromosome.equals(mConfig.Filters.ExcludedRegion.Chromosome)
-            && positionsOverlap(
+                    && positionsOverlap(
                     mConfig.Filters.ExcludedRegion.start(), mConfig.Filters.ExcludedRegion.end(),
                     mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
             {
@@ -238,7 +238,7 @@ public class FragmentSizeCalcs implements Callable
 
         if(mConfig.WriteFragmentLengthsByGene)
         {
-            final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(mFragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
+            final List<Double> fragLengths = calcPercentileData(mFragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
             if(!fragLengths.isEmpty())
             {
@@ -266,7 +266,7 @@ public class FragmentSizeCalcs implements Callable
 
         mMaxReadLength = max(mMaxReadLength, read.getReadLength());
 
-        final SAMRecord otherRead = (SAMRecord)mFragmentTracker.checkRead(read.getReadName(), read);
+        final SAMRecord otherRead = (SAMRecord) mFragmentTracker.checkRead(read.getReadName(), read);
 
         if(otherRead == null)
             return;
@@ -366,7 +366,7 @@ public class FragmentSizeCalcs implements Callable
         if(fragmentLength < 3000)
             return 10 * (int)round(fragmentLength/10.0);
 
-        return 100 * (int)round(fragmentLength/100.0);
+        return 100 * (int) round(fragmentLength / 100.0);
     }
 
     public static void setConfigFragmentLengthData(final IsofoxConfig config, final List<FragmentSize> fragmentLengths)
@@ -394,7 +394,7 @@ public class FragmentSizeCalcs implements Callable
 
             int lengthCount = 0;
 
-            for (final FragmentSize fragLengthCount : fragmentLengths)
+            for(final FragmentSize fragLengthCount : fragmentLengths)
             {
                 if(fragLengthCount.Length >= currentRangeMin && fragLengthCount.Length <= currentRangeMax)
                 {
@@ -418,7 +418,7 @@ public class FragmentSizeCalcs implements Callable
             int currentTotal = 0;
             int prevLength = 0;
 
-            for (final FragmentSize fragLengthCount : fragmentLengths)
+            for(final FragmentSize fragLengthCount : fragmentLengths)
             {
                 double nextPercTotal = (currentTotal + fragLengthCount.Frequency) / totalFragments;
 
@@ -439,13 +439,13 @@ public class FragmentSizeCalcs implements Callable
 
     public static void mergeData(final List<FragmentSize> fragmentLengths, final FragmentSizeCalcs other)
     {
-        for(FragmentSize otherLengthData : other.getFragmentLengths())
+        for(FragmentSize otherLengthData : other.mFragmentLengths)
         {
             int fragmentLength = otherLengthData.Length;
 
             int index = 0;
             boolean exists = false;
-            while (index < fragmentLengths.size())
+            while(index < fragmentLengths.size())
             {
                 final FragmentSize fragLengthCount = fragmentLengths.get(index);
 
@@ -492,7 +492,7 @@ public class FragmentSizeCalcs implements Callable
         }
     }
 
-    public synchronized static void writeGeneFragmentLengths(
+    public static synchronized void writeGeneFragmentLengths(
             final BufferedWriter writer, final List<FragmentSize> fragmentLengths, final String geneNames, int geneCount,
             final String chromosome, final int[] genesRegion)
     {
@@ -504,7 +504,7 @@ public class FragmentSizeCalcs implements Callable
 
         try
         {
-            for (FragmentSize fragLengthCount : fragmentLengths)
+            for(FragmentSize fragLengthCount : fragmentLengths)
             {
                 writer.write(String.format("%s,%d,%s,%d,%d",
                         geneNames, geneCount, chromosome, genesRegion[SE_START], genesRegion[SE_END]));
@@ -533,7 +533,7 @@ public class FragmentSizeCalcs implements Callable
             writer.write("FragmentLength,Count");
             writer.newLine();
 
-            for (final FragmentSize fragLengthData : fragmentLengths)
+            for(final FragmentSize fragLengthData : fragmentLengths)
             {
                 writer.write(String.format("%d,%d", fragLengthData.Length, fragLengthData.Frequency));
                 writer.newLine();

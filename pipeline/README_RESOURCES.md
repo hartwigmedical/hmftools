@@ -3,7 +3,7 @@
 This document provides an overview for the resource files used in the [WiGiTS](https://github.com/hartwigmedical/hmftools) toolkit.
 In file names, `<genome_version>` tags represent either `37` or `38`, referring to GRCh37 or GRCh38 reference genome versions.
 
-The files themselves are available for download [here](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/pipeline/oncoanalyser/).
+Download links to the resource files can be found on the [Oncoanalyser page](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls).
 
 ## Table of contents
 <!-- TOC -->

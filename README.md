@@ -4,12 +4,12 @@ WiGiTS is a universal open source suite of genome and transcriptome analysis too
 
 ![HMF_Pipeline](./pipeline/wigits.png)
 
-The current release of the WiGiTs pipeline is v2.0. Release notes are [here](./pipeline/docs/v2_0/WiGiTs_v2.0_ReleaseNotes.pdf).
+The current release of the WiGiTs pipeline is v2.1. Release notes are [here](./pipeline/docs/v2_1/WiGiTs_v2.1_ReleaseNotes.pdf).
 
-We recommend to run WiGiTS using the NextFlow implementation called [OncoAnalyser](./pipeline/README_ONCOANALYSER.md). It will be available on nfCore April 2025.
+We recommend running WiGiTS with [Oncoanalyser](https://nf-co.re/oncoanalyser), a Nextflow implementation of the WiGiTS pipeline.
 
 A detailed list of the resource files used to run the WiGiTs pipeline is [here](./pipeline/README_RESOURCES.md).
-The files themselves are available for download [here](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/pipeline/oncoanalyser/).
+Download links to the resource files can be found on the [Oncoanalyser page](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls).
 
 The pipeline can be run on a targeted panel eg TSO500 - see detailed information [here](./pipeline/README_TARGETED.md).
 
@@ -18,12 +18,9 @@ Here is a schematic showing how the interactions between the core molecular comp
 
 ![HMF_Pipeline](./pipeline/wigits_pipeline.png)
 
-## Latest Pipeline Version
+## Latest tool versions
 
-The next planned release of the WiGiTs pipeline is v2.0, expected to be available on nfCore during April.
-Release notes are [here](./pipeline/docs/v2_0/WiGiTs_v2.0_ReleaseNotes.pdf):
-
-The table below has links for each tool used in this release.
+Below are descriptions and download links for each tool used in the pipeline.
 
 ### DNA Tools
 
@@ -63,7 +60,7 @@ The following external tools are also used in the pipeline:
 | [Protect](https://github.com/hartwigmedical/oncoact/tree/master/protect/README.md) | Matching of molecular results to treatments and clinical trials      | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v2.3)           |
 | [Rose](https://github.com/hartwigmedical/oncoact/tree/master/rose/README.md)       | Actionability of clinically relevant molecular findings              | [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/rose-v1.3)              |
 | [Virus Interpreter](./virus-interpreter/README.md)                                 | Filtering, annotation and interpretation of virus breakend data      | [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.3) |
-| [Orange](./orange/README.md)                                                       | PDF summary report and JSON file of all WGS output                   | [3.7.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.1-rc.1)        |
+| [Orange](./orange/README.md)                                                       | PDF summary report and JSON file of all WGS output                   | [4.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.1)        |
 | Patient-reporter                                                                   | PDF summary report and JSON file of all clinical relevant WGS output | 7.25.1                                                                                |
 
 

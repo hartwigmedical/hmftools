@@ -3,12 +3,14 @@ package com.hartwig.hmftools.cobalt.norm;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -60,7 +62,10 @@ public class FileWriter
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("SampleId\tChromosome\tPosition\tGcBucket\tMappability\tGcRatioPanel\tReadDepth\tAdjGcRatio");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("SampleId").add("Chromosome").add("Position").add("ProfileGcBucket").add("Mappability");
+            sj.add("PanelGcContent").add("ReadDepth").add("PanelGcRatio").add("AdjGcRatio");
+            writer.write(sj.toString());
             writer.newLine();
 
             for(Map.Entry<String, List<RegionData>> entry : chrRegionData.entrySet())
@@ -76,9 +81,18 @@ public class FileWriter
                         String sampleId = sampleIds.get(i);
                         SampleRegionData sampleRegionData = regionData.getSampleData(i);
 
-                        writer.write(format("%s\t%s\t%d\t%d\t%.3f\t%.3f\t%.3f\t%.3f",
-                                sampleId, chromosome, regionData.Position, regionData.gcBucket(), regionData.mappability(),
-                                sampleRegionData.GcRatioPanel, sampleRegionData.ReadDepth, sampleRegionData.adjustedGcRatio()));
+                        sj = new StringJoiner(TSV_DELIM);
+                        sj.add(sampleId);
+                        sj.add(chromosome);
+                        sj.add(String.valueOf(regionData.Position));
+                        sj.add(String.valueOf(regionData.profileGcBucket()));
+                        sj.add(format("%.3f", regionData.mappability()));
+                        sj.add(format("%.3f", sampleRegionData.PanelGcContent));
+                        sj.add(format("%.3f", sampleRegionData.ReadDepth));
+                        sj.add(format("%.3f", sampleRegionData.PanelGcRatio));
+                        sj.add(format("%.3f", sampleRegionData.adjustedGcRatio()));
+
+                        writer.write(sj.toString());
                         writer.newLine();
                     }
                 }
@@ -92,5 +106,4 @@ public class FileWriter
             System.exit(1);
         }
     }
-
 }

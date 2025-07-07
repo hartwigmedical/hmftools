@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.fromByteStr;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
@@ -197,7 +195,7 @@ public class BreakendWriter
 
         sj.add(filtersStr);
 
-        sj.add(format("%.3f", breakend.calcAllelicFrequency(breakend.TumorGenotype)));
+        sj.add(format("%.3f", breakend.calcAllelicFrequency()));
 
         sj.add(String.valueOf(breakend.sv().ponCount()));
 

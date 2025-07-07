@@ -191,7 +191,7 @@ public class GeneTestUtils
     {
         final String transName = String.format("TRANS%03d", transId);
         TranscriptData transData = new TranscriptData(
-                transId, transName, gene.geneId(), isCanonical, gene.strand(), transStart, transEnd, codingStart, codingEnd, bioType);
+                transId, transName, gene.geneId(), isCanonical, gene.strand(), transStart, transEnd, codingStart, codingEnd, bioType, null);
 
         return new BreakendTransData(gene, transData, exonUpstream, exonDownstream, phase, exonicPhase, codingBases, totalCodingBases);
     }

@@ -5,9 +5,10 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.convertAminoAcidsToGeneMap;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -15,8 +16,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
@@ -37,7 +36,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
@@ -48,7 +47,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class RankProteomePeptides
 {
-    private final Map<String,List<TranscriptAminoAcids>> mTransAminoAcidMap;
+    private final Map<String, List<TranscriptAminoAcids>> mTransAminoAcidMap;
 
     private final List<String> mAlleles;
     private final BindScorer mScorer;
@@ -65,7 +64,7 @@ public class RankProteomePeptides
     {
         mAlleles = loadDelimitedIdFile(configBuilder.getValue(ALLELE_FILE), FLD_ALLELE, CSV_DELIM);
 
-        Map<String,TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
+        Map<String, TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
         mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
 
@@ -105,7 +104,7 @@ public class RankProteomePeptides
             }
 
             int taskIndex = 0;
-            for (final String allele : mAlleles)
+            for(final String allele : mAlleles)
             {
                 searchTasks.get(taskIndex).getAlleles().add(allele);
                 ++taskIndex;
@@ -114,7 +113,7 @@ public class RankProteomePeptides
                     taskIndex = 0;
             }
 
-            final List<Callable> callableList = searchTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = searchTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -148,7 +147,7 @@ public class RankProteomePeptides
         }
     }
 
-    public synchronized static void writePeptides(final BufferedWriter writer, final String allele, final List<PeptideData> peptideDataList)
+    public static synchronized void writePeptides(final BufferedWriter writer, final String allele, final List<PeptideData> peptideDataList)
     {
         try
         {
@@ -166,10 +165,10 @@ public class RankProteomePeptides
         }
     }
 
-    private class PeptideRankTask implements Callable
+    private class PeptideRankTask implements Callable<Void>
     {
         private final int mTaskId;
-        private final Map<String,List<TranscriptAminoAcids>> mTransAminoAcidMap;
+        private final Map<String, List<TranscriptAminoAcids>> mTransAminoAcidMap;
 
         private final BindScorer mScorer;
         private final double mRankCuttoff;
@@ -191,10 +190,10 @@ public class RankProteomePeptides
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             run();
-            return (long)1;
+            return null;
         }
 
         public List<String> getAlleles() { return mAlleles; }
@@ -213,7 +212,7 @@ public class RankProteomePeptides
 
         private void findPeptides(final String allele)
         {
-            Map<String,PeptideData> results = Maps.newHashMap();
+            Map<String, PeptideData> results = Maps.newHashMap();
 
             for(int peptideLength : RANKED_PROTEOME_PEPTIDE_LENGTHS)
             {

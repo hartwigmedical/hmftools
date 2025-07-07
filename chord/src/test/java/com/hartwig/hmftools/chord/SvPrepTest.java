@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.chord;
 
-import static com.hartwig.hmftools.chord.ChordTestUtils.EMPTY_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.INPUT_VCF_DIR;
-import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE;
-import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE_SNV_INDEL_VCF;
-import static com.hartwig.hmftools.chord.ChordTestUtils.MINIMAL_SAMPLE_SV_VCF;
-import static com.hartwig.hmftools.chord.ChordTestUtils.TMP_OUTPUT_DIR;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.EMPTY_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.INPUT_VCF_DIR;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.MINIMAL_SAMPLE;
+import static com.hartwig.hmftools.chord.ChordTestDataPaths.TMP_OUTPUT_DIR;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.List;
 
-import com.hartwig.hmftools.chord.indel.IndelPrep;
 import com.hartwig.hmftools.chord.prep.MutContextCount;
 import com.hartwig.hmftools.chord.sv.SvPrep;
 
@@ -45,7 +44,7 @@ public class SvPrepTest
         Configurator.setRootLevel(Level.DEBUG);
 
         ChordConfig config = new ChordConfig.Builder()
-                .svVcfFile(INPUT_VCF_DIR + "MINIMAL_SAMPLE.purple.sv.vcf.gz")
+                .svVcfFile(INPUT_VCF_DIR + MINIMAL_SAMPLE + PURPLE_SV_VCF_SUFFIX)
                 .outputDir(TMP_OUTPUT_DIR)
                 .build();
 
@@ -106,7 +105,7 @@ public class SvPrepTest
     {
         ChordConfig config = new ChordConfig.Builder()
                 .sampleIds(MINIMAL_SAMPLE)
-                .svVcfFile(MINIMAL_SAMPLE_SNV_INDEL_VCF)
+                .svVcfFile(INPUT_VCF_DIR + MINIMAL_SAMPLE + PURPLE_SOMATIC_VCF_SUFFIX)
                 .build();
 
         new SvPrep(config).loadVariants(MINIMAL_SAMPLE);

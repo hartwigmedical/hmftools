@@ -236,7 +236,9 @@ public class LocalLinksTest
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList(assembly3, assembly4);
         List<JunctionAssembly> candidateAssemblies = Lists.newArrayList(assembly5);
-        dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);
+        List<JunctionAssembly> dedupIndels = Lists.newArrayList();
+
+        dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies, dedupIndels);
         junctionGroupAssemblies.addAll(candidateAssemblies);
 
         assertEquals(2, junctionGroupAssemblies.size());

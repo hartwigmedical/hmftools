@@ -31,12 +31,6 @@ public final class TumorContaminationFile
     }
 
     @NotNull
-    public static List<TumorContamination> read(@NotNull final String fileName) throws IOException
-    {
-        return fromLines(Files.readAllLines(new File(fileName).toPath()));
-    }
-
-    @NotNull
     static List<TumorContamination> fromLines(@NotNull List<String> lines)
     {
         final List<TumorContamination> result = Lists.newArrayList();

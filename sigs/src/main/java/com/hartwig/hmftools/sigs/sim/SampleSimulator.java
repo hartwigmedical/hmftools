@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromList
 import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getNewFile;
@@ -28,7 +27,7 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.Matrix;

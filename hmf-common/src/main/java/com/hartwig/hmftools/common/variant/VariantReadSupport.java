@@ -4,8 +4,8 @@ public enum VariantReadSupport
 {
     FULL,
     PARTIAL_CORE,
-    REALIGNED,
     CORE,
+    REALIGNED,
     REF,
     TOTAL;
 }

@@ -10,6 +10,7 @@ public class PurityConstants
     public static final double MAX_SUBCLONAL_LIKELIHOOD = 0.5;
     public static final double SUBCLONAL_VCN_THRESHOLD = 0.7;
     public static final double MAX_REPEAT_COUNT = 3;
+    public static final double MIN_AVG_EDGE_DISTANCE = 9;
     public static final double MAX_GERMLINE_AF = 0.01;
     public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 30;
 
@@ -58,9 +59,9 @@ public class PurityConstants
 
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;
 
-    public static final int CHIP_MIN_ALLELE_FRAGS = 3;
-    public static final double CHIP_MIN_SAMPLE_PERC = 0.15;
-    public static final double CHIP_MIN_SAMPLE_RETEST_PERC = 0.3;
+    public static final int OUTLIER_MIN_ALLELE_FRAGS = 3;
+    public static final double OUTLIER_MIN_SAMPLE_PERC = 0.15;
+    public static final double OUTLIER_MIN_SAMPLE_RETEST_PERC = 0.3;
 
     public static final double AMBER_LOH_MINOR_ALLELE_THRESHOLD = 0.2;
     public static final double AMBER_LOH_CN_THRESHOLD = 0.8;

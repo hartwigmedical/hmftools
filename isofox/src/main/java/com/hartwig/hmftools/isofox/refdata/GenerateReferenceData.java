@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox.refdata;
 
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
 
@@ -12,7 +11,7 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +41,7 @@ public class GenerateReferenceData
 
         long startTimeMs = System.currentTimeMillis();
 
-        Map<String,List<GeneData>> chrGeneMap = mEnsemblDataCache.getChrGeneDataMap();
+        Map<String, List<GeneData>> chrGeneMap = mEnsemblDataCache.getChrGeneDataMap();
 
         // first execute non-core tasks
         if(mConfig.GenerateGcRatios)
@@ -65,9 +64,9 @@ public class GenerateReferenceData
         ISF_LOGGER.info("generating expected transcript counts cache");
 
         final List<ChrExpectedCountsTask> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Void>> callableList = Lists.newArrayList();
 
-        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
         {
             ChrExpectedCountsTask expressionTask = new ChrExpectedCountsTask(mConfig, mEnsemblDataCache, mWriter);
             expressionTask.initialise(entry.getKey(), entry.getValue());
@@ -78,14 +77,14 @@ public class GenerateReferenceData
         return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
-    private boolean generateGcRatios(final Map<String,List<GeneData>> chrGeneMap)
+    private boolean generateGcRatios(final Map<String, List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("generating GC counts cache");
 
         final List<ExpectedGcRatiosGenerator> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<Void>> callableList = Lists.newArrayList();
 
-        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
         {
             ExpectedGcRatiosGenerator gcCalcs = new ExpectedGcRatiosGenerator(
                     mConfig, mEnsemblDataCache, entry.getKey(), entry.getValue(), mWriter.getReadGcRatioWriter());

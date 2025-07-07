@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.cobalt.CobaltTestUtils.female;
 import static com.hartwig.hmftools.common.cobalt.CobaltTestUtils.male;
 import static com.hartwig.hmftools.common.cobalt.CobaltTestUtils.create;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MIN_Y_COUNT;
-import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MOSIAC_X_CUTOFF;
+import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MOSAIC_X_CUTOFF;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.TRISOMY_CUTOFF;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.TWO_X_CUTOFF;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.TWO_Y_CUTOFF;
@@ -129,7 +129,7 @@ public class CobaltChromosomesTest
     @Test
     public void testMosiacX()
     {
-        assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSIAC_X_CUTOFF));
+        assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSAIC_X_CUTOFF));
         MedianRatio chr1 = create("1", 1, MIN_Y_COUNT);
         MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX);
@@ -143,9 +143,9 @@ public class CobaltChromosomesTest
     }
 
     @Test
-    public void testGCBiasNotMosiacX()
+    public void testGCBiasNotMosaicX()
     {
-        assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSIAC_X_CUTOFF));
+        assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSAIC_X_CUTOFF));
         MedianRatio chr1 = create("1", TWO_X_CUTOFF, MIN_Y_COUNT);
         MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX);

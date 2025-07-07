@@ -2,7 +2,7 @@ package com.hartwig.hmftools.chord.prep;
 
 import static com.hartwig.hmftools.chord.ChordConstants.APP_NAME;
 import static com.hartwig.hmftools.chord.ChordConstants.CHORD_LOGGER;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.hartwig.hmftools.chord.ChordConfig;
 import com.hartwig.hmftools.chord.ChordOutput;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +60,7 @@ public class ChordDataPrep
             sampleTasks.add(sampleTask);
         }
 
-        List<Callable> callableTasks = new ArrayList<>(sampleTasks);
+        List<Callable<Void>> callableTasks = new ArrayList<>(sampleTasks);
         TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
 
         ChordDataWriter writer = new ChordDataWriter(mOutputFile);

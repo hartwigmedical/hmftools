@@ -2,7 +2,6 @@ package com.hartwig.hmftools.geneutils.ensembl;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
@@ -11,6 +10,8 @@ import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.createEnsemblDbC
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -53,6 +54,24 @@ public class GenerateRefSeq
         generateRefSeqMapping(context, reqSeqOutputFile);
 
         GU_LOGGER.info("ReqSeq transcript mapping complete");
+    }
+
+    static Map<String, String> getRefSeqMapping(final DSLContext context)
+    {
+        Map<String, String> result = new HashMap<>();
+
+        final Result<Record> refseqMappingResult = context.fetch(
+                readQueryString(Resources.getResource("ensembl_sql/ensembl_refseq_mapping.sql")));
+
+        GU_LOGGER.debug("RefSeq mapping query returned {} entries", refseqMappingResult.size());
+
+        refseqMappingResult.forEach(record -> {
+            String refSeqId = (String) record.get("refSeqId");
+            String transcriptId = (String) record.get("transcriptId");
+            result.put(transcriptId, refSeqId);
+        });
+
+        return result;
     }
 
     private static void generateRefSeqMapping(final DSLContext context, final String outputFile)

@@ -50,7 +50,6 @@ public final class SvFileLoader
 
         try
         {
-            // List<StructuralVariant> variants = StructuralVariantFileLoader.fromGridssFile(vcfFile, new AlwaysPassFilter());
             List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
             List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 

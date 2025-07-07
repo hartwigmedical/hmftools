@@ -155,7 +155,7 @@ public class SomaticPurityFitter
             fittingVariants.add(variant);
         }
 
-        PPL_LOGGER.debug("variants({}) used for fitting({})", variants.size(), fittingVariants.size());
+        // PPL_LOGGER.debug("variants({}) used for fitting({})", variants.size(), fittingVariants.size());
 
         return fittingVariants;
     }

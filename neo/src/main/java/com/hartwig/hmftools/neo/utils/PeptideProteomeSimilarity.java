@@ -5,16 +5,15 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.convertAminoAcidsToGeneMap;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
@@ -41,7 +40,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.aminoacid.BlosumMapping;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
@@ -54,7 +53,7 @@ public class PeptideProteomeSimilarity
 {
     private final List<PeptideSimilarity> mPeptideSimilarities;
 
-    private final Map<String,List<TranscriptAminoAcids>> mTransAminoAcidMap;
+    private final Map<String, List<TranscriptAminoAcids>> mTransAminoAcidMap;
     private final RankedProteomePeptides mRankedProteomePeptides;
     private final BindScorer mScorer;
 
@@ -139,7 +138,7 @@ public class PeptideProteomeSimilarity
                     taskIndex = 0;
             }
 
-            final List<Callable> callableList = searchTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = searchTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -230,7 +229,6 @@ public class PeptideProteomeSimilarity
         catch(IOException e)
         {
             NE_LOGGER.error("failed to write peptide similarity results: {}", e.toString());
-            return;
         }
     }
 
@@ -255,14 +253,14 @@ public class PeptideProteomeSimilarity
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             // Peptide,Allele,Foreignness,WtPeptide,DisToSelf,DtsPeptide,Immunogenic,PRIME
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
             Integer wildtypeIndex = fieldsIndexMap.get("WtPeptide");
 
-            for(String line :lines)
+            for(String line : lines)
             {
                 final String[] values = line.split(CSV_DELIM, -1);
 
@@ -282,14 +280,13 @@ public class PeptideProteomeSimilarity
         catch(IOException e)
         {
             NE_LOGGER.error("failed to read allele peptides rank file: {}", e.toString());
-            return;
         }
     }
 
-    private class PeptideSearchTask implements Callable
+    private class PeptideSearchTask implements Callable<Void>
     {
         private final int mTaskId;
-        private final Map<String,List<TranscriptAminoAcids>> mTransAminoAcidMap;
+        private final Map<String, List<TranscriptAminoAcids>> mTransAminoAcidMap;
         private final RankedProteomePeptides mRankedProteomePeptides;
 
         private final List<PeptideSimilarity> mPeptideSimilarities;
@@ -297,7 +294,7 @@ public class PeptideProteomeSimilarity
         private final BlosumMapping mBlosumMapping;
 
         public PeptideSearchTask(
-                int taskId, final Map<String,List<TranscriptAminoAcids>> transAminoAcidMap,
+                int taskId, final Map<String, List<TranscriptAminoAcids>> transAminoAcidMap,
                 final RankedProteomePeptides rankedProteomePeptides)
         {
             mTaskId = taskId;
@@ -312,10 +309,10 @@ public class PeptideProteomeSimilarity
         public List<PeptideSimilarity> getPeptides() { return mPeptideSimilarities; }
 
         @Override
-        public Long call()
+        public Void call()
         {
             run();
-            return (long)1;
+            return null;
         }
 
         private void run()
@@ -361,7 +358,7 @@ public class PeptideProteomeSimilarity
             double topSimilarity = 0;
             double topRank = 0;
 
-            Map<String,Double> allelePeptideRanks = mRankedProteomePeptides.getPeptideRanks(peptideSim.Allele, peptideLength);
+            Map<String, Double> allelePeptideRanks = mRankedProteomePeptides.getPeptideRanks(peptideSim.Allele, peptideLength);
 
             if(allelePeptideRanks == null)
             {
@@ -369,7 +366,7 @@ public class PeptideProteomeSimilarity
                 return;
             }
 
-            for(Map.Entry<String,Double> entry : allelePeptideRanks.entrySet())
+            for(Map.Entry<String, Double> entry : allelePeptideRanks.entrySet())
             {
                 String otherPeptide = entry.getKey();
 

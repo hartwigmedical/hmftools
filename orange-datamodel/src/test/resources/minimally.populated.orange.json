@@ -297,9 +297,9 @@
         "minMinorAlleleCopyNumber": 0.4
       }
     ],
-    "allSomaticGainsLosses": [
+    "allSomaticGainsDels": [
       {
-        "interpretation": "FULL_LOSS",
+        "interpretation": "FULL_DEL",
         "chromosome": 5,
         "chromosomeBand": "q2.2",
         "gene": "SMAD4",
@@ -309,9 +309,9 @@
         "maxCopies": 1.2
       }
     ],
-    "reportableSomaticGainsLosses": [
+    "reportableSomaticGainsDels": [
       {
-        "interpretation": "FULL_LOSS",
+        "interpretation": "FULL_DEL",
         "chromosome": "5",
         "chromosomeBand": "q2.2",
         "gene": "SMAD4",
@@ -556,15 +556,7 @@
     }
   ],
   "cuppa": {
-    "bestPrediction": {
-      "cancerType": "Melanoma",
-      "likelihood": 0.996,
-      "snvPairwiseClassifier": 0.979,
-      "genomicPositionClassifier": 0.990,
-      "featureClassifier": 0.972,
-      "altSjCohortClassifier": null,
-      "expressionPairwiseClassifier": null
-    },
+    "mode" : "WGS",
     "predictions": [
       {
         "cancerType": "Melanoma",
@@ -576,6 +568,15 @@
         "expressionPairwiseClassifier": null
       }
     ],
+    "bestPrediction": {
+      "cancerType": "Melanoma",
+      "likelihood": 0.996,
+      "snvPairwiseClassifier": 0.979,
+      "genomicPositionClassifier": 0.990,
+      "featureClassifier": 0.972,
+      "altSjCohortClassifier": null,
+      "expressionPairwiseClassifier": null
+    },
     "simpleDups32To200B": 0,
     "maxComplexSize": 0,
     "telomericSGLs": 0,

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.loadConfigFile;
 import static com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator.fragileSitesResourceFile;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.lineElementsResourceFile;
@@ -10,12 +11,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 public class Highlights
 {
+    public static final List<GenomeRegion> CENTROMERES = Lists.newArrayList();
     public static final List<GenomeRegion> FRAGILE_SITES = Lists.newArrayList();
     public static final List<GenomeRegion> LINE_ELEMENTS = Lists.newArrayList();
 
@@ -46,7 +49,11 @@ public class Highlights
 
     public static void populateKnownSites(final RefGenomeVersion refGenomeVersion)
     {
-        List<String> resourceLines = new BufferedReader(new InputStreamReader(
+        List<String> resourceLines = RefGenomeCoordinates.readCentromereGaps(refGenomeVersion)
+                .stream().map(x -> x.replaceFirst("^hs", "")).toList(); // Strip circos style chromosome prefix
+        loadConfigFile(resourceLines, null, TSV_DELIM).forEach(x -> CENTROMERES.add(x.genomeRegion()));
+
+        resourceLines = new BufferedReader(new InputStreamReader(
                 Highlights.class.getResourceAsStream(fragileSitesResourceFile(refGenomeVersion))))
                 .lines().collect(Collectors.toList());
 

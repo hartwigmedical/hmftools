@@ -141,10 +141,10 @@ interesting and added to the report:
     5. Variants in splice regions that are not reported in genes with splice variant reporting enabled.
 - Other regions with amps, or with deletions in other autosomal regions:
     1. Gains in genes for which we report amplifications with a relative minimum copy number between 2.5 and 3 times ploidy.
-    2. Any chromosomal band location with at least one gene lost or fully amplified is considered potentially interesting.
-       A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting:
+    2. Any chromosomal band location with at least one gene deleted or fully amplified is considered potentially interesting.
+       A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional deletions are reported as potentially interesting:
         - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
-        - For a band with a loss that has no losses reported in this band already, an arbitrary gene is picked.
+        - For a band with a deletion that has no deletions reported in this band already, an arbitrary gene is picked.
 - Potentially interesting chromosomal rearrangements:
     1. 1q trisomy: In case 98% of 1q has copy number > 2.8 AND 90% of 1q has copy number < 3.5
     2. 1p19q co-deletion: In case 98% of 1p and 98% of 19q have MACN < 0.2
@@ -264,13 +264,22 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming:
+- [4.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.1):
+    - Change UGT1A1 status from None to NA on Front page
+- [4.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.0):
     - Add presence of tumor stats to quality control page and to orange-datamodel
     - Ensure only exonic variants that are phased with reported variants are shown in 'potentially interesting' section
     - Add potentially interesting chromosomal rearrangements (1q trisomy and 1p19q co-deletion) to report
     - Derive breakend fields type, chromosome, chromosomeBand, orientation and junctionCopyNumber from root sources
     - Make PurpleGeneCopyNumber transcript-aware in orange-datamodel
-    - Upgraded DOID datamodel to version of Dec 2024 release  
+    - Upgraded DOID datamodel to version of Dec 2024 release
+    - Replace "platinum" with "pipeline"
+    - Improve nomenclature for losses
+    - Capture CUPPA mode in ORANGE output
+    - Remove UGT1A1 from PEACH output ingested in ORANGE
+- [3.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.8.0):
+   - Make compatible with new doid.json format
+  - Support Purple QC status for TINC
 - [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
     - Add unreported reason to fusions in ORANGE
     - Add etiology information to signatures and sort by allocation

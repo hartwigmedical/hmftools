@@ -15,7 +15,7 @@ import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
-import com.hartwig.hmftools.common.utils.TaskQueue;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 public class PhaseSetTask extends ThreadTask
 {
@@ -76,12 +76,10 @@ public class PhaseSetTask extends ThreadTask
 
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
                 PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, mRemoteReadExtractor, phaseGroup);
-                phaseSetBuilder.setPerfLogTime(mConfig.PerfLogTime);
 
                 try
                 {
-                    phaseSetBuilder.buildPhaseSets();
-                    phaseGroup.finalisePhaseSetAlignments();
+                    phaseSetBuilder.run();
                 }
                 catch(Exception e)
                 {

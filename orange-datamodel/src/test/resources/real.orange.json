@@ -3,7 +3,7 @@
   "samplingDate": {
     "year": 2025,
     "month": 4,
-    "day": 2
+    "day": 22
   },
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
@@ -13,7 +13,7 @@
     }
   ],
   "refGenomeVersion": "V37",
-  "platinumVersion": "6.0",
+  "pipelineVersion": "6.0",
   "refSample": {
     "metrics": {
       "meanCoverage": 31.256,
@@ -168,7 +168,7 @@
         "worstCodingEffect": "MISSENSE",
         "canonicalImpact": {
           "transcript": "ENST00000335508",
-          "hgvsCodingImpact": "c.2153C>T",
+          "hgvsCodingImpact": "c.2153C\u003eT",
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": null,
           "affectedExon": null,
@@ -182,7 +182,7 @@
         "otherImpacts": [
           {
             "transcript": "ENST00000462613",
-            "hgvsCodingImpact": "n.108C>T",
+            "hgvsCodingImpact": "n.108C\u003eT",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -195,7 +195,7 @@
           },
           {
             "transcript": "NM_012433",
-            "hgvsCodingImpact": "c.2153C>T",
+            "hgvsCodingImpact": "c.2153C\u003eT",
             "hgvsProteinImpact": "p.Pro718Leu",
             "affectedCodon": null,
             "affectedExon": null,
@@ -397,7 +397,7 @@
         "worstCodingEffect": "MISSENSE",
         "canonicalImpact": {
           "transcript": "ENST00000355716",
-          "hgvsCodingImpact": "c.50A>G",
+          "hgvsCodingImpact": "c.50A\u003eG",
           "hgvsProteinImpact": "p.Lys17Arg",
           "affectedCodon": null,
           "affectedExon": null,
@@ -411,7 +411,7 @@
         "otherImpacts": [
           {
             "transcript": "ENST00000416860",
-            "hgvsCodingImpact": "n.36-18T>C",
+            "hgvsCodingImpact": "n.36-18T\u003eC",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -424,7 +424,7 @@
           },
           {
             "transcript": "ENST00000452793",
-            "hgvsCodingImpact": "n.56-18T>C",
+            "hgvsCodingImpact": "n.56-18T\u003eC",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -437,7 +437,7 @@
           },
           {
             "transcript": "ENST00000426449",
-            "hgvsCodingImpact": "c.50A>G",
+            "hgvsCodingImpact": "c.50A\u003eG",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -450,7 +450,7 @@
           },
           {
             "transcript": "ENST00000434817",
-            "hgvsCodingImpact": "c.50A>G",
+            "hgvsCodingImpact": "c.50A\u003eG",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -463,7 +463,7 @@
           },
           {
             "transcript": "ENST00000435221",
-            "hgvsCodingImpact": "c.50A>G",
+            "hgvsCodingImpact": "c.50A\u003eG",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -476,7 +476,7 @@
           },
           {
             "transcript": "ENST00000451778",
-            "hgvsCodingImpact": "c.50A>G",
+            "hgvsCodingImpact": "c.50A\u003eG",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -489,7 +489,7 @@
           },
           {
             "transcript": "ENST00000409119",
-            "hgvsCodingImpact": "c.50A>G",
+            "hgvsCodingImpact": "c.50A\u003eG",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -502,7 +502,7 @@
           },
           {
             "transcript": "ENST00000475523",
-            "hgvsCodingImpact": "n.70+259A>G",
+            "hgvsCodingImpact": "n.70+259A\u003eG",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -515,7 +515,7 @@
           },
           {
             "transcript": "ENST00000442392",
-            "hgvsCodingImpact": "n.310A>G",
+            "hgvsCodingImpact": "n.310A\u003eG",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -528,7 +528,7 @@
           },
           {
             "transcript": "ENST00000482074",
-            "hgvsCodingImpact": "n.309A>G",
+            "hgvsCodingImpact": "n.309A\u003eG",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -541,7 +541,7 @@
           },
           {
             "transcript": "ENST00000496064",
-            "hgvsCodingImpact": "n.158A>G",
+            "hgvsCodingImpact": "n.158A\u003eG",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -554,7 +554,7 @@
           },
           {
             "transcript": "ENST00000463471",
-            "hgvsCodingImpact": "n.144A>G",
+            "hgvsCodingImpact": "n.144A\u003eG",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -567,7 +567,7 @@
           },
           {
             "transcript": "NM_003820",
-            "hgvsCodingImpact": "c.50A>G",
+            "hgvsCodingImpact": "c.50A\u003eG",
             "hgvsProteinImpact": "p.Lys17Arg",
             "affectedCodon": null,
             "affectedExon": null,
@@ -610,7 +610,7 @@
         "worstCodingEffect": "NONE",
         "canonicalImpact": {
           "transcript": "ENST00000336411",
-          "hgvsCodingImpact": "c.522-191C>T",
+          "hgvsCodingImpact": "c.522-191C\u003eT",
           "hgvsProteinImpact": "",
           "affectedCodon": null,
           "affectedExon": null,
@@ -624,7 +624,7 @@
         "otherImpacts": [
           {
             "transcript": "ENST00000354593",
-            "hgvsCodingImpact": "c.72-191C>T",
+            "hgvsCodingImpact": "c.72-191C\u003eT",
             "hgvsProteinImpact": "",
             "affectedCodon": null,
             "affectedExon": null,
@@ -676,9 +676,9 @@
       }
     ],
     "suspectGeneCopyNumbersWithLOH": [],
-    "allSomaticGainsLosses": [
+    "allSomaticGainsDels": [
       {
-        "interpretation": "FULL_LOSS",
+        "interpretation": "FULL_DEL",
         "gene": "DLGAP5P1",
         "chromosome": "Y",
         "chromosomeBand": "p11.2",
@@ -688,9 +688,9 @@
         "maxCopies": 0.0
       }
     ],
-    "reportableSomaticGainsLosses": [
+    "reportableSomaticGainsDels": [
       {
-        "interpretation": "PARTIAL_LOSS",
+        "interpretation": "PARTIAL_DEL",
         "gene": "PTEN",
         "chromosome": "10",
         "chromosomeBand": "q23.31",
@@ -701,7 +701,7 @@
       }
     ],
     "nearReportableSomaticGains": [],
-    "additionalSuspectSomaticGainsLosses": [
+    "additionalSuspectSomaticGainsDels": [
       {
         "interpretation": "FULL_GAIN",
         "gene": "CFL1P7",
@@ -733,25 +733,25 @@
         "reported": false
       }
     ],
-    "allGermlineFullLosses": [
+    "allGermlineFullDels": [
       {
-        "interpretation": "PARTIAL_LOSS",
-        "gene": "RNVU1-17",
-        "chromosome": "1",
-        "chromosomeBand": "q21.2",
+        "interpretation": "PARTIAL_DEL",
+        "gene": "BTNL3",
+        "chromosome": "5",
+        "chromosomeBand": "q35.3",
         "transcript": "trans",
         "isCanonical": true,
         "minCopies": 0.0,
-        "maxCopies": 3.9314
+        "maxCopies": 1.9898
       }
     ],
-    "reportableGermlineFullLosses": [],
+    "reportableGermlineFullDels": [],
     "allGermlineLossOfHeterozygosities": [
       {
         "geneProportion": "PARTIAL_GENE",
         "chromosome": "15",
         "chromosomeBand": "q11.2",
-        "gene": "OR11J2P",
+        "gene": "ZNF519P2",
         "transcript": "trans",
         "isCanonical": true,
         "minCopies": 2.15,
@@ -1064,6 +1064,7 @@
     "hrdType": "none"
   },
   "cuppa": {
+    "mode": "WGS",
     "predictions": [
       {
         "cancerType": "Skin: Melanoma",
@@ -1449,17 +1450,6 @@
       "function": "Normal Function",
       "linkedDrugs": "5-Fluorouracil;Capecitabine;Tegafur",
       "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104939;https://www.pharmgkb.org/guidelineAnnotation/PA166104963;https://www.pharmgkb.org/guidelineAnnotation/PA166104944",
-      "panelVersion": "",
-      "repoVersion": ""
-    },
-    {
-      "gene": "UGT1A1",
-      "allele": "*1",
-      "alleleCount": 2,
-      "haplotype": "*1_HOM",
-      "function": "Normal Function",
-      "linkedDrugs": "Irinotecan",
-      "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104951",
       "panelVersion": "",
       "repoVersion": ""
     }

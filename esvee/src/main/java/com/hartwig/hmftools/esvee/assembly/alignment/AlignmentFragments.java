@@ -8,11 +8,11 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.SvUtils.isIndel;
+import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isLocalIndelAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isIndel;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isShortLocalDelDupIns;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
 
 import java.util.Collections;
@@ -180,6 +180,8 @@ public class AlignmentFragments
         // handle incomplete fragment reads
         for(FragmentReads fragmentReads : fragmentMap.values())
         {
+            updateUniqueFragmentPositions(fragmentReads);
+
             if(fragmentReads.Processed)
                 continue;
 
@@ -283,13 +285,10 @@ public class AlignmentFragments
         firstRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
         secondRead.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
-        int[] fragCoords = firstRead.fragmentCoords();
-
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(fragmentLength, true);
-            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!inPrimaryAssembly)
                 breakend.addNonPrimaryAssemblyFragmentCount();
@@ -299,10 +298,45 @@ public class AlignmentFragments
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(fragmentLength, true);
-                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
                 if(!inPrimaryAssembly)
                     otherBreakend.addNonPrimaryAssemblyFragmentCount();
+            }
+        }
+    }
+
+    private void updateUniqueFragmentPositions(final FragmentReads fragmentReads)
+    {
+        // use split reads (including supplementaries) to determine unique fragment end (ie 5' unsclipped) positions for each breakend
+        if(!fragmentReads.InPrimaryAssembly)
+            return;
+
+        Set<Breakend> processedBreakends = Sets.newHashSet();
+
+        for(SupportRead read : fragmentReads.PrimaryReads)
+        {
+            if(!read.type().isSplitSupport())
+                continue;
+
+            List<ReadBreakendMatch> breakendMatches = findReadBreakendMatch(read);
+
+            int fragmentPosition = read.fivePrimeFragmentPosition();
+
+            for(ReadBreakendMatch breakendMatch : breakendMatches)
+            {
+                Breakend breakend = breakendMatch.Breakend;
+
+                if(processedBreakends.contains(breakend))
+                    continue;
+
+                if(!breakend.Chromosome.equals(read.chromosome()))
+                    continue;
+
+                if(!positionWithin(breakend.Position, read.unclippedStart(), read.unclippedEnd()))
+                    continue;
+
+                breakend.addFragmentPosition(fragmentPosition);
+                processedBreakends.add(breakend);
             }
         }
     }
@@ -385,13 +419,10 @@ public class AlignmentFragments
 
         read.setBreakendSupportType(isSplitSupport ? SupportType.JUNCTION : SupportType.DISCORDANT);
 
-        int[] fragCoords = read.fragmentCoords();
-
         for(Breakend breakend : breakends)
         {
             breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-            breakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
             if(!inPrimaryAssembly)
                 breakend.addNonPrimaryAssemblyFragmentCount();
@@ -401,7 +432,6 @@ public class AlignmentFragments
                 Breakend otherBreakend = breakend.otherBreakend();
                 otherBreakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
                 otherBreakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
-                otherBreakend.addFragmentPositions(fragCoords[0], fragCoords[1]);
 
                 if(!inPrimaryAssembly)
                     otherBreakend.addNonPrimaryAssemblyFragmentCount();
@@ -588,16 +618,6 @@ public class AlignmentFragments
         // look for a read crossing any segment boundary
         for(BreakendSegment segment : breakend.segments())
         {
-            int segmentSeqStart = segment.Alignment.sequenceStart();
-
-            if(segmentSeqStart > 0 && readSeqIndexStart < segmentSeqStart && readSeqIndexEnd > segmentSeqStart)
-                return true;
-
-            int segmentSeqEnd = segment.Alignment.sequenceEnd();
-
-            if(segmentSeqEnd < fullSequenceEndIndex && readSeqIndexStart < segmentSeqEnd && readSeqIndexEnd > segmentSeqEnd)
-                return true;
-
             if(segment.indelSeqenceIndices() != null)
             {
                 int[] indelSequenceIndices = segment.indelSeqenceIndices();
@@ -608,6 +628,25 @@ public class AlignmentFragments
                 if(readSeqIndexStart < indelSequenceIndices[1] && readSeqIndexEnd > indelSequenceIndices[1])
                     return true;
             }
+
+            // determine which end of the segment corresponds to the breakend
+            int segmentJunctionIndex;
+
+            if(breakend.Orient.isForward())
+            {
+                segmentJunctionIndex = segment.Alignment.isForward() ? segment.Alignment.sequenceEnd() : segment.Alignment.sequenceStart();
+            }
+            else
+            {
+                segmentJunctionIndex = segment.Alignment.isForward() ? segment.Alignment.sequenceStart() : segment.Alignment.sequenceEnd();
+            }
+
+            // ignore ends of the full assembly since these are not junctions
+            if(segmentJunctionIndex == 0 || segmentJunctionIndex == fullSequenceEndIndex)
+                continue;
+
+            if(readSeqIndexStart < segmentJunctionIndex && readSeqIndexEnd > segmentJunctionIndex)
+                return true;
         }
 
         return false;

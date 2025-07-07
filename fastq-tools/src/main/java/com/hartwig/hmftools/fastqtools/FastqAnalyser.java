@@ -3,7 +3,7 @@ package com.hartwig.hmftools.fastqtools;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import htsjdk.samtools.fastq.FastqReader;
 
 public class FastqAnalyser
 {

@@ -113,7 +113,7 @@ public class NormalisationFileBuilder
 
         List<ChrBaseRegion> regions = ChrBaseRegion.loadChrBaseRegionList(bedFile);
 
-            addTargetRegions(regions, mChrRegionData);
+        addTargetRegions(regions, mChrRegionData);
 
         CB_LOGGER.info("loaded {} target regions from file({})",
                 mChrRegionData.values().stream().mapToInt(x -> x.size()).sum(), bedFile);

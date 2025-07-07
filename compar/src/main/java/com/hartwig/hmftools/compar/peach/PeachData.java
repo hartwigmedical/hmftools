@@ -60,6 +60,11 @@ public class PeachData implements ComparableItem
     }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final PeachData otherData = (PeachData) other;
@@ -83,6 +88,6 @@ public class PeachData implements ComparableItem
         checkDiff(diffs, FLD_DRUGS, Genotype.linkedDrugs(), otherData.Genotype.linkedDrugs());
         checkDiff(diffs, FLD_PRESCRIPTION_URLS, Genotype.urlPrescriptionInfo(), otherData.Genotype.urlPrescriptionInfo());
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

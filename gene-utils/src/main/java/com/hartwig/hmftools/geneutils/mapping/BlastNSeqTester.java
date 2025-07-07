@@ -6,13 +6,11 @@ import static com.hartwig.hmftools.common.blastn.BlastnMatch.calcSumBitScore;
 import static com.hartwig.hmftools.common.blastn.BlastnMatch.isPrimaryBlastnMatch;
 import static com.hartwig.hmftools.common.blastn.BlastnRunner.BLAST_DB;
 import static com.hartwig.hmftools.common.blastn.BlastnRunner.BLAST_TOOL;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.mapping.SequenceTester.FLD_SEQ_ID;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.BLASTN_WORD_SIZE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MIN_BLAST_ALIGNMENT_LENGTH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -35,6 +33,9 @@ public class BlastNSeqTester
 {
     private final SeqTestConfig mConfig;
     private final BlastnRunner mBlastnRunner;
+
+    private static final int BLASTN_WORD_SIZE = 15;
+    private static final int MIN_BLAST_ALIGNMENT_LENGTH = 30;
 
     public BlastNSeqTester(final SeqTestConfig config, final ConfigBuilder configBuilder)
     {

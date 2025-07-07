@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_PENALTY_ADJUST;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_ZDROP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.nio.file.Files;
@@ -37,7 +38,9 @@ public class BwaAligner implements Aligner
             if(index != null)
             {
                 mAligner = new BwaMemAligner(index);
-                mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
+
+                // int zDropValue = mAligner.getZDropOption();
+                // mAligner.setZDropOption(BWA_ZDROP);
 
                 int mismatchPenalty = mAligner.getMismatchPenaltyOption();
                 mAligner.setMismatchPenaltyOption(mismatchPenalty + BWA_PENALTY_ADJUST);

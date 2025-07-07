@@ -58,7 +58,7 @@ public class AmberData
         PPL_LOGGER.info("reading Amber QC from {}", qcFile);
         Contamination = AmberQCFile.read(qcFile).contamination();
 
-        final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
+        String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
         if(!new File(amberFilename).exists())
         {
             throw new ParseException("Unable to open Amber BAF file: " + amberFilename);

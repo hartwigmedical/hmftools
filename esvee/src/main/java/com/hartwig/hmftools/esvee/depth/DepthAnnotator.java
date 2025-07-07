@@ -2,13 +2,13 @@ package com.hartwig.hmftools.esvee.depth;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.DEPTH_VCF_SUFFIX;
@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -47,9 +47,9 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class DepthAnnotator
 {
     private final DepthConfig mConfig;
-    private final Map<String,Integer> mSampleVcfGenotypeIds;
+    private final Map<String, Integer> mSampleVcfGenotypeIds;
 
-    private final Map<String,List<VariantContext>> mChrVariantMap;
+    private final Map<String, List<VariantContext>> mChrVariantMap;
     private final List<ChrBaseRegion> mExcludedRegions;
 
     public DepthAnnotator(final ConfigBuilder configBuilder)
@@ -154,7 +154,7 @@ public class DepthAnnotator
             depthTasks.add(depthTask);
         }
 
-        final List<Callable> callableList = depthTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = depthTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
@@ -192,6 +192,9 @@ public class DepthAnnotator
                 .setOutputFile(outputVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
+
+        if(!header.hasInfoLine(ALLELE_FRACTION))
+            header.addMetaDataLine(new VCFInfoHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
 
         if(!header.hasFormatLine(ALLELE_FRACTION))
             header.addMetaDataLine(new VCFFormatHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
@@ -272,7 +275,7 @@ public class DepthAnnotator
 
     private void analyseVariantDistribution()
     {
-        Map<Integer,Integer> groupFrequencies = Maps.newHashMap();
+        Map<Integer, Integer> groupFrequencies = Maps.newHashMap();
 
         int totalGroups = 0;
         int totalVariants = 0;
@@ -327,13 +330,13 @@ public class DepthAnnotator
             }
 
             SV_LOGGER.debug("chr({}) variants({}) group({}) soloVariants({} pct={})",
-                    chrStr, variants.size(), groupCount, soloVariants, format("%.3f", soloVariants / (double)variants.size()));
+                    chrStr, variants.size(), groupCount, soloVariants, format("%.3f", soloVariants / (double) variants.size()));
         }
 
         int largeGroupCount = 0;
         int largeVariantsCount = 0;
 
-        for(Map.Entry<Integer,Integer> entry : groupFrequencies.entrySet())
+        for(Map.Entry<Integer, Integer> entry : groupFrequencies.entrySet())
         {
             if(entry.getKey() >= 25)
             {

@@ -46,27 +46,19 @@ public class PurpleConstants
 
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 150;
-    public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 3;
+    public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 1;
 
     public static final double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
-
     public static final double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.05;
-    public static final double TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.1;
-
     public static final double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1.5;
-
     public static final double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 1;
-    public static final double TARGETED_PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 3;
-
     public static final double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
-
     public static final double PLOIDY_PENALTY_MIN_DEFAULT = 0.1;
-    public static final double TARGETED_PLOIDY_PENALTY_MIN_DEFAULT = 0.2;
 
     public static final double TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT = 0.25;
     public static final double TARGETED_GC_RATIO_EXPONENT_DEFAULT = 3;
     
-    public static final double AMBIGUOUS_BAF_THRESHOLD = 0.52;
+    public static final double AMBIGUOUS_BAF_THRESHOLD = 0.535;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
@@ -151,5 +143,7 @@ public class PurpleConstants
     public static final double BIALLELIC_ASSUMED_FRACTION = 0.2;
 
     // chimerism
-    public static final double CHIMERISM_SAMPLE_CUTOFF = 0.05;
+    public static final double CHIMERISM_SAMPLE_CUTOFF = 0.08;
+    public static final int CHIMERISM_MIN_BAF_COUNT = 2;
+    public static final double CHIMERISM_KDE_BANDWIDTH = 0.01;
 }

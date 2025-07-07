@@ -32,7 +32,8 @@ public class BestFit
 
     public static List<FittedPurity> mostDiploidPerPurity(final List<FittedPurity> all)
     {
-        final List<FittedPurity> sortableList = Lists.newArrayList(all);
+        // find the solutions closest to diploid (ploidy 2) for each unique purity
+        List<FittedPurity> sortableList = Lists.newArrayList(all);
         sortableList.sort((o1, o2) ->
         {
             double o1DistanceFromDiploid = Math.abs(2 - o1.ploidy());
@@ -40,8 +41,8 @@ public class BestFit
             return Double.compare(o1DistanceFromDiploid, o2DistanceFromDiploid);
         });
 
-        final List<FittedPurity> result = Lists.newArrayList();
-        final TreeSet<Double> purities = new TreeSet<>(Doubles.comparator());
+        List<FittedPurity> result = Lists.newArrayList();
+        TreeSet<Double> purities = new TreeSet<>(Doubles.comparator());
         for(FittedPurity fittedPurity : sortableList)
         {
             if(purities.add(fittedPurity.purity()))

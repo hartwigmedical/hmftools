@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 public enum SoftFilter
 {
     MIN_TUMOR_QUAL("minTumorQual", "min_tumor_qual", true, false, "Insufficient tumor quality"),
+    MIN_MAP_QUAL_FACTOR("minMQF", "min_mqf", true, false, "Insufficient map qual factor"),
     MIN_TUMOR_VAF("minTumorVAF", "min_tumor_vaf", true, false, "Insufficient tumor VAF"),
     MIN_TUMOR_SUPPORT("minTumorSupport", "min_tumor_support", true, false, "Insufficient tumor strong support"),
     MIN_GERMLINE_DEPTH("minGermlineDepth", "min_germline_depth", false, true, "Insufficient germline depth"),
@@ -15,7 +16,7 @@ public enum SoftFilter
             "maxGermlineRelQual", "max_germline_rel_qual", false, true, "Excess germline relative qual"),
     MAX_GERMLINE_ALT_SUPPORT(
             "maxGermlineAltSupport", "max_germline_alt_support", false, true, "Excess germline alt support"),
-    MIN_AVG_BASE_QUALITY("minAvgBaseQual", "", true, false, "Variant average base quality below limit"),
+    MIN_AVG_BASE_QUALITY("minAvgRawBaseQual", "", true, false, "Variant average raw base quality below limit"),
     FRAGMENT_STRAND_BIAS("fragmentStrandBias", "", true, false, "Variant exceeds fragment strand bias limit"),
     READ_STRAND_BIAS("readStrandBias", "", true, false, "Variant exceeds read strand bias limit"),
     FRAGMENT_COORDS("minFragmentCoords", "", true, false, "Insufficient fragment coordinate variation"),

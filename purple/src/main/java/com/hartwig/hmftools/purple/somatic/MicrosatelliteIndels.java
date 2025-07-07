@@ -113,10 +113,12 @@ public class MicrosatelliteIndels
 
     private static boolean repeatContextIsRelevant(int repeatCount, int repeatSequenceLength)
     {
-        final boolean longRepeatRelevant =
-                repeatSequenceLength >= MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS && repeatSequenceLength <= MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS
-                        && repeatCount >= MIN_REPEAT_COUNT_FOR_LONG_REPEATS;
-        final boolean shortRepeatRelevant = repeatSequenceLength == 1 && repeatCount >= MIN_REPEAT_COUNT_FOR_SHORT_REPEATS;
+        boolean longRepeatRelevant = repeatSequenceLength >= MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS
+                && repeatSequenceLength <= MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS
+                && repeatCount >= MIN_REPEAT_COUNT_FOR_LONG_REPEATS;
+
+        boolean shortRepeatRelevant = repeatSequenceLength == 1 && repeatCount >= MIN_REPEAT_COUNT_FOR_SHORT_REPEATS;
+
         return longRepeatRelevant | shortRepeatRelevant;
     }
 

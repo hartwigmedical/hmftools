@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static com.hartwig.hmftools.esvee.prep.SpanningReadCache.chrFromChrPartition;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.prep.SpanningReadCache.chrFromChrPartition;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.CACHE_BAM;
 
 import java.io.File;
@@ -18,11 +18,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bamops.BamMerger;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
-import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -36,11 +36,11 @@ import htsjdk.samtools.SamReaderFactory;
 public class CandidateBamWriter
 {
     private final PrepConfig mConfig;
-    private final Map<String,SAMFileWriter> mCandidatesWriters;
-    private final Map<String,String> mCandidatesWriterBamFiles;
+    private final Map<String, SAMFileWriter> mCandidatesWriters;
+    private final Map<String, String> mCandidatesWriterBamFiles;
 
-    private final Map<String,Set<String>> mChrJunctionReadIds;
-    private ReadIdTrimmer mReadIdTrimmer;
+    private final Map<String, Set<String>> mChrJunctionReadIds;
+    private final ReadIdTrimmer mReadIdTrimmer;
 
     public CandidateBamWriter(final PrepConfig config)
     {
@@ -104,7 +104,7 @@ public class CandidateBamWriter
 
         List<CandidateReadMatchTask> chromosomeTasks = Lists.newArrayList();
 
-        for(Map.Entry<String,Set<String>> entry : mChrJunctionReadIds.entrySet())
+        for(Map.Entry<String, Set<String>> entry : mChrJunctionReadIds.entrySet())
         {
             String chromosome = entry.getKey();
             Set<String> junctionReadIds = entry.getValue();
@@ -125,7 +125,7 @@ public class CandidateBamWriter
             chromosomeTasks.add(chrTask);
         }
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = chromosomeTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
@@ -151,7 +151,7 @@ public class CandidateBamWriter
         }
     }
 
-    private class CandidateReadMatchTask implements Callable
+    private class CandidateReadMatchTask implements Callable<Void>
     {
         private final String mChromosome;
         private final SamReader mSamReader;
@@ -170,7 +170,7 @@ public class CandidateBamWriter
         private static final int READ_GROUP_FLUSH = 1000;
 
         @Override
-        public Long call()
+        public Void call()
         {
             SV_LOGGER.debug("chr({}) assigning candidates from {} junction fragments", mChromosome, mJunctionReadIds.size());
 
@@ -217,7 +217,7 @@ public class CandidateBamWriter
 
             SV_LOGGER.debug("chr({}) matched and wrote {} candidate reads", mChromosome, matchedCandidates);
 
-            return (long)0;
+            return null;
         }
     }
 

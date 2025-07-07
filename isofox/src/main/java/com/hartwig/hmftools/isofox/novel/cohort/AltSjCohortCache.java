@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -47,7 +48,7 @@ public class AltSjCohortCache
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(cohortFile));
+            BufferedReader fileReader = createBufferedReader(cohortFile);
 
             String line = fileReader.readLine();
             final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
@@ -73,13 +74,11 @@ public class AltSjCohortCache
                 mCohortFrequency.put(asjKey, sampleCount);
             }
 
-            ISF_LOGGER.info("loaded alt-SJ cohort file({}) with {} sites", cohortFile, mCohortFrequency.size());
+            ISF_LOGGER.info("loaded {} alt-SJ sites from cohort file({})", mCohortFrequency.size(), cohortFile);
         }
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to load alt-SJ cohort file({}): {}", cohortFile, e.toString());
-            return;
         }
     }
-
 }

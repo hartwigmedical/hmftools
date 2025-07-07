@@ -3,19 +3,24 @@ package com.hartwig.hmftools.esvee.caller.annotation;
 import static java.lang.Integer.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEFAULT_PON_DISTANCE;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEFAULT_SGL_PON_DISTANCE;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_MAX_INS_SEQ_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_SHORT_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_SHORT_INDEL_MAX_REPEATS;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_SHORT_INDEL_MAX_REPEAT_PON_DISTANCE;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_SHORT_INDEL_PON_DISTANCE;
 import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
 import java.io.BufferedReader;
@@ -24,11 +29,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -38,9 +41,10 @@ import com.hartwig.hmftools.esvee.caller.Variant;
 
 public class PonCache
 {
-    private final Map<String,List<PonSvRegion>> mSvRegions;
-    private final Map<String,List<PonSglRegion>> mSglRegions;
-    private final int mPositionMargin;
+    private final Map<String,List<PonSvRegion>> mSvRegions; // SV entries keyed by starting/lower chromosome
+    private final Map<String,List<PonSglRegion>> mSglRegions; // SGL entries keyed by chromosome
+    private final int mPositionSvMargin;
+    private final int mPositionSglMargin;
     private final boolean mAllowUnordered;
 
     // keep indices into the 2 collections assuming that requests to match on the PON will be made sequentially through the genome
@@ -53,21 +57,26 @@ public class PonCache
     private static final String GERMLINE_PON_BED_SV_FILE = "pon_sv_file";
     private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
     public static final String GERMLINE_PON_MARGIN = "pon_margin";
+    public static final String GERMLINE_SGL_PON_MARGIN = "pon_sgl_margin";
 
     public static final String ARTEFACT_PON_BED_SV_FILE = "artefact_pon_sv_file";
     public static final String ARTEFACT_PON_BED_SGL_FILE = "artefact_pon_sgl_file";
+
+    public static final String FLD_PON_COUNT = "PonCount";
 
     private final List<ChrBaseRegion> mSpecificSglFusionRegions;
 
     public PonCache(final ConfigBuilder configBuilder)
     {
-        this(configBuilder.getInteger(GERMLINE_PON_MARGIN), configBuilder.getValue(GERMLINE_PON_BED_SV_FILE),
+        this(configBuilder.getInteger(GERMLINE_PON_MARGIN),
+                configBuilder.getInteger(GERMLINE_SGL_PON_MARGIN),
+                configBuilder.getValue(GERMLINE_PON_BED_SV_FILE),
                 configBuilder.getValue(GERMLINE_PON_BED_SGL_FILE), false);
 
         buildSpecificSglRegion(RefGenomeVersion.from(configBuilder));
     }
 
-    public PonCache(final int margin, final String ponSvFile, final String ponSglFile, boolean allowUnordered)
+    public PonCache(final int svMargin, final int sglMargin, final String ponSvFile, final String ponSglFile, boolean allowUnordered)
     {
         mSvRegions = Maps.newHashMap();
         mSglRegions = Maps.newHashMap();
@@ -76,7 +85,8 @@ public class PonCache
 
         mSpecificSglFusionRegions = Lists.newArrayList();
 
-        mPositionMargin = margin;
+        mPositionSvMargin = svMargin;
+        mPositionSglMargin = sglMargin;
 
         if(ponSvFile != null)
             loadPonSvFile(ponSvFile);
@@ -170,13 +180,60 @@ public class PonCache
         }
     }
 
-    private static int[] breakendMargin(final Breakend breakend)
+    private class MarginPositions
     {
-        int[] margins = new int[SE_PAIR];
+        public int Start;
+        public int End;
+
+        public MarginPositions(final int start, final int end)
+        {
+            Start = start;
+            End = end;
+        }
+
+        public String toString() { return format("%d / %d", Start, End); }
+    }
+
+    private MarginPositions breakendMargin(final Breakend breakend)
+    {
         int inexactHomology = abs(breakend.IsStart ? breakend.InexactHomology.Start : breakend.InexactHomology.End);
-        margins[SE_START] = min(breakend.ConfidenceInterval.Start, -inexactHomology);
-        margins[SE_END] = max(breakend.ConfidenceInterval.End, inexactHomology);
-        return margins;
+        int marginStart = min(breakend.ConfidenceInterval.Start, -inexactHomology);
+        int marginEnd = max(breakend.ConfidenceInterval.End, inexactHomology);
+
+        if(!breakend.isSgl())
+        {
+            int maxInsSeqLength = min(breakend.InsertSequence.length(), PON_MAX_INS_SEQ_LENGTH);
+            if(breakend.Orient.isForward())
+                marginEnd += maxInsSeqLength;
+            else
+                marginStart -= maxInsSeqLength;
+        }
+
+        return new MarginPositions(marginStart, marginEnd);
+    }
+
+    private void adjustSvPonMargins(final Variant var, final MarginPositions marginsStart, final MarginPositions marginsEnd)
+    {
+        int positionMargin = mPositionSvMargin;
+
+        if(var.isShortLocal())
+        {
+            if(var.svLength() <= PON_SHORT_INDEL_LENGTH)
+            {
+                positionMargin = PON_SHORT_INDEL_PON_DISTANCE;
+
+                int maxLocalRepeat = var.breakendStart().Context.getAttributeAsInt(MAX_LOCAL_REPEAT, 0);
+
+                if(maxLocalRepeat >= PON_SHORT_INDEL_MAX_REPEATS)
+                    positionMargin = PON_SHORT_INDEL_MAX_REPEAT_PON_DISTANCE;
+            }
+        }
+
+        marginsStart.Start -= positionMargin;
+        marginsStart.End += positionMargin;
+
+        marginsEnd.Start -= positionMargin;
+        marginsEnd.End += positionMargin;
     }
 
     private int findSvPonMatch(final List<PonSvRegion> regions, final Variant var)
@@ -184,12 +241,12 @@ public class PonCache
         if(regions == null)
             return 0;
 
-        final int[] marginStart = breakendMargin(var.breakendStart());
-        final int[] marginEnd = breakendMargin(var.breakendEnd());
+        MarginPositions marginStart = breakendMargin(var.breakendStart());
+        MarginPositions marginEnd = breakendMargin(var.breakendEnd());
 
-        BaseRegion svStart = new BaseRegion(
-                var.posStart() + marginStart[SE_START] - mPositionMargin,
-                var.posStart() + marginStart[SE_END] + mPositionMargin);
+        adjustSvPonMargins(var, marginStart, marginEnd);
+
+        BaseRegion svStart = new BaseRegion(var.posStart() + marginStart.Start, var.posStart() + marginStart.End);
 
         for(; mCurrentSvIndex < regions.size(); ++mCurrentSvIndex)
         {
@@ -199,9 +256,7 @@ public class PonCache
             {
                 // test the PON entries around this position
                 ChrBaseRegion svEnd = new ChrBaseRegion(
-                        var.chromosomeEnd(),
-                        var.posEnd() + marginEnd[SE_START] - mPositionMargin,
-                        var.posEnd() + marginEnd[SE_END] + mPositionMargin);
+                        var.chromosomeEnd(),var.posEnd() + marginEnd.Start, var.posEnd() + marginEnd.End);
 
                 return findPonMatch(regions, var, svStart, svEnd, mCurrentSvIndex);
             }
@@ -221,6 +276,7 @@ public class PonCache
             final List<PonSvRegion> regions, final Variant var, final BaseRegion svStart, final ChrBaseRegion svEnd, int startIndex)
     {
         // search and up and down from this entry point for a PON match
+        int maxPonCount = 0;
         for(int i = 0; i <= 1; ++i)
         {
             boolean searchUp = (i == 0);
@@ -236,8 +292,8 @@ public class PonCache
                 if(!searchUp && region.RegionStart.end() < svStart.start())
                     break;
 
-                if(region.matches(svStart, svEnd, var.orientStart(), var.orientEnd()))
-                    return region.PonCount;
+                if(region.matches(svStart, svEnd, var.orientStart(), var.orientEnd()) && region.PonCount > maxPonCount)
+                    maxPonCount = region.PonCount;
 
                 if(searchUp)
                     ++currentIndex;
@@ -246,7 +302,7 @@ public class PonCache
             }
         }
 
-        return 0;
+        return maxPonCount;
     }
 
     private boolean matchesSpecificSglFusionRegion(final Variant var)
@@ -280,11 +336,11 @@ public class PonCache
         if(regions == null)
             return 0;
 
-        final int[] marginStart = breakendMargin(var.breakendStart());
+        MarginPositions marginPositions = breakendMargin(var.breakendStart());
+        marginPositions.Start -= mPositionSglMargin;
+        marginPositions.End += mPositionSglMargin;
 
-        BaseRegion svStart = new BaseRegion(
-                var.posStart() + marginStart[SE_START] - mPositionMargin,
-                var.posStart() + marginStart[SE_END] + mPositionMargin);
+        BaseRegion svStart = new BaseRegion(var.posStart() + marginPositions.Start, var.posStart() + marginPositions.End);
 
         for(; mCurrentSglIndex < regions.size(); ++mCurrentSglIndex)
         {
@@ -313,6 +369,7 @@ public class PonCache
     {
         // search and up and down from this entry point for a PON match
 
+        int maxPonCount = 0;
         for(int i = 0; i <= 1; ++i)
         {
             boolean searchUp = (i == 0);
@@ -328,8 +385,8 @@ public class PonCache
                 if(!searchUp && region.Region.end() < svStart.start())
                     break;
 
-                if(region.matches(svStart, var.orientStart()))
-                    return region.PonCount;
+                if(region.matches(svStart, var.orientStart()) && region.PonCount > maxPonCount)
+                    maxPonCount = region.PonCount;
 
                 if(searchUp)
                     ++currentIndex;
@@ -338,17 +395,17 @@ public class PonCache
             }
         }
 
-        return 0;
+        return maxPonCount;
     }
 
     private int findSvPonMatchBasic(final List<PonSvRegion> regions, final Variant var)
     {
-        final int[] marginStart = breakendMargin(var.breakendStart());
-        final int[] marginEnd = breakendMargin(var.breakendEnd());
+        MarginPositions marginStart = breakendMargin(var.breakendStart());
+        MarginPositions marginEnd = breakendMargin(var.breakendEnd());
 
-        BaseRegion svStart = new BaseRegion(
-                var.posStart() + marginStart[SE_START] - mPositionMargin,
-                var.posStart() + marginStart[SE_END] + mPositionMargin);
+        adjustSvPonMargins(var, marginStart, marginEnd);
+
+        BaseRegion svStart = new BaseRegion(var.posStart() + marginStart.Start,var.posStart() + marginStart.End);
 
         for(int i = 0; i < regions.size(); ++i)
         {
@@ -358,9 +415,7 @@ public class PonCache
             {
                 // test the PON entries around this position
                 ChrBaseRegion svEnd = new ChrBaseRegion(
-                        var.chromosomeEnd(),
-                        var.posEnd() + marginEnd[SE_START] - mPositionMargin,
-                        var.posEnd() + marginEnd[SE_END] + mPositionMargin);
+                        var.chromosomeEnd(), var.posEnd() + marginEnd.Start, var.posEnd() + marginEnd.End);
 
                 return findPonMatch(regions, var, svStart, svEnd, i);
             }
@@ -374,11 +429,9 @@ public class PonCache
 
     private int findSglPonMatchBasic(final List<PonSglRegion> regions, final Variant var)
     {
-        final int[] marginStart = breakendMargin(var.breakendStart());
+        MarginPositions marginPositions = breakendMargin(var.breakendStart());
 
-        BaseRegion svStart = new BaseRegion(
-                var.posStart() + marginStart[SE_START] - mPositionMargin,
-                var.posStart() + marginStart[SE_END] + mPositionMargin);
+        BaseRegion svStart = new BaseRegion(var.posStart() + marginPositions.Start, var.posStart() + marginPositions.End);
 
         for(int i = 0; i < regions.size(); ++i)
         {
@@ -420,15 +473,20 @@ public class PonCache
         {
             BufferedReader fileReader = createBufferedReader(filename);
 
+            boolean isTsvFormat = filename.endsWith(TSV_ZIP_EXTENSION);
+
             int itemCount = 0;
             String line = null;
             String currentChr = "";
             List<PonSvRegion> svRegions = null;
             ChrBaseRegion lastRegionStart = null;
 
+            if(isTsvFormat)
+                line = fileReader.readLine(); // skip header
+
             while((line = fileReader.readLine()) != null)
             {
-                PonSvRegion ponRegion = PonSvRegion.fromBedRecord(line);
+                PonSvRegion ponRegion = isTsvFormat ? PonSvRegion.fromTsv(line) : PonSvRegion.fromBedRecord(line);
 
                 if(!ponRegion.RegionStart.Chromosome.equals(currentChr))
                 {
@@ -478,15 +536,20 @@ public class PonCache
         {
             BufferedReader fileReader = createBufferedReader(filename);
 
+            boolean isTsvFormat = filename.endsWith(TSV_ZIP_EXTENSION);
+
             int itemCount = 0;
             String line = null;
             String currentChr = "";
             List<PonSglRegion> sglRegions = null;
             ChrBaseRegion lastRegion = null;
 
+            if(isTsvFormat)
+                line = fileReader.readLine(); // skip header
+
             while((line = fileReader.readLine()) != null)
             {
-                PonSglRegion ponRegion = PonSglRegion.fromBedRecord(line);
+                PonSglRegion ponRegion = isTsvFormat ? PonSglRegion.fromTsv(line) : PonSglRegion.fromBedRecord(line);
 
                 if(!ponRegion.Region.Chromosome.equals(currentChr))
                 {
@@ -538,8 +601,9 @@ public class PonCache
     {
         configBuilder.addPath(GERMLINE_PON_BED_SV_FILE, false, "PON for SV positions");
         configBuilder.addPath(GERMLINE_PON_BED_SGL_FILE, false, "PON for SGL positions");
-        configBuilder.addInteger(
-                GERMLINE_PON_MARGIN, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
+
+        configBuilder.addInteger(GERMLINE_PON_MARGIN, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
+        configBuilder.addInteger(GERMLINE_SGL_PON_MARGIN, "PON permitted matching position margin for SGLs", DEFAULT_SGL_PON_DISTANCE);
     }
 
     /*

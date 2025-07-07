@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.impact;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -21,15 +23,18 @@ public class ProteinContext
 
     public int CodonIndex; // amino acid index of ref codon, corresponds to the coding context CodingBase
 
-    public String RefAminoAcids;
-    public String AltAminoAcids;
+    public String RefAminoAcids; // amino acids formed directly from RefCodonBases (or RefCodonBasesExtended if different)
+    public String AltAminoAcids; // amino acids formed from AltCodonBasesComplete
 
     // strips off any ref codon present in both
     public boolean ExtraUpstreamCodon;
-    public int[] NetCodonIndexRange; // range of net red amino acids in codon-index terms
+
+    // trimmed ref and alt amino acids, after removing excess matching AAs from start and end
     public String NetRefAminoAcids;
     public String NetAltAminoAcids;
-    public boolean IsDuplication;
+    public int[] NetCodonIndexRange; // range of net red amino acids in codon-index terms
+
+    public boolean IsDuplication; // if the amino acid impact is determined to be a duplication
     public boolean IsPhased;
 
     public String Hgvs;
@@ -92,7 +97,7 @@ public class ProteinContext
         sj.add(String.valueOf(CodonIndex));
         sj.add(RefAminoAcids);
         sj.add(AltAminoAcids);
-        sj.add(String.format("%d-%d", NetCodonIndexRange[SE_START], NetCodonIndexRange[SE_END]));
+        sj.add(format("%d-%d", NetCodonIndexRange[SE_START], NetCodonIndexRange[SE_END]));
         sj.add(NetRefAminoAcids);
         sj.add(NetAltAminoAcids);
         sj.add(String.valueOf(IsDuplication));
@@ -100,4 +105,12 @@ public class ProteinContext
     }
 
     public static String empty() { return ",,,0,,,0-0,,,"; }
+
+    public String toString()
+    {
+        return format("codon(ref=%s alt=%s refExt=%s altComplete=%s) codonIndex(%d netRange %d-%d) aa(ref=%s alt=%s refNet=%s altNet=%s) %s %s",
+                RefCodonBases, AltCodonBases, RefCodonBasesExtended, AltCodonBasesComplete, CodonIndex,
+                NetCodonIndexRange[SE_START], NetCodonIndexRange[SE_END], RefAminoAcids, AltAminoAcids, NetRefAminoAcids, NetAltAminoAcids,
+                !Hgvs.isEmpty() ? Hgvs : "", IsDuplication ? "dup" : "");
+    }
 }

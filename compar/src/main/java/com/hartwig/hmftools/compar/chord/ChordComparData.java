@@ -56,6 +56,11 @@ public class ChordComparData implements ComparableItem
     public boolean reportable() { return true; }
 
     @Override
+    public boolean isPass() {
+        return true;
+    }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample
@@ -76,6 +81,6 @@ public class ChordComparData implements ComparableItem
         checkDiff(diffs, FLD_TYPE, Chord.hrdType(), otherData.Chord.hrdType());
         checkDiff(diffs, FLD_STATUS, Chord.hrStatus().toString(), otherData.Chord.hrStatus().toString());
 
-        return createMismatchFromDiffs(this, other, diffs, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

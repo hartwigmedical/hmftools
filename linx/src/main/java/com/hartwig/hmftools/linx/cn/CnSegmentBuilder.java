@@ -428,6 +428,7 @@ public class CnSegmentBuilder
                 .amberMeanDepth(0)
                 .lohPercent(0)
                 .tincLevel(0)
+                .chimerismPercentage(0)
                 .build();
 
         PurityContext purityContext = ImmutablePurityContext.builder()

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -150,7 +151,7 @@ public class UmiConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(
-                UMI_TYPE, false, "UMI type from values: " + UmiType.values().toString(), UmiType.NONE.toString());
+                UMI_TYPE, false, "UMI type from values: " + Arrays.asList(UmiType.values()), UmiType.NONE.toString());
 
         // or set them individually
         configBuilder.addFlag(UMI_ENABLED, "Use UMIs for duplicates");

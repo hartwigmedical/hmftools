@@ -9,11 +9,11 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.UnmappedRegions.UNMAP_REGIONS_FILE;
+import static com.hartwig.hmftools.common.mappability.UnmappedRegions.UNMAP_REGIONS_FILE;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME;
@@ -53,8 +53,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.region.UnmappedRegions;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappedRegions;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -140,6 +140,7 @@ public class ReduxConfig
     private static final String SKIP_FULL_UNMAPPED_READS = "skip_fully_unmapped";
     private static final String SKIP_UNMAPPING = "skip_unmapping";
     private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
+    private static final String UNMAP_MITOCHONDRIAL = "unmap_mt";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -213,9 +214,9 @@ public class ReduxConfig
         SkipFullyUnmappedReads = configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
         FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
 
-        UMIs = UmiConfig.from(configBuilder);
+        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
 
-        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, UMIs.Enabled, configBuilder);
+        UMIs = UmiConfig.from(configBuilder);
 
         JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
         JitterConfig = JitterAnalyserConfig.create(
@@ -228,7 +229,9 @@ public class ReduxConfig
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
             UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS_FILE));
-            UnmapRegions.addMitochondrialRegion(RefGenVersion);
+
+            if(configBuilder.hasFlag(UNMAP_MITOCHONDRIAL))
+                UnmapRegions.addMitochondrialRegion(RefGenVersion);
         }
         else
         {
@@ -344,6 +347,7 @@ public class ReduxConfig
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
         configBuilder.addFlag(SKIP_FULL_UNMAPPED_READS, "Skip processing existing fully unmapped reads");
         configBuilder.addFlag(SKIP_UNMAPPING, "Skip unmapping routine, including excluded regions");
+        configBuilder.addFlag(UNMAP_MITOCHONDRIAL, "Unmap mitochondrial reads");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -390,7 +394,7 @@ public class ReduxConfig
         JitterMsiOnly = false;
         JitterConfig = null;
 
-        DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, UMIs.Enabled, sbxMaxDuplicateDistance);
+        DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, sbxMaxDuplicateDistance);
 
         WriteBam = false;
         MultiBam = false;

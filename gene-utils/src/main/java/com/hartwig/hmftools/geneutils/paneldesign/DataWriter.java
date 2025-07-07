@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.Double.NaN;
+
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -32,13 +34,14 @@ public class DataWriter
         try(BufferedWriter writer = createBufferedWriter(filename))
         {
             DelimFileWriter.write(writer, PanelDefinitionColumn.values(), panelRegions,
-                    (r, row) -> {
+                    (r, row) ->
+                    {
                         row.set(PanelDefinitionColumn.Chromosome, r.Chromosome);
                         row.set(PanelDefinitionColumn.PositionStart, r.start());
                         row.set(PanelDefinitionColumn.PositionEnd, r.end());
                         row.set(PanelDefinitionColumn.RegionType, r.Type.toString());
                         row.set(PanelDefinitionColumn.SourceInfo, r.extendedSourceInfo());
-             });
+                    });
         }
         catch(IOException e)
         {
@@ -57,36 +60,37 @@ public class DataWriter
         ProbeStart,
         ProbeEnd,
         ProbeGcContent,
-        ProbeSumBitScore,
+        ProbeQualityScore,
         ProbeSequence
     }
 
-    public static void writeTargertedGeneRegions(final String filename, final List<TargetedGeneRegion> targetedGeneRegions)
+    public static void writeTargetedGeneRegions(final String filename, final List<TargetedGeneRegion> targetedGeneRegions)
     {
         try(BufferedWriter writer = createBufferedWriter(filename))
         {
             DelimFileWriter.write(writer, GeneRegionColumn.values(), targetedGeneRegions,
-                (r, row) -> {
-                    row.set(GeneRegionColumn.GeneName, r.getGene().getGeneData().GeneName);
-                    row.set(GeneRegionColumn.RegionType, r.getType().name());
-                    row.set(GeneRegionColumn.Chromosome, r.getChromosome());
-                    row.set(GeneRegionColumn.RegionStart, r.getStart());
-                    row.set(GeneRegionColumn.RegionEnd, r.getEnd());
-                    row.set(GeneRegionColumn.UseWholeRegion, r.useWholeRegion());
-
-                    // some we use whole region
-                    if(!r.useWholeRegion())
+                    (r, row) ->
                     {
-                        ProbeCandidate selectedProbe = r.getSelectedProbe();
-                        if(selectedProbe != null)
+                        row.set(GeneRegionColumn.GeneName, r.getGene().getGeneData().GeneName);
+                        row.set(GeneRegionColumn.RegionType, r.getType().name());
+                        row.set(GeneRegionColumn.Chromosome, r.getChromosome());
+                        row.set(GeneRegionColumn.RegionStart, r.getStart());
+                        row.set(GeneRegionColumn.RegionEnd, r.getEnd());
+                        row.set(GeneRegionColumn.UseWholeRegion, r.useWholeRegion());
+
+                        // some we use whole region
+                        if(!r.useWholeRegion())
                         {
-                            row.set(GeneRegionColumn.ProbeStart, selectedProbe.getStart());
-                            row.set(GeneRegionColumn.ProbeEnd, selectedProbe.getEnd());
-                            row.set(GeneRegionColumn.ProbeGcContent, selectedProbe.getGcContent());
-                            row.set(GeneRegionColumn.ProbeSumBitScore, selectedProbe.getSumBlastnBitScore());
+                            ProbeCandidate selectedProbe = r.getSelectedProbe();
+                            if(selectedProbe != null)
+                            {
+                                row.set(GeneRegionColumn.ProbeStart, selectedProbe.getStart());
+                                row.set(GeneRegionColumn.ProbeEnd, selectedProbe.getEnd());
+                                row.set(GeneRegionColumn.ProbeGcContent, selectedProbe.getGcContent());
+                                row.set(GeneRegionColumn.ProbeQualityScore, selectedProbe.getQualityScore().orElse(NaN));
+                            }
                         }
-                    }
-                });
+                    });
         }
         catch(IOException e)
         {
@@ -104,7 +108,7 @@ public class DataWriter
         ProbeStart,
         ProbeEnd,
         ProbeGcContent,
-        ProbeSumBitScore,
+        ProbeQualityScore,
         Selected,
         ProbeSequence
     }
@@ -118,7 +122,8 @@ public class DataWriter
         try(BufferedWriter writer = createBufferedWriter(filename))
         {
             DelimFileWriter.write(writer, GeneProbeCandidateColumn.values(), probeList,
-                    (r, row) -> {
+                    (r, row) ->
+                    {
                         row.set(GeneProbeCandidateColumn.GeneName, r.getLeft().getGene().getGeneData().GeneName);
                         row.set(GeneProbeCandidateColumn.RegionType, r.getLeft().getType().name());
                         row.set(GeneProbeCandidateColumn.Chromosome, r.getLeft().getChromosome());
@@ -127,7 +132,7 @@ public class DataWriter
                         row.set(GeneProbeCandidateColumn.ProbeStart, r.getRight().getStart());
                         row.set(GeneProbeCandidateColumn.ProbeEnd, r.getRight().getEnd());
                         row.set(GeneProbeCandidateColumn.ProbeGcContent, r.getRight().getGcContent());
-                        row.set(GeneProbeCandidateColumn.ProbeSumBitScore, r.getRight().getSumBlastnBitScore());
+                        row.set(GeneProbeCandidateColumn.ProbeQualityScore, r.getRight().getQualityScore().orElse(NaN));
                         row.set(GeneProbeCandidateColumn.Selected, Boolean.toString(r.getLeft().getSelectedProbe() == r.getRight()));
                         row.set(GeneProbeCandidateColumn.ProbeSequence, r.getRight().getSequence());
                     });

@@ -55,7 +55,7 @@ public class IgTcrGeneFile
 
         List<IgTcrGene> igTcrGenes = new ArrayList<>();
 
-        InputStream tsvStream = IgTcrGeneFile.class.getClassLoader().getResourceAsStream(resourcePath);
+        InputStream tsvStream = IgTcrGeneFile.class.getResourceAsStream(resourcePath);
         if(tsvStream == null)
         {
             sLogger.error("unable to find resource file: {}", resourcePath);

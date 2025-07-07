@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
@@ -55,6 +53,10 @@ public class VcfWriter
     private final VariantContextWriter mSomaticWriter;
     private final VariantContextWriter mGermlineWriter;
 
+    public static final String SOMATIC_VCF_ID = "somatic";
+    public static final String GERMLINE_VCF_ID = "germline";
+    public static final String UNFILTERED_VCF_ID = "unfiltered";
+
     public VcfWriter(
             final CallerConfig config, final VCFHeader vcfHeader, final String gripssVersion, final GenotypeIds genotypeIds,
             final SvDataCache dataCache)
@@ -65,12 +67,12 @@ public class VcfWriter
 
         String fileSampleId = config.fileSampleId();
 
-        String unfilteredVcf = formVcfFilename(fileSampleId, "unfiltered");
+        String unfilteredVcf = formVcfFilename(fileSampleId, UNFILTERED_VCF_ID);
         mUnfilteredWriter = initialiseWriter(vcfHeader, gripssVersion, unfilteredVcf);
 
         if(mConfig.hasTumor())
         {
-            String somaticVcf = formVcfFilename(fileSampleId, "somatic");
+            String somaticVcf = formVcfFilename(fileSampleId, SOMATIC_VCF_ID);
             mSomaticWriter = initialiseWriter(vcfHeader, gripssVersion, somaticVcf);
         }
         else
@@ -80,7 +82,7 @@ public class VcfWriter
 
         if(mConfig.hasReference())
         {
-            String germlineVcf = formVcfFilename(fileSampleId, "germline");
+            String germlineVcf = formVcfFilename(fileSampleId, GERMLINE_VCF_ID);
             mGermlineWriter = initialiseWriter(vcfHeader, gripssVersion, germlineVcf);
         }
         else
@@ -123,8 +125,6 @@ public class VcfWriter
         {
             newHeader.addMetaDataLine(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
         }
-
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(ALLELE_FRACTION, 1, VCFHeaderLineType.Float, ALLELE_FRACTION_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT, 1, VCFHeaderLineType.Flag, HOTSPOT_DESC));
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(PON_COUNT, 1, VCFHeaderLineType.Integer, "PON count if in PON"));
@@ -177,10 +177,6 @@ public class VcfWriter
 
         double qual = breakend.Context.getPhredScaledQual();
         builder.log10PError(qual / -10);
-
-        Genotype tumorGenotype = genotypes.get(0);
-
-        builder.attribute(ALLELE_FRACTION, breakend.calcAllelicFrequency(tumorGenotype));
 
         if(var.isHotspot())
             builder.attribute(HOTSPOT, true);

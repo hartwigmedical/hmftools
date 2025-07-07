@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -65,7 +67,6 @@ public class SomaticVariant
     }
 
     public void addFilterReason(final FilterReason filterReason) { mFilterReasons.add(filterReason); }
-
     public List<FilterReason> filterReasons() { return mFilterReasons; }
 
     public boolean isFiltered() { return !mFilterReasons.isEmpty(); }
@@ -80,6 +81,13 @@ public class SomaticVariant
 
     public void setSequenceGcRatio(double ratio) { mSequenceGcRatio = ratio; }
     public double sequenceGcRatio() { return mSequenceGcRatio; }
+
+    public double variantCnFloored() { return max(VariantCopyNumber, 1); }
+
+    public boolean matches(final SimpleVariant variant)
+    {
+        return Chromosome.matches(variant.Chromosome) && Position == variant.position() && Ref.equals(variant.Ref) && Alt.equals(variant.Alt);
+    }
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 }
