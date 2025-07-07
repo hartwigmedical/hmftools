@@ -27,6 +27,6 @@ public abstract class ClonalityModel
 
     public boolean useVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        return !variant.isFiltered() && !sampleFragData.isLowQual();
+        return !variant.isFiltered() && !sampleFragData.isFiltered();
     }
 }

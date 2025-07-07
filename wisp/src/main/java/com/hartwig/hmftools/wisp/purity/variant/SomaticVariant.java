@@ -67,7 +67,6 @@ public class SomaticVariant
     }
 
     public void addFilterReason(final FilterReason filterReason) { mFilterReasons.add(filterReason); }
-
     public List<FilterReason> filterReasons() { return mFilterReasons; }
 
     public boolean isFiltered() { return !mFilterReasons.isEmpty(); }

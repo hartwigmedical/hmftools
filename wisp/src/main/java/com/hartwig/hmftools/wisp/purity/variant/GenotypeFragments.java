@@ -3,10 +3,11 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
-import com.hartwig.hmftools.wisp.purity.PurityConstants;
 
 import htsjdk.variant.variantcontext.Genotype;
 
@@ -23,7 +24,8 @@ public class GenotypeFragments
 
     private double mBqrErrorRate; // only used for output data
 
-    private boolean mLikelyChip;
+    private final List<FilterReason> mFilterReasons;
+    private boolean mIsOutlier;
 
     public GenotypeFragments(
             final String sampleName, final int alleleCount, final int depth, final double qualTotal, final UmiTypeCounts umiCounts,
@@ -37,20 +39,24 @@ public class GenotypeFragments
         GenotypeData = genotype;
 
         mBqrErrorRate = 0;
-        mLikelyChip = false;
+        mIsOutlier = false;
+        mFilterReasons = Lists.newArrayList();
     }
 
     public double qualPerAlleleFragment() { return AlleleCount > 0 ? QualTotal / (double)AlleleCount : 0; }
 
     public double vaf() { return Depth > 0 ? AlleleCount / (double)Depth : 0; }
 
-    public boolean isLowQual() { return AlleleCount > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }  // also require that MQF > 10
-
     public void setBqrErrorRate(double errorRate) { mBqrErrorRate = errorRate; }
     public double bqrErrorRate() { return mBqrErrorRate; }
 
-    public void markLikeChip() { mLikelyChip = true; }
-    public boolean likelyChip() { return mLikelyChip; }
+    public void markOutlier()
+    {
+        mIsOutlier = true;
+        mFilterReasons.add(FilterReason.OUTLIER);
+    }
+
+    public boolean isOutlier() { return mIsOutlier; }
 
     public int averageReadDistance()
     {
@@ -62,6 +68,10 @@ public class GenotypeFragments
         String[] aedCounts = intField.toString().split(LIST_SEPARATOR, 2);
         return aedCounts.length == 2 ? Integer.parseInt(aedCounts[1]) : -1;
     }
+
+    public boolean isFiltered() { return !mFilterReasons.isEmpty(); }
+    public void addFilterReason(final FilterReason filterReason) { mFilterReasons.add(filterReason); }
+    public List<FilterReason> filterReasons() { return mFilterReasons; }
 
     public String toString()
     {

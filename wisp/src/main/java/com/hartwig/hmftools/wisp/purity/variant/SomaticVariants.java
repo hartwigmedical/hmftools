@@ -29,6 +29,7 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSeque
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATICS;
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
 import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_RETEST_PERC;
@@ -39,6 +40,7 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_GERMLINE_AF;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.AVG_EDGE_DIST;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.OUTLIER;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GC_RATIO;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDENCE;
@@ -64,7 +66,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
@@ -313,8 +314,10 @@ public class SomaticVariants
             if(sampleFragData == null || tumorFragData == null)
                 continue;
 
+            checkSampleDataFilters(sampleFragData);
+
             // only include unfiltered variants which satisfy the min avg qual check in the sample
-            if(!variant.filterReasons().isEmpty() || sampleFragData.isLowQual())
+            if(variant.isFiltered() || sampleFragData.isFiltered())
                 continue;
 
             filteredVariants.add(variant);
@@ -401,6 +404,18 @@ public class SomaticVariants
         return filters;
     }
 
+    public void checkSampleDataFilters(final GenotypeFragments sampleFragData)
+    {
+        if(sampleFragData.AlleleCount > 0)
+        {
+            if(sampleFragData.qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD)
+                sampleFragData.addFilterReason(LOW_QUAL_PER_AD);
+
+            if(sampleFragData.averageReadDistance() < MIN_AVG_EDGE_DISTANCE)
+                sampleFragData.addFilterReason(AVG_EDGE_DIST);
+        }
+    }
+
     private List<SomaticVariant> findOutlierVariants(
             final String sampleId, final List<SomaticVariant> filteredVariants, double initialSampleTotalAD)
     {
@@ -423,7 +438,7 @@ public class SomaticVariants
 
                 if((sampleFragData.AlleleCount / variant.variantCnFloored()) / sampleTotalAD > minSamplePerc)
                 {
-                    sampleFragData.markLikeChip();
+                    sampleFragData.markOutlier();
                     outlierVariants.add(variant);
                 }
             }
@@ -508,12 +523,7 @@ public class SomaticVariants
             sj.add(valueOf(variant.isProbeVariant()));
 
             List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
-
-            if(sampleFragData.likelyChip())
-                filterReasons.add(OUTLIER);
-
-            if(filterReasons.isEmpty() && sampleFragData.isLowQual())
-                filterReasons.add(LOW_QUAL_PER_AD);
+            filterReasons.addAll(sampleFragData.filterReasons());
 
             String filtersStr = !filterReasons.isEmpty() ?
                     filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)) : PASS;
