@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
@@ -33,8 +31,6 @@ public class PanelConfig
 
     public final String ProbeQualityProfileFile;
 
-    public final int Threads;
-
     private static final String AMBER_SITES_FILE = "amber_sites_file";
     private static final String GENE_TRANSCRIPT_FILE = "gene_transcript_file";
     private static final String CUSTOM_REGION_FILE = "custom_region_file";
@@ -57,7 +53,6 @@ public class PanelConfig
 
         OutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
         OutputDir = parseOutputDir(configBuilder);
-        Threads = parseThreads(configBuilder);
     }
 
     public String formOutputFilename(final String fileIdExtension)
@@ -80,7 +75,6 @@ public class PanelConfig
         configBuilder.addConfigItem(OUTPUT_PREFIX, true, "prefix of output BED filename");
         addOutputDir(configBuilder);
 
-        addThreadOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 }
