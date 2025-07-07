@@ -88,7 +88,7 @@ public class GeneProbesGenerator
 
     public void run()
     {
-        List<TargetedGene> targetedGenes = new ArrayList<>();
+        List<Gene> targetedGenes = new ArrayList<>();
 
         // from the gene, find all the gene regions
         for(GeneNameTranscriptId geneTranscript : mGeneNameTranscriptIds)
@@ -130,11 +130,11 @@ public class GeneProbesGenerator
                 continue;
             }
 
-            TargetedGene targetedGene = new TargetedGene(geneData, transcriptData);
+            Gene targetedGene = new Gene(geneData, transcriptData);
             targetedGenes.add(targetedGene);
         }
 
-        for(TargetedGene targetedGene : targetedGenes)
+        for(Gene targetedGene : targetedGenes)
         {
             populateTargetedGeneRegions(targetedGene);
             populateCandidateProbes(targetedGene);
@@ -146,22 +146,22 @@ public class GeneProbesGenerator
         selectProbeCandidates(targetedGenes);
 
         // add regions & probes to the cache
-        List<TargetedGeneRegion> targetedGeneRegions = Lists.newArrayList();
+        List<GeneRegion> targetedGeneRegions = Lists.newArrayList();
 
-        for(TargetedGene targetedGene : targetedGenes)
+        for(Gene targetedGene : targetedGenes)
         {
-            for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
+            for(GeneRegion targetedGeneRegion : targetedGene.getRegions())
             {
                 ChrBaseRegion region = new ChrBaseRegion(
                         targetedGene.getGeneData().Chromosome, targetedGeneRegion.getStart(), targetedGeneRegion.getEnd());
 
-                PanelRegion panelRegion;
+                ProbeCandidate panelRegion;
 
                 String sourceInfo = format("%s:%s", targetedGene.getGeneData().GeneName, targetedGeneRegion.getType().toString());
 
                 if(targetedGeneRegion.useWholeRegion())
                 {
-                    panelRegion = new PanelRegion(region, RegionType.GENE, sourceInfo);
+                    panelRegion = new ProbeCandidate(region, ProbeSource.GENE, sourceInfo);
                 }
                 else
                 {
@@ -172,8 +172,8 @@ public class GeneProbesGenerator
                         continue;
                     }
 
-                    panelRegion = new PanelRegion(
-                            region, RegionType.GENE, sourceInfo,
+                    panelRegion = new ProbeCandidate(
+                            region, ProbeSource.GENE, sourceInfo,
                             probeCandidate.getSequence(), probeCandidate.getGcContent(), probeCandidate.getQualityScore().get());
                 }
 
@@ -205,14 +205,14 @@ public class GeneProbesGenerator
     |             |                       | - Choose 1 probe  per region with lowest SUM_BLASTN score.                                     |
     |-------------|-----------------------|------------------------------------------------------------------------------------------------|
     */
-    protected static void populateTargetedGeneRegions(final TargetedGene targetedGene)
+    protected static void populateTargetedGeneRegions(final Gene targetedGene)
     {
         // first we create a region 1-2kb upstream of the gene
         TranscriptData transcript = targetedGene.getTranscriptData();
 
         targetedGene.addRegion(targetedGene.getGeneData().forwardStrand()
-                        ? TargetedGeneRegion.Type.UP_STREAM
-                        : TargetedGeneRegion.Type.DOWN_STREAM,
+                        ? GeneRegion.Type.UP_STREAM
+                        : GeneRegion.Type.DOWN_STREAM,
                 transcript.TransStart - GENE_FLANKING_DISTANCE - GENE_CANDIDATE_REGION_SIZE,
                 transcript.TransStart - GENE_FLANKING_DISTANCE - 1);
 
@@ -229,11 +229,11 @@ public class GeneProbesGenerator
                     if(intronLength > GENE_LONG_INTRON_LENGTH)
                     {
                         // for long intron, we want to split into two 1k regions each flank the exons
-                        targetedGene.addRegion(TargetedGeneRegion.Type.INTRONIC_LONG,
+                        targetedGene.addRegion(GeneRegion.Type.INTRONIC_LONG,
                                 lastExonEnd + 1 + GENE_FLANKING_DISTANCE,
                                 lastExonEnd + GENE_FLANKING_DISTANCE + GENE_CANDIDATE_REGION_SIZE);
 
-                        targetedGene.addRegion(TargetedGeneRegion.Type.INTRONIC_LONG,
+                        targetedGene.addRegion(GeneRegion.Type.INTRONIC_LONG,
                                 exonData.Start - GENE_FLANKING_DISTANCE - GENE_CANDIDATE_REGION_SIZE,
                                 exonData.Start - GENE_FLANKING_DISTANCE - 1);
                     }
@@ -241,7 +241,7 @@ public class GeneProbesGenerator
                     {
                         // for smaller intron we add a region in the middle 1k
                         int intronMid = (lastExonEnd + 1 + exonData.Start) / 2;
-                        targetedGene.addRegion(TargetedGeneRegion.Type.INTRONIC_SHORT,
+                        targetedGene.addRegion(GeneRegion.Type.INTRONIC_SHORT,
                                 intronMid - GENE_CANDIDATE_REGION_SIZE / 2,
                                 intronMid + GENE_CANDIDATE_REGION_SIZE / 2 - 1);
                     }
@@ -253,7 +253,7 @@ public class GeneProbesGenerator
             if(isCoding)
             {
                 // limit the region's bases to coding
-                targetedGene.addRegion(TargetedGeneRegion.Type.CODING,
+                targetedGene.addRegion(GeneRegion.Type.CODING,
                         Math.max(exonData.Start, transcript.CodingStart),
                         Math.min(exonData.End, transcript.CodingEnd));
             }
@@ -261,29 +261,29 @@ public class GeneProbesGenerator
             {
                 // just one probe at the middle, so just the 120 bases
                 int exonMid = (exonData.Start + exonData.End + 1) / 2;
-                targetedGene.addRegion(TargetedGeneRegion.Type.UTR, exonMid - PROBE_LENGTH / 2, exonMid + PROBE_LENGTH / 2 - 1);
+                targetedGene.addRegion(GeneRegion.Type.UTR, exonMid - PROBE_LENGTH / 2, exonMid + PROBE_LENGTH / 2 - 1);
             }
 
             lastExonEnd = exonData.End;
         }
 
         targetedGene.addRegion(targetedGene.getGeneData().forwardStrand()
-                        ? TargetedGeneRegion.Type.DOWN_STREAM
-                        : TargetedGeneRegion.Type.UP_STREAM,
+                        ? GeneRegion.Type.DOWN_STREAM
+                        : GeneRegion.Type.UP_STREAM,
                 transcript.TransEnd + 1 + GENE_FLANKING_DISTANCE,
                 transcript.TransEnd + GENE_FLANKING_DISTANCE + GENE_CANDIDATE_REGION_SIZE);
     }
 
     // from the targeted gene regions, we find the probes
-    protected void populateCandidateProbes(TargetedGene targetedGene)
+    protected void populateCandidateProbes(Gene targetedGene)
     {
-        for(TargetedGeneRegion region : targetedGene.getRegions())
+        for(GeneRegion region : targetedGene.getRegions())
         {
             populateCandidateProbes(region, mConfig.RefGenome);
         }
     }
 
-    protected static void populateCandidateProbes(final TargetedGeneRegion region, final RefGenomeInterface refGenomeInterface)
+    protected static void populateCandidateProbes(final GeneRegion region, final RefGenomeInterface refGenomeInterface)
     {
         switch(region.getType())
         {
@@ -311,13 +311,13 @@ public class GeneProbesGenerator
         }
     }
 
-    private void computeCandidateProbeQualityScores(final List<TargetedGene> targetedGeneList)
+    private void computeCandidateProbeQualityScores(final List<Gene> targetedGeneList)
     {
         List<ProbeCandidate> probeCandidates = Lists.newArrayList();
 
-        for(TargetedGene targetedGene : targetedGeneList)
+        for(Gene targetedGene : targetedGeneList)
         {
-            for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
+            for(GeneRegion targetedGeneRegion : targetedGene.getRegions())
             {
                 for(ProbeCandidate probeCandidate : targetedGeneRegion.getProbeCandidates())
                 {
@@ -345,12 +345,12 @@ public class GeneProbesGenerator
         }
     }
 
-    private void selectProbeCandidates(Collection<TargetedGene> targetedGeneList)
+    private void selectProbeCandidates(Collection<Gene> targetedGeneList)
     {
         // select top-scoring, valid probe from the set of candidates
-        for(TargetedGene targetedGene : targetedGeneList)
+        for(Gene targetedGene : targetedGeneList)
         {
-            for(TargetedGeneRegion targetedGeneRegion : targetedGene.getRegions())
+            for(GeneRegion targetedGeneRegion : targetedGene.getRegions())
             {
                 GU_LOGGER.trace("Selecting probe candidates for gene region: {}:{}-{}",
                         targetedGeneRegion.getChromosome(), targetedGeneRegion.getStart(), targetedGeneRegion.getEnd());

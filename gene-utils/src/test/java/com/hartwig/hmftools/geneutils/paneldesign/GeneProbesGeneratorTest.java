@@ -46,42 +46,42 @@ public class GeneProbesGeneratorTest
         transData.exons().add(new ExonData(transId, 15000, 19000 - 1, 3, -1, -1));
 
         // create a targeted gene
-        TargetedGene targetedGene = new TargetedGene(geneData, transData);
+        Gene targetedGene = new Gene(geneData, transData);
 
         GeneProbesGenerator.populateTargetedGeneRegions(targetedGene);
 
         // check the regions
         assertEquals(5, targetedGene.getRegions().size());
 
-        Iterator<TargetedGeneRegion> itr = targetedGene.getRegions().iterator();
+        Iterator<GeneRegion> itr = targetedGene.getRegions().iterator();
 
         // first we should have an upstream region
-        TargetedGeneRegion region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.UP_STREAM, region.getType());
+        GeneRegion region = itr.next();
+        assertEquals(GeneRegion.Type.UP_STREAM, region.getType());
         assertEquals(9040, region.getStart());
         assertEquals(9999, region.getEnd());
 
         // 1st exon is non coding, add a probe in the centre
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.UTR, region.getType());
+        assertEquals(GeneRegion.Type.UTR, region.getType());
         assertEquals(11440, region.getStart());
         assertEquals(11559, region.getEnd());
 
         // 2nd exon is coding, cover the coding regions of the exon
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.CODING, region.getType());
+        assertEquals(GeneRegion.Type.CODING, region.getType());
         assertEquals(13500, region.getStart());
         assertEquals(14000 - 1, region.getEnd());
 
         // 3rd exon is also coding, cover the coding regions of the exon
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.CODING, region.getType());
+        assertEquals(GeneRegion.Type.CODING, region.getType());
         assertEquals(15000, region.getStart());
         assertEquals(18000 - 1, region.getEnd());
 
         // downstream region
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.DOWN_STREAM, region.getType());
+        assertEquals(GeneRegion.Type.DOWN_STREAM, region.getType());
         assertEquals(20000, region.getStart());
         assertEquals(20960 - 1, region.getEnd());
     }
@@ -116,58 +116,58 @@ public class GeneProbesGeneratorTest
         transData.exons().add(new ExonData(transId, 23000, 25000 - 1, 3, -1, -1));
 
         // create a targeted gene
-        TargetedGene targetedGene = new TargetedGene(geneData, transData);
+        Gene targetedGene = new Gene(geneData, transData);
 
         GeneProbesGenerator.populateTargetedGeneRegions(targetedGene);
 
         // check the regions
         assertEquals(8, targetedGene.getRegions().size());
-        Iterator<TargetedGeneRegion> itr = targetedGene.getRegions().iterator();
+        Iterator<GeneRegion> itr = targetedGene.getRegions().iterator();
 
         // first we should have an upstream region
-        TargetedGeneRegion region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.UP_STREAM, region.getType());
+        GeneRegion region = itr.next();
+        assertEquals(GeneRegion.Type.UP_STREAM, region.getType());
         assertEquals(9040, region.getStart());
         assertEquals(9999, region.getEnd());
 
         // 1st exon is non coding, add a probe in the centre
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.UTR, region.getType());
+        assertEquals(GeneRegion.Type.UTR, region.getType());
         assertEquals(11440, region.getStart());
         assertEquals(11559, region.getEnd());
 
         // long intron create two flanking regions
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.INTRONIC_LONG, region.getType());
+        assertEquals(GeneRegion.Type.INTRONIC_LONG, region.getType());
         assertEquals(13000, region.getStart()); // 1000 bases after previous exon
         assertEquals(13960 - 1, region.getEnd());
 
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.INTRONIC_LONG, region.getType());
+        assertEquals(GeneRegion.Type.INTRONIC_LONG, region.getType());
         assertEquals(16040, region.getStart());
         assertEquals(17000 - 1, region.getEnd()); // 1000 bases before next exon
 
         // 2nd exon is coding, cover the coding regions of the exon
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.CODING, region.getType());
+        assertEquals(GeneRegion.Type.CODING, region.getType());
         assertEquals(18000, region.getStart());
         assertEquals(19000 - 1, region.getEnd());
 
         // short intron, 960 bases length at 21000, which is the middle
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.INTRONIC_SHORT, region.getType());
+        assertEquals(GeneRegion.Type.INTRONIC_SHORT, region.getType());
         assertEquals(20520, region.getStart());
         assertEquals(21480 - 1, region.getEnd());
 
         // 3rd exon
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.CODING, region.getType());
+        assertEquals(GeneRegion.Type.CODING, region.getType());
         assertEquals(23000, region.getStart());
         assertEquals(24000 - 1, region.getEnd());
 
         // downstream region
         region = itr.next();
-        assertEquals(TargetedGeneRegion.Type.DOWN_STREAM, region.getType());
+        assertEquals(GeneRegion.Type.DOWN_STREAM, region.getType());
         assertEquals(26000, region.getStart());
         assertEquals(26960 - 1, region.getEnd());
     }
@@ -192,17 +192,17 @@ public class GeneProbesGeneratorTest
                 transId, transName, geneId, true, Strand.POS_STRAND, 1, 1000, 1, 1000, "", null);
 
         // create a targeted gene
-        TargetedGene targetedGene = new TargetedGene(geneData, transData);
+        Gene targetedGene = new Gene(geneData, transData);
 
         // coding gene region
-        TargetedGeneRegion region = new TargetedGeneRegion(targetedGene, TargetedGeneRegion.Type.CODING, new BaseRegion(1, 1000));
+        GeneRegion region = new GeneRegion(targetedGene, GeneRegion.Type.CODING, new BaseRegion(1, 1000));
         GeneProbesGenerator.populateCandidateProbes(region, refGenome);
         // for coding exons, we use the whole region, so no probe candidate is needed
         assertTrue(region.useWholeRegion());
         assertTrue(region.getProbeCandidates().isEmpty());
 
         // test that we generate the correct probe candidates and the gc
-        region = new TargetedGeneRegion(targetedGene, TargetedGeneRegion.Type.UP_STREAM, new BaseRegion(1, 1000));
+        region = new GeneRegion(targetedGene, GeneRegion.Type.UP_STREAM, new BaseRegion(1, 1000));
         GeneProbesGenerator.populateCandidateProbes(region, refGenome);
 
         // 8 probes generated

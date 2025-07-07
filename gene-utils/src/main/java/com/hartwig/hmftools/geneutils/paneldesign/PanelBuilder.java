@@ -64,7 +64,7 @@ public class PanelBuilder
 
     private void writeFinalPanelRegions()
     {
-        List<PanelRegion> panelRegions = Lists.newArrayList();
+        List<ProbeCandidate> panelRegions = Lists.newArrayList();
 
         mPanelCache.chrRegionsMap().values().forEach(panelRegions::addAll);
 
@@ -75,8 +75,8 @@ public class PanelBuilder
         int index = 0;
         while(index < panelRegions.size() - 1)
         {
-            PanelRegion region = panelRegions.get(index);
-            PanelRegion nextRegion = panelRegions.get(index + 1);
+            ProbeCandidate region = panelRegions.get(index);
+            ProbeCandidate nextRegion = panelRegions.get(index + 1);
 
             if(region.Chromosome.equals(nextRegion.Chromosome) && region.end() >= nextRegion.start() - 2)
             {
@@ -85,7 +85,7 @@ public class PanelBuilder
 
                 String sourceInfo = format("%s;%s", region.SourceInfo, nextRegion.SourceInfo);
 
-                PanelRegion newPanelRegion = new PanelRegion(newRegion, RegionType.MIXED, sourceInfo);
+                ProbeCandidate newPanelRegion = new ProbeCandidate(newRegion, ProbeSource.MIXED, sourceInfo);
 
                 panelRegions.set(index, newPanelRegion);
                 panelRegions.remove(index + 1);

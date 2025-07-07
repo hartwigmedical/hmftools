@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-public enum RegionType
+public enum ProbeSource
 {
     GENE,
     CN_BACKBONE,

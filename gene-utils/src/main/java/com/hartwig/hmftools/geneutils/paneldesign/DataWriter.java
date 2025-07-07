@@ -29,7 +29,7 @@ public class DataWriter
         SourceInfo;
     }
 
-    public static void writePanelDefinition(final String filename, final List<PanelRegion> panelRegions)
+    public static void writePanelDefinition(final String filename, final List<ProbeCandidate> panelRegions)
     {
         try(BufferedWriter writer = createBufferedWriter(filename))
         {
@@ -64,7 +64,7 @@ public class DataWriter
         ProbeSequence
     }
 
-    public static void writeTargetedGeneRegions(final String filename, final List<TargetedGeneRegion> targetedGeneRegions)
+    public static void writeTargetedGeneRegions(final String filename, final List<GeneRegion> targetedGeneRegions)
     {
         try(BufferedWriter writer = createBufferedWriter(filename))
         {
@@ -113,9 +113,9 @@ public class DataWriter
         ProbeSequence
     }
 
-    public static void writeCandidates(final String filename, final List<TargetedGeneRegion> targetedGeneRegions)
+    public static void writeCandidates(final String filename, final List<GeneRegion> targetedGeneRegions)
     {
-        List<Pair<TargetedGeneRegion, ProbeCandidate>> probeList = targetedGeneRegions.stream()
+        List<Pair<GeneRegion, ProbeCandidate>> probeList = targetedGeneRegions.stream()
                 .flatMap(o -> o.getProbeCandidates().stream().map(c -> Pair.of(o, c)))
                 .collect(Collectors.toList());
 

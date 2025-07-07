@@ -24,7 +24,6 @@ public class CustomRegions
         }
     }
 
-    // load file of the form: Chromosome, Position
     enum Column
     {
         Chromosome,
@@ -45,8 +44,8 @@ public class CustomRegions
                 int positionEnd = row.getInt(Column.PositionEnd);
                 String sourceInfo = row.get(Column.SourceInfo);
 
-                PanelRegion region =
-                        new PanelRegion(new ChrBaseRegion(chromosome, positionStart, positionEnd), RegionType.CUSTOM, sourceInfo);
+                ProbeCandidate region =
+                        new ProbeCandidate(new ChrBaseRegion(chromosome, positionStart, positionEnd), ProbeSource.CUSTOM, sourceInfo);
                 mPanelCache.addRegion(region);
                 ++regionCount;
             }
