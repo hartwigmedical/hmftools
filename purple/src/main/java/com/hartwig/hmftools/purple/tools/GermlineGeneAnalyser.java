@@ -50,7 +50,6 @@ public class GermlineGeneAnalyser
 
     public GermlineGeneAnalyser(final ConfigBuilder configBuilder)
     {
-        RefGenomeVersion refGenVersion = RefGenomeVersion.from(configBuilder);
         mGeneDataCache = new EnsemblDataCache(configBuilder);
 
         mGeneDataCache.setRequiredData(true, false, false, true);
