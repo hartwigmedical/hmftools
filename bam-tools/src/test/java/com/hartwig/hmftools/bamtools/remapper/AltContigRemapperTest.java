@@ -14,11 +14,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 
 public class AltContigRemapperTest extends RemapperTestBase
 {
-    private AltContigRemapperConfig config;
-    private AltContigRemapper remapper;
     private File outputFile;
     private PairAligner aligner;
     private File inputFile;
@@ -39,8 +38,8 @@ public class AltContigRemapperTest extends RemapperTestBase
     @Test
     public void runTest()
     {
-        config = new DummyConfig(aligner, inputFile.getAbsolutePath(), outputFile.getAbsolutePath(), false);
-        remapper = new AltContigRemapper(config);
+        AltContigRemapperConfig config = new DummyConfig(aligner, inputFile.getAbsolutePath(), outputFile.getAbsolutePath(), false);
+        AltContigRemapper remapper = new AltContigRemapper(config);
 
         remapper.run();
 
@@ -78,6 +77,8 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor4.setMateAlignmentStart(29945439 + 1);
         expectedFor4.setMateReferenceIndex(5);
         expectedFor4.setInferredInsertSize(0);
+        // This line has a supplementary read, but when we re-map it and its mate, there is no supplementary.
+        expectedFor4.setAttribute(SAMTag.SA.name(), null);
         checkOutputContains(expectedFor4, results);
 
         // input[5] and input[6] produce no output.
@@ -97,7 +98,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor7.setInferredInsertSize(0);
         checkOutputContains(expectedFor7, results);
 
-        // input[8]: A00624:8:HHKYHDSXX:1:2559:3224:21292, reverse strand
+        // input[9]: A00624:8:HHKYHDSXX:1:2559:3224:21292, reverse strand
         // BWA returns 81,5,31354760,31354911,0,151,60,2,145,101,151M,21G128T0,null,5,31354347,-564
         SAMRecord expectedMainFor8 = records.get(8).deepCopy();
         Assert.assertEquals("A00624:8:HHKYHDSXX:1:2559:3224:21292", expectedMainFor8.getReadName()); // sanity check
@@ -110,6 +111,9 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedMainFor8.setMateReferenceIndex(5);
         expectedMainFor8.setMateAlignmentStart(31354347 + 1);
         expectedMainFor8.setInferredInsertSize(-564);
+        // This line has a supplementary read, but when we re-map it and its mate (input 9),
+        // it is the mate that gets a supplemenary, not this.
+        expectedMainFor8.setAttribute(SAMTag.SA.name(), null);
         checkOutputContains(expectedMainFor8, results);
 
         // input[8]: A00624:8:HHKYHDSXX:1:2559:3224:21292, forward strand
@@ -117,35 +121,38 @@ public class AltContigRemapperTest extends RemapperTestBase
         // principal alignment: 161,5,31354347,31354419,0,72,60,2,62,19,72M79S,4C45C21,null,5,31354760,564
         // secondary alignment: 2225,1,32916241,32916273,42,74,13,0,32,28,42S32M77S,32,null,5,31354760,0
         // principal:
-        SAMRecord expectedSupplementaryFor8 = records.get(9).deepCopy();
-        Assert.assertEquals("A00624:8:HHKYHDSXX:1:2559:3224:21292", expectedSupplementaryFor8.getReadName()); // sanity check
-        Assert.assertEquals(97, expectedSupplementaryFor8.getFlags()); // sanity check
-        expectedSupplementaryFor8.setFlags(161 + 2); // gets proper pair flag
-        expectedSupplementaryFor8.setReferenceIndex(5);
-        expectedSupplementaryFor8.setAlignmentStart(31354347 + 1);
-        expectedSupplementaryFor8.setMappingQuality(60);
-        expectedSupplementaryFor8.setCigarString("72M79S");
-        expectedSupplementaryFor8.setMateReferenceIndex(5);
-        expectedSupplementaryFor8.setMateAlignmentStart(31354760 + 1);
-        expectedSupplementaryFor8.setInferredInsertSize(564);
-        checkOutputContains(expectedSupplementaryFor8, results);
+        SAMRecord expectedPrincipalFor9 = records.get(9).deepCopy();
+        Assert.assertEquals("A00624:8:HHKYHDSXX:1:2559:3224:21292", expectedPrincipalFor9.getReadName()); // sanity check
+        Assert.assertEquals(97, expectedPrincipalFor9.getFlags()); // sanity check
+        expectedPrincipalFor9.setFlags(161 + 2); // gets proper pair flag
+        expectedPrincipalFor9.setReferenceIndex(5);
+        expectedPrincipalFor9.setAlignmentStart(31354347 + 1);
+        expectedPrincipalFor9.setMappingQuality(60);
+        expectedPrincipalFor9.setCigarString("72M79S");
+        expectedPrincipalFor9.setMateReferenceIndex(5);
+        expectedPrincipalFor9.setMateAlignmentStart(31354760 + 1);
+        expectedPrincipalFor9.setInferredInsertSize(564);
+        // The re-mapped read has a supplementary.
+        expectedPrincipalFor9.setAttribute(SAMTag.SA.name(), "chr2,32916242,-,42S32M77S,13,0;");
+        checkOutputContains(expectedPrincipalFor9, results);
 
         // secondary:
-        SAMRecord expectedFor9 = records.get(9).deepCopy();
-        Assert.assertEquals("A00624:8:HHKYHDSXX:1:2559:3224:21292", expectedFor9.getReadName()); // sanity check
-        Assert.assertEquals(97, expectedFor9.getFlags()); // sanity check
-        expectedFor9.setFlags(2225);
-        expectedFor9.setReferenceIndex(1);
-        expectedFor9.setAlignmentStart(32916241 + 1);
-        expectedFor9.setMappingQuality(13);
-        expectedFor9.setCigarString("42S32M77S");
-        expectedFor9.setMateReferenceIndex(5);
-        expectedFor9.setMateAlignmentStart(31354760 + 1);
-        expectedFor9.setInferredInsertSize(0);
+        SAMRecord expectedSecondaryFor9 = records.get(9).deepCopy();
+        Assert.assertEquals("A00624:8:HHKYHDSXX:1:2559:3224:21292", expectedSecondaryFor9.getReadName()); // sanity check
+        Assert.assertEquals(97, expectedSecondaryFor9.getFlags()); // sanity check
+        expectedSecondaryFor9.setFlags(2225);
+        expectedSecondaryFor9.setReferenceIndex(1);
+        expectedSecondaryFor9.setAlignmentStart(32916241 + 1);
+        expectedSecondaryFor9.setMappingQuality(13);
+        expectedSecondaryFor9.setCigarString("42S32M77S");
+        expectedSecondaryFor9.setMateReferenceIndex(5);
+        expectedSecondaryFor9.setMateAlignmentStart(31354760 + 1);
+        expectedSecondaryFor9.setInferredInsertSize(0);
+        expectedSecondaryFor9.setAttribute(SAMTag.SA.name(),"chr6,31354348,+,72M79S,60,2;");
         // This is a reverse strand match.
-        expectedFor9.setReadBases(Nucleotides.reverseComplementBases(expectedFor9.getReadBases()));
-        expectedFor9.setBaseQualities(reverseArray(expectedFor9.getBaseQualities()));
-        checkOutputContains(expectedFor9, results);
+        expectedSecondaryFor9.setReadBases(Nucleotides.reverseComplementBases(expectedSecondaryFor9.getReadBases()));
+        expectedSecondaryFor9.setBaseQualities(reverseArray(expectedSecondaryFor9.getBaseQualities()));
+        checkOutputContains(expectedSecondaryFor9, results);
 
         // input[10]: A00624:8:HHKYHDSXX:1:1446:18213:29684, forward strand
         // BWA returns 97,5,31355729,31355880,0,151,60,0,151,19,151M,151,null,5,31356297,719
@@ -229,6 +236,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         // This is a forward strand match, whereas the input was reverse strand.
         expectedPrincipalFor13.setReadBases(Nucleotides.reverseComplementBases(expectedPrincipalFor13.getReadBases()));
         expectedPrincipalFor13.setBaseQualities(reverseArray(expectedPrincipalFor13.getBaseQualities()));
+        expectedPrincipalFor13.setAttribute(SAMTag.SA.name(),"chr2,32916487,-,67S36M48S,0,0;");
         checkOutputContains(expectedPrincipalFor13, results);
 
         SAMRecord expectedSecondaryFor13 = records.get(13).deepCopy();
@@ -242,6 +250,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedSecondaryFor13.setMateReferenceIndex(5);
         expectedSecondaryFor13.setMateAlignmentStart(31354513 + 1);
         expectedSecondaryFor13.setInferredInsertSize(0);
+        expectedSecondaryFor13.setAttribute(SAMTag.SA.name(),"chr6,31354376,+,44M107S,60,1;");
         checkOutputContains(expectedSecondaryFor13, results);
 
         // input[14] and input[15]: A00624:8:HHKYHDSXX:2:2276:27299:7623, forward and reverse respectively
