@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -23,16 +24,18 @@ import org.jetbrains.annotations.NotNull;
 public class PanelBuilder
 {
     private final PanelConfig mConfig;
-    private final BlastnMapper mBlastNMapper;
 
     private final PanelCache mPanelCache;
+
+    private final ProbeQualityProfile mProbeQualityProfile;
 
     public PanelBuilder(final ConfigBuilder configBuilder)
     {
         mConfig = new PanelConfig(configBuilder);
-        mBlastNMapper = new BlastnMapper(mConfig);
 
         mPanelCache = new PanelCache();
+
+        mProbeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
     }
 
     public void run()
@@ -46,18 +49,15 @@ public class PanelBuilder
         customRegions.run();
 
         // generate gene probes
-        GeneProbesGenerator geneProbesGenerator = new GeneProbesGenerator(mConfig, mPanelCache, mBlastNMapper);
+        GeneProbesGenerator geneProbesGenerator = new GeneProbesGenerator(mConfig, mPanelCache, mProbeQualityProfile);
         geneProbesGenerator.run();
 
         // build copy-number backbone to fill in gaps
-        CopyNumberBackbone copyNumberBackbone = new CopyNumberBackbone(mConfig, mPanelCache, mBlastNMapper);
+        CopyNumberBackbone copyNumberBackbone = new CopyNumberBackbone(mConfig, mPanelCache, mProbeQualityProfile);
         copyNumberBackbone.run();
 
         // write final regions and probes
         writeFinalPanelRegions();
-
-        // write a BlastN cache if configured
-        mBlastNMapper.onComplete();
 
         GU_LOGGER.info("panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -66,7 +66,7 @@ public class PanelBuilder
     {
         List<PanelRegion> panelRegions = Lists.newArrayList();
 
-        mPanelCache.chrRegionsMap().values().forEach(x -> panelRegions.addAll(x));
+        mPanelCache.chrRegionsMap().values().forEach(panelRegions::addAll);
 
         // sort and merge - for now keep the first region's source info and type
         Collections.sort(panelRegions);

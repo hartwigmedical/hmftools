@@ -8,27 +8,30 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PanelCache
 {
-    private final Map<String,List<PanelRegion>> mChrRegionsMap;
+    private final Map<String, List<PanelRegion>> mChrRegionsMap;
 
     public PanelCache()
     {
         mChrRegionsMap = Maps.newHashMap();
     }
 
-    public Map<String,List<PanelRegion>> chrRegionsMap() { return mChrRegionsMap; }
+    public Map<String, List<PanelRegion>> chrRegionsMap()
+    {
+        return mChrRegionsMap;
+    }
 
     public List<PanelRegion> chromosomeRegions(final String chromosome)
     {
-        return mChrRegionsMap.containsKey(chromosome) ? mChrRegionsMap.get(chromosome) : Collections.emptyList();
+        return mChrRegionsMap.getOrDefault(chromosome, Collections.emptyList());
     }
 
-    public int regionCount() { return mChrRegionsMap.values().stream().mapToInt(x -> x.size()).sum(); }
-
-    public void addRegion(final PanelRegion panelRegion) { addRegion(panelRegion, true); }
+    public void addRegion(final PanelRegion panelRegion)
+    {
+        addRegion(panelRegion, true);
+    }
 
     public void addRegion(final PanelRegion panelRegion, boolean checkOverlaps)
     {
@@ -44,12 +47,10 @@ public class PanelCache
 
         if(checkOverlaps)
         {
-            PanelRegion existing = regions.stream().filter(x -> x.overlaps(panelRegion)).findFirst().orElse(null);
-
-            if(existing != null)
-            {
-                GU_LOGGER.warn("panel region({}) overlaps with existing({})", panelRegion, existing);
-            }
+            regions.stream()
+                    .filter(x -> x.overlaps(panelRegion))
+                    .findFirst()
+                    .ifPresent(existing -> GU_LOGGER.warn("panel region({}) overlaps with existing({})", panelRegion, existing));
         }
 
         regions.add(panelRegion);
@@ -59,11 +60,5 @@ public class PanelCache
     {
         List<PanelRegion> regions = mChrRegionsMap.get(chromosome);
         return regions != null && regions.stream().anyMatch(x -> x.overlaps(chromosome, positionStart, positionEnd));
-    }
-
-    public boolean overlapsExisting(final ChrBaseRegion region)
-    {
-        List<PanelRegion> regions = mChrRegionsMap.get(region.Chromosome);
-        return regions != null && regions.stream().anyMatch(x -> x.overlaps(region));
     }
 }

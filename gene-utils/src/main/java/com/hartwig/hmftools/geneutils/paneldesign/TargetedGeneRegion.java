@@ -9,7 +9,12 @@ public class TargetedGeneRegion
 {
     public enum Type
     {
-        CODING, UTR, UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT
+        CODING,
+        UTR,
+        UP_STREAM,
+        DOWN_STREAM,
+        INTRONIC_LONG,
+        INTRONIC_SHORT
     }
 
     private final TargetedGene mGene;
