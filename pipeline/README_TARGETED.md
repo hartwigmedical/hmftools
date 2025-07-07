@@ -14,11 +14,11 @@ The targeted pipeline largely matches the WGS/WTS pipeline but with some modules
 
 ## Panel-specific resource files
 
-The [panel-specific resource files](#panel-specific-resources-files) fits and normalises the biases inherent to your panel. 
+The [panel-specific resource files](#panel-specific-resource-files) fits and normalises the biases inherent to your panel. 
 [Manual configuration](#manually-configured-files) is required for some of these files, which in turn are used as input for a 
-[training procedure](#training-procedure-to-build-panel-specific-resource-files) that generates the remaining panel-specific resource files 
-from a representative set of sample BAMs from your panel (**at least 20 samples recommended**). The below diagram summarises the generation 
-of panel-specific resource files.
+[training procedure](#panel-resources-training-procedure) that generates the remaining panel-specific resource files 
+from a representative set of sample BAMs or FASTQs from your panel (**≥20 samples recommended**). The below diagram summarises the 
+generation of panel-specific resource files.
 
 <p align="center">
 <img width="428"  alt="image" src="https://github.com/user-attachments/assets/03ec7de5-80df-4e8b-9b13-51735e37f00a">
@@ -27,8 +27,7 @@ of panel-specific resource files.
 ### Manually configured files
 
 The below files represent a basic definition of the panel and are to be created manually. Some of these files are used as inputs to the 
-[panel training procedure](#training-procedure-to-build-panel-specific-resource-files). RNA resource files are only required if your panel 
-supports RNA data.
+[panel training procedure](#panel-resources-training-procedure).
 
 | Data type | File name                                              | Oncoanalyser config        | Input for training? | Tool(s)  | Description                                                                                                                                                                                                                                                             |
 |:----------|:-------------------------------------------------------|:---------------------------|:--------------------|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -99,7 +98,7 @@ ENSG00000135446,0,0,0,0,0,0,0,0,0,0,0,0,0,0.000008,...
 ...
 ```
 
-### Output files training procedure
+### Output files from training procedure
 
 The following files are the output of the training process described below:
 
@@ -111,22 +110,53 @@ The following files are the output of the training process described below:
 
 These files are then used by the pipeline in panel mode to produce well-calibrated, accurate results ideally without panel-specific biases.
 
-## Training procedure to build panel-specific resource files
+## Panel resources training procedure
 
-An initial set of input samples, recommended to number at least 20, are use to 'train' the pipeline. 
-In particular this identifies variance in read depth and variant calling compared with whole genome and transcriptome. 
-Note that the assumption of this training is that the _median_ relative copy number for any given gene should not deviate too systematically from the ploidy across the cohort. 
-In general this is a relatively safe assumption for a pan-cancer dataset, but in cancer specific training sets, there may be certain recurrently copy-number-altered genes that violate this assumption.   
+The panel training procedure identifies variance in read depth and variant calling compared with whole genome and transcriptome.
 
-There are 2 steps in the training procedure:
+> [!NOTE]
+> An assumption of the training procedure is that the _median_ relative copy number for any given gene should not deviate too systematically 
+> from the ploidy across the cohort. In general, this is a relatively safe assumption for a pan-cancer dataset, but in cancer specific 
+> training sets, there may be certain genes with recurrent copy number alterations that violate this assumption.
 
-### STEP 1: Run COBALT, AMBER, SAGE & ISOFOX on the targeted samples in WGTS mode
+The training procedure can be run with `oncoanalyser` using `--mode panel_resource_creation`, First create a samplesheet with a set of 
+representative samples (**≥20 samples recommended**) from your panel sequencing run:
 
-This can be done by running the samples through `oncoanalyser` in WGTS mode.
+```
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bam,/path/to/PATIENT1-T.dna.bam
+PATIENT1,PATIENT1,PATIENT1-T,tumor,dna,bai,/path/to/PATIENT1-T.dna.bam.bai
+PATIENT2,PATIENT2,PATIENT2-T,tumor,dna,bam,/path/to/PATIENT2-T.dna.bam
+PATIENT2,PATIENT2,PATIENT2-T,tumor,dna,bai,/path/to/PATIENT2-T.dna.bam.bai
+```
 
-Alternatively COBALT, AMBER & SAGE & ISOFOX can be run on each sample with the below configurations
+Then, run `oncoanalyser` with `--mode panel_resource_creation` (`--isofox_*` arguments only required if panel supports RNA data):
 
-COBALT
+```bash
+nextflow run nf-core/oncoanalyser \
+  -profile docker \
+  -revision 2.2.0 \
+  -config refdata.config \
+  --genome GRCh38_hmf \
+  --mode panel_resource_creation \
+  --input samplesheet.panel_resource_creation.csv \
+  --outdir output/ \
+  \
+  --driver_gene_panel DriverGenePanel.38.tsv \
+  --target_regions_bed target_regions_definition.38.bed.gz \
+  --isofox_gene_ids rna_gene_ids.csv # Optional, only provide if panel supports RNA data
+```
+
+The training procedure that `onconalyser` runs involves 2 mains steps which are described below.
+
+### Step 1: Run COBALT, AMBER, SAGE & ISOFOX
+
+#### COBALT
+
+COBALT is used determine raw read depth ratios (before GC normalisation).
+
+**Commands**:
+
 ```
 java -jar cobalt.jar \
     -tumor SAMPLE_ID \
@@ -136,8 +166,13 @@ java -jar cobalt.jar \
     -tumor_only_diploid_bed DiploidRegions.37.bed.gz \
     -threads 10 \ 
 ```
-AMBER
-AMBER is required to determined the gender of the samples for copy number normalisation.  Note that we recommend to lower the tumor_min_depth to ensure sufficient coverage of heterozygous points.
+#### AMBER
+
+AMBER is required to determine the gender of the samples for copy number normalisation. Note that we recommend to lower 
+`-tumor_min_depth` to ensure sufficient coverage of heterozygous points.
+
+**Commands**:
+
 ```
 java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
     -tumor SAMPLE_ID \
@@ -147,7 +182,13 @@ java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
     -output_dir /sample_data/ \
     -threads 10 \
 ```
-SAGE
+
+#### SAGE
+
+SAGE performs variant calling so that a panel-specific PON can be created.
+
+**Commands**:
+
 ```
 java -jar sage.jar \
     -tumor SAMPLE_ID \ 
@@ -162,7 +203,12 @@ java -jar sage.jar \
     -threads 16 \
 ```
 
-ISOFOX (panels with targeted RNA only)
+#### ISOFOX
+
+Calculates gene and transcript expression with ISOFOX. ISOFOX is only run for panels supporting RNA sequencing data.
+
+**Commands**:
+
 ```
 java -jar isofox.jar \
     -sample SAMPLE_ID \
@@ -176,34 +222,25 @@ java -jar isofox.jar \
     -threads 16 \
 ```
 
-Note: Isofox requires the expected counts file to have been generated for the correct RNA read length. See Isofox read-me for details.
+> [!NOTE]
+> ISOFOX requires the expected counts file to have been generated for the correct RNA read length (see [ISOFOX readme](https://github.com/hartwigmedical/hmftools/blob/master/isofox/README.md#transcript-expression)) for details.
 
-### STEP 2: Run training normalisation scripts
+### Step 2: Run training normalisation scripts
 
-#### Target Regions Normalisation TSV
+#### COBALT: Target regions normalisation TSV
 
-Run the COBALT normalisation file builder command described below on the training samples output.  This performs the following steps
-- for each 1K region covering any target region, extract each sample's tumor read count and the GC profile mappability and GC ratio bucket
-- calculate median and median read counts for each sample, and overall sample mean and median counts
-- normalise each sample's tumor read counts per region
-- calculate a median read count from all samples per GC ratio bucket
-- write a relative enrichment for each region to the output file, with a min enrichment of 0.1
-- if no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
+The target regions normalisation file contains the expected relative enrichment for each on target region. This file is created by COBALT 
+with the following steps:
+- For each 1K region covering any target region, extract each sample's tumor read count and the GC profile mappability and GC ratio bucket
+- Calculate median and median read counts for each sample, and overall sample mean and median counts
+- Normalise each sample's tumor read counts per region
+- Calculate a median read count from all samples per GC ratio bucket
+- Write a relative enrichment for each region to the output file, with a min enrichment of 0.1
+- If no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. 
+Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
 
-The output of this process is a target regions normalisation file with the expected relative enrichment for each on target region.
+**Commands**:
 
-##### Arguments
-Field | Description
----|---
-sample_id_file | CSV with SampleId column header
-cobalt_dir | COBALT output directory from step 1 above
-amber_dir | AMBER output directory from step 2 above
-ref_genome_version | V37 or V38
-gc_profile | As used in COBALT and PURPLE
-target_regions_bed | Definition of target regions
-output_file | Output normalisation TSV file
-
-##### Command
 ```
 java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder 
   -sample_id_file sample_ids.csv \
@@ -216,11 +253,12 @@ java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder
   -log_debug \
 ```
 
-#### Panel Artefact PON
-In addition to the WGS PON, Pave utilises a panel-specific PON to capture panel specific artefacts. 
-Any non-hotspot variant found 3 or more times with a qual (TQP) of > 40 and modified map-qual factor of > -10 is added to the panel PON.
+#### PAVE: Panel artefact PON
 
-To generate this file all the Pave PonBuilder to make the additional PON file:
+In addition to the WGS PON, PAVE utilises a panel-specific PON to capture panel specific artefacts. Any non-hotspot variant found 3 or more 
+times with a qual (TQP) of > 40 and modified map-qual factor of > -10 is added to the panel PON.
+
+**Commands**:
 
 ```
 java -cp pave.jar com.hartwig.hmftools.pave.pon_gen.PonBuilder \
@@ -231,9 +269,14 @@ java -cp pave.jar com.hartwig.hmftools.pave.pon_gen.PonBuilder \
   -log_debug \
 ```
 
-#### TPM normalisation
+#### ISOFOX: TPM normalisation
 
-The TPM normalisation is only required for panels with RNA coverage (eg. TSO500) in order to normalise the TPM so that it is equivalent to WTS.  This can be generated using the Isofox Normalisation Builder
+This step is only required for panels with RNA coverage (e.g. TSO500) and is done to normalise the TPM so that it is equivalent to WTS. 
+Specifically, The median adjusted TPM is calculated for each gene across the panel samples. If the median is zero, a replacement value of 
+0.01 is used instead. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for 
+each gene.
+
+**Commands**:
 
 ```
 java -cp isofox.jar com.hartwig.hmftools.isofox.cohort.CohortAnalyser \
@@ -245,9 +288,9 @@ java -cp isofox.jar com.hartwig.hmftools.isofox.cohort.CohortAnalyser \
   -output_dir /ref_data/ \
 ```
 
-The median adjusted TPM for each gene across the panel samples. If the median is zero, a replacement value of 0.01 is used instead. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene.
-
-Note: The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from panel sequencing are not reliable.
+> [!NOTE] 
+> The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from 
+> panel sequencing are not reliable.
 
 ## Pipeline Tool Functional Differences
 
