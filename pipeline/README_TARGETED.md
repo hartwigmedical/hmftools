@@ -12,6 +12,22 @@ The targeted pipeline largely matches the WGS/WTS pipeline but with some modules
 * TMB and MSI have custom calculations routines
 * TPM is normalised to be in line with observed WGS rates
 
+## Table of contents
+<!-- TOC -->
+* [Panel-specific resource files](#panel-specific-resource-files)
+  * [Manually configured files](#manually-configured-files)
+  * [Output files from training procedure](#output-files-from-training-procedure)
+* [Panel resources training procedure](#panel-resources-training-procedure)
+  * [Running the training procedure](#running-the-training-procedure)
+  * [Overview of training procedure](#overview-of-training-procedure)
+    * [Step 1: Run COBALT, AMBER, SAGE & ISOFOX](#step-1-run-cobalt-amber-sage--isofox)
+    * [Step 2: Run training normalisation scripts](#step-2-run-training-normalisation-scripts)
+* [Targeted analysis pipeline differences](#targeted-analysis-pipeline-differences-)
+  * [Functional differences per tool](#functional-differences-per-tool)
+  * [Recommended parameter values per tool](#recommended-parameter-values-per-tool)
+* [Future improvements](#future-improvements)
+<!-- TOC -->
+
 ## Panel-specific resource files
 
 The [panel-specific resource files](#panel-specific-resource-files) fits and normalises the biases inherent to your panel. 
@@ -102,6 +118,7 @@ The panel training procedure identifies variance in read depth and variant calli
 > from the ploidy across the cohort. In general, this is a relatively safe assumption for a pan-cancer dataset, but in cancer specific 
 > training sets, there may be certain genes with recurrent copy number alterations that violate this assumption.
 
+### Running the training procedure
 The training procedure can be run with `oncoanalyser` using `--mode panel_resource_creation`, First create a samplesheet with a set of 
 representative samples (**≥20 samples recommended**) from your panel sequencing run:
 
@@ -130,11 +147,13 @@ nextflow run nf-core/oncoanalyser \
   --isofox_gene_ids rna_gene_ids.csv # Optional, only provide if panel supports RNA data
 ```
 
+### Overview of training procedure
+
 The training procedure that `onconalyser` runs involves 2 mains steps which are described below.
 
-### Step 1: Run COBALT, AMBER, SAGE & ISOFOX
+#### Step 1: Run COBALT, AMBER, SAGE & ISOFOX
 
-#### COBALT
+##### COBALT
 
 COBALT is used determine raw read depth ratios (before GC normalisation).
 
@@ -149,7 +168,7 @@ java -jar cobalt.jar \
     -tumor_only_diploid_bed DiploidRegions.37.bed.gz \
     -threads 10 \ 
 ```
-#### AMBER
+##### AMBER
 
 AMBER is required to determine the gender of the samples for copy number normalisation. Note that we recommend to lower 
 `-tumor_min_depth` to ensure sufficient coverage of heterozygous points.
@@ -166,7 +185,7 @@ java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
     -threads 10 \
 ```
 
-#### SAGE
+##### SAGE
 
 SAGE performs variant calling so that a panel-specific PON can be created.
 
@@ -186,7 +205,7 @@ java -jar sage.jar \
     -threads 16 \
 ```
 
-#### ISOFOX
+##### ISOFOX
 
 Calculates gene and transcript expression with ISOFOX. ISOFOX is only run for panels supporting RNA sequencing data.
 
@@ -208,9 +227,9 @@ java -jar isofox.jar \
 > [!NOTE]
 > ISOFOX requires the expected counts file to have been generated for the correct RNA read length (see [ISOFOX readme](https://github.com/hartwigmedical/hmftools/blob/master/isofox/README.md#transcript-expression)) for details.
 
-### Step 2: Run training normalisation scripts
+#### Step 2: Run training normalisation scripts
 
-#### COBALT: Target regions normalisation TSV
+##### COBALT: Target regions normalisation TSV
 
 The target regions normalisation file contains the expected relative enrichment for each on target region. This file is created by COBALT 
 with the following steps:
@@ -236,7 +255,7 @@ java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder
   -log_debug \
 ```
 
-#### PAVE: Panel artefact PON
+##### PAVE: Panel artefact PON
 
 In addition to the WGS PON, PAVE utilises a panel-specific PON to capture panel specific artefacts. Any non-hotspot variant found 3 or more 
 times with a qual (TQP) of > 40 and modified map-qual factor of > -10 is added to the panel PON.
@@ -252,7 +271,7 @@ java -cp pave.jar com.hartwig.hmftools.pave.pon_gen.PonBuilder \
   -log_debug \
 ```
 
-#### ISOFOX: TPM normalisation
+##### ISOFOX: TPM normalisation
 
 This step is only required for panels with RNA coverage (e.g. TSO500) and is done to normalise the TPM so that it is equivalent to WTS. 
 Specifically, The median adjusted TPM is calculated for each gene across the panel samples. If the median is zero, a replacement value of 
@@ -275,15 +294,17 @@ java -cp isofox.jar com.hartwig.hmftools.isofox.cohort.CohortAnalyser \
 > The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from 
 > panel sequencing are not reliable.
 
-## Pipeline Tool Functional Differences
+## Targeted analysis pipeline differences 
+
+### Functional differences per tool
 
 <TO DO: make into a table>
 
-### COBALT
+#### COBALT
 COBALT normalises copy number and masks off-target regions according to the CN normalisation file. If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.
 Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment. The GC bias is calculated using on target regions only.
 
-### AMBER
+#### AMBER
 The following filters are applied:
 * min_depth (in tumor) > 25
 * Tumor ref and alt support >= 2
@@ -291,10 +312,10 @@ The following filters are applied:
 * Tumor ref and alt VAF >= 0.05
 * AMBER loci must be within 300 bases of a target region
 
-### PURPLE
+#### PURPLE
 To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
 
-#### MSI estimate
+**MSI estimate**
 For a set of microsatellite sites defined in the MSI target bed file count the number of passing variants at MSI sites ignoring SNV, MNV and 1 base deletes and requiring a VAF cutoff of > 0.15 for 2 and 3 base deletes or 0.08 for 4+ base deletes or any length insertion.
 
 We estimate MSI rate as:
@@ -302,7 +323,7 @@ We estimate MSI rate as:
 MSIndelsPerMb = 220 * # of MSI variants / # of MSI sites in panel
 ```
 
-#### TML & TMB estimate
+**TML & TMB estimate**
 A custom model is used for TMB estimated in targeted mode. The main challenges of the model is to determine variants are included in the TMB estimate. PURPLE selects variants that meet the following criteria:
 - Coding effect <> NONE
 - GNDFreq <0.00005
@@ -326,41 +347,41 @@ The 0.05 conversion from TML to TMB is the empirically observed relationship in 
 
 For driver likelihood calculations, we assume 20% of variants are biallelic for targeted sequencing samples.
 
-#### PURPLE
+**Other**
 
-The following special rules apply to the consrtuction of the driver catalog
+The following special rules apply to the construction of the driver catalog:
 - **DELS**: Don’t report DELS >10Mb or if the copy number segment has less than 3 depth windows (unless supported by SV on both sides)
 - **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
 
 There is also no somatic fit mode or somatic penalty and no SV recovery in PURPLE in targeted mode.
 
-### Isofox
+#### ISOFOX
 TPM is normalised to bring panel gene expression in-line with WGS expression rates.
 
-### SAGE
+#### SAGE
 SAGE is run in high depth mode. See SAGE readme for details.
 
-## Recommended parameter values
+### Recommended parameter values per tool
 The following parameters are calibrated for panel sequencing and are set differently to WGS. These are the default panel parameter values.
 
-AMBER
+#### AMBER
 
 ```
 -target_regions_bed Target Regions BED file
 ```
 
-COBALT
+#### COBALT
 ```
 -target_region Target Regions Normalisation TSV
 -pcf_gamma 50
 ```
 
-SAGE
+#### SAGE
 ```
 -high_depth_mode
 ```
 
-PURPLE
+#### PURPLE
 ```
 -target_regions_bed Target Regions BED file
 -target_regions_ratios Target Regions Ratios file
