@@ -137,7 +137,7 @@ java -jar cobalt.jar \
     -threads 10 \ 
 ```
 AMBER
-Amber is required to determined the gender of the samples for copy number normalisation.  Note that we recommend to lower the tumor_min_depth to ensure sufficient coverage of heterozygous points.
+AMBER is required to determined the gender of the samples for copy number normalisation.  Note that we recommend to lower the tumor_min_depth to ensure sufficient coverage of heterozygous points.
 ```
 java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
     -tumor SAMPLE_ID \
@@ -182,7 +182,7 @@ Note: Isofox requires the expected counts file to have been generated for the co
 
 #### Target Regions Normalisation TSV
 
-Run the Cobalt normalisation file builder command described below on the training samples output.  This performs the following steps
+Run the COBALT normalisation file builder command described below on the training samples output.  This performs the following steps
 - for each 1K region covering any target region, extract each sample's tumor read count and the GC profile mappability and GC ratio bucket
 - calculate median and median read counts for each sample, and overall sample mean and median counts
 - normalise each sample's tumor read counts per region
@@ -196,10 +196,10 @@ The output of this process is a target regions normalisation file with the expec
 Field | Description
 ---|---
 sample_id_file | CSV with SampleId column header
-cobalt_dir | Cobalt output directory from step 1 above
-amber_dir | Amber output directory from step 2 above
+cobalt_dir | COBALT output directory from step 1 above
+amber_dir | AMBER output directory from step 2 above
 ref_genome_version | V37 or V38
-gc_profile | As used in Cobalt and Purple
+gc_profile | As used in COBALT and PURPLE
 target_regions_bed | Definition of target regions
 output_file | Output normalisation TSV file
 
@@ -253,19 +253,19 @@ Note: The adjustment factors are calculated at the gene level and not at the tra
 
 <TO DO: make into a table>
 
-### Cobalt
-Cobalt normalises copy number and masks off-target regions according to the CN normalisation file. If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.
+### COBALT
+COBALT normalises copy number and masks off-target regions according to the CN normalisation file. If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.
 Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment. The GC bias is calculated using on target regions only.
 
-### Amber
+### AMBER
 The following filters are applied:
 * min_depth (in tumor) > 25
 * Tumor ref and alt support >= 2
 * Min_depth_percent and max_depth_percent are not applied
 * Tumor ref and alt VAF >= 0.05
-* Amber loci must be within 300 bases of a target region
+* AMBER loci must be within 300 bases of a target region
 
-### Purple
+### PURPLE
 To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
 
 #### MSI estimate
@@ -300,7 +300,7 @@ The 0.05 conversion from TML to TMB is the empirically observed relationship in 
 
 For driver likelihood calculations, we assume 20% of variants are biallelic for targeted sequencing samples.
 
-#### Purple
+#### PURPLE
 
 The following special rules apply to the consrtuction of the driver catalog
 - **DELS**: Don’t report DELS >10Mb or if the copy number segment has less than 3 depth windows (unless supported by SV on both sides)
@@ -311,30 +311,30 @@ There is also no somatic fit mode or somatic penalty and no SV recovery in PURPL
 ### Isofox
 TPM is normalised to bring panel gene expression in-line with WGS expression rates.
 
-### Sage
-Sage is run in high depth mode. See Sage readme for details.
+### SAGE
+SAGE is run in high depth mode. See SAGE readme for details.
 
 ## Recommended parameter values
 The following parameters are calibrated for panel sequencing and are set differently to WGS. These are the default panel parameter values.
 
-Amber
+AMBER
 
 ```
 -target_regions_bed Target Regions BED file
 ```
 
-Cobalt
+COBALT
 ```
 -target_region Target Regions Normalisation TSV
 -pcf_gamma 50
 ```
 
-Sage
+SAGE
 ```
 -high_depth_mode
 ```
 
-Purple
+PURPLE
 ```
 -target_regions_bed Target Regions BED file
 -target_regions_ratios Target Regions Ratios file
