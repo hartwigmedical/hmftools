@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
@@ -210,6 +211,9 @@ public class SomaticVariants
 
     private static final double NO_GC_RATIO = -1;
 
+    private static final List<Integer> READ_COUNT_AD_TYPES = Lists.newArrayList(
+            VariantReadSupport.FULL.ordinal(), VariantReadSupport.PARTIAL_CORE.ordinal(), VariantReadSupport.REALIGNED.ordinal());
+
     private void processVariant(final List<String> targetSampleIds, final VariantContext variantContext)
     {
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
@@ -250,19 +254,23 @@ public class SomaticVariants
                 continue;
 
             int depth = genotype.getDP();
-            int alleleCount = genotype.getAD()[1];
             UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
 
             int qualTotal = 0;
+            int alleleCount = 0;
 
-            if(alleleCount > 0)
+            if(genotype.getAD()[1] > 0)
             {
                 String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
                         .split(LIST_SEPARATOR, -1);
 
-                for(int i = 0; i <= VariantReadSupport.REALIGNED.ordinal(); ++i)
+                String[] readCounts = genotype.getExtendedAttribute(READ_CONTEXT_COUNT, 0).toString()
+                        .split(LIST_SEPARATOR, -1);
+
+                for(Integer rcType : READ_COUNT_AD_TYPES)
                 {
-                    qualTotal += Integer.parseInt(qualCounts[i]);
+                    alleleCount += Integer.parseInt(readCounts[rcType]);
+                    qualTotal += Integer.parseInt(qualCounts[rcType]);
                 }
             }
 
