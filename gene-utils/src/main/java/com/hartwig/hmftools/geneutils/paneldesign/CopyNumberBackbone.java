@@ -5,13 +5,13 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_CENTROMERE_MARGIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_GC_RATIO_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_GNMOD_FREQ_MAX;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_GNMOD_FREQ_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_MAPPABILITY;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_PARTITION_SIZE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GC_RATIO_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNMOD_FREQ_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNMOD_FREQ_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_MAPPABILITY;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,14 +28,15 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// Probes based on Amber heterozygous sites, used to deduce copy number.
 public class CopyNumberBackbone
 {
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
-    public static List<ProbeCandidateChoice> createProbeCandidates(final PanelConfig config)
+    public static List<ProbeCandidateChoice> createProbeCandidates(final String amberSitesFile, final RefGenomeVersion refGenVersion)
     {
-        Map<String, List<Partition>> partitions = createPartitions(config.RefGenVersion);
-        populateAmberSites(partitions, config.AmberSitesFile);
+        Map<String, List<Partition>> partitions = createPartitions(refGenVersion);
+        populateAmberSites(partitions, amberSitesFile);
         return createProbeCandidates(partitions);
     }
 
@@ -57,6 +58,8 @@ public class CopyNumberBackbone
 
         return Arrays.stream(HumanChromosome.values()).map(chromosome ->
         {
+            // Partitions spaced across the chromosome, avoiding the centromeres.
+
             String chrStr = refGenomeVersion.versionedChromosome(chromosome.toString());
             int centromere = refGenomeCoordinates.centromeres().get(chromosome);
             int centromereMin = centromere - CN_BACKBONE_CENTROMERE_MARGIN;
@@ -70,7 +73,7 @@ public class CopyNumberBackbone
         }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private static void populateAmberSites(Map<String, List<Partition>> partitions, String sitesFilePath)
+    private static void populateAmberSites(Map<String, List<Partition>> partitions, final String sitesFilePath)
     {
         enum SiteFilter
         {
@@ -139,6 +142,8 @@ public class CopyNumberBackbone
 
     private static ProbeCandidateChoice partitionToProbes(final Partition partition)
     {
+        // For each partition, we generate a set of possible probes on Amber sites.
+        // Later we will pick 1 best probe for each partition.
         List<ProbeCandidate> siteProbes = partition.Sites.stream().map(CopyNumberBackbone::amberSiteToProbe).toList();
         String extraInfo = partition.Region.toString();
         ProbeSourceInfo source = new ProbeSourceInfo(ProbeSource.CN_BACKBONE, extraInfo);

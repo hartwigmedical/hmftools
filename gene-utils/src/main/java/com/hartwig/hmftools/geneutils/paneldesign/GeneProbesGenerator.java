@@ -8,16 +8,16 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.CANDIDATE_FILE_EXTENSION;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.GENE_REGION_FILE_EXTENSION;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_CANDIDATE_REGION_SIZE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_FLANKING_DISTANCE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_LONG_INTRON_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX_CANDIDATE_PROBES;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.GENE_MIN_INTRON_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MIN_PROBE_QUALITY_SCORE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MAX;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_GC_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_CANDIDATE_REGION_SIZE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_FLANKING_DISTANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_LONG_INTRON_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MAX_CANDIDATE_PROBES;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MIN_INTRON_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.MIN_PROBE_QUALITY_SCORE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_GC_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_GC_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeCandidate.createProbeCandidate;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class GeneProbesGenerator
         }
     }
 
-    private final PanelConfig mConfig;
+    private final PanelBuilderConfig mConfig;
     private final PanelCache mPanelCache;
     private final ProbeQualityProfile mProbeQualityProfile;
 
@@ -67,7 +67,7 @@ public class GeneProbesGenerator
 
     private final List<GeneNameTranscriptId> mGeneNameTranscriptIds;
 
-    public GeneProbesGenerator(final PanelConfig config, final PanelCache panelCache, final ProbeQualityProfile probeQualityProfile)
+    public GeneProbesGenerator(final PanelBuilderConfig config, final PanelCache panelCache, final ProbeQualityProfile probeQualityProfile)
     {
         mConfig = config;
         mPanelCache = panelCache;

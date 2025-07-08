@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PanelBuilder
 {
-    private final PanelConfig mConfig;
+    private final PanelBuilderConfig mConfig;
 
     private final PanelCache mPanelCache;
 
@@ -31,7 +31,7 @@ public class PanelBuilder
 
     public PanelBuilder(final ConfigBuilder configBuilder)
     {
-        mConfig = new PanelConfig(configBuilder);
+        mConfig = new PanelBuilderConfig(configBuilder);
 
         mPanelCache = new PanelCache();
 
@@ -104,7 +104,7 @@ public class PanelBuilder
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        PanelConfig.registerConfig(configBuilder);
+        PanelBuilderConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 

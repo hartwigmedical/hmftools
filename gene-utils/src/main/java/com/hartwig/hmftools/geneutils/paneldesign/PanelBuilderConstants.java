@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-public class PanelConstants
+public class PanelBuilderConstants
 {
     // copy number backbone
     public static final int CN_BACKBONE_PARTITION_SIZE = 1_000_000;
