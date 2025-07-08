@@ -13,18 +13,27 @@ import org.apache.logging.log4j.util.BiConsumer;
 
 public class DataWriter
 {
+    private static final String FLD_BASE_SEQUENCE = "Sequence";
+    private static final String FLD_QUALITY_SCORE = "QualityScore";
+    private static final String FLD_GC_CONTENT = "GCContent";
     private static final String FLD_SOURCE_TYPE = "SourceType";
     private static final String FLD_SOURCE_EXTRA_INFO = "SourceExtra";
     private static final String FLD_REJECT_REASON = "Reason";
 
     public static void writePanelProbes(final String filePath, final Stream<EvaluatedProbe> probes)
     {
-        List<String> columns = List.of(FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_SOURCE_TYPE, FLD_SOURCE_EXTRA_INFO);
+        List<String> columns = List.of(
+                FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END,
+                FLD_BASE_SEQUENCE, FLD_QUALITY_SCORE, FLD_GC_CONTENT,
+                FLD_SOURCE_TYPE, FLD_SOURCE_EXTRA_INFO);
         BiConsumer<EvaluatedProbe, DelimFileWriter.Row> rowWriter = (probe, row) ->
         {
             row.set(FLD_CHROMOSOME, probe.candidate().probeRegion().chromosome());
             row.set(FLD_POSITION_START, probe.candidate().probeRegion().start());
             row.set(FLD_POSITION_END, probe.candidate().probeRegion().end());
+            row.set(FLD_BASE_SEQUENCE, probe.sequence());
+            row.set(FLD_QUALITY_SCORE, probe.qualityScore());
+            row.set(FLD_GC_CONTENT, probe.gcContent());
             row.set(FLD_SOURCE_TYPE, probe.candidate().source().type().name());
             row.set(FLD_SOURCE_EXTRA_INFO, probe.candidate().source().extra());
         };

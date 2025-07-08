@@ -171,6 +171,7 @@ public class CopyNumberBackbone
 
     private static CandidateProbe amberSiteToProbe(final AmberSite site)
     {
+        // TODO: can probably try different probes no centered and select the best
         BasePosition position = site.position();
         // Probe centered on the site.
         int probeStart = max(1, position.Position - PROBE_LENGTH / 2);

@@ -76,7 +76,9 @@ public class ProbeEvaluator
 
     private EvaluatedProbe evaluateGc(EvaluatedProbe probe)
     {
-        double gcContent = getGcContent(probe.candidate());
+        String sequence = getProbeSequence(probe.candidate());
+        probe = probe.withSequence(sequence);
+        double gcContent = calcGcPercent(sequence);
         probe = probe.withGcContent(gcContent);
         if(!(gcContent >= mGcMin && gcContent <= mGcMax))
         {
@@ -91,11 +93,8 @@ public class ProbeEvaluator
         return mQualityProfile.computeQualityScore(probe.probeRegion()).orElse(0d);
     }
 
-    private double getGcContent(CandidateProbe probe)
-    {
+    private String getProbeSequence(CandidateProbe probe) {
         ChrBaseRegion region = probe.probeRegion();
-        String sequence = mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
-        double gcContent = calcGcPercent(sequence);
-        return gcContent;
+        return mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
     }
 }

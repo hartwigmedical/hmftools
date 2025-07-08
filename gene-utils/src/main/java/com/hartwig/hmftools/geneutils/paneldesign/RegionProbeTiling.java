@@ -14,6 +14,7 @@ public class RegionProbeTiling
             final ProbeEvaluator probeEvaluator)
     {
         // TODO
+        return new ProbeGenerationResult();
     }
 
     // Yields consecutive nonoverlapping probes starting at a position.

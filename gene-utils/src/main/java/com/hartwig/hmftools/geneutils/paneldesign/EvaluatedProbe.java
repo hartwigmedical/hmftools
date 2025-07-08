@@ -5,6 +5,8 @@ public record EvaluatedProbe(
         // null if the probe is acceptable.
         String rejectionReason,
         // null if not checked.
+        String sequence,
+        // null if not checked.
         Double qualityScore,
         // null if not checked.
         Double gcContent
@@ -12,7 +14,7 @@ public record EvaluatedProbe(
 {
     public EvaluatedProbe(final CandidateProbe probe)
     {
-        this(probe, null, null, null);
+        this(probe, null, null, null, null);
     }
 
     public boolean accepted()
@@ -27,16 +29,20 @@ public record EvaluatedProbe(
 
     public EvaluatedProbe withRejectionReason(final String value)
     {
-        return new EvaluatedProbe(candidate, value, qualityScore, gcContent);
+        return new EvaluatedProbe(candidate, value, sequence, qualityScore, gcContent);
+    }
+
+    public EvaluatedProbe withSequence(String value) {
+        return new EvaluatedProbe(candidate, rejectionReason, value, qualityScore, gcContent);
     }
 
     public EvaluatedProbe withQualityScore(double value)
     {
-        return new EvaluatedProbe(candidate, rejectionReason, value, gcContent);
+        return new EvaluatedProbe(candidate, rejectionReason, sequence, value, gcContent);
     }
 
     public EvaluatedProbe withGcContent(double value)
     {
-        return new EvaluatedProbe(candidate, rejectionReason, qualityScore, value);
+        return new EvaluatedProbe(candidate, rejectionReason, sequence, qualityScore, value);
     }
 }
