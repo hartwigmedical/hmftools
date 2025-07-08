@@ -1,16 +1,15 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
+import java.nio.file.Paths;
+
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -21,15 +20,12 @@ public class PanelBuilderConfig
     public final String GeneTranscriptFile;
     public final String CustomRegionFile;
 
+    public final String RefGenomeFile;
+    public final String EnsemblDir;
+    public final String ProbeQualityProfileFile;
+
     public final String OutputPrefix;
     public final String OutputDir;
-
-    public final RefGenomeInterface RefGenome;
-    public final RefGenomeVersion RefGenVersion;
-
-    public final String EnsemblDir;
-
-    public final String ProbeQualityProfileFile;
 
     private static final String CFG_AMBER_SITES_FILE = "amber_sites_file";
     private static final String CFG_GENE_TRANSCRIPT_FILE = "gene_transcript_file";
@@ -42,9 +38,7 @@ public class PanelBuilderConfig
         GeneTranscriptFile = configBuilder.getValue(CFG_GENE_TRANSCRIPT_FILE);
         CustomRegionFile = configBuilder.getValue(CFG_CUSTOM_REGION_FILE);
 
-        String refGenomeFile = configBuilder.getValue(REF_GENOME);
-        RefGenome = loadRefGenome(refGenomeFile);
-        RefGenVersion = deriveRefGenomeVersion((RefGenomeSource) RefGenome);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
         EnsemblDir = configBuilder.getValue(EnsemblDataCache.ENSEMBL_DATA_DIR);
 
@@ -54,9 +48,9 @@ public class PanelBuilderConfig
         OutputDir = parseOutputDir(configBuilder);
     }
 
-    public String formOutputFilename(final String fileIdExtension)
+    public String outputFilePath(final String fileName)
     {
-        return OutputDir + OutputPrefix + fileIdExtension;
+        return Paths.get(OutputDir, format("%s.%s", OutputPrefix, fileName)).toString();
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GC_RATIO_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNMOD_FREQ_MAX;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNMOD_FREQ_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_MAPPABILITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
@@ -38,7 +38,7 @@ import org.apache.logging.log4j.Logger;
 //   - Select the best probe within each partition.
 public class CopyNumberBackbone
 {
-    private static final ProbeSource PROBE_SOURCE = ProbeSource.CN_BACKBONE;
+    private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.CN_BACKBONE;
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
@@ -104,7 +104,7 @@ public class CopyNumberBackbone
                 ++siteFilterCounts[SiteFilter.MAPPABILITY.ordinal()];
                 continue;
             }
-            else if(site.gnomadFreq() < CN_BACKBONE_GNMOD_FREQ_MIN || site.gnomadFreq() > CN_BACKBONE_GNMOD_FREQ_MAX)
+            else if(site.gnomadFreq() < CN_BACKBONE_GNOMAD_FREQ_MIN || site.gnomadFreq() > CN_BACKBONE_GNOMAD_FREQ_MAX)
             {
                 ++siteFilterCounts[SiteFilter.GNOMAD.ordinal()];
                 continue;
@@ -145,7 +145,7 @@ public class CopyNumberBackbone
 
     private static ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions, final ProbeEvaluator probeEvaluator)
     {
-        List<ProbeCandidate> probes = partitions.values().stream()
+        List<EvaluatedProbe> probes = partitions.values().stream()
                 .flatMap(chrPartitions ->
                         chrPartitions.stream().map(partition -> generateProbe(partition, probeEvaluator)))
                 .toList();
@@ -153,10 +153,10 @@ public class CopyNumberBackbone
         return new ProbeGenerationResult(probes, Collections.emptyList());
     }
 
-    private static ProbeCandidate generateProbe(final Partition partition, final ProbeEvaluator probeEvaluator)
+    private static EvaluatedProbe generateProbe(final Partition partition, final ProbeEvaluator probeEvaluator)
     {
-        Stream<ProbeCandidate> candidates = generateProbeCandidates(partition);
-        Optional<ProbeCandidate> bestCandidate = probeEvaluator.selectBestProbe(candidates);
+        Stream<CandidateProbe> candidates = generateCandidateProbes(partition);
+        Optional<EvaluatedProbe> bestCandidate = probeEvaluator.selectBestProbe(candidates);
         // Assume there is at least one acceptable probe in each partition to make things simpler.
         // It's likely a valid assumption because the set of Amber sites is fixed and each partition includes many sites.
         return bestCandidate.orElseThrow(
@@ -164,12 +164,12 @@ public class CopyNumberBackbone
                         format("Expected at least one Amber site to be an acceptable probe in CN backbone partition %s", partition.Region)));
     }
 
-    private static Stream<ProbeCandidate> generateProbeCandidates(final Partition partition)
+    private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition)
     {
         return partition.Sites.stream().map(CopyNumberBackbone::amberSiteToProbe);
     }
 
-    private static ProbeCandidate amberSiteToProbe(final AmberSite site)
+    private static CandidateProbe amberSiteToProbe(final AmberSite site)
     {
         BasePosition position = site.position();
         // Probe centered on the site.
@@ -179,6 +179,6 @@ public class CopyNumberBackbone
         ChrBaseRegion targetRegion = new ChrBaseRegion(position.Chromosome, position.Position, position.Position);
         String extraInfo = position.toString();
         ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
-        return new ProbeCandidate(source, probeRegion, targetRegion);
+        return new CandidateProbe(source, probeRegion, targetRegion);
     }
 }

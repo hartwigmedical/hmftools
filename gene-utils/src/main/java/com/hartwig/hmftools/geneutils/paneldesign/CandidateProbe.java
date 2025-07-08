@@ -2,7 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-public record ProbeCandidate(
+public record CandidateProbe(
         // What caused the probe to be generated.
         ProbeSourceInfo source,
         // The region of the probe itself.

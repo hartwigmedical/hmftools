@@ -39,18 +39,17 @@ import org.apache.logging.log4j.Logger;
 //     - For small introns, create several probes centered on the intron and choose the best probe for each.
 public class TargetGenes
 {
-    private static final ProbeSource PROBE_SOURCE = ProbeSource.GENE;
+    private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.GENE;
 
     private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);
 
-    public ProbeGenerationResult generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
+    public static ProbeGenerationResult generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
             final ProbeEvaluator probeEvaluator)
     {
-        List<TargetGene> targetGenes = loadTargetGenesFile(targetGeneFile);
-        List<GeneTranscript> genes = targetGenes.stream()
+        List<GeneTranscriptId> geneIds = loadTargetGenesFile(targetGeneFile);
+        List<GeneTranscript> genes = geneIds.stream()
                 .map(gene -> loadGeneData(gene, ensemblData))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(Optional::stream)
                 .toList();
         List<GeneRegion> geneRegions = genes.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
         ProbeGenerationResult result = geneRegions.stream()
@@ -59,7 +58,7 @@ public class TargetGenes
         return result;
     }
 
-    private record TargetGene(
+    private record GeneTranscriptId(
             String geneName,
             String transcriptName
     )
@@ -70,18 +69,18 @@ public class TargetGenes
         }
     }
 
-    private static List<TargetGene> loadTargetGenesFile(final String filePath)
+    private static List<GeneTranscriptId> loadTargetGenesFile(final String filePath)
     {
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
             int geneNameIdx = reader.getColumnIndex(FLD_GENE_NAME);
             int transNameIdx = reader.getColumnIndex(FLD_TRANS_NAME);
 
-            List<TargetGene> genes = reader.stream().map(row ->
+            List<GeneTranscriptId> genes = reader.stream().map(row ->
             {
                 String geneName = row.get(geneNameIdx);
                 String transcriptName = row.getOrNull(transNameIdx);
-                return new TargetGene(geneName, transcriptName);
+                return new GeneTranscriptId(geneName, transcriptName);
             }).toList();
 
             LOGGER.info("Loaded {} target genes", genes.size());
@@ -89,22 +88,29 @@ public class TargetGenes
         }
     }
 
-    private static Optional<GeneTranscript> loadGeneData(final TargetGene gene, final EnsemblDataCache ensemblData)
+    public record GeneTranscript(
+            GeneData gene,
+            TranscriptData transcript
+    )
     {
-        GeneData geneData = ensemblData.getGeneDataByName(gene.geneName());
+    }
+
+    private static Optional<GeneTranscript> loadGeneData(final GeneTranscriptId geneId, final EnsemblDataCache ensemblData)
+    {
+        GeneData geneData = ensemblData.getGeneDataByName(geneId.geneName());
         if(geneData == null)
         {
-            String error = format("Transcript gene for gene: %s not found", gene.geneName());
+            String error = format("Transcript gene for gene: %s not found", geneId.geneName());
             LOGGER.error(error);
             throw new RuntimeException(error);
         }
 
-        TranscriptData transcriptData = gene.canonical() ?
+        TranscriptData transcriptData = geneId.canonical() ?
                 ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
-                ensemblData.getTranscriptData(geneData.GeneId, gene.transcriptName());
+                ensemblData.getTranscriptData(geneData.GeneId, geneId.transcriptName());
         if(transcriptData == null)
         {
-            String error = format("gene(%s) transcript(%s) not found", gene.geneName(), gene.transcriptName());
+            String error = format("gene(%s) transcript(%s) not found", geneId.geneName(), geneId.transcriptName());
             LOGGER.error(error);
             throw new RuntimeException(error);
         }
@@ -112,7 +118,7 @@ public class TargetGenes
         if(transcriptData.nonCoding())
         {
             // User should add as a custom region instead.
-            LOGGER.warn("gene({}) transcript({}) non-coding skipped", gene.geneName(), gene.transcriptName());
+            LOGGER.warn("gene({}) transcript({}) non-coding skipped", geneId.geneName(), geneId.transcriptName());
             return Optional.empty();
         }
 
@@ -143,7 +149,6 @@ public class TargetGenes
 
     private static List<GeneRegion> createGeneRegions(final GeneTranscript gene)
     {
-
         List<GeneRegion> regions = new ArrayList<>();
 
         GeneData geneData = gene.gene();
@@ -240,22 +245,23 @@ public class TargetGenes
     private static ProbeGenerationResult generateSingleProbeInRegion(final GeneRegion geneRegion, final ProbeEvaluator probeEvaluator)
     {
         ProbeSourceInfo source = createProbeSourceInfo(geneRegion);
-        // TODO: can probably look at all possible probes here instead
-        Stream<ProbeCandidate> candidates = RegionProbeTiling.tileBaseRegionsFrom(geneRegion.region().start())
+        // TODO: can probably look at all possible probes here instead, and put such a function in ProbeEvaluator
+        Stream<CandidateProbe> candidates = RegionProbeTiling.tileBaseRegionsFrom(geneRegion.region().start())
                 .limit(GENE_MAX_CANDIDATE_PROBES)
                 .map(probeRegion ->
                 {
                     ChrBaseRegion chrBaseRegion =
                             new ChrBaseRegion(geneRegion.gene().gene().Chromosome, probeRegion.start(), probeRegion.end());
-                    return new ProbeCandidate(source, chrBaseRegion, chrBaseRegion);
+                    return new CandidateProbe(source, chrBaseRegion, chrBaseRegion);
                 });
-        Optional<ProbeCandidate> bestCandidate = probeEvaluator.selectBestProbe(candidates);
+        Optional<EvaluatedProbe> bestCandidate = probeEvaluator.selectBestProbe(candidates);
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), List.of()))
                 .orElseGet(() ->
                         new ProbeGenerationResult(
                                 List.of(),
-                                List.of(new RejectedRegion(geneRegion.chrBaseRegion(), source))));
+                                // TODO: rejection reason
+                                List.of(new RejectedRegion(geneRegion.chrBaseRegion(), source, null))));
         return result;
     }
 
@@ -263,7 +269,7 @@ public class TargetGenes
     {
         GeneData geneData = geneRegion.gene().gene();
         TranscriptData transcriptData = geneRegion.gene().transcript();
-        String extraInfo = format("%s:%s:%s", geneData.GeneName, transcriptData.TransName, geneRegion.type());
+        String extraInfo = format("%s:%s:%s", geneData.GeneName, transcriptData.TransName, geneRegion.type().name());
         return new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
     }
 }

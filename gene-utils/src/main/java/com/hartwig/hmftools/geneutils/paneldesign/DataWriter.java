@@ -1,146 +1,55 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static java.lang.Double.NaN;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.util.BiConsumer;
 
 public class DataWriter
 {
-    public static final String PANEL_DEFINITION_FILE_EXTENSION = ".panel_definition.tsv";
-    public static final String GENE_REGION_FILE_EXTENSION = ".gene_region.tsv";
-    public static final String CANDIDATE_FILE_EXTENSION = ".probe_candidate.tsv";
+    private static final String FLD_SOURCE_TYPE = "SourceType";
+    private static final String FLD_SOURCE_EXTRA_INFO = "SourceExtra";
+    private static final String FLD_REJECT_REASON = "Reason";
 
-    enum PanelDefinitionColumn
+    public static void writePanelProbes(final String filePath, final Stream<EvaluatedProbe> probes)
     {
-        Chromosome,
-        PositionStart,
-        PositionEnd,
-        RegionType,
-        SourceInfo;
-    }
-
-    public static void writePanelDefinition(final String filename, final List<ProbeCandidate> panelRegions)
-    {
-        try(BufferedWriter writer = createBufferedWriter(filename))
+        List<String> columns = List.of(FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_SOURCE_TYPE, FLD_SOURCE_EXTRA_INFO);
+        BiConsumer<EvaluatedProbe, DelimFileWriter.Row> rowWriter = (probe, row) ->
         {
-            DelimFileWriter.write(writer, PanelDefinitionColumn.values(), panelRegions,
-                    (r, row) ->
-                    {
-                        row.set(PanelDefinitionColumn.Chromosome, r.Chromosome);
-                        row.set(PanelDefinitionColumn.PositionStart, r.start());
-                        row.set(PanelDefinitionColumn.PositionEnd, r.end());
-                        row.set(PanelDefinitionColumn.RegionType, r.Type.toString());
-                        row.set(PanelDefinitionColumn.SourceInfo, r.extendedSourceInfo());
-                    });
-        }
-        catch(IOException e)
+            row.set(FLD_CHROMOSOME, probe.candidate().probeRegion().chromosome());
+            row.set(FLD_POSITION_START, probe.candidate().probeRegion().start());
+            row.set(FLD_POSITION_END, probe.candidate().probeRegion().end());
+            row.set(FLD_SOURCE_TYPE, probe.candidate().source().type().name());
+            row.set(FLD_SOURCE_EXTRA_INFO, probe.candidate().source().extra());
+        };
+        try(DelimFileWriter<EvaluatedProbe> writer = new DelimFileWriter<>(filePath, columns, rowWriter))
         {
-            throw new UncheckedIOException(e);
+            probes.forEach(writer::writeRow);
         }
     }
 
-    enum GeneRegionColumn
+    public static void writeRejectedRegions(final String filePath, final Stream<RejectedRegion> regions)
     {
-        GeneName,
-        RegionType,
-        Chromosome,
-        RegionStart,
-        RegionEnd,
-        UseWholeRegion,
-        ProbeStart,
-        ProbeEnd,
-        ProbeGcContent,
-        ProbeQualityScore,
-        ProbeSequence
-    }
-
-    public static void writeTargetedGeneRegions(final String filename, final List<GeneRegion> targetedGeneRegions)
-    {
-        try(BufferedWriter writer = createBufferedWriter(filename))
+        List<String> columns =
+                List.of(FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_SOURCE_TYPE, FLD_SOURCE_EXTRA_INFO, FLD_REJECT_REASON);
+        BiConsumer<RejectedRegion, DelimFileWriter.Row> rowWriter = (region, row) ->
         {
-            DelimFileWriter.write(writer, GeneRegionColumn.values(), targetedGeneRegions,
-                    (r, row) ->
-                    {
-                        row.set(GeneRegionColumn.GeneName, r.getGene().getGeneData().GeneName);
-                        row.set(GeneRegionColumn.RegionType, r.getType().name());
-                        row.set(GeneRegionColumn.Chromosome, r.getChromosome());
-                        row.set(GeneRegionColumn.RegionStart, r.getStart());
-                        row.set(GeneRegionColumn.RegionEnd, r.getEnd());
-                        row.set(GeneRegionColumn.UseWholeRegion, r.useWholeRegion());
-
-                        // some we use whole region
-                        if(!r.useWholeRegion())
-                        {
-                            ProbeCandidate selectedProbe = r.getSelectedProbe();
-                            if(selectedProbe != null)
-                            {
-                                row.set(GeneRegionColumn.ProbeStart, selectedProbe.getStart());
-                                row.set(GeneRegionColumn.ProbeEnd, selectedProbe.getEnd());
-                                row.set(GeneRegionColumn.ProbeGcContent, selectedProbe.getGcContent());
-                                row.set(GeneRegionColumn.ProbeQualityScore, selectedProbe.getQualityScore().orElse(NaN));
-                            }
-                        }
-                    });
-        }
-        catch(IOException e)
+            row.set(FLD_CHROMOSOME, region.baseRegion().chromosome());
+            row.set(FLD_POSITION_START, region.baseRegion().start());
+            row.set(FLD_POSITION_END, region.baseRegion().end());
+            row.set(FLD_SOURCE_TYPE, region.source().type().name());
+            row.set(FLD_SOURCE_EXTRA_INFO, region.source().extra());
+            row.set(FLD_REJECT_REASON, region.reason());
+        };
+        try(DelimFileWriter<RejectedRegion> writer = new DelimFileWriter<>(filePath, columns, rowWriter))
         {
-            throw new UncheckedIOException(e);
+            regions.forEach(writer::writeRow);
         }
     }
-
-    enum GeneProbeCandidateColumn
-    {
-        GeneName,
-        RegionType,
-        Chromosome,
-        RegionStart,
-        RegionEnd,
-        ProbeStart,
-        ProbeEnd,
-        ProbeGcContent,
-        ProbeQualityScore,
-        Selected,
-        ProbeSequence
-    }
-
-    public static void writeCandidates(final String filename, final List<GeneRegion> targetedGeneRegions)
-    {
-        List<Pair<GeneRegion, ProbeCandidate>> probeList = targetedGeneRegions.stream()
-                .flatMap(o -> o.getProbeCandidates().stream().map(c -> Pair.of(o, c)))
-                .collect(Collectors.toList());
-
-        try(BufferedWriter writer = createBufferedWriter(filename))
-        {
-            DelimFileWriter.write(writer, GeneProbeCandidateColumn.values(), probeList,
-                    (r, row) ->
-                    {
-                        row.set(GeneProbeCandidateColumn.GeneName, r.getLeft().getGene().getGeneData().GeneName);
-                        row.set(GeneProbeCandidateColumn.RegionType, r.getLeft().getType().name());
-                        row.set(GeneProbeCandidateColumn.Chromosome, r.getLeft().getChromosome());
-                        row.set(GeneProbeCandidateColumn.RegionStart, r.getLeft().getStart());
-                        row.set(GeneProbeCandidateColumn.RegionEnd, r.getLeft().getEnd());
-                        row.set(GeneProbeCandidateColumn.ProbeStart, r.getRight().getStart());
-                        row.set(GeneProbeCandidateColumn.ProbeEnd, r.getRight().getEnd());
-                        row.set(GeneProbeCandidateColumn.ProbeGcContent, r.getRight().getGcContent());
-                        row.set(GeneProbeCandidateColumn.ProbeQualityScore, r.getRight().getQualityScore().orElse(NaN));
-                        row.set(GeneProbeCandidateColumn.Selected, Boolean.toString(r.getLeft().getSelectedProbe() == r.getRight()));
-                        row.set(GeneProbeCandidateColumn.ProbeSequence, r.getRight().getSequence());
-                    });
-        }
-        catch(IOException e)
-        {
-            throw new UncheckedIOException(e);
-        }
-    }
-
 }

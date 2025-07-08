@@ -20,7 +20,11 @@ public class PanelBuilderConstants
     public static final int CN_BACKBONE_PARTITION_SIZE = 1_000_000;
     public static final int CN_BACKBONE_CENTROMERE_MARGIN = 5_000_000;
     public static final double CN_BACKBONE_MAPPABILITY_MIN = 1;
-    public static final double CN_BACKBONE_GNMOD_FREQ_MIN = 0.3;
-    public static final double CN_BACKBONE_GNMOD_FREQ_MAX = 0.7;
+    public static final double CN_BACKBONE_GNOMAD_FREQ_MIN = 0.3;
+    public static final double CN_BACKBONE_GNOMAD_FREQ_MAX = 0.7;
     public static final double CN_BACKBONE_GC_RATIO_MIN = 0.45;
+
+    // Output naming
+    public static final String PANEL_PROBES_FILE = "panel_probes.tsv";
+    public static final String REJECTED_REGIONS_FILE = "rejected_regions.tsv";
 }

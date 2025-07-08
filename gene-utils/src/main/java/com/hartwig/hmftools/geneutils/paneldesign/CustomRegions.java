@@ -17,7 +17,7 @@ public class CustomRegions
 {
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
 
-    private static final ProbeSource PROBE_SOURCE = ProbeSource.CUSTOM;
+    private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.CUSTOM;
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 

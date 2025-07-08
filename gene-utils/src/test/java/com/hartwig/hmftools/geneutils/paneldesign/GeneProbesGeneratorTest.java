@@ -211,10 +211,10 @@ public class GeneProbesGeneratorTest
         checkProbeCandidates(region.getProbeCandidates(), region.getStart(), region.getEnd(), 8, 120);
     }
 
-    private void checkProbeCandidates(List<ProbeCandidate> probeCandidates, int start, int end, int numProbes, int probeLength)
+    private void checkProbeCandidates(List<CandidateProbe> probeCandidates, int start, int end, int numProbes, int probeLength)
     {
         int probeStart = start;
-        for(ProbeCandidate probeCandidate : probeCandidates)
+        for(CandidateProbe probeCandidate : probeCandidates)
         {
             assertEquals(probeStart, probeCandidate.getStart());
             assertEquals(probeStart + probeLength - 1, probeCandidate.getEnd());

@@ -1,102 +1,70 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.String.format;
-
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.PANEL_DEFINITION_FILE_EXTENSION;
-import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writePanelDefinition;
+import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writePanelProbes;
+import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writeRejectedRegions;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_GC_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_GC_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_SCORE_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE;
 
-import java.util.Collections;
-import java.util.List;
-
-import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PanelBuilder
 {
     private final PanelBuilderConfig mConfig;
 
-    private final PanelCache mPanelCache;
-
-    private final ProbeQualityProfile mProbeQualityProfile;
+    private static final Logger LOGGER = LogManager.getLogger(PanelBuilder.class);
 
     public PanelBuilder(final ConfigBuilder configBuilder)
     {
         mConfig = new PanelBuilderConfig(configBuilder);
-
-        mPanelCache = new PanelCache();
-
-        mProbeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
     }
 
     public void run()
     {
-        GU_LOGGER.info("starting panel builder");
+        LOGGER.info("Starting panel builder");
 
         long startTimeMs = System.currentTimeMillis();
 
-        // first load custom regions
-        CustomRegions customRegions = new CustomRegions(mConfig, mPanelCache);
-        customRegions.run();
+        RefGenomeSource refGenome = loadRefGenome(mConfig.RefGenomeFile);
+        RefGenomeVersion refGenomeVersion = deriveRefGenomeVersion(refGenome);
 
-        // generate gene probes
-        GeneProbesGenerator geneProbesGenerator = new GeneProbesGenerator(mConfig, mPanelCache, mProbeQualityProfile);
-        geneProbesGenerator.run();
+        EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.EnsemblDir, refGenomeVersion);
 
-        // build copy-number backbone to fill in gaps
-        CopyNumberBackbone copyNumberBackbone = new CopyNumberBackbone(mConfig, mPanelCache, mProbeQualityProfile);
-        copyNumberBackbone.run();
+        ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
+        ProbeEvaluator probeEvaluator =
+                new ProbeEvaluator(refGenome, probeQualityProfile, PROBE_QUALITY_SCORE_MIN, PROBE_GC_MIN, PROBE_GC_MAX);
 
-        // write final regions and probes
-        writeFinalPanelRegions();
+        ProbeGenerationResult customRegionProbes = CustomRegions.generateProbes(mConfig.CustomRegionFile, probeEvaluator);
 
-        GU_LOGGER.info("panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
-    }
+        ProbeGenerationResult geneProbes = TargetGenes.generateProbes(mConfig.GeneTranscriptFile, ensemblData, probeEvaluator);
 
-    private void writeFinalPanelRegions()
-    {
-        List<ProbeCandidate> panelRegions = Lists.newArrayList();
+        ProbeGenerationResult cnBackboneProbes =
+                CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, refGenomeVersion, probeEvaluator);
 
-        mPanelCache.chrRegionsMap().values().forEach(panelRegions::addAll);
+        ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
 
-        // sort and merge - for now keep the first region's source info and type
-        Collections.sort(panelRegions);
+        writePanelProbes(mConfig.outputFilePath(PANEL_PROBES_FILE), aggregate.probes().stream());
+        writeRejectedRegions(mConfig.outputFilePath(REJECTED_REGIONS_FILE), aggregate.rejectedRegions().stream());
 
-        // merge any adjacent regions
-        int index = 0;
-        while(index < panelRegions.size() - 1)
-        {
-            ProbeCandidate region = panelRegions.get(index);
-            ProbeCandidate nextRegion = panelRegions.get(index + 1);
+        // TODO: other output to write?
 
-            if(region.Chromosome.equals(nextRegion.Chromosome) && region.end() >= nextRegion.start() - 2)
-            {
-                ChrBaseRegion newRegion = new ChrBaseRegion(
-                        region.Chromosome, min(region.start(), nextRegion.start()), max(region.end(), nextRegion.end()));
+        // TODO: remove duplicate/overlapping probes?
 
-                String sourceInfo = format("%s;%s", region.SourceInfo, nextRegion.SourceInfo);
-
-                ProbeCandidate newPanelRegion = new ProbeCandidate(newRegion, ProbeSource.MIXED, sourceInfo);
-
-                panelRegions.set(index, newPanelRegion);
-                panelRegions.remove(index + 1);
-            }
-            else
-            {
-                ++index;
-            }
-        }
-
-        String panelDefinitionFilename = mConfig.formOutputFilename(PANEL_DEFINITION_FILE_EXTENSION);
-        writePanelDefinition(panelDefinitionFilename, panelRegions);
+        LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)
