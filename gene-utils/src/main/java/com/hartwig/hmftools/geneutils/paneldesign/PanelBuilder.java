@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.PANEL_DEFINITION_FILE_EXTENSION;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writePanelDefinition;
 
-import java.io.FileNotFoundException;
 import java.util.Collections;
 import java.util.List;
 
@@ -100,7 +99,7 @@ public class PanelBuilder
         writePanelDefinition(panelDefinitionFilename, panelRegions);
     }
 
-    public static void main(@NotNull final String[] args) throws FileNotFoundException
+    public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 

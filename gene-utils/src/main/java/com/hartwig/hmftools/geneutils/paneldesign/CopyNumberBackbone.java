@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GC_RATIO_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNMOD_FREQ_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNMOD_FREQ_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_MAPPABILITY;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_MAPPABILITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 
@@ -37,7 +37,8 @@ public class CopyNumberBackbone
     {
         Map<String, List<Partition>> partitions = createPartitions(refGenVersion);
         populateAmberSites(partitions, amberSitesFile);
-        return createProbeCandidates(partitions);
+        List<ProbeCandidateChoice> probeCandidates = createProbeCandidates(partitions);
+        return probeCandidates;
     }
 
     private static class Partition
@@ -84,11 +85,11 @@ public class CopyNumberBackbone
             MAPPABILITY
         }
 
-        List<AmberSite> sites = AmberSites.loadFile(sitesFilePath);
+        List<AmberSite> sites = AmberSites.loadAmberSitesFile(sitesFilePath);
         int[] siteFilterCounts = new int[SiteFilter.values().length];
         for(AmberSite site : sites)
         {
-            if(site.mappability() < CN_BACKBONE_MAPPABILITY)
+            if(site.mappability() < CN_BACKBONE_MAPPABILITY_MIN)
             {
                 ++siteFilterCounts[SiteFilter.MAPPABILITY.ordinal()];
                 continue;

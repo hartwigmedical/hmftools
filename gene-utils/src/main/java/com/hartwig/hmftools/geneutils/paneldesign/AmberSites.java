@@ -14,7 +14,7 @@ public class AmberSites
     private static final String FLD_MAPPABILITY = "Mappability";
     private static final String FLD_GC_RATIO = "GcRatio";
 
-    public static List<AmberSite> loadFile(String path)
+    public static List<AmberSite> loadAmberSitesFile(String path)
     {
         try(DelimFileReader reader = new DelimFileReader(path))
         {

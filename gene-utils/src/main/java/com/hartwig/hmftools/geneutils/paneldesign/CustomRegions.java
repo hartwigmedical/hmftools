@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -22,33 +21,34 @@ public class CustomRegions
 
     public static List<ProbeCandidate> createProbeCandidates(final String customRegionFile)
     {
-        List<CustomRegion> regions = loadFile(customRegionFile);
-        return regions.stream()
+        List<CustomRegion> regions = loadCustomRegionsFile(customRegionFile);
+        List<ProbeCandidate> probesCandidates = regions.stream()
                 .flatMap(region -> createProbeCandidates(region).stream()).toList();
+        return probesCandidates;
     }
 
-    private static List<CustomRegion> loadFile(final String filePath)
+    private static List<CustomRegion> loadCustomRegionsFile(final String filePath)
     {
-        ArrayList<CustomRegion> regions = new ArrayList<>();
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
             int chromosomeIdx = reader.getColumnIndex(FLD_CHROMOSOME);
             int posStartIdx = reader.getColumnIndex(FLD_POSITION_START);
             int posEndIdx = reader.getColumnIndex(FLD_POSITION_END);
             int extraInfoIdx = reader.getColumnIndex(FLD_EXTRA_INFO);
-            for(DelimFileReader.Row row : reader)
+
+            List<CustomRegion> regions = reader.stream().map(row ->
             {
                 String chromosome = row.get(chromosomeIdx);
                 int start = row.getInt(posStartIdx);
                 int end = row.getInt(posEndIdx);
                 String extraInfo = row.get(extraInfoIdx);
                 ChrBaseRegion baseRegion = new ChrBaseRegion(chromosome, start, end);
-                CustomRegion region = new CustomRegion(baseRegion, extraInfo);
-                regions.add(region);
-            }
+                return new CustomRegion(baseRegion, extraInfo);
+            }).toList();
+
+            LOGGER.info("Loaded {} custom regions", regions.size());
+            return regions;
         }
-        LOGGER.info("Loaded {} custom regions", regions.size());
-        return regions;
     }
 
     private static List<ProbeCandidate> createProbeCandidates(final CustomRegion region)
