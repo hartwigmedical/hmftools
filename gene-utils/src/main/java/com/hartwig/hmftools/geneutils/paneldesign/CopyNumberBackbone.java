@@ -14,9 +14,12 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -29,16 +32,23 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // Probes based on Amber heterozygous sites, used to deduce copy number.
+// Methodology:
+//   - Divide chromosomes into large partitions;
+//   - In each partition, generate candidate probes on each Amber site;
+//   - Select the best probe within each partition.
 public class CopyNumberBackbone
 {
+    private static final ProbeSource PROBE_SOURCE = ProbeSource.CN_BACKBONE;
+
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
-    public static List<ProbeCandidateChoice> createProbeCandidates(final String amberSitesFile, final RefGenomeVersion refGenVersion)
+    public static ProbeGenerationResult generateProbes(final String amberSitesFile, final RefGenomeVersion refGenVersion,
+            final ProbeEvaluator probeEvaluator)
     {
         Map<String, List<Partition>> partitions = createPartitions(refGenVersion);
         populateAmberSites(partitions, amberSitesFile);
-        List<ProbeCandidateChoice> probeCandidates = createProbeCandidates(partitions);
-        return probeCandidates;
+        ProbeGenerationResult result = generateProbes(partitions, probeEvaluator);
+        return result;
     }
 
     private static class Partition
@@ -133,33 +143,42 @@ public class CopyNumberBackbone
         LOGGER.debug("Amber site filters: {}", filterCountStr);
     }
 
-    private static List<ProbeCandidateChoice> createProbeCandidates(final Map<String, List<Partition>> partitions)
+    private static ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions, final ProbeEvaluator probeEvaluator)
     {
-        return partitions.entrySet().stream()
-                .flatMap(entry ->
-                        entry.getValue().stream().map(CopyNumberBackbone::partitionToProbes))
+        List<ProbeCandidate> probes = partitions.values().stream()
+                .flatMap(chrPartitions ->
+                        chrPartitions.stream().map(partition -> generateProbe(partition, probeEvaluator)))
                 .toList();
+        // Note there are never any rejected regions because it's assumed each partition has at least one acceptable probe.
+        return new ProbeGenerationResult(probes, Collections.emptyList());
     }
 
-    private static ProbeCandidateChoice partitionToProbes(final Partition partition)
+    private static ProbeCandidate generateProbe(final Partition partition, final ProbeEvaluator probeEvaluator)
     {
-        // For each partition, we generate a set of possible probes on Amber sites.
-        // Later we will pick 1 best probe for each partition.
-        List<ProbeCandidate> siteProbes = partition.Sites.stream().map(CopyNumberBackbone::amberSiteToProbe).toList();
-        String extraInfo = partition.Region.toString();
-        ProbeSourceInfo source = new ProbeSourceInfo(ProbeSource.CN_BACKBONE, extraInfo);
-        return new ProbeCandidateChoice(siteProbes, source);
+        Stream<ProbeCandidate> candidates = generateProbeCandidates(partition);
+        Optional<ProbeCandidate> bestCandidate = probeEvaluator.selectBestProbe(candidates);
+        // Assume there is at least one acceptable probe in each partition to make things simpler.
+        // It's likely a valid assumption because the set of Amber sites is fixed and each partition includes many sites.
+        return bestCandidate.orElseThrow(
+                () -> new RuntimeException(
+                        format("Expected at least one Amber site to be an acceptable probe in CN backbone partition %s", partition.Region)));
+    }
+
+    private static Stream<ProbeCandidate> generateProbeCandidates(final Partition partition)
+    {
+        return partition.Sites.stream().map(CopyNumberBackbone::amberSiteToProbe);
     }
 
     private static ProbeCandidate amberSiteToProbe(final AmberSite site)
     {
         BasePosition position = site.position();
+        // Probe centered on the site.
         int probeStart = max(1, position.Position - PROBE_LENGTH / 2);
         int probeEnd = probeStart + PROBE_LENGTH - 1;
         ChrBaseRegion probeRegion = new ChrBaseRegion(position.Chromosome, probeStart, probeEnd);
         ChrBaseRegion targetRegion = new ChrBaseRegion(position.Chromosome, position.Position, position.Position);
         String extraInfo = position.toString();
-        ProbeSourceInfo source = new ProbeSourceInfo(ProbeSource.CN_BACKBONE, extraInfo);
+        ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
         return new ProbeCandidate(source, probeRegion, targetRegion);
     }
 }

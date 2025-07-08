@@ -5,5 +5,5 @@ public enum ProbeSource
     GENE,
     CN_BACKBONE,
     CUSTOM,
-    MIXED;
+    MIXED  // TODO: needed?
 }

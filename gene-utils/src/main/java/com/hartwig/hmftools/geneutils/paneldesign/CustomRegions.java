@@ -17,14 +17,25 @@ public class CustomRegions
 {
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
 
+    private static final ProbeSource PROBE_SOURCE = ProbeSource.CUSTOM;
+
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
-    public static List<ProbeCandidate> createProbeCandidates(final String customRegionFile)
+    public static ProbeGenerationResult generateProbes(final String customRegionFile, final ProbeEvaluator probeEvaluator)
     {
         List<CustomRegion> regions = loadCustomRegionsFile(customRegionFile);
-        List<ProbeCandidate> probesCandidates = regions.stream()
-                .flatMap(region -> createProbeCandidates(region).stream()).toList();
-        return probesCandidates;
+        ProbeGenerationResult result = regions.stream()
+                .map(region -> generateProbes(region, probeEvaluator))
+                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        return result;
+    }
+
+    private record CustomRegion(
+            ChrBaseRegion region,
+            // Arbitrary descriptor for the user.
+            String extraInfo
+    )
+    {
     }
 
     private static List<CustomRegion> loadCustomRegionsFile(final String filePath)
@@ -51,9 +62,9 @@ public class CustomRegions
         }
     }
 
-    private static List<ProbeCandidate> createProbeCandidates(final CustomRegion region)
+    private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeEvaluator probeEvaluator)
     {
-        ProbeSourceInfo source = new ProbeSourceInfo(ProbeSource.CUSTOM, region.extraInfo());
-        return RegionProbeTiling.fillRegionWithProbes(region.region(), source);
+        ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, region.extraInfo());
+        return RegionProbeTiling.fillRegionWithProbes(region.region(), source, probeEvaluator);
     }
 }

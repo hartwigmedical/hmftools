@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_CANDIDATE_REGION_SIZE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_FLANKING_DISTANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_LONG_INTRON_LENGTH;
@@ -17,6 +16,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.P
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -29,11 +29,22 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// Probes covering (regions of) selected genes.
+// Methodology for gene regions:
+//   - Coding: Cover the full coding region of each exon.
+//   - UTR: Probe centered on each noncoding exon.
+//   - Upstream/downstream: Create several probes 1-2kb upstream/downstream, and choose the best probe.
+//   - Intronic:
+//     - For large introns, create several probes for 1-2kb on adjacent exons and choose the best probe for each.
+//     - For small introns, create several probes centered on the intron and choose the best probe for each.
 public class TargetGenes
 {
+    private static final ProbeSource PROBE_SOURCE = ProbeSource.GENE;
+
     private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);
 
-    public List<ProbeCandidate> createProbeCandidates(final String targetGeneFile, final EnsemblDataCache ensemblData)
+    public ProbeGenerationResult generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
+            final ProbeEvaluator probeEvaluator)
     {
         List<TargetGene> targetGenes = loadTargetGenesFile(targetGeneFile);
         List<GeneTranscript> genes = targetGenes.stream()
@@ -42,8 +53,10 @@ public class TargetGenes
                 .map(Optional::get)
                 .toList();
         List<GeneRegion> geneRegions = genes.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
-        List<ProbeCandidate> probeCandidates = geneRegions.stream().flatMap(region -> createProbeCandidates(region).stream()).toList();
-        return probeCandidates;
+        ProbeGenerationResult result = geneRegions.stream()
+                .map(region -> generateProbe(region, probeEvaluator))
+                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        return result;
     }
 
     private record TargetGene(
@@ -82,7 +95,7 @@ public class TargetGenes
         if(geneData == null)
         {
             String error = format("Transcript gene for gene: %s not found", gene.geneName());
-            GU_LOGGER.error(error);
+            LOGGER.error(error);
             throw new RuntimeException(error);
         }
 
@@ -92,29 +105,44 @@ public class TargetGenes
         if(transcriptData == null)
         {
             String error = format("gene(%s) transcript(%s) not found", gene.geneName(), gene.transcriptName());
-            GU_LOGGER.error(error);
+            LOGGER.error(error);
             throw new RuntimeException(error);
         }
 
         if(transcriptData.nonCoding())
         {
             // User should add as a custom region instead.
-            GU_LOGGER.warn("gene({}) transcript({}) non-coding skipped", gene.geneName(), gene.transcriptName());
+            LOGGER.warn("gene({}) transcript({}) non-coding skipped", gene.geneName(), gene.transcriptName());
             return Optional.empty();
         }
 
         return Optional.of(new GeneTranscript(geneData, transcriptData));
     }
 
+    private enum GeneRegionType
+    {
+        CODING,
+        UTR,
+        UP_STREAM,
+        DOWN_STREAM,
+        INTRONIC_LONG,
+        INTRONIC_SHORT
+    }
+
+    private record GeneRegion(
+            GeneTranscript gene,
+            GeneRegionType type,
+            BaseRegion region
+    )
+    {
+        public ChrBaseRegion chrBaseRegion()
+        {
+            return new ChrBaseRegion(gene.gene().Chromosome, region.start(), region.end());
+        }
+    }
+
     private static List<GeneRegion> createGeneRegions(final GeneTranscript gene)
     {
-        // Regions:
-        //   - Coding: cover the full coding region of each exon
-        //   - UTR: Add probe centered on each noncoding exon
-        //   - Upstream/downstream: create 8 probes 1-2kb upstream/downstream, and choose the best probe.
-        //   - Intronic:
-        //     - For large introns, create 8 probes for 1-2kb on adjacent exons and choose the best probe for each.
-        //     - For small introns, create 8 probes centered on the intron and choose the best probe for each.
 
         List<GeneRegion> regions = new ArrayList<>();
 
@@ -199,31 +227,43 @@ public class TargetGenes
         return regions;
     }
 
-    private static List<ProbeCandidate> createProbeCandidates(final GeneRegion region) {
-        // TODO
-        switch(region.type())
+    private static ProbeGenerationResult generateProbe(final GeneRegion geneRegion, final ProbeEvaluator probeEvaluator)
+    {
+        return switch(geneRegion.type())
         {
-            case CODING:
-            case UTR:
-                // TODO: tile whole region
-                break;
-            case UP_STREAM:
-            case DOWN_STREAM:
-            case INTRONIC_LONG:
-            case INTRONIC_SHORT:
-                // TODO
-                // create set of candidate probes within the region
-                for(int i = 0; i < GENE_MAX_CANDIDATE_PROBES; ++i)
+            case CODING, UTR ->
+                    RegionProbeTiling.fillRegionWithProbes(geneRegion.chrBaseRegion(), createProbeSourceInfo(geneRegion), probeEvaluator);
+            case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT -> generateSingleProbeInRegion(geneRegion, probeEvaluator);
+        };
+    }
+
+    private static ProbeGenerationResult generateSingleProbeInRegion(final GeneRegion geneRegion, final ProbeEvaluator probeEvaluator)
+    {
+        ProbeSourceInfo source = createProbeSourceInfo(geneRegion);
+        // TODO: can probably look at all possible probes here instead
+        Stream<ProbeCandidate> candidates = RegionProbeTiling.tileBaseRegionsFrom(geneRegion.region().start())
+                .limit(GENE_MAX_CANDIDATE_PROBES)
+                .map(probeRegion ->
                 {
-                    int start = region.region().start() + i * PROBE_LENGTH;
-                    int end = start + PROBE_LENGTH - 1; // end is inclusive
+                    ChrBaseRegion chrBaseRegion =
+                            new ChrBaseRegion(geneRegion.gene().gene().Chromosome, probeRegion.start(), probeRegion.end());
+                    return new ProbeCandidate(source, chrBaseRegion, chrBaseRegion);
+                });
+        Optional<ProbeCandidate> bestCandidate = probeEvaluator.selectBestProbe(candidates);
+        ProbeGenerationResult result = bestCandidate
+                .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), List.of()))
+                .orElseGet(() ->
+                        new ProbeGenerationResult(
+                                List.of(),
+                                List.of(new RejectedRegion(geneRegion.chrBaseRegion(), source))));
+        return result;
+    }
 
-                    ProbeCandidate probe = createProbeCandidate(
-                            new ChrBaseRegion(region.getGene().getGeneData().Chromosome, start, end), refGenomeInterface);
-
-                    region.getProbeCandidates().add(probe);
-                }
-                break;
-        }
+    private static ProbeSourceInfo createProbeSourceInfo(final GeneRegion geneRegion)
+    {
+        GeneData geneData = geneRegion.gene().gene();
+        TranscriptData transcriptData = geneRegion.gene().transcript();
+        String extraInfo = format("%s:%s:%s", geneData.GeneName, transcriptData.TransName, geneRegion.type());
+        return new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
     }
 }
