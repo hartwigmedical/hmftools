@@ -54,7 +54,7 @@ public class ProteinVariantTest extends VariantTest
                 b7 + "TGATGATTT";
         int genomeLength = allBases.length();
         GeneData g = new GeneData("GeneId", "BLAH", "chr5", (byte) 1, 5, genomeLength - 5, "q13.1");
-        TranscriptData transcriptData = new TranscriptData(500, "TrName", g.GeneId, true, (byte) 1, 10, genomeLength - 5, 10, genomeLength - 10, "protein_coding");
+        TranscriptData transcriptData = new TranscriptData(500, "TrName", g.GeneId, true, (byte) 1, 10, genomeLength - 5, 10, genomeLength - 10, "protein_coding", "ref_seq_id");
         TranscriptAminoAcids transcriptAminoAcids = new TranscriptAminoAcids(g.GeneId, g.GeneName, transcriptData.TransName, true, aminoAcids);
 
         FixedStringGenome fixedGenome = new FixedStringGenome(allBases);
