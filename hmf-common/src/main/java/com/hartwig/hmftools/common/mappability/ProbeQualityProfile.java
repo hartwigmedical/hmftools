@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.mappability;
 
+import static java.lang.Float.parseFloat;
+import static java.lang.Integer.parseInt;
 import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -63,28 +65,42 @@ public class ProbeQualityProfile
     private static Map<String, List<ProbeQualityWindow>> loadProbeQualityWindows(final String filePath)
     {
         LOGGER.debug("Loading probe quality profile file: {}", filePath);
+
         long startTimeMs = System.currentTimeMillis();
         Map<String, List<ProbeQualityWindow>> result = new HashMap<>();
+
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
             int chromosomeField = reader.getColumnIndex(FLD_CHROMOSOME);
             int startField = reader.getColumnIndex(FLD_POSITION_START);
             int qualityScoreField = reader.getColumnIndex(FLD_QUALITY_SCORE);
+
+            String curChromosome = null;
+            List<ProbeQualityWindow> curWindows = null;
+
             for(DelimFileReader.Row row : reader)
             {
-                String chromosome = row.get(chromosomeField);
-                int start = row.getInt(startField);
-                double qualityScore = row.getDouble(qualityScoreField);
+                String chromosome = row.getRawValue(chromosomeField);
+                int start = parseInt(row.getRawValue(startField));
+                double qualityScore = parseFloat(row.getRawValue(qualityScoreField));
                 int end = start + BASE_WINDOW_LENGTH;
                 ProbeQualityWindow window = new ProbeQualityWindow(start, end, (float) qualityScore);
-                List<ProbeQualityWindow> windows = result.get(chromosome);
-                // Not using computeIfAbsent() because that is much slower.
-                if(windows == null)
+
+                // File is typically sorted by chromosome so we can improve performance by only doing the hash table lookup when the
+                // chromosome changes.
+                if(!chromosome.equals(curChromosome))
                 {
-                    windows = new ArrayList<>();
-                    result.put(chromosome, windows);
+                    curChromosome = chromosome;
+                    curWindows = result.get(curChromosome);
+                    // Not using computeIfAbsent() because that is much slower.
+                    if(curWindows == null)
+                    {
+                        curWindows = new ArrayList<>();
+                        result.put(curChromosome, curWindows);
+                    }
                 }
-                windows.add(window);
+
+                curWindows.add(window);
             }
         }
 
