@@ -17,8 +17,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 public class PanelBuilderConfig
 {
     public final String AmberSitesFile;
-    public final String GeneTranscriptFile;
-    public final String CustomRegionFile;
+    public final String TargetGenesFile;
+    public final String CustomRegionsFile;
 
     public final String RefGenomeFile;
     public final String EnsemblDir;
@@ -28,15 +28,19 @@ public class PanelBuilderConfig
     public final String OutputDir;
 
     private static final String CFG_AMBER_SITES_FILE = "amber_sites_file";
-    private static final String CFG_GENE_TRANSCRIPT_FILE = "gene_transcript_file";
-    private static final String CFG_CUSTOM_REGION_FILE = "custom_region_file";
+    private static final String DESC_AMBER_SITES_FILE = "Amber het sites file";
+    private static final String CFG_TARGET_GENES_FILE = "gene_transcript_file";
+    private static final String DESC_TARGET_GENES_FILE = "Gene and transcript name file";
+    private static final String CFG_CUSTOM_REGIONS_FILE = "custom_region_file";
+    private static final String DESC_CUSTOM_REGIONS_FILE = "Custom region file";
     private static final String CFG_OUTPUT_PREFIX = "output_prefix";
+    private static final String DESC_OUTPUT_PREFIX = "Prefix of output file names";
 
     public PanelBuilderConfig(final ConfigBuilder configBuilder)
     {
         AmberSitesFile = configBuilder.getValue(CFG_AMBER_SITES_FILE);
-        GeneTranscriptFile = configBuilder.getValue(CFG_GENE_TRANSCRIPT_FILE);
-        CustomRegionFile = configBuilder.getValue(CFG_CUSTOM_REGION_FILE);
+        TargetGenesFile = configBuilder.getValue(CFG_TARGET_GENES_FILE);
+        CustomRegionsFile = configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
@@ -55,9 +59,9 @@ public class PanelBuilderConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(CFG_AMBER_SITES_FILE, false, "Amber het sites file");
-        configBuilder.addPath(CFG_GENE_TRANSCRIPT_FILE, false, "Gene and transcript name file");
-        configBuilder.addPath(CFG_CUSTOM_REGION_FILE, false, "Custom region file");
+        configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);
+        configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
+        configBuilder.addPath(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
 
         EnsemblDataCache.addEnsemblDir(configBuilder, true);
 
@@ -65,7 +69,7 @@ public class PanelBuilderConfig
 
         ProbeQualityProfile.registerConfig(configBuilder);
 
-        configBuilder.addConfigItem(CFG_OUTPUT_PREFIX, true, "prefix of output BED filename");
+        configBuilder.addConfigItem(CFG_OUTPUT_PREFIX, true, DESC_OUTPUT_PREFIX);
         addOutputDir(configBuilder);
 
         ConfigUtils.addLoggingOptions(configBuilder);

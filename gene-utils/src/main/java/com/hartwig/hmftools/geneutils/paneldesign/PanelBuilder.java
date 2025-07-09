@@ -25,12 +25,18 @@ import org.jetbrains.annotations.NotNull;
 public class PanelBuilder
 {
     private final PanelBuilderConfig mConfig;
+    private final RefGenomeVersion mRefGenomeVersion;
+    private final ProbeEvaluator mProbeEvaluator;
 
     private static final Logger LOGGER = LogManager.getLogger(PanelBuilder.class);
 
     public PanelBuilder(final ConfigBuilder configBuilder)
     {
         mConfig = new PanelBuilderConfig(configBuilder);
+        RefGenomeSource mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
+        mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
+        ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
+        mProbeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, PROBE_QUALITY_SCORE_MIN, PROBE_GC_MIN, PROBE_GC_MAX);
     }
 
     public void run()
@@ -39,20 +45,10 @@ public class PanelBuilder
 
         long startTimeMs = System.currentTimeMillis();
 
-        RefGenomeSource refGenome = loadRefGenome(mConfig.RefGenomeFile);
-        RefGenomeVersion refGenomeVersion = deriveRefGenomeVersion(refGenome);
-
-        EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.EnsemblDir, refGenomeVersion);
-
-        ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
-        ProbeEvaluator probeEvaluator =
-                new ProbeEvaluator(refGenome, probeQualityProfile, PROBE_QUALITY_SCORE_MIN, PROBE_GC_MIN, PROBE_GC_MAX);
-
         LOGGER.info("Starting probe generation");
-        ProbeGenerationResult customRegionProbes = CustomRegions.generateProbes(mConfig.CustomRegionFile, probeEvaluator);
-        ProbeGenerationResult geneProbes = TargetGenes.generateProbes(mConfig.GeneTranscriptFile, ensemblData, probeEvaluator);
-        ProbeGenerationResult cnBackboneProbes =
-                CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, refGenomeVersion, probeEvaluator);
+        ProbeGenerationResult customRegionProbes = generateCustomRegionProbes();
+        ProbeGenerationResult geneProbes = generateTargetGeneProbes();
+        ProbeGenerationResult cnBackboneProbes = generateCopyNumberBackboneProbes();
         LOGGER.info("Probe generation done");
 
         LOGGER.debug("Writing output");
@@ -67,6 +63,46 @@ public class PanelBuilder
         // TODO: remove duplicate/overlapping probes?
 
         LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private ProbeGenerationResult generateCustomRegionProbes()
+    {
+        if(mConfig.CustomRegionsFile == null)
+        {
+            LOGGER.info("Custom regions not provided; skipping custom region probes");
+            return new ProbeGenerationResult();
+        }
+        else
+        {
+            return CustomRegions.generateProbes(mConfig.CustomRegionsFile, mProbeEvaluator);
+        }
+    }
+
+    private ProbeGenerationResult generateTargetGeneProbes()
+    {
+        if(mConfig.TargetGenesFile == null)
+        {
+            LOGGER.info("Target genes not provided; skipping gene probes");
+            return new ProbeGenerationResult();
+        }
+        else
+        {
+            EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.EnsemblDir, mRefGenomeVersion);
+            return TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeEvaluator);
+        }
+    }
+
+    private ProbeGenerationResult generateCopyNumberBackboneProbes()
+    {
+        if(mConfig.AmberSitesFile == null)
+        {
+            LOGGER.info("Amber sites not provided; skipping copy number backbone probes");
+            return new ProbeGenerationResult();
+        }
+        else
+        {
+            return CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeEvaluator);
+        }
     }
 
     public static void main(@NotNull final String[] args)
