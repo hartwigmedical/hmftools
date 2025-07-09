@@ -540,8 +540,7 @@ public class LilacApplication
                 unmatchedFrags);
 
         AminoAcidQC aminoAcidQC = AminoAcidQC.create(
-                winningSequences, mRefData.HlaYAminoAcidSequences, mRefAminoAcidCounts,
-                haplotypeQC.UnmatchedHaplotypes, totalFragmentCount);
+                winningSequences, mRefData.HlaYAminoAcidSequences, mRefAminoAcidCounts, haplotypeQC.UnmatchedHaplotypes);
 
         BamQC bamQC = BamQC.create(mRefBamReader, geneBaseDepth);
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);

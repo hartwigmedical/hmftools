@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -15,8 +16,8 @@ public final class NucleotideFragmentQualEnrichment
 {
     private NucleotideFragmentQualEnrichment() {}
 
-    public static List<Fragment> qualityFilterFragments(final int minEvidenceDepth, final double minEvidenceFactor, final double minHighQualEvidenceFactor,
-            final List<Fragment> fragments, final List<Fragment> highQualFrags)
+    public static List<Fragment> qualityFilterFragments(final int minEvidenceDepth, final double minEvidenceFactor,
+            final double minHighQualEvidenceFactor, final Collection<Fragment> fragments, final Iterable<Fragment> highQualFrags)
     {
         // fragments are all in nucleotide-space
 
@@ -30,7 +31,7 @@ public final class NucleotideFragmentQualEnrichment
 
     private static Fragment applyQualityFilter(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
     {
-        // checks whether all nucleotides have qual above the required level - if so return this fragment unch, otherwise build a
+        // checks whether all nucleotides have qual above the required level - if so return this fragment, otherwise build a
         // new fragment just with these filtered loci
         SortedMap<Integer, Nucleotide> nucleotidesByLoci = fragment.nucleotidesByLoci();
         boolean allPresent = true;

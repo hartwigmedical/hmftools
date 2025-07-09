@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -33,14 +34,15 @@ public class PhasedEvidenceFactory
         mDebugPhasing = mConfig.DebugPhasing;
     }
 
-    public List<PhasedEvidence> evidence(final HlaContext context, final List<Fragment> fragments)
+    public List<PhasedEvidence> evidence(final HlaContext context, final Collection<Fragment> fragments)
     {
         if(mDebugPhasing)
         {
             LL_LOGGER.debug("phasing {} records:", context.geneName());
         }
 
-        List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
+        List<Fragment> contextFragments = fragments.stream().filter(x -> context.geneName().equals(x.readGene())).toList();
+        List<PhasedEvidence> result = evidence(context.ExpectedAlleles, contextFragments);
 
         if(mDebugPhasing)
         {

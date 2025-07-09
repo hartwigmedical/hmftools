@@ -48,7 +48,7 @@ public final class Candidates
 
         // Amino acid filtering
         List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(
-	        geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
+                geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
@@ -101,9 +101,7 @@ public final class Candidates
         for(int locus : aminoAcidCount.seqCountsByLoci().keySet())
         {
             if(aminoAcidBoundaries.contains(locus))
-            {
                 continue;
-            }
 
             List<String> expectedSequences = aminoAcidCount.getMinEvidenceSequences(locus, mConfig.MinEvidenceFactor);
 
@@ -131,6 +129,9 @@ public final class Candidates
 
                 candidateSequences.remove(index);
             }
+
+            if(candidateSequences.isEmpty())
+                break;
         }
 
         return candidateSequences;
