@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.P
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -28,6 +27,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
@@ -46,6 +46,8 @@ public class TargetGenes
     public static ProbeGenerationResult generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
             final ProbeEvaluator probeEvaluator)
     {
+        LOGGER.info("Generating gene probes");
+
         List<GeneTranscriptId> geneIds = loadTargetGenesFile(targetGeneFile);
         List<GeneTranscript> genes = geneIds.stream()
                 .map(gene -> loadGeneData(gene, ensemblData))
@@ -55,6 +57,8 @@ public class TargetGenes
         ProbeGenerationResult result = geneRegions.stream()
                 .map(region -> generateProbe(region, probeEvaluator))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+
+        LOGGER.info("Done generating gene probes");
         return result;
     }
 
@@ -83,7 +87,7 @@ public class TargetGenes
                 return new GeneTranscriptId(geneName, transcriptName);
             }).toList();
 
-            LOGGER.info("Loaded {} target genes", genes.size());
+            LOGGER.info("Loaded {} target genes from {}", genes.size(), filePath);
             return genes;
         }
     }
@@ -93,6 +97,12 @@ public class TargetGenes
             TranscriptData transcript
     )
     {
+        @NotNull
+        @Override
+        public String toString()
+        {
+            return format("%s:%s", gene.GeneName, transcript.TransName);
+        }
     }
 
     private static Optional<GeneTranscript> loadGeneData(final GeneTranscriptId geneId, final EnsemblDataCache ensemblData)
@@ -229,6 +239,8 @@ public class TargetGenes
                         transcriptData.TransEnd + 1 + GENE_FLANKING_DISTANCE,
                         transcriptData.TransEnd + GENE_FLANKING_DISTANCE + GENE_CANDIDATE_REGION_SIZE)));
 
+        regions.forEach(region -> LOGGER.trace("Gene region: {}", region));
+
         return regions;
     }
 
@@ -238,23 +250,29 @@ public class TargetGenes
         {
             case CODING, UTR ->
                     RegionProbeTiling.fillRegionWithProbes(geneRegion.chrBaseRegion(), createProbeSourceInfo(geneRegion), probeEvaluator);
-            case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT -> generateSingleProbeInRegion(geneRegion, probeEvaluator);
+            case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT -> generateBestProbeInRegion(geneRegion, probeEvaluator);
         };
     }
 
-    private static ProbeGenerationResult generateSingleProbeInRegion(final GeneRegion geneRegion, final ProbeEvaluator probeEvaluator)
+    private static ProbeGenerationResult generateBestProbeInRegion(final GeneRegion geneRegion, final ProbeEvaluator probeEvaluator)
     {
         ProbeSourceInfo source = createProbeSourceInfo(geneRegion);
+
         // TODO: can probably look at all possible probes here instead, and put such a function in ProbeEvaluator
-        Stream<CandidateProbe> candidates = RegionProbeTiling.tileBaseRegionsFrom(geneRegion.region().start())
+        List<CandidateProbe> candidates = RegionProbeTiling.tileBaseRegionsFrom(geneRegion.region().start())
                 .limit(GENE_MAX_CANDIDATE_PROBES)
                 .map(probeRegion ->
                 {
                     ChrBaseRegion chrBaseRegion =
                             new ChrBaseRegion(geneRegion.gene().gene().Chromosome, probeRegion.start(), probeRegion.end());
                     return new CandidateProbe(source, chrBaseRegion, chrBaseRegion);
-                });
-        Optional<EvaluatedProbe> bestCandidate = probeEvaluator.selectBestProbe(candidates);
+                })
+                .toList();
+        candidates.forEach(probe -> LOGGER.trace("Candidate probe: {}", probe));
+
+        Optional<EvaluatedProbe> bestCandidate = probeEvaluator.selectBestProbe(candidates.stream());
+        LOGGER.trace("{}: Best probe: {}", geneRegion, bestCandidate);
+
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), List.of()))
                 .orElseGet(() ->

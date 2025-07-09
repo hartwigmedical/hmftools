@@ -12,6 +12,9 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 // Common candidate probe evaluation and filtering.
 public class ProbeEvaluator
 {
@@ -20,6 +23,8 @@ public class ProbeEvaluator
     private final double mQualityMin;
     private final double mGcMin;
     private final double mGcMax;
+
+    private static final Logger LOGGER = LogManager.getLogger(ProbeEvaluator.class);
 
     public ProbeEvaluator(RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
             double qualityMin, double gcMin, double gcMax)
@@ -60,6 +65,7 @@ public class ProbeEvaluator
                 break;
             }
         }
+        LOGGER.trace("Evaluated probe: {}", evaluatedProbe);
         return evaluatedProbe;
     }
 

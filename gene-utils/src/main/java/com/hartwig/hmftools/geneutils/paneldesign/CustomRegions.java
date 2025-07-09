@@ -23,10 +23,15 @@ public class CustomRegions
 
     public static ProbeGenerationResult generateProbes(final String customRegionFile, final ProbeEvaluator probeEvaluator)
     {
+        LOGGER.info("Generating custom region probes");
+
         List<CustomRegion> regions = loadCustomRegionsFile(customRegionFile);
+
         ProbeGenerationResult result = regions.stream()
                 .map(region -> generateProbes(region, probeEvaluator))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+
+        LOGGER.info("Done generating custom region probes");
         return result;
     }
 
@@ -57,7 +62,7 @@ public class CustomRegions
                 return new CustomRegion(baseRegion, extraInfo);
             }).toList();
 
-            LOGGER.info("Loaded {} custom regions", regions.size());
+            LOGGER.info("Loaded {} custom regions from {}", regions.size(), filePath);
             return regions;
         }
     }

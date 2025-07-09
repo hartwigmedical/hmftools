@@ -45,9 +45,15 @@ public class CopyNumberBackbone
     public static ProbeGenerationResult generateProbes(final String amberSitesFile, final RefGenomeVersion refGenVersion,
             final ProbeEvaluator probeEvaluator)
     {
+        LOGGER.info("Generating copy number backbone probes");
+
         Map<String, List<Partition>> partitions = createPartitions(refGenVersion);
+
         populateAmberSites(partitions, amberSitesFile);
+
         ProbeGenerationResult result = generateProbes(partitions, probeEvaluator);
+
+        LOGGER.info("Done generating copy number backbone probes");
         return result;
     }
 
@@ -80,6 +86,9 @@ public class CopyNumberBackbone
                     .filter(region -> !region.overlaps(chrStr, centromereMin, centromereMax))
                     .map(Partition::new)
                     .toList();
+
+            chrPartitions.forEach(partition -> LOGGER.trace("Copy number backbone partition: {}", partition.Region));
+
             return Map.entry(chrStr, chrPartitions);
         }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
@@ -88,7 +97,7 @@ public class CopyNumberBackbone
     {
         enum SiteFilter
         {
-            SELECTED,
+            CANDIDATE,
             EXCLUDED,
             GNOMAD,
             GC_RATIO,
@@ -132,7 +141,7 @@ public class CopyNumberBackbone
                 ++siteFilterCounts[SiteFilter.EXCLUDED.ordinal()];
                 continue;
             }
-            ++siteFilterCounts[SiteFilter.SELECTED.ordinal()];
+            ++siteFilterCounts[SiteFilter.CANDIDATE.ordinal()];
             partition.Sites.add(site);
         }
 
@@ -157,6 +166,7 @@ public class CopyNumberBackbone
     {
         Stream<CandidateProbe> candidates = generateCandidateProbes(partition);
         Optional<EvaluatedProbe> bestCandidate = probeEvaluator.selectBestProbe(candidates);
+        LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
         // Assume there is at least one acceptable probe in each partition to make things simpler.
         // It's likely a valid assumption because the set of Amber sites is fixed and each partition includes many sites.
         return bestCandidate.orElseThrow(
@@ -180,6 +190,8 @@ public class CopyNumberBackbone
         ChrBaseRegion targetRegion = new ChrBaseRegion(position.Chromosome, position.Position, position.Position);
         String extraInfo = position.toString();
         ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
-        return new CandidateProbe(source, probeRegion, targetRegion);
+        CandidateProbe probe = new CandidateProbe(source, probeRegion, targetRegion);
+        LOGGER.trace("Candidate probe: {}", probe);
+        return probe;
     }
 }

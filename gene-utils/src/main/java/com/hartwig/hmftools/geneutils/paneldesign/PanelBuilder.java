@@ -48,17 +48,19 @@ public class PanelBuilder
         ProbeEvaluator probeEvaluator =
                 new ProbeEvaluator(refGenome, probeQualityProfile, PROBE_QUALITY_SCORE_MIN, PROBE_GC_MIN, PROBE_GC_MAX);
 
+        LOGGER.info("Starting probe generation");
         ProbeGenerationResult customRegionProbes = CustomRegions.generateProbes(mConfig.CustomRegionFile, probeEvaluator);
-
         ProbeGenerationResult geneProbes = TargetGenes.generateProbes(mConfig.GeneTranscriptFile, ensemblData, probeEvaluator);
-
         ProbeGenerationResult cnBackboneProbes =
                 CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, refGenomeVersion, probeEvaluator);
+        LOGGER.info("Probe generation done");
 
-        ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
-
-        writePanelProbes(mConfig.outputFilePath(PANEL_PROBES_FILE), aggregate.probes().stream());
-        writeRejectedRegions(mConfig.outputFilePath(REJECTED_REGIONS_FILE), aggregate.rejectedRegions().stream());
+        LOGGER.debug("Writing output");
+        {
+            ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
+            writePanelProbes(mConfig.outputFilePath(PANEL_PROBES_FILE), aggregate.probes().stream());
+            writeRejectedRegions(mConfig.outputFilePath(REJECTED_REGIONS_FILE), aggregate.rejectedRegions().stream());
+        }
 
         // TODO: other output to write?
 
