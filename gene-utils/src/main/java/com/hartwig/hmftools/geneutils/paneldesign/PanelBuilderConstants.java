@@ -8,7 +8,7 @@ public class PanelBuilderConstants
     public static final double PROBE_QUALITY_ACCEPT = 0.5;
     // All probes with quality score below this value are unconditionally rejected.
     public static final double PROBE_QUALITY_REJECT = 0.08;
-    // When covering a region with probes, how many bases in the region can be not covered?
+    // When covering a region with probes, how many bases in the region are allowed to not be covered?
     public static final int UNCOVERED_BASES_MAX = 10;
 
     // Target genes constants.
@@ -16,7 +16,6 @@ public class PanelBuilderConstants
     public static final int GENE_UPDOWNSTREAM_GAP = 1000;
     // Region within which the upstream/downstream probes are selected.
     public static final int GENE_UPDOWNSTREAM_REGION = 2000;
-    public static final int GENE_MAX_CANDIDATE_PROBES = 8;
     // Only probe intronic regions when the gene has <= this number of exons.
     public static final int GENE_MAX_EXONS_TO_ADD_INTRON = 19;
     // Space between exon and intron probe.
