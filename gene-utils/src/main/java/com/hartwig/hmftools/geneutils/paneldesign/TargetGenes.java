@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -274,10 +275,10 @@ public class TargetGenes
         LOGGER.trace("{}: Best probe: {}", geneRegion, bestCandidate);
 
         ProbeGenerationResult result = bestCandidate
-                .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), List.of()))
+                .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), Collections.emptyList()))
                 .orElseGet(() ->
                         new ProbeGenerationResult(
-                                List.of(),
+                                Collections.emptyList(),
                                 // TODO: rejection reason
                                 List.of(new RejectedRegion(geneRegion.chrBaseRegion(), source, null))));
         return result;

@@ -2,8 +2,10 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
+import static com.hartwig.hmftools.common.mappability.ProbeQualityProfile.CFG_PROBE_QUALITY_FILE;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
@@ -27,11 +29,11 @@ public class PanelBuilderConfig
     public final String OutputPrefix;
     public final String OutputDir;
 
-    private static final String CFG_AMBER_SITES_FILE = "amber_sites_file";
+    private static final String CFG_AMBER_SITES_FILE = "amber_sites";
     private static final String DESC_AMBER_SITES_FILE = "Amber het sites file";
-    private static final String CFG_TARGET_GENES_FILE = "gene_transcript_file";
+    private static final String CFG_TARGET_GENES_FILE = "target_genes";
     private static final String DESC_TARGET_GENES_FILE = "Gene and transcript name file";
-    private static final String CFG_CUSTOM_REGIONS_FILE = "custom_region_file";
+    private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
     private static final String DESC_CUSTOM_REGIONS_FILE = "Custom region file";
     private static final String CFG_OUTPUT_PREFIX = "output_prefix";
     private static final String DESC_OUTPUT_PREFIX = "Prefix of output file names";
@@ -44,9 +46,9 @@ public class PanelBuilderConfig
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
-        EnsemblDir = configBuilder.getValue(EnsemblDataCache.ENSEMBL_DATA_DIR);
+        EnsemblDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
 
-        ProbeQualityProfileFile = configBuilder.getValue(ProbeQualityProfile.PROBE_QUALITY_FILE_CONFIG);
+        ProbeQualityProfileFile = configBuilder.getValue(CFG_PROBE_QUALITY_FILE);
 
         OutputPrefix = configBuilder.getValue(CFG_OUTPUT_PREFIX);
         OutputDir = parseOutputDir(configBuilder);

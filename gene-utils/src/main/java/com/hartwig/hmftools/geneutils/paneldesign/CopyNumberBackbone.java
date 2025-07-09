@@ -154,24 +154,27 @@ public class CopyNumberBackbone
 
     private static ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions, final ProbeEvaluator probeEvaluator)
     {
-        List<EvaluatedProbe> probes = partitions.values().stream()
+        return partitions.values().stream()
                 .flatMap(chrPartitions ->
                         chrPartitions.stream().map(partition -> generateProbe(partition, probeEvaluator)))
-                .toList();
-        // Note there are never any rejected regions because it's assumed each partition has at least one acceptable probe.
-        return new ProbeGenerationResult(probes, Collections.emptyList());
+                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
     }
 
-    private static EvaluatedProbe generateProbe(final Partition partition, final ProbeEvaluator probeEvaluator)
+    private static ProbeGenerationResult generateProbe(final Partition partition, final ProbeEvaluator probeEvaluator)
     {
         Stream<CandidateProbe> candidates = generateCandidateProbes(partition);
         Optional<EvaluatedProbe> bestCandidate = probeEvaluator.selectBestProbe(candidates);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
-        // Assume there is at least one acceptable probe in each partition to make things simpler.
-        // It's likely a valid assumption because the set of Amber sites is fixed and each partition includes many sites.
-        return bestCandidate.orElseThrow(
-                () -> new RuntimeException(
-                        format("Expected at least one Amber site to be an acceptable probe in CN backbone partition %s", partition.Region)));
+        ProbeGenerationResult result = bestCandidate
+                .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), Collections.emptyList()))
+                .orElseGet(() -> new ProbeGenerationResult(
+                        Collections.emptyList(),
+                        List.of(new RejectedRegion(
+                                partition.Region,
+                                new ProbeSourceInfo(PROBE_SOURCE, partition.Region.toString()),
+                                // TODO: rejection reason
+                                null))));
+        return result;
     }
 
     private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition)

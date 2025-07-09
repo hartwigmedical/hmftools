@@ -3,6 +3,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writePanelProbes;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writeRejectedRegions;
@@ -53,6 +54,7 @@ public class PanelBuilder
 
         LOGGER.debug("Writing output");
         {
+            checkCreateOutputDir(mConfig.OutputDir);
             ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
             writePanelProbes(mConfig.outputFilePath(PANEL_PROBES_FILE), aggregate.probes().stream());
             writeRejectedRegions(mConfig.outputFilePath(REJECTED_REGIONS_FILE), aggregate.rejectedRegions().stream());
@@ -87,7 +89,7 @@ public class PanelBuilder
         }
         else
         {
-            EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.EnsemblDir, mRefGenomeVersion);
+            EnsemblDataCache ensemblData = loadEnsemblData();
             return TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeEvaluator);
         }
     }
@@ -103,6 +105,14 @@ public class PanelBuilder
         {
             return CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeEvaluator);
         }
+    }
+
+    private EnsemblDataCache loadEnsemblData()
+    {
+        EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.EnsemblDir, mRefGenomeVersion);
+        ensemblData.setRequiredData(true, false, false, false);
+        ensemblData.load(false);
+        return ensemblData;
     }
 
     public static void main(@NotNull final String[] args)

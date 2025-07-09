@@ -32,13 +32,13 @@ public class ProbeQualityProfile
     // Keyed by chromosome.
     public final Map<String, List<ProbeQualityWindow>> mWindows;
 
-    public static final String PROBE_QUALITY_FILE_CONFIG = "probe_quality_profile";
-    public static final String PROBE_QUALITY_FILE_DESC = "Genome regions to probe quality";
+    public static final String CFG_PROBE_QUALITY_FILE = "probe_quality_profile";
+    private static final String DESC_PROBE_QUALITY_FILE = "Genome regions to probe quality";
 
     // Must match the config used for generating the file
     private static final int BASE_WINDOW_LENGTH = 40;
     private static final int BASE_WINDOW_SPACING = 20;
-    private static final String QUALITY_SCORE_FIELD = "QualityScore";
+    private static final String FLD_QUALITY_SCORE = "QualityScore";
 
     private static final double AGGREGATE_SHARPNESS = 10;
     private static final double AGGREGATE_EXP_NORM = -AGGREGATE_SHARPNESS / BASE_WINDOW_LENGTH;
@@ -57,7 +57,7 @@ public class ProbeQualityProfile
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(PROBE_QUALITY_FILE_CONFIG, true, PROBE_QUALITY_FILE_DESC);
+        configBuilder.addPath(CFG_PROBE_QUALITY_FILE, true, DESC_PROBE_QUALITY_FILE);
     }
 
     private static Map<String, List<ProbeQualityWindow>> loadProbeQualityWindows(final String filePath)
@@ -69,7 +69,7 @@ public class ProbeQualityProfile
         {
             int chromosomeField = reader.getColumnIndex(FLD_CHROMOSOME);
             int startField = reader.getColumnIndex(FLD_POSITION_START);
-            int qualityScoreField = reader.getColumnIndex(QUALITY_SCORE_FIELD);
+            int qualityScoreField = reader.getColumnIndex(FLD_QUALITY_SCORE);
             for(DelimFileReader.Row row : reader)
             {
                 String chromosome = row.get(chromosomeField);
@@ -91,7 +91,8 @@ public class ProbeQualityProfile
         // Store windows sorted, helps computations later.
         result.forEach((chromosome, windows) -> Collections.sort(windows));
 
-        result.forEach((chromosome, windows) -> LOGGER.debug("Loaded chromosome {} with {} windows", chromosome, windows.size()));
+        result.forEach((chromosome, windows) ->
+                LOGGER.trace("Loaded chromosome {} with {} windows", chromosome, windows.size()));
         LOGGER.debug("Loading complete, secs({})", secondsSinceNow(startTimeMs));
         return result;
     }
@@ -115,7 +116,8 @@ public class ProbeQualityProfile
             return Optional.empty();
         }
         Optional<Integer> windowsStart = findFirstWindowContaining(windows, probe.start());
-        if (windowsStart.isEmpty()) {
+        if(windowsStart.isEmpty())
+        {
             // Probe start position not covered.
             return Optional.empty();
         }

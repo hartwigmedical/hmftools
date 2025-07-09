@@ -36,6 +36,7 @@ public class ProbeEvaluator
         mGcMax = gcMax;
     }
 
+    // TODO: if no best probe, return reason why
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there is no such best probe.
     public Optional<EvaluatedProbe> selectBestProbe(Stream<CandidateProbe> probes)
     {
@@ -95,11 +96,17 @@ public class ProbeEvaluator
 
     private double getProbeQuality(CandidateProbe probe)
     {
-        // Never want to accept a probe with no quality score, so just return 0 in that case to simplify the code elsewhere.
-        return mQualityProfile.computeQualityScore(probe.probeRegion()).orElse(0d);
+        return mQualityProfile.computeQualityScore(probe.probeRegion()).orElseGet(() ->
+        {
+            // Never want to accept a probe with no quality score, so just return 0 in that case to simplify the code elsewhere.
+            // But also this shouldn't happen in practice because the probe quality profile covers the whole genome.
+            LOGGER.warn("Evaluating candidate probe not covered by probe quality profile; assuming qualityScore=0");
+            return 0d;
+        });
     }
 
-    private String getProbeSequence(CandidateProbe probe) {
+    private String getProbeSequence(CandidateProbe probe)
+    {
         ChrBaseRegion region = probe.probeRegion();
         return mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
     }
