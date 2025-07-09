@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -20,81 +20,69 @@ public class ProbeEvaluator
 {
     private final RefGenomeInterface mRefGenome;
     private final ProbeQualityProfile mQualityProfile;
-    private final double mQualityMin;
-    private final double mGcMin;
-    private final double mGcMax;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeEvaluator.class);
 
-    public ProbeEvaluator(RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
-            double qualityMin, double gcMin, double gcMax)
+    public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile)
     {
         mRefGenome = refGenome;
         mQualityProfile = qualityProfile;
-        mQualityMin = qualityMin;
-        mGcMin = gcMin;
-        mGcMax = gcMax;
     }
 
     // TODO: if no best probe, return reason why
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there is no such best probe.
-    public Optional<EvaluatedProbe> selectBestProbe(Stream<CandidateProbe> probes)
+    public Optional<EvaluatedProbe> selectBestProbe(Stream<CandidateProbe> probes, final ProbeSelectCriteria criteria)
     {
-        // Apply the common probe filters.
-        // Select only probes which pass the filters.
-        // Sort by highest quality first.
-        // Take the first (i.e. best) acceptable probe.
-        return probes
-                // Apply the common probe filters.
-                .map(this::evaluateCandidate)
-                // Select only probes which pass the filters.
-                .filter(EvaluatedProbe::accepted)
-                // Order nulls as lower values to be safe, but a quality score is required so it shouldn't matter here.
-                .max(Comparator.nullsFirst(Comparator.comparing(EvaluatedProbe::qualityScore)));
+        Stream<EvaluatedProbe> acceptableProbes = probes
+                .map(probe -> evaluateCandidate(probe, criteria.eval()))
+                .filter(EvaluatedProbe::accepted);
+        return switch(criteria.strategy())
+        {
+            case FIRST_ACCEPTABLE -> acceptableProbes.findFirst();
+            case MAX_QUALITY -> acceptableProbes.max(Comparator.nullsFirst(Comparator.comparing(EvaluatedProbe::qualityScore)));
+            case BEST_GC -> acceptableProbes
+                    .min(Comparator.comparingDouble(
+                            probe -> abs(probe.gcContent() - criteria.eval().gcContentTarget())));
+        };
     }
 
-    public EvaluatedProbe evaluateCandidate(final CandidateProbe probe)
+    private EvaluatedProbe evaluateCandidate(final CandidateProbe probe, final ProbeEvalCriteria criteria)
     {
-        List<Function<EvaluatedProbe, EvaluatedProbe>> filters = List.of(this::evaluateQuality, this::evaluateGc);
-        EvaluatedProbe evaluatedProbe = new EvaluatedProbe(probe);
-        for(Function<EvaluatedProbe, EvaluatedProbe> filter : filters)
+        EvaluatedProbe evaluatedProbe = new EvaluatedProbe(probe, criteria);
+        evaluatedProbe = evaluateQualityScore(evaluatedProbe, criteria);
+        if(!evaluatedProbe.rejected())
         {
-            evaluatedProbe = filter.apply(evaluatedProbe);
-            if(evaluatedProbe.rejected())
-            {
-                // No need to keep going if a filter already rejected the probe.
-                break;
-            }
+            evaluatedProbe = evaluateGcContent(evaluatedProbe, criteria);
         }
         LOGGER.trace("Evaluated probe: {}", evaluatedProbe);
         return evaluatedProbe;
     }
 
-    private EvaluatedProbe evaluateQuality(EvaluatedProbe probe)
+    private EvaluatedProbe evaluateQualityScore(EvaluatedProbe probe, final ProbeEvalCriteria criteria)
     {
         double qualityScore = getProbeQuality(probe.candidate());
         probe = probe.withQualityScore(qualityScore);
-        if(!(qualityScore >= mQualityMin))
+        if(!(qualityScore >= criteria.qualityScoreMin()))
         {
             probe = probe.withRejectionReason("quality");
         }
         return probe;
     }
 
-    private EvaluatedProbe evaluateGc(EvaluatedProbe probe)
+    private EvaluatedProbe evaluateGcContent(EvaluatedProbe probe, final ProbeEvalCriteria criteria)
     {
         String sequence = getProbeSequence(probe.candidate());
         probe = probe.withSequence(sequence);
         double gcContent = calcGcPercent(sequence);
         probe = probe.withGcContent(gcContent);
-        if(!(gcContent >= mGcMin && gcContent <= mGcMax))
+        if(!(gcContent >= criteria.gcContentMin() && gcContent <= criteria.gcContentMax()))
         {
             probe = probe.withRejectionReason("gc");
         }
         return probe;
     }
 
-    private double getProbeQuality(CandidateProbe probe)
+    private double getProbeQuality(final CandidateProbe probe)
     {
         return mQualityProfile.computeQualityScore(probe.probeRegion()).orElseGet(() ->
         {
@@ -105,7 +93,7 @@ public class ProbeEvaluator
         });
     }
 
-    private String getProbeSequence(CandidateProbe probe)
+    private String getProbeSequence(final CandidateProbe probe)
     {
         ChrBaseRegion region = probe.probeRegion();
         return mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());

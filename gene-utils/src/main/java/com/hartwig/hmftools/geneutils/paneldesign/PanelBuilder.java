@@ -8,9 +8,6 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writePanelProbes;
 import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writeRejectedRegions;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_GC_MAX;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_GC_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_SCORE_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -27,7 +24,7 @@ public class PanelBuilder
 {
     private final PanelBuilderConfig mConfig;
     private final RefGenomeVersion mRefGenomeVersion;
-    private final ProbeEvaluator mProbeEvaluator;
+    private final ProbeGenerator mProbeGenerator;
 
     private static final Logger LOGGER = LogManager.getLogger(PanelBuilder.class);
 
@@ -37,7 +34,8 @@ public class PanelBuilder
         RefGenomeSource mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
         ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
-        mProbeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, PROBE_QUALITY_SCORE_MIN, PROBE_GC_MIN, PROBE_GC_MAX);
+        ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile);
+        mProbeGenerator = new ProbeGenerator(probeEvaluator);
     }
 
     public void run()
@@ -64,6 +62,8 @@ public class PanelBuilder
 
         // TODO: remove duplicate/overlapping probes?
 
+        // TODO: check probes are within chromosome bounds?
+
         LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
@@ -76,7 +76,7 @@ public class PanelBuilder
         }
         else
         {
-            return CustomRegions.generateProbes(mConfig.CustomRegionsFile, mProbeEvaluator);
+            return CustomRegions.generateProbes(mConfig.CustomRegionsFile, mProbeGenerator);
         }
     }
 
@@ -90,7 +90,7 @@ public class PanelBuilder
         else
         {
             EnsemblDataCache ensemblData = loadEnsemblData();
-            return TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeEvaluator);
+            return TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator);
         }
     }
 
@@ -103,7 +103,7 @@ public class PanelBuilder
         }
         else
         {
-            return CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeEvaluator);
+            return CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator);
         }
     }
 

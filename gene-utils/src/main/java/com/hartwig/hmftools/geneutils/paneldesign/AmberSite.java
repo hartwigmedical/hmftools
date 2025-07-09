@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.region.BasePosition;
 public record AmberSite(
         BasePosition position,
         double gnomadFreq,
-        double mappability,
         double gcRatio
 )
 {

@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GC_RATIO_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_QUALITY_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_MAPPABILITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,15 +35,19 @@ import org.apache.logging.log4j.Logger;
 // Methodology:
 //   - Divide chromosomes into large partitions;
 //   - In each partition, generate candidate probes on each Amber site;
-//   - Select the best probe within each partition.
+//   - In each partition, select the acceptable probe with the best GC content.
 public class CopyNumberBackbone
 {
     private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.CN_BACKBONE;
 
+    private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
+            new ProbeEvalCriteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
+            ProbeSelectStrategy.BEST_GC);
+
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
     public static ProbeGenerationResult generateProbes(final String amberSitesFile, final RefGenomeVersion refGenVersion,
-            final ProbeEvaluator probeEvaluator)
+            final ProbeGenerator probeGenerator)
     {
         LOGGER.info("Generating copy number backbone probes");
 
@@ -51,7 +55,7 @@ public class CopyNumberBackbone
 
         populateAmberSites(partitions, amberSitesFile);
 
-        ProbeGenerationResult result = generateProbes(partitions, probeEvaluator);
+        ProbeGenerationResult result = generateProbes(partitions, probeGenerator);
 
         LOGGER.info("Done generating copy number backbone probes");
         return result;
@@ -100,25 +104,19 @@ public class CopyNumberBackbone
             CANDIDATE,
             EXCLUDED,
             GNOMAD,
-            GC_RATIO,
-            MAPPABILITY
+            GC_RATIO
         }
 
         List<AmberSite> sites = AmberSites.loadAmberSitesFile(sitesFilePath);
         int[] siteFilterCounts = new int[SiteFilter.values().length];
         for(AmberSite site : sites)
         {
-            if(site.mappability() < CN_BACKBONE_MAPPABILITY_MIN)
-            {
-                ++siteFilterCounts[SiteFilter.MAPPABILITY.ordinal()];
-                continue;
-            }
-            else if(site.gnomadFreq() < CN_BACKBONE_GNOMAD_FREQ_MIN || site.gnomadFreq() > CN_BACKBONE_GNOMAD_FREQ_MAX)
+            if(!(site.gnomadFreq() >= CN_BACKBONE_GNOMAD_FREQ_MIN && site.gnomadFreq() <= CN_BACKBONE_GNOMAD_FREQ_MAX))
             {
                 ++siteFilterCounts[SiteFilter.GNOMAD.ordinal()];
                 continue;
             }
-            else if(site.gcRatio() < CN_BACKBONE_GC_RATIO_MIN)
+            else if(!(site.gcRatio() >= CN_GC_MIN && site.gcRatio() <= CN_GC_MAX))
             {
                 ++siteFilterCounts[SiteFilter.GC_RATIO.ordinal()];
                 continue;
@@ -152,49 +150,53 @@ public class CopyNumberBackbone
         LOGGER.debug("Amber site filters: {}", filterCountStr);
     }
 
-    private static ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions, final ProbeEvaluator probeEvaluator)
+    private static ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions, final ProbeGenerator probeGenerator)
     {
         return partitions.values().stream()
                 .flatMap(chrPartitions ->
-                        chrPartitions.stream().map(partition -> generateProbe(partition, probeEvaluator)))
+                        chrPartitions.stream().map(partition -> generateProbe(partition, probeGenerator)))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
     }
 
-    private static ProbeGenerationResult generateProbe(final Partition partition, final ProbeEvaluator probeEvaluator)
+    private static ProbeGenerationResult generateProbe(final Partition partition, final ProbeGenerator probeGenerator)
     {
         Stream<CandidateProbe> candidates = generateCandidateProbes(partition);
-        Optional<EvaluatedProbe> bestCandidate = probeEvaluator.selectBestProbe(candidates);
+        Optional<EvaluatedProbe> bestCandidate = probeGenerator.mProbeEvaluator.selectBestProbe(candidates, PROBE_SELECT_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), Collections.emptyList()))
-                .orElseGet(() -> new ProbeGenerationResult(
-                        Collections.emptyList(),
-                        List.of(new RejectedRegion(
-                                partition.Region,
-                                new ProbeSourceInfo(PROBE_SOURCE, partition.Region.toString()),
-                                // TODO: rejection reason
-                                null))));
+                .orElseGet(() ->
+                {
+                    // Given the Amber sites are predetermined and there's a lot of them, in typical use we should find an acceptable probe.
+                    // If no probe is found then the input data is probably wrong (or the code is being tested).
+                    LOGGER.warn("No acceptable probe for copy number backbone partition: {}", partition.Region);
+                    return new ProbeGenerationResult(
+                            Collections.emptyList(),
+                            List.of(new RejectedRegion(
+                                    partition.Region,
+                                    new ProbeSourceInfo(PROBE_SOURCE, partition.Region.toString()),
+                                    // TODO: rejection reason
+                                    null)));
+                });
         return result;
     }
 
     private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition)
     {
-        return partition.Sites.stream().map(CopyNumberBackbone::amberSiteToProbe);
+        return partition.Sites.stream()
+                .flatMap(CopyNumberBackbone::generateCandidateProbes)
+                // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
+                .filter(probe -> partition.Region.containsRegion(probe.probeRegion()));
     }
 
-    private static CandidateProbe amberSiteToProbe(final AmberSite site)
+    private static Stream<CandidateProbe> generateCandidateProbes(final AmberSite site)
     {
-        // TODO: can probably try different probes no centered and select the best
-        BasePosition position = site.position();
-        // Probe centered on the site.
-        int probeStart = max(1, position.Position - PROBE_LENGTH / 2);
-        int probeEnd = probeStart + PROBE_LENGTH - 1;
-        ChrBaseRegion probeRegion = new ChrBaseRegion(position.Chromosome, probeStart, probeEnd);
-        ChrBaseRegion targetRegion = new ChrBaseRegion(position.Chromosome, position.Position, position.Position);
-        String extraInfo = position.toString();
-        ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
-        CandidateProbe probe = new CandidateProbe(source, probeRegion, targetRegion);
-        LOGGER.trace("Candidate probe: {}", probe);
-        return probe;
+        return ProbeGenerator.coverPositionCandidates(site.position(), createProbeSourceInfo(site));
+    }
+
+    private static ProbeSourceInfo createProbeSourceInfo(final AmberSite site)
+    {
+        String extraInfo = site.position().toString();
+        return new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
     }
 }

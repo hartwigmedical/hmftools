@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 public class AmberSites
 {
     private static final String FLD_GNOMAD_FREQ = "GnomadFreq";
-    private static final String FLD_MAPPABILITY = "Mappability";
     private static final String FLD_GC_RATIO = "GcRatio";
 
     public static List<AmberSite> loadAmberSitesFile(String path)
@@ -20,7 +19,6 @@ public class AmberSites
         {
             int chrIndex = reader.getColumnIndex(FLD_CHROMOSOME);
             int posIndex = reader.getColumnIndex(FLD_POSITION);
-            int mapIndex = reader.getColumnIndex(FLD_MAPPABILITY);
             int gnomadIndex = reader.getColumnIndex(FLD_GNOMAD_FREQ);
             int gcRatioIndex = reader.getColumnIndex(FLD_GC_RATIO);
 
@@ -28,10 +26,9 @@ public class AmberSites
             {
                 String chromosome = row.get(chrIndex);
                 int position = row.getInt(posIndex);
-                double mappability = row.getDouble(mapIndex);
                 double gnomadFreq = row.getDouble(gnomadIndex);
                 double gcRatio = row.getDouble(gcRatioIndex);
-                return new AmberSite(new BasePosition(chromosome, position), gnomadFreq, mappability, gcRatio);
+                return new AmberSite(new BasePosition(chromosome, position), gnomadFreq, gcRatio);
             }).toList();
         }
     }

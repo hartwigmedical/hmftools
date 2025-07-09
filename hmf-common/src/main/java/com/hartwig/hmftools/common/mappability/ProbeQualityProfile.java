@@ -43,7 +43,6 @@ public class ProbeQualityProfile
     private static final String FLD_QUALITY_SCORE = "QualityScore";
 
     private static final double AGGREGATE_SHARPNESS = 10;
-    private static final double AGGREGATE_EXP_NORM = -AGGREGATE_SHARPNESS / BASE_WINDOW_LENGTH;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
@@ -183,7 +182,8 @@ public class ProbeQualityProfile
         {
             float value = window.getQualityScore();
             int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
-            double weight = exp(AGGREGATE_EXP_NORM * overlap * value);
+            double confidence = (double) overlap / BASE_WINDOW_LENGTH;
+            double weight = confidence * exp(-AGGREGATE_SHARPNESS * confidence * value);
             sums[0] += value * weight;
             sums[1] += weight;
         });

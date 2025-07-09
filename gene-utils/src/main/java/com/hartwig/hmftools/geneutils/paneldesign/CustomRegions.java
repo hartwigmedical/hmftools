@@ -21,14 +21,14 @@ public class CustomRegions
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
-    public static ProbeGenerationResult generateProbes(final String customRegionFile, final ProbeEvaluator probeEvaluator)
+    public static ProbeGenerationResult generateProbes(final String customRegionFile, final ProbeGenerator probeGenerator)
     {
         LOGGER.info("Generating custom region probes");
 
         List<CustomRegion> regions = loadCustomRegionsFile(customRegionFile);
 
         ProbeGenerationResult result = regions.stream()
-                .map(region -> generateProbes(region, probeEvaluator))
+                .map(region -> generateProbes(region, probeGenerator))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
 
         LOGGER.info("Done generating custom region probes");
@@ -67,9 +67,9 @@ public class CustomRegions
         }
     }
 
-    private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeEvaluator probeEvaluator)
+    private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator)
     {
         ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, region.extraInfo());
-        return RegionProbeTiling.fillRegionWithProbes(region.region(), source, probeEvaluator);
+        return probeGenerator.coverWholeRegion(region.region(), source);
     }
 }

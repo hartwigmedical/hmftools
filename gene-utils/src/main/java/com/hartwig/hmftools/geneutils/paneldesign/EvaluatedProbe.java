@@ -2,19 +2,18 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 public record EvaluatedProbe(
         CandidateProbe candidate,
+        ProbeEvalCriteria criteria,
         // null if the probe is acceptable.
         String rejectionReason,
-        // null if not checked.
+        // All the following fields may be null if the probe was rejected, and the field didn't need to be checked.
         String sequence,
-        // null if not checked.
         Double qualityScore,
-        // null if not checked.
         Double gcContent
 )
 {
-    public EvaluatedProbe(final CandidateProbe probe)
+    public EvaluatedProbe(final CandidateProbe probe, final ProbeEvalCriteria criteria)
     {
-        this(probe, null, null, null, null);
+        this(probe, criteria, null, null, null, null);
     }
 
     public boolean accepted()
@@ -29,20 +28,20 @@ public record EvaluatedProbe(
 
     public EvaluatedProbe withRejectionReason(final String value)
     {
-        return new EvaluatedProbe(candidate, value, sequence, qualityScore, gcContent);
+        return new EvaluatedProbe(candidate, criteria, value, sequence, qualityScore, gcContent);
     }
 
     public EvaluatedProbe withSequence(String value) {
-        return new EvaluatedProbe(candidate, rejectionReason, value, qualityScore, gcContent);
+        return new EvaluatedProbe(candidate, criteria, rejectionReason, value, qualityScore, gcContent);
     }
 
     public EvaluatedProbe withQualityScore(double value)
     {
-        return new EvaluatedProbe(candidate, rejectionReason, sequence, value, gcContent);
+        return new EvaluatedProbe(candidate, criteria, rejectionReason, sequence, value, gcContent);
     }
 
     public EvaluatedProbe withGcContent(double value)
     {
-        return new EvaluatedProbe(candidate, rejectionReason, sequence, qualityScore, value);
+        return new EvaluatedProbe(candidate, criteria, rejectionReason, sequence, qualityScore, value);
     }
 }

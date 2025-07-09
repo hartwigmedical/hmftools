@@ -105,6 +105,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return Chromosome.equals(chromosome) && positionWithin(position, start(), end());
     }
 
+    public boolean containsRegion(final ChrBaseRegion region)
+    {
+        return Chromosome.equals(region.Chromosome) && baseRegion().containsRegion(region);
+    }
+
     public boolean matches(final ChrBaseRegion other)
     {
         return Chromosome.equals(other.Chromosome) && start() == other.start() && end() == other.end();
