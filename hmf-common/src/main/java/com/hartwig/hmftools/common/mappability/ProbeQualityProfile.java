@@ -16,7 +16,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -114,7 +115,7 @@ public class ProbeQualityProfile
 
     // Compute the final quality score from the probe quality profile.
     // Returns empty optional if the profile doesn't cover the probe region.
-    public Optional<Double> computeQualityScore(final ChrBaseRegion probe)
+    public OptionalDouble computeQualityScore(final ChrBaseRegion probe)
     {
         if(probe.baseLength() < 1)
         {
@@ -128,28 +129,28 @@ public class ProbeQualityProfile
         if(windows == null)
         {
             // Probe chromosome not covered at all.
-            return Optional.empty();
+            return OptionalDouble.empty();
         }
-        Optional<Integer> windowsStart = findFirstWindowContaining(windows, probe.start());
+        OptionalInt windowsStart = findFirstWindowContaining(windows, probe.start());
         if(windowsStart.isEmpty())
         {
             // Probe start position not covered.
-            return Optional.empty();
+            return OptionalDouble.empty();
         }
         // For some reason using Stream skip() and takeWhile() here is extremely slow compared to List.subList().
-        int windowsEnd = scanWhileOverlap(windows, windowsStart.get(), probe.baseRegion());   // Inclusive
-        List<ProbeQualityWindow> overlappingWindows = windows.subList(windowsStart.get(), windowsEnd + 1);
+        int windowsEnd = scanWhileOverlap(windows, windowsStart.getAsInt(), probe.baseRegion());   // Inclusive
+        List<ProbeQualityWindow> overlappingWindows = windows.subList(windowsStart.getAsInt(), windowsEnd + 1);
         if(!overlappingWindows.get(overlappingWindows.size() - 1).containsPosition(probe.end()))
         {
             // Probe middle or end not covered.
-            return Optional.empty();
+            return OptionalDouble.empty();
         }
         double qualityScore = aggregateQualityScore(overlappingWindows.stream(), probe.baseRegion());
-        return Optional.of(qualityScore);
+        return OptionalDouble.of(qualityScore);
     }
 
     // Efficiently finds the index of the first window that contains a position.
-    private static Optional<Integer> findFirstWindowContaining(final List<ProbeQualityWindow> windows, int position)
+    private static OptionalInt findFirstWindowContaining(final List<ProbeQualityWindow> windows, int position)
     {
         // We are able to find the first window that overlaps using Collections.binarySearch() because, since the windows are of equal size,
         // sorting by start (done previously) implies sorting by end.
@@ -164,11 +165,11 @@ public class ProbeQualityProfile
         }
         if(index < windows.size() && windows.get(index).containsPosition(position))
         {
-            return Optional.of(index);
+            return OptionalInt.of(index);
         }
         else
         {
-            return Optional.empty();
+            return OptionalInt.empty();
         }
     }
 

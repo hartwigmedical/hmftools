@@ -20,8 +20,9 @@ public class CustomRegions
 {
     private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.CUSTOM;
 
-    private static final ProbeEvalCriteria PROBE_EVAL_CRITERIA =
-            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
+    private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
+            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            ProbeSelectStrategy.MAX_QUALITY);
 
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
 
@@ -75,7 +76,9 @@ public class CustomRegions
 
     private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator)
     {
+        LOGGER.trace("Generating probes for {}", region);
         ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, region.extraInfo());
-        return probeGenerator.coverWholeRegion(region.region(), source, PROBE_EVAL_CRITERIA);
+        ProbeGenerationResult result = probeGenerator.coverRegion(region.region(), source, PROBE_SELECT_CRITERIA);
+        return result;
     }
 }

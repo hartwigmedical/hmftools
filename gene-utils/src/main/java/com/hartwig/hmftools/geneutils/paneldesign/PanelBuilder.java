@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -129,7 +127,7 @@ public class PanelBuilder
 
     private void writeCandidateProbe(final EvaluatedProbe probe)
     {
-        mOutputWriter.writeCandidateProbes(List.of(probe));
+        mOutputWriter.writeCandidateProbe(probe);
     }
 
     public static void main(@NotNull final String[] args)

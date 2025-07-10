@@ -48,8 +48,9 @@ public class TargetGenes
 {
     private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.GENE;
 
-    private static final ProbeEvalCriteria EXON_PROBE_EVAL_CRITERIA =
-            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
+    private static final ProbeSelectCriteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
+            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            ProbeSelectStrategy.MAX_QUALITY);
     private static final ProbeSelectCriteria CN_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(PROBE_QUALITY_ACCEPT, CN_GC_TARGET, CN_GC_TOLERANCE),
             ProbeSelectStrategy.BEST_GC);
@@ -68,7 +69,7 @@ public class TargetGenes
                 .toList();
         List<GeneRegion> geneRegions = genes.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
         ProbeGenerationResult result = geneRegions.stream()
-                .map(region -> generateProbe(region, probeGenerator))
+                .map(region -> generateProbes(region, probeGenerator))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
 
         LOGGER.info("Done generating gene probes");
@@ -259,14 +260,17 @@ public class TargetGenes
         return regions;
     }
 
-    private static ProbeGenerationResult generateProbe(final GeneRegion geneRegion, final ProbeGenerator probeGenerator)
+    private static ProbeGenerationResult generateProbes(final GeneRegion geneRegion, final ProbeGenerator probeGenerator)
     {
+        LOGGER.trace("Generating probes for {}", geneRegion);
+
         ProbeSourceInfo source = createProbeSourceInfo(geneRegion);
+
         return switch(geneRegion.type())
         {
-            case CODING, UTR -> probeGenerator.coverWholeRegion(geneRegion.baseRegion(), source, EXON_PROBE_EVAL_CRITERIA);
+            case CODING, UTR -> probeGenerator.coverRegion(geneRegion.baseRegion(), source, EXON_PROBE_SELECT_CRITERIA);
             case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT ->
-                    probeGenerator.bestProbeInRegion(geneRegion.baseRegion(), source, CN_PROBE_SELECT_CRITERIA);
+                    probeGenerator.coverOneSubregion(geneRegion.baseRegion(), source, CN_PROBE_SELECT_CRITERIA);
         };
     }
 

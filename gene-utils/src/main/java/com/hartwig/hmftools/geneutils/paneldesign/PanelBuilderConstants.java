@@ -14,6 +14,7 @@ public class PanelBuilderConstants
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;
     // When covering a region with probes, how many bases in the region are allowed to not be covered?
+    // TODO: i think we should get rid of this because it doesn't make sense for large regions. or make it specific to some probe gen algorithms
     // TODO: allow this to be negative?
     public static final int UNCOVERED_BASES_MAX = 10;
 
@@ -51,5 +52,6 @@ public class PanelBuilderConstants
     // Output naming.
     public static final String PANEL_PROBES_FILE = "panel_probes.tsv";
     public static final String REJECTED_REGIONS_FILE = "rejected_regions.tsv";
-    public static final String CANDIDATE_PROBES_FILE = "candidate_probes.tsv";
+    // This output can get very large (10s of GB) so write it in compressed format.
+    public static final String CANDIDATE_PROBES_FILE = "candidate_probes.tsv.gz";
 }

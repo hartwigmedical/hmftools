@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.OptionalDouble;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -57,36 +57,36 @@ public class ProbeQualityProfileTest
     @Test
     public void testComputeQualityScoreCovered()
     {
-        Optional<Double> actual;
+        OptionalDouble actual;
 
         // Probe contained within 1 window.
         actual = mProfile.computeQualityScore(new ChrBaseRegion("1", 101, 111));
         assertTrue(actual.isPresent());
-        assertEquals(0.1, actual.get(), 1e-6);
+        assertEquals(0.1, actual.getAsDouble(), 1e-6);
 
         // Probe overlapping 2 windows.
         actual = mProfile.computeQualityScore(new ChrBaseRegion("1", 101, 131));
         assertTrue(actual.isPresent());
         // No need to duplicate the maths to find the exact score. It should be somewhere in between the scores of the 2 windows.
-        assertTrue(actual.get() > 0.1 && actual.get() < 0.2);
+        assertTrue(actual.getAsDouble() > 0.1 && actual.getAsDouble() < 0.2);
 
         // Probe overlapping multiple windows.
         actual = mProfile.computeQualityScore(new ChrBaseRegion("2", 233, 282));
         assertTrue(actual.isPresent());
-        assertTrue(actual.get() > 0.1 && actual.get() < 0.3);
+        assertTrue(actual.getAsDouble() > 0.1 && actual.getAsDouble() < 0.3);
     }
 
     @Test
     public void testComputeQualityScoreNotCovered()
     {
         // Nonexistent chromosome.
-        assertEquals(Optional.empty(), mProfile.computeQualityScore(new ChrBaseRegion("50", 30, 50)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("50", 30, 50)));
         // Region not covered at all.
-        assertEquals(Optional.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 1, 15)));
-        assertEquals(Optional.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 10000, 20000)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 1, 15)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 10000, 20000)));
         // Region partially covered.
-        assertEquals(Optional.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 50, 160)));
-        assertEquals(Optional.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 145, 1000)));
-        assertEquals(Optional.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 50, 1000)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 50, 160)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 145, 1000)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 50, 1000)));
     }
 }

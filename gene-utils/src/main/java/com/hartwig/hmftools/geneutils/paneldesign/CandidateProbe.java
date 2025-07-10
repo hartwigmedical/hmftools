@@ -7,8 +7,7 @@ public record CandidateProbe(
         ProbeSourceInfo source,
         // The region of the probe itself.
         ChrBaseRegion probeRegion,
-        // The region we were originally interested to create a probe for.
-        // In the best case, it's contained within probeRegion. Depending on probe selection criteria, it may only mostly overlap.
+        // The region we were originally interested to create a probe for. Just for output and debugging purposes.
         ChrBaseRegion targetRegion
 )
 {
