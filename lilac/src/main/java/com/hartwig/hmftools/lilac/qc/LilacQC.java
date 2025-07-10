@@ -35,7 +35,7 @@ public final class LilacQC
     public final double ScoreMargin;
     public final String NextSolutionInfo;
     public final HlaAllele HlaYAllele;
-    public final byte MedianBaseQual;
+    public final int MedianBaseQual;
 
     public final AminoAcidQC AminoAcidQC;
     public final BamQC BamQC;
@@ -44,7 +44,7 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            final double scoreMargin, final String nextSolutionInfo, final byte medianBaseQual, final HlaAllele hlaYAllele,
+            double scoreMargin, final String nextSolutionInfo, int medianBaseQual, final HlaAllele hlaYAllele,
             final AminoAcidQC aminoAcidQC, final BamQC bamQC,
             final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
@@ -63,7 +63,7 @@ public final class LilacQC
         populateStatus();
     }
 
-    private List<String> getHeaderItems()
+    public List<String> getHeaderItems()
     {
         List<String> columns = Lists.newArrayList();
         columns.add(LilacQcData.FLD_QC_STATUS);
@@ -79,7 +79,7 @@ public final class LilacQC
         return columns;
     }
 
-    private List<String> getBodyItems()
+    public List<String> getBodyItems()
     {
         List<String> columns = Lists.newArrayList();
 
@@ -102,14 +102,14 @@ public final class LilacQC
     public String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getHeaderItems().forEach(sj::add);
+        getHeaderItems().forEach(x -> sj.add(x));
         return sj.toString();
     }
 
-    private String body()
+    public String body()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getBodyItems().forEach(sj::add);
+        getBodyItems().forEach(x -> sj.add(x));
         return sj.toString();
     }
 

@@ -33,7 +33,7 @@ public final class ExtendEvidence
         mExpectedAlleles = expectedAlleles;
     }
 
-    public List<PhasedEvidence> pairedEvidence()
+    public final List<PhasedEvidence> pairedEvidence()
     {
         List<PhasedEvidence> results = Lists.newArrayList();
 
@@ -47,7 +47,7 @@ public final class ExtendEvidence
             List<Integer> indices = Lists.newArrayList(mHeterozygousLoci.get(i), mHeterozygousLoci.get(i + 1));
 
             final List<Fragment> filteredFragments = mFragments.stream()
-                    .filter(x -> x.containsAminoAcidLoci(indices)).toList();
+                    .filter(x -> x.containsAminoAcidLoci(indices)).collect(Collectors.toList());
 
             if(!filteredFragments.isEmpty())
             {
@@ -90,10 +90,10 @@ public final class ExtendEvidence
         int maxExisting = listMax(current.getAminoAcidLoci());
 
         List<PhasedEvidence> othersContainingMax = others.stream()
-                .filter(x -> x != current && x.getAminoAcidLoci().contains(maxExisting)).toList();
+                .filter(x -> x != current && x.getAminoAcidLoci().contains(maxExisting)).collect(Collectors.toList());
 
         List<PhasedEvidence> othersContainingMin = others.stream()
-                .filter(x -> x != current && x.getAminoAcidLoci().contains(minExisting)).toList();
+                .filter(x -> x != current && x.getAminoAcidLoci().contains(minExisting)).collect(Collectors.toList());
 
         if(!othersContainingMin.isEmpty() && !othersContainingMax.isEmpty())
         {
@@ -135,19 +135,18 @@ public final class ExtendEvidence
         return Pair.create(current, Sets.newHashSet());
     }
 
-    private int minTotalFragments(final List<Integer> indices)
+    private final int minTotalFragments(List<Integer> indices)
     {
         return mExpectedAlleles.expectedAlleles(indices) * mConfig.MinFragmentsPerAllele;
     }
 
-    private Pair<PhasedEvidence, Set<PhasedEvidence>> merge(
-	    final PhasedEvidence current, final PhasedEvidence left, final PhasedEvidence right)
+    private final Pair<PhasedEvidence, Set<PhasedEvidence>> merge( PhasedEvidence current, PhasedEvidence left, PhasedEvidence right)
     {
         List<Integer> leftTail = left.unambiguousTailIndices();
         List<Integer> rightHead = right.unambiguousHeadIndices();
-        List<Integer> mergeIndices = Lists.newArrayList(leftTail);
+        List<Integer> mergeIndices = leftTail.stream().collect(Collectors.toList());
 
-        rightHead.stream().filter(x -> !leftTail.contains(x)).forEach(mergeIndices::add);
+        rightHead.stream().filter(x -> !leftTail.contains(x)).forEach(x -> mergeIndices.add(x));
         Collections.sort(mergeIndices);
 
         List<Fragment> filteredFragments = mFragments.stream()
@@ -157,8 +156,7 @@ public final class ExtendEvidence
         {
             int minTotalFragments = minTotalFragments(mergeIndices);
 
-            PhasedEvidence mergeEvidence = PhasedEvidence.evidence(filteredFragments, mergeIndices)
-		    .removeSingles(mConfig.MinFragmentsToRemoveSingle);
+            PhasedEvidence mergeEvidence = PhasedEvidence.evidence(filteredFragments, mergeIndices).removeSingles(mConfig.MinFragmentsToRemoveSingle);
 
             if(CombineEvidence.canCombine(left, mergeEvidence, right))
             {

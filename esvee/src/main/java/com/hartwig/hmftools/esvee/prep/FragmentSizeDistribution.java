@@ -55,7 +55,7 @@ public class FragmentSizeDistribution
         mMaxReadLength = 0;
         mHasPairedReads = false;
     }
-
+    
     public void run()
     {
         SV_LOGGER.info("calculating fragment size distribution");
@@ -122,9 +122,9 @@ public class FragmentSizeDistribution
 
         int totalFragments = lengthFrequencies.stream().mapToInt(x -> x.Frequency).sum();
         int cumulativeTotal = 0;
-        int requiredMinTotal = (int) floor(totalFragments * (1 - FRAG_LENGTH_DIST_PERCENTILE));
-        int requiredStdDevTotal = (int) floor(totalFragments * FRAG_LENGTH_1_STD_DEV_PERCENTILE);
-        int requiredMaxTotal = (int) floor(totalFragments * FRAG_LENGTH_DIST_PERCENTILE);
+        int requiredMinTotal = (int)floor(totalFragments * (1 - FRAG_LENGTH_DIST_PERCENTILE));
+        int requiredStdDevTotal = (int)floor(totalFragments * FRAG_LENGTH_1_STD_DEV_PERCENTILE);
+        int requiredMaxTotal = (int)floor(totalFragments * FRAG_LENGTH_DIST_PERCENTILE);
         int medianFragment = totalFragments / 2;
 
         int lowerBound = 0;
@@ -240,7 +240,7 @@ public class FragmentSizeDistribution
                 region = mConfig.SpecificChrRegions.Regions.stream().filter(x -> x.Chromosome.equals(mChromosome)).findFirst().orElse(null);
 
                 if(region == null)
-                    return 1L;
+                    return (long)1;
             }
             else
             {
@@ -249,7 +249,7 @@ public class FragmentSizeDistribution
 
             mBamSlicer.slice(mSamReader, region, this::processBamRead);
 
-            return 0L;
+            return (long)0;
         }
 
         private void processBamRead(final SAMRecord record)
@@ -318,7 +318,8 @@ public class FragmentSizeDistribution
 
                 String mateCigar = record.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
 
-                return mateCigar == null || mateCigar.equals(alignedCigar);
+                if(mateCigar != null && !mateCigar.equals(alignedCigar))
+                    return false;
             }
 
             return true;
@@ -366,9 +367,9 @@ public class FragmentSizeDistribution
                 return fragmentLength;
 
             if(fragmentLength < 3000)
-                return 10 * (int) round(fragmentLength / 10.0);
+                return 10 * (int)round(fragmentLength/10.0);
 
-            return 100 * (int) round(fragmentLength / 100.0);
+            return 100 * (int)round(fragmentLength/100.0);
         }
     }
 
@@ -386,7 +387,7 @@ public class FragmentSizeDistribution
             for(LengthFrequency lengthFrequency : mLengthFrequencies)
             {
                 // cap any fragmemt distribution entry at the observed read length to avoid the use of trimmed fragments impacting it
-                if(mHasPairedReads && mMaxReadLength > 0 && lengthFrequency.Length < mMaxReadLength)
+                if(mHasPairedReads &&  mMaxReadLength > 0 && lengthFrequency.Length < mMaxReadLength)
                     continue;
 
                 writer.write(format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));

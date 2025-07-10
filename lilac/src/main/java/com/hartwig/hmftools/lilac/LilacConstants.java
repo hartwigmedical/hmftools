@@ -6,10 +6,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public final class LilacConstants
+public class LilacConstants
 {
-    private LilacConstants() {}
-
     public static final String APP_NAME = "Lilac";
 
     public static final byte DEFAULT_MIN_BASE_QUAL = 30;
@@ -17,13 +15,15 @@ public final class LilacConstants
 
     public static final double LOW_BASE_TRIM_PERC = 0.35;
     public static final double MAX_LOW_BASE_PERC = 0.5;
+    public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
     public static final double DEFAULT_TOP_SCORE_THRESHOLD = 0.005;
 
-    public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.006;
-    public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.003;
-    public static final int DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH = 10;
+    public static final double DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR = 0.000375;
+    public static final double DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR = 0.00075;
+    public static final double DEFAULT_MIN_AMINO_ACID_EVIDENCE_FACTOR = 0.004;
+
     public static final int DEFAULT_MAX_REF_FRAGMENTS = 1000;
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;
@@ -73,7 +73,7 @@ public final class LilacConstants
             "A*31:135", "A*33:191", "A*02:783", "B*07:282",
 
             // Similar to HLA-Y
-            "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237");
+            "A*30:205", "A*30:207", "A*30:225", "A*30:228","A*01:81","A*01:237");
 
     // common INDEL associated with allele C*04:09N
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
@@ -83,17 +83,17 @@ public final class LilacConstants
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
     // output file IDs
-    public static final String LILAC_FILE_ID = ".lilac.";
+    public static String LILAC_FILE_ID = ".lilac.";
 
-    public static final String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
-    public static final String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
-    public static final String LILAC_FILE_FRAGMENTS = "fragments.tsv";
-    public static final String LILAC_FILE_READS = "reads.tsv";
+    public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
+    public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
+    public static String LILAC_FILE_FRAGMENTS = "fragments.tsv";
+    public static String LILAC_FILE_READS = "reads.tsv";
 
-    public static final String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
-    public static final String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
+    public static String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
+    public static String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
 
-    public static final String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
-    public static final String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
-    public static final String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
+    public static String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
+    public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
+    public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
 }

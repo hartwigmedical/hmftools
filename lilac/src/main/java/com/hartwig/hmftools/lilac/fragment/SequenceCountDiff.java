@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static java.lang.Integer.min;
+
 import java.util.List;
-import java.util.NavigableSet;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class SequenceCountDiff
@@ -17,7 +17,7 @@ public class SequenceCountDiff
     public final int TumorCount;
     public final int TumorDepth;
 
-    public SequenceCountDiff(final int locus, final String sequence, final int referenceCount, final int referenceDepth, final int tumorCount, final int tumorDepth)
+    public SequenceCountDiff(int locus, final String sequence, int referenceCount, int referenceDepth, int tumorCount, int tumorDepth)
     {
         Loci = locus;
         Sequence = sequence;
@@ -31,33 +31,49 @@ public class SequenceCountDiff
     {
         final List<SequenceCountDiff> seqCountDiffs = Lists.newArrayList();
 
-        NavigableSet<Integer> loci = Sets.newTreeSet();
-        loci.addAll(referenceCount.seqCountsByLoci().keySet());
-        loci.addAll(tumorCount.seqCountsByLoci().keySet());
+        int minLength = min(referenceCount.getLength(), tumorCount.getLength());
 
-        for(int locus : loci)
+        for(int locus = 0; locus < minLength; ++locus) 
         {
-            boolean inRef = referenceCount.seqCountsByLoci().containsKey(locus);
-            boolean inTum = tumorCount.seqCountsByLoci().containsKey(locus);
-            Multiset<String> refSeqCounts = referenceCount.get(locus);
-            Multiset<String> tumorSeqCounts = tumorCount.get(locus);
-            if(inRef)
-            {
-                int refDepth = referenceCount.depth(locus);
-                final int locusIndex = locus;
-                refSeqCounts.entrySet().stream()
-                        .filter(x -> !tumorSeqCounts.contains(x.getElement()))
-                        .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x.getElement(), x.getCount(), refDepth, 0, 0)));
-            }
+            int refDepth = referenceCount.depth(locus);
+            int tumorDepth = tumorCount.depth(locus);
 
-            if(inTum)
-            {
-                int tumorDepth = tumorCount.depth(locus);
-                final int locusIndex = locus;
-                tumorSeqCounts.entrySet().stream()
-                        .filter(x -> !refSeqCounts.contains(x.getElement()))
-                        .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x.getElement(), 0, 0, x.getCount(), tumorDepth)));
-            }
+            Map<String, Integer> refSeqCounts = referenceCount.get(locus);
+            Map<String, Integer> tumorSeqCounts = tumorCount.get(locus);
+
+            final int locusIndex = locus;
+
+            refSeqCounts.keySet().stream()
+                    .filter(x -> !tumorSeqCounts.containsKey(x))
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, refSeqCounts.get(x), refDepth, 0, tumorDepth)));
+
+            tumorSeqCounts.keySet().stream()
+                    .filter(x -> !refSeqCounts.containsKey(x))
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, 0, refDepth, tumorSeqCounts.get(x), tumorDepth)));
+        }
+
+        for(int locus = minLength; locus < tumorCount.getLength(); ++locus) 
+        {
+            int tumorDepth = tumorCount.depth(locus);
+
+            Map<String, Integer> tumorSeqCounts = tumorCount.get(locus);
+
+            final int locusIndex = locus;
+
+            tumorSeqCounts.keySet().stream()
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, 0, 0, tumorSeqCounts.get(x), tumorDepth)));
+        }
+
+        for(int locus = minLength; locus < referenceCount.getLength(); ++locus) 
+        {
+            int refDepth = referenceCount.depth(locus);
+
+            Map<String, Integer> refSeqCounts = referenceCount.get(locus);
+
+            final int locusIndex = locus;
+
+            refSeqCounts.keySet().stream()
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, refSeqCounts.get(x), refDepth, 0, 0)));
         }
 
         return seqCountDiffs;
