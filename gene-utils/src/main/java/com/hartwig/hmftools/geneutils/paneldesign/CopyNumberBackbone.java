@@ -44,7 +44,7 @@ public class CopyNumberBackbone
             new ProbeEvalCriteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             ProbeSelectStrategy.BEST_GC);
 
-    private static final String REJECTION_NO_AMBER_SITES = "no amber sites in partition";
+    private static final String REJECTION_NO_AMBER_SITES = "No amber sites in partition";
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
@@ -173,11 +173,13 @@ public class CopyNumberBackbone
                     // If no probe is found then the input data is probably wrong (or the code is being tested).
                     LOGGER.warn("No acceptable probe for copy number backbone partition: {}", partition.Region);
 
-                    // TODO: rejection reason
-                    String rejectionReason = null;
+                    String rejectionReason;
                     if(partition.Sites.isEmpty())
                     {
                         rejectionReason = REJECTION_NO_AMBER_SITES;
+                    }
+                    else {
+                        rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_SELECT_CRITERIA.eval();
                     }
 
                     return new ProbeGenerationResult(

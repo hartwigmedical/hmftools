@@ -40,8 +40,13 @@ public class ProbeGenerator
     {
         return mProbeEvaluator.selectBestProbe(bestProbeInRegionCandidates(region, source), criteria)
                 .map(probe -> new ProbeGenerationResult(List.of(probe), Collections.emptyList()))
-                // TODO: rejection reason
-                .orElseGet(() -> new ProbeGenerationResult(Collections.emptyList(), List.of(new RejectedRegion(region, source, null))));
+                .orElseGet(() ->
+                {
+                    String rejectionReason = "No probe in region meeting criteria " + criteria.eval();
+                    return new ProbeGenerationResult(
+                            Collections.emptyList(),
+                            List.of(new RejectedRegion(region, source, rejectionReason)));
+                });
     }
 
     private static Stream<CandidateProbe> bestProbeInRegionCandidates(final ChrBaseRegion region, final ProbeSourceInfo source)

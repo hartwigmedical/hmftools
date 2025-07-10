@@ -1,16 +1,22 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.Double.NEGATIVE_INFINITY;
+import static java.lang.Double.POSITIVE_INFINITY;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 
-import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.BiPredicate;
+import java.util.function.DoublePredicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +35,7 @@ public class ProbeEvaluator
         mQualityProfile = qualityProfile;
     }
 
-    // TODO: if no best probe, return reason why
-    // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there is no such best probe.
+    // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there are no acceptable probes.
     public Optional<EvaluatedProbe> selectBestProbe(Stream<CandidateProbe> probes, final ProbeSelectCriteria criteria)
     {
         Stream<EvaluatedProbe> acceptableProbes = probes
@@ -39,10 +44,14 @@ public class ProbeEvaluator
         return switch(criteria.strategy())
         {
             case FIRST_ACCEPTABLE -> acceptableProbes.findFirst();
-            case MAX_QUALITY -> acceptableProbes.max(Comparator.nullsFirst(Comparator.comparing(EvaluatedProbe::qualityScore)));
-            case BEST_GC -> acceptableProbes
-                    .min(Comparator.comparingDouble(
-                            probe -> abs(probe.gcContent() - criteria.eval().gcContentTarget())));
+            // Stop if a probe with quality=1 is found.
+            case MAX_QUALITY -> findBestProbe(acceptableProbes,
+                    EvaluatedProbe::qualityScore,
+                    quality -> Doubles.greaterOrEqual(quality, 1.0), true);
+            // Stop if a probe with gc=gcTarget is found.
+            case BEST_GC -> findBestProbe(acceptableProbes,
+                    probe -> abs(probe.gcContent() - criteria.eval().gcContentTarget()),
+                    gc -> Doubles.equal(gc, criteria.eval().gcContentTarget()), false);
         };
     }
 
@@ -97,5 +106,32 @@ public class ProbeEvaluator
     {
         ChrBaseRegion region = probe.probeRegion();
         return mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
+    }
+
+    // Min/max function with early stopping if an optimal value is found.
+    private static Optional<EvaluatedProbe> findBestProbe(Stream<EvaluatedProbe> probes, final ToDoubleFunction<EvaluatedProbe> scoreFunc,
+            final DoublePredicate isOptimalFunc, boolean maximise)
+    {
+        BiPredicate<Double, Double> scoreCompareFunc = maximise ? Doubles::greaterThan : Doubles::lessThan;
+        Optional<EvaluatedProbe> bestProbe = Optional.empty();
+        double bestScore = maximise ? NEGATIVE_INFINITY : POSITIVE_INFINITY;
+        Iterator<EvaluatedProbe> iterator = probes.iterator();
+        while(iterator.hasNext())
+        {
+            EvaluatedProbe probe = iterator.next();
+            double score = scoreFunc.applyAsDouble(probe);
+            if(scoreCompareFunc.test(score, bestScore))
+            {
+                bestProbe = Optional.of(probe);
+                bestScore = score;
+                LOGGER.trace("New bestScore={} probe={}", bestScore, bestProbe);
+                if(isOptimalFunc.test(bestScore))
+                {
+                    LOGGER.trace("Optimal score found, stopping candidate search");
+                    break;
+                }
+            }
+        }
+        return bestProbe;
     }
 }
