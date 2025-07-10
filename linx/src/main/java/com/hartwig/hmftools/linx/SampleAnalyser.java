@@ -410,7 +410,6 @@ public class SampleAnalyser implements Callable<Void>
             LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
             LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
             LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
-            mCohortDataWriter.getVisWriter().writeCopyNumberData(mVisSampleData, mCnDataLoader.getChrCnDataMap());
 
             // write out the Purple drivers again as would usually be done with SVs
             List<DriverCatalog> purpleDrivers = Lists.newArrayList();
@@ -429,6 +428,8 @@ public class SampleAnalyser implements Callable<Void>
             }
             else
             {
+                mCohortDataWriter.getVisWriter().writeCopyNumberData(mVisSampleData, mCnDataLoader.getChrCnDataMap());
+
                 LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
                 LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
 
