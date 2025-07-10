@@ -65,11 +65,16 @@ public class PanelBuilder
             mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
         }
 
+        // TODO: profile code (it's kinda slow)
+
         // TODO: other output to write?
 
         // TODO: remove duplicate/overlapping probes?
 
         // TODO: check probes are within chromosome bounds?
+
+        mOutputWriter.close();
+        mOutputWriter = null;
 
         LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }

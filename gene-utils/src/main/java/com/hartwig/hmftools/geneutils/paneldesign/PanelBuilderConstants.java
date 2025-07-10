@@ -7,8 +7,12 @@ public class PanelBuilderConstants
     // TODO: is this actually used how its specified?
     // Above this quality score we may consider a candidate probe to be acceptable without checking other candidates.
     public static final double PROBE_QUALITY_ACCEPT = 0.5;
+    // TODO: needed?
     // All probes with quality score below this value are unconditionally rejected.
     public static final double PROBE_QUALITY_REJECT = 0.08;
+    // By default, have wide GC content tolerance since it matters less for general probes.
+    public static final double GENERAL_GC_TARGET = 0.45;
+    public static final double GENERAL_GC_TOLERANCE = 1;
     // When covering a region with probes, how many bases in the region are allowed to not be covered?
     // TODO: allow this to be negative?
     public static final int UNCOVERED_BASES_MAX = 10;
@@ -36,7 +40,7 @@ public class PanelBuilderConstants
     // Aiming to pick heterozygous sites which are common in the population.
     public static final double CN_BACKBONE_GNOMAD_FREQ_MIN = 0.3;
     public static final double CN_BACKBONE_GNOMAD_FREQ_MAX = 0.7;
-    // Very high quality threshold because there are many sites to pick from to we may as well get the best.
+    // Very high probe quality threshold because there are many sites to pick from to we may as well get the best.
     public static final double CN_BACKBONE_QUALITY_MIN = 0.8;
 
     // GC content bounds for probes used for determining copy number.

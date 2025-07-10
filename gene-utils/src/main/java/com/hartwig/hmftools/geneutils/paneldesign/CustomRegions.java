@@ -3,6 +3,9 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TARGET;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_REJECT;
 
 import java.util.List;
 
@@ -15,9 +18,12 @@ import org.apache.logging.log4j.Logger;
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {
-    private static final String FLD_EXTRA_INFO = "ExtraInfo";
-
     private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.CUSTOM;
+
+    private static final ProbeEvalCriteria PROBE_EVAL_CRITERIA =
+            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
+
+    private static final String FLD_EXTRA_INFO = "ExtraInfo";
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
@@ -70,6 +76,6 @@ public class CustomRegions
     private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator)
     {
         ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, region.extraInfo());
-        return probeGenerator.coverWholeRegion(region.region(), source);
+        return probeGenerator.coverWholeRegion(region.region(), source, PROBE_EVAL_CRITERIA);
     }
 }

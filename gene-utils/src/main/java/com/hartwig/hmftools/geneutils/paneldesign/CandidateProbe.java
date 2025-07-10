@@ -12,8 +12,10 @@ public record CandidateProbe(
         ChrBaseRegion targetRegion
 )
 {
-    public CandidateProbe {
-        if (!probeRegion.Chromosome.equals(targetRegion.Chromosome)) {
+    public CandidateProbe
+    {
+        if(!probeRegion.Chromosome.equals(targetRegion.Chromosome))
+        {
             // Not expecting this to ever occur but should check it to be safe.
             throw new IllegalArgumentException("probeRegion and targetRegion should have same chromosome");
         }

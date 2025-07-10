@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
-public class OutputWriter
+public class OutputWriter implements AutoCloseable
 {
     private final DelimFileWriter<EvaluatedProbe> mPanelProbesWriter;
     private final DelimFileWriter<RejectedRegion> mRejectedRegionsWriter;
@@ -101,5 +101,13 @@ public class OutputWriter
         row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
         row.setOrNull(FLD_EVAL_CRITERIA, probe.criteria().toString());
         row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());
+    }
+
+    @Override
+    public void close()
+    {
+        mPanelProbesWriter.close();
+        mRejectedRegionsWriter.close();
+        mCandidateProbesWriter.close();
     }
 }

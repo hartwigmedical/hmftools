@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TARGET;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_LONG_INTRON_LENGTH;
@@ -16,6 +18,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_ACCEPT;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_REJECT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +48,8 @@ public class TargetGenes
 {
     private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.GENE;
 
+    private static final ProbeEvalCriteria EXON_PROBE_EVAL_CRITERIA =
+            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
     private static final ProbeSelectCriteria CN_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(PROBE_QUALITY_ACCEPT, CN_GC_TARGET, CN_GC_TOLERANCE),
             ProbeSelectStrategy.BEST_GC);
@@ -259,7 +264,7 @@ public class TargetGenes
         ProbeSourceInfo source = createProbeSourceInfo(geneRegion);
         return switch(geneRegion.type())
         {
-            case CODING, UTR -> probeGenerator.coverWholeRegion(geneRegion.baseRegion(), source);
+            case CODING, UTR -> probeGenerator.coverWholeRegion(geneRegion.baseRegion(), source, EXON_PROBE_EVAL_CRITERIA);
             case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT ->
                     probeGenerator.bestProbeInRegion(geneRegion.baseRegion(), source, CN_PROBE_SELECT_CRITERIA);
         };
