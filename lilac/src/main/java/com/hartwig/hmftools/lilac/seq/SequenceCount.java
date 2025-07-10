@@ -84,8 +84,9 @@ public final class SequenceCount
         return new SequenceCount(minFilterDepth, minEvidenceFactor, seqCountsByLoci);
     }
 
-    public static SequenceCount aminoAcids(final int minFilterDepth, final double minEvidenceFactor, final Collection<Fragment> fragments)
+    public static SequenceCount aminoAcids(final int minFilterDepth, final double minEvidenceFactor, final List<Fragment> fragments)
     {
+
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
         for(Fragment fragment : fragments)
         {
@@ -181,8 +182,8 @@ public final class SequenceCount
         return mSeqCountsByLoci.get(locus).size();
     }
 
-    public static Map<String, Map<Integer, Set<String>>> extractHeterozygousLociSequences(final Map<String, SequenceCount> geneCountsMap,
-            final Collection<HlaSequenceLoci> extraSeqLoci)
+    public static Map<String, Map<Integer, Set<String>>> extractHeterozygousLociSequences(
+            final Map<String, SequenceCount> geneCountsMap, final List<HlaSequenceLoci> extraSeqLoci)
     {
         Map<String, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
         for(Map.Entry<String, SequenceCount> geneEntry : geneCountsMap.entrySet())

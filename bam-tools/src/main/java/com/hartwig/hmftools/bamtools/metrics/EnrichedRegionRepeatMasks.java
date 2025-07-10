@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.gripss.RepeatMaskData;
-import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -134,7 +134,7 @@ public class EnrichedRegionRepeatMasks
             mWriter.write(sj.toString());
             mWriter.newLine();
 
-            final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get(FLD_PEAK_POS_START);
@@ -223,7 +223,7 @@ public class EnrichedRegionRepeatMasks
                     maxOverlapRmData != null ? maxOverlapRmData.ClassType : "", maxOverlapRmData != null ? maxOverlapRmData.Repeat : ""));
 
             mWriter.newLine();
-        }
+         }
         catch(IOException e)
         {
             BT_LOGGER.error("failed to write annotation data: {}", e.toString());

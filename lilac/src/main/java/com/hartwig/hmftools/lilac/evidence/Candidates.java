@@ -3,10 +3,7 @@ package com.hartwig.hmftools.lilac.evidence;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -31,10 +28,9 @@ public final class Candidates
         mAminoAcidSequences = aminoAcidSequences;
     }
 
-    public List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments,
-            final Collection<HlaAllele> commonAllles)
+    public List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final List<HlaAllele> commonAllles)
     {
-        Set<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
+        List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
         LL_LOGGER.debug("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
 
@@ -52,7 +48,8 @@ public final class Candidates
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
         List<HlaAllele> aminoAcidSpecificAllelesCandidates = aminoAcidCandidateAlleles.stream()
-                .map(HlaAllele::asFourDigit).toList();
+                .map(x -> x.asFourDigit())
+                .collect(Collectors.toList());
 
         if(aminoAcidSpecificAllelesCandidates.isEmpty())
         {
@@ -91,7 +88,7 @@ public final class Candidates
     }
 
     private List<HlaSequenceLoci> filterSequencesByMinSupport(
-            final Collection<HlaSequenceLoci> candidates, final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries)
+            final List<HlaSequenceLoci> candidates, final SequenceCount aminoAcidCount, final List<Integer> aminoAcidBoundaries)
     {
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
@@ -152,17 +149,18 @@ public final class Candidates
         return phasedAlleles;
     }
 
-    private static List<HlaSequenceLoci> filterCandidates(final Collection<HlaSequenceLoci> initialCandidates,
-            final List<PhasedEvidence> evidence)
+    private List<HlaSequenceLoci> filterCandidates(final List<HlaSequenceLoci> initialCandidates, final List<PhasedEvidence> evidence)
     {
         List<HlaSequenceLoci> candidates = Lists.newArrayList();
         candidates.addAll(initialCandidates);
 
-        for(PhasedEvidence newEvidence : evidence)
+        for(int i = 0; i < evidence.size(); ++i)
         {
+            PhasedEvidence newEvidence = evidence.get(i);
+
             candidates = candidates.stream()
                     .filter(x -> x.consistentWithAny(
-                            new ArrayList<>(newEvidence.getEvidence().keySet()), newEvidence.getAminoAcidLoci()))
+                            newEvidence.getEvidence().keySet().stream().collect(Collectors.toList()), newEvidence.getAminoAcidLoci()))
                     .collect(Collectors.toList());
         }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import java.util.Collection;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -12,24 +13,22 @@ import com.hartwig.hmftools.lilac.utils.AminoAcid;
 
 public final class AminoAcidQualEnrichment
 {
-    private AminoAcidQualEnrichment() {}
-
-    public static List<Fragment> qualityFilterAminoAcidFragments(final LilacConfig config, final Collection<Fragment> fragments)
+    public static List<Fragment> qualityFilterAminoAcidFragments(final LilacConfig config, final List<Fragment> fragments)
     {
         // only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
         List<Fragment> qualityFilteredAminoAcidFragments = fragments.stream()
-                .map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
+                .map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
-        qualityFilteredAminoAcidFragments.forEach(Fragment::buildAminoAcids);
+        qualityFilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
 
         SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(
-		config.MinVafFilterDepth, config.MinEvidenceFactor, qualityFilteredAminoAcidFragments);
+                config.MinVafFilterDepth, config.MinEvidenceFactor, qualityFilteredAminoAcidFragments);
 
         List<Fragment> unfilteredAminoAcidFragments = fragments.stream()
-                .filter(Fragment::hasNucleotides)
-                .map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
+                .filter(x -> x.hasNucleotides())
+                .map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
-        unfilteredAminoAcidFragments.forEach(Fragment::buildAminoAcids);
+        unfilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
 
         unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(config, x, highQualityAminoAcidCounts));
 

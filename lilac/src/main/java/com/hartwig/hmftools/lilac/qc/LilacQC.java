@@ -63,7 +63,7 @@ public final class LilacQC
         populateStatus();
     }
 
-    private List<String> getHeaderItems()
+    public List<String> getHeaderItems()
     {
         List<String> columns = Lists.newArrayList();
         columns.add(LilacQcData.FLD_QC_STATUS);
@@ -79,7 +79,7 @@ public final class LilacQC
         return columns;
     }
 
-    private List<String> getBodyItems()
+    public List<String> getBodyItems()
     {
         List<String> columns = Lists.newArrayList();
 
@@ -102,14 +102,14 @@ public final class LilacQC
     public String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getHeaderItems().forEach(sj::add);
+        getHeaderItems().forEach(x -> sj.add(x));
         return sj.toString();
     }
 
-    private String body()
+    public String body()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getBodyItems().forEach(sj::add);
+        getBodyItems().forEach(x -> sj.add(x));
         return sj.toString();
     }
 

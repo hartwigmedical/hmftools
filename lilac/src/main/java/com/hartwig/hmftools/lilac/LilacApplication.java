@@ -27,7 +27,6 @@ import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -483,7 +482,7 @@ public class LilacApplication
         StringJoiner totalCoverages = new StringJoiner(",");
         winningRefCoverage.getAlleleCoverage().forEach(x -> totalCoverages.add(format("%.0f", x.TotalCoverage)));
 
-        double scoreMargin = 0.0;
+        double scoreMargin = 0;
         StringJoiner nextSolutionInfo = new StringJoiner(ITEM_DELIM);
 
         if(mRankedComplexes.size() > 1)
@@ -601,8 +600,7 @@ public class LilacApplication
         return calcRefFragAlleles;
     }
 
-    private void extractTumorResults(
-            final List<HlaAllele> winningAlleles, final ComplexCoverage winningRefCoverage,
+    public void extractTumorResults(final List<HlaAllele> winningAlleles, final ComplexCoverage winningRefCoverage,
             final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
     {
         if(mConfig.TumorBam.isEmpty())
@@ -674,16 +672,14 @@ public class LilacApplication
         }
     }
 
-    private void extractRnaCoverage(
-            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+    public void extractRnaCoverage(final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
             final List<HlaSequenceLoci> winningNucSequences)
     {
-        mRnaCoverage = LilacAppendRna.extractRnaCoverage(
-                mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper,
-                winningAlleles, winningSequences, winningNucSequences);
+        mRnaCoverage = LilacAppendRna.extractRnaCoverage(mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory,
+                NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper, winningAlleles, winningSequences, winningNucSequences);
     }
 
-    private void writeFileOutputs()
+    public void writeFileOutputs()
     {
         mSummaryMetrics.log(mConfig.Sample);
 
@@ -696,7 +692,7 @@ public class LilacApplication
         mResultsWriter.writeReferenceFragments(mRankedComplexes, mRefNucleotideFrags, mRefFragAlleles);
     }
 
-    private boolean validateFragments(final Collection<Fragment> fragments)
+    private boolean validateFragments(final List<Fragment> fragments)
     {
         if(!mConfig.RunValidation)
         {
