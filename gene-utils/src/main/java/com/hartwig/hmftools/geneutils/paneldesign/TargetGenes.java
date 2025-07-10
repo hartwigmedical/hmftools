@@ -193,13 +193,13 @@ public class TargetGenes
                 {
                     if(intronLength >= GENE_LONG_INTRON_LENGTH)
                     {
+                        // GENE_LONG_INTRON_LENGTH should be large enough such that these two probes cannot overlap.
                         regions.add(new GeneRegion(
                                 gene,
                                 GeneRegionType.INTRONIC_LONG,
                                 new BaseRegion(
                                         lastExonEnd + 1 + GENE_EXON_FLANK_GAP,
                                         lastExonEnd + GENE_EXON_FLANK_GAP + GENE_EXON_FLANK_REGION)));
-
                         regions.add(new GeneRegion(
                                 gene,
                                 GeneRegionType.INTRONIC_LONG,

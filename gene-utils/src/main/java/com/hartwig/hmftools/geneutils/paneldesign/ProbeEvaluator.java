@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.DoublePredicate;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Stream;
@@ -26,13 +27,17 @@ public class ProbeEvaluator
 {
     private final RefGenomeInterface mRefGenome;
     private final ProbeQualityProfile mQualityProfile;
+    // Hook to catch all candidate probes for output.
+    private final Consumer<EvaluatedProbe> mCandidateCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeEvaluator.class);
 
-    public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile)
+    public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
+            final Consumer<EvaluatedProbe> candidateCallback)
     {
         mRefGenome = refGenome;
         mQualityProfile = qualityProfile;
+        mCandidateCallback = candidateCallback;
     }
 
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there are no acceptable probes.
@@ -63,7 +68,7 @@ public class ProbeEvaluator
         {
             evaluatedProbe = evaluateGcContent(evaluatedProbe, criteria);
         }
-        LOGGER.trace("Evaluated probe: {}", evaluatedProbe);
+        logCandidateProbe(evaluatedProbe);
         return evaluatedProbe;
     }
 
@@ -96,8 +101,8 @@ public class ProbeEvaluator
         return mQualityProfile.computeQualityScore(probe.probeRegion()).orElseGet(() ->
         {
             // Never want to accept a probe with no quality score, so just return 0 in that case to simplify the code elsewhere.
-            // But also this shouldn't happen in practice because the probe quality profile covers the whole genome.
-            LOGGER.warn("Evaluating candidate probe not covered by probe quality profile; assuming qualityScore=0");
+            // Maybe be interesting to know when this happens because the probe quality profile ideally covers the whole genome.
+            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore=0 probe={}", probe);
             return 0d;
         });
     }
@@ -133,5 +138,11 @@ public class ProbeEvaluator
             }
         }
         return bestProbe;
+    }
+
+    private void logCandidateProbe(final EvaluatedProbe probe)
+    {
+        LOGGER.trace("Evaluated probe: {}", probe);
+        mCandidateCallback.accept(probe);
     }
 }

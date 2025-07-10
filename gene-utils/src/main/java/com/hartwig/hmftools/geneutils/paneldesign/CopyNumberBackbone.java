@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_QUALITY_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_MAX;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
@@ -43,8 +41,6 @@ public class CopyNumberBackbone
     private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             ProbeSelectStrategy.BEST_GC);
-
-    private static final String REJECTION_NO_AMBER_SITES = "No amber sites in partition";
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
@@ -104,9 +100,8 @@ public class CopyNumberBackbone
         enum SiteFilter
         {
             CANDIDATE,
-            EXCLUDED,
-            GNOMAD,
-            GC_RATIO
+            EXCLUDED_REGION,
+            GNOMAD_FREQ
         }
 
         List<AmberSite> sites = AmberSites.loadAmberSitesFile(sitesFilePath);
@@ -115,30 +110,25 @@ public class CopyNumberBackbone
         {
             if(!(site.gnomadFreq() >= CN_BACKBONE_GNOMAD_FREQ_MIN && site.gnomadFreq() <= CN_BACKBONE_GNOMAD_FREQ_MAX))
             {
-                ++siteFilterCounts[SiteFilter.GNOMAD.ordinal()];
-                continue;
-            }
-            else if(!(site.gcRatio() >= CN_GC_MIN && site.gcRatio() <= CN_GC_MAX))
-            {
-                ++siteFilterCounts[SiteFilter.GC_RATIO.ordinal()];
+                ++siteFilterCounts[SiteFilter.GNOMAD_FREQ.ordinal()];
                 continue;
             }
             else if(!HumanChromosome.contains(site.position().Chromosome))
             {
-                ++siteFilterCounts[SiteFilter.EXCLUDED.ordinal()];
+                ++siteFilterCounts[SiteFilter.EXCLUDED_REGION.ordinal()];
                 continue;
             }
             List<Partition> chrPartitions = partitions.get(site.position().Chromosome);
             if(chrPartitions == null)
             {
-                ++siteFilterCounts[SiteFilter.EXCLUDED.ordinal()];
+                ++siteFilterCounts[SiteFilter.EXCLUDED_REGION.ordinal()];
                 continue;
             }
             Partition partition = chrPartitions.stream()
                     .filter(p -> p.Region.containsPosition(site.position().Position)).findFirst().orElse(null);
             if(partition == null)
             {
-                ++siteFilterCounts[SiteFilter.EXCLUDED.ordinal()];
+                ++siteFilterCounts[SiteFilter.EXCLUDED_REGION.ordinal()];
                 continue;
             }
             ++siteFilterCounts[SiteFilter.CANDIDATE.ordinal()];
@@ -176,9 +166,10 @@ public class CopyNumberBackbone
                     String rejectionReason;
                     if(partition.Sites.isEmpty())
                     {
-                        rejectionReason = REJECTION_NO_AMBER_SITES;
+                        rejectionReason = "No Amber sites in partition";
                     }
-                    else {
+                    else
+                    {
                         rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_SELECT_CRITERIA.eval();
                     }
 

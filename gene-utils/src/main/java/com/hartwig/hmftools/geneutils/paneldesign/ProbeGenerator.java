@@ -21,6 +21,7 @@ public class ProbeGenerator
 {
     public final ProbeEvaluator mProbeEvaluator;
 
+    // TODO: needed?
     private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
     public ProbeGenerator(final ProbeEvaluator probeEvaluator)
@@ -31,7 +32,7 @@ public class ProbeGenerator
     public ProbeGenerationResult coverWholeRegion(final ChrBaseRegion region, final ProbeSourceInfo source)
     {
         // TODO
-        return new ProbeGenerationResult();
+        return new ProbeGenerationResult(Collections.emptyList(), List.of(new RejectedRegion(region, source, "unimplemented algorithm")));
     }
 
     // Find the 1 best acceptable probe that is contained within the specified region.
@@ -63,8 +64,7 @@ public class ProbeGenerator
                 // Negative offsets could go before the start of the chromosome.
                 .filter(probe -> probe.probeRegion().start() >= 1)
                 // Stop once the probes go outside the target region.
-                .takeWhile(probe -> region.containsRegion(probe.probeRegion()))
-                .peek(ProbeGenerator::logCandidateProbe);
+                .takeWhile(probe -> region.containsRegion(probe.probeRegion()));
     }
 
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
@@ -76,9 +76,7 @@ public class ProbeGenerator
                 // Negative offsets could go before the start of the chromosome.
                 .filter(probe -> probe.probeRegion().start() >= 1)
                 // Stop once the probes are too far from the target position to cover it.
-                // TODO: enforce minimum distance between probe edge and position?
-                .takeWhile(probe -> probeCoversTarget(probe.probeRegion().baseRegion(), targetRegion.baseRegion()))
-                .peek(ProbeGenerator::logCandidateProbe);
+                .takeWhile(probe -> probeCoversTarget(probe.probeRegion().baseRegion(), targetRegion.baseRegion()));
     }
 
     // Returns the sequence: 0, 1, -1, 2, -2, 3, -3, ...
@@ -91,7 +89,6 @@ public class ProbeGenerator
     // Checks if a probe acceptably covers a target region.
     private static boolean probeCoversTarget(final BaseRegion probe, final BaseRegion target)
     {
-        // TODO: enforce minimum distance between probe edge and target edge?
         int uncoveredLeft = max(0, probe.start() - target.start());
         int uncoveredRight = max(0, target.end() - probe.end());
         int uncovered = uncoveredLeft + uncoveredRight;
@@ -109,10 +106,5 @@ public class ProbeGenerator
             final ProbeSourceInfo source)
     {
         return new CandidateProbe(source, new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH), targetRegion);
-    }
-
-    private static void logCandidateProbe(final CandidateProbe probe)
-    {
-        LOGGER.trace("Candidate probe: {}", probe);
     }
 }

@@ -5,10 +5,11 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writePanelProbes;
-import static com.hartwig.hmftools.geneutils.paneldesign.DataWriter.writeRejectedRegions;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CANDIDATE_PROBES_FILE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -25,6 +26,7 @@ public class PanelBuilder
     private final PanelBuilderConfig mConfig;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
+    private OutputWriter mOutputWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(PanelBuilder.class);
 
@@ -34,7 +36,7 @@ public class PanelBuilder
         RefGenomeSource mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
         ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
-        ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile);
+        ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
         mProbeGenerator = new ProbeGenerator(probeEvaluator);
     }
 
@@ -44,7 +46,12 @@ public class PanelBuilder
 
         long startTimeMs = System.currentTimeMillis();
 
-        LOGGER.info("Starting probe generation");
+        mOutputWriter = new OutputWriter(
+                mConfig.outputFilePath(PANEL_PROBES_FILE),
+                mConfig.outputFilePath(REJECTED_REGIONS_FILE),
+                mConfig.outputFilePath(CANDIDATE_PROBES_FILE));
+
+        LOGGER.info("Generating probes");
         ProbeGenerationResult customRegionProbes = generateCustomRegionProbes();
         ProbeGenerationResult geneProbes = generateTargetGeneProbes();
         ProbeGenerationResult cnBackboneProbes = generateCopyNumberBackboneProbes();
@@ -54,8 +61,8 @@ public class PanelBuilder
         {
             checkCreateOutputDir(mConfig.OutputDir);
             ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
-            writePanelProbes(mConfig.outputFilePath(PANEL_PROBES_FILE), aggregate.probes().stream());
-            writeRejectedRegions(mConfig.outputFilePath(REJECTED_REGIONS_FILE), aggregate.rejectedRegions().stream());
+            mOutputWriter.writePanelProbes(aggregate.probes());
+            mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
         }
 
         // TODO: other output to write?
@@ -113,6 +120,11 @@ public class PanelBuilder
         ensemblData.setRequiredData(true, false, false, false);
         ensemblData.load(false);
         return ensemblData;
+    }
+
+    private void writeCandidateProbe(final EvaluatedProbe probe)
+    {
+        mOutputWriter.writeCandidateProbes(List.of(probe));
     }
 
     public static void main(@NotNull final String[] args)
