@@ -153,6 +153,6 @@ public class ProbeGenerator
     private static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final ChrBaseRegion targetRegion,
             final ProbeSourceInfo source)
     {
-        return new CandidateProbe(source, new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH), targetRegion);
+        return new CandidateProbe(source, new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH - 1), targetRegion);
     }
 }
