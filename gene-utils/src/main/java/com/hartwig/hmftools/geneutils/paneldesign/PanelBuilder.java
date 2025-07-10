@@ -46,6 +46,7 @@ public class PanelBuilder
 
         long startTimeMs = System.currentTimeMillis();
 
+        checkCreateOutputDir(mConfig.OutputDir);
         mOutputWriter = new OutputWriter(
                 mConfig.outputFilePath(PANEL_PROBES_FILE),
                 mConfig.outputFilePath(REJECTED_REGIONS_FILE),
@@ -59,7 +60,6 @@ public class PanelBuilder
 
         LOGGER.debug("Writing output");
         {
-            checkCreateOutputDir(mConfig.OutputDir);
             ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
             mOutputWriter.writePanelProbes(aggregate.probes());
             mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
