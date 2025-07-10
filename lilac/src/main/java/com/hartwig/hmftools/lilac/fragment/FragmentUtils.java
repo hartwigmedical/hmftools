@@ -21,7 +21,7 @@ public class FragmentUtils
         // merge paired reads but keep any single reads as well
         final List<Fragment> mergedFragments = Lists.newArrayList(); // by readId
 
-        Map<String, List<Fragment>> readGroupFrags = Maps.newHashMap();
+        Map<String,List<Fragment>> readGroupFrags = Maps.newHashMap();
 
         for(Fragment fragment : fragments)
         {
@@ -36,7 +36,7 @@ public class FragmentUtils
             idFrags.add(fragment);
         }
 
-        for(Map.Entry<String, List<Fragment>> readGroup : readGroupFrags.entrySet())
+        for(Map.Entry<String,List<Fragment>> readGroup : readGroupFrags.entrySet())
         {
             List<Fragment> idFrags = readGroup.getValue();
 
@@ -81,9 +81,7 @@ public class FragmentUtils
             int locus2 = entry2.getKey();
             Nucleotide nuc2 = entry2.getValue();
             if(frag1.containsNucleotideLocus(locus2))
-            {
                 continue;
-            }
 
             frag1.addNucleotide(nuc2);
             frag1.addReads(frag2);
@@ -95,8 +93,7 @@ public class FragmentUtils
     public static Fragment copyNucleotideFragment(final Fragment fragment)
     {
         // ignores all state, just starts with original information
-        Fragment newFragment =
-                new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(), fragment.rawNucleotidesByLoci().values());
+        Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(), fragment.rawNucleotidesByLoci().values());
 
         for(int i = 1; i < fragment.reads().size(); ++i)
         {
@@ -106,7 +103,7 @@ public class FragmentUtils
         return newFragment;
     }
 
-    public static String formCodonAminoAcid(final int locus, final SortedMap<Integer, Nucleotide> nucleotides)
+    public static String formCodonAminoAcid(int locus, final SortedMap<Integer, Nucleotide> nucleotides)
     {
         SortedMap<Integer, Nucleotide> head = nucleotides.tailMap(locus * 3);
         List<String> bases = head.values().stream().limit(3).map(Nucleotide::bases).toList();
@@ -114,15 +111,13 @@ public class FragmentUtils
         String second = bases.get(1);
         String third = bases.get(2);
 
-        if(first.equals(DEL_STR) && second.equals(DEL_STR) && third.equals(DEL_STR))
-        {
+        if(first == DEL_STR && second == DEL_STR && third == DEL_STR)
             return DEL_STR;
-        }
 
         return Codons.aminoAcidFromBases(first + second + third);
     }
 
-    public static List<Integer> calcAminoAcidIndices(final int nucStartIndex, final int nucEndIndex)
+    public static List<Integer> calcAminoAcidIndices(int nucStartIndex, int nucEndIndex)
     {
         int start = nucStartIndex / 3 + (nucStartIndex % 3 == 0 ? 0 : 1);
         int end = (nucEndIndex + 1) / 3 - 1;
