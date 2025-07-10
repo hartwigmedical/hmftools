@@ -204,7 +204,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
 
         for(int i = 0; i < mAminoAcidLoci.size(); ++i)
         {
-            if(mAminoAcidLoci.get(i) != otherIndices.get(i))
+            if(mAminoAcidLoci.get(i).equals(otherIndices.get(i)))
                 return false;
         }
 

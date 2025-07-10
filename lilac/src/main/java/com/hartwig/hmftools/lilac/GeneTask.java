@@ -64,7 +64,7 @@ public class GeneTask implements Callable<Void>
         // validate phasing against expected sequences
         if(!mConfig.ActualAlleles.isEmpty() && LL_LOGGER.isDebugEnabled())
         {
-            List<HlaSequenceLoci> actualSequences = mRefData.AminoAcidSequences.stream()
+            List<HlaSequenceLoci> actualSequences = mRefData.AminoAcidSequences_.stream()
                     .filter(x -> mConfig.ActualAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
             PhasedEvidence.logInconsistentEvidence(mHlaContext.Gene, mPhasedEvidence, actualSequences);

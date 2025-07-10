@@ -347,17 +347,17 @@ public class LilacAppTest
                 ReferenceData.class.getResourceAsStream("/test_allele_nucleotides.csv")))
                 .lines().collect(Collectors.toList());
 
-        refData.loadSequenceFile(nucleotides, refData.NucleotideSequences, false);
+        refData.loadSequenceFile(nucleotides, refData.NucleotideSequences, null,false);
 
         final List<String> aminoAcids = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream("/test_allele_amino_acids.csv")))
                 .lines().collect(Collectors.toList());
 
-        refData.loadSequenceFile(aminoAcids, refData.AminoAcidSequences, true);
+        refData.loadSequenceFile(aminoAcids, refData.AminoAcidSequences_, null, true);
 
         for(String alleleStr : COMMON_ALLELES)
         {
-            HlaSequenceLoci seqLoci = refData.AminoAcidSequences.stream().filter(x -> x.Allele.matches(alleleStr)).findFirst().orElse(null);
+            HlaSequenceLoci seqLoci = refData.AminoAcidSequences_.stream().filter(x -> x.Allele.matches(alleleStr)).findFirst().orElse(null);
 
             if(seqLoci == null)
                 continue;

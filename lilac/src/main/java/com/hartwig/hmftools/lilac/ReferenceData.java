@@ -26,8 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -40,6 +42,8 @@ import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
+import org.jetbrains.annotations.Nullable;
+
 public class ReferenceData
 {
     private final String mResourceDir;
@@ -48,11 +52,15 @@ public class ReferenceData
     public static GeneCache GENE_CACHE = null;
 
     public final List<HlaSequenceLoci> NucleotideSequences;
-    public final List<HlaSequenceLoci> AminoAcidSequences;
+    public final List<HlaSequenceLoci> AminoAcidSequences_;
     public final List<HlaSequenceLoci> AminoAcidSequencesWithInserts;
     public final List<HlaSequenceLoci> AminoAcidSequencesWithDeletes;
     public final List<HlaSequenceLoci> HlaYNucleotideSequences;
     public final List<HlaSequenceLoci> HlaYAminoAcidSequences;
+
+    // four-digit allele to seq
+    // TODO: multimap needed?
+    public final Multimap<String, HlaSequenceLoci> AminoAcidSequenceLookup_;
 
     public final List<HlaAllele> CommonAlleles; // common in population
     public final Map<Indel,HlaAllele> KnownStopLossIndelAlleles;
@@ -114,11 +122,13 @@ public class ReferenceData
         mAlleleFrequencies = new CohortFrequency(!mResourceDir.isEmpty() ? mResourceDir + COHORT_ALLELE_FREQ_FILE : "");
 
         NucleotideSequences = Lists.newArrayList();
-        AminoAcidSequences = Lists.newArrayList();
+        AminoAcidSequences_ = Lists.newArrayList();
         AminoAcidSequencesWithInserts = Lists.newArrayList();
         AminoAcidSequencesWithDeletes = Lists.newArrayList();
         HlaYNucleotideSequences = Lists.newArrayList();
         HlaYAminoAcidSequences = Lists.newArrayList();
+
+        AminoAcidSequenceLookup_ = HashMultimap.create();
 
         mDeflatedSequenceTemplate = null;
 
@@ -166,14 +176,14 @@ public class ReferenceData
 
             LL_LOGGER.info("reading nucleotide file: {}", nucleotideFilename);
 
-            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, false))
+            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, null, false))
                 return false;
 
             String aminoAcidFilename = mResourceDir + AA_REF_FILE;
 
             LL_LOGGER.info("reading protein file: {}", aminoAcidFilename);
 
-            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
+            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences_, AminoAcidSequenceLookup_, true))
                 return false;
         }
 
@@ -196,7 +206,7 @@ public class ReferenceData
         HlaYNucleotideSequences.addAll(NucleotideSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
         HlaYNucleotideSequences.forEach(x -> NucleotideSequences.remove(x));
 
-        for(HlaSequenceLoci sequenceLoci : AminoAcidSequences)
+        for(HlaSequenceLoci sequenceLoci : AminoAcidSequences_)
         {
             if(sequenceLoci.hasInserts())
             {
@@ -217,11 +227,11 @@ public class ReferenceData
     private void buildHlaYAminoAcidSequences()
     {
         // construct the AA allele sequences for HLA-Y from the nucleotides if it wasn't loaded
-        HlaYAminoAcidSequences.addAll(AminoAcidSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
+        HlaYAminoAcidSequences.addAll(AminoAcidSequences_.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
 
         if(!HlaYAminoAcidSequences.isEmpty())
         {
-            HlaYAminoAcidSequences.forEach(x -> AminoAcidSequences.remove(x));
+            HlaYAminoAcidSequences.forEach(x -> AminoAcidSequences_.remove(x));
         }
         else
         {
@@ -234,7 +244,7 @@ public class ReferenceData
 
     private void markExonBoundaryWildcards()
     {
-        for(HlaSequenceLoci sequence : AminoAcidSequences)
+        for(HlaSequenceLoci sequence : AminoAcidSequences_)
         {
             List<Integer> exonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
             sequence.setExonBoundaryWildcards(exonBoundaries);
@@ -367,14 +377,14 @@ public class ReferenceData
         return hlaTranscriptMap;
     }
 
-    private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
+    private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData_, @Nullable final Multimap<String, HlaSequenceLoci> sequenceDataLookup, boolean isProteinFile)
     {
         try
         {
             final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
             fileContents.remove(0); // remove header
-            loadSequenceFile(fileContents, sequenceData, isProteinFile);
-            LL_LOGGER.info("loaded {} sequences from file {}", sequenceData.size(), filename);
+            loadSequenceFile(fileContents, sequenceData_, sequenceDataLookup, isProteinFile);
+            LL_LOGGER.info("loaded {} sequences from file {}", sequenceData_.size(), filename);
             return true;
         }
         catch (IOException e)
@@ -384,7 +394,7 @@ public class ReferenceData
         }
     }
 
-    public void loadSequenceFile(final List<String> fileContents, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
+    public void loadSequenceFile(final List<String> fileContents, final List<HlaSequenceLoci> sequenceData_, @Nullable final Multimap<String, HlaSequenceLoci> sequenceDataLookup, boolean isProteinFile)
     {
         for(String line : fileContents)
         {
@@ -411,7 +421,11 @@ public class ReferenceData
                 mDeflatedSequenceTemplate = newSequence;
 
             if(!excludeAllele)
-                sequenceData.add(newSequence);
+            {
+                sequenceData_.add(newSequence);
+                if(sequenceDataLookup != null)
+                    sequenceDataLookup.put(newSequence.Allele.asFourDigit().toString(), newSequence);
+            }
         }
     }
 }

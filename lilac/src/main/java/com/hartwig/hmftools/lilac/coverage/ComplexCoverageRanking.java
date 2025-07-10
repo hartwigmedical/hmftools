@@ -5,6 +5,7 @@ import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_POPULATION_FREQUENCY;
 import static com.hartwig.hmftools.lilac.LilacConstants.RECOVERY_SCORE_PENALTY;
@@ -14,12 +15,14 @@ import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundarie
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -61,20 +64,20 @@ public class ComplexCoverageRanking
             return complexes;
         }
 
-        double topScore = complexes.stream().mapToDouble(ComplexCoverage::getScore).max().orElse(0);
+        double topScore = complexes.stream().mapToDouble(ComplexCoverage::getScore_).max().orElse(0);
         int topCoverage = complexes.stream().mapToInt(x -> x.TotalCoverage).max().orElse(0);
         double inclusionThreshold = topScore - mMaxScoreDifference * topCoverage;
 
         // initial cull before sort
         double baseThreshold = topScore - 0.25 * topCoverage;
-        List<ComplexCoverage> candidateResults = complexes.stream().filter(x -> x.getScore() >= baseThreshold).collect(Collectors.toList());
+        List<ComplexCoverage> candidateResults = complexes.stream().filter(x -> x.getScore_() >= baseThreshold).collect(Collectors.toList());
         Collections.sort(candidateResults, new ComplexCoverageSorter());
 
         List<ComplexCoverage> results = Lists.newArrayList();
 
         for(ComplexCoverage complexCoverage : candidateResults)
         {
-            if(complexCoverage.getScore() >= inclusionThreshold || results.size() < 2)
+            if(complexCoverage.getScore_() >= inclusionThreshold || results.size() < 2)
             {
                 results.add(complexCoverage);
             }
@@ -150,26 +153,43 @@ public class ComplexCoverageRanking
     {
         int totalCoverage = complexCoverage.TotalCoverage;
 
+        double complexityPenalty = -solutionComplexity(complexCoverage) * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
         double score = totalCoverage
                 + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage
-                - solution_complexity(complexCoverage) * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage
+                + complexityPenalty
                 - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * totalCoverage;
 
         complexCoverage.setScore(score);
+        complexCoverage.setComplexityPenalty(complexityPenalty);
     }
 
-    private int solution_complexity(final ComplexCoverage complexCoverage)
+    public final static HashSet<String> DBG_ALLELES = Sets.newHashSet("A*02:01", "B*18:01", "B*44:27", "C*07:04", "C*12:03");
+
+    private int solutionComplexity(final ComplexCoverage complexCoverage)
     {
-        Map<String, HlaSequenceLoci> aminoAcidLookup = mRefData.AminoAcidSequences.stream().collect(Collectors.toMap(
-                x -> x.Allele.toString(),
-                x -> x,
-                (HlaSequenceLoci acc, HlaSequenceLoci x) -> acc));
+        // TODO:
+        if(complexCoverage.getAlleles().stream().map(x -> x.asFourDigit().toString()).collect(Collectors.toCollection(Sets::newHashSet)).equals(DBG_ALLELES))
+        {
+            System.out.println("");
+        }
+
+        // TODO:
+        if(mRefData.AminoAcidSequenceLookup_ == null || mRefData.AminoAcidSequenceLookup_.isEmpty())
+            return 0;
 
         Map<Integer, List<List<String>>> exonAcids = Maps.newTreeMap();
         for(HlaAllele allele : complexCoverage.getAlleles())
         {
             List<Integer> exonBoundaries = getAminoAcidExonBoundaries(allele.Gene);
-            HlaSequenceLoci seq = aminoAcidLookup.get(allele.toString());
+            Collections.sort(exonBoundaries);
+            // TODO: only the first seq?
+            HlaSequenceLoci seq = mRefData.AminoAcidSequenceLookup_.get(allele.asFourDigit().toString()).stream().findFirst().orElse(null);
+            if(seq == null)
+            {
+                LL_LOGGER.warn("No HlaSequenceLoci found for allele({})", allele.asFourDigit().toString());
+                continue;
+            }
+
             List<String> acids = seq.getSequences();
 
             int index = 0;
@@ -177,7 +197,11 @@ public class ComplexCoverageRanking
             for(int exonBoundary : exonBoundaries)
             {
                 exonAcids.computeIfAbsent(exonIndex, k -> Lists.newArrayList());
-                exonAcids.get(exonIndex).add(acids.subList(index, exonBoundary + 1));
+                if(index >= acids.size())
+                    break;
+
+                int toIndex = min(exonBoundary + 1, acids.size());
+                exonAcids.get(exonIndex).add(acids.subList(index, toIndex));
                 index = exonBoundary + 1;
                 exonIndex++;
             }
@@ -190,30 +214,31 @@ public class ComplexCoverageRanking
             for(int i = 1; i < acids.size(); i++)
             {
                 List<String> acid1 = acids.get(i);
-                boolean isUniq = true;
+                boolean isUniq_ = true;
                 for(int j = 0; j < i; j++)
                 {
                     List<String> acid2 = acids.get(j);
                     if(acid1.size() != acid2.size())
-                    {
-                        isUniq = false;
-                        break;
-                    }
+                        continue;
 
+                    boolean allMatch = true;
                     for(int k = 0; k < acid1.size(); k++)
                     {
                         if("*".equals(acid1.get(k)) || "*".equals(acid2.get(k)) || acid1.get(k).equals(acid2.get(k)))
                             continue;
 
-                        isUniq = false;
+                        allMatch = false;
                         break;
                     }
 
-                    if(!isUniq)
+                    if(allMatch)
+                    {
+                        isUniq_ = false;
                         break;
+                    }
                 }
 
-                if(isUniq)
+                if(isUniq_)
                     uniqExonAcidsCount++;
             }
         }
@@ -226,8 +251,8 @@ public class ComplexCoverageRanking
         // sorts by score then numerically if required
         public int compare(final ComplexCoverage first, final ComplexCoverage second)
         {
-            if(abs(first.getScore() - second.getScore()) > 0.0001)
-                return first.getScore() < second.getScore() ? 1 : -1;
+            if(abs(first.getScore_() - second.getScore_()) > 0.0001)
+                return first.getScore_() < second.getScore_() ? 1 : -1;
 
             final List<HlaAllele> alleles1 = first.getAlleles();
             final List<HlaAllele> alleles2 = second.getAlleles();

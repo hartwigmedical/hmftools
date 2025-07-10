@@ -217,7 +217,7 @@ public class LilacApplication
         LL_LOGGER.info(format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
                 totalFragmentCount, minEvidence, mAminoAcidPipeline.minHighQualEvidence()));
 
-        Candidates candidateFactory = new Candidates(mConfig, minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(mConfig, minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences_);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -290,7 +290,7 @@ public class LilacApplication
             candidateAlleles.addAll(missingExpected);
         }
 
-        List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences.stream()
+        List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences_.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
@@ -302,7 +302,7 @@ public class LilacApplication
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences.stream()
+        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences_.stream()
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
@@ -395,7 +395,8 @@ public class LilacApplication
 
                 ComplexCoverage recalcComplexCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles,
                         origComplexCoverage.getAlleles());
-                recalcComplexCoverage.setScore(origComplexCoverage.getScore());
+                recalcComplexCoverage.setScore(origComplexCoverage.getScore_());
+                recalcComplexCoverage.setComplexityPenalty(origComplexCoverage.getComplexityPenalty());
                 recalcComplexCoverage.setCohortFrequencyTotal(origComplexCoverage.cohortFrequencyTotal());
 
                 mRankedComplexes.set(i, recalcComplexCoverage);
@@ -460,7 +461,7 @@ public class LilacApplication
         if(mRankedComplexes.size() > 1)
         {
             ComplexCoverage nextSolution = mRankedComplexes.get(1);
-            scoreMargin = mRankedComplexes.get(0).getScore() - nextSolution.getScore();
+            scoreMargin = mRankedComplexes.get(0).getScore_() - nextSolution.getScore_();
             nextSolution.getAlleles().stream().filter(x -> !winningAlleles.contains(x))
                     .forEach(x -> nextSolutionInfo.add(x.toString()));
         }

@@ -3,13 +3,17 @@ package com.hartwig.hmftools.lilac.coverage;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.coverage.ComplexCoverageRanking.DBG_ALLELES;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 public final class ComplexCoverage implements Comparable<ComplexCoverage>
 {
@@ -22,7 +26,8 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     // computed values
     private double mCohortFrequencyTotal;
-    private double mScore;
+    private double mScore_;
+    private double mComplexityPenalty;
     private final int mHomozygousCount;
     private int mRecoveredCount;
     private int mWildcardCount;
@@ -40,7 +45,8 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         mRecoveredCount = 0;
         mWildcardCount = 0;
         mCohortFrequencyTotal = 0;
-        mScore = 0;
+        mScore_ = 0;
+        mComplexityPenalty = 0;
     }
 
     public List<AlleleCoverage> getAlleleCoverage() { return mAlleleCoverage; }
@@ -71,8 +77,10 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         return getAlleles().stream().filter(x -> x.Gene.equals(allele.Gene)).count() == 1;
     }
 
-    public void setScore(double score) { mScore = score; }
-    public double getScore() { return mScore; }
+    public void setScore(double score) { mScore_ = score; }
+    public double getScore_() { return mScore_; }
+    public void setComplexityPenalty(double complexityPenalty) { mComplexityPenalty = complexityPenalty; }
+    public double getComplexityPenalty() { return mComplexityPenalty; }
 
     public void expandToSixAlleles()
     {
@@ -114,7 +122,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         AlleleCoverage remainder = new AlleleCoverage(single.Allele,
                 single.UniqueCoverage - first.UniqueCoverage,
                 single.SharedCoverage - first.SharedCoverage,
-                single.WildCoverage - single.WildCoverage);
+                0.0);
 
         List<AlleleCoverage> newCoverage = Lists.newArrayList(first, remainder);
         return newCoverage;
@@ -182,6 +190,6 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     public String toString()
     {
-        return String.format("alleles(%s) coverage(%d) score(%.2f)", HlaAllele.toString(getAlleles()), TotalCoverage, mScore);
+        return String.format("alleles(%s) coverage(%d) score(%.2f) complexityPenalty(%.2f)", HlaAllele.toString(getAlleles()), TotalCoverage, mScore_, mComplexityPenalty);
     }
 }
