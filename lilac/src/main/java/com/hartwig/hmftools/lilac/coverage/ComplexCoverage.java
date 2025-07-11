@@ -52,6 +52,8 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         return mAlleleCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }
 
+    public HlaComplex toComplex() { return new HlaComplex(getAlleles()); }
+
     public double cohortFrequencyTotal() { return mCohortFrequencyTotal; }
     public void setCohortFrequencyTotal(double total) { mCohortFrequencyTotal = total; }
 
@@ -91,8 +93,8 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         for(String gene : GENE_CACHE.GeneIds)
         {
             List<AlleleCoverage> geneCoverage = existingCoverage.stream()
-		    .filter(x -> x.Allele.Gene.equals(gene))
-		    .collect(Collectors.toList());
+                    .filter(x -> x.Allele.Gene.equals(gene))
+                    .collect(Collectors.toList());
 
             if(geneCoverage.size() == 2)
             {

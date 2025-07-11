@@ -219,7 +219,7 @@ public class LilacApplication
                 totalFragmentCount, minEvidenceFactor, mAminoAcidPipeline.minHighQualEvidenceFactor()));
 
         Candidates candidateFactory = new Candidates(
-		mConfig, minEvidenceSupport, minEvidenceFactor, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+                mConfig, minEvidenceSupport, minEvidenceFactor, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -300,7 +300,7 @@ public class LilacApplication
         mRefNucleotideCounts = SequenceCount.nucleotides(minEvidenceSupport, minEvidenceFactor, refAminoAcidFrags);
 
         Map<String, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
-		Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci()));
+                Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci()));
 
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
@@ -375,8 +375,7 @@ public class LilacApplication
                         ? format("%d capped=%d", mRefFragAlleles.size(), calcRefFragAlleles.size())
                         : mRefFragAlleles.size());
 
-        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles,
-                complexes);
+        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
         mRankedComplexes
@@ -390,19 +389,11 @@ public class LilacApplication
 
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
-            // For top solutions, recalculate from all evidence but keep the scoring values unchanged
-            for(int i = 0; i < mRankedComplexes.size(); i++)
-            {
-                ComplexCoverage origComplexCoverage = mRankedComplexes.get(i);
-
-                ComplexCoverage recalcComplexCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles,
-                        origComplexCoverage.getAlleles());
-                recalcComplexCoverage.setScore(origComplexCoverage.getScore());
-                recalcComplexCoverage.setComplexityPenalty(origComplexCoverage.getComplexityPenalty());
-                recalcComplexCoverage.setCohortFrequencyTotal(origComplexCoverage.cohortFrequencyTotal());
-
-                mRankedComplexes.set(i, recalcComplexCoverage);
-            }
+            List<HlaComplex> filteredComplexes = mRankedComplexes.stream().map(ComplexCoverage::toComplex).toList();
+            calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
+            complexRanker = new ComplexCoverageRanking(0, mRefData);
+            mRankedComplexes.clear();
+            mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
         }
 
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
