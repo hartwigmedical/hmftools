@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,18 +17,18 @@ public class HlaAlleleCache
     // ensure the same HlaAlle is not created twice, allowing for object matching instead of string matching
 
     // map of group alleles to protein/4-digit alleles to list of synonymous/6-digit alleles
-    private final Map<HlaAllele,Map<HlaAllele,List<HlaAllele>>> mAlleleMap;
+    public final Map<HlaAllele,Map<HlaAllele,List<HlaAllele>>> AlleleMap;
 
     public HlaAlleleCache()
     {
-        mAlleleMap = Maps.newHashMap();
+        AlleleMap = Maps.newHashMap();
     }
 
-    public int groupCount() { return mAlleleMap.size(); }
-    public int fourDigitCount() { return mAlleleMap.values().stream().mapToInt(x -> x.size()).sum(); }
+    public int groupCount() { return AlleleMap.size(); }
+    public int fourDigitCount() { return AlleleMap.values().stream().mapToInt(x -> x.size()).sum(); }
     public int alleleCount()
     {
-        return mAlleleMap.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
+        return AlleleMap.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
     }
 
     public HlaAllele request(final String alleleStr)
@@ -63,6 +65,16 @@ public class HlaAlleleCache
                 tmpAllele.Gene, tmpAllele.AlleleGroup, tmpAllele.Protein, tmpAllele.Synonymous, tmpAllele.SynonymousNonCoding,
                 null, group.getKey());
 
+        // TODO:
+        if(!newAllele.equals(newAllele.asFourDigit()))
+            throw new RuntimeException(format("allele(%s) is not four-digit", newAllele.toString()));
+
+        // TODO:
+        if(newAllele.toString().equals("A*31:135"))
+        {
+            System.out.println("");
+        }
+
         group.getSecond().put(newAllele, Lists.newArrayList());
         return newAllele;
     }
@@ -79,7 +91,7 @@ public class HlaAlleleCache
     {
         HlaAllele groupAllele = allele.asAlleleGroup();
 
-        Map.Entry<HlaAllele,Map<HlaAllele,List<HlaAllele>>> entry = mAlleleMap.entrySet().stream()
+        Map.Entry<HlaAllele,Map<HlaAllele,List<HlaAllele>>> entry = AlleleMap.entrySet().stream()
                 .filter(x -> x.getKey().equals(groupAllele)).findFirst().orElse(null);
 
         if(entry != null)
@@ -90,7 +102,7 @@ public class HlaAlleleCache
         HlaAllele newGroup = new HlaAllele(
                 allele.Gene, allele.AlleleGroup, "", "", "", null, null);
 
-        mAlleleMap.put(newGroup, groupMap);
+        AlleleMap.put(newGroup, groupMap);
         return Pair.create(newGroup, groupMap);
     }
 
@@ -125,14 +137,14 @@ public class HlaAlleleCache
     public List<HlaAllele> getAlleles()
     {
         List<HlaAllele> allAlleles = Lists.newArrayList();
-        mAlleleMap.values().stream().forEach(x -> x.values().stream().forEach(y -> allAlleles.addAll(y)));
+        AlleleMap.values().stream().forEach(x -> x.values().stream().forEach(y -> allAlleles.addAll(y)));
         return allAlleles;
     }
 
     public HlaAllele findFourDigitAllele(final String alleleStr)
     {
         // assumes four-digit
-        for(Map<HlaAllele,List<HlaAllele>> proteinEntry : mAlleleMap.values())
+        for(Map<HlaAllele,List<HlaAllele>> proteinEntry : AlleleMap.values())
         {
             HlaAllele matchedAllele = proteinEntry.keySet().stream().filter(x -> x.matches(alleleStr)).findFirst().orElse(null);
             if(matchedAllele != null)
@@ -145,7 +157,7 @@ public class HlaAlleleCache
     public HlaAllele findAllele(final String alleleStr)
     {
         // assumes four-digit
-        for(Map<HlaAllele,List<HlaAllele>> proteinEntry : mAlleleMap.values())
+        for(Map<HlaAllele,List<HlaAllele>> proteinEntry : AlleleMap.values())
         {
             for(List<HlaAllele> alleles : proteinEntry.values())
             {

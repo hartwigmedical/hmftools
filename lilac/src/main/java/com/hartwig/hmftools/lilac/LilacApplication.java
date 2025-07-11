@@ -74,6 +74,8 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 public class LilacApplication
 {
     private final LilacConfig mConfig;
@@ -148,7 +150,7 @@ public class LilacApplication
 
     public LilacQC getSummaryMetrics() { return mSummaryMetrics; }
     public SolutionSummary getSolutionSummary() { return mSolutionSummary; }
-    public List<ComplexCoverage> getRankedComplexes() { return mRankedComplexes; }
+    public List<ComplexCoverage> getRankedComplexes_() { return mRankedComplexes; }
 
     public void run()
     {
@@ -218,7 +220,7 @@ public class LilacApplication
         LL_LOGGER.info(format("totalFrags(%d) minEvidenceFactor(%.6f) minHighQualEvidenceFactor(%.6f)",
                 totalFragmentCount, minEvidenceFactor_, mAminoAcidPipeline.minHighQualEvidenceFactor_()));
 
-        Candidates candidateFactory = new Candidates(mConfig, minEvidenceSupport_, minEvidenceFactor_, mRefData.NucleotideSequences, mRefData.AminoAcidSequences_);
+        Candidates candidateFactory = new Candidates(mConfig, minEvidenceSupport_, minEvidenceFactor_, mRefData.NucleotideSequences, mRefData.AminoAcidSequences__);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -291,7 +293,7 @@ public class LilacApplication
             candidateAlleles.addAll(missingExpected);
         }
 
-        List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences_.stream()
+        List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences__.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
@@ -303,7 +305,7 @@ public class LilacApplication
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences_.stream()
+        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences__.stream()
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
@@ -327,13 +329,13 @@ public class LilacApplication
         mHlaYCoverage.checkThreshold(mRefFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
-        ComplexBuilder complexBuilder = new ComplexBuilder(mConfig, mRefData);
+        ComplexBuilder complexBuilder_ = new ComplexBuilder(mConfig, mRefData);
 
-        complexBuilder.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles);
-        allValid &= validateAlleles(complexBuilder.getUniqueProteinAlleles());
+        complexBuilder_.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles);
+        allValid &= validateAlleles(complexBuilder_.getUniqueProteinAlleles());
 
         // reassess fragment-allele assignment with the reduced set of filtered alleles
-        List<HlaAllele> confirmedRecoveredAlleles = complexBuilder.getConfirmedRecoveredAlleles();
+        List<HlaAllele> confirmedRecoveredAlleles = complexBuilder_.getConfirmedRecoveredAlleles();
         recoveredSequences = recoveredSequences.stream()
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
@@ -343,7 +345,7 @@ public class LilacApplication
         mFragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
         mHlaYCoverage.updateAminoAcidLoci(geneAminoAcidHetLociMap);
 
-        List<HlaAllele> confirmedAlleles = complexBuilder.getUniqueProteinAlleles();
+        List<HlaAllele> confirmedAlleles = complexBuilder_.getUniqueProteinAlleles();
 
         candidateSequences = candidateSequences.stream()
                 .filter(x -> confirmedAlleles.contains(x.Allele)).collect(Collectors.toList());
@@ -352,6 +354,7 @@ public class LilacApplication
                 .filter(x -> confirmedAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
         mRefFragAlleles.clear();
+        // TODO: reset mRefFragAlleles
 
         LL_LOGGER.debug(
                 "creating fragment alleles from amnioAcidfrags({}) candidateSequences({}) nucleotideSequences({})",
@@ -363,21 +366,25 @@ public class LilacApplication
         // down-sample if ref depth is higher than configured cap
         List<FragmentAlleles> calcRefFragAlleles = checkDownsampleRefFragmentAlleles();
 
-        List<HlaComplex> complexes = complexBuilder.buildComplexes(calcRefFragAlleles, confirmedRecoveredAlleles);
+        // TODO: calcRefFragAlleles is the downsampled one.
+        List<HlaComplex> complexes_ = complexBuilder_.buildComplexes(calcRefFragAlleles, confirmedRecoveredAlleles);
         // allValid &= validateComplexes(complexes); // too expensive in current form even for validation, address in unit tests instead
 
-        ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig);
+        ComplexCoverageCalculator complexCalculator_ = new ComplexCoverageCalculator(mConfig);
 
         LL_LOGGER.info("calculating coverage for complexes({}) and ref alleles({})",
-                complexes.size(),
+                complexes_.size(),
                 mRefFragAlleles.size() > calcRefFragAlleles.size()
                         ? format("%d capped=%d", mRefFragAlleles.size(), calcRefFragAlleles.size())
                         : mRefFragAlleles.size());
 
-        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles,
-                complexes);
+        // TODO: mRefFragAlleles
+        // TODO: downsamples is calcRefFragAlleles
+        List<ComplexCoverage> calculatedComplexes = complexCalculator_.calculateComplexCoverages(calcRefFragAlleles, complexes_);
 
+        // TODO: we have to sort at some point...
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
+        // TODO: does the scoring
         mRankedComplexes
                 .addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
 
@@ -389,19 +396,11 @@ public class LilacApplication
 
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
-            // For top solutions, recalculate from all evidence but keep the scoring values unchanged
-            for(int i = 0; i < mRankedComplexes.size(); i++)
-            {
-                ComplexCoverage origComplexCoverage = mRankedComplexes.get(i);
-
-                ComplexCoverage recalcComplexCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles,
-                        origComplexCoverage.getAlleles());
-                recalcComplexCoverage.setScore(origComplexCoverage.getScore_());
-                recalcComplexCoverage.setComplexityPenalty(origComplexCoverage.getComplexityPenalty());
-                recalcComplexCoverage.setCohortFrequencyTotal(origComplexCoverage.cohortFrequencyTotal());
-
-                mRankedComplexes.set(i, recalcComplexCoverage);
-            }
+            List<HlaComplex> filteredComplexes = mRankedComplexes.stream().map(ComplexCoverage::toComplex).toList();
+            calculatedComplexes = complexCalculator_.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
+            complexRanker = new ComplexCoverageRanking(0, mRefData);
+            mRankedComplexes.clear();
+            mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
         }
 
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
@@ -532,21 +531,24 @@ public class LilacApplication
 
     private List<FragmentAlleles> checkDownsampleRefFragmentAlleles()
     {
-        if(mConfig.MaxRefFragments == 0 || mRefFragAlleles.size() <= mConfig.MaxRefFragments)
+        // TODO:
+        var mRefFragAlleles_ = Collections.unmodifiableList(mRefFragAlleles);
+
+        if(mConfig.MaxRefFragments == 0 || mRefFragAlleles_.size() <= mConfig.MaxRefFragments)
             return mRefFragAlleles;
 
-        if(mRefFragAlleles.size() <= mConfig.MaxRefFragments * 2)
+        if(mRefFragAlleles_.size() <= mConfig.MaxRefFragments * 2)
         {
-            return mRefFragAlleles.stream().sorted(Comparator.comparing(x -> x.getFragment().id()))
+            return mRefFragAlleles_.stream().sorted(Comparator.comparing(x -> x.getFragment().id()))
                     .limit(mConfig.MaxRefFragments)
                     .collect(Collectors.toList());
         }
 
         List<FragmentAlleles> calcRefFragAlleles = Lists.newArrayList();
-        int nthElement = (int)floor(mRefFragAlleles.size() / (double)mConfig.MaxRefFragments);
+        int nthElement = (int)floor(mRefFragAlleles_.size() / (double)mConfig.MaxRefFragments);
 
         int counter = 0;
-        for(FragmentAlleles fragmentAllele : mRefFragAlleles)
+        for(FragmentAlleles fragmentAllele : mRefFragAlleles_)
         {
             ++counter;
 

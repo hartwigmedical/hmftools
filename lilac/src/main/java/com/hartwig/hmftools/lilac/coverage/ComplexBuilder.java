@@ -111,6 +111,12 @@ public class ComplexBuilder
 
         candidatesAfterUniqueGroups.addAll(commonAllelesInLowConfGroups);
 
+        // TODO:
+        if(commonAllelesInLowConfGroups.stream().anyMatch(x -> x.asFourDigit().toString().equals("C*03:23")))
+        {
+            System.out.println("");
+        }
+
         LL_LOGGER.debug("  keeping {} common allele(s) from insufficiently unique allele groups{}{}",
                 commonAllelesInLowConfGroups.size(), commonAllelesInLowConfGroups.isEmpty() ? "" : ": ",
                 HlaAllele.toString(commonAllelesInLowConfGroups));
@@ -131,6 +137,12 @@ public class ComplexBuilder
                 .collect(Collectors.toList());
 
         candidatesAfterUniqueGroups.addAll(commonAllelesFromSameGroupAsDubiousAlleles);
+
+        // TODO:
+        if(commonAllelesFromSameGroupAsDubiousAlleles.stream().anyMatch(x -> x.asFourDigit().toString().equals("C*03:23")))
+        {
+            System.out.println("");
+        }
 
         LL_LOGGER.debug("  keeping {} common allele(s) in the same 2-digit group as wildcard or rare allele candidates{}{}",
                 commonAllelesFromSameGroupAsDubiousAlleles.size(),

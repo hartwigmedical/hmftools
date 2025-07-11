@@ -22,7 +22,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     private final int mProteinNumber;
     private final HlaAllele mFourDigit;
     private final HlaAllele mGroup;
-    private final int mHashCode;;
+    private final int mHashCode;
     private boolean mHasWildcards;
 
     public HlaAllele(
@@ -101,7 +101,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         if(!(other instanceof HlaAllele))
             return false;
 
-        return hashCode() == other.hashCode();
+        return toString().equals(other.toString());
     }
 
     public int hashCode() { return mHashCode; }

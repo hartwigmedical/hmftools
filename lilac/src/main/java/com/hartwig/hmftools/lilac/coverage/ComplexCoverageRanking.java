@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
@@ -167,13 +168,6 @@ public class ComplexCoverageRanking
 
     private int solutionComplexity(final ComplexCoverage complexCoverage)
     {
-        // TODO:
-        if(complexCoverage.getAlleles().stream().map(x -> x.asFourDigit().toString()).collect(Collectors.toCollection(Sets::newHashSet)).equals(DBG_ALLELES))
-        {
-            System.out.println("");
-        }
-
-        // TODO:
         if(mRefData.AminoAcidSequenceLookup_ == null || mRefData.AminoAcidSequenceLookup_.isEmpty())
             return 0;
 
@@ -182,12 +176,12 @@ public class ComplexCoverageRanking
         {
             List<Integer> exonBoundaries = getAminoAcidExonBoundaries(allele.Gene);
             Collections.sort(exonBoundaries);
-            // TODO: only the first seq?
-            HlaSequenceLoci seq = mRefData.AminoAcidSequenceLookup_.get(allele.asFourDigit().toString()).stream().findFirst().orElse(null);
+            HlaSequenceLoci seq = mRefData.AminoAcidSequenceLookup_.get(allele.asFourDigit());
             if(seq == null)
             {
-                LL_LOGGER.warn("No HlaSequenceLoci found for allele({})", allele.asFourDigit().toString());
-                continue;
+                String errorMsg = format("No HlaSequenceLoci found for allele(%s)", allele.toString());
+                LL_LOGGER.error(errorMsg);
+                throw new RuntimeException(errorMsg);
             }
 
             List<String> acids = seq.getSequences();
