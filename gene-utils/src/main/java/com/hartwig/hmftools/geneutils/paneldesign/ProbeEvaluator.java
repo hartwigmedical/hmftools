@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -24,9 +25,8 @@ public class ProbeEvaluator
     public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
             final Consumer<EvaluatedProbe> candidateCallback)
     {
-        // TODO: use CachedRefGenome for performance
-
-        mRefGenome = refGenome;
+        // During probe generation it's common to evaluate many nearby probes, which can be exploited with caching to improve performance.
+        mRefGenome = refGenome instanceof CachedRefGenome ? refGenome : new CachedRefGenome(refGenome);
         mQualityProfile = qualityProfile;
         mCandidateCallback = candidateCallback;
     }
