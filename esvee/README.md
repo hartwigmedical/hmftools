@@ -122,8 +122,8 @@ This feeds into the VAF calculations in the caller routine below.
 java -cp esvee.jar com.hartwig.hmftools.esvee.depth.DepthAnnotator \
   -sample 'TUMOR_SAMPLE_ID,REF_SAMPLE_ID'
   -bam_file '/sample_data/TUMOR_SAMPLE_ID.bam,/sample_data/REF_SAMPLE_ID.bam'
-  -input_vcf TUMOR_SAMPLE_ID.esee.raw.vcf.gz
-  -output_vcf TUMOR_SAMPLE_ID.esee.ref_depth.vcf.gz
+  -input_vcf TUMOR_SAMPLE_ID.esvee.raw.vcf.gz
+  -output_vcf TUMOR_SAMPLE_ID.esvee.ref_depth.vcf.gz
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version 38
   -threads 16
