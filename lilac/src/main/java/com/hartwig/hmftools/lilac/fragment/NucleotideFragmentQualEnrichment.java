@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 
 import java.util.List;
 import java.util.Map;
@@ -15,14 +15,14 @@ import com.hartwig.hmftools.lilac.utils.Nucleotide;
 public final class NucleotideFragmentQualEnrichment
 {
     public static List<Fragment> qualityFilterFragments(
-            double minEvidence, double minHighQualEvidence, final List<Fragment> fragments, final List<Fragment> highQualFrags)
+            int minEvidenceSupport, double minEvidenceFactor, double minHighQualEvidenceFactor, final List<Fragment> fragments, final List<Fragment> highQualFrags)
     {
         // fragments are all in nucleotide-space
 
         // filter fragments so that each nucleotide has at least 1 base at or above the min-qual threshold, and
         // X fragments (minEvidence) at that base with any qual
-        SequenceCount highQualCounts = SequenceCount.nucleotides(minHighQualEvidence, highQualFrags);
-        SequenceCount rawCounts = SequenceCount.nucleotides(minEvidence, fragments);
+        SequenceCount highQualCounts = SequenceCount.nucleotides(minEvidenceSupport, minHighQualEvidenceFactor, highQualFrags);
+        SequenceCount rawCounts = SequenceCount.nucleotides(minEvidenceSupport, minEvidenceFactor, fragments);
 
         return fragments.stream().map(x -> applyQualityFilter(x, highQualCounts, rawCounts)).collect(Collectors.toList());
     }
@@ -40,8 +40,8 @@ public final class NucleotideFragmentQualEnrichment
             Nucleotide nucleotide = entry.getValue();
             String fragmentNucleotide = entry.getValue().bases();
 
-            List<String> highQualitySequences = highQualityCount.getMinCountOrVafSequences(locus, DEFAULT_MIN_NUCLEOTIDE_HIGH_QUAL_EVIDENCE_FACTOR);
-            List<String> rawSequences = rawCount.getMinCountOrVafSequences(locus, DEFAULT_MIN_NUCLEOTIDE_EVIDENCE_FACTOR);
+            List<String> highQualitySequences = highQualityCount.getMinEvidenceSequences(locus, DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+            List<String> rawSequences = rawCount.getMinEvidenceSequences(locus, DEFAULT_MIN_EVIDENCE_FACTOR);
             List<String> allowedSequences = highQualitySequences.stream().filter(x -> rawSequences.contains(x)).collect(Collectors.toList());
 
             if(allowedSequences.contains(fragmentNucleotide))

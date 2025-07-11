@@ -7,14 +7,14 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.seq.SequenceCount;
-
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class AminoAcidQC
 {
@@ -52,7 +52,7 @@ public class AminoAcidQC
 
             // or those matching the winning or HLA-Y sequences
 
-            Map<String,Integer> expected = aminoAcidCount.get(locus);
+            Multiset<String> expected = aminoAcidCount.get(locus);
 
             Set<String> actualSequences = winners.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
@@ -64,9 +64,9 @@ public class AminoAcidQC
                 continue;
 
 
-            for(Map.Entry<String,Integer> entry : expected.entrySet())
+            for(Multiset.Entry<String> entry : expected.entrySet())
             {
-                String aminoAcid = entry.getKey();
+                String aminoAcid = entry.getElement();
 
                 if(actualSequences.contains(aminoAcid))
                     continue;
@@ -74,7 +74,7 @@ public class AminoAcidQC
                 if(hlaYSequences.contains(aminoAcid))
                     continue;
 
-                int count = entry.getValue();
+                int count = entry.getCount();
 
                 if(count < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
                     continue;

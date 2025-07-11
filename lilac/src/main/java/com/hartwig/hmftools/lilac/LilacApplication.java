@@ -212,12 +212,14 @@ public class LilacApplication
         List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
 
-        double minEvidence = mAminoAcidPipeline.minEvidence();
+        int minEvidenceSupport = mAminoAcidPipeline.minEvidenceSupport();
+        double minEvidenceFactor = mAminoAcidPipeline.minEvidenceFactor();
 
-        LL_LOGGER.info(format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
-                totalFragmentCount, minEvidence, mAminoAcidPipeline.minHighQualEvidence()));
+        LL_LOGGER.info(format("totalFrags(%d) minEvidenceFactor(%.6f) minHighQualEvidenceFactor(%.6f)",
+                totalFragmentCount, minEvidenceFactor, mAminoAcidPipeline.minHighQualEvidenceFactor()));
 
-        Candidates candidateFactory = new Candidates(mConfig, minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(
+		mConfig, minEvidenceSupport, minEvidenceFactor, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -294,10 +296,11 @@ public class LilacApplication
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
-        mRefAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, refAminoAcidFrags);
-        mRefNucleotideCounts = SequenceCount.nucleotides(minEvidence, refAminoAcidFrags);
+        mRefAminoAcidCounts = SequenceCount.aminoAcids(minEvidenceSupport, minEvidenceFactor, refAminoAcidFrags);
+        mRefNucleotideCounts = SequenceCount.nucleotides(minEvidenceSupport, minEvidenceFactor, refAminoAcidFrags);
 
-        Map<String, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(mRefNucleotideCounts.heterozygousLoci());
+        Map<String, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
+		Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci()));
 
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
@@ -306,7 +309,7 @@ public class LilacApplication
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         Map<String, Map<Integer, Set<String>>> geneAminoAcidHetLociMap =
-                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, recoveredSequences);
+                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, mAminoAcidPipeline.getReferenceNucleotides());
@@ -336,8 +339,7 @@ public class LilacApplication
         recoveredSequences = recoveredSequences.stream()
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
-        geneAminoAcidHetLociMap = extractHeterozygousLociSequences(
-                mAminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, recoveredSequences);
+        geneAminoAcidHetLociMap = extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
         mHlaYCoverage.updateAminoAcidLoci(geneAminoAcidHetLociMap);
@@ -632,8 +634,8 @@ public class LilacApplication
         }
     }
 
-    public void extractRnaCoverage(
-            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
+    public void extractRnaCoverage(final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+            final List<HlaSequenceLoci> winningNucSequences)
     {
         mRnaCoverage = LilacAppendRna.extractRnaCoverage(
                 mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper,
