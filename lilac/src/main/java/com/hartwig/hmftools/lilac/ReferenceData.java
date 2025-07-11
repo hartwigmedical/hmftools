@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
 import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V37;
 import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V38;
@@ -24,12 +26,12 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -41,8 +43,6 @@ import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-
-import org.jetbrains.annotations.Nullable;
 
 public class ReferenceData
 {
@@ -59,7 +59,7 @@ public class ReferenceData
     public final List<HlaSequenceLoci> HlaYAminoAcidSequences;
 
     // four-digit allele to seq
-    public final Multimap<String, HlaSequenceLoci> AminoAcidSequenceLookup;
+    public final Map<HlaAllele, HlaSequenceLoci> AminoAcidSequenceLookup;
 
     public final List<HlaAllele> CommonAlleles; // common in population
     public final Map<Indel, HlaAllele> KnownStopLossIndelAlleles;
@@ -127,7 +127,7 @@ public class ReferenceData
         HlaYNucleotideSequences = Lists.newArrayList();
         HlaYAminoAcidSequences = Lists.newArrayList();
 
-        AminoAcidSequenceLookup = HashMultimap.create();
+        AminoAcidSequenceLookup = Maps.newHashMap();
 
         mDeflatedSequenceTemplate = null;
 
@@ -167,6 +167,18 @@ public class ReferenceData
         return GENE_CACHE.NucleotideExonBoundaries.get(longGeneName(gene));
     }
 
+    private void populateAminoAcidSequenceLookup()
+    {
+        for(HlaSequenceLoci seq : AminoAcidSequences)
+        {
+            HlaAllele allele = seq.Allele;
+            if(!allele.equals(allele.asFourDigit()))
+                throw new RuntimeException(format("allele(%s) is not four-digit", allele));
+
+            AminoAcidSequenceLookup.computeIfAbsent(allele, k -> seq);
+        }
+    }
+
     public boolean load()
     {
         if(!mResourceDir.isEmpty())
@@ -175,15 +187,35 @@ public class ReferenceData
 
             LL_LOGGER.info("reading nucleotide file: {}", nucleotideFilename);
 
-            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, null, false))
+            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, false))
                 return false;
 
             String aminoAcidFilename = mResourceDir + AA_REF_FILE;
 
             LL_LOGGER.info("reading protein file: {}", aminoAcidFilename);
 
-            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, AminoAcidSequenceLookup, true))
+            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
                 return false;
+
+            populateAminoAcidSequenceLookup();
+
+            Set<HlaAllele> allelesWithFreqs = Sets.newHashSet(mAlleleFrequencies.getAlleleFrequencies().keySet());
+            for(HlaAllele allele : allelesWithFreqs)
+            {
+                if(!allele.equals(allele.asFourDigit()))
+                    throw new RuntimeException(format("allele(%s) is not four-digit", allele));
+
+                if(AminoAcidSequenceLookup.containsKey(allele))
+                    continue;
+
+                LL_LOGGER.warn("allele({}) with cohort frequency has no loaded sequences, dropping from allele frequencies", allele.toString());
+                mAlleleFrequencies.getAlleleFrequencies().remove(allele);
+            }
+
+            mAlleleFrequencies.getAlleleFrequencies().entrySet().stream()
+                    .filter(x -> x.getValue() >= COMMON_ALLELES_FREQ_CUTOFF)
+                    .map(x -> mAlleleCache.requestFourDigit(x.getKey().toString()))
+                    .forEach(x -> CommonAlleles.add(x));
         }
 
         // load and register configured and known alleles
@@ -375,14 +407,13 @@ public class ReferenceData
         return hlaTranscriptMap;
     }
 
-    private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData,
-            @Nullable final Multimap<String, HlaSequenceLoci> sequenceDataLookup, boolean isProteinFile)
+    private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
     {
         try
         {
             final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
             fileContents.remove(0); // remove header
-            loadSequenceFile(fileContents, sequenceData, sequenceDataLookup, isProteinFile);
+            loadSequenceFile(fileContents, sequenceData, isProteinFile);
             LL_LOGGER.info("loaded {} sequences from file {}", sequenceData.size(), filename);
             return true;
         }
@@ -393,8 +424,7 @@ public class ReferenceData
         }
     }
 
-    public void loadSequenceFile(final List<String> fileContents, final List<HlaSequenceLoci> sequenceData,
-            @Nullable final Multimap<String, HlaSequenceLoci> sequenceDataLookup, boolean isProteinFile)
+    public void loadSequenceFile(final List<String> fileContents, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
     {
         for(String line : fileContents)
         {
@@ -421,12 +451,7 @@ public class ReferenceData
                 mDeflatedSequenceTemplate = newSequence;
 
             if(!excludeAllele)
-            {
                 sequenceData.add(newSequence);
-                if(sequenceDataLookup != null)
-                    sequenceDataLookup.put(newSequence.Allele.asFourDigit().toString(), newSequence);
-            }
         }
     }
 }
-
