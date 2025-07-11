@@ -12,13 +12,15 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 public class NucleotideSpliceEnrichment
 {
     private final byte mMinBaseQuality;
-    private final double mMinEvidence;
+    private final int mMinEvidenceSupport_;
+    private final double mMinEvidenceFactor_;
     private final Set<Integer> mAminoAcidBoundary;
 
-    public NucleotideSpliceEnrichment(double minEvidence, final Set<Integer> aminoAcidBoundary)
+    public NucleotideSpliceEnrichment(int minEvidenceSupport, double minEvidenceFactor, final Set<Integer> aminoAcidBoundary)
     {
         mMinBaseQuality = LOW_BASE_QUAL_THRESHOLD;
-        mMinEvidence = minEvidence;
+        mMinEvidenceSupport_ = minEvidenceSupport;
+        mMinEvidenceFactor_ = minEvidenceFactor;
         mAminoAcidBoundary = aminoAcidBoundary;
     }
 
@@ -26,9 +28,9 @@ public class NucleotideSpliceEnrichment
     {
         // fragments are all in nucleotide-space
 
-        SequenceCount nucleotideCounts = SequenceCount.nucleotides(mMinEvidence, highQualFrags);
+        SequenceCount nucleotideCounts = SequenceCount.nucleotides_(mMinEvidenceSupport_, mMinEvidenceFactor_, highQualFrags);
         Set<Integer> nucleotideExonBoundaryStarts = mAminoAcidBoundary.stream().map(x -> x * 3).collect(Collectors.toSet());
-        List<Integer> homLoci = nucleotideCounts.homozygousIndices();
+        List<Integer> homLoci = Lists.newArrayList(nucleotideCounts.homozygousLoci_());
 
         Set<Integer> homStarts = nucleotideExonBoundaryStarts.stream().filter(x -> homLoci.contains(x)).collect(Collectors.toSet());
 
@@ -71,12 +73,12 @@ public class NucleotideSpliceEnrichment
 
     private void addStart(final Fragment fragment, int index, SequenceCount nucleotideCounts)
     {
-        fragment.addNucleotide(index, nucleotideCounts.getMinCountSequences(index).get(0), mMinBaseQuality);
+        fragment.addNucleotide(index, nucleotideCounts.getMinEvidenceSequences_(index).get(0), mMinBaseQuality);
     }
 
     private void addEnd(final Fragment fragment, int index, SequenceCount nucleotideCounts)
     {
-        fragment.addNucleotide(index + 1, nucleotideCounts.getMinCountSequences(index + 1).get(0), mMinBaseQuality);
-        fragment.addNucleotide(index + 2, nucleotideCounts.getMinCountSequences(index + 2).get(0), mMinBaseQuality);
+        fragment.addNucleotide(index + 1, nucleotideCounts.getMinEvidenceSequences_(index + 1).get(0), mMinBaseQuality);
+        fragment.addNucleotide(index + 2, nucleotideCounts.getMinEvidenceSequences_(index + 2).get(0), mMinBaseQuality);
     }
 }

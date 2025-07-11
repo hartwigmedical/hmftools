@@ -8,11 +8,11 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +44,7 @@ public class AminoAcidQC
         int unused = 0;
         int largest = 0;
 
-        for(Integer locus : aminoAcidCount.heterozygousLoci())
+        for(Integer locus : aminoAcidCount.heterozygousLoci_())
         {
             // ignore amino acids in any unmatched haplotype
             if(unmatchedHaplotypes.stream().anyMatch(x -> positionWithin(locus, x.StartLocus, x.EndLocus)))
@@ -52,7 +52,7 @@ public class AminoAcidQC
 
             // or those matching the winning or HLA-Y sequences
 
-            Map<String,Integer> expected = aminoAcidCount.get(locus);
+            Multiset<String> expected_ = aminoAcidCount.get_(locus);
 
             Set<String> actualSequences = winners.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
@@ -64,9 +64,9 @@ public class AminoAcidQC
                 continue;
 
 
-            for(Map.Entry<String,Integer> entry : expected.entrySet())
+            for(var entry_ : expected_.entrySet())
             {
-                String aminoAcid = entry.getKey();
+                String aminoAcid = entry_.getElement();
 
                 if(actualSequences.contains(aminoAcid))
                     continue;
@@ -74,7 +74,7 @@ public class AminoAcidQC
                 if(hlaYSequences.contains(aminoAcid))
                     continue;
 
-                int count = entry.getValue();
+                int count = entry_.getCount();
 
                 if(count < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
                     continue;

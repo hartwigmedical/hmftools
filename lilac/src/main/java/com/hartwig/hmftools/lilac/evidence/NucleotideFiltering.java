@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.evidence;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 
@@ -14,12 +16,14 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class NucleotideFiltering
 {
-    private final double mMinNucleotideCount;
+    private final int mMinNucleotideSupport_;
+    private final double mMinNucleotideFactor_;
     private final List<Integer> mAminoAcidBoundaries;
 
-    public NucleotideFiltering(double minNucleotideCount, final List<Integer> aminoAcidBoundaries)
+    public NucleotideFiltering(int minNucleotideSupport, double minNucleotideFactor, final List<Integer> aminoAcidBoundaries)
     {
-        mMinNucleotideCount = minNucleotideCount;
+        mMinNucleotideSupport_ = minNucleotideSupport;
+        mMinNucleotideFactor_ = minNucleotideFactor;
         mAminoAcidBoundaries = aminoAcidBoundaries;
     }
 
@@ -50,10 +54,11 @@ public class NucleotideFiltering
             && seqLoci.consistentWithAny(endSequences, Lists.newArrayList(startLoci + 1, startLoci + 2));
     }
 
-    private final List<String> nucleotideSequence(final List<Fragment> fragments, final List<Integer> nucleotideIndices)
+    private List<String> nucleotideSequence(final List<Fragment> fragments, final List<Integer> nucleotideIndices)
     {
         Map<String,Integer> sequenceCounts = Maps.newHashMap();
 
+        int totalCount = 0;
         for(Fragment fragment : fragments)
         {
             if(!fragment.containsAllNucleotideLoci(nucleotideIndices))
@@ -63,10 +68,12 @@ public class NucleotideFiltering
 
             Integer count = sequenceCounts.get(nucleotides);
             sequenceCounts.put(nucleotides, count != null ? count + 1 : 1);
+            totalCount++;
         }
 
+        int minNucleotideCount = max(mMinNucleotideSupport_, (int) Math.ceil(totalCount * mMinNucleotideFactor_));
         return sequenceCounts.entrySet().stream()
-                .filter(x -> x.getValue() >= mMinNucleotideCount)
+                .filter(x -> x.getValue() >= minNucleotideCount)
                 .map(x -> x.getKey())
                 .collect(Collectors.toList());
 

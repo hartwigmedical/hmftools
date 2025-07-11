@@ -43,7 +43,7 @@ public class QualityControlTest
 
         Map<String,Integer>[] array = new Map[] { index0Map, index1Map, index2Map, index3Map };
 
-        SequenceCount aminoAcidCount = new SequenceCount(1, array);
+        SequenceCount aminoAcidCount = new SequenceCount(array);
 
         List<Integer> aminoAcidIndexList = Lists.newArrayList(0, 1, 3);
         Map<String,Integer> evidence = Maps.newHashMap();
@@ -114,7 +114,7 @@ public class QualityControlTest
         sequenceCountsMap[0].put("B", warnLevel); // expect A
         sequenceCountsMap[12].put("B", warnLevel); // expect M
 
-        SequenceCount aminoAcidCount = new SequenceCount(1, sequenceCountsMap);
+        SequenceCount aminoAcidCount = new SequenceCount(sequenceCountsMap);
 
         List<Haplotype> unmatchedHaplotypes = Lists.newArrayList(
                 new Haplotype(5, 10, 10, "ABCDEF"));

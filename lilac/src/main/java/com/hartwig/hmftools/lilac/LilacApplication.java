@@ -212,12 +212,13 @@ public class LilacApplication
         List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
 
-        double minEvidence = mAminoAcidPipeline.minEvidence();
+        int minEvidenceSupport_ = mAminoAcidPipeline.minEvidenceSupport_();
+        double minEvidenceFactor_ = mAminoAcidPipeline.minEvidenceFactor_();
 
-        LL_LOGGER.info(format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
-                totalFragmentCount, minEvidence, mAminoAcidPipeline.minHighQualEvidence()));
+        LL_LOGGER.info(format("totalFrags(%d) minEvidenceFactor(%.6f) minHighQualEvidenceFactor(%.6f)",
+                totalFragmentCount, minEvidenceFactor_, mAminoAcidPipeline.minHighQualEvidenceFactor_()));
 
-        Candidates candidateFactory = new Candidates(mConfig, minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences_);
+        Candidates candidateFactory = new Candidates(mConfig, minEvidenceSupport_, minEvidenceFactor_, mRefData.NucleotideSequences, mRefData.AminoAcidSequences_);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -294,10 +295,10 @@ public class LilacApplication
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
-        mRefAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, refAminoAcidFrags);
-        mRefNucleotideCounts = SequenceCount.nucleotides(minEvidence, refAminoAcidFrags);
+        mRefAminoAcidCounts = SequenceCount.aminoAcids_(minEvidenceSupport_, minEvidenceFactor_, refAminoAcidFrags);
+        mRefNucleotideCounts = SequenceCount.nucleotides_(minEvidenceSupport_, minEvidenceFactor_, refAminoAcidFrags);
 
-        Map<String, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(mRefNucleotideCounts.heterozygousLoci());
+        Map<String, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci_()));
 
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
@@ -306,7 +307,7 @@ public class LilacApplication
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
-                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, recoveredSequences);
+                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, mAminoAcidPipeline.getReferenceNucleotides());
@@ -337,7 +338,7 @@ public class LilacApplication
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         geneAminoAcidHetLociMap = extractHeterozygousLociSequences(
-                mAminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, recoveredSequences);
+                mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
         mHlaYCoverage.updateAminoAcidLoci(geneAminoAcidHetLociMap);
