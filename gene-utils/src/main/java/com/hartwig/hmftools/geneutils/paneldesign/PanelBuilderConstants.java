@@ -51,8 +51,9 @@ public class PanelBuilderConstants
     public static final double CN_GC_TOLERANCE = 0.025;
 
     // Output naming.
-    public static final String PANEL_PROBES_FILE = "panel_probes.tsv";
-    public static final String REJECTED_REGIONS_FILE = "rejected_regions.tsv";
+    public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
+    public static final String TARGET_REGIONS_FILE_NAME = "target_regions.bed";
+    public static final String REJECTED_REGIONS_FILE_STEM = "rejected_regions";
     // This output can get very large (10s of GB) so write it in compressed format.
-    public static final String CANDIDATE_PROBES_FILE = "candidate_probes.tsv.gz";
+    public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
 }

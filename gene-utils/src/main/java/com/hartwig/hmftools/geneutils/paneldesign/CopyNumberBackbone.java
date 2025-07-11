@@ -157,8 +157,11 @@ public class CopyNumberBackbone
         Optional<EvaluatedProbe> bestCandidate = probeGenerator.selectBestProbe(generateCandidateProbes(partition), PROBE_SELECT_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
+        ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, partition.Region.toString());
+        TargetRegion target = new TargetRegion(source, partition.Region);
+
         ProbeGenerationResult result = bestCandidate
-                .map(bestProbe -> new ProbeGenerationResult(List.of(bestProbe), Collections.emptyList()))
+                .map(bestProbe -> new ProbeGenerationResult(List.of(target), List.of(bestProbe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
                     // Given the Amber sites are predetermined and there's a lot of them, in typical use we should find an acceptable probe.
@@ -175,12 +178,8 @@ public class CopyNumberBackbone
                         rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_SELECT_CRITERIA.eval();
                     }
 
-                    return new ProbeGenerationResult(
-                            Collections.emptyList(),
-                            List.of(new RejectedRegion(
-                                    partition.Region,
-                                    new ProbeSourceInfo(PROBE_SOURCE, partition.Region.toString()),
-                                    rejectionReason)));
+                    RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, source, rejectionReason);
+                    return new ProbeGenerationResult(List.of(target), Collections.emptyList(), List.of(rejectedRegion));
                 });
         return result;
     }

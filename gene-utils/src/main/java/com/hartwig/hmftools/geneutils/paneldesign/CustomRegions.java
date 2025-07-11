@@ -78,7 +78,8 @@ public class CustomRegions
     {
         LOGGER.trace("Generating probes for {}", region);
         ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, region.extraInfo());
-        ProbeGenerationResult result = probeGenerator.coverRegion(region.region(), source, PROBE_SELECT_CRITERIA);
+        TargetRegion target = new TargetRegion(source, region.region());
+        ProbeGenerationResult result = probeGenerator.coverRegion(target, PROBE_SELECT_CRITERIA);
         return result;
     }
 }

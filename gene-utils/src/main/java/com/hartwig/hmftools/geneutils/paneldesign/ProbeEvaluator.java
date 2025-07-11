@@ -24,6 +24,8 @@ public class ProbeEvaluator
     public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
             final Consumer<EvaluatedProbe> candidateCallback)
     {
+        // TODO: use CachedRefGenome for performance
+
         mRefGenome = refGenome;
         mQualityProfile = qualityProfile;
         mCandidateCallback = candidateCallback;

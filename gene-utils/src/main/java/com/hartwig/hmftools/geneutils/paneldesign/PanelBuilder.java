@@ -1,13 +1,18 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.System.exit;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CANDIDATE_PROBES_FILE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.TARGET_REGIONS_FILE_NAME;
+
+import java.io.IOException;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -38,7 +43,7 @@ public class PanelBuilder
         mProbeGenerator = new ProbeGenerator(probeEvaluator);
     }
 
-    public void run()
+    public void run() throws IOException
     {
         LOGGER.info("Starting panel builder");
 
@@ -46,9 +51,10 @@ public class PanelBuilder
 
         checkCreateOutputDir(mConfig.OutputDir);
         mOutputWriter = new OutputWriter(
-                mConfig.outputFilePath(PANEL_PROBES_FILE),
-                mConfig.outputFilePath(REJECTED_REGIONS_FILE),
-                mConfig.outputFilePath(CANDIDATE_PROBES_FILE));
+                mConfig.outputFilePath(PANEL_PROBES_FILE_STEM),
+                mConfig.outputFilePath(TARGET_REGIONS_FILE_NAME),
+                mConfig.outputFilePath(REJECTED_REGIONS_FILE_STEM),
+                mConfig.outputFilePath(CANDIDATE_PROBES_FILE_NAME));
 
         LOGGER.info("Generating probes");
         ProbeGenerationResult customRegionProbes = generateCustomRegionProbes();
@@ -63,11 +69,9 @@ public class PanelBuilder
             mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
         }
 
-        // TODO: profile code (it's kinda slow)
+        // TODO: output target regions
 
-        // TODO: output BED file of target regions
-        // TODO: output BED file of probes
-        // TODO: output BED file of rejected regions
+        // TODO: profile code (it's kinda slow)
 
         // TODO: remove duplicate/overlapping probes?
 
@@ -140,7 +144,15 @@ public class PanelBuilder
 
         configBuilder.checkAndParseCommandLine(args);
 
-        PanelBuilder panelBuilder = new PanelBuilder(configBuilder);
-        panelBuilder.run();
+        try
+        {
+            PanelBuilder panelBuilder = new PanelBuilder(configBuilder);
+            panelBuilder.run();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("IO error", e);
+            exit(1);
+        }
     }
 }

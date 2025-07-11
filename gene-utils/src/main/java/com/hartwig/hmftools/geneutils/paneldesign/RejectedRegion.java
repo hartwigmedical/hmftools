@@ -9,4 +9,8 @@ public record RejectedRegion(
         String reason
 )
 {
+    public static RejectedRegion fromTargetRegion(TargetRegion target, String reason)
+    {
+        return new RejectedRegion(target.region(), target.source(), reason);
+    }
 }

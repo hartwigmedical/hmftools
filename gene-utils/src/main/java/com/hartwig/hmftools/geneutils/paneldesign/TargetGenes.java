@@ -167,7 +167,7 @@ public class TargetGenes
     {
         public GeneRegion(GeneTranscript gene, GeneRegionType type, BaseRegion region)
         {
-            this(gene, type, new ChrBaseRegion(gene.gene().Chromosome, region.start(), region.end()));
+            this(gene, type, ChrBaseRegion.from(gene.gene().Chromosome, region));
         }
     }
 
@@ -264,13 +264,13 @@ public class TargetGenes
     {
         LOGGER.trace("Generating probes for {}", geneRegion);
 
-        ProbeSourceInfo source = createProbeSourceInfo(geneRegion);
+        TargetRegion target = new TargetRegion(createProbeSourceInfo(geneRegion), geneRegion.baseRegion());
 
         return switch(geneRegion.type())
         {
-            case CODING, UTR -> probeGenerator.coverRegion(geneRegion.baseRegion(), source, EXON_PROBE_SELECT_CRITERIA);
+            case CODING, UTR -> probeGenerator.coverRegion(target, EXON_PROBE_SELECT_CRITERIA);
             case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT ->
-                    probeGenerator.coverOneSubregion(geneRegion.baseRegion(), source, CN_PROBE_SELECT_CRITERIA);
+                    probeGenerator.coverOneSubregion(target, CN_PROBE_SELECT_CRITERIA);
         };
     }
 
