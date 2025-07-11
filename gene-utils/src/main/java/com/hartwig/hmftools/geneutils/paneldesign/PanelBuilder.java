@@ -66,10 +66,9 @@ public class PanelBuilder
         {
             ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
             mOutputWriter.writePanelProbes(aggregate.probes());
+            mOutputWriter.writeTargetRegions(aggregate.targetRegions());
             mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
         }
-
-        // TODO: output target regions
 
         // TODO: profile code (it's kinda slow)
 

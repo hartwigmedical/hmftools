@@ -46,7 +46,7 @@ import org.jetbrains.annotations.NotNull;
 //     - Large introns: Select the best acceptable probe from each of ~1kb regions near the adjacent exons.
 public class TargetGenes
 {
-    private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.GENE;
+    private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.GENE;
 
     private static final ProbeSelectCriteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
@@ -264,7 +264,7 @@ public class TargetGenes
     {
         LOGGER.trace("Generating probes for {}", geneRegion);
 
-        TargetRegion target = new TargetRegion(createProbeSourceInfo(geneRegion), geneRegion.baseRegion());
+        TargetRegion target = new TargetRegion(geneRegion.baseRegion(), createTargetMetadata(geneRegion));
 
         return switch(geneRegion.type())
         {
@@ -274,11 +274,11 @@ public class TargetGenes
         };
     }
 
-    private static ProbeSourceInfo createProbeSourceInfo(final GeneRegion geneRegion)
+    private static TargetMetadata createTargetMetadata(final GeneRegion geneRegion)
     {
         GeneData geneData = geneRegion.gene().gene();
         TranscriptData transcriptData = geneRegion.gene().transcript();
         String extraInfo = format("%s:%s:%s", geneData.GeneName, transcriptData.TransName, geneRegion.type().name());
-        return new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
+        return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
     }
 }

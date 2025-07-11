@@ -31,7 +31,8 @@ public record EvaluatedProbe(
         return new EvaluatedProbe(candidate, criteria, value, sequence, qualityScore, gcContent);
     }
 
-    public EvaluatedProbe withSequence(String value) {
+    public EvaluatedProbe withSequence(String value)
+    {
         return new EvaluatedProbe(candidate, criteria, rejectionReason, value, qualityScore, gcContent);
     }
 

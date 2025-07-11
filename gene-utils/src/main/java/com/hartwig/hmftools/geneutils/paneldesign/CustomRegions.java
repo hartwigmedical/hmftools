@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {
-    private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.CUSTOM;
+    private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.CUSTOM;
 
     private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
@@ -77,8 +77,8 @@ public class CustomRegions
     private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator)
     {
         LOGGER.trace("Generating probes for {}", region);
-        ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, region.extraInfo());
-        TargetRegion target = new TargetRegion(source, region.region());
+        TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
+        TargetRegion target = new TargetRegion(region.region(), metadata);
         ProbeGenerationResult result = probeGenerator.coverRegion(target, PROBE_SELECT_CRITERIA);
         return result;
     }

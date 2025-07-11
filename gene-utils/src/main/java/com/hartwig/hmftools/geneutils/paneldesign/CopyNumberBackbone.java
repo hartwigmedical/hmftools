@@ -36,7 +36,7 @@ import org.apache.logging.log4j.Logger;
 //   - In each partition, select the acceptable probe with the best GC content.
 public class CopyNumberBackbone
 {
-    private static final ProbeSourceType PROBE_SOURCE = ProbeSourceType.CN_BACKBONE;
+    private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.CN_BACKBONE;
 
     private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
@@ -157,8 +157,8 @@ public class CopyNumberBackbone
         Optional<EvaluatedProbe> bestCandidate = probeGenerator.selectBestProbe(generateCandidateProbes(partition), PROBE_SELECT_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
-        ProbeSourceInfo source = new ProbeSourceInfo(PROBE_SOURCE, partition.Region.toString());
-        TargetRegion target = new TargetRegion(source, partition.Region);
+        TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, partition.Region.toString());
+        TargetRegion target = new TargetRegion(partition.Region, metadata);
 
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe -> new ProbeGenerationResult(List.of(target), List.of(bestProbe), Collections.emptyList()))
@@ -178,7 +178,7 @@ public class CopyNumberBackbone
                         rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_SELECT_CRITERIA.eval();
                     }
 
-                    RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, source, rejectionReason);
+                    RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, target, rejectionReason);
                     return new ProbeGenerationResult(List.of(target), Collections.emptyList(), List.of(rejectedRegion));
                 });
         return result;
@@ -194,12 +194,12 @@ public class CopyNumberBackbone
 
     private static Stream<CandidateProbe> generateCandidateProbes(final AmberSite site)
     {
-        return ProbeGenerator.coverPositionCandidates(site.position(), createProbeSourceInfo(site));
+        return ProbeGenerator.coverPositionCandidates(site.position(), createTargetMetadata(site));
     }
 
-    private static ProbeSourceInfo createProbeSourceInfo(final AmberSite site)
+    private static TargetMetadata createTargetMetadata(final AmberSite site)
     {
         String extraInfo = site.position().toString();
-        return new ProbeSourceInfo(PROBE_SOURCE, extraInfo);
+        return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
     }
 }
