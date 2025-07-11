@@ -56,7 +56,7 @@ public class PanelBuilder
         ProbeGenerationResult cnBackboneProbes = generateCopyNumberBackboneProbes();
         LOGGER.info("Probe generation done");
 
-        LOGGER.debug("Writing output");
+        LOGGER.info("Writing output");
         {
             ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
             mOutputWriter.writePanelProbes(aggregate.probes());
@@ -65,7 +65,9 @@ public class PanelBuilder
 
         // TODO: profile code (it's kinda slow)
 
-        // TODO: other output to write?
+        // TODO: output BED file of target regions
+        // TODO: output BED file of probes
+        // TODO: output BED file of rejected regions
 
         // TODO: remove duplicate/overlapping probes?
 

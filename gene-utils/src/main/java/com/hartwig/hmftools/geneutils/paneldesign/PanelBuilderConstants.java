@@ -9,7 +9,7 @@ public class PanelBuilderConstants
     public static final double PROBE_QUALITY_ACCEPT = 0.5;
     // TODO: needed?
     // All probes with quality score below this value are unconditionally rejected.
-    public static final double PROBE_QUALITY_REJECT = 0.08;
+    public static final double PROBE_QUALITY_REJECT = 0.1;
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;
@@ -17,6 +17,7 @@ public class PanelBuilderConstants
     // TODO: i think we should get rid of this because it doesn't make sense for large regions. or make it specific to some probe gen algorithms
     // TODO: allow this to be negative?
     public static final int UNCOVERED_BASES_MAX = 10;
+    public static final int PROBE_OVERLAP_MAX = 10;
 
     // Target genes constants.
     // All the region and gap sizes should be much larger than the probe size to avoid probe overlap.

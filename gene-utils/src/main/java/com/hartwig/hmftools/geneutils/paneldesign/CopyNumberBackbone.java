@@ -152,7 +152,7 @@ public class CopyNumberBackbone
 
     private static ProbeGenerationResult generateProbe(final Partition partition, final ProbeGenerator probeGenerator)
     {
-        LOGGER.trace("Generating probes for {}", partition.Region);
+        LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
         Optional<EvaluatedProbe> bestCandidate = probeGenerator.selectBestProbe(generateCandidateProbes(partition), PROBE_SELECT_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);

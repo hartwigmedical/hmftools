@@ -43,7 +43,7 @@ public class ProbeQualityProfile
     private static final int BASE_WINDOW_SPACING = 20;
     private static final String FLD_QUALITY_SCORE = "QualityScore";
 
-    private static final double AGGREGATE_SHARPNESS = 10;
+    private static final double AGGREGATE_SHARPNESS = 5;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
@@ -181,11 +181,13 @@ public class ProbeQualityProfile
         double[] sums = new double[2];
         windows.forEach(window ->
         {
-            float value = window.getQualityScore();
+            // Idea is to scale the risk approximately linearly with the overlap.
+            // This biases the quality score upwards progressively as the overlap decreases.
             int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
-            double confidence = (double) overlap / BASE_WINDOW_LENGTH;
-            double weight = confidence * exp(-AGGREGATE_SHARPNESS * confidence * value);
-            sums[0] += value * weight;
+            double overlapFrac = (double) overlap / BASE_WINDOW_LENGTH;
+            double adjustedQuality = 1 / ((1 / window.getQualityScore() - 1) * overlapFrac + 1);
+            double weight = exp(-AGGREGATE_SHARPNESS * adjustedQuality);
+            sums[0] += adjustedQuality * weight;
             sums[1] += weight;
         });
         if(sums[1] > 0)

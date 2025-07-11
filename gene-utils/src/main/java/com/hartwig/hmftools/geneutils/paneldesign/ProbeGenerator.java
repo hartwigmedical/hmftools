@@ -1,21 +1,19 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static java.lang.Double.NEGATIVE_INFINITY;
-import static java.lang.Double.POSITIVE_INFINITY;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_OVERLAP_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.UNCOVERED_BASES_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.computeUncoveredRegions;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.getBestScoringElement;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiPredicate;
-import java.util.function.DoublePredicate;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -24,19 +22,16 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class ProbeGenerator
 {
     public final ProbeEvaluator mProbeEvaluator;
-
-    private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
     public ProbeGenerator(final ProbeEvaluator probeEvaluator)
     {
         mProbeEvaluator = probeEvaluator;
     }
+
+    // TODO: check chromosome lengths and reject probes outside chromosome
 
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     public ProbeGenerationResult coverRegion(final ChrBaseRegion target, final ProbeSourceInfo source,
@@ -59,55 +54,39 @@ public class ProbeGenerator
         // Methodology:
         //   - For each position in the target, try to find the 1 best acceptable probe that covers it.
         //   - If an acceptable probe is found, advance the position to the next position after the probe.
-        //   - If a position can't be covered by a probe, mark it as rejected and move to the next position.
+        //   - If a position can't be covered by a probe, move to the next position.
 
+        ProbeFactory probeFactory = new ProbeFactory(source, target);
         List<EvaluatedProbe> probes = new ArrayList<>();
-        List<Integer> rejectedPositions = new ArrayList<>();
-        for(int windowStart = target.start(); windowStart <= target.end(); )
+        for(int position = target.start(); position <= target.end(); )
         {
-            // TODO: probe may significantly overlap last iteration. Introduce max overlap constraint?
-            // TODO: reuse other code?
-            int windowStartCopy = windowStart;
-            Stream<CandidateProbe> candidates = IntStream.iterate(0, offset -> offset - 1)
-                    .mapToObj(offset -> probeStartingAt(target.chromosome(), windowStartCopy + offset, target, source))
-                    // Negative offsets could go before the start of the chromosome.
-                    .filter(probe -> probe.probeRegion().start() >= 1)
-                    .takeWhile(probe -> probe.probeRegion().containsPosition(windowStartCopy));
+            // Ensure the probe covers this position and doesn't overlap the previous probe.
+            int minProbeStart = max(
+                    minProbeStartContaining(position),
+                    probes.isEmpty() ? 1 : nextProbeStartPosition(probes.get(probes.size() - 1).candidate().probeRegion().end()));
+            Stream<CandidateProbe> candidates =
+                    leftMovingLeftAlignedProbes(new BasePosition(target.chromosome(), position), minProbeStart, probeFactory);
             Optional<EvaluatedProbe> bestCandidate = selectBestProbe(candidates, criteria);
 
             if(bestCandidate.isPresent())
             {
                 probes.add(bestCandidate.get());
-                windowStart = bestCandidate.get().candidate().probeRegion().end() + 1;
+                position = bestCandidate.get().candidate().probeRegion().end() + 1;
             }
             else
             {
-                // We have checked up to windowStart-1. And in subsequent iterations we could accept windowStart+1, windowStart+2, etc.
-                // So the only region we can confidently reject is this current position.
-                rejectedPositions.add(windowStart);
-                ++windowStart;
+                ++position;
             }
         }
 
-        // Compute merged rejected regions.
-        List<RejectedRegion> rejectedRegions = new ArrayList<>();
-        if(!rejectedPositions.isEmpty())
-        {
-            String rejectionReason = "No probe covering region meeting criteria " + criteria.eval();
-            int rejectStart = rejectedPositions.get(0);
-            int rejectEnd = rejectedPositions.get(0);
-            for(int i = 1; i < rejectedPositions.size(); ++i)
-            {
-                int rejectedPosition = rejectedPositions.get(i);
-                if(rejectedPosition != rejectEnd + 1 || i == rejectedPositions.size() - 1)
-                {
-                    rejectedRegions.add(
-                            new RejectedRegion(new ChrBaseRegion(target.chromosome(), rejectStart, rejectEnd), source, rejectionReason));
-                    rejectStart = rejectedPosition;
-                }
-                rejectEnd = rejectedPosition;
-            }
-        }
+        // Compute rejected regions based on what has been covered by the probes.
+        String rejectionReason = "No probe covering region meeting criteria " + criteria.eval();
+        List<RejectedRegion> rejectedRegions = computeUncoveredRegions(
+                target.baseRegion(), probes.stream().map(probe -> probe.candidate().probeRegion().baseRegion()))
+                .stream()
+                .map(region ->
+                        new RejectedRegion(new ChrBaseRegion(target.chromosome(), region.start(), region.end()), source, rejectionReason))
+                .toList();
 
         return new ProbeGenerationResult(probes, rejectedRegions);
     }
@@ -136,9 +115,12 @@ public class ProbeGenerator
         }
 
         int regionCentre = (target.start() + target.end()) / 2;
-        return outwardMovingCenteredProbes(new BasePosition(target.chromosome(), regionCentre), target, source)
-                // Stop once the probes are too far from the target position to cover it.
-                .takeWhile(probe -> probeCoversTarget(probe.probeRegion().baseRegion(), target.baseRegion()));
+        BasePosition initialPosition = new BasePosition(target.chromosome(), regionCentre);
+        // Stop once the probes are too far from the target position to cover it.
+        int minProbeStart = minProbeStartCovering(target.baseRegion());
+        int maxProbeEnd = maxProbeEndCovering(target.baseRegion());
+        ProbeFactory probeFactory = new ProbeFactory(source, target);
+        return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd, probeFactory);
     }
 
     // Generates the 1 best acceptable probe that is contained within the specified region.
@@ -165,30 +147,66 @@ public class ProbeGenerator
         }
 
         int regionCentre = (target.start() + target.end()) / 2;
-        return outwardMovingCenteredProbes(new BasePosition(target.chromosome(), regionCentre), target, source)
-                // Stop once the probes go outside the target region.
-                .takeWhile(probe -> target.containsRegion(probe.probeRegion()));
+        BasePosition initialPosition = new BasePosition(target.chromosome(), regionCentre);
+        // Stop once the probes go outside the target region.
+        int minProbeStart = target.start();
+        int maxProbeEnd = target.end();
+        ProbeFactory probeFactory = new ProbeFactory(source, target);
+        return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd, probeFactory);
     }
 
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
     public static Stream<CandidateProbe> coverPositionCandidates(final BasePosition position, final ProbeSourceInfo source)
     {
+        int minProbeStart = minProbeStartContaining(position.Position);
+        int maxProbeEnd = maxProbeEndContaining(position.Position);
         ChrBaseRegion targetRegion = new ChrBaseRegion(position.Chromosome, position.Position, position.Position);
-        return outwardMovingCenteredProbes(position, targetRegion, source)
-                // Stop once the probes are too far from the target position to cover it.
-                .takeWhile(probe -> probe.probeRegion().containsPosition(position.Position));
+        ProbeFactory probeFactory = new ProbeFactory(source, targetRegion);
+        return outwardMovingCenterAlignedProbes(position, minProbeStart, maxProbeEnd, probeFactory);
     }
 
-    // Returns candidate probes starting centered on a position and then shifting left and right with offsets: 0, 1, -1, 2, -2, 3, -3, ...
+    // Returns candidate probes shifting left and right with offsets: 0, 1, -1, 2, -2, 3, -3, ...
+    // Probes are aligned to their centre position.
+    // Probe bounds:
+    //   - Can't start before start of chromosome
+    //   - Can't start before `minProbeStart`
+    //   - Can't end after `maxProbeEnd`
+    // TODO: don't extend past end of chromosome
     // Useful because we prefer to select probes which are closest to the target position or centre of a region.
-    private static Stream<CandidateProbe> outwardMovingCenteredProbes(final BasePosition position, final ChrBaseRegion targetRegion,
-            final ProbeSourceInfo source)
+    private static Stream<CandidateProbe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
+            int maxProbeEnd, final ProbeFactory factory)
     {
-        return IntStream.iterate(0, absOffset -> absOffset + 1)
+        minProbeStart = max(1, minProbeStart);
+
+        // minProbeStart = initialPosition + offset - PROBE_LENGTH/2
+        // minProbeStart - initialPosition + PROBE_LENGTH/2 = offset
+        int minOffset = minProbeStart - initialPosition.Position + PROBE_LENGTH / 2;
+
+        // maxProbeEnd = initialPosition + offset - PROBE_LENGTH/2 + PROBE_LENGTH - 1;
+        // maxProbeEnd - initialPosition + PROBE_LENGTH/2 - PROBE_LENGTH + 1 = offset
+        int maxOffset = maxProbeEnd - initialPosition.Position + PROBE_LENGTH / 2 - PROBE_LENGTH + 1;
+
+        return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
                 .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
-                .mapToObj(offset -> probeCenteredAt(position.Chromosome, position.Position + offset, targetRegion, source))
-                // Negative offsets could go before the start of the chromosome.
-                .filter(probe -> probe.probeRegion().start() >= 1);
+                .filter(offset -> offset >= minOffset && offset <= maxOffset)
+                .mapToObj(offset -> probeCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset, factory));
+    }
+
+    // Generates probes shifting with offsets: 0, -1, -2, -3, ...
+    // Probes are aligned to the start position.
+    // Probe bounds:
+    //   - Can't start before start of chromosome
+    //   - Can't start before `minProbeStart`
+    // TODO: don't extend past end of chromosome
+    private static Stream<CandidateProbe> leftMovingLeftAlignedProbes(final BasePosition position, int minProbeStart,
+            final ProbeFactory factory)
+    {
+        minProbeStart = max(1, minProbeStart);
+        // minProbeStart <= position + offset
+        int minOffset = minProbeStart - position.Position;
+        int maxOffset = 0;
+        return IntStream.iterate(maxOffset, offset -> offset >= minOffset, offset -> offset - 1)
+                .mapToObj(offset -> probeStartingAt(position.Chromosome, position.Position + offset, factory));
     }
 
     private static boolean canCoverRegionWith1Probe(final ChrBaseRegion target)
@@ -196,26 +214,61 @@ public class ProbeGenerator
         return target.baseLength() - UNCOVERED_BASES_MAX <= PROBE_LENGTH;
     }
 
-    private static boolean probeCoversTarget(final BaseRegion probe, final BaseRegion target)
+    private static int minProbeStartCovering(final BaseRegion target)
     {
-        // TODO: only ensure >= 1 base of the probe overlaps the target. Want to be stricter?
-        int uncoveredLeft = max(0, probe.start() - target.start());
-        int uncoveredRight = max(0, target.end() - probe.end());
-        int uncovered = uncoveredLeft + uncoveredRight;
-        // First clause covers the case where target is smaller than probe.
-        return uncovered < target.baseLength() && uncovered <= UNCOVERED_BASES_MAX;
+        // Need to take care of the case where target is smaller than a probe: don't allow the probe to end before the target start.
+        int minProbeEnd = max(target.start(), target.end() - UNCOVERED_BASES_MAX);
+        return minProbeEnd - PROBE_LENGTH + 1;
     }
 
-    private static CandidateProbe probeCenteredAt(final String chromosome, int centrePosition, final ChrBaseRegion targetRegion,
-            final ProbeSourceInfo source)
+    private static int maxProbeEndCovering(final BaseRegion target)
     {
-        return probeStartingAt(chromosome, centrePosition - PROBE_LENGTH / 2, targetRegion, source);
+        // Need to take care of the case where target is smaller than a probe: don't allow the probe to start after the target end.
+        int maxProbeStart = min(target.end(), target.start() + UNCOVERED_BASES_MAX);
+        return maxProbeStart + PROBE_LENGTH - 1;
     }
 
-    private static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final ChrBaseRegion targetRegion,
-            final ProbeSourceInfo source)
+    // Calculates the minimum probe starting position such that the specified position is contained within the probe.
+    private static int minProbeStartContaining(int targetPosition)
     {
-        return new CandidateProbe(source, new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH - 1), targetRegion);
+        // start + PROBE_LENGTH - 1 >= targetPosition
+        return targetPosition - PROBE_LENGTH + 1;
+    }
+
+    // Calculates the maximum probe ending position such that the specified position is contained within the probe.
+    private static int maxProbeEndContaining(int targetPosition)
+    {
+        // end - PROBE_LENGTH + 1 <= targetPosition
+        return targetPosition + PROBE_LENGTH - 1;
+    }
+
+    // Calculates the next position a probe may start at, respecting the probe overlap constraint.
+    private static int nextProbeStartPosition(int prevProbeEnd)
+    {
+        // prevProbeEnd - nextStart + 1 < PROBE_OVERLAP_MAX
+        return prevProbeEnd - PROBE_OVERLAP_MAX + 1;
+    }
+
+    // Encapsulates the constant fields so we don't have to pass them around everywhere when creating candidates.
+    private record ProbeFactory(
+            ProbeSourceInfo source,
+            ChrBaseRegion targetRegion
+    )
+    {
+        public CandidateProbe create(final ChrBaseRegion probeRegion)
+        {
+            return new CandidateProbe(source, probeRegion, targetRegion);
+        }
+    }
+
+    private static CandidateProbe probeCenteredAt(final String chromosome, int centrePosition, final ProbeFactory factory)
+    {
+        return probeStartingAt(chromosome, centrePosition - PROBE_LENGTH / 2, factory);
+    }
+
+    private static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final ProbeFactory factory)
+    {
+        return factory.create(new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH - 1));
     }
 
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there are no acceptable probes.
@@ -228,40 +281,13 @@ public class ProbeGenerator
         {
             case FIRST_ACCEPTABLE -> acceptableProbes.findFirst();
             // Stop if a probe with quality=1 is found.
-            case MAX_QUALITY -> selectBestScoringProbe(acceptableProbes,
+            case MAX_QUALITY -> getBestScoringElement(acceptableProbes,
                     EvaluatedProbe::qualityScore,
                     quality -> Doubles.greaterOrEqual(quality, 1.0), true);
             // Stop if a probe with gc=gcTarget is found.
-            case BEST_GC -> selectBestScoringProbe(acceptableProbes,
+            case BEST_GC -> getBestScoringElement(acceptableProbes,
                     probe -> abs(probe.gcContent() - criteria.eval().gcContentTarget()),
                     gc -> Doubles.equal(gc, criteria.eval().gcContentTarget()), false);
         };
-    }
-
-    // Min/max function with early stopping if an optimal value is found.
-    private static Optional<EvaluatedProbe> selectBestScoringProbe(Stream<EvaluatedProbe> probes,
-            final ToDoubleFunction<EvaluatedProbe> scoreFunc, final DoublePredicate isOptimalFunc, boolean maximise)
-    {
-        BiPredicate<Double, Double> scoreCompareFunc = maximise ? Doubles::greaterThan : Doubles::lessThan;
-        Optional<EvaluatedProbe> bestProbe = Optional.empty();
-        double bestScore = maximise ? NEGATIVE_INFINITY : POSITIVE_INFINITY;
-        Iterator<EvaluatedProbe> iterator = probes.iterator();
-        while(iterator.hasNext())
-        {
-            EvaluatedProbe probe = iterator.next();
-            double score = scoreFunc.applyAsDouble(probe);
-            if(scoreCompareFunc.test(score, bestScore))
-            {
-                bestProbe = Optional.of(probe);
-                bestScore = score;
-                LOGGER.trace("New bestScore={} probe={}", bestScore, bestProbe);
-                if(isOptimalFunc.test(bestScore))
-                {
-                    LOGGER.trace("Optimal score found, stopping candidate search");
-                    break;
-                }
-            }
-        }
-        return bestProbe;
     }
 }

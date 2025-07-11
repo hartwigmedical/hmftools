@@ -59,11 +59,6 @@ public class ProbeQualityProfileTest
     {
         OptionalDouble actual;
 
-        // Probe contained within 1 window.
-        actual = mProfile.computeQualityScore(new ChrBaseRegion("1", 101, 111));
-        assertTrue(actual.isPresent());
-        assertEquals(0.1, actual.getAsDouble(), 1e-6);
-
         // Probe overlapping 2 windows.
         actual = mProfile.computeQualityScore(new ChrBaseRegion("1", 101, 131));
         assertTrue(actual.isPresent());

@@ -98,6 +98,7 @@ public class OutputWriter implements AutoCloseable
     public void writeCandidateProbe(final EvaluatedProbe probe)
     {
         // Buffer probes to improve performance.
+        // TODO: this is really slow
         mCandidateProbesBuffer.add(probe);
         checkFlushCandidateProbes(false);
     }

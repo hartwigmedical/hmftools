@@ -16,6 +16,13 @@ public record ProbeEvalCriteria(
         double gcContentTolerance
 )
 {
+    private static final DecimalFormat DECIMAL_FORMAT;
+
+    static {
+        DECIMAL_FORMAT = new DecimalFormat();
+        DECIMAL_FORMAT.setMinimumFractionDigits(0);
+    }
+
     public double gcContentMin()
     {
         return gcContentTarget - gcContentTolerance;
@@ -30,8 +37,9 @@ public record ProbeEvalCriteria(
     @Override
     public String toString()
     {
-        DecimalFormat df = new DecimalFormat();
-        df.setMinimumFractionDigits(0);
-        return format("quality>=%s gc=%s+-%s", df.format(qualityScoreMin), df.format(gcContentTarget), df.format(gcContentTolerance));
+        return format("quality>=%s gc=%s+-%s",
+                DECIMAL_FORMAT.format(qualityScoreMin),
+                DECIMAL_FORMAT.format(gcContentTarget),
+                DECIMAL_FORMAT.format(gcContentTolerance));
     }
 }
