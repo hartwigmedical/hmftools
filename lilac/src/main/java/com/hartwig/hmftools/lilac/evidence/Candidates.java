@@ -1,18 +1,28 @@
 package com.hartwig.hmftools.lilac.evidence;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.NavigableMap;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 public final class Candidates
 {
@@ -47,7 +57,7 @@ public final class Candidates
         LL_LOGGER.debug("gene({}) {} candidates before filtering", context.geneName(), geneCandidates.size());
 
         // Amino acid filtering
-        List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
+        List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(context, geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
@@ -89,19 +99,52 @@ public final class Candidates
         return nucleotideSpecificAllelesCandidates;
     }
 
-    private List<HlaSequenceLoci> filterSequencesByMinSupport(
-            final List<HlaSequenceLoci> candidates, final SequenceCount aminoAcidCount, final List<Integer> aminoAcidBoundaries)
+    private List<HlaSequenceLoci> filterSequencesByMinSupport(final HlaContext context, final List<HlaSequenceLoci> candidates,
+            final SequenceCount aminoAcidCount, final List<Integer> aminoAcidBoundaries)
     {
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
         candidateSequences.addAll(candidates);
 
+        NavigableMap<Integer, Multiset<String>> rawAminoAcidCounts = aminoAcidCount.geneSeqCountsByLoci_(context.geneName());
         for(final int locus : aminoAcidCount.seqCountsByLoci_().keySet())
         {
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
             List<String> expectedSequences = aminoAcidCount.getMinEvidenceSequences_(locus, mConfig.MinEvidenceFactor_);
+            Multiset<String> rawSequences = rawAminoAcidCounts.getOrDefault(locus, HashMultiset.create());
+            // TODO: Use config constant.
+            List<String> lowDepthSequences = rawSequences.entrySet().stream().filter(x -> x.getCount() < 10).map(x -> x.getElement()).toList();
+            Set<String> novelLowDepthSequences = Sets.newHashSet(lowDepthSequences);
+            novelLowDepthSequences.removeAll(expectedSequences);
+
+            // TODO: HERE
+            if(true)
+            {
+                Set<String> _lowDepthSequences = Sets.newHashSet(lowDepthSequences);
+                _lowDepthSequences.removeAll(expectedSequences);
+                if(!_lowDepthSequences.isEmpty())
+                {
+                    System.out.println("");
+                }
+
+                System.out.println("");
+            }
+
+            // TODO:
+            if(lowDepthSequences.size() > 0)
+            {
+                System.out.println(format("*** gene(%s) locus(%d) expected(%s) lowDepth(%s) novelLowDepth(%s)", context.geneName(), locus, expectedSequences.toString(), lowDepthSequences.toString(), novelLowDepthSequences.toString()));
+            }
+
+            if(novelLowDepthSequences.size() > 0)
+            {
+                System.out.println(format("*** Adding gene(%s) locus(%d) expected(%s) lowDepth(%s) novelLowDepth(%s)", context.geneName(), locus, expectedSequences.toString(), lowDepthSequences.toString(), novelLowDepthSequences.toString()));
+            }
+
+            for(String novelSeq : novelLowDepthSequences)
+                expectedSequences.add(novelSeq);
 
             if(expectedSequences.isEmpty())
                 continue;

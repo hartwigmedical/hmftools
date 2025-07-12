@@ -309,10 +309,10 @@ public class LilacApplication
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
-                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
+                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts_(), recoveredSequences);
 
         mFragAlleleMapper = new FragmentAlleleMapper(
-                geneAminoAcidHetLociMap, refNucleotideHetLociMap, mAminoAcidPipeline.getReferenceNucleotides());
+                geneAminoAcidHetLociMap, refNucleotideHetLociMap, mAminoAcidPipeline.getReferenceNucleotides_());
 
         mFragAlleleMapper.setKnownStopLossAlleleFragments(knownStopLossFragments);
 
@@ -340,7 +340,7 @@ public class LilacApplication
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         geneAminoAcidHetLociMap = extractHeterozygousLociSequences(
-                mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
+                mAminoAcidPipeline.getReferenceAminoAcidCounts_(), recoveredSequences);
 
         mFragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
         mHlaYCoverage.updateAminoAcidLoci(geneAminoAcidHetLociMap);

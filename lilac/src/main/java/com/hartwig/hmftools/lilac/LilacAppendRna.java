@@ -109,7 +109,7 @@ public class LilacAppendRna
         Map<String,List<Integer>> refNucleotideHetLociMap = Maps.newHashMap();
 
         FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(
-                geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
+                geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides_());
 
         ComplexCoverage rnaCoverage = extractRnaCoverage(
                 mConfig.RnaBam, mConfig, mRefData, nucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, aminoAcidPipeline,

@@ -125,6 +125,10 @@ public final class SequenceCount
     {
         return mSeqCountsByLoci_;
     }
+    public NavigableMap<Integer, Multiset<String>> geneSeqCountsByLoci_(final String gene)
+    {
+        return mSeqCountsByLociByGene_.getOrDefault(gene, Maps.newTreeMap());
+    }
 
     public NavigableSet<Integer> heterozygousLoci_()
     {
@@ -275,6 +279,12 @@ public final class SequenceCount
 
     public void writeVertically(final String fileName, @Nullable final String gene)
     {
+        // TODO:
+        if(gene != null && gene.equals("HLA-B"))
+        {
+            System.out.println("");
+        }
+
         try
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);

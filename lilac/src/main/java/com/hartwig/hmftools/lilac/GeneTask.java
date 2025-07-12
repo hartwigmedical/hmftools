@@ -56,6 +56,16 @@ public class GeneTask implements Callable<Void>
     @Override
     public Void call()
     {
+        // TODO:
+        if(mHlaContext.geneName().equals("HLA-B"))
+        {
+            System.out.println("");
+        }
+        else
+        {
+            System.out.println("");
+        }
+
         // determine un-phased Candidates
         List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
 
