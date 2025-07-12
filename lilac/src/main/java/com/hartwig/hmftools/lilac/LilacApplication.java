@@ -214,12 +214,13 @@ public class LilacApplication
 
         int minEvidenceSupport = mAminoAcidPipeline.minEvidenceSupport();
         double minEvidenceFactor = mAminoAcidPipeline.minEvidenceFactor();
+        int minDepthFilter = mAminoAcidPipeline.minDepthFilter();
 
         LL_LOGGER.info(format("totalFrags(%d) minEvidenceFactor(%.6f) minHighQualEvidenceFactor(%.6f)",
                 totalFragmentCount, minEvidenceFactor, mAminoAcidPipeline.minHighQualEvidenceFactor()));
 
         Candidates candidateFactory = new Candidates(
-                mConfig, minEvidenceSupport, minEvidenceFactor, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+                mConfig, minEvidenceSupport, minEvidenceFactor, minDepthFilter, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -339,7 +340,8 @@ public class LilacApplication
         recoveredSequences = recoveredSequences.stream()
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
-        geneAminoAcidHetLociMap = extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
+        geneAminoAcidHetLociMap = extractHeterozygousLociSequences(
+                mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
         mHlaYCoverage.updateAminoAcidLoci(geneAminoAcidHetLociMap);
@@ -654,7 +656,6 @@ public class LilacApplication
         List<Fragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).toList();
         if(invalidFragments.isEmpty())
             return true;
-
 
         LL_LOGGER.warn("has {} invalid fragments", invalidFragments.size());
         return false;

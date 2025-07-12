@@ -41,13 +41,16 @@ public final class SequenceCount
     private final double mMinEvidenceFactor;
 
     private final NavigableMap<Integer, Multiset<String>> mSeqCountsByLoci;
+    private final Map<String, NavigableMap<Integer, Multiset<String>>> mSeqCountsByLociByGene;
 
     private SequenceCount(final int minEvidenceSupport, final double minEvidenceFactor,
-            final NavigableMap<Integer, Multiset<String>> seqCounts)
+            final NavigableMap<Integer, Multiset<String>> seqCounts,
+            final Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene)
     {
         mMinEvidenceSupport = minEvidenceSupport;
         mMinEvidenceFactor = minEvidenceFactor;
         mSeqCountsByLoci = seqCounts;
+        mSeqCountsByLociByGene = seqCountsByLociByGene;
     }
 
     @VisibleForTesting
@@ -65,41 +68,54 @@ public final class SequenceCount
 
         mMinEvidenceSupport = 1;
         mMinEvidenceFactor = 0.0;
+        mSeqCountsByLociByGene = null;
     }
 
     public static SequenceCount nucleotides(final int minEvidenceSupport, final double minEvidenceFactor,
             final Iterable<Fragment> fragments)
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
+        Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
         for(Fragment fragment : fragments)
         {
+            String gene = fragment.readGene();
             for(Nucleotide nucleotide : fragment.nucleotidesByLoci().values())
             {
                 int locus = nucleotide.locus();
                 String bases = nucleotide.bases();
                 seqCountsByLoci.computeIfAbsent(locus, k -> HashMultiset.create());
                 seqCountsByLoci.get(locus).add(bases);
+
+                seqCountsByLociByGene.computeIfAbsent(gene, k -> Maps.newTreeMap());
+                seqCountsByLociByGene.get(gene).computeIfAbsent(locus, k -> HashMultiset.create());
+                seqCountsByLociByGene.get(gene).get(locus).add(bases);
             }
         }
 
-        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci);
+        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
     }
 
     public static SequenceCount aminoAcids(final int minEvidenceSupport, final double minEvidenceFactor, final Iterable<Fragment> fragments)
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
+        Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
         for(Fragment fragment : fragments)
         {
+            String gene = fragment.readGene();
             for(AminoAcid aminoAcid : fragment.aminoAcidsByLoci().values())
             {
                 int locus = aminoAcid.locus();
                 String acid = aminoAcid.acid();
                 seqCountsByLoci.computeIfAbsent(locus, k -> HashMultiset.create());
                 seqCountsByLoci.get(locus).add(acid);
+
+                seqCountsByLociByGene.computeIfAbsent(gene, k -> Maps.newTreeMap());
+                seqCountsByLociByGene.get(gene).computeIfAbsent(locus, k -> HashMultiset.create());
+                seqCountsByLociByGene.get(gene).get(locus).add(acid);
             }
         }
 
-        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci);
+        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
     }
 
     public Multiset<String> get(final int locus)
@@ -110,6 +126,11 @@ public final class SequenceCount
     public NavigableMap<Integer, Multiset<String>> seqCountsByLoci()
     {
         return mSeqCountsByLoci;
+    }
+
+    public NavigableMap<Integer, Multiset<String>> geneSeqCountsByLoci(final String gene)
+    {
+        return mSeqCountsByLociByGene.getOrDefault(gene, Maps.newTreeMap());
     }
 
     public NavigableSet<Integer> heterozygousLoci()
@@ -144,7 +165,7 @@ public final class SequenceCount
     public List<String> getMinEvidenceSequences(final int locus, @Nullable final Double minEvidenceFactor)
     {
         Multiset<String> seqCounts = mSeqCountsByLoci.get(locus);
-        if(seqCounts == null)
+        if(seqCounts == null || seqCounts.isEmpty())
             return Lists.newArrayList();
 
         int support = seqCounts.size();
@@ -154,6 +175,18 @@ public final class SequenceCount
                 .filter(x -> x.getCount() >= evidenceMinCount)
                 .map(Multiset.Entry::getElement)
                 .collect(Collectors.toList());
+    }
+
+    public Set<String> getLowRawDepthSequences(final String gene, int locus, int minDepthThreshold)
+    {
+        Multiset<String> seqCounts = mSeqCountsByLociByGene.get(gene).get(locus);
+        if(seqCounts == null || seqCounts.isEmpty())
+            return Sets.newHashSet();
+
+        return seqCounts.entrySet().stream()
+                .filter(x -> x.getCount() < minDepthThreshold)
+                .map(Multiset.Entry::getElement)
+                .collect(Collectors.toCollection(Sets::newHashSet));
     }
 
     public String getMaxCountSequence(final int locus)
@@ -256,17 +289,24 @@ public final class SequenceCount
 
     public void writeVertically(final String fileName)
     {
+        writeVertically(fileName, null);
+    }
+
+    public void writeVertically(final String fileName, @Nullable final NavigableMap<Integer, Multiset<String>> rawCounts)
+    {
         try
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
-
             for(Map.Entry<Integer, Multiset<String>> seqCountsEntry : mSeqCountsByLoci.entrySet())
             {
                 int locus = seqCountsEntry.getKey();
                 Multiset<String> seqCounts = seqCountsEntry.getValue();
+                int rawDepth = rawCounts == null ? -1 : rawCounts.getOrDefault(locus, HashMultiset.create()).size();
 
                 StringJoiner lineBuilder = new StringJoiner("\t");
                 lineBuilder.add(String.valueOf(locus));
+                if(rawDepth >= 0)
+                    lineBuilder.add(String.valueOf(rawDepth));
 
                 Iterator<Multiset.Entry<String>> sortedCounts = seqCounts.entrySet().stream()
                         .sorted(Comparator.comparingInt((Multiset.Entry<String> x) -> x.getCount()).reversed())

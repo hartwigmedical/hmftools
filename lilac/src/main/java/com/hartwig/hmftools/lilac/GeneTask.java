@@ -57,7 +57,8 @@ public class GeneTask implements Callable<Void>
     public Void call()
     {
         // determine un-phased Candidates
-        List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
+        List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles,
+                mAminoAcidPipeline.getRawReferenceAminoAcidCounts().get(mHlaContext.geneName()));
 
         // determine phasing of amino acids
         PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig, mMinEvidenceSupport, mMinEvidenceFactor);
