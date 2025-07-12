@@ -33,6 +33,7 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.utils.AminoAcid;
 import com.hartwig.hmftools.lilac.utils.Nucleotide;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 
 public final class SequenceCount
@@ -41,12 +42,14 @@ public final class SequenceCount
     private final double mMinEvidenceFactor_;
 
     private final NavigableMap<Integer, Multiset<String>> mSeqCountsByLoci_;
+    private final Map<String, NavigableMap<Integer, Multiset<String>>> mSeqCountsByLociByGene_;
 
-    private SequenceCount(final int minEvidenceSupport, final double minEvidenceFactor, final NavigableMap<Integer, Multiset<String>> seqCounts)
+    private SequenceCount(final int minEvidenceSupport, final double minEvidenceFactor, final NavigableMap<Integer, Multiset<String>> seqCounts, final Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene)
     {
         mMinEvidenceSupport_ = minEvidenceSupport;
         mMinEvidenceFactor_ = minEvidenceFactor;
         mSeqCountsByLoci_ = seqCounts;
+        mSeqCountsByLociByGene_ = seqCountsByLociByGene;
     }
 
     @VisibleForTesting
@@ -64,40 +67,53 @@ public final class SequenceCount
 
         mMinEvidenceSupport_ = 1;
         mMinEvidenceFactor_ = 0.0;
+        mSeqCountsByLociByGene_ = null;
     }
 
     public static SequenceCount nucleotides_(final int minEvidenceSupport, final double minEvidenceFactor, final Iterable<Fragment> fragments)
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
+        Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
         for(Fragment fragment : fragments)
         {
+            String gene = fragment.readGene();
             for(Nucleotide nucleotide : fragment.nucleotidesByLoci().values())
             {
                 int locus = nucleotide.locus();
                 String bases = nucleotide.bases();
                 seqCountsByLoci.computeIfAbsent(locus, k -> HashMultiset.create());
                 seqCountsByLoci.get(locus).add(bases);
+
+                seqCountsByLociByGene.computeIfAbsent(gene, k -> Maps.newTreeMap());
+                seqCountsByLociByGene.get(gene).computeIfAbsent(locus, k -> HashMultiset.create());
+                seqCountsByLociByGene.get(gene).get(locus).add(bases);
             }
         }
 
-        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci);
+        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
     }
 
     public static SequenceCount aminoAcids_(final int minEvidenceSupport, final double minEvidenceFactor, final Iterable<Fragment> fragments)
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
+        Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
         for(Fragment fragment : fragments)
         {
+            String gene = fragment.readGene();
             for(AminoAcid aminoAcid : fragment.aminoAcidsByLoci().values())
             {
                 int locus = aminoAcid.locus();
                 String acid = aminoAcid.acid();
                 seqCountsByLoci.computeIfAbsent(locus, k -> HashMultiset.create());
                 seqCountsByLoci.get(locus).add(acid);
+
+                seqCountsByLociByGene.computeIfAbsent(gene, k -> Maps.newTreeMap());
+                seqCountsByLociByGene.get(gene).computeIfAbsent(locus, k -> HashMultiset.create());
+                seqCountsByLociByGene.get(gene).get(locus).add(acid);
             }
         }
 
-        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci);
+        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
     }
 
     public Multiset<String> get_(final int locus)
@@ -254,17 +270,26 @@ public final class SequenceCount
 
     public void writeVertically(final String fileName)
     {
+        writeVertically(fileName, null);
+    }
+
+    public void writeVertically(final String fileName, @Nullable final String gene)
+    {
         try
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
+            NavigableMap<Integer, Multiset<String>> geneSeqCounts = gene == null ? null : mSeqCountsByLociByGene_.getOrDefault(gene, Maps.newTreeMap());
             for(Map.Entry<Integer, Multiset<String>> seqCountsEntry : mSeqCountsByLoci_.entrySet())
             {
                 int locus = seqCountsEntry.getKey();
                 Multiset<String> seqCounts = seqCountsEntry.getValue();
+                int rawDepth = geneSeqCounts == null ? -1 : geneSeqCounts.getOrDefault(locus, HashMultiset.create()).size();
 
                 StringJoiner lineBuilder = new StringJoiner("\t");
                 lineBuilder.add(String.valueOf(locus));
+                if(rawDepth >= 0)
+                    lineBuilder.add(String.valueOf(rawDepth));
 
                 Iterator<Multiset.Entry<String>> sortedCounts = seqCounts.entrySet().stream()
                         .sorted(Comparator.comparingInt((Multiset.Entry<String> x) -> x.getCount()).reversed())

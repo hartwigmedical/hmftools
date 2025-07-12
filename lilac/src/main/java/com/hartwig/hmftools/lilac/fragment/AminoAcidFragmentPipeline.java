@@ -191,13 +191,13 @@ public class AminoAcidFragmentPipeline
         for(Map.Entry<String, SequenceCount> entry : mRefAminoAcidCounts.entrySet())
         {
             String gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene + ".aminoacids.txt"));
+            entry.getValue().writeVertically(config.formFileId(gene + ".aminoacids.txt"), gene);
         }
 
         for(Map.Entry<String, SequenceCount> entry : mRefNucleotideCounts.entrySet())
         {
             String gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene + ".nucleotides.txt"));
+            entry.getValue().writeVertically(config.formFileId(gene + ".nucleotides.txt"), gene);
         }
     }
 }
