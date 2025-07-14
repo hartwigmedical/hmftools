@@ -49,7 +49,7 @@ public class PurpleConstants
     public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 1;
 
     public static final double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
-    public static final double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.05;
+    public static final double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.1;
     public static final double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1.5;
     public static final double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 1;
     public static final double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
