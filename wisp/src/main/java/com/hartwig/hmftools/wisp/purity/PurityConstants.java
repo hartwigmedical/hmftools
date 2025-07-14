@@ -61,6 +61,7 @@ public class PurityConstants
 
     public static final int OUTLIER_MIN_ALLELE_FRAGS = 3;
     public static final double OUTLIER_MIN_SAMPLE_PERC = 0.15;
+    public static final int OUTLIER_MIN_AVG_VAF_MULTIPLE = 8;
     public static final double OUTLIER_MIN_SAMPLE_RETEST_PERC = 0.3;
 
     public static final double AMBER_LOH_MINOR_ALLELE_THRESHOLD = 0.2;
