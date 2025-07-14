@@ -137,7 +137,8 @@ public class StackSampler implements AutoCloseable
         if(mIncludeTopLineNumber)
             foldedStack.add(stack[0].toString());
 
-        final String foldedStackStr = foldedStack.toString();
+        final String foldedStackStr = foldedStack.toString().replace(' ', '_');
+
         mStackCounts.updateAndGet(stackCounts ->
         {
             if(!stackCounts.containsKey(foldedStackStr))
