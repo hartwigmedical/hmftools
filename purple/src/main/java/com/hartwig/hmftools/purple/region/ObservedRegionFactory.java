@@ -408,7 +408,8 @@ public class ObservedRegionFactory
                 mReferenceAccumulator.add(ratio.referenceGCDiploidRatio());
                 mUnnormalisedReferenceAccumulator.add(ratio.referenceGCRatio());
                 boolean includeRegionValue = mTumorGcRatioAccumulator.add(ratio.tumorGCRatio(), true);
-                if (includeRegionValue)
+
+                if(includeRegionValue)
                 {
                     mTumorGcContentAccumulator.add(ratio.tumorGcContent(), true);
                 }
