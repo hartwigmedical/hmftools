@@ -54,7 +54,7 @@ public class PanelBuilder
                 mConfig.outputFilePath(PANEL_PROBES_FILE_STEM),
                 mConfig.outputFilePath(TARGET_REGIONS_FILE_NAME),
                 mConfig.outputFilePath(REJECTED_REGIONS_FILE_STEM),
-                mConfig.outputFilePath(CANDIDATE_PROBES_FILE_NAME));
+                mConfig.VerboseOutput ? mConfig.outputFilePath(CANDIDATE_PROBES_FILE_NAME) : null);
 
         LOGGER.info("Generating probes");
         ProbeGenerationResult customRegionProbes = generateCustomRegionProbes();

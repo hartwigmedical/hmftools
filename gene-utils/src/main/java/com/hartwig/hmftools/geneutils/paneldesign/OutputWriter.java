@@ -26,7 +26,6 @@ public class OutputWriter implements AutoCloseable
     private final DelimFileWriter<RejectedRegion> mRejectedRegionsTsvWriter;
     private final BufferedWriter mRejectedRegionsBedWriter;
     private final DelimFileWriter<EvaluatedProbe> mCandidateProbesWriter;
-
     private final List<EvaluatedProbe> mCandidateProbesBuffer;
 
     private static final String TSV_EXT = ".tsv";
@@ -73,9 +72,17 @@ public class OutputWriter implements AutoCloseable
         mRejectedRegionsTsvWriter =
                 new DelimFileWriter<>(rejectedRegionsFile + TSV_EXT, REJECTED_REGIONS_COLUMNS, OutputWriter::writeRejectedRegionsTsvRow);
         mRejectedRegionsBedWriter = createBufferedWriter(rejectedRegionsFile + BED_EXT);
-        mCandidateProbesWriter =
-                new DelimFileWriter<>(candidateProbesFile, CANDIDATE_PROBES_COLUMNS, OutputWriter::writeCandidateProbesRow);
-        mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
+        if(candidateProbesFile == null)
+        {
+            mCandidateProbesWriter = null;
+            mCandidateProbesBuffer = null;
+        }
+        else
+        {
+            mCandidateProbesWriter =
+                    new DelimFileWriter<>(candidateProbesFile, CANDIDATE_PROBES_COLUMNS, OutputWriter::writeCandidateProbesRow);
+            mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
+        }
     }
 
     public void writePanelProbes(final List<EvaluatedProbe> probes) throws IOException
@@ -147,10 +154,12 @@ public class OutputWriter implements AutoCloseable
 
     public void writeCandidateProbe(final EvaluatedProbe probe)
     {
-        // Buffer probes to improve performance.
-        // TODO: this is really slow
-        mCandidateProbesBuffer.add(probe);
-        checkFlushCandidateProbes(false);
+        if(mCandidateProbesWriter != null)
+        {
+            // Buffer probes to improve performance.
+            mCandidateProbesBuffer.add(probe);
+            checkFlushCandidateProbes(false);
+        }
     }
 
     private void checkFlushCandidateProbes(boolean force)
@@ -198,10 +207,12 @@ public class OutputWriter implements AutoCloseable
     @Override
     public void close()
     {
-        checkFlushCandidateProbes(true);
-
         mPanelProbesTsvWriter.close();
         mRejectedRegionsTsvWriter.close();
-        mCandidateProbesWriter.close();
+        if(mCandidateProbesWriter != null)
+        {
+            checkFlushCandidateProbes(true);
+            mCandidateProbesWriter.close();
+        }
     }
 }

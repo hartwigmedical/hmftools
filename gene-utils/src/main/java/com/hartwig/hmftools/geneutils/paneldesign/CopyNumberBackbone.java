@@ -154,7 +154,8 @@ public class CopyNumberBackbone
     {
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
-        Optional<EvaluatedProbe> bestCandidate = probeGenerator.selectBestProbe(generateCandidateProbes(partition), PROBE_SELECT_CRITERIA);
+        Optional<EvaluatedProbe> bestCandidate =
+                probeGenerator.selectBestProbe(generateCandidateProbes(partition, probeGenerator), PROBE_SELECT_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, partition.Region.toString());
@@ -184,17 +185,17 @@ public class CopyNumberBackbone
         return result;
     }
 
-    private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition)
+    private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final ProbeGenerator probeGenerator)
     {
         return partition.Sites.stream()
-                .flatMap(CopyNumberBackbone::generateCandidateProbes)
+                .flatMap(site -> generateCandidateProbes(site, probeGenerator))
                 // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
                 .filter(probe -> partition.Region.containsRegion(probe.probeRegion()));
     }
 
-    private static Stream<CandidateProbe> generateCandidateProbes(final AmberSite site)
+    private static Stream<CandidateProbe> generateCandidateProbes(final AmberSite site, final ProbeGenerator probeGenerator)
     {
-        return ProbeGenerator.coverPositionCandidates(site.position(), createTargetMetadata(site));
+        return probeGenerator.coverPositionCandidates(site.position(), createTargetMetadata(site));
     }
 
     private static TargetMetadata createTargetMetadata(final AmberSite site)

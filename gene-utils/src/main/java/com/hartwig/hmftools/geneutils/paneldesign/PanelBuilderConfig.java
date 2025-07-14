@@ -28,6 +28,7 @@ public class PanelBuilderConfig
 
     public final String OutputPrefix;
     public final String OutputDir;
+    public final boolean VerboseOutput;
 
     private static final String CFG_AMBER_SITES_FILE = "amber_sites";
     private static final String DESC_AMBER_SITES_FILE = "Amber het sites file";
@@ -37,6 +38,8 @@ public class PanelBuilderConfig
     private static final String DESC_CUSTOM_REGIONS_FILE = "Custom region file";
     private static final String CFG_OUTPUT_PREFIX = "output_prefix";
     private static final String DESC_OUTPUT_PREFIX = "Prefix of output file names";
+    private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
+    private static final String DESC_VERBOSE_OUTPUT = "Output more information useful for debugging";
 
     public PanelBuilderConfig(final ConfigBuilder configBuilder)
     {
@@ -52,6 +55,7 @@ public class PanelBuilderConfig
 
         OutputPrefix = configBuilder.getValue(CFG_OUTPUT_PREFIX);
         OutputDir = parseOutputDir(configBuilder);
+        VerboseOutput = configBuilder.hasFlag(CFG_VERBOSE_OUTPUT);
     }
 
     public String outputFilePath(final String fileName)
@@ -73,6 +77,7 @@ public class PanelBuilderConfig
 
         configBuilder.addConfigItem(CFG_OUTPUT_PREFIX, true, DESC_OUTPUT_PREFIX);
         addOutputDir(configBuilder);
+        configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
         ConfigUtils.addLoggingOptions(configBuilder);
     }
