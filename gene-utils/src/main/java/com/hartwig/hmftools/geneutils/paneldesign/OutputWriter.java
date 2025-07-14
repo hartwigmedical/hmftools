@@ -205,10 +205,13 @@ public class OutputWriter implements AutoCloseable
     }
 
     @Override
-    public void close()
+    public void close() throws IOException
     {
         mPanelProbesTsvWriter.close();
+        mPanelProbesBedWriter.close();
+        mTargetRegionsWriter.close();
         mRejectedRegionsTsvWriter.close();
+        mRejectedRegionsBedWriter.close();
         if(mCandidateProbesWriter != null)
         {
             checkFlushCandidateProbes(true);
