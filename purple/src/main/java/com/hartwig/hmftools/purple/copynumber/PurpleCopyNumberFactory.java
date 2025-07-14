@@ -142,6 +142,7 @@ public class PurpleCopyNumberFactory
     private static PurpleCopyNumber toCopyNumber(final CombinedRegion region, int copyNumberStartPos, final SegmentSupport trailingSupport)
     {
         return ImmutablePurpleCopyNumber.builder()
+                .gcContent(region.region().gcContent())
                 .chromosome(region.chromosome())
                 .start(copyNumberStartPos)
                 .end(region.end())

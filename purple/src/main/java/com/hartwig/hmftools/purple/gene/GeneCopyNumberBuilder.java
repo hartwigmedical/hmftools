@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.gene;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.purple.copynumber.CombinedRegion.weightedAverage;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,7 @@ public class GeneCopyNumberBuilder
     private SegmentSupport mMinRegionEndSupport;
     private CopyNumberMethod mMinRegionMethod;
     private int mDepthWindowCount;
+    private double mMinRegionGcContent;
 
     public static List<GeneCopyNumber> createGeneCopyNumbers(
             final RefGenomeVersion refGenomeVersion, final EnsemblDataCache geneTransCache, final List<PurpleCopyNumber> copyNumbers)
@@ -99,6 +102,7 @@ public class GeneCopyNumberBuilder
         mMinRegionEndSupport = SegmentSupport.NONE;
         mMinRegionMethod = CopyNumberMethod.UNKNOWN;
         mDepthWindowCount = 0;
+        mMinRegionGcContent = 0;
 
         mBuilder = ImmutableGeneCopyNumber.builder()
                 .geneName(geneData.GeneName)
@@ -148,6 +152,7 @@ public class GeneCopyNumberBuilder
                 .minRegions(mMinRegions)
                 .minMinorAlleleCopyNumber(mMinMinorAllelePloidy)
                 .depthWindowCount(mDepthWindowCount)
+                .gcContent(mMinRegionGcContent)
                 .build();
     }
 
@@ -206,7 +211,7 @@ public class GeneCopyNumberBuilder
                     mMinRegionEndSupport = copyNumber.segmentEndSupport();
                     mMinRegionMethod = copyNumber.method();
                     mDepthWindowCount = copyNumber.depthWindowCount();
-
+                    mMinRegionGcContent = copyNumber.gcContent();
                 }
                 else if(Doubles.equal(currentCopyNumber, mMinCopyNumber))
                 {
@@ -219,6 +224,7 @@ public class GeneCopyNumberBuilder
                         mMinRegions++;
                     }
 
+                    mMinRegionGcContent = weightedAverage(mDepthWindowCount, mMinRegionGcContent, copyNumber.depthWindowCount(), copyNumber.gcContent());
                     mDepthWindowCount += copyNumber.depthWindowCount();
                 }
             }

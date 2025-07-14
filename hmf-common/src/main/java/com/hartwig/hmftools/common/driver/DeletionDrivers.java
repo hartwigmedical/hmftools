@@ -21,7 +21,6 @@ public class DeletionDrivers
 {
     public static final double MAX_COPY_NUMBER_DEL = 0.5;
     public static final int SHORT_DEL_LENGTH = 10_000_000;
-    public static final int TARGET_REGIONS_MIN_DEPTH_COUNT = 1;
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
@@ -73,7 +72,7 @@ public class DeletionDrivers
                         continue;
                     }
 
-                    if(geneCopyNumber.depthWindowCount() < TARGET_REGIONS_MIN_DEPTH_COUNT)
+                    if ((geneCopyNumber.gcContent() < 0.35 || geneCopyNumber.gcContent() > 0.6) && geneCopyNumber.depthWindowCount() == 1)
                     {
                         continue;
                     }
