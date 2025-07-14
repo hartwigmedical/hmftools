@@ -115,6 +115,23 @@ public class ProbeGenerator
         return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd, probeFactory);
     }
 
+    // Generates the 1 best probe which covers a position.
+    public ProbeGenerationResult coverPosition(final BasePosition position, final TargetMetadata metadata,
+            final ProbeSelectCriteria criteria)
+    {
+        TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
+        return selectBestProbe(coverPositionCandidates(position, metadata), criteria)
+                .map(probe -> new ProbeGenerationResult(List.of(target), List.of(probe), Collections.emptyList()))
+                .orElseGet(() ->
+                {
+                    String rejectionReason = "No probe covering position meeting criteria " + criteria.eval();
+                    return new ProbeGenerationResult(
+                            List.of(target),
+                            Collections.emptyList(),
+                            List.of(RejectedRegion.fromTargetRegion(target, rejectionReason)));
+                });
+    }
+
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
     public Stream<CandidateProbe> coverPositionCandidates(final BasePosition position, final TargetMetadata metadata)
     {
@@ -137,6 +154,12 @@ public class ProbeGenerator
     private Stream<CandidateProbe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
             int maxProbeEnd, final ProbeFactory factory)
     {
+        if(maxProbeEnd - minProbeStart < PROBE_LENGTH)
+        {
+            // Probably indicates a bug in the calling code.
+            throw new IllegalArgumentException("minProbeStart and maxProbeEnd forbid all possible probes");
+        }
+
         minProbeStart = max(minProbeStart, 1);
         maxProbeEnd = min(maxProbeEnd, mChromosomeLengths.get(initialPosition.Chromosome));
 
@@ -160,20 +183,26 @@ public class ProbeGenerator
     //   - Can't start before start of chromosome
     //   - Can't start before `minProbeStart`
     //   - Can't end after end of chromosome
-    private Stream<CandidateProbe> leftMovingLeftAlignedProbes(final BasePosition position, int minProbeStart,
+    private Stream<CandidateProbe> leftMovingLeftAlignedProbes(final BasePosition initialPosition, int minProbeStart,
             final ProbeFactory factory)
     {
+        if(initialPosition.Position < minProbeStart)
+        {
+            // Probably indicates a bug in the calling code.
+            throw new IllegalArgumentException("minProbeStart forbids all possible probes");
+        }
+
         minProbeStart = max(minProbeStart, 1);
-        int maxProbeEnd = min(position.Position + PROBE_LENGTH - 1, mChromosomeLengths.get(position.Chromosome));
+        int maxProbeEnd = min(initialPosition.Position + PROBE_LENGTH - 1, mChromosomeLengths.get(initialPosition.Chromosome));
 
-        // minProbeStart = position + offset
-        int minOffset = minProbeStart - position.Position;
+        // minProbeStart = initialPosition + offset
+        int minOffset = minProbeStart - initialPosition.Position;
 
-        // maxProbeEnd = position + offset + PROBE_LENGTH - 1
-        int maxOffset = maxProbeEnd - position.Position - PROBE_LENGTH + 1;
+        // maxProbeEnd = initialPosition + offset + PROBE_LENGTH - 1
+        int maxOffset = maxProbeEnd - initialPosition.Position - PROBE_LENGTH + 1;
 
         return IntStream.iterate(maxOffset, offset -> offset >= minOffset, offset -> offset - 1)
-                .mapToObj(offset -> probeStartingAt(position.Chromosome, position.Position + offset, factory));
+                .mapToObj(offset -> probeStartingAt(initialPosition.Chromosome, initialPosition.Position + offset, factory));
     }
 
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there are no acceptable probes.

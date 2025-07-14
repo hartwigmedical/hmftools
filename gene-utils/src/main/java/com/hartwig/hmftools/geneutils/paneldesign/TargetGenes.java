@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MIN_INTRON_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_ACCEPT;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_REJECT;
 
@@ -28,6 +27,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
@@ -39,7 +39,7 @@ import org.jetbrains.annotations.NotNull;
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
 //   - Coding: Cover the full coding region of each exon.
-//   - UTR: 1 probe centered on each noncoding exon.
+//   - UTR: Select 1 probe within each noncoding exon.
 //   - Upstream/downstream: Select the best acceptable probe from a ~2kb region ~1kb upstream/downstream.
 //   - Intronic: Only when there are not too many exons:
 //     - Small introns: Select the best acceptable probe from a ~1kb region centered on the centre of the intron.
@@ -238,11 +238,10 @@ public class TargetGenes
             }
             else
             {
-                int exonMid = (exonData.Start + exonData.End + 1) / 2;
                 regions.add(new GeneRegion(
                         gene,
                         GeneRegionType.UTR,
-                        new BaseRegion(exonMid - PROBE_LENGTH / 2, exonMid + PROBE_LENGTH / 2 - 1)));
+                        new BaseRegion(exonData.Start, exonData.End)));
             }
 
             lastExonEnd = exonData.End;
@@ -264,13 +263,27 @@ public class TargetGenes
     {
         LOGGER.trace("Generating probes for {}", geneRegion);
 
-        TargetRegion target = new TargetRegion(geneRegion.baseRegion(), createTargetMetadata(geneRegion));
+        TargetMetadata metadata = createTargetMetadata(geneRegion);
 
         return switch(geneRegion.type())
         {
-            case CODING, UTR -> probeGenerator.coverRegion(target, EXON_PROBE_SELECT_CRITERIA);
+            case CODING ->
+            {
+                TargetRegion target = new TargetRegion(geneRegion.baseRegion(), metadata);
+                yield probeGenerator.coverRegion(target, EXON_PROBE_SELECT_CRITERIA);
+            }
+            case UTR ->
+            {
+                BasePosition position = new BasePosition(
+                        geneRegion.baseRegion().Chromosome,
+                        (geneRegion.baseRegion().start() + geneRegion.baseRegion().end()) / 2);
+                yield probeGenerator.coverPosition(position, metadata, EXON_PROBE_SELECT_CRITERIA);
+            }
             case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT ->
-                    probeGenerator.coverOneSubregion(target, CN_PROBE_SELECT_CRITERIA);
+            {
+                TargetRegion target = new TargetRegion(geneRegion.baseRegion(), metadata);
+                yield probeGenerator.coverOneSubregion(target, CN_PROBE_SELECT_CRITERIA);
+            }
         };
     }
 

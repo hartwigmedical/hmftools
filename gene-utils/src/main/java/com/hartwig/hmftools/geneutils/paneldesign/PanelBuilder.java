@@ -72,6 +72,8 @@ public class PanelBuilder
 
         // TODO: remove duplicate/overlapping probes?
 
+        // TODO: write probes FASTA
+
         mOutputWriter.close();
         mOutputWriter = null;
 
