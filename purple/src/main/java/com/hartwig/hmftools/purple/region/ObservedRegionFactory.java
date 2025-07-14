@@ -407,8 +407,11 @@ public class ObservedRegionFactory
 
                 mReferenceAccumulator.add(ratio.referenceGCDiploidRatio());
                 mUnnormalisedReferenceAccumulator.add(ratio.referenceGCRatio());
-                mTumorGcRatioAccumulator.add(ratio.tumorGCRatio(), true);
-                mTumorGcContentAccumulator.add(ratio.tumorGcContent(), true);
+                boolean includeRegionValue = mTumorGcRatioAccumulator.add(ratio.tumorGCRatio(), true);
+                if (includeRegionValue)
+                {
+                    mTumorGcContentAccumulator.add(ratio.tumorGcContent(), true);
+                }
             }
         }
     }
@@ -447,10 +450,10 @@ public class ObservedRegionFactory
             add(ratio, false);
         }
 
-        public void add(double ratio, boolean keepValues)
+        public boolean add(double ratio, boolean keepValues)
         {
             if(!Doubles.greaterThan(ratio, -1))
-                return;
+                return false;
 
             mCount++;
             mSumRatio += ratio;
@@ -469,6 +472,7 @@ public class ObservedRegionFactory
 
                 mRatios.add(index, ratio);
             }
+            return true;
         }
     }
 }
