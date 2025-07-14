@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.canCoverRegionWithOneProbe;
@@ -18,6 +19,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.Utils.getBestScoringEle
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -28,14 +30,14 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 public class ProbeGenerator
 {
-    public final ProbeEvaluator mProbeEvaluator;
+    private final ProbeEvaluator mProbeEvaluator;
+    private final Map<String, Integer> mChromosomeLengths;
 
-    public ProbeGenerator(final ProbeEvaluator probeEvaluator)
+    public ProbeGenerator(final ProbeEvaluator probeEvaluator, final Map<String, Integer> chromosomeLengths)
     {
         mProbeEvaluator = probeEvaluator;
+        mChromosomeLengths = chromosomeLengths;
     }
-
-    // TODO: check chromosome lengths and reject probes outside chromosome
 
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     public ProbeGenerationResult coverRegion(final TargetRegion target, final ProbeSelectCriteria criteria)
@@ -110,7 +112,7 @@ public class ProbeGenerator
                 });
     }
 
-    private static Stream<CandidateProbe> coverSmallRegionCandidates(final TargetRegion target)
+    private Stream<CandidateProbe> coverSmallRegionCandidates(final TargetRegion target)
     {
         ChrBaseRegion targetBaseRegion = target.region();
 
@@ -144,7 +146,7 @@ public class ProbeGenerator
                 });
     }
 
-    private static Stream<CandidateProbe> coverOneSubregionCandidates(final TargetRegion target)
+    private Stream<CandidateProbe> coverOneSubregionCandidates(final TargetRegion target)
     {
         ChrBaseRegion targetBaseRegion = target.region();
 
@@ -164,7 +166,7 @@ public class ProbeGenerator
     }
 
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
-    public static Stream<CandidateProbe> coverPositionCandidates(final BasePosition position, final TargetMetadata metadata)
+    public Stream<CandidateProbe> coverPositionCandidates(final BasePosition position, final TargetMetadata metadata)
     {
         int minProbeStart = minProbeStartContaining(position.Position);
         int maxProbeEnd = maxProbeEndContaining(position.Position);
@@ -180,12 +182,13 @@ public class ProbeGenerator
     //   - Can't start before start of chromosome
     //   - Can't start before `minProbeStart`
     //   - Can't end after `maxProbeEnd`
-    // TODO: don't extend past end of chromosome
+    //   - Can't end after end of chromosome
     // Useful because we prefer to select probes which are closest to the target position or centre of a region.
-    private static Stream<CandidateProbe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
+    private Stream<CandidateProbe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
             int maxProbeEnd, final ProbeFactory factory)
     {
-        minProbeStart = max(1, minProbeStart);
+        minProbeStart = max(minProbeStart, 1);
+        maxProbeEnd = min(maxProbeEnd, mChromosomeLengths.get(initialPosition.Chromosome));
 
         // minProbeStart = initialPosition + offset - PROBE_LENGTH/2
         // minProbeStart - initialPosition + PROBE_LENGTH/2 = offset
@@ -206,14 +209,19 @@ public class ProbeGenerator
     // Probe bounds:
     //   - Can't start before start of chromosome
     //   - Can't start before `minProbeStart`
-    // TODO: don't extend past end of chromosome
-    private static Stream<CandidateProbe> leftMovingLeftAlignedProbes(final BasePosition position, int minProbeStart,
+    //   - Can't end after end of chromosome
+    private Stream<CandidateProbe> leftMovingLeftAlignedProbes(final BasePosition position, int minProbeStart,
             final ProbeFactory factory)
     {
-        minProbeStart = max(1, minProbeStart);
-        // minProbeStart <= position + offset
+        minProbeStart = max(minProbeStart, 1);
+        int maxProbeEnd = min(position.Position + PROBE_LENGTH - 1, mChromosomeLengths.get(position.Chromosome));
+
+        // minProbeStart = position + offset
         int minOffset = minProbeStart - position.Position;
-        int maxOffset = 0;
+
+        // maxProbeEnd = position + offset + PROBE_LENGTH - 1
+        int maxOffset = maxProbeEnd - position.Position - PROBE_LENGTH + 1;
+
         return IntStream.iterate(maxOffset, offset -> offset >= minOffset, offset -> offset - 1)
                 .mapToObj(offset -> probeStartingAt(position.Chromosome, position.Position + offset, factory));
     }

@@ -40,7 +40,7 @@ public class PanelBuilder
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
         ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
         ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
-        mProbeGenerator = new ProbeGenerator(probeEvaluator);
+        mProbeGenerator = new ProbeGenerator(probeEvaluator, mRefGenome.chromosomeLengths());
     }
 
     public void run() throws IOException
@@ -73,8 +73,6 @@ public class PanelBuilder
         // TODO: profile code (it's kinda slow)
 
         // TODO: remove duplicate/overlapping probes?
-
-        // TODO: check probes are within chromosome bounds?
 
         mOutputWriter.close();
         mOutputWriter = null;
