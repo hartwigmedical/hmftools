@@ -28,22 +28,27 @@ public class Utils
 
         Iterator<BaseRegion> iterator = coveredRegions.iterator();
         BaseRegion prevCoveredRegion = null;
-        while (iterator.hasNext()) {
+        while(iterator.hasNext())
+        {
             BaseRegion coveredRegion = iterator.next();
-            if (prevCoveredRegion == null) {
+            if(prevCoveredRegion == null)
+            {
                 // First covered region, check against target region start.
-                if (coveredRegion.start() > targetRegion.start()) {
+                if(coveredRegion.start() > targetRegion.start())
+                {
                     uncoveredRegions.add(new BaseRegion(targetRegion.start(), coveredRegion.start() - 1));
                 }
             }
-            else {
+            else
+            {
                 // Possibilities:
                 //   - Current region starts at same position as previous:
                 //     - And ends >= previous end: nothing to do.
                 //   - Current region starts after previous start:
                 //     - And ends <= previous end + 1: nothing to do.
                 //     - And ends > previous end + 1: uncovered region in between.
-                if (coveredRegion.start() > prevCoveredRegion.end() + 1) {
+                if(coveredRegion.start() > prevCoveredRegion.end() + 1)
+                {
                     uncoveredRegions.add(new BaseRegion(prevCoveredRegion.end() + 1, coveredRegion.start() - 1));
                 }
             }

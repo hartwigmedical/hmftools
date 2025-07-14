@@ -5,11 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.canCoverRegionWithOneProbe;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndCovering;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartCovering;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.nextProbeStartPosition;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeCenteredAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeStartingAt;
@@ -41,19 +38,6 @@ public class ProbeGenerator
 
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     public ProbeGenerationResult coverRegion(final TargetRegion target, final ProbeSelectCriteria criteria)
-    {
-        if(canCoverRegionWithOneProbe(target.region().baseRegion()))
-        {
-            return coverSmallRegion(target, criteria);
-        }
-        else
-        {
-            return coverLargeRegion(target, criteria);
-        }
-    }
-
-    // Generates the best acceptable probes to cover an entire region larger than the probe size.
-    private ProbeGenerationResult coverLargeRegion(final TargetRegion target, final ProbeSelectCriteria criteria)
     {
         // Methodology:
         //   - For each position in the target, try to find the 1 best acceptable probe that covers it.
@@ -95,40 +79,6 @@ public class ProbeGenerator
                 .toList();
 
         return new ProbeGenerationResult(List.of(target), probes, rejectedRegions);
-    }
-
-    // Generates the 1 best acceptable probe that covers the specified smaller region.
-    private ProbeGenerationResult coverSmallRegion(final TargetRegion target, final ProbeSelectCriteria criteria)
-    {
-        return selectBestProbe(coverSmallRegionCandidates(target), criteria)
-                .map(probe -> new ProbeGenerationResult(List.of(target), List.of(probe), Collections.emptyList()))
-                .orElseGet(() ->
-                {
-                    String rejectionReason = "No probe covering region meeting criteria " + criteria.eval();
-                    return new ProbeGenerationResult(
-                            List.of(target),
-                            Collections.emptyList(),
-                            List.of(RejectedRegion.fromTargetRegion(target, rejectionReason)));
-                });
-    }
-
-    private Stream<CandidateProbe> coverSmallRegionCandidates(final TargetRegion target)
-    {
-        ChrBaseRegion targetBaseRegion = target.region();
-
-        if(!canCoverRegionWithOneProbe(targetBaseRegion.baseRegion()))
-        {
-            // This method is designed to find 1 probe covering the whole region, which is impossible in this case.
-            throw new IllegalArgumentException("target must be no larger than probe");
-        }
-
-        int regionCentre = (targetBaseRegion.start() + targetBaseRegion.end()) / 2;
-        BasePosition initialPosition = new BasePosition(targetBaseRegion.chromosome(), regionCentre);
-        // Stop once the probes are too far from the target position to cover it.
-        int minProbeStart = minProbeStartCovering(targetBaseRegion.baseRegion());
-        int maxProbeEnd = maxProbeEndCovering(targetBaseRegion.baseRegion());
-        ProbeFactory probeFactory = new ProbeFactory(target);
-        return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd, probeFactory);
     }
 
     // Generates the 1 best acceptable probe that is contained within the specified region.

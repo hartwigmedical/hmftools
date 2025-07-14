@@ -18,7 +18,8 @@ public record ProbeEvalCriteria(
 {
     private static final DecimalFormat DECIMAL_FORMAT;
 
-    static {
+    static
+    {
         DECIMAL_FORMAT = new DecimalFormat();
         DECIMAL_FORMAT.setMinimumFractionDigits(0);
     }

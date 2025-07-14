@@ -70,8 +70,6 @@ public class PanelBuilder
             mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
         }
 
-        // TODO: profile code (it's kinda slow)
-
         // TODO: remove duplicate/overlapping probes?
 
         mOutputWriter.close();

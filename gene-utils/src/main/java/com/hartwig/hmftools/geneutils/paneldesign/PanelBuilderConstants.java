@@ -13,10 +13,7 @@ public class PanelBuilderConstants
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;
-    // When covering a region with probes, how many bases in the region are allowed to not be covered?
-    // TODO: i think we should get rid of this because it doesn't make sense for large regions. or make it specific to some probe gen algorithms
-    // TODO: allow this to be negative?
-    public static final int UNCOVERED_BASES_MAX = 10;
+    // When covering a large region with probes, how many bases in the region are allowed to not be covered?
     public static final int PROBE_OVERLAP_MAX = 10;
 
     // Target genes constants.

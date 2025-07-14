@@ -1,13 +1,8 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_OVERLAP_MAX;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.UNCOVERED_BASES_MAX;
 
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class ProbeUtils
@@ -20,25 +15,6 @@ public class ProbeUtils
     public static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final ProbeFactory factory)
     {
         return factory.create(new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH - 1));
-    }
-
-    public static boolean canCoverRegionWithOneProbe(final BaseRegion target)
-    {
-        return target.baseLength() - UNCOVERED_BASES_MAX <= PROBE_LENGTH;
-    }
-
-    public static int minProbeStartCovering(final BaseRegion target)
-    {
-        // Need to take care of the case where target is smaller than a probe: don't allow the probe to end before the target start.
-        int minProbeEnd = max(target.start(), target.end() - UNCOVERED_BASES_MAX);
-        return minProbeEnd - PROBE_LENGTH + 1;
-    }
-
-    public static int maxProbeEndCovering(final BaseRegion target)
-    {
-        // Need to take care of the case where target is smaller than a probe: don't allow the probe to start after the target end.
-        int maxProbeStart = min(target.end(), target.start() + UNCOVERED_BASES_MAX);
-        return maxProbeStart + PROBE_LENGTH - 1;
     }
 
     // Calculates the minimum probe starting position such that the specified position is contained within the probe.
