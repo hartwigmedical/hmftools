@@ -43,8 +43,8 @@ public final class SequenceCount
     private final NavigableMap<Integer, Multiset<String>> mSeqCountsByLoci;
     private final Map<String, NavigableMap<Integer, Multiset<String>>> mSeqCountsByLociByGene;
 
-    private SequenceCount(final int minEvidenceSupport, final double minEvidenceFactor,
-            final NavigableMap<Integer, Multiset<String>> seqCounts,
+    private SequenceCount(
+            final int minEvidenceSupport, final double minEvidenceFactor, final NavigableMap<Integer, Multiset<String>> seqCounts,
             final Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene)
     {
         mMinEvidenceSupport = minEvidenceSupport;
@@ -53,29 +53,12 @@ public final class SequenceCount
         mSeqCountsByLociByGene = seqCountsByLociByGene;
     }
 
-    @VisibleForTesting
-    public SequenceCount(final Map<String, Integer>[] seqCounts)
-    {
-        mSeqCountsByLoci = Maps.newTreeMap();
-        for(int locus = 0; locus < seqCounts.length; locus++)
-        {
-            Multiset<String> seqCount = HashMultiset.create();
-            for(Map.Entry<String, Integer> entry : seqCounts[locus].entrySet())
-                seqCount.add(entry.getKey(), entry.getValue());
-
-            mSeqCountsByLoci.put(locus, seqCount);
-        }
-
-        mMinEvidenceSupport = 1;
-        mMinEvidenceFactor = 0.0;
-        mSeqCountsByLociByGene = null;
-    }
-
-    public static SequenceCount nucleotides(final int minEvidenceSupport, final double minEvidenceFactor,
-            final Iterable<Fragment> fragments)
+    public static SequenceCount nucleotides(
+            final int minEvidenceSupport, final double minEvidenceFactor, final Iterable<Fragment> fragments)
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
         Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
+
         for(Fragment fragment : fragments)
         {
             String gene = fragment.readGene();
@@ -99,6 +82,7 @@ public final class SequenceCount
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
         Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
+
         for(Fragment fragment : fragments)
         {
             String gene = fragment.readGene();
@@ -171,6 +155,7 @@ public final class SequenceCount
         int support = seqCounts.size();
         double factor = minEvidenceFactor == null ? mMinEvidenceFactor : minEvidenceFactor;
         int evidenceMinCount = max(mMinEvidenceSupport, (int) ceil(support * factor));
+
         return seqCounts.entrySet().stream()
                 .filter(x -> x.getCount() >= evidenceMinCount)
                 .map(Multiset.Entry::getElement)
@@ -201,8 +186,8 @@ public final class SequenceCount
 
     public int depth(final int locus) { return mSeqCountsByLoci.get(locus).size(); }
 
-    public static Map<String, Map<Integer, Set<String>>> extractHeterozygousLociSequences(final Map<String, SequenceCount> geneCountsMap,
-            final Collection<HlaSequenceLoci> extraSeqLoci)
+    public static Map<String, Map<Integer, Set<String>>> extractHeterozygousLociSequences(
+            final Map<String, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
     {
         Map<String, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
         for(Map.Entry<String, SequenceCount> geneEntry : geneCountsMap.entrySet())
@@ -263,6 +248,7 @@ public final class SequenceCount
     private Map<Integer, Set<String>> extractHeterozygousLociSequences(final Iterable<HlaSequenceLoci> extraSequences)
     {
         NavigableMap<Integer, Set<String>> lociSeqMap = Maps.newTreeMap();
+
         for(Map.Entry<Integer, Multiset<String>> entry : mSeqCountsByLoci.entrySet())
         {
             int locus = entry.getKey();
@@ -330,5 +316,26 @@ public final class SequenceCount
         {
             LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
         }
+    }
+
+    @VisibleForTesting
+    public SequenceCount(final Map<String, Integer>[] seqCounts)
+    {
+        mSeqCountsByLoci = Maps.newTreeMap();
+
+        for(int locus = 0; locus < seqCounts.length; locus++)
+        {
+            Multiset<String> seqCount = HashMultiset.create();
+            for(Map.Entry<String, Integer> entry : seqCounts[locus].entrySet())
+            {
+                seqCount.add(entry.getKey(), entry.getValue());
+            }
+
+            mSeqCountsByLoci.put(locus, seqCount);
+        }
+
+        mMinEvidenceSupport = 1;
+        mMinEvidenceFactor = 0.0;
+        mSeqCountsByLociByGene = null;
     }
 }

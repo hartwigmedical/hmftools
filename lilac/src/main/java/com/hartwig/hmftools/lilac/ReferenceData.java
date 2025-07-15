@@ -180,56 +180,43 @@ public class ReferenceData
 
     public boolean load()
     {
-        if(!mResourceDir.isEmpty())
+        if(mResourceDir.isEmpty()) // a condition for unit testing, otherwise is checked by config loading validation
+            return true;
+
+        String nucleotideFilename = mResourceDir + NUC_REF_FILE;
+
+        LL_LOGGER.info("reading nucleotide file: {}", nucleotideFilename);
+
+        if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, false))
+            return false;
+
+        String aminoAcidFilename = mResourceDir + AA_REF_FILE;
+
+        LL_LOGGER.info("reading protein file: {}", aminoAcidFilename);
+
+        if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
+            return false;
+
+        populateAminoAcidSequenceLookup();
+
+        Set<HlaAllele> allelesWithFreqs = Sets.newHashSet(mAlleleFrequencies.getAlleleFrequencies().keySet());
+        for(HlaAllele allele : allelesWithFreqs)
         {
-            String nucleotideFilename = mResourceDir + NUC_REF_FILE;
+            if(!allele.equals(allele.asFourDigit()))
+                throw new RuntimeException(format("allele(%s) is not four-digit", allele));
 
-            LL_LOGGER.info("reading nucleotide file: {}", nucleotideFilename);
+            if(AminoAcidSequenceLookup.containsKey(allele))
+                continue;
 
-            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, false))
-                return false;
-
-            String aminoAcidFilename = mResourceDir + AA_REF_FILE;
-
-            LL_LOGGER.info("reading protein file: {}", aminoAcidFilename);
-
-            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
-                return false;
-
-            populateAminoAcidSequenceLookup();
-
-            Set<HlaAllele> allelesWithFreqs = Sets.newHashSet(mAlleleFrequencies.getAlleleFrequencies().keySet());
-            for(HlaAllele allele : allelesWithFreqs)
-            {
-                if(!allele.equals(allele.asFourDigit()))
-                    throw new RuntimeException(format("allele(%s) is not four-digit", allele));
-
-                if(AminoAcidSequenceLookup.containsKey(allele))
-                    continue;
-
-                LL_LOGGER.warn("allele({}) with cohort frequency has no loaded sequences, dropping from allele frequencies", allele.toString());
-                mAlleleFrequencies.getAlleleFrequencies().remove(allele);
-            }
-
-            mAlleleFrequencies.getAlleleFrequencies().entrySet().stream()
-                    .filter(x -> x.getValue() >= COMMON_ALLELES_FREQ_CUTOFF)
-                    .map(x -> mAlleleCache.requestFourDigit(x.getKey().toString()))
-                    .forEach(x -> CommonAlleles.add(x));
+            LL_LOGGER.warn("allele({}) with cohort frequency has no loaded sequences, dropping from allele frequencies", allele.toString());
+            mAlleleFrequencies.getAlleleFrequencies().remove(allele);
         }
 
         // load and register configured and known alleles
         mAlleleCache.rebuildProteinAlleles(mConfig.ActualAlleles);
         mAlleleCache.rebuildProteinAlleles(mConfig.RestrictedAlleles);
 
-        // apply PON
-        // "A*01:81", "A*01:237", "A*11:126", "A*11:353", "A*25:68", "A*30:95", "A*30:136", "A*31:135", "A*33:191");
-
         loadCommonAlleles();
-
-        if(!CommonAlleles.isEmpty())
-        {
-            LL_LOGGER.info("loaded {} common alleles", CommonAlleles.size());
-        }
 
         loadStopLossRecoveryAllele();
 
@@ -293,6 +280,11 @@ public class ReferenceData
                 .filter(x -> x.getValue() >= COMMON_ALLELES_FREQ_CUTOFF)
                 .map(x -> mAlleleCache.requestFourDigit(x.getKey().toString()))
                 .forEach(x -> CommonAlleles.add(x));
+
+        if(!CommonAlleles.isEmpty())
+        {
+            LL_LOGGER.info("loaded {} common alleles", CommonAlleles.size());
+        }
     }
 
     private void loadStopLossRecoveryAllele()
