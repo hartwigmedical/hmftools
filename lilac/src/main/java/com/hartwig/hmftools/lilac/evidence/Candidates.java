@@ -19,19 +19,12 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 public final class Candidates
 {
     private final LilacConfig mConfig;
-    private final int mMinEvidenceSupport;
-    private final double mMinEvidenceFactor;
-    private final int mMinDepthFilter;
     private final List<HlaSequenceLoci> mNucleotideSequences;
     private final List<HlaSequenceLoci> mAminoAcidSequences;
 
-    public Candidates(final LilacConfig config, int minEvidenceSupport, double minEvidenceFactor, int minDepthFilter,
-            final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
+    public Candidates(final LilacConfig config, final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
     {
         mConfig = config;
-        mMinEvidenceSupport = minEvidenceSupport;
-        mMinEvidenceFactor = minEvidenceFactor;
-        mMinDepthFilter = minDepthFilter;
         mNucleotideSequences = nucleotideSequences;
         mAminoAcidSequences = aminoAcidSequences;
     }
@@ -43,7 +36,7 @@ public final class Candidates
 
         LL_LOGGER.debug("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
 
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidenceSupport, mMinEvidenceFactor, fragments);
+        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, fragments);
 
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.Gene.equals(context.Gene)).collect(Collectors.toList());
@@ -70,7 +63,8 @@ public final class Candidates
         LL_LOGGER.info("gene({}) {} candidates after amino acid filtering", context.geneName(), aminoAcidCandidates.size());
 
         // Nucleotide filtering
-        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mMinEvidenceSupport, mMinEvidenceFactor, aminoAcidBoundary);
+        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(
+                mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, aminoAcidBoundary);
 
         List<HlaSequenceLoci> nucleotideCandidatesAfterAminoAcidFiltering = mNucleotideSequences.stream()
                 .filter(x -> aminoAcidSpecificAllelesCandidates.contains(x.Allele.asFourDigit()))
@@ -110,7 +104,7 @@ public final class Candidates
             if(expectedSequences.isEmpty())
                 continue;
 
-            Set<String> lowDepthSequences = rawAminoAcidCount.getLowRawDepthSequences(context.geneName(), locus, mMinDepthFilter);
+            Set<String> lowDepthSequences = rawAminoAcidCount.getLowRawDepthSequences(context.geneName(), locus, mConfig.MinDepthFilter);
             expectedSequences.addAll(lowDepthSequences);
 
             int index = 0;

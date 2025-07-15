@@ -24,10 +24,10 @@ public class AminoAcidFragmentPipeline
 {
     private final LilacConfig mConfig;
 
+    // cached for convenience only, consider making global constants
     private final int mMinEvidenceSupport;
     private final double mMinEvidenceFactor;
     private final double mMinHighQualEvidenceFactor;
-    private final int mMinDepthFilter;
 
     private final List<Fragment> mHighQualRefAminoAcidFragments; // generated from input ref fragments, filtered and amino acids built
 
@@ -46,12 +46,9 @@ public class AminoAcidFragmentPipeline
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
 
-        int fragmentCount = mHighQualRefAminoAcidFragments.size();
-
         mMinEvidenceSupport = config.MinEvidenceSupport;
         mMinEvidenceFactor = config.MinEvidenceFactor;
         mMinHighQualEvidenceFactor = config.MinHighQualEvidenceFactor;
-        mMinDepthFilter = config.MinDepthFilter;
 
         mRefNucleotideCounts = new ConcurrentHashMap<>();
         mRefAminoAcidCounts = new ConcurrentHashMap<>();
@@ -60,10 +57,6 @@ public class AminoAcidFragmentPipeline
     }
 
     public List<Fragment> highQualRefFragments() { return mHighQualRefAminoAcidFragments; }
-    public int minEvidenceSupport() { return mMinEvidenceSupport; }
-    public double minEvidenceFactor() { return mMinEvidenceFactor; }
-    public double minHighQualEvidenceFactor() { return mMinHighQualEvidenceFactor; }
-    public int minDepthFilter() { return mMinDepthFilter; }
 
     public Map<String, SequenceCount> getReferenceAminoAcidCounts() { return mRefAminoAcidCounts; }
 

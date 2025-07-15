@@ -19,16 +19,12 @@ import org.apache.commons.math3.util.Pair;
 
 public class PhasedEvidenceFactory
 {
-    private final int mMinEvidenceSupport;
-    private final double mMinEvidenceFactor;
-    private final boolean mDebugPhasing;
     private final LilacConfig mConfig;
+    private final boolean mDebugPhasing;
 
-    public PhasedEvidenceFactory(final LilacConfig config, int minEvidenceSupport, double minEvidenceFactor)
+    public PhasedEvidenceFactory(final LilacConfig config)
     {
         mConfig = config;
-        mMinEvidenceSupport = minEvidenceSupport;
-        mMinEvidenceFactor = minEvidenceFactor;
         mDebugPhasing = mConfig.DebugPhasing;
     }
 
@@ -54,7 +50,7 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<Fragment> fragments)
     {
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidenceSupport, mMinEvidenceFactor, fragments);
+        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, fragments);
 
         List<Integer> heterozygousIndices = Lists.newArrayList(aminoAcidCounts.heterozygousLoci());
 

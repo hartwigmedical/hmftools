@@ -212,15 +212,9 @@ public class LilacApplication
         List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
 
-        int minEvidenceSupport = mAminoAcidPipeline.minEvidenceSupport();
-        double minEvidenceFactor = mAminoAcidPipeline.minEvidenceFactor();
-        int minDepthFilter = mAminoAcidPipeline.minDepthFilter();
+        LL_LOGGER.info(format("totalFrags(%d)", totalFragmentCount));
 
-        LL_LOGGER.info(format("totalFrags(%d) minEvidenceFactor(%.6f) minHighQualEvidenceFactor(%.6f)",
-                totalFragmentCount, minEvidenceFactor, mAminoAcidPipeline.minHighQualEvidenceFactor()));
-
-        Candidates candidateFactory = new Candidates(
-                mConfig, minEvidenceSupport, minEvidenceFactor, minDepthFilter, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -297,8 +291,8 @@ public class LilacApplication
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
-        mRefAminoAcidCounts = SequenceCount.aminoAcids(minEvidenceSupport, minEvidenceFactor, refAminoAcidFrags);
-        mRefNucleotideCounts = SequenceCount.nucleotides(minEvidenceSupport, minEvidenceFactor, refAminoAcidFrags);
+        mRefAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, refAminoAcidFrags);
+        mRefNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, refAminoAcidFrags);
 
         Map<String, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
                 Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci()));
