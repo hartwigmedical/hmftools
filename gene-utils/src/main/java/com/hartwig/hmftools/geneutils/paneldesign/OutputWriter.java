@@ -22,6 +22,7 @@ public class OutputWriter implements AutoCloseable
 {
     private final DelimFileWriter<EvaluatedProbe> mPanelProbesTsvWriter;
     private final BufferedWriter mPanelProbesBedWriter;
+    private final BufferedWriter mPanelProbesFastaWriter;
     private final BufferedWriter mTargetRegionsWriter;
     private final DelimFileWriter<RejectedRegion> mRejectedRegionsTsvWriter;
     private final BufferedWriter mRejectedRegionsBedWriter;
@@ -30,6 +31,7 @@ public class OutputWriter implements AutoCloseable
 
     private static final String TSV_EXT = ".tsv";
     private static final String BED_EXT = ".bed";
+    private static final String FASTA_EXT = ".fasta";
 
     private static final String FLD_SEQUENCE = "Sequence";
     private static final String FLD_QUALITY_SCORE = "QualityScore";
@@ -62,17 +64,22 @@ public class OutputWriter implements AutoCloseable
 
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    public OutputWriter(final String panelProbesFile, final String targetRegionsFile, final String rejectedRegionsFile,
-            final String candidateProbesFile) throws IOException
+    public OutputWriter(final String panelProbesFileStem, final String targetRegionsFilePath, final String rejectedRegionsFileStem,
+            final String candidateProbesFilePath) throws IOException
     {
         mPanelProbesTsvWriter =
-                new DelimFileWriter<>(panelProbesFile + TSV_EXT, PANEL_PROBES_COLUMNS, OutputWriter::writePanelProbesTsvRow);
-        mPanelProbesBedWriter = createBufferedWriter(panelProbesFile + BED_EXT);
-        mTargetRegionsWriter = createBufferedWriter(targetRegionsFile);
+                new DelimFileWriter<>(panelProbesFileStem + TSV_EXT, PANEL_PROBES_COLUMNS, OutputWriter::writePanelProbesTsvRow);
+        mPanelProbesBedWriter = createBufferedWriter(panelProbesFileStem + BED_EXT);
+        mPanelProbesFastaWriter = createBufferedWriter(panelProbesFileStem + FASTA_EXT);
+
+        mTargetRegionsWriter = createBufferedWriter(targetRegionsFilePath);
+
         mRejectedRegionsTsvWriter =
-                new DelimFileWriter<>(rejectedRegionsFile + TSV_EXT, REJECTED_REGIONS_COLUMNS, OutputWriter::writeRejectedRegionsTsvRow);
-        mRejectedRegionsBedWriter = createBufferedWriter(rejectedRegionsFile + BED_EXT);
-        if(candidateProbesFile == null)
+                new DelimFileWriter<>(
+                        rejectedRegionsFileStem + TSV_EXT, REJECTED_REGIONS_COLUMNS, OutputWriter::writeRejectedRegionsTsvRow);
+        mRejectedRegionsBedWriter = createBufferedWriter(rejectedRegionsFileStem + BED_EXT);
+
+        if(candidateProbesFilePath == null)
         {
             mCandidateProbesWriter = null;
             mCandidateProbesBuffer = null;
@@ -80,7 +87,7 @@ public class OutputWriter implements AutoCloseable
         else
         {
             mCandidateProbesWriter =
-                    new DelimFileWriter<>(candidateProbesFile, CANDIDATE_PROBES_COLUMNS, OutputWriter::writeCandidateProbesRow);
+                    new DelimFileWriter<>(candidateProbesFilePath, CANDIDATE_PROBES_COLUMNS, OutputWriter::writeCandidateProbesRow);
             mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
         }
     }
@@ -90,8 +97,15 @@ public class OutputWriter implements AutoCloseable
         LOGGER.debug("Writing {} panel probes to file", probes.size());
         for(EvaluatedProbe probe : probes)
         {
+            if(!probe.accepted())
+            {
+                // If this happens there's a code bug.
+                throw new IllegalArgumentException("Shouldn't be writing rejected probes");
+            }
+
             mPanelProbesTsvWriter.writeRow(probe);
             writePanelProbesBedRow(probe);
+            writePanelProbesFastaRecord(probe);
         }
     }
 
@@ -111,6 +125,18 @@ public class OutputWriter implements AutoCloseable
     {
         CandidateProbe candidate = probe.candidate();
         mPanelProbesBedWriter.write(formatBedRow(candidate.probeRegion(), targetMetadataToBedName(candidate.target().metadata())));
+    }
+
+    private void writePanelProbesFastaRecord(final EvaluatedProbe probe) throws IOException
+    {
+        String label = getProbeLabel(probe);
+        String sequence = probe.sequence();
+        if(sequence == null)
+        {
+            // If this happens there's a code bug.
+            throw new IllegalArgumentException("Probe must have sequence data to write FASTA");
+        }
+        mPanelProbesFastaWriter.write(format(">%s\n%s\n", label, sequence));
     }
 
     public void writeTargetRegions(final List<TargetRegion> regions) throws IOException
@@ -204,14 +230,26 @@ public class OutputWriter implements AutoCloseable
         return format("%s\t%d\t%d\t%s\n", region.chromosome(), region.start() - 1, region.end(), name);
     }
 
+    private static String getProbeLabel(final EvaluatedProbe probe)
+    {
+        // This should be unique enough.
+        ChrBaseRegion region = probe.candidate().probeRegion();
+        TargetMetadata metadata = probe.candidate().target().metadata();
+        return format("%s:%s:%d", metadata.type().name(), metadata.extra(), region.start());
+    }
+
     @Override
     public void close() throws IOException
     {
         mPanelProbesTsvWriter.close();
         mPanelProbesBedWriter.close();
+        mPanelProbesFastaWriter.close();
+
         mTargetRegionsWriter.close();
+
         mRejectedRegionsTsvWriter.close();
         mRejectedRegionsBedWriter.close();
+
         if(mCandidateProbesWriter != null)
         {
             checkFlushCandidateProbes(true);
