@@ -134,7 +134,7 @@ public class Fragment
 
     public boolean containsAllNucleotideLoci(final Collection<Integer> loci)
     {
-        return !loci.stream().allMatch(this::containsNucleotideLocus);
+        return loci.stream().allMatch(this::containsNucleotideLocus);
     }
 
     public String nucleotides(final Collection<Integer> loci)
