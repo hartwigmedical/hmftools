@@ -18,8 +18,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.read.Read;
-import com.hartwig.hmftools.lilac.utils.AminoAcid;
-import com.hartwig.hmftools.lilac.utils.Nucleotide;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
+import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 
 public class Fragment
 {

@@ -27,8 +27,8 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
-import com.hartwig.hmftools.lilac.utils.AminoAcid;
-import com.hartwig.hmftools.lilac.utils.Nucleotide;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
+import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 
 public class FragmentAlleleMapper
 {

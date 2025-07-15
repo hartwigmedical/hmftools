@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.cohort;
+package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 

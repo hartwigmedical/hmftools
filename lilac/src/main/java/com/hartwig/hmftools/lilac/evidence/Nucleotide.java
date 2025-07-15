@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.utils;
+package com.hartwig.hmftools.lilac.evidence;
 
 import java.util.Collection;
 import java.util.List;

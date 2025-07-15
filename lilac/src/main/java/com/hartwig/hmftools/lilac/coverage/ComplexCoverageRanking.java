@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.ReferenceData;
-import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
+import com.hartwig.hmftools.lilac.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 

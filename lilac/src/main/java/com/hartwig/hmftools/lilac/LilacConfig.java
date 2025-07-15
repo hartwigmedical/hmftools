@@ -68,7 +68,7 @@ public class LilacConfig
     public final String ResourceDir;
     public final String RefGenome;
     public final RefGenomeVersion RefGenVersion;
-    private final String SampleDataDir;
+    public final String SampleDataDir;
     public final String OutputDir;
 
     public final MhcClass ClassType;

@@ -22,7 +22,7 @@ import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.utils.AminoAcid;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 
 import htsjdk.variant.variantcontext.VariantContext;
 

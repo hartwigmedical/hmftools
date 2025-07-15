@@ -47,9 +47,7 @@ public final class LilacConstants
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
     // QC thresholds
-    // TODO(mkcmkc): Change from fixed value to 10% depth.
     public static int FAIL_LOW_COVERAGE_THRESHOLD = 360;
-    // TODO(mkcmkc): Change from fixed value to 5% depth.
     public static double WARN_LOW_COVERAGE_THRESHOLD = 180;
     public static final double WARN_LOW_BASE_QUAL_THRESHOLD = 25;
     public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
