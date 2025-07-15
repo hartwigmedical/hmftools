@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_CN_QUALITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_LONG_INTRON_LENGTH;
@@ -16,8 +17,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MIN_INTRON_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_ACCEPT;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_REJECT;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_BASELINE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,10 +49,10 @@ public class TargetGenes
     private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.GENE;
 
     private static final ProbeSelectCriteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeEvalCriteria(PROBE_QUALITY_BASELINE, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
             ProbeSelectStrategy.MAX_QUALITY);
     private static final ProbeSelectCriteria CN_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(PROBE_QUALITY_ACCEPT, CN_GC_TARGET, CN_GC_TOLERANCE),
+            new ProbeEvalCriteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             ProbeSelectStrategy.BEST_GC);
 
     private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);

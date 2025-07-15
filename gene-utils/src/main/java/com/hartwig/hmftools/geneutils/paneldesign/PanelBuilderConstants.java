@@ -4,12 +4,8 @@ public class PanelBuilderConstants
 {
     // Common constants.
     public static final int PROBE_LENGTH = 120;
-    // TODO: is this actually used how its specified?
-    // Above this quality score we may consider a candidate probe to be acceptable without checking other candidates.
-    public static final double PROBE_QUALITY_ACCEPT = 0.5;
-    // TODO: needed?
-    // All probes with quality score below this value are unconditionally rejected.
-    public static final double PROBE_QUALITY_REJECT = 0.1;
+    // Minimum probe quality score to accept. Below this the probe is likely to have too much off-target risk.
+    public static final double PROBE_QUALITY_BASELINE = 0.1;
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;
@@ -32,6 +28,7 @@ public class PanelBuilderConstants
     public static final int GENE_MIN_INTRON_LENGTH = GENE_EXON_FLANK_GAP * 2 + GENE_EXON_FLANK_REGION;
     // Introns shorter than this many bases get 1 probe, longer introns get 2 nonoverlapping probes.
     public static final int GENE_LONG_INTRON_LENGTH = GENE_EXON_FLANK_GAP * 2 + GENE_EXON_FLANK_REGION * 3;
+    public static final double GENE_CN_QUALITY_MIN = 0.5;
 
     // Copy number backbone constants.
     public static final int CN_BACKBONE_PARTITION_SIZE = 1_000_000;

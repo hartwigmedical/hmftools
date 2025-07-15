@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_E
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_REJECT;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_BASELINE;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class CustomRegions
     private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.CUSTOM;
 
     private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(PROBE_QUALITY_REJECT, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeEvalCriteria(PROBE_QUALITY_BASELINE, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
             ProbeSelectStrategy.MAX_QUALITY);
 
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
