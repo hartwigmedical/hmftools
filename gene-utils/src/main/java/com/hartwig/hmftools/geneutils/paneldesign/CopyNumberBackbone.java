@@ -83,6 +83,7 @@ public class CopyNumberBackbone
             int centromere = refGenomeCoordinates.centromeres().get(chromosome);
             int centromereMin = centromere - CN_BACKBONE_CENTROMERE_MARGIN;
             int centromereMax = centromere + CN_BACKBONE_CENTROMERE_MARGIN;
+            LOGGER.debug("Excluded centromere region {}:{}-{}", chromosome, centromereMin, centromereMax);
 
             List<Partition> chrPartitions = partitionChromosome(chrStr, refGenomeVersion, CN_BACKBONE_PARTITION_SIZE).stream()
                     .filter(region -> !region.overlaps(chrStr, centromereMin, centromereMax))
@@ -165,6 +166,7 @@ public class CopyNumberBackbone
                 .map(bestProbe -> new ProbeGenerationResult(List.of(target), List.of(bestProbe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
+                    // TODO: resolve this since there are many such occurrences
                     // Given the Amber sites are predetermined and there's a lot of them, in typical use we should find an acceptable probe.
                     // If no probe is found then the input data is probably wrong (or the code is being tested).
                     LOGGER.warn("No acceptable probe for copy number backbone partition: {}", partition.Region);

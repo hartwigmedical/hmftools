@@ -63,11 +63,17 @@ public class TargetGenes
         LOGGER.info("Generating gene probes");
 
         List<GeneTranscriptId> geneIds = loadTargetGenesFile(targetGeneFile);
+
+        LOGGER.debug("Loading gene transcript data");
         List<GeneTranscript> genes = geneIds.stream()
                 .map(gene -> loadGeneData(gene, ensemblData))
                 .flatMap(Optional::stream)
                 .toList();
+
+        LOGGER.debug("Creating gene target regions");
         List<GeneRegion> geneRegions = genes.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
+
+        LOGGER.debug("Generating probes");
         ProbeGenerationResult result = geneRegions.stream()
                 .map(region -> generateProbes(region, probeGenerator))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
