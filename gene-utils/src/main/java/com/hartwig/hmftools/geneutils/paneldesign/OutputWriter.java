@@ -20,6 +20,8 @@ import org.apache.logging.log4j.Logger;
 
 public class OutputWriter implements AutoCloseable
 {
+    // TODO: bed files should be sorted for some tools to work correctly.
+
     private final DelimFileWriter<EvaluatedProbe> mPanelProbesTsvWriter;
     private final BufferedWriter mPanelProbesBedWriter;
     private final BufferedWriter mPanelProbesFastaWriter;
