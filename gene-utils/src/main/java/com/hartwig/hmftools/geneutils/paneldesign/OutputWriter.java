@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -20,8 +21,6 @@ import org.apache.logging.log4j.Logger;
 
 public class OutputWriter implements AutoCloseable
 {
-    // TODO: bed files should be sorted for some tools to work correctly.
-
     private final DelimFileWriter<EvaluatedProbe> mPanelProbesTsvWriter;
     private final BufferedWriter mPanelProbesBedWriter;
     private final BufferedWriter mPanelProbesFastaWriter;
@@ -94,9 +93,13 @@ public class OutputWriter implements AutoCloseable
         }
     }
 
-    public void writePanelProbes(final List<EvaluatedProbe> probes) throws IOException
+    public void writePanelProbes(List<EvaluatedProbe> probes) throws IOException
     {
         LOGGER.debug("Writing {} panel probes to file", probes.size());
+
+        // Must be sorted for BED files since some tools expect sorted order.
+        probes = probes.stream().sorted(Comparator.comparing(probe -> probe.candidate().probeRegion())).toList();
+
         for(EvaluatedProbe probe : probes)
         {
             if(!probe.accepted())
@@ -141,9 +144,13 @@ public class OutputWriter implements AutoCloseable
         mPanelProbesFastaWriter.write(format(">%s\n%s\n", label, sequence));
     }
 
-    public void writeTargetRegions(final List<TargetRegion> regions) throws IOException
+    public void writeTargetRegions(List<TargetRegion> regions) throws IOException
     {
         LOGGER.debug("Writing {} target regions to file", regions.size());
+
+        // Must be sorted for BED files since some tools expect sorted order.
+        regions = regions.stream().sorted(Comparator.comparing(TargetRegion::region)).toList();
+
         for(TargetRegion region : regions)
         {
             writeTargetRegionsBedRow(region);
@@ -155,9 +162,13 @@ public class OutputWriter implements AutoCloseable
         mTargetRegionsWriter.write(formatBedRow(region.region(), targetMetadataToBedName(region.metadata())));
     }
 
-    public void writeRejectedRegions(final List<RejectedRegion> regions) throws IOException
+    public void writeRejectedRegions(List<RejectedRegion> regions) throws IOException
     {
         LOGGER.debug("Writing {} rejected regions to file", regions.size());
+
+        // Must be sorted for BED files since some tools expect sorted order.
+        regions = regions.stream().sorted(Comparator.comparing(RejectedRegion::baseRegion)).toList();
+
         for(RejectedRegion region : regions)
         {
             mRejectedRegionsTsvWriter.writeRow(region);
