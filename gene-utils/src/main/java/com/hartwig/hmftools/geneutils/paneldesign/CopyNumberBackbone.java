@@ -160,6 +160,7 @@ public class CopyNumberBackbone
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, partition.Region.toString());
+        // TODO: maybe don't use the whole region as the target because it covers everything in IGV
         TargetRegion target = new TargetRegion(partition.Region, metadata);
 
         ProbeGenerationResult result = bestCandidate
