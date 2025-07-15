@@ -268,7 +268,7 @@ public class LilacApplication
             if(!missedCommonAlleles.isEmpty())
             {
                 Collections.sort(missedCommonAlleles);
-                LL_LOGGER.info("recovering common alleles: {}", HlaAllele.toString(missedCommonAlleles));
+                LL_LOGGER.info("recovering {} common alleles: {}", missedCommonAlleles.size(), HlaAllele.toString(missedCommonAlleles));
                 recoveredAlleles.addAll(missedCommonAlleles);
             }
         }

@@ -63,13 +63,16 @@ public class NucleotideSpliceEnrichment
 
     private boolean missingStart(int index, final Fragment fragment)
     {
-        return !fragment.containsNucleotideLocus(index) && fragment.containsAllNucleotideLoci(Lists.newArrayList(index + 1, index + 2));
+        return !fragment.containsNucleotideLocus(index)
+                && fragment.containsNucleotideLocus(index + 1)
+                && fragment.containsNucleotideLocus(index + 2);
     }
 
     private boolean missingEnd(int index, final Fragment fragment)
     {
-        return fragment.containsNucleotideLocus(index) && !fragment.containsNucleotideLocus(index + 1) && !fragment.containsNucleotideLocus(
-                index + 2);
+        return fragment.containsNucleotideLocus(index)
+                && !fragment.containsNucleotideLocus(index + 1)
+                && !fragment.containsNucleotideLocus(index + 2);
     }
 
     private void addStart(final Fragment fragment, int index, final SequenceCount nucleotideCounts)
