@@ -2,9 +2,9 @@ package com.hartwig.hmftools.common.mappability;
 
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
-import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -42,8 +41,6 @@ public class ProbeQualityProfile
     private static final int BASE_WINDOW_LENGTH = 40;
     private static final int BASE_WINDOW_SPACING = 20;
     private static final String FLD_QUALITY_SCORE = "QualityScore";
-
-    private static final double AGGREGATE_SHARPNESS = 5;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
@@ -117,9 +114,10 @@ public class ProbeQualityProfile
     // Returns empty optional if the profile doesn't cover the probe region.
     public OptionalDouble computeQualityScore(final ChrBaseRegion probe)
     {
-        if(probe.baseLength() < 1)
+        if(probe.baseLength() < BASE_WINDOW_LENGTH)
         {
-            throw new IllegalArgumentException("probe length must be >= 1");
+            // The aggregation of the quality score is design to work for probes that cover multiple windows.
+            throw new IllegalArgumentException(format("probe length must be >= %d", BASE_WINDOW_LENGTH));
         }
 
         // If the profile doesn't completely cover the probe then we say we can't assess its quality
@@ -145,7 +143,7 @@ public class ProbeQualityProfile
             // Probe middle or end not covered.
             return OptionalDouble.empty();
         }
-        double qualityScore = aggregateQualityScore(overlappingWindows.stream(), probe.baseRegion());
+        double qualityScore = aggregateQualityScore(overlappingWindows, probe.baseRegion());
         return OptionalDouble.of(qualityScore);
     }
 
@@ -174,31 +172,56 @@ public class ProbeQualityProfile
     }
 
     // Compute the final quality score from windows which overlap the probe.
-    // `windows` should not be empty.
-    private static double aggregateQualityScore(final Stream<ProbeQualityWindow> windows, final BaseRegion probe)
+    // `windows` must not be empty.
+    private static double aggregateQualityScore(final List<ProbeQualityWindow> windows, final BaseRegion probe)
     {
-        // Using a soft minimum function to aggregate the scores proved to be a good estimator in experiment.
-        double[] sums = new double[2];
-        windows.forEach(window ->
+        // Pick the minimum quality score, however need to take into account partial overlap of the windows on the edge of the probe.
+        // Windows fully overlapping the probe are used as-is.
+        // Windows partially overlapping the probe have their quality score interpolated towards windows which overlap more.
+
+        double centreQuality = windows.get(windows.size() / 2).getQualityScore();
+
+        double minQuality = centreQuality;
+
+        // Interpolate towards left side.
+        double higherOverlapQuality = centreQuality;
+        for(int i = windows.size() / 2 - 1; i >= 0; --i)
         {
-            // Idea is to scale the risk approximately linearly with the overlap.
-            // This biases the quality score upwards progressively as the overlap decreases.
-            int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
-            double overlapFrac = (double) overlap / BASE_WINDOW_LENGTH;
-            double adjustedQuality = 1 / ((1 / window.getQualityScore() - 1) * overlapFrac + 1);
-            double weight = exp(-AGGREGATE_SHARPNESS * adjustedQuality);
-            sums[0] += adjustedQuality * weight;
-            sums[1] += weight;
-        });
-        if(sums[1] > 0)
-        {
-            return sums[0] / sums[1];
+            ProbeQualityWindow window = windows.get(i);
+            double quality = adjustedWindowQualityScore(window, higherOverlapQuality, probe);
+            minQuality = min(minQuality, quality);
+            higherOverlapQuality = quality;
         }
-        else
+
+        // Interpolate towards right side.
+        higherOverlapQuality = centreQuality;
+        for(int i = windows.size() / 2 + 1; i < windows.size(); ++i)
         {
-            // Shouldn't occur if windows is nonempty but don't want to return a NaN or inf.
-            return 0;
+            ProbeQualityWindow window = windows.get(i);
+            double quality = adjustedWindowQualityScore(window, higherOverlapQuality, probe);
+            minQuality = min(minQuality, quality);
+            higherOverlapQuality = quality;
         }
+
+        return minQuality;
+    }
+
+    private static double adjustedWindowQualityScore(final ProbeQualityWindow window, double adjacentQualityScore, final BaseRegion probe)
+    {
+        int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
+        double qualityScore = window.getQualityScore();
+        if(overlap < BASE_WINDOW_LENGTH)
+        {
+            double overlapFract = (double) overlap / BASE_WINDOW_LENGTH;
+            qualityScore = interpolateQualityScores(window.getQualityScore(), adjacentQualityScore, overlapFract);
+        }
+        return qualityScore;
+    }
+
+    private static double interpolateQualityScores(double q1, double q2, double t)
+    {
+        // Interpolating in the "risk space" because it's the risk that's proportional to the overlap. (The quality is a reciprocal value.)
+        return q1 * q2 / (q1 + t * q2 - t * q1);
     }
 
     // Gets the last index >= `index` in `windows` which overlaps `region`.

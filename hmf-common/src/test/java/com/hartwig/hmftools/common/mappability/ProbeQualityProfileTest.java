@@ -57,17 +57,10 @@ public class ProbeQualityProfileTest
     @Test
     public void testComputeQualityScoreCovered()
     {
-        OptionalDouble actual;
-
-        // Probe overlapping 2 windows.
-        actual = mProfile.computeQualityScore(new ChrBaseRegion("1", 101, 131));
+        // Probe overlapping multiple windows.
+        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("2", 233, 282));
         assertTrue(actual.isPresent());
         // No need to duplicate the maths to find the exact score. It should be somewhere in between the scores of the 2 windows.
-        assertTrue(actual.getAsDouble() > 0.1 && actual.getAsDouble() < 0.2);
-
-        // Probe overlapping multiple windows.
-        actual = mProfile.computeQualityScore(new ChrBaseRegion("2", 233, 282));
-        assertTrue(actual.isPresent());
         assertTrue(actual.getAsDouble() > 0.1 && actual.getAsDouble() < 0.3);
     }
 
@@ -75,12 +68,12 @@ public class ProbeQualityProfileTest
     public void testComputeQualityScoreNotCovered()
     {
         // Nonexistent chromosome.
-        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("50", 30, 50)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("50", 30, 150)));
         // Region not covered at all.
-        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 1, 15)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 1, 120)));
         assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 10000, 20000)));
         // Region partially covered.
-        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 50, 160)));
+        assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 20, 160)));
         assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 145, 1000)));
         assertEquals(OptionalDouble.empty(), mProfile.computeQualityScore(new ChrBaseRegion("1", 50, 1000)));
     }
