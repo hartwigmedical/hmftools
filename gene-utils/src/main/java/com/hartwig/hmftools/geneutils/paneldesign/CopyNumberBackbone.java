@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 //   - Divide chromosomes into large partitions;
 //   - In each partition, generate candidate probes on each Amber site;
 //   - In each partition, select the acceptable probe with the best GC content.
+// TODO: this should probably be a predefined list rather than generate every time
 public class CopyNumberBackbone
 {
     private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.CN_BACKBONE;
@@ -167,10 +168,7 @@ public class CopyNumberBackbone
                 .map(bestProbe -> new ProbeGenerationResult(List.of(target), List.of(bestProbe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
-                    // TODO: resolve this since there are many such occurrences
-                    // Given the Amber sites are predetermined and there's a lot of them, in typical use we should find an acceptable probe.
-                    // If no probe is found then the input data is probably wrong (or the code is being tested).
-                    LOGGER.warn("No acceptable probe for copy number backbone partition: {}", partition.Region);
+                    LOGGER.trace("No acceptable probe for copy number backbone partition: {}", partition.Region);
 
                     String rejectionReason;
                     if(partition.Sites.isEmpty())

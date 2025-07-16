@@ -70,7 +70,7 @@ public class PanelBuilder
             mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
         }
 
-        // TODO: remove duplicate/overlapping probes?
+        // TODO: strategy for handling overlapping probes. potentially
 
         mOutputWriter.close();
         mOutputWriter = null;

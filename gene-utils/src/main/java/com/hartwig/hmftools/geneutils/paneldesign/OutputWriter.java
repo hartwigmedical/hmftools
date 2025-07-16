@@ -129,7 +129,7 @@ public class OutputWriter implements AutoCloseable
     private void writePanelProbesBedRow(final EvaluatedProbe probe) throws IOException
     {
         CandidateProbe candidate = probe.candidate();
-        mPanelProbesBedWriter.write(formatBedRow(candidate.probeRegion(), targetMetadataToBedName(candidate.target().metadata())));
+        mPanelProbesBedWriter.write(formatBedRow(candidate.probeRegion(), probeBedName(probe)));
     }
 
     private void writePanelProbesFastaRecord(final EvaluatedProbe probe) throws IOException
@@ -231,6 +231,15 @@ public class OutputWriter implements AutoCloseable
         row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
         row.setOrNull(FLD_EVAL_CRITERIA, probe.criteria().toString());
         row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());
+    }
+
+    private static String probeBedName(final EvaluatedProbe probe)
+    {
+        // Purposely unbox here to throw on nulls.
+        double qualityScore = probe.qualityScore();
+        double gcContent = probe.gcContent();
+        String baseName = targetMetadataToBedName(probe.candidate().target().metadata());
+        return format("%s:QS=%f:GC=%f", baseName, qualityScore, gcContent);
     }
 
     private static String targetMetadataToBedName(final TargetMetadata info)

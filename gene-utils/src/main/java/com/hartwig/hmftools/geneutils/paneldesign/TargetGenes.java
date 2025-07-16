@@ -12,12 +12,12 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_CN_QUALITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_PROBE_QUALITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_LONG_INTRON_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MIN_INTRON_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_QUALITY_BASELINE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,7 @@ public class TargetGenes
     private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.GENE;
 
     private static final ProbeSelectCriteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(PROBE_QUALITY_BASELINE, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeEvalCriteria(GENE_EXON_PROBE_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
             ProbeSelectStrategy.MAX_QUALITY);
     private static final ProbeSelectCriteria CN_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
@@ -81,6 +81,9 @@ public class TargetGenes
         LOGGER.info("Done generating gene probes");
         return result;
     }
+
+    // TODO: canonical gene always present, with optional list of transcripts
+    // TODO: flags for enable/disable regions
 
     private record GeneTranscriptId(
             String geneName,
@@ -205,6 +208,7 @@ public class TargetGenes
                 {
                     if(intronLength >= GENE_LONG_INTRON_LENGTH)
                     {
+                        // TODO: expand search region as exon becomes very large, up to 5kb
                         // GENE_LONG_INTRON_LENGTH should be large enough such that these two probes cannot overlap.
                         regions.add(new GeneRegion(
                                 gene,

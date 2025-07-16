@@ -4,8 +4,6 @@ public class PanelBuilderConstants
 {
     // Common constants.
     public static final int PROBE_LENGTH = 120;
-    // Minimum probe quality score to accept. Below this the probe is likely to have too much off-target risk.
-    public static final double PROBE_QUALITY_BASELINE = 0.1;
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;
@@ -20,6 +18,7 @@ public class PanelBuilderConstants
     public static final int GENE_UPDOWNSTREAM_REGION = 2000;
     // Only probe intronic regions when the gene has <= this number of exons.
     public static final int GENE_MAX_EXONS_TO_ADD_INTRON = 19;
+    public static final double GENE_EXON_PROBE_QUALITY_MIN = 0.05;
     // Space between exon and intron probe.
     public static final int GENE_EXON_FLANK_GAP = 1000;
     // Intron probes are selected within a region of this many bases.
@@ -43,6 +42,9 @@ public class PanelBuilderConstants
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.
     public static final double CN_GC_TARGET = 0.45;
     public static final double CN_GC_TOLERANCE = 0.025;
+
+    // Custom regions parameters.
+    public static final double CUSTOM_REGION_PROBE_QUALITY_MIN = 0.2;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
