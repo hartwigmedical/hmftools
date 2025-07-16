@@ -239,7 +239,7 @@ public class OutputWriter implements AutoCloseable
         double qualityScore = probe.qualityScore();
         double gcContent = probe.gcContent();
         String baseName = targetMetadataToBedName(probe.candidate().target().metadata());
-        return format("%s:QS=%f:GC=%f", baseName, qualityScore, gcContent);
+        return format("%s:QS=%.2f:GC=%.2f", baseName, qualityScore, gcContent);
     }
 
     private static String targetMetadataToBedName(final TargetMetadata info)

@@ -6,7 +6,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeStartCovering;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartCovering;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.nextProbeStartPosition;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeCenteredAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeStartingAt;
@@ -22,6 +24,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -49,18 +52,33 @@ public class ProbeGenerator
         //   - If an acceptable probe is found, advance the position to the next position after the probe.
         //   - If a position can't be covered by a probe, move to the next position.
 
-        ChrBaseRegion targetBaseRegion = target.region();
+        ChrBaseRegion targetChrBaseRegion = target.region();
+        String chromosome = targetChrBaseRegion.chromosome();
+        BaseRegion targetBaseRegion = targetChrBaseRegion.baseRegion();
 
         ProbeFactory probeFactory = new ProbeFactory(target);
         List<EvaluatedProbe> probes = new ArrayList<>();
         for(int position = targetBaseRegion.start(); position <= targetBaseRegion.end(); )
         {
-            // Ensure the probe covers this position and doesn't overlap the previous probe.
-            int minProbeStart = max(
-                    minProbeStartContaining(position),
-                    probes.isEmpty() ? 1 : nextProbeStartPosition(probes.get(probes.size() - 1).candidate().probeRegion().end()));
+            // Ensure:
+            //  - Probe covers this position;
+            //  - Limited overlap with the previous probe;
+            //  - Minimum overlap with the target region
+            int initialProbeStart = min(position, maxProbeStartCovering(targetBaseRegion));
+            int minProbeStart = max(minProbeStartContaining(position), minProbeStartCovering(targetBaseRegion));
+            if(!probes.isEmpty())
+            {
+                minProbeStart = max(minProbeStart, nextProbeStartPosition(probes.get(probes.size() - 1).candidate().probeRegion().end()));
+            }
+
+            if(initialProbeStart < minProbeStart)
+            {
+                // Not allowed to place any more probes due to the target region coverage constraint.
+                break;
+            }
+
             Stream<CandidateProbe> candidates =
-                    leftMovingLeftAlignedProbes(new BasePosition(targetBaseRegion.chromosome(), position), minProbeStart, probeFactory);
+                    leftMovingLeftAlignedProbes(new BasePosition(chromosome, initialProbeStart), minProbeStart, probeFactory);
             Optional<EvaluatedProbe> bestCandidate = selectBestProbe(candidates, criteria);
 
             if(bestCandidate.isPresent())
@@ -77,10 +95,10 @@ public class ProbeGenerator
         // Compute rejected regions based on what has been covered by the probes.
         String rejectionReason = "No probe covering region meeting criteria " + criteria.eval();
         List<RejectedRegion> rejectedRegions = computeUncoveredRegions(
-                targetBaseRegion.baseRegion(), probes.stream().map(probe -> probe.candidate().probeRegion().baseRegion()))
+                targetBaseRegion, probes.stream().map(probe -> probe.candidate().probeRegion().baseRegion()))
                 .stream()
                 .map(region ->
-                        new RejectedRegion(ChrBaseRegion.from(targetBaseRegion.chromosome(), region), target, rejectionReason))
+                        new RejectedRegion(ChrBaseRegion.from(chromosome, region), target, rejectionReason))
                 .toList();
 
         return new ProbeGenerationResult(List.of(target), probes, rejectedRegions);

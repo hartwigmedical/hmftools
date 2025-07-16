@@ -7,8 +7,11 @@ public class PanelBuilderConstants
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;
-    // When covering a large region with probes, how many bases in the region are allowed to not be covered?
+    // When covering a large region with probes, how many bases can a probe overlap with another?
     public static final int PROBE_OVERLAP_MAX = 10;
+    // When covering a large region with probes, how many bases in a probe must overlap with the target region?
+    // (Unless the target is smaller than the probe).
+    public static final int PROBE_COVERAGE_MIN = PROBE_LENGTH / 2;
 
     // Target genes constants.
     // All the region and gap sizes should be much larger than the probe size to avoid probe overlap.

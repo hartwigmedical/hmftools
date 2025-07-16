@@ -20,9 +20,9 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -73,6 +73,7 @@ public class TargetGenes
 
         List<GeneDefinition> geneDefs = loadTargetGenesFile(targetGeneFile);
         List<GeneTranscriptDefinition> geneTranscriptDefs = makeGeneTranscriptDefinitions(geneDefs);
+        geneTranscriptDefs.forEach(gene -> LOGGER.debug("{}", gene));
 
         LOGGER.debug("Loading gene transcript data");
         List<GeneTranscriptData> geneTranscriptDatas = geneTranscriptDefs.stream()
@@ -105,9 +106,17 @@ public class TargetGenes
     private record GeneDefinition(
             String geneName,
             GeneOptions options,
-            String[] extraTranscriptNames
+            List<String> extraTranscriptNames
     )
     {
+        public List<String> transcriptNames()
+        {
+            // Always get the canonical transcript, plus any extra transcripts requested.
+            List<String> names = new ArrayList<>();
+            names.add(null);
+            names.addAll(extraTranscriptNames);
+            return names;
+        }
     }
 
     private record GeneTranscriptDefinition(
@@ -138,7 +147,8 @@ public class TargetGenes
                 boolean upstream = row.getBoolean(FLD_INCLUDE_UPSTREAM);
                 boolean downstream = row.getBoolean(FLD_INCLUDE_DOWNSTREAM);
                 String extraTranscriptsStr = row.get(FLD_EXTRA_TRANSCRIPTS);
-                String[] extraTranscripts = extraTranscriptsStr.isEmpty() ? new String[] {} : extraTranscriptsStr.split(",");
+                List<String> extraTranscripts =
+                        extraTranscriptsStr.isEmpty() ? Collections.emptyList() : Arrays.asList(extraTranscriptsStr.split(","));
                 GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream);
                 return new GeneDefinition(geneName, options, extraTranscripts);
             }).toList();
@@ -150,11 +160,11 @@ public class TargetGenes
 
     private static List<GeneTranscriptDefinition> makeGeneTranscriptDefinitions(final List<GeneDefinition> genes)
     {
-        // Always get the canonical transcript, plus any extra transcripts requested.
-        return genes.stream().flatMap(gene ->
-                Stream.concat(Stream.ofNullable(null), Arrays.stream(gene.extraTranscriptNames))
+        return genes.stream()
+                .flatMap(gene -> gene.transcriptNames().stream()
                         .map(trans -> new GeneTranscriptDefinition(gene.geneName(), trans, gene.options()))
-        ).toList();
+                )
+                .toList();
     }
 
     private record GeneTranscriptData(
@@ -279,6 +289,7 @@ public class TargetGenes
                     else
                     {
                         // Can fit 1 probe.
+                        // TODO: doesn't expand region for larger introns - too restrictive?
                         int intronMid = (lastExonEnd + 1 + exonData.Start) / 2;
                         regions.add(new GeneRegion(
                                 gene,
