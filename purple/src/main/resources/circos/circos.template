@@ -20,9 +20,12 @@ show_tick_labels    = no
 
     show_label       = yes
     # see etc/fonts.conf for list of font names
-    label_font       = default
-    label_radius     = 1r + 30p
+    label_font       = bold
+    label_with_tag   = yes
+    label_center     = yes
+    label_radius     = (dims(ideogram,radius_outer)+dims(ideogram,radius_inner))/2
     label_size       = 30
+    label_color      = white
     label_parallel   = yes
     label_case       = upper
 
@@ -81,7 +84,6 @@ chromosomes                 = -EXCLUDE
 		</backgrounds>
 	</plot>
 
-
 	# -----------------------------------------------------------
 	# INDELs
 	<plot>
@@ -102,7 +104,7 @@ chromosomes                 = -EXCLUDE
 
 		<backgrounds>
 			<background>
-				color = vlpurple_a5
+				color = white
 			</background>
 		</backgrounds>
 
@@ -306,6 +308,35 @@ chromosomes                 = -EXCLUDE
 			</rule>
 		</rules>
 	</plot>
+
+    # -----------------------------------------------------------
+    # Driver gene text
+    <plot>
+        type             = text
+        color            = black
+        file             = SAMPLE.driver_text.circos
+        r0               = 1.01r
+        r1               = 1.2r
+        show_links       = no
+        label_size       = 28p
+        label_font       = condensed
+        label_snuggle    = yes
+        padding  = 0p
+        rpadding = 0p
+    </plot>
+
+    # -----------------------------------------------------------
+    # Driver gene pointer
+    <plot>
+        type             = highlight
+        color            = black
+        file             = SAMPLE.driver_pointer.circos
+        r1               = 1.005r
+        padding  = 0p
+        rpadding = 0p
+        stroke_thickness = 3
+    </plot>
+
 </plots>
 
 <links>
@@ -321,33 +352,32 @@ chromosomes                 = -EXCLUDE
 
 <<include etc/housekeeping.conf>>
 
-
 <colors>
-    chr1 = 128,125,186
-    chr2 = 145,142,179
-    chr3 = 161,159,173
-    chr4 = 179,176,166
-    chr5 = 196,193,160
-    chr6 = 213,210,153
+    chr1 = 103,88,150
+    chr2 = 117,90,134
+    chr3 = 129,92,121
+    chr4 = 144,106,116
+    chr5 = 158,117,111
+    chr6 = 171,143,105
 
-    chr7 = 230,228,147
-    chr8 = 202,218,138
-    chr9 = 175,209,129
-    chr10 = 147,199,120
-    chr11 = 120,190,111
-    chr12 = 92,180,102
+    chr7 = 171,171,10
+    chr8 = 154,168,10
+    chr9 = 139,165,10
+    chr10 = 123,162,10
+    chr11 = 99,162,10
+    chr12 = 73,153,10
 
-    chr13 = 65,171,93
-    chr14 = 65,166,110
-    chr15 = 65,162,128
-    chr16 = 65,158,145
-    chr17 = 65,154,163
-    chr18 = 65,150,180
+    chr13 = 31,153,83
+    chr14 = 31,149,99
+    chr15 = 31,145,115
+    chr16 = 31,142,130
+    chr17 = 31,138,146
+    chr18 = 31,135,162
 
-    chr19 = 66,146,198
-    chr20 = 76,142,196
-    chr21 = 86,139,194
-    chr22 = 97,135,192
-    chrX = 107,132,190
-    chrY = 117,128,188
-</colors>
+    chr19 = 59,131,178
+    chr20 = 68,127,176
+    chr21 = 77,125,174
+    chr22 = 87,121,172
+    chrX = 96,114,171
+    chrY = 105,106,169
+ </colors>
