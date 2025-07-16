@@ -79,6 +79,14 @@ public class ProbeQualityProfile
             {
                 String chromosome = row.getRawValue(chromosomeField);
                 int start = parseInt(row.getRawValue(startField));
+                if((start - 1) % BASE_WINDOW_SPACING != 0)
+                {
+                    // The code will probably still work but better to be safe than sorry.
+                    // No reason why the windows should not be aligned to the grid we expect.
+                    String error = format("Invalid base with start: %s:%d", chromosome, start);
+                    LOGGER.error(error);
+                    throw new RuntimeException(error);
+                }
                 double qualityScore = parseFloat(row.getRawValue(qualityScoreField));
                 int end = start + BASE_WINDOW_LENGTH;
                 ProbeQualityWindow window = new ProbeQualityWindow(start, end, (float) qualityScore);
