@@ -70,7 +70,11 @@ public class PanelBuilder
             mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
         }
 
-        // TODO: strategy for handling overlapping probes. potentially
+        // TODO: strategy for handling overlapping probes. potentially:
+        //  1. compute regions to be fully covered (e.g. custom, gene coding)
+        //  2. merge them, using the strictest probe criteria for overlaps
+        //  3. generate probes to cover full regions
+        //  4. generate probes for "select best probe"-type regions (e.g. CN backbone). dont put probe if it's already covered
 
         mOutputWriter.close();
         mOutputWriter = null;

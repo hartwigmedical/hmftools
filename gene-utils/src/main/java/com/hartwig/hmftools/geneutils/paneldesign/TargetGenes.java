@@ -1,27 +1,28 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_CN_QUALITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_GAP;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_PROBE_QUALITY_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_LONG_INTRON_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_QUALITY_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MIN_INTRON_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -35,13 +36,14 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
 //   - Coding: Cover the full coding region of each exon.
 //   - UTR: Select 1 probe within each noncoding exon.
 //   - Upstream/downstream: Select the best acceptable probe from a ~2kb region ~1kb upstream/downstream.
-//   - Intronic: Only when there are not too many exons:
+//   - Exon flanks: Only when there are not too many exons:
 //     - Small introns: Select the best acceptable probe from a ~1kb region centered on the centre of the intron.
 //     - Large introns: Select the best acceptable probe from each of ~1kb regions near the adjacent exons.
 public class TargetGenes
@@ -49,11 +51,18 @@ public class TargetGenes
     private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.GENE;
 
     private static final ProbeSelectCriteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(GENE_EXON_PROBE_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeEvalCriteria(GENE_EXON_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
             ProbeSelectStrategy.MAX_QUALITY);
     private static final ProbeSelectCriteria CN_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             ProbeSelectStrategy.BEST_GC);
+
+    private static final String FLD_INCLUDE_CODING = "IncludeCoding";
+    private static final String FLD_INCLUDE_UTR = "IncludeUTR";
+    private static final String FLD_INCLUDE_EXON_FLANK = "IncludeExonFlank";
+    private static final String FLD_INCLUDE_UPSTREAM = "IncludeUpstream";
+    private static final String FLD_INCLUDE_DOWNSTREAM = "IncludeDownstream";
+    private static final String FLD_EXTRA_TRANSCRIPTS = "ExtraTransNames";
 
     private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);
 
@@ -62,16 +71,17 @@ public class TargetGenes
     {
         LOGGER.info("Generating gene probes");
 
-        List<GeneTranscriptId> geneIds = loadTargetGenesFile(targetGeneFile);
+        List<GeneDefinition> geneDefs = loadTargetGenesFile(targetGeneFile);
+        List<GeneTranscriptDefinition> geneTranscriptDefs = makeGeneTranscriptDefinitions(geneDefs);
 
         LOGGER.debug("Loading gene transcript data");
-        List<GeneTranscript> genes = geneIds.stream()
-                .map(gene -> loadGeneData(gene, ensemblData))
+        List<GeneTranscriptData> geneTranscriptDatas = geneTranscriptDefs.stream()
+                .map(gene -> loadGeneTranscriptData(gene, ensemblData))
                 .flatMap(Optional::stream)
                 .toList();
 
         LOGGER.debug("Creating gene target regions");
-        List<GeneRegion> geneRegions = genes.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
+        List<GeneRegion> geneRegions = geneTranscriptDatas.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
 
         LOGGER.debug("Generating probes");
         ProbeGenerationResult result = geneRegions.stream()
@@ -82,12 +92,29 @@ public class TargetGenes
         return result;
     }
 
-    // TODO: canonical gene always present, with optional list of transcripts
-    // TODO: flags for enable/disable regions
+    private record GeneOptions(
+            boolean coding,
+            boolean utr,
+            boolean exonFlank,
+            boolean upstream,
+            boolean downstream
+    )
+    {
+    }
 
-    private record GeneTranscriptId(
+    private record GeneDefinition(
             String geneName,
-            String transcriptName
+            GeneOptions options,
+            String[] extraTranscriptNames
+    )
+    {
+    }
+
+    private record GeneTranscriptDefinition(
+            String geneName,
+            // Null if canonical transcript.
+            @Nullable String transcriptName,
+            GeneOptions options
     )
     {
         public boolean canonical()
@@ -96,18 +123,24 @@ public class TargetGenes
         }
     }
 
-    private static List<GeneTranscriptId> loadTargetGenesFile(final String filePath)
+    private static List<GeneDefinition> loadTargetGenesFile(final String filePath)
     {
+        LOGGER.debug("Loading target genes files: {}", filePath);
+
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
-            int geneNameIdx = reader.getColumnIndex(FLD_GENE_NAME);
-            int transNameIdx = reader.getColumnIndex(FLD_TRANS_NAME);
-
-            List<GeneTranscriptId> genes = reader.stream().map(row ->
+            List<GeneDefinition> genes = reader.stream().map(row ->
             {
-                String geneName = row.get(geneNameIdx);
-                String transcriptName = row.getOrNull(transNameIdx);
-                return new GeneTranscriptId(geneName, transcriptName);
+                String geneName = row.get(FLD_GENE_NAME);
+                boolean coding = row.getBoolean(FLD_INCLUDE_CODING);
+                boolean utr = row.getBoolean(FLD_INCLUDE_UTR);
+                boolean exonFlank = row.getBoolean(FLD_INCLUDE_EXON_FLANK);
+                boolean upstream = row.getBoolean(FLD_INCLUDE_UPSTREAM);
+                boolean downstream = row.getBoolean(FLD_INCLUDE_DOWNSTREAM);
+                String extraTranscriptsStr = row.get(FLD_EXTRA_TRANSCRIPTS);
+                String[] extraTranscripts = extraTranscriptsStr.isEmpty() ? new String[] {} : extraTranscriptsStr.split(",");
+                GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream);
+                return new GeneDefinition(geneName, options, extraTranscripts);
             }).toList();
 
             LOGGER.info("Loaded {} target genes from {}", genes.size(), filePath);
@@ -115,35 +148,46 @@ public class TargetGenes
         }
     }
 
-    public record GeneTranscript(
+    private static List<GeneTranscriptDefinition> makeGeneTranscriptDefinitions(final List<GeneDefinition> genes)
+    {
+        // Always get the canonical transcript, plus any extra transcripts requested.
+        return genes.stream().flatMap(gene ->
+                Stream.concat(Stream.ofNullable(null), Arrays.stream(gene.extraTranscriptNames))
+                        .map(trans -> new GeneTranscriptDefinition(gene.geneName(), trans, gene.options()))
+        ).toList();
+    }
+
+    private record GeneTranscriptData(
             GeneData gene,
-            TranscriptData transcript
+            TranscriptData transcript,
+            GeneOptions options
     )
     {
         @NotNull
         @Override
         public String toString()
         {
-            return format("%s:%s", gene.GeneName, transcript.TransName);
+            return format("GeneTranscriptData[gene=%s, transcript=%s, options=%s]", gene.GeneName, transcript.TransName, options);
         }
     }
 
-    private static Optional<GeneTranscript> loadGeneData(final GeneTranscriptId geneId, final EnsemblDataCache ensemblData)
+    private static Optional<GeneTranscriptData> loadGeneTranscriptData(final GeneTranscriptDefinition geneDef,
+            final EnsemblDataCache ensemblData)
     {
-        GeneData geneData = ensemblData.getGeneDataByName(geneId.geneName());
+        GeneData geneData = ensemblData.getGeneDataByName(geneDef.geneName());
         if(geneData == null)
         {
-            String error = format("Transcript gene for gene: %s not found", geneId.geneName());
+            String error = format("Gene not found: %s", geneDef.geneName());
             LOGGER.error(error);
             throw new RuntimeException(error);
         }
 
-        TranscriptData transcriptData = geneId.canonical() ?
+        TranscriptData transcriptData = geneDef.canonical() ?
                 ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
-                ensemblData.getTranscriptData(geneData.GeneId, geneId.transcriptName());
+                ensemblData.getTranscriptData(geneData.GeneId, geneDef.transcriptName());
         if(transcriptData == null)
         {
-            String error = format("gene(%s) transcript(%s) not found", geneId.geneName(), geneId.transcriptName());
+            String error = format("Gene not found: %s:%s", geneDef.geneName(), geneDef.transcriptName());
             LOGGER.error(error);
             throw new RuntimeException(error);
         }
@@ -151,11 +195,11 @@ public class TargetGenes
         if(transcriptData.nonCoding())
         {
             // User should add as a custom region instead.
-            LOGGER.warn("gene({}) transcript({}) non-coding skipped", geneId.geneName(), geneId.transcriptName());
+            LOGGER.warn("Noncoding gene skipped: {}:{}", geneDef.geneName(), geneDef.transcriptName());
             return Optional.empty();
         }
 
-        return Optional.of(new GeneTranscript(geneData, transcriptData));
+        return Optional.of(new GeneTranscriptData(geneData, transcriptData, geneDef.options));
     }
 
     private enum GeneRegionType
@@ -164,74 +208,84 @@ public class TargetGenes
         UTR,
         UP_STREAM,
         DOWN_STREAM,
-        INTRONIC_LONG,
-        INTRONIC_SHORT
+        EXON_FLANK
     }
 
     private record GeneRegion(
-            GeneTranscript gene,
+            GeneTranscriptData gene,
             GeneRegionType type,
             ChrBaseRegion baseRegion
     )
     {
-        public GeneRegion(GeneTranscript gene, GeneRegionType type, BaseRegion region)
+        public GeneRegion(GeneTranscriptData gene, GeneRegionType type, BaseRegion region)
         {
             this(gene, type, ChrBaseRegion.from(gene.gene().Chromosome, region));
         }
     }
 
-    private static List<GeneRegion> createGeneRegions(final GeneTranscript gene)
+    private static List<GeneRegion> createGeneRegions(final GeneTranscriptData gene)
     {
         List<GeneRegion> regions = new ArrayList<>();
 
         GeneData geneData = gene.gene();
         TranscriptData transcriptData = gene.transcript();
+        GeneOptions options = gene.options();
 
-        regions.add(new GeneRegion(
-                gene,
-                geneData.forwardStrand() ? GeneRegionType.UP_STREAM : GeneRegionType.DOWN_STREAM,
-                new BaseRegion(
-                        transcriptData.TransStart - GENE_UPDOWNSTREAM_GAP - GENE_UPDOWNSTREAM_REGION,
-                        transcriptData.TransStart - GENE_UPDOWNSTREAM_GAP - 1)));
+        if(geneData.forwardStrand() ? options.upstream() : options.downstream())
+        {
+            regions.add(new GeneRegion(
+                    gene,
+                    geneData.forwardStrand() ? GeneRegionType.UP_STREAM : GeneRegionType.DOWN_STREAM,
+                    new BaseRegion(
+                            transcriptData.TransStart - GENE_UPDOWNSTREAM_GAP - GENE_UPDOWNSTREAM_REGION,
+                            transcriptData.TransStart - GENE_UPDOWNSTREAM_GAP - 1)));
+        }
 
         int lastExonEnd = -1;
-
-        boolean probeIntrons = transcriptData.exons().size() <= GENE_MAX_EXONS_TO_ADD_INTRON;
-
+        boolean probeIntrons = options.exonFlank() && transcriptData.exons().size() <= GENE_MAX_EXONS_TO_ADD_INTRON;
         for(ExonData exonData : transcriptData.exons())
         {
             if(probeIntrons && lastExonEnd != -1)
             {
                 int intronLength = exonData.Start - lastExonEnd;
 
-                if(intronLength >= GENE_MIN_INTRON_LENGTH)
+                int minGap = 2 * GENE_EXON_FLANK_GAP;
+                int available = intronLength - minGap;
+
+                if(available >= GENE_EXON_FLANK_REGION_MIN)
                 {
-                    if(intronLength >= GENE_LONG_INTRON_LENGTH)
+                    if(available >= GENE_EXON_FLANK_REGION_MIN * 3)
                     {
-                        // TODO: expand search region as exon becomes very large, up to 5kb
-                        // GENE_LONG_INTRON_LENGTH should be large enough such that these two probes cannot overlap.
+                        // Can fit 2 probes, with a gap in between.
+
+                        // Remove space for the gap.
+                        available -= GENE_EXON_FLANK_REGION_MIN;
+                        // Allow the probe search regions to grow as the intron gets larger, up to a limit.
+                        int regionSize = min(available / 2, GENE_EXON_FLANK_REGION_MAX);
+
                         regions.add(new GeneRegion(
                                 gene,
-                                GeneRegionType.INTRONIC_LONG,
+                                GeneRegionType.EXON_FLANK,
                                 new BaseRegion(
                                         lastExonEnd + 1 + GENE_EXON_FLANK_GAP,
-                                        lastExonEnd + GENE_EXON_FLANK_GAP + GENE_EXON_FLANK_REGION)));
+                                        lastExonEnd + GENE_EXON_FLANK_GAP + regionSize)));
                         regions.add(new GeneRegion(
                                 gene,
-                                GeneRegionType.INTRONIC_LONG,
+                                GeneRegionType.EXON_FLANK,
                                 new BaseRegion(
-                                        exonData.Start - GENE_EXON_FLANK_GAP - GENE_EXON_FLANK_REGION,
+                                        exonData.Start - GENE_EXON_FLANK_GAP - regionSize,
                                         exonData.Start - GENE_EXON_FLANK_GAP - 1)));
                     }
                     else
                     {
+                        // Can fit 1 probe.
                         int intronMid = (lastExonEnd + 1 + exonData.Start) / 2;
                         regions.add(new GeneRegion(
                                 gene,
-                                GeneRegionType.INTRONIC_SHORT,
+                                GeneRegionType.EXON_FLANK,
                                 new BaseRegion(
-                                        intronMid - GENE_EXON_FLANK_REGION / 2,
-                                        intronMid + GENE_EXON_FLANK_REGION / 2 - 1)));
+                                        intronMid - GENE_EXON_FLANK_REGION_MIN / 2,
+                                        intronMid + GENE_EXON_FLANK_REGION_MIN / 2 - 1)));
                     }
                 }
             }
@@ -239,30 +293,39 @@ public class TargetGenes
             boolean isCoding = positionsOverlap(exonData.Start, exonData.End, transcriptData.CodingStart, transcriptData.CodingEnd);
             if(isCoding)
             {
-                regions.add(new GeneRegion(
-                        gene,
-                        GeneRegionType.CODING,
-                        new BaseRegion(
-                                Math.max(exonData.Start, transcriptData.CodingStart),
-                                Math.min(exonData.End, transcriptData.CodingEnd))));
+                if(options.coding())
+                {
+                    regions.add(new GeneRegion(
+                            gene,
+                            GeneRegionType.CODING,
+                            new BaseRegion(
+                                    Math.max(exonData.Start, transcriptData.CodingStart),
+                                    min(exonData.End, transcriptData.CodingEnd))));
+                }
             }
             else
             {
-                regions.add(new GeneRegion(
-                        gene,
-                        GeneRegionType.UTR,
-                        new BaseRegion(exonData.Start, exonData.End)));
+                if(options.utr())
+                {
+                    regions.add(new GeneRegion(
+                            gene,
+                            GeneRegionType.UTR,
+                            new BaseRegion(exonData.Start, exonData.End)));
+                }
             }
 
             lastExonEnd = exonData.End;
         }
 
-        regions.add(new GeneRegion(
-                gene,
-                geneData.forwardStrand() ? GeneRegionType.DOWN_STREAM : GeneRegionType.UP_STREAM,
-                new BaseRegion(
-                        transcriptData.TransEnd + GENE_UPDOWNSTREAM_GAP,
-                        transcriptData.TransEnd + GENE_UPDOWNSTREAM_GAP + GENE_UPDOWNSTREAM_REGION - 1)));
+        if(geneData.forwardStrand() ? options.downstream() : options.upstream())
+        {
+            regions.add(new GeneRegion(
+                    gene,
+                    geneData.forwardStrand() ? GeneRegionType.DOWN_STREAM : GeneRegionType.UP_STREAM,
+                    new BaseRegion(
+                            transcriptData.TransEnd + GENE_UPDOWNSTREAM_GAP,
+                            transcriptData.TransEnd + GENE_UPDOWNSTREAM_GAP + GENE_UPDOWNSTREAM_REGION - 1)));
+        }
 
         regions.forEach(region -> LOGGER.trace("Gene region: {}", region));
 
@@ -289,7 +352,7 @@ public class TargetGenes
                         (geneRegion.baseRegion().start() + geneRegion.baseRegion().end()) / 2);
                 yield probeGenerator.coverPosition(position, metadata, EXON_PROBE_SELECT_CRITERIA);
             }
-            case UP_STREAM, DOWN_STREAM, INTRONIC_LONG, INTRONIC_SHORT ->
+            case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
             {
                 TargetRegion target = new TargetRegion(geneRegion.baseRegion(), metadata);
                 yield probeGenerator.coverOneSubregion(target, CN_PROBE_SELECT_CRITERIA);

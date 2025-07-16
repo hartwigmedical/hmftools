@@ -159,7 +159,6 @@ public class UtilsTest
     public void testComputeUncoveredRegionsMixed()
     {
         BaseRegion target = new BaseRegion(1000, 2000);
-        // TODO
         Stream<BaseRegion> covered = Stream.of(
                 new BaseRegion(100, 200),
                 new BaseRegion(950, 1050),

@@ -137,8 +137,6 @@ public class CopyNumberBackbone
             partition.Sites.add(site);
         }
 
-        LOGGER.info("Loaded {} Amber sites from {}", sites.size(), sitesFilePath);
-
         String filterCountStr = Arrays.stream(SiteFilter.values())
                 .map(x -> format("%s=%d", x.toString(), siteFilterCounts[x.ordinal()])).collect(Collectors.joining(", "));
         LOGGER.debug("Amber site filters: {}", filterCountStr);

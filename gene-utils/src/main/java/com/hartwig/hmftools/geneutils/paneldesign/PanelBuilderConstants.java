@@ -18,15 +18,12 @@ public class PanelBuilderConstants
     public static final int GENE_UPDOWNSTREAM_REGION = 2000;
     // Only probe intronic regions when the gene has <= this number of exons.
     public static final int GENE_MAX_EXONS_TO_ADD_INTRON = 19;
-    public static final double GENE_EXON_PROBE_QUALITY_MIN = 0.05;
-    // Space between exon and intron probe.
+    public static final double GENE_EXON_QUALITY_MIN = 0.05;
+    // Minimum space between exon and intron probe.
     public static final int GENE_EXON_FLANK_GAP = 1000;
-    // Intron probes are selected within a region of this many bases.
-    public static final int GENE_EXON_FLANK_REGION = 1000;
-    // Introns shorter than this many bases are ignored.
-    public static final int GENE_MIN_INTRON_LENGTH = GENE_EXON_FLANK_GAP * 2 + GENE_EXON_FLANK_REGION;
-    // Introns shorter than this many bases get 1 probe, longer introns get 2 nonoverlapping probes.
-    public static final int GENE_LONG_INTRON_LENGTH = GENE_EXON_FLANK_GAP * 2 + GENE_EXON_FLANK_REGION * 3;
+    // Exon flank probes are selected within a region of this many bases.
+    public static final int GENE_EXON_FLANK_REGION_MIN = 1000;
+    public static final int GENE_EXON_FLANK_REGION_MAX = 5000;
     public static final double GENE_CN_QUALITY_MIN = 0.5;
 
     // Copy number backbone constants.
@@ -44,7 +41,7 @@ public class PanelBuilderConstants
     public static final double CN_GC_TOLERANCE = 0.025;
 
     // Custom regions parameters.
-    public static final double CUSTOM_REGION_PROBE_QUALITY_MIN = 0.2;
+    public static final double CUSTOM_REGION_QUALITY_MIN = 0.2;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";

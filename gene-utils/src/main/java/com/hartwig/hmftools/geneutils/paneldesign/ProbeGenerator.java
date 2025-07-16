@@ -39,6 +39,11 @@ public class ProbeGenerator
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     public ProbeGenerationResult coverRegion(final TargetRegion target, final ProbeSelectCriteria criteria)
     {
+        // TODO: this is not good because
+        //  - can make probe that only covers tiny bit of region
+        //  - can make probe that extends far past region - should centre probes instead
+        //  - shouldn't try to find best probe?
+
         // Methodology:
         //   - For each position in the target, try to find the 1 best acceptable probe that covers it.
         //   - If an acceptable probe is found, advance the position to the next position after the probe.

@@ -1,14 +1,16 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import org.jetbrains.annotations.Nullable;
+
 public record EvaluatedProbe(
         CandidateProbe candidate,
         ProbeEvalCriteria criteria,
         // null if the probe is acceptable.
-        String rejectionReason,
+        @Nullable String rejectionReason,
         // All the following fields may be null if the probe was rejected, and the field didn't need to be checked.
-        String sequence,
-        Double qualityScore,
-        Double gcContent
+        @Nullable String sequence,
+        @Nullable Double qualityScore,
+        @Nullable Double gcContent
 )
 {
     public EvaluatedProbe(final CandidateProbe probe, final ProbeEvalCriteria criteria)
