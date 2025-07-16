@@ -171,14 +171,7 @@ public class ComplexCoverageRanking
         for(HlaAllele allele : complexCoverage.getAlleles())
         {
             List<Integer> exonBoundaries = getAminoAcidExonBoundaries(allele.Gene);
-            Collections.sort(exonBoundaries);
             HlaSequenceLoci seq = mRefData.AminoAcidSequenceLookup.get(allele.asFourDigit());
-            if(seq == null)
-            {
-                String errorMsg = format("No HlaSequenceLoci found for allele(%s)", allele);
-                LL_LOGGER.error(errorMsg);
-                throw new RuntimeException(errorMsg);
-            }
 
             List<String> acids = seq.getSequences();
 

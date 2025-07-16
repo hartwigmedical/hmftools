@@ -375,8 +375,7 @@ public class LilacApplication
         List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
-        mRankedComplexes
-                .addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
+        mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
 
         if(mRankedComplexes.isEmpty())
         {
