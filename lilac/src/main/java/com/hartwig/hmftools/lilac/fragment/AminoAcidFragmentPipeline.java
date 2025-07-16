@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
 
@@ -24,11 +26,6 @@ public class AminoAcidFragmentPipeline
 {
     private final LilacConfig mConfig;
 
-    // cached for convenience only, consider making global constants
-    private final int mMinEvidenceSupport;
-    private final double mMinEvidenceFactor;
-    private final double mMinHighQualEvidenceFactor;
-
     private final List<Fragment> mHighQualRefAminoAcidFragments; // generated from input ref fragments, filtered and amino acids built
 
     // per-gene counts of bases and amino-acids with sufficient support
@@ -45,10 +42,6 @@ public class AminoAcidFragmentPipeline
         mOriginalRefFragments = referenceFragments.stream().map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
-
-        mMinEvidenceSupport = config.MinEvidenceSupport;
-        mMinEvidenceFactor = config.MinEvidenceFactor;
-        mMinHighQualEvidenceFactor = config.MinHighQualEvidenceFactor;
 
         mRefNucleotideCounts = new ConcurrentHashMap<>();
         mRefAminoAcidCounts = new ConcurrentHashMap<>();
@@ -115,10 +108,10 @@ public class AminoAcidFragmentPipeline
         // start with the unfiltered fragments again
         List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream().filter(x -> x.containsGene(gene)).toList();
 
-        SequenceCount rawNucCount = SequenceCount.nucleotides(mMinEvidenceSupport, mMinEvidenceFactor, geneRefNucFrags);
+        SequenceCount rawNucCount = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, geneRefNucFrags);
         List<Fragment> geneRefAcidFrags = geneRefNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
         geneRefAcidFrags.forEach(Fragment::buildAminoAcids);
-        SequenceCount rawAcidCount = SequenceCount.aminoAcids(mMinEvidenceSupport, mMinEvidenceFactor, geneRefAcidFrags);
+        SequenceCount rawAcidCount = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, geneRefAcidFrags);
 
         if(geneRefNucFrags.isEmpty())
             return Collections.emptyList();
@@ -128,23 +121,22 @@ public class AminoAcidFragmentPipeline
         highQualFrags = highQualFrags.stream().filter(Fragment::hasNucleotides).toList();
 
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
-                context, mMinEvidenceSupport, mMinEvidenceFactor, mMinHighQualEvidenceFactor, geneRefNucFrags, highQualFrags);
+                context, MIN_EVIDENCE_FACTOR, MIN_HIGH_QUAL_EVIDENCE_FACTOR, geneRefNucFrags, highQualFrags);
 
         int maxCommonAminoAcidExonBoundary = GENE_CACHE.MaxCommonAminoAcidExonBoundary;
 
         Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
                 .filter(x -> x <= maxCommonAminoAcidExonBoundary).collect(Collectors.toSet());
 
-        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(
-                mMinEvidenceSupport, mMinEvidenceFactor, aminoAcidBoundaries);
+        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(aminoAcidBoundaries);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
         List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(
-                mConfig, context, rawAcidCount, spliceEnrichedNucFrags, mMinEvidenceSupport, mMinEvidenceFactor);
+                context, rawAcidCount, spliceEnrichedNucFrags, MIN_EVIDENCE_FACTOR);
 
         // cache support at each base and amino acid for later writing and recovery of low-qual support
-        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mMinEvidenceSupport, mMinEvidenceFactor, enrichedAminoAcidFrags);
-        SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidenceSupport, mMinEvidenceFactor, enrichedAminoAcidFrags);
+        SequenceCount refNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, enrichedAminoAcidFrags);
+        SequenceCount refAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, enrichedAminoAcidFrags);
         setCounts(gene, refNucleotideCounts, refAminoAcidCounts, rawNucCount, rawAcidCount);
 
         return enrichedAminoAcidFrags;
@@ -166,13 +158,11 @@ public class AminoAcidFragmentPipeline
         if(highQualFragments.isEmpty())
             return Lists.newArrayList();
 
-        SequenceCount referenceNucleotideCounts = SequenceCount.nucleotides(
-                mMinEvidenceSupport, mMinEvidenceFactor, mHighQualRefAminoAcidFragments);
-        SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(
-                mMinEvidenceSupport, mMinEvidenceFactor, mHighQualRefAminoAcidFragments);
+        SequenceCount referenceNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, mHighQualRefAminoAcidFragments);
+        SequenceCount referenceAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, mHighQualRefAminoAcidFragments);
 
-        SequenceCount tumorNucleotideCounts = SequenceCount.nucleotides(mMinEvidenceSupport, mMinEvidenceFactor, highQualFragments);
-        SequenceCount tumorAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidenceSupport, mMinEvidenceFactor, highQualFragments);
+        SequenceCount tumorNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, highQualFragments);
+        SequenceCount tumorAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, highQualFragments);
 
         final List<SequenceCountDiff> nucleotideDifferences = SequenceCountDiff.create(referenceNucleotideCounts, tumorNucleotideCounts)
                 .stream().filter(x -> x.TumorCount > 0).collect(Collectors.toList());

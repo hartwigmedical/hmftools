@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,7 +51,7 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<Fragment> fragments)
     {
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, fragments);
+        SequenceCount aminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, fragments);
 
         List<Integer> heterozygousIndices = Lists.newArrayList(aminoAcidCounts.heterozygousLoci());
 

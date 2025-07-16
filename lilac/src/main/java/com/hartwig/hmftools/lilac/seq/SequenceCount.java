@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -37,24 +39,21 @@ import org.jetbrains.annotations.Nullable;
 
 public final class SequenceCount
 {
-    private final int mMinEvidenceSupport;
     private final double mMinEvidenceFactor;
 
     private final NavigableMap<Integer, Multiset<String>> mSeqCountsByLoci;
     private final Map<String, NavigableMap<Integer, Multiset<String>>> mSeqCountsByLociByGene;
 
     private SequenceCount(
-            final int minEvidenceSupport, final double minEvidenceFactor, final NavigableMap<Integer, Multiset<String>> seqCounts,
+            final double minEvidenceFactor, final NavigableMap<Integer, Multiset<String>> seqCounts,
             final Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene)
     {
-        mMinEvidenceSupport = minEvidenceSupport;
         mMinEvidenceFactor = minEvidenceFactor;
         mSeqCountsByLoci = seqCounts;
         mSeqCountsByLociByGene = seqCountsByLociByGene;
     }
 
-    public static SequenceCount nucleotides(
-            final int minEvidenceSupport, final double minEvidenceFactor, final Iterable<Fragment> fragments)
+    public static SequenceCount buildFromNucleotides(final double minEvidenceFactor, final Iterable<Fragment> fragments)
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
         Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
@@ -75,10 +74,10 @@ public final class SequenceCount
             }
         }
 
-        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
+        return new SequenceCount(minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
     }
 
-    public static SequenceCount aminoAcids(final int minEvidenceSupport, final double minEvidenceFactor, final Iterable<Fragment> fragments)
+    public static SequenceCount buildFromAminoAcids(final double minEvidenceFactor, final Iterable<Fragment> fragments)
     {
         NavigableMap<Integer, Multiset<String>> seqCountsByLoci = Maps.newTreeMap();
         Map<String, NavigableMap<Integer, Multiset<String>>> seqCountsByLociByGene = Maps.newHashMap();
@@ -99,7 +98,7 @@ public final class SequenceCount
             }
         }
 
-        return new SequenceCount(minEvidenceSupport, minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
+        return new SequenceCount(minEvidenceFactor, seqCountsByLoci, seqCountsByLociByGene);
     }
 
     public Multiset<String> get(final int locus)
@@ -143,18 +142,12 @@ public final class SequenceCount
 
     public List<String> getMinEvidenceSequences(final int locus)
     {
-        return getMinEvidenceSequences(locus, null);
-    }
-
-    public List<String> getMinEvidenceSequences(final int locus, @Nullable final Double minEvidenceFactor)
-    {
         Multiset<String> seqCounts = mSeqCountsByLoci.get(locus);
         if(seqCounts == null || seqCounts.isEmpty())
             return Lists.newArrayList();
 
         int support = seqCounts.size();
-        double factor = minEvidenceFactor == null ? mMinEvidenceFactor : minEvidenceFactor;
-        int evidenceMinCount = max(mMinEvidenceSupport, (int) ceil(support * factor));
+        int evidenceMinCount = max(MIN_EVIDENCE_SUPPORT, (int)ceil(support * mMinEvidenceFactor));
 
         return seqCounts.entrySet().stream()
                 .filter(x -> x.getCount() >= evidenceMinCount)
@@ -162,14 +155,14 @@ public final class SequenceCount
                 .collect(Collectors.toList());
     }
 
-    public Set<String> getLowRawDepthSequences(final String gene, int locus, int minDepthThreshold)
+    public Set<String> getLowRawDepthSequences(final String gene, int locus)
     {
         Multiset<String> seqCounts = mSeqCountsByLociByGene.get(gene).get(locus);
         if(seqCounts == null || seqCounts.isEmpty())
             return Sets.newHashSet();
 
         return seqCounts.entrySet().stream()
-                .filter(x -> x.getCount() < minDepthThreshold)
+                .filter(x -> x.getCount() < MIN_DEPTH_FILTER)
                 .map(Multiset.Entry::getElement)
                 .collect(Collectors.toCollection(Sets::newHashSet));
     }
@@ -334,7 +327,6 @@ public final class SequenceCount
             mSeqCountsByLoci.put(locus, seqCount);
         }
 
-        mMinEvidenceSupport = 1;
         mMinEvidenceFactor = 0.0;
         mSeqCountsByLociByGene = null;
     }

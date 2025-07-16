@@ -25,6 +25,13 @@ public final class LilacConstants
     public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.003;
     public static final int DEFAULT_MIN_EVIDENCE_SUPPORT = 1;
     public static final int DEFAULT_MIN_DEPTH_FILTER = 10;
+
+    // can be overridden in config
+    public static double MIN_EVIDENCE_FACTOR = DEFAULT_MIN_EVIDENCE_FACTOR;
+    public static double MIN_HIGH_QUAL_EVIDENCE_FACTOR = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
+    public static int MIN_EVIDENCE_SUPPORT = DEFAULT_MIN_EVIDENCE_SUPPORT;
+    public static int MIN_DEPTH_FILTER = DEFAULT_MIN_DEPTH_FILTER;
+
     public static final int DEFAULT_MAX_REF_FRAGMENTS = 1000;
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;

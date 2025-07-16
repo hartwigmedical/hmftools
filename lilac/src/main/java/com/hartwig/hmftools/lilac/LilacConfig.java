@@ -73,10 +73,12 @@ public class LilacConfig
 
     public final MhcClass ClassType;
 
+    /*
     public final int MinEvidenceSupport;
     public final double MinEvidenceFactor;
     public final double MinHighQualEvidenceFactor;
     public final int MinDepthFilter;
+    */
     public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
@@ -197,14 +199,13 @@ public class LilacConfig
 
         ClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
 
-        if(configBuilder.hasValue(MIN_BASE_QUAL))
-            LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte) configBuilder.getInteger(MIN_BASE_QUAL);
+        LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte)configBuilder.getInteger(MIN_BASE_QUAL);
+        LilacConstants.MIN_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
+        LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        LilacConstants.MIN_EVIDENCE_SUPPORT = configBuilder.getInteger(MIN_EVIDENCE_SUPPORT);
+        LilacConstants.MIN_DEPTH_FILTER = configBuilder.getInteger(MIN_DEPTH_FILTER);
 
-        MinEvidenceFactor = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         MaxRefFragments = configBuilder.getInteger(MAX_REF_FRAGMENTS);
-        MinHighQualEvidenceFactor = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
-        MinEvidenceSupport = configBuilder.getInteger(MIN_EVIDENCE_SUPPORT);
-        MinDepthFilter = configBuilder.getInteger(MIN_DEPTH_FILTER);
         HlaYPercentThreshold = configBuilder.getDecimal(HLA_Y_THRESHOLD);
 
         MinFragmentsPerAllele = configBuilder.getInteger(MIN_FRAGMENTS_PER_ALLELE);
@@ -282,10 +283,6 @@ public class LilacConfig
 
         ClassType = MhcClass.CLASS_1;
 
-        MinEvidenceFactor = DEFAULT_MIN_EVIDENCE_FACTOR;
-        MinHighQualEvidenceFactor = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
-        MinEvidenceSupport = DEFAULT_MIN_EVIDENCE_SUPPORT;
-        MinDepthFilter = DEFAULT_MIN_DEPTH_FILTER;
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
 
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;

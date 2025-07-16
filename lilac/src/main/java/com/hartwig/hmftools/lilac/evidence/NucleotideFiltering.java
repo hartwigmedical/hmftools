@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.lilac.evidence;
 
+import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 
@@ -16,14 +19,10 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class NucleotideFiltering
 {
-    private final int mMinNucleotideSupport;
-    private final double mMinNucleotideFactor;
     private final List<Integer> mAminoAcidBoundaries;
 
-    public NucleotideFiltering(int minNucleotideSupport, double minNucleotideFactor, final List<Integer> aminoAcidBoundaries)
+    public NucleotideFiltering(final List<Integer> aminoAcidBoundaries)
     {
-        mMinNucleotideSupport = minNucleotideSupport;
-        mMinNucleotideFactor = minNucleotideFactor;
         mAminoAcidBoundaries = aminoAcidBoundaries;
     }
 
@@ -71,7 +70,8 @@ public class NucleotideFiltering
             totalCount++;
         }
 
-        int minNucleotideCount = max(mMinNucleotideSupport, (int) Math.ceil(totalCount * mMinNucleotideFactor));
+        int minNucleotideCount = max(MIN_EVIDENCE_SUPPORT, (int)ceil(totalCount * MIN_EVIDENCE_FACTOR));
+
         return sequenceCounts.entrySet().stream()
                 .filter(x -> x.getValue() >= minNucleotideCount)
                 .map(x -> x.getKey())

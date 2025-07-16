@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public final class Candidates
 
         LL_LOGGER.debug("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
 
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, fragments);
+        SequenceCount aminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, fragments);
 
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.Gene.equals(context.Gene)).collect(Collectors.toList());
@@ -63,8 +64,7 @@ public final class Candidates
         LL_LOGGER.info("gene({}) {} candidates after amino acid filtering", context.geneName(), aminoAcidCandidates.size());
 
         // Nucleotide filtering
-        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(
-                mConfig.MinEvidenceSupport, mConfig.MinEvidenceFactor, aminoAcidBoundary);
+        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(aminoAcidBoundary);
 
         List<HlaSequenceLoci> nucleotideCandidatesAfterAminoAcidFiltering = mNucleotideSequences.stream()
                 .filter(x -> aminoAcidSpecificAllelesCandidates.contains(x.Allele.asFourDigit()))
@@ -100,11 +100,11 @@ public final class Candidates
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
-            Set<String> expectedSequences = Sets.newHashSet(aminoAcidCount.getMinEvidenceSequences(locus, mConfig.MinEvidenceFactor));
+            Set<String> expectedSequences = Sets.newHashSet(aminoAcidCount.getMinEvidenceSequences(locus));
             if(expectedSequences.isEmpty())
                 continue;
 
-            Set<String> lowDepthSequences = rawAminoAcidCount.getLowRawDepthSequences(context.geneName(), locus, mConfig.MinDepthFilter);
+            Set<String> lowDepthSequences = rawAminoAcidCount.getLowRawDepthSequences(context.geneName(), locus);
             expectedSequences.addAll(lowDepthSequences);
 
             int index = 0;

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 
 import java.util.List;
 import java.util.Set;
@@ -12,15 +13,11 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 public class NucleotideSpliceEnrichment
 {
     private final byte mMinBaseQuality;
-    private final int mMinEvidenceSupport;
-    private final double mMinEvidenceFactor;
     private final Set<Integer> mAminoAcidBoundary;
 
-    public NucleotideSpliceEnrichment(int minEvidenceSupport, double minEvidenceFactor, final Set<Integer> aminoAcidBoundary)
+        public NucleotideSpliceEnrichment(final Set<Integer> aminoAcidBoundary)
     {
         mMinBaseQuality = LOW_BASE_QUAL_THRESHOLD;
-        mMinEvidenceSupport = minEvidenceSupport;
-        mMinEvidenceFactor = minEvidenceFactor;
         mAminoAcidBoundary = aminoAcidBoundary;
     }
 
@@ -28,7 +25,7 @@ public class NucleotideSpliceEnrichment
     {
         // fragments are all in nucleotide-space
 
-        SequenceCount nucleotideCounts = SequenceCount.nucleotides(mMinEvidenceSupport, mMinEvidenceFactor, highQualFrags);
+        SequenceCount nucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, highQualFrags);
         Set<Integer> nucleotideExonBoundaryStarts = mAminoAcidBoundary.stream().map(x -> x * 3).collect(Collectors.toSet());
         List<Integer> homLoci = Lists.newArrayList(nucleotideCounts.homozygousLoci());
 
