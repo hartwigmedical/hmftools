@@ -26,9 +26,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ComplexBuilder
 {
@@ -264,18 +267,19 @@ public class ComplexBuilder
     {
         List<HlaAllele> confirmedGroups = takeN(unfilteredGroups.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList()), 2);
         List<HlaAllele> candidates = unfilteredCandidates.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList());
+        Set<HlaAllele> candidatesSet = Sets.newHashSet(candidates);
 
         if (confirmedGroups.size() == 2)
         {
-            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
-            List<HlaAllele> second = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(1)).collect(Collectors.toList());
+            Set<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toCollection(Sets::newHashSet));
+            Set<HlaAllele> second = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(1)).collect(Collectors.toCollection(Sets::newHashSet));
             return combineAlleles(first, second);
         }
 
         if (confirmedGroups.size() == 1)
         {
-            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
-            List<HlaAllele> second = candidates;
+            Set<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toCollection(Sets::newHashSet));
+            Set<HlaAllele> second = candidatesSet;
 
             List<HlaComplex> complexes = first.stream().map(x -> new HlaComplex(Lists.newArrayList(x))).collect(Collectors.toList());
             complexes.addAll(combineAlleles(first, second));
@@ -283,7 +287,7 @@ public class ComplexBuilder
         }
 
         List<HlaComplex> complexes = candidates.stream().map(x -> new HlaComplex(Lists.newArrayList(x))).collect(Collectors.toList());
-        complexes.addAll(combineAlleles(candidates, candidates));
+        complexes.addAll(combineAlleles(candidatesSet, candidatesSet));
         return complexes;
     }
 
@@ -323,27 +327,28 @@ public class ComplexBuilder
         return results;
     }
 
-    private static List<HlaComplex> combineAlleles(final List<HlaAllele> first, final List<HlaAllele> second)
+    private static List<HlaComplex> combineAlleles(final Set<HlaAllele> first, final Set<HlaAllele> second)
     {
-        List<List<HlaAllele>> allelePairs = cartesianAlleleProduct(first, second);
-        return allelePairs.stream().map(x -> new HlaComplex(x)).collect(Collectors.toList());
+        Set<Pair<HlaAllele, HlaAllele>> allelePairs = cartesianAlleleProduct(first, second);
+        return allelePairs.stream().map(x -> new HlaComplex(Lists.newArrayList(x.getLeft(), x.getRight()))).collect(Collectors.toList());
     }
 
-    private static List<List<HlaAllele>> cartesianAlleleProduct(final List<HlaAllele> first, final List<HlaAllele> second)
+    private static Set<Pair<HlaAllele, HlaAllele>> cartesianAlleleProduct(final Set<HlaAllele> first, final Set<HlaAllele> second)
     {
         // make a list of all possible combinations of the alleles in each of the 2 lists
-        List<List<HlaAllele>> results = Lists.newArrayList();
+        Set<Pair<HlaAllele, HlaAllele>> results = Sets.newHashSet();
 
-        for(HlaAllele i : first)
+        for(HlaAllele allele1 : first)
         {
-            for(HlaAllele j : second)
+            for(HlaAllele allele2 : second)
             {
-                if(i != j)
+                if(allele1 != allele2)
                 {
-                    List<HlaAllele> pairing = Lists.newArrayList(i, j);
-                    Collections.sort(pairing);
-                    if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
-                        continue;
+                    Pair<HlaAllele, HlaAllele> pairing;
+                    if(allele1.compareTo(allele2) <= 0)
+                        pairing = Pair.of(allele1, allele2);
+                    else
+                        pairing = Pair.of(allele2, allele1);
 
                     results.add(pairing);
                 }

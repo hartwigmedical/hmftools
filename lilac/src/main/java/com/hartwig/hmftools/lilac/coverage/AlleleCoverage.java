@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class AlleleCoverage implements Comparable<AlleleCoverage>
@@ -77,8 +78,18 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
 
         for(FragmentAlleles fragment : fragAlleles)
         {
-            Set<HlaAllele> fullAlleles = fragment.getFull().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
-            Set<HlaAllele> wildAlleles = fragment.getWild().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
+            Set<HlaAllele> fullAlleles;
+            Set<HlaAllele> wildAlleles;
+            if(asAlleleGroup)
+            {
+                fullAlleles = fragment.getFull().stream().map(HlaAllele::asAlleleGroup).collect(Collectors.toCollection(Sets::newHashSet));
+                wildAlleles = fragment.getWild().stream().map(HlaAllele::asAlleleGroup).collect(Collectors.toCollection(Sets::newHashSet));
+            }
+            else
+            {
+                fullAlleles = fragment.getFull();
+                wildAlleles = fragment.getWild();
+            }
 
             if(fullAlleles.size() == 1 && wildAlleles.isEmpty())
             {
@@ -128,15 +139,7 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
 
     private static void increment(final Map<HlaAllele,Double> map, final HlaAllele allele, double value)
     {
-        Map.Entry<HlaAllele,Double> entry = map.entrySet().stream().filter(x -> x.getKey() == allele).findFirst().orElse(null);
-
-        if(entry == null)
-        {
-            map.put(allele, value);
-            return;
-        }
-
-        entry.setValue(entry.getValue() + value);
+        map.merge(allele, value, Double::sum);
     }
 
     public static List<HlaAllele> coverageAlleles(final List<AlleleCoverage> coverage)
