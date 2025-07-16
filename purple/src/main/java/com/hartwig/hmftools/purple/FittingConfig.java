@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAU
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_GC_RATIO_EXPONENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -93,7 +94,8 @@ public class FittingConfig
         PloidyPenaltyFactor = configBuilder.getDecimal(PLOIDY_PENALTY_FACTOR);
 
         PloidyPenaltyStandardDeviation = getConfigDecimal(
-                configBuilder, PLOIDY_PENALTY_STANDARD_DEVIATION, PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
+                configBuilder, PLOIDY_PENALTY_STANDARD_DEVIATION,
+                targetedMode ? TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT : PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
 
         PloidyPenaltyMinStandardDeviationPerPloidy = configBuilder.getDecimal(PLOIDY_PENALTY_MIN_STANDARD_DEVIATION);
 
