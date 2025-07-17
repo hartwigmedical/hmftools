@@ -19,7 +19,7 @@ public class ProbeSelector
     }
 
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there are no acceptable probes.
-    public Optional<EvaluatedProbe> selectBestProbe(Stream<CandidateProbe> probes, final ProbeSelectCriteria criteria)
+    public Optional<EvaluatedProbe> selectBestCandidate(Stream<CandidateProbe> probes, final ProbeSelectCriteria criteria)
     {
         Stream<EvaluatedProbe> acceptableProbes = probes
                 .map(probe -> mProbeEvaluator.evaluateCandidate(probe, criteria.eval()))

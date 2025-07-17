@@ -70,7 +70,7 @@ public class ProbeGenerator
 
             Stream<CandidateProbe> candidates = mCandidateGenerator.leftMovingLeftAlignedProbes(
                     new BasePosition(chromosome, initialProbeStart), minProbeStart, candidateFactory);
-            Optional<EvaluatedProbe> bestCandidate = mProbeSelector.selectBestProbe(candidates, criteria);
+            Optional<EvaluatedProbe> bestCandidate = mProbeSelector.selectBestCandidate(candidates, criteria);
 
             if(bestCandidate.isPresent())
             {
@@ -98,7 +98,7 @@ public class ProbeGenerator
     // Generates the 1 best acceptable probe that is contained within the specified region.
     public ProbeGenerationResult coverOneSubregion(final TargetRegion target, final ProbeSelectCriteria criteria)
     {
-        return mProbeSelector.selectBestProbe(mCandidateGenerator.coverOneSubregion(target), criteria)
+        return mProbeSelector.selectBestCandidate(mCandidateGenerator.coverOneSubregion(target), criteria)
                 .map(probe -> new ProbeGenerationResult(List.of(target), List.of(probe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
@@ -115,7 +115,7 @@ public class ProbeGenerator
             final ProbeSelectCriteria criteria)
     {
         TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
-        return mProbeSelector.selectBestProbe(mCandidateGenerator.coverPosition(position, metadata), criteria)
+        return mProbeSelector.selectBestCandidate(mCandidateGenerator.coverPosition(position, metadata), criteria)
                 .map(probe -> new ProbeGenerationResult(List.of(target), List.of(probe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
