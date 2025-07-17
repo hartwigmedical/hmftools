@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
 
@@ -41,7 +42,7 @@ public class CopyNumberBackbone
 
     private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
-            ProbeSelectStrategy.BEST_GC);
+            new ProbeSelectStrategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
@@ -154,6 +155,7 @@ public class CopyNumberBackbone
     {
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
+        // TODO: could make this a lot faster by early stopping when close to target GC
         Optional<EvaluatedProbe> bestCandidate =
                 probeGenerator.selectBestProbe(generateCandidateProbes(partition, probeGenerator), PROBE_SELECT_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);

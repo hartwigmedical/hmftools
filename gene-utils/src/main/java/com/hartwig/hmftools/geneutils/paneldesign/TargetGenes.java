@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TARGET;
@@ -52,10 +53,10 @@ public class TargetGenes
 
     private static final ProbeSelectCriteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(GENE_EXON_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
-            ProbeSelectStrategy.MAX_QUALITY);
+            new ProbeSelectStrategy.MaxQuality());
     private static final ProbeSelectCriteria CN_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
-            ProbeSelectStrategy.BEST_GC);
+            new ProbeSelectStrategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
     private static final String FLD_INCLUDE_CODING = "IncludeCoding";
     private static final String FLD_INCLUDE_UTR = "IncludeUTR";
@@ -306,6 +307,7 @@ public class TargetGenes
             {
                 if(options.coding())
                 {
+                    // TODO: cover splice point
                     regions.add(new GeneRegion(
                             gene,
                             GeneRegionType.CODING,

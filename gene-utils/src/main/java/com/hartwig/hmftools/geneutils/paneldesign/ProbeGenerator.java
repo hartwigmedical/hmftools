@@ -234,17 +234,36 @@ public class ProbeGenerator
         Stream<EvaluatedProbe> acceptableProbes = probes
                 .map(probe -> mProbeEvaluator.evaluateCandidate(probe, criteria.eval()))
                 .filter(EvaluatedProbe::accepted);
-        return switch(criteria.strategy())
+
+        ProbeSelectStrategy strategy = criteria.strategy();
+        if(strategy instanceof ProbeSelectStrategy.FirstAcceptable)
         {
-            case FIRST_ACCEPTABLE -> acceptableProbes.findFirst();
-            // Stop if a probe with quality=1 is found.
-            case MAX_QUALITY -> getBestScoringElement(acceptableProbes,
+            return acceptableProbes.findFirst();
+        }
+        else if(strategy instanceof ProbeSelectStrategy.MaxQuality)
+        {
+            // Early stopping if "optimal" quality score is found.
+            double optimalQuality = ((ProbeSelectStrategy.MaxQuality) strategy).optimalQuality();
+            return getBestScoringElement(
+                    acceptableProbes,
                     EvaluatedProbe::qualityScore,
-                    quality -> Doubles.greaterOrEqual(quality, 1.0), true);
-            // Stop if a probe with gc=gcTarget is found.
-            case BEST_GC -> getBestScoringElement(acceptableProbes,
-                    probe -> abs(probe.gcContent() - criteria.eval().gcContentTarget()),
-                    gc -> Doubles.equal(gc, criteria.eval().gcContentTarget()), false);
-        };
+                    quality -> Doubles.greaterOrEqual(quality, optimalQuality),
+                    true);
+        }
+        else if(strategy instanceof ProbeSelectStrategy.BestGc)
+        {
+            // Early stopping if "optimal" GC content is found.
+            double targetGc = criteria.eval().gcContentTarget();
+            double optimalGcTolerance = ((ProbeSelectStrategy.BestGc) strategy).gcToleranceOptimal();
+            return getBestScoringElement(
+                    acceptableProbes,
+                    probe -> abs(probe.gcContent() - targetGc),
+                    distance -> Doubles.lessOrEqual(distance, optimalGcTolerance),
+                    false);
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unhandled ProbeSelectStrategy");
+        }
     }
 }

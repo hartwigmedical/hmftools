@@ -42,6 +42,8 @@ public class PanelBuilderConstants
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.
     public static final double CN_GC_TARGET = 0.45;
     public static final double CN_GC_TOLERANCE = 0.025;
+    // Early stopping on the probe search if the GC is within this tolerance. (Performance tuning parameter.)
+    public static final double CN_GC_OPTIMAL_TOLERANCE = 0.001;
 
     // Custom regions parameters.
     public static final double CUSTOM_REGION_QUALITY_MIN = 0.2;

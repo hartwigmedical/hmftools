@@ -22,7 +22,7 @@ public class CustomRegions
 
     private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvalCriteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
-            ProbeSelectStrategy.MAX_QUALITY);
+            new ProbeSelectStrategy.MaxQuality());
 
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
 
