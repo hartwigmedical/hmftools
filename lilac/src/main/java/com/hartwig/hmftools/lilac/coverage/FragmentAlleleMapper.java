@@ -24,12 +24,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
+import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
-import com.hartwig.hmftools.lilac.evidence.AminoAcid;
-import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 
 public class FragmentAlleleMapper
 {

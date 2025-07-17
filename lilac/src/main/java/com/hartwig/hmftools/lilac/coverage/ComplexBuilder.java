@@ -13,10 +13,10 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_GROUP_TOTAL
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_LOW_CONF_GROUP_UNIQUE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.RARE_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.coverage.AlleleCoverage.coverageAlleles;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUnsupportedWildcardFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
-import static com.hartwig.hmftools.lilac.coverage.AlleleCoverage.coverageAlleles;
 
 import java.util.Collections;
 import java.util.List;

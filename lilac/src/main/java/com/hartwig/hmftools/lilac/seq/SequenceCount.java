@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
 
 import java.io.BufferedWriter;
@@ -31,9 +30,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 
 import org.jetbrains.annotations.Nullable;
 

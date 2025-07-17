@@ -9,10 +9,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 public class FragmentAlleles
 {
     private final Fragment mFragment;
