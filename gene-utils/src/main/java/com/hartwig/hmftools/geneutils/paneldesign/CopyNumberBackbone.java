@@ -1,339 +1,234 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_CENTROMERE_MARGIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_GC_RATIO_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_GNMOD_FREQ_MAX;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_GNMOD_FREQ_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_MAPPABILITY;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.CN_BACKBONE_PARTITION_SIZE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.MIN_PROBE_QUALITY_SCORE;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeCandidate.createProbeCandidate;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_QUALITY_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeBoundsContaining;
 
-import java.io.BufferedReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
-import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+
+// Probes based on Amber heterozygous sites, used to deduce copy number.
+// Methodology:
+//   - Divide chromosomes into large partitions;
+//   - In each partition, generate candidate probes on each Amber site;
+//   - In each partition, select the acceptable probe with the best GC content.
+// TODO: this should probably be a predefined list rather than generate every time
 public class CopyNumberBackbone
 {
-    private final PanelConfig mConfig;
-    private final PanelCache mPanelCache;
-    private final ProbeQualityProfile mProbeQualityProfile;
+    private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.CN_BACKBONE;
 
-    private final Map<String, List<Partition>> mChrPartitionsMap;
+    private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
+            new ProbeEvalCriteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
+            new ProbeSelectStrategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
-    public CopyNumberBackbone(final PanelConfig config, final PanelCache panelCache, final ProbeQualityProfile probeQualityProfile)
+    private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
+
+    public static ProbeGenerationResult generateProbes(final String amberSitesFile, final RefGenomeVersion refGenVersion,
+            final ProbeGenerator probeGenerator, final CoveredRegions coveredRegions)
     {
-        mConfig = config;
-        mPanelCache = panelCache;
-        mProbeQualityProfile = probeQualityProfile;
+        LOGGER.info("Generating copy number backbone probes");
 
-        mChrPartitionsMap = Maps.newHashMap();
+        Map<String, List<Partition>> partitions = createPartitions(refGenVersion);
 
-        createPartitions();
-    }
+        populateAmberSites(partitions, amberSitesFile, coveredRegions);
 
-    public void run()
-    {
-        // evaluate sites for any partition which doesn't already have a region or probe
-        markCoveredPartitions();
+        ProbeGenerationResult result = generateProbes(partitions, probeGenerator);
 
-        loadSites();
-
-        selectSiteProbes();
-    }
-
-    private void markCoveredPartitions()
-    {
-        for(Map.Entry<String, List<Partition>> entry : mChrPartitionsMap.entrySet())
-        {
-            String chromosome = entry.getKey();
-            List<Partition> partitions = entry.getValue();
-
-            List<PanelRegion> panelRegions = mPanelCache.chromosomeRegions(chromosome);
-
-            for(Partition partition : partitions)
-            {
-                if(panelRegions.stream().anyMatch(partition.Region::overlaps))
-                {
-                    partition.HasExistingProbes = true;
-                }
-            }
-        }
-    }
-
-    private void selectSiteProbes()
-    {
-        List<AmberSite> amberSites = Lists.newArrayList();
-        List<ChrBaseRegion> regions = Lists.newArrayList();
-
-        for(List<Partition> partitions : mChrPartitionsMap.values())
-        {
-            for(Partition partition : partitions)
-            {
-                if(partition.HasExistingProbes)
-                {
-                    continue;
-                }
-
-                for(AmberSite amberSite : partition.Sites)
-                {
-                    int probeStart = max(1, amberSite.Position - PROBE_LENGTH / 2);
-                    int probeEnd = probeStart + PROBE_LENGTH - 1;
-
-                    ProbeCandidate probe = createProbeCandidate(
-                            new ChrBaseRegion(amberSite.Chromosome, probeStart, probeEnd), mConfig.RefGenome);
-
-                    amberSite.setProbe(probe);
-
-                    amberSites.add(amberSite);
-                    regions.add(probe.region());
-                }
-            }
-        }
-
-        if(amberSites.isEmpty())
-        {
-            GU_LOGGER.info("no valid Amber sites found");
-            return;
-        }
-
-        GU_LOGGER.info("Computing quality scores for {} Amber site probes", regions.size());
-
-        List<Optional<Double>> qualityScores = regions.stream().map(mProbeQualityProfile::computeQualityScore).toList();
-
-        for(int i = 0; i < amberSites.size(); ++i)
-        {
-            AmberSite amberSite = amberSites.get(i);
-            ProbeCandidate probe = amberSite.probe();
-            qualityScores.get(i).ifPresent(probe::setQualityScore);
-        }
-
-        // take the lowest scoring site for each partition
-        for(List<Partition> partitions : mChrPartitionsMap.values())
-        {
-            for(Partition partition : partitions)
-            {
-                if(partition.HasExistingProbes)
-                {
-                    continue;
-                }
-
-                double bestScore = MIN_PROBE_QUALITY_SCORE;
-                AmberSite topAmberSite = null;
-
-                for(AmberSite amberSite : partition.Sites)
-                {
-                    ProbeCandidate probe = amberSite.probe();
-
-                    if(probe.getQualityScore().isEmpty())
-                    {
-                        continue;
-                    }
-
-                    if(topAmberSite == null || probe.getQualityScore().get() > bestScore)
-                    {
-                        bestScore = probe.getQualityScore().get();
-                        topAmberSite = amberSite;
-                    }
-                }
-
-                if(topAmberSite != null)
-                {
-                    ProbeCandidate probe = topAmberSite.probe();
-
-                    PanelRegion amberProbe = new PanelRegion(
-                            probe.region(), RegionType.CN_BACKBONE, format("%s:%d", topAmberSite.Chromosome, topAmberSite.Position),
-                            probe.getSequence(), probe.getGcContent(), probe.getQualityScore().get());
-
-                    mPanelCache.addRegion(amberProbe);
-                }
-            }
-        }
+        LOGGER.info("Done generating copy number backbone probes");
+        return result;
     }
 
     private static class Partition
     {
-        public final BaseRegion Region;
+        public final ChrBaseRegion Region;
         public final List<AmberSite> Sites;
-        public boolean HasExistingProbes;
 
-        public Partition(final BaseRegion region)
+        public Partition(final ChrBaseRegion region)
         {
             Region = region;
             Sites = Lists.newArrayList();
-            HasExistingProbes = false;
-        }
-
-        public String toString()
-        {
-            return format("region(%s) sites(%d) hasExistingProbes(%s)", Region, Sites.size(), HasExistingProbes);
         }
     }
 
-    private void createPartitions()
+    private static Map<String, List<Partition>> createPartitions(final RefGenomeVersion refGenomeVersion)
     {
-        RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(mConfig.RefGenVersion);
+        RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(refGenomeVersion);
 
-        for(HumanChromosome chromosome : HumanChromosome.values())
+        return Arrays.stream(HumanChromosome.values()).map(chromosome ->
         {
-            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+            // Partitions spaced across the chromosome, avoiding the centromeres.
 
+            String chrStr = refGenomeVersion.versionedChromosome(chromosome.toString());
             int centromere = refGenomeCoordinates.centromeres().get(chromosome);
             int centromereMin = centromere - CN_BACKBONE_CENTROMERE_MARGIN;
             int centromereMax = centromere + CN_BACKBONE_CENTROMERE_MARGIN;
+            LOGGER.debug("Excluded centromere region {}:{}-{}", chromosome, centromereMin, centromereMax);
 
-            List<Partition> chrPartitions = Lists.newArrayList();
-            mChrPartitionsMap.put(chrStr, chrPartitions);
+            List<Partition> chrPartitions = partitionChromosome(chrStr, refGenomeVersion, CN_BACKBONE_PARTITION_SIZE).stream()
+                    .filter(region -> !region.overlaps(chrStr, centromereMin, centromereMax))
+                    .map(Partition::new)
+                    .toList();
 
-            List<ChrBaseRegion> regions = partitionChromosome(chrStr, mConfig.RefGenVersion, CN_BACKBONE_PARTITION_SIZE);
+            chrPartitions.forEach(partition -> LOGGER.trace("Copy number backbone partition: {}", partition.Region));
 
-            for(ChrBaseRegion region : regions)
-            {
-                if(region.overlaps(chrStr, centromereMin, centromereMax))
-                {
-                    continue;
-                }
-
-                chrPartitions.add(new Partition(new BaseRegion(region.start(), region.end())));
-            }
-        }
+            return Map.entry(chrStr, chrPartitions);
+        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private static final String FLD_GNOMAD_FREQ = "GnomadFreq";
-    private static final String FLD_MAPPABILITY = "Mappability";
-    private static final String FLD_GC_RATIO = "GcRatio";
-
-    private enum SiteFilter
+    private static void populateAmberSites(Map<String, List<Partition>> partitions, final String sitesFilePath,
+            final CoveredRegions coveredRegions)
     {
-        REQUIRED,
-        EXCLUDED,
-        GNOMAD,
-        GC_RATIO,
-        MAPPABILITY,
-        POPULATED;
+        enum SiteFilter
+        {
+            CANDIDATE,
+            EXCLUDED_REGION,
+            GNOMAD_FREQ,
+            ALREADY_COVERED
+        }
+
+        List<AmberSite> sites = AmberSites.loadAmberSitesFile(sitesFilePath);
+        int[] siteFilterCounts = new int[SiteFilter.values().length];
+        for(AmberSite site : sites)
+        {
+            if(!(site.gnomadFreq() >= CN_BACKBONE_GNOMAD_FREQ_MIN && site.gnomadFreq() <= CN_BACKBONE_GNOMAD_FREQ_MAX))
+            {
+                ++siteFilterCounts[SiteFilter.GNOMAD_FREQ.ordinal()];
+                continue;
+            }
+            else if(!HumanChromosome.contains(site.position().Chromosome))
+            {
+                ++siteFilterCounts[SiteFilter.EXCLUDED_REGION.ordinal()];
+                continue;
+            }
+            List<Partition> chrPartitions = partitions.get(site.position().Chromosome);
+            if(chrPartitions == null)
+            {
+                ++siteFilterCounts[SiteFilter.EXCLUDED_REGION.ordinal()];
+                continue;
+            }
+            Partition partition = chrPartitions.stream()
+                    .filter(p -> p.Region.containsPosition(site.position().Position)).findFirst().orElse(null);
+            if(partition == null)
+            {
+                ++siteFilterCounts[SiteFilter.EXCLUDED_REGION.ordinal()];
+                continue;
+            }
+            // TODO: probably makes more sense to do this later
+            if(positionAlreadyCovered(site.position(), coveredRegions))
+            {
+                ++siteFilterCounts[SiteFilter.ALREADY_COVERED.ordinal()];
+            }
+            ++siteFilterCounts[SiteFilter.CANDIDATE.ordinal()];
+            partition.Sites.add(site);
+        }
+
+        String filterCountStr = Arrays.stream(SiteFilter.values())
+                .map(x -> format("%s=%d", x.toString(), siteFilterCounts[x.ordinal()])).collect(Collectors.joining(", "));
+        LOGGER.debug("Amber site filters: {}", filterCountStr);
     }
 
-    private void loadSites()
+    private static boolean positionAlreadyCovered(final BasePosition position, final CoveredRegions coveredRegions)
     {
-        try(BufferedReader reader = createBufferedReader(mConfig.AmberSitesFile))
-        {
-            String header = reader.readLine();
+        // Say it's covered if any candidate probes for the position could overlap with a covered region.
+        // Not perfect but there are so many Amber sites to choose from that it shouldn't matter.
+        // Simpler than trying to filter the candidates later.
+        ChrBaseRegion region = ChrBaseRegion.from(position.Chromosome, probeBoundsContaining(position.Position));
+        return coveredRegions.isCovered(region);
+    }
 
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+    private static ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions, final ProbeGenerator probeGenerator)
+    {
+        return partitions.values().stream()
+                .flatMap(chrPartitions ->
+                        chrPartitions.stream().map(partition -> generateProbe(partition, probeGenerator)))
+                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+    }
 
-            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posIndex = fieldsIndexMap.get(FLD_POSITION);
-            int mapIndex = fieldsIndexMap.get(FLD_MAPPABILITY);
-            int gnomadIndex = fieldsIndexMap.get(FLD_GNOMAD_FREQ);
-            int gcRatioIndex = fieldsIndexMap.get(FLD_GC_RATIO);
+    private static ProbeGenerationResult generateProbe(final Partition partition, final ProbeGenerator probeGenerator)
+    {
+        LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
-            int[] siteFilterCounts = new int[SiteFilter.values().length];
+        Optional<EvaluatedProbe> bestCandidate =
+                probeGenerator.mProbeSelector.selectBestCandidate(generateCandidateProbes(partition, probeGenerator), PROBE_SELECT_CRITERIA);
+        LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
-            String line = null;
-            List<Partition> chrPartitions = null;
-            Partition currentPartition = null;
-            String currentChromosome = "";
-            int siteCount = 0;
-
-            while((line = reader.readLine()) != null)
-            {
-                String[] values = line.split(TSV_DELIM, -1);
-
-                ++siteCount;
-
-                double mappability = Double.parseDouble(values[mapIndex]);
-
-                if(mappability < CN_BACKBONE_MAPPABILITY)
+        ProbeGenerationResult result = bestCandidate
+                .map(bestProbe -> new ProbeGenerationResult(
+                        // TODO: is this the best target region to use here?
+                        List.of(bestProbe.candidate().target()),
+                        List.of(bestProbe),
+                        Collections.emptyList()))
+                .orElseGet(() ->
                 {
-                    ++siteFilterCounts[SiteFilter.MAPPABILITY.ordinal()];
-                    continue;
-                }
+                    LOGGER.debug("No acceptable probe for copy number backbone partition: {}", partition.Region);
 
-                double gnomadFreq = Double.parseDouble(values[gnomadIndex]);
+                    TargetMetadata metadata = createTargetMetadata(partition.Region, null);
+                    // TODO: is this the best target region to use here?
+                    TargetRegion target = new TargetRegion(partition.Region, metadata);
 
-                if(gnomadFreq < CN_BACKBONE_GNMOD_FREQ_MIN || gnomadFreq > CN_BACKBONE_GNMOD_FREQ_MAX)
-                {
-                    ++siteFilterCounts[SiteFilter.GNOMAD.ordinal()];
-                    continue;
-                }
-
-                double gcRatio = Double.parseDouble(values[gcRatioIndex]);
-
-                if(gcRatio < CN_BACKBONE_GC_RATIO_MIN)
-                {
-                    ++siteFilterCounts[SiteFilter.GC_RATIO.ordinal()];
-                    continue;
-                }
-
-                String chrStr = values[chrIndex];
-
-                if(!HumanChromosome.contains(chrStr))
-                {
-                    continue;
-                }
-
-                if(!currentChromosome.equals(chrStr))
-                {
-                    currentChromosome = chrStr;
-                    chrPartitions = mChrPartitionsMap.get(chrStr);
-                    currentPartition = null;
-                }
-
-                int position = Integer.parseInt(values[posIndex]);
-
-                if(currentPartition == null || !currentPartition.Region.containsPosition(position))
-                {
-                    currentPartition = chrPartitions.stream().filter(x -> x.Region.containsPosition(position)).findFirst().orElse(null);
-
-                    if(currentPartition == null)
+                    String rejectionReason;
+                    if(partition.Sites.isEmpty())
                     {
-                        ++siteFilterCounts[SiteFilter.EXCLUDED.ordinal()];
-                        continue;
+                        rejectionReason = "No Amber sites in partition";
                     }
-
-                    if(currentPartition.HasExistingProbes)
+                    else
                     {
-                        ++siteFilterCounts[SiteFilter.POPULATED.ordinal()];
-                        continue;
+                        rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_SELECT_CRITERIA.eval();
                     }
-                }
+                    RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, target, rejectionReason);
 
-                currentPartition.Sites.add(new AmberSite(chrStr, position));
-                ++siteFilterCounts[SiteFilter.REQUIRED.ordinal()];
-            }
+                    return new ProbeGenerationResult(List.of(target), Collections.emptyList(), List.of(rejectedRegion));
+                });
+        return result;
+    }
 
-            GU_LOGGER.info("loaded {} Amber sites from {}", siteCount, mConfig.AmberSitesFile);
+    private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final ProbeGenerator probeGenerator)
+    {
+        return partition.Sites.stream()
+                .flatMap(site -> generateCandidateProbes(partition, site, probeGenerator))
+                // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
+                .filter(probe -> partition.Region.containsRegion(probe.probeRegion()));
+    }
 
-            String filterCountStr = Arrays.stream(SiteFilter.values())
-                    .map(x -> format("%s=%d", x.toString(), siteFilterCounts[x.ordinal()])).collect(Collectors.joining(", "));
-            GU_LOGGER.debug("Amber site filters: {}", filterCountStr);
-        }
-        catch(Exception e)
+    private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final AmberSite site,
+            final ProbeGenerator probeGenerator)
+    {
+        return probeGenerator.mCandidateGenerator.coverPosition(site.position(), createTargetMetadata(partition.Region, site));
+    }
+
+    private static TargetMetadata createTargetMetadata(final ChrBaseRegion partitionRegion, @Nullable final AmberSite site)
+    {
+        String extraInfo = partitionRegion.toString();
+        if(site != null)
         {
-            GU_LOGGER.error("failed to load Amber sites file: {}", e.toString());
+            extraInfo += format(":%d", site.position().Position);
         }
+        return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
     }
 }

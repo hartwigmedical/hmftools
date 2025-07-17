@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-public enum RegionType
+public enum TargetRegionType
 {
     GENE,
     CN_BACKBONE,
     CUSTOM,
-    MIXED;
+    MIXED  // TODO: needed?
 }
