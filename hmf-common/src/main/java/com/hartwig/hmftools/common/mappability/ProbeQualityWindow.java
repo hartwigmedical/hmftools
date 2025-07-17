@@ -1,33 +1,20 @@
 package com.hartwig.hmftools.common.mappability;
 
-import static java.lang.String.format;
-
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-public class ProbeQualityWindow extends BaseRegion
+public record ProbeQualityWindow(
+        BaseRegion region,
+        float qualityScore
+) implements Comparable<ProbeQualityWindow>
 {
-    private final float mQualityScore;
-
     public ProbeQualityWindow(int posStart, int posEnd, float qualityScore)
     {
-        super(posStart, posEnd);
-        this.mQualityScore = qualityScore;
-    }
-
-    public float getQualityScore()
-    {
-        return mQualityScore;
+        this(new BaseRegion(posStart, posEnd), qualityScore);
     }
 
     @Override
-    public String toString()
+    public int compareTo(final ProbeQualityWindow other)
     {
-        return format("%d-%d quality(%f)", start(), end(), mQualityScore);
-    }
-
-    @Override
-    public boolean equals(final Object obj)
-    {
-        return super.equals(obj) && ((ProbeQualityWindow) obj).mQualityScore == mQualityScore;
+        return region.compareTo(other.region);
     }
 }

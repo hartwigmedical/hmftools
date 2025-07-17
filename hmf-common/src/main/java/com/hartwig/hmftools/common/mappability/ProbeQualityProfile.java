@@ -146,7 +146,7 @@ public class ProbeQualityProfile
         // For some reason using Stream skip() and takeWhile() here is extremely slow compared to List.subList().
         int windowsEnd = scanWhileOverlap(windows, windowsStart.getAsInt(), probe.baseRegion());   // Inclusive
         List<ProbeQualityWindow> overlappingWindows = windows.subList(windowsStart.getAsInt(), windowsEnd + 1);
-        if(!overlappingWindows.get(overlappingWindows.size() - 1).containsPosition(probe.end()))
+        if(!overlappingWindows.get(overlappingWindows.size() - 1).region().containsPosition(probe.end()))
         {
             // Probe middle or end not covered.
             return OptionalDouble.empty();
@@ -162,14 +162,14 @@ public class ProbeQualityProfile
         // sorting by start (done previously) implies sorting by end.
         int index = Collections.binarySearch(
                 windows,
-                new BaseRegion(0, position),   // Dummy interval, only end is used
-                Comparator.comparingInt(BaseRegion::end)
+                new ProbeQualityWindow(0, position, 0),   // Dummy interval, only end is used
+                Comparator.comparingInt(window -> window.region().end())
         );
         if(index < 0)
         {
             index = -index - 1;
         }
-        if(index < windows.size() && windows.get(index).containsPosition(position))
+        if(index < windows.size() && windows.get(index).region().containsPosition(position))
         {
             return OptionalInt.of(index);
         }
@@ -187,7 +187,7 @@ public class ProbeQualityProfile
         // Windows fully overlapping the probe are used as-is.
         // Windows partially overlapping the probe have their quality score interpolated towards windows which overlap more.
 
-        double centreQuality = windows.get(windows.size() / 2).getQualityScore();
+        double centreQuality = windows.get(windows.size() / 2).qualityScore();
 
         double minQuality = centreQuality;
 
@@ -216,12 +216,12 @@ public class ProbeQualityProfile
 
     private static double adjustedWindowQualityScore(final ProbeQualityWindow window, double adjacentQualityScore, final BaseRegion probe)
     {
-        int overlap = min(window.end(), probe.end()) - max(window.start(), probe.start());
-        double qualityScore = window.getQualityScore();
+        int overlap = min(window.region().end(), probe.end()) - max(window.region().start(), probe.start());
+        double qualityScore = window.qualityScore();
         if(overlap < BASE_WINDOW_LENGTH)
         {
             double overlapFract = (double) overlap / BASE_WINDOW_LENGTH;
-            qualityScore = interpolateQualityScores(window.getQualityScore(), adjacentQualityScore, overlapFract);
+            qualityScore = interpolateQualityScores(window.qualityScore(), adjacentQualityScore, overlapFract);
         }
         return qualityScore;
     }
@@ -235,7 +235,7 @@ public class ProbeQualityProfile
     // Gets the last index >= `index` in `windows` which overlaps `region`.
     private static int scanWhileOverlap(final List<ProbeQualityWindow> windows, int index, final BaseRegion region)
     {
-        while(index + 1 < windows.size() && windows.get(index + 1).overlaps(region))
+        while(index + 1 < windows.size() && windows.get(index + 1).region().overlaps(region))
         {
             ++index;
         }
