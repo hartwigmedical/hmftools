@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 
+// Evaluates and selects best candidate probes.
 public class ProbeSelector
 {
     private final ProbeEvaluator mProbeEvaluator;

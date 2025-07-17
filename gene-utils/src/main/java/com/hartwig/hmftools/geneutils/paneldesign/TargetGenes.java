@@ -42,12 +42,12 @@ import org.jetbrains.annotations.Nullable;
 
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
-//   - Coding: Cover the full coding region of each exon.
+//   - Coding: Cover the full coding region of each exon, plus splice points.
 //   - UTR: Select 1 probe within each noncoding exon.
-//   - Upstream/downstream: Select the best acceptable probe from a ~2kb region ~1kb upstream/downstream.
+//   - Upstream/downstream: Select the best acceptable probe from a 2kb region 1kb upstream/downstream.
 //   - Exon flanks: Only when there are not too many exons:
-//     - Small introns: Select the best acceptable probe from a ~1kb region centered on the centre of the intron.
-//     - Large introns: Select the best acceptable probe from each of ~1kb regions near the adjacent exons.
+//     - Small introns: Select the best acceptable probe from a 1kb region centered on the centre of the intron.
+//     - Large introns: Select the best acceptable probe from each of 1-5kb regions near the adjacent exons.
 public class TargetGenes
 {
     private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.GENE;

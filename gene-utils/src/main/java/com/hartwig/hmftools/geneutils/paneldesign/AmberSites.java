@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// Amber heterozygous sites file loading.
 public class AmberSites
 {
     private static final String FLD_GNOMAD_FREQ = "GnomadFreq";

@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 
+// Miscellaneous utility functionality.
 public class Utils
 {
     // Compute regions within `targetRegion` which do not overlap `coveredRegions`.

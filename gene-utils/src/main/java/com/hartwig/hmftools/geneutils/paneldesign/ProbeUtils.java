@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.P
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+// Miscellaneous probe maths and utilities.
 public class ProbeUtils
 {
     public static CandidateProbe probeCenteredAt(final String chromosome, int centrePosition, final CandidateProbeFactory factory)

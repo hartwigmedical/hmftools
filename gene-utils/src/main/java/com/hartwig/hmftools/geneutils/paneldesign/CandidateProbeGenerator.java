@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+// Utilities for creating candidate probes covering target regions.
 public class CandidateProbeGenerator
 {
     private final Map<String, Integer> mChromosomeLengths;

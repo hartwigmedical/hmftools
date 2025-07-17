@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+// A probe which is plausible for a particular target region, subject to future evaluation and filtering.
 public record CandidateProbe(
         TargetRegion target,
         ChrBaseRegion probeRegion

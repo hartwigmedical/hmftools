@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import org.jetbrains.annotations.Nullable;
 
+// Candidate probe which has been evaluated for suitability.
 public record EvaluatedProbe(
         CandidateProbe candidate,
         ProbeEvalCriteria criteria,

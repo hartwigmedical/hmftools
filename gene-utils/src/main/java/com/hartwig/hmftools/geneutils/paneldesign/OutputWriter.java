@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+// Writes all file output data.
 public class OutputWriter implements AutoCloseable
 {
     private final DelimFileWriter<EvaluatedProbe> mPanelProbesTsvWriter;
