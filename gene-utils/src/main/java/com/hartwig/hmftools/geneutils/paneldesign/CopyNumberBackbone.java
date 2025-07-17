@@ -167,7 +167,7 @@ public class CopyNumberBackbone
                 .map(bestProbe -> new ProbeGenerationResult(List.of(target), List.of(bestProbe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
-                    LOGGER.trace("No acceptable probe for copy number backbone partition: {}", partition.Region);
+                    LOGGER.debug("No acceptable probe for copy number backbone partition: {}", partition.Region);
 
                     String rejectionReason;
                     if(partition.Sites.isEmpty())

@@ -32,9 +32,11 @@ public class CustomRegions
     {
         LOGGER.info("Generating custom region probes");
 
-        List<CustomRegion> regions = loadCustomRegionsFile(customRegionFile);
+        List<CustomRegion> customRegions = loadCustomRegionsFile(customRegionFile);
 
-        ProbeGenerationResult result = regions.stream()
+        checkNoOverlaps(customRegions);
+
+        ProbeGenerationResult result = customRegions.stream()
                 .map(region -> generateProbes(region, probeGenerator))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
 
@@ -76,9 +78,24 @@ public class CustomRegions
         }
     }
 
+    private static void checkNoOverlaps(final List<CustomRegion> customRegions)
+    {
+        LOGGER.debug("Checking custom regions for overlap");
+        List<CustomRegion> overlaps = customRegions.stream()
+                .filter(region ->
+                        customRegions.stream().anyMatch(region2 ->
+                                region2 != region && region.region().overlaps(region2.region()))
+                ).toList();
+        if(!overlaps.isEmpty())
+        {
+            overlaps.forEach(region -> LOGGER.error("Overlapping custom region: {}", region));
+            throw new UserInputError("Custom regions overlap");
+        }
+    }
+
     private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator)
     {
-        LOGGER.trace("Generating probes for {}", region);
+        LOGGER.debug("Generating probes for {}", region);
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
         TargetRegion target = new TargetRegion(region.region(), metadata);
         ProbeGenerationResult result = probeGenerator.coverRegion(target, PROBE_SELECT_CRITERIA);

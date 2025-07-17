@@ -189,9 +189,7 @@ public class TargetGenes
         GeneData geneData = ensemblData.getGeneDataByName(geneDef.geneName());
         if(geneData == null)
         {
-            String error = format("Gene not found: %s", geneDef.geneName());
-            LOGGER.error(error);
-            throw new RuntimeException(error);
+            throw new UserInputError(format("Gene not found: %s", geneDef.geneName()));
         }
 
         TranscriptData transcriptData = geneDef.canonical() ?
@@ -199,9 +197,7 @@ public class TargetGenes
                 ensemblData.getTranscriptData(geneData.GeneId, geneDef.transcriptName());
         if(transcriptData == null)
         {
-            String error = format("Gene not found: %s:%s", geneDef.geneName(), geneDef.transcriptName());
-            LOGGER.error(error);
-            throw new RuntimeException(error);
+            throw new UserInputError(format("Gene not found: %s:%s", geneDef.geneName(), geneDef.transcriptName()));
         }
 
         if(transcriptData.nonCoding())
