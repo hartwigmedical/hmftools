@@ -24,6 +24,19 @@ public record ProbeEvalCriteria(
         DECIMAL_FORMAT.setMinimumFractionDigits(0);
     }
 
+    public ProbeEvalCriteria
+    {
+        if(!(qualityScoreMin > 0 && qualityScoreMin <= 1))
+        {
+            // Note quality score is always required, quality=0 is never acceptable.
+            throw new IllegalArgumentException("qualityScoreMin must be in range (0, 1]");
+        }
+        if(!(gcContentMax() >= 0 && gcContentMin() <= 1))
+        {
+            throw new IllegalArgumentException("GC content range must overlap range [0, 1]");
+        }
+    }
+
     public double gcContentMin()
     {
         return gcContentTarget - gcContentTolerance;
@@ -38,9 +51,12 @@ public record ProbeEvalCriteria(
     @Override
     public String toString()
     {
-        return format("quality>=%s gc=%s+-%s",
-                DECIMAL_FORMAT.format(qualityScoreMin),
-                DECIMAL_FORMAT.format(gcContentTarget),
-                DECIMAL_FORMAT.format(gcContentTolerance));
+        String str = format("quality>=%s", DECIMAL_FORMAT.format(qualityScoreMin));
+        if(gcContentMin() > 0 || gcContentMax() < 1)
+        {
+            // Only show GC criteria if it does anything.
+            str += format(" gc=%s+-%s", DECIMAL_FORMAT.format(gcContentTarget), DECIMAL_FORMAT.format(gcContentTolerance));
+        }
+        return str;
     }
 }

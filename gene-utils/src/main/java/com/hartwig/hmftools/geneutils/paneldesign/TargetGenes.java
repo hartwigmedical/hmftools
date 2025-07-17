@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_CN_QUALITY_MIN;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_CODING_REGION_EXPAND;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_QUALITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MAX;
@@ -307,13 +308,12 @@ public class TargetGenes
             {
                 if(options.coding())
                 {
-                    // TODO: cover splice point
                     regions.add(new GeneRegion(
                             gene,
                             GeneRegionType.CODING,
                             new BaseRegion(
-                                    Math.max(exonData.Start, transcriptData.CodingStart),
-                                    min(exonData.End, transcriptData.CodingEnd))));
+                                    Math.max(exonData.Start - GENE_CODING_REGION_EXPAND, transcriptData.CodingStart),
+                                    min(exonData.End + GENE_CODING_REGION_EXPAND, transcriptData.CodingEnd))));
                 }
             }
             else
@@ -377,7 +377,8 @@ public class TargetGenes
     {
         GeneData geneData = geneRegion.gene().gene();
         TranscriptData transcriptData = geneRegion.gene().transcript();
-        String extraInfo = format("%s:%s:%s", geneData.GeneName, transcriptData.TransName, geneRegion.type().name());
+        String transcriptName = transcriptData.IsCanonical ? "canon" : transcriptData.TransName;
+        String extraInfo = format("%s:%s:%s", geneData.GeneName, transcriptName, geneRegion.type().name());
         return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
     }
 }
