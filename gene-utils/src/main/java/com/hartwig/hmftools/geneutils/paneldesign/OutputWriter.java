@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class OutputWriter implements AutoCloseable
 {
@@ -27,7 +28,9 @@ public class OutputWriter implements AutoCloseable
     private final BufferedWriter mTargetRegionsWriter;
     private final DelimFileWriter<RejectedRegion> mRejectedRegionsTsvWriter;
     private final BufferedWriter mRejectedRegionsBedWriter;
+    @Nullable
     private final DelimFileWriter<EvaluatedProbe> mCandidateProbesWriter;
+    @Nullable
     private final List<EvaluatedProbe> mCandidateProbesBuffer;
 
     private static final String TSV_EXT = ".tsv";
@@ -263,6 +266,8 @@ public class OutputWriter implements AutoCloseable
     @Override
     public void close() throws IOException
     {
+        LOGGER.debug("Flushing and closing output files");
+
         mPanelProbesTsvWriter.close();
         mPanelProbesBedWriter.close();
         mPanelProbesFastaWriter.close();

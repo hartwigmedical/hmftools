@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 public class PanelBuilder
 {
     private final PanelBuilderConfig mConfig;
+    private final RefGenomeSource mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
     private OutputWriter mOutputWriter;
@@ -36,11 +37,13 @@ public class PanelBuilder
     public PanelBuilder(final ConfigBuilder configBuilder)
     {
         mConfig = new PanelBuilderConfig(configBuilder);
-        RefGenomeSource mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
+        mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
         ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
         ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
-        mProbeGenerator = new ProbeGenerator(probeEvaluator, mRefGenome.chromosomeLengths());
+        ProbeSelector probeSelector = new ProbeSelector(probeEvaluator);
+        CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
+        mProbeGenerator = new ProbeGenerator(candidateGenerator, probeSelector);
     }
 
     public void run() throws IOException
@@ -57,9 +60,9 @@ public class PanelBuilder
                 mConfig.VerboseOutput ? mConfig.outputFilePath(CANDIDATE_PROBES_FILE_NAME) : null);
 
         LOGGER.info("Generating probes");
-        ProbeGenerationResult customRegionProbes = generateCustomRegionProbes();
         ProbeGenerationResult geneProbes = generateTargetGeneProbes();
         ProbeGenerationResult cnBackboneProbes = generateCopyNumberBackboneProbes();
+        ProbeGenerationResult customRegionProbes = generateCustomRegionProbes();
         LOGGER.info("Probe generation done");
 
         LOGGER.info("Writing output");
@@ -87,7 +90,7 @@ public class PanelBuilder
         }
         else
         {
-            return CustomRegions.generateProbes(mConfig.CustomRegionsFile, mProbeGenerator);
+            return CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator);
         }
     }
 

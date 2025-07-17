@@ -11,7 +11,7 @@ public class ProbeUtilsTest
     private static final TargetRegion TARGET_REGION = new TargetRegion(
             new ChrBaseRegion("1", 100, 200),
             new TargetMetadata(TargetRegionType.CUSTOM, "extra"));
-    private static final ProbeFactory PROBE_FACTORY = new ProbeFactory(TARGET_REGION);
+    private static final CandidateProbeFactory PROBE_FACTORY = new CandidateProbeFactory(TARGET_REGION);
 
     @Test
     public void testProbeCenteredAt()

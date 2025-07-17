@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 // Probes based on Amber heterozygous sites, used to deduce copy number.
 // Methodology:
@@ -56,6 +57,8 @@ public class CopyNumberBackbone
         populateAmberSites(partitions, amberSitesFile);
 
         ProbeGenerationResult result = generateProbes(partitions, probeGenerator);
+
+        // TODO: filter probes by covered regions
 
         LOGGER.info("Done generating copy number backbone probes");
         return result;
@@ -156,18 +159,22 @@ public class CopyNumberBackbone
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
         Optional<EvaluatedProbe> bestCandidate =
-                probeGenerator.selectBestProbe(generateCandidateProbes(partition, probeGenerator), PROBE_SELECT_CRITERIA);
+                probeGenerator.mProbeSelector.selectBestProbe(generateCandidateProbes(partition, probeGenerator), PROBE_SELECT_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
-        TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, partition.Region.toString());
-        // TODO: maybe don't use the whole region as the target because it covers everything in IGV
-        TargetRegion target = new TargetRegion(partition.Region, metadata);
-
         ProbeGenerationResult result = bestCandidate
-                .map(bestProbe -> new ProbeGenerationResult(List.of(target), List.of(bestProbe), Collections.emptyList()))
+                .map(bestProbe -> new ProbeGenerationResult(
+                        // TODO: is this the best target region to use here?
+                        List.of(bestProbe.candidate().target()),
+                        List.of(bestProbe),
+                        Collections.emptyList()))
                 .orElseGet(() ->
                 {
                     LOGGER.debug("No acceptable probe for copy number backbone partition: {}", partition.Region);
+
+                    TargetMetadata metadata = createTargetMetadata(partition.Region, null);
+                    // TODO: is this the best target region to use here?
+                    TargetRegion target = new TargetRegion(partition.Region, metadata);
 
                     String rejectionReason;
                     if(partition.Sites.isEmpty())
@@ -178,8 +185,8 @@ public class CopyNumberBackbone
                     {
                         rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_SELECT_CRITERIA.eval();
                     }
-
                     RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, target, rejectionReason);
+
                     return new ProbeGenerationResult(List.of(target), Collections.emptyList(), List.of(rejectedRegion));
                 });
         return result;
@@ -188,19 +195,19 @@ public class CopyNumberBackbone
     private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final ProbeGenerator probeGenerator)
     {
         return partition.Sites.stream()
-                .flatMap(site -> generateCandidateProbes(site, probeGenerator))
+                .flatMap(site ->
+                        probeGenerator.mCandidateGenerator.coverPosition(site.position(), createTargetMetadata(partition.Region, site)))
                 // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
                 .filter(probe -> partition.Region.containsRegion(probe.probeRegion()));
     }
 
-    private static Stream<CandidateProbe> generateCandidateProbes(final AmberSite site, final ProbeGenerator probeGenerator)
+    private static TargetMetadata createTargetMetadata(final ChrBaseRegion partitionRegion, @Nullable final AmberSite site)
     {
-        return probeGenerator.coverPositionCandidates(site.position(), createTargetMetadata(site));
-    }
-
-    private static TargetMetadata createTargetMetadata(final AmberSite site)
-    {
-        String extraInfo = site.position().toString();
+        String extraInfo = partitionRegion.toString();
+        if(site != null)
+        {
+            extraInfo += format(":%d", site.position().Position);
+        }
         return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
     }
 }

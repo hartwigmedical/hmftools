@@ -11,12 +11,12 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class ProbeUtils
 {
-    public static CandidateProbe probeCenteredAt(final String chromosome, int centrePosition, final ProbeFactory factory)
+    public static CandidateProbe probeCenteredAt(final String chromosome, int centrePosition, final CandidateProbeFactory factory)
     {
         return probeStartingAt(chromosome, centrePosition - PROBE_LENGTH / 2, factory);
     }
 
-    public static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final ProbeFactory factory)
+    public static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final CandidateProbeFactory factory)
     {
         return factory.create(new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH - 1));
     }

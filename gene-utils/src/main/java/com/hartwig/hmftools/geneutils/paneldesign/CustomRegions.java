@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
@@ -28,12 +30,14 @@ public class CustomRegions
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
-    public static ProbeGenerationResult generateProbes(final String customRegionFile, final ProbeGenerator probeGenerator)
+    public static ProbeGenerationResult generateProbes(final String customRegionFile, final Map<String, Integer> chromosomeLengths,
+            final ProbeGenerator probeGenerator)
     {
         LOGGER.info("Generating custom region probes");
 
         List<CustomRegion> customRegions = loadCustomRegionsFile(customRegionFile);
 
+        checkRegionBounds(customRegions, chromosomeLengths);
         checkNoOverlaps(customRegions);
 
         ProbeGenerationResult result = customRegions.stream()
@@ -78,17 +82,43 @@ public class CustomRegions
         }
     }
 
+    private static void checkRegionBounds(final List<CustomRegion> customRegions, final Map<String, Integer> chromosomeLengths)
+    {
+        Predicate<ChrBaseRegion> isRegionValid = region ->
+        {
+            if(!region.hasValidPositions())
+            {
+                return false;
+            }
+            Integer chromosomeLength = chromosomeLengths.get(region.chromosome());
+            if(chromosomeLength == null)
+            {
+                return false;
+            }
+            return region.end() <= chromosomeLength;
+        };
+
+        List<CustomRegion> invalid = customRegions.stream()
+                .filter(region -> !isRegionValid.test(region.region()))
+                .toList();
+        if(!invalid.isEmpty())
+        {
+            invalid.forEach(region -> LOGGER.error("Invalid custom region bounds: {}", region));
+            throw new UserInputError("Invalid custom region bounds");
+        }
+    }
+
     private static void checkNoOverlaps(final List<CustomRegion> customRegions)
     {
         LOGGER.debug("Checking custom regions for overlap");
-        List<CustomRegion> overlaps = customRegions.stream()
+        List<CustomRegion> invalid = customRegions.stream()
                 .filter(region ->
                         customRegions.stream().anyMatch(region2 ->
                                 region2 != region && region.region().overlaps(region2.region()))
                 ).toList();
-        if(!overlaps.isEmpty())
+        if(!invalid.isEmpty())
         {
-            overlaps.forEach(region -> LOGGER.error("Overlapping custom region: {}", region));
+            invalid.forEach(region -> LOGGER.error("Overlapping custom region: {}", region));
             throw new UserInputError("Custom regions overlap");
         }
     }
