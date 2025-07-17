@@ -38,6 +38,12 @@ public class ProbeUtils
 
     // TODO: unit test
 
+    // minProbeStartContaining() and maxProbeEndContaining() in one call.
+    public static BaseRegion probeBoundsContaining(int targetPosition)
+    {
+        return new BaseRegion(minProbeStartContaining(targetPosition), maxProbeEndContaining(targetPosition));
+    }
+
     // Calculates the minimum probe starting position such that the probe sufficiently overlaps the target region.
     public static int minProbeStartCovering(final BaseRegion targetRegion)
     {

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeBoundsContaining;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,17 +50,15 @@ public class CopyNumberBackbone
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
     public static ProbeGenerationResult generateProbes(final String amberSitesFile, final RefGenomeVersion refGenVersion,
-            final ProbeGenerator probeGenerator)
+            final ProbeGenerator probeGenerator, final CoveredRegions coveredRegions)
     {
         LOGGER.info("Generating copy number backbone probes");
 
         Map<String, List<Partition>> partitions = createPartitions(refGenVersion);
 
-        populateAmberSites(partitions, amberSitesFile);
+        populateAmberSites(partitions, amberSitesFile, coveredRegions);
 
         ProbeGenerationResult result = generateProbes(partitions, probeGenerator);
-
-        // TODO: filter probes by covered regions
 
         LOGGER.info("Done generating copy number backbone probes");
         return result;
@@ -101,13 +101,15 @@ public class CopyNumberBackbone
         }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private static void populateAmberSites(Map<String, List<Partition>> partitions, final String sitesFilePath)
+    private static void populateAmberSites(Map<String, List<Partition>> partitions, final String sitesFilePath,
+            final CoveredRegions coveredRegions)
     {
         enum SiteFilter
         {
             CANDIDATE,
             EXCLUDED_REGION,
-            GNOMAD_FREQ
+            GNOMAD_FREQ,
+            ALREADY_COVERED
         }
 
         List<AmberSite> sites = AmberSites.loadAmberSitesFile(sitesFilePath);
@@ -137,6 +139,11 @@ public class CopyNumberBackbone
                 ++siteFilterCounts[SiteFilter.EXCLUDED_REGION.ordinal()];
                 continue;
             }
+            // TODO: probably makes more sense to do this later
+            if(positionAlreadyCovered(site.position(), coveredRegions))
+            {
+                ++siteFilterCounts[SiteFilter.ALREADY_COVERED.ordinal()];
+            }
             ++siteFilterCounts[SiteFilter.CANDIDATE.ordinal()];
             partition.Sites.add(site);
         }
@@ -144,6 +151,15 @@ public class CopyNumberBackbone
         String filterCountStr = Arrays.stream(SiteFilter.values())
                 .map(x -> format("%s=%d", x.toString(), siteFilterCounts[x.ordinal()])).collect(Collectors.joining(", "));
         LOGGER.debug("Amber site filters: {}", filterCountStr);
+    }
+
+    private static boolean positionAlreadyCovered(final BasePosition position, final CoveredRegions coveredRegions)
+    {
+        // Say it's covered if any candidate probes for the position could overlap with a covered region.
+        // Not perfect but there are so many Amber sites to choose from that it shouldn't matter.
+        // Simpler than trying to filter the candidates later.
+        ChrBaseRegion region = ChrBaseRegion.from(position.Chromosome, probeBoundsContaining(position.Position));
+        return coveredRegions.isCovered(region);
     }
 
     private static ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions, final ProbeGenerator probeGenerator)
@@ -195,10 +211,15 @@ public class CopyNumberBackbone
     private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final ProbeGenerator probeGenerator)
     {
         return partition.Sites.stream()
-                .flatMap(site ->
-                        probeGenerator.mCandidateGenerator.coverPosition(site.position(), createTargetMetadata(partition.Region, site)))
+                .flatMap(site -> generateCandidateProbes(partition, site, probeGenerator))
                 // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
                 .filter(probe -> partition.Region.containsRegion(probe.probeRegion()));
+    }
+
+    private static Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final AmberSite site,
+            final ProbeGenerator probeGenerator)
+    {
+        return probeGenerator.mCandidateGenerator.coverPosition(site.position(), createTargetMetadata(partition.Region, site));
     }
 
     private static TargetMetadata createTargetMetadata(final ChrBaseRegion partitionRegion, @Nullable final AmberSite site)

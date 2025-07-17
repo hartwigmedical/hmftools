@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PanelBuilder
 {
@@ -30,6 +31,9 @@ public class PanelBuilder
     private final RefGenomeSource mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
+    // TODO: is this the best way to scope this?
+    private final CoveredRegions mCoveredRegions;
+    @Nullable
     private OutputWriter mOutputWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(PanelBuilder.class);
@@ -44,6 +48,7 @@ public class PanelBuilder
         ProbeSelector probeSelector = new ProbeSelector(probeEvaluator);
         CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
         mProbeGenerator = new ProbeGenerator(candidateGenerator, probeSelector);
+        mCoveredRegions = new CoveredRegions();
     }
 
     public void run() throws IOException
@@ -78,20 +83,9 @@ public class PanelBuilder
         mOutputWriter.close();
         mOutputWriter = null;
 
-        LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
-    }
+        mCoveredRegions.clear();
 
-    private ProbeGenerationResult generateCustomRegionProbes()
-    {
-        if(mConfig.CustomRegionsFile == null)
-        {
-            LOGGER.info("Custom regions not provided; skipping custom region probes");
-            return new ProbeGenerationResult();
-        }
-        else
-        {
-            return CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator);
-        }
+        LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private ProbeGenerationResult generateTargetGeneProbes()
@@ -104,7 +98,9 @@ public class PanelBuilder
         else
         {
             EnsemblDataCache ensemblData = loadEnsemblData();
-            return TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator);
+            ProbeGenerationResult result = TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator);
+            mCoveredRegions.addFromProbes(result.probes());
+            return result;
         }
     }
 
@@ -117,7 +113,26 @@ public class PanelBuilder
         }
         else
         {
-            return CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator);
+            ProbeGenerationResult result =
+                    CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator, mCoveredRegions);
+            mCoveredRegions.addFromProbes(result.probes());
+            return result;
+        }
+    }
+
+    private ProbeGenerationResult generateCustomRegionProbes()
+    {
+        if(mConfig.CustomRegionsFile == null)
+        {
+            LOGGER.info("Custom regions not provided; skipping custom region probes");
+            return new ProbeGenerationResult();
+        }
+        else
+        {
+            ProbeGenerationResult result =
+                    CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator);
+            mCoveredRegions.addFromProbes(result.probes());
+            return result;
         }
     }
 

@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeBoundsContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeCenteredAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeStartingAt;
 
@@ -14,6 +15,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 // Utilities for creating candidate probes covering target regions.
@@ -50,12 +52,11 @@ public class CandidateProbeGenerator
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
     public Stream<CandidateProbe> coverPosition(final BasePosition position, final TargetMetadata metadata)
     {
-        int minProbeStart = minProbeStartContaining(position.Position);
-        int maxProbeEnd = maxProbeEndContaining(position.Position);
+        BaseRegion probeBounds = probeBoundsContaining(position.Position);
         ChrBaseRegion targetBaseRegion = ChrBaseRegion.from(position);
         TargetRegion target = new TargetRegion(targetBaseRegion, metadata);
         CandidateProbeFactory candidateFactory = new CandidateProbeFactory(target);
-        return outwardMovingCenterAlignedProbes(position, minProbeStart, maxProbeEnd, candidateFactory);
+        return outwardMovingCenterAlignedProbes(position, probeBounds.start(), probeBounds.end(), candidateFactory);
     }
 
     // Returns candidate probes shifting left and right with offsets: 0, 1, -1, 2, -2, 3, -3, ...

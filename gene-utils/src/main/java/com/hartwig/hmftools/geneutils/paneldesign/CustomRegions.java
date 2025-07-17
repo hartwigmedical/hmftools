@@ -40,6 +40,8 @@ public class CustomRegions
         checkRegionBounds(customRegions, chromosomeLengths);
         checkNoOverlaps(customRegions);
 
+        // TODO: handle overlaps with existing probes
+
         ProbeGenerationResult result = customRegions.stream()
                 .map(region -> generateProbes(region, probeGenerator))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
