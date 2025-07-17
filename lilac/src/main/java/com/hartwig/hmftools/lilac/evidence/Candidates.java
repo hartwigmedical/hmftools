@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_AMINO_ACID_COUNTS;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,8 +34,7 @@ public final class Candidates
         mAminoAcidSequences = aminoAcidSequences;
     }
 
-    public List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final List<HlaAllele> commonAllles,
-            final SequenceCount rawAminoAcidCount)
+    public List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final List<HlaAllele> commonAllles)
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
@@ -45,8 +48,7 @@ public final class Candidates
         LL_LOGGER.debug("gene({}) {} candidates before filtering", context.geneName(), geneCandidates.size());
 
         // Amino acid filtering
-        List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(
-		context, geneCandidates, aminoAcidCounts, rawAminoAcidCount, context.AminoAcidBoundaries);
+        List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(context, geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
@@ -89,9 +91,10 @@ public final class Candidates
     }
 
     private List<HlaSequenceLoci> filterSequencesByMinSupport(final HlaContext context, final List<HlaSequenceLoci> candidates,
-            final SequenceCount aminoAcidCount, final SequenceCount rawAminoAcidCount, final List<Integer> aminoAcidBoundaries)
+            final SequenceCount aminoAcidCount, final List<Integer> aminoAcidBoundaries)
     {
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
+        SequenceCount rawAminoAcidCounts = RAW_REF_AMINO_ACID_COUNTS.get(context.geneName());
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
         candidateSequences.addAll(candidates);
 
@@ -100,12 +103,12 @@ public final class Candidates
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
+            if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+                continue;
+
             Set<String> expectedSequences = Sets.newHashSet(aminoAcidCount.getMinEvidenceSequences(locus));
             if(expectedSequences.isEmpty())
                 continue;
-
-            Set<String> lowDepthSequences = rawAminoAcidCount.getLowRawDepthSequences(context.geneName(), locus);
-            expectedSequences.addAll(lowDepthSequences);
 
             int index = 0;
             while(index < candidateSequences.size())
@@ -138,7 +141,7 @@ public final class Candidates
         List<HlaSequenceLoci> unphasedCandidates = mAminoAcidSequences.stream()
                 .filter(x -> unphasedCandidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaSequenceLoci> phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence);
+        List<HlaSequenceLoci> phasedCandidates = filterCandidates(context, unphasedCandidates, phasedEvidence);
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
         LL_LOGGER.info("gene({}) has {} candidates after phasing: {}",
@@ -147,19 +150,42 @@ public final class Candidates
         return phasedAlleles;
     }
 
-    private List<HlaSequenceLoci> filterCandidates(final List<HlaSequenceLoci> initialCandidates, final List<PhasedEvidence> evidence)
+    private List<HlaSequenceLoci> filterCandidates(final HlaContext context, final List<HlaSequenceLoci> initialCandidates, final List<PhasedEvidence> evidence)
     {
+        SequenceCount rawAminoAcidCounts = RAW_REF_AMINO_ACID_COUNTS.get(context.geneName());
         List<HlaSequenceLoci> candidates = Lists.newArrayList();
         candidates.addAll(initialCandidates);
 
         for(int i = 0; i < evidence.size(); ++i)
         {
             PhasedEvidence newEvidence = evidence.get(i);
+            List<Integer> targetLoci = newEvidence.getAminoAcidLoci();
+            List<StringBuilder> targetSequenceBuilders = newEvidence.getEvidence().keySet().stream().map(x -> new StringBuilder(x)).collect(Collectors.toList());
 
-            candidates = candidates.stream()
-                    .filter(x -> x.consistentWithAny(
-                            newEvidence.getEvidence().keySet().stream().collect(Collectors.toList()), newEvidence.getAminoAcidLoci()))
-                    .collect(Collectors.toList());
+            List<Integer> lowDepthIndices = Lists.newArrayList();
+            for(int j = 0; j < targetLoci.size(); j++)
+            {
+                int locus = targetLoci.get(j);
+                if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+                    lowDepthIndices.add(j);
+            }
+
+            if(lowDepthIndices.size() >= targetLoci.size() - 1)
+                continue;
+
+            if(!lowDepthIndices.isEmpty())
+            {
+                Collections.sort(lowDepthIndices, Comparator.comparingInt((Integer x) -> x).reversed());
+                for(int index : lowDepthIndices)
+                {
+                    targetLoci.remove(index);
+                    for(StringBuilder seqBuilder : targetSequenceBuilders)
+                        seqBuilder.deleteCharAt(index);
+                }
+            }
+
+            List<String> targetSequences = targetSequenceBuilders.stream().map(StringBuilder::toString).collect(Collectors.toList());
+            candidates = candidates.stream().filter(x -> x.consistentWithAny(targetSequences, targetLoci)).collect(Collectors.toList());
         }
 
         return candidates;

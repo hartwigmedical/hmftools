@@ -30,7 +30,6 @@ public class StackSampler implements AutoCloseable
     private final Duration mSamplePeriod;
     private final File mOutFile;
     private final boolean mIncludeTopLineNumber;
-    private final boolean mCollapseThreads;
     private final AtomicBoolean mStopSignal = new AtomicBoolean();
     private final ConcurrentLinkedQueue<Map<Thread, StackTraceElement[]>> mSampleQueue = new ConcurrentLinkedQueue<>();
     private final AtomicReference<PMap<String, Long>> mStackCounts = new AtomicReference<>(HashTreePMap.empty());
@@ -38,50 +37,23 @@ public class StackSampler implements AutoCloseable
     private Thread mStackSampler;
     private Thread mStackProcessor;
 
-    public StackSampler(final int samplesPerSecond, final File outFile, final boolean includeTopLineNumber, final boolean collapseThreads)
+    public StackSampler(final int samplesPerSecond, final File outFile, final boolean includeTopLineNumber)
     {
         mSamplePeriod = Duration.ofSeconds(1).dividedBy(samplesPerSecond);
         mOutFile = outFile;
         mIncludeTopLineNumber = includeTopLineNumber;
-        mCollapseThreads = collapseThreads;
 
         run();
     }
 
     public StackSampler(final int sampleFreq, final File outFile)
     {
-        this(sampleFreq, outFile, true, true);
+        this(sampleFreq, outFile, true);
     }
 
     private boolean threadNameFilter(final String threadName)
     {
-        if(threadName.equals(STACK_SAMPLER_THREAD_NAME))
-            return false;
-
-        if(threadName.equals(STACK_PROCESSOR_THREAD_NAME))
-            return true;
-
-        return threadName.toLowerCase().matches("^(main|thread-.*|gc_thread.*|g1_conc.*)$");
-    }
-
-    private static String collapseThreadName(final String threadName)
-    {
-        if(threadName.toLowerCase().startsWith("thread-"))
-        {
-            return "thread";
-        }
-
-        if(threadName.toLowerCase().startsWith("gc_thread"))
-        {
-            return "gc_thread";
-        }
-
-        if(threadName.toLowerCase().startsWith("g1_conc"))
-        {
-            return "g1_conc";
-        }
-
-        return threadName;
+        return !threadName.equals(STACK_SAMPLER_THREAD_NAME);
     }
 
     private static String stripLineNumberFromStackEl(final String stackEl)
@@ -112,15 +84,13 @@ public class StackSampler implements AutoCloseable
         return builder.toString();
     }
 
-    private void processStack(final String threadName_, final StackTraceElement[] stack)
+    private void processStack(final String threadName, final StackTraceElement[] stack)
     {
         if(stack.length == 0)
             return;
 
-        if(!threadNameFilter(threadName_))
+        if(!threadNameFilter(threadName))
             return;
-
-        String threadName = mCollapseThreads ? collapseThreadName(threadName_) : threadName_;
 
         StringJoiner foldedStack = new StringJoiner(";");
         foldedStack.add(threadName);

@@ -386,6 +386,9 @@ public class LilacApplication
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
             List<HlaComplex> filteredComplexes = mRankedComplexes.stream().map(ComplexCoverage::toComplex).toList();
+            LL_LOGGER.info("Recalculating coverage for complexes({}) and ref alleles({})",
+                    filteredComplexes.size(), mRefFragAlleles.size());
+
             calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
             complexRanker = new ComplexCoverageRanking(0, mRefData);
             mRankedComplexes.clear();

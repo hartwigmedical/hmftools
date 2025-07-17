@@ -1,21 +1,23 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
+import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_AMINO_ACID_COUNTS;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
 
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
-import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 
 public final class AminoAcidQualEnrichment
 {
     public static List<Fragment> qualityFilterAminoAcidFragments(
-            final HlaContext context, final SequenceCount rawAcidCount, final List<Fragment> enrichedFragments, double minEvidenceFactor)
+            final HlaContext context, final List<Fragment> enrichedFragments, double minEvidenceFactor)
     {
         // only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
         List<Fragment> qualityFilteredAminoAcidFragments = enrichedFragments.stream()
@@ -32,28 +34,30 @@ public final class AminoAcidQualEnrichment
                 .collect(Collectors.toList());
 
         unfilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
-
-        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(context, x, highQualityAminoAcidCounts, rawAcidCount));
+        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(context, x, highQualityAminoAcidCounts));
 
         return unfilteredAminoAcidFragments;
     }
 
-    private static void applyQualFilter(
-            final HlaContext context, final Fragment fragment, final SequenceCount count, final SequenceCount rawAcidCount)
+    private static void applyQualFilter(final HlaContext context, final Fragment fragment, final SequenceCount count)
     {
-        Set<Integer> filteredIntersect = Sets.newHashSet();
+        SequenceCount rawAminoAcidCounts = RAW_REF_AMINO_ACID_COUNTS.get(context.geneName());
+        NavigableSet<Integer> filteredIntersect = Sets.newTreeSet();
 
         fragment.aminoAcidsByLoci().values().stream()
                 .mapToInt(AminoAcid::locus)
-                .forEach(locusIndex ->
+                .forEach(locus ->
                 {
-                    Set<String> allowed = Sets.newHashSet(count.getMinEvidenceSequences(locusIndex));
+                    if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+                    {
+                        filteredIntersect.add(locus);
+                        return;
+                    }
 
-                    allowed.addAll(rawAcidCount.getLowRawDepthSequences(context.geneName(), locusIndex));
-                    String actual = fragment.aminoAcid(locusIndex);
-
+                    Set<String> allowed = Sets.newHashSet(count.getMinEvidenceSequences(locus));
+                    String actual = fragment.aminoAcid(locus);
                     if(allowed.contains(actual))
-                        filteredIntersect.add(locusIndex);
+                        filteredIntersect.add(locus);
                 });
 
         fragment.filterAminoAcidsOnLoci(filteredIntersect);
