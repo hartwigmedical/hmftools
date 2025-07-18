@@ -67,6 +67,10 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     private int calcHomozygousCount()
     {
+        // for unit tests
+        if(GENE_CACHE == null)
+            return 0;
+
         return GENE_CACHE.ExpectAlleleCount - getAlleles().size();
     }
 

@@ -4,14 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_POPULATION_FREQUENCY;
 import static com.hartwig.hmftools.lilac.LilacConstants.RECOVERY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.SOLUTION_COMPLEXITY_PENALTY_WEIGHT;
-import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -20,10 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.CohortFrequency;
+import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -152,7 +151,8 @@ public class ComplexCoverageRanking
     {
         int totalCoverage = complexCoverage.TotalCoverage;
 
-        double complexityPenalty = -solutionComplexity(complexCoverage) * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
+        int complexity = solutionComplexity(mRefData.AminoAcidSequenceLookup, ReferenceData.GENE_CACHE.AminoAcidExonBoundaries, complexCoverage);
+        double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
         double score = totalCoverage
                 + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage
                 + complexityPenalty
@@ -162,16 +162,18 @@ public class ComplexCoverageRanking
         complexCoverage.setComplexityPenalty(complexityPenalty);
     }
 
-    private int solutionComplexity(final ComplexCoverage complexCoverage)
+    @VisibleForTesting
+    public static int solutionComplexity(final Map<HlaAllele, HlaSequenceLoci> aminoAcidSequenceLookup,
+            final Map<String, List<Integer>> geneExonBoundaries, final ComplexCoverage complexCoverage)
     {
-        if(mRefData.AminoAcidSequenceLookup == null || mRefData.AminoAcidSequenceLookup.isEmpty())
+        if(aminoAcidSequenceLookup == null || aminoAcidSequenceLookup.isEmpty())
             return 0;
 
         Map<Integer, List<List<String>>> exonAcids = Maps.newTreeMap();
         for(HlaAllele allele : complexCoverage.getAlleles())
         {
-            List<Integer> exonBoundaries = getAminoAcidExonBoundaries(allele.Gene);
-            HlaSequenceLoci seq = mRefData.AminoAcidSequenceLookup.get(allele.asFourDigit());
+            List<Integer> exonBoundaries = geneExonBoundaries.get(longGeneName(allele.Gene));
+            HlaSequenceLoci seq = aminoAcidSequenceLookup.get(allele.asFourDigit());
 
             List<String> acids = seq.getSequences();
 
@@ -198,8 +200,11 @@ public class ComplexCoverageRanking
             {
                 List<String> acid1 = acids.get(i);
                 boolean isUniq = true;
-                for(int j = 0; j < i; j++)
+                for(int j = 0; j < acids.size(); j++)
                 {
+                    if(i == j)
+                        continue;
+
                     List<String> acid2 = acids.get(j);
                     if(acid1.size() != acid2.size())
                         continue;
