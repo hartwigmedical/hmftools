@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -144,9 +145,9 @@ public class ReferenceData
 
         final List<String> ponLines = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream(refFile)))
-                .lines().collect(Collectors.toList());
+                .lines().toList();
 
-        ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
+        ponLines.stream().map(Indel::fromString).forEach(INDEL_PON::add);
     }
 
     public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
@@ -221,8 +222,8 @@ public class ReferenceData
 
         loadStopLossRecoveryAllele();
 
-        HlaYNucleotideSequences.addAll(NucleotideSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
-        HlaYNucleotideSequences.forEach(x -> NucleotideSequences.remove(x));
+        HlaYNucleotideSequences.addAll(NucleotideSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).toList());
+        HlaYNucleotideSequences.forEach(NucleotideSequences::remove);
 
         for(HlaSequenceLoci sequenceLoci : AminoAcidSequences)
         {
@@ -245,11 +246,11 @@ public class ReferenceData
     private void buildHlaYAminoAcidSequences()
     {
         // construct the AA allele sequences for HLA-Y from the nucleotides if it wasn't loaded
-        HlaYAminoAcidSequences.addAll(AminoAcidSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
+        HlaYAminoAcidSequences.addAll(AminoAcidSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).toList());
 
         if(!HlaYAminoAcidSequences.isEmpty())
         {
-            HlaYAminoAcidSequences.forEach(x -> AminoAcidSequences.remove(x));
+            HlaYAminoAcidSequences.forEach(AminoAcidSequences::remove);
         }
         else
         {
@@ -280,7 +281,7 @@ public class ReferenceData
         mAlleleFrequencies.getAlleleFrequencies().entrySet().stream()
                 .filter(x -> x.getValue() >= COMMON_ALLELES_FREQ_CUTOFF)
                 .map(x -> mAlleleCache.requestFourDigit(x.getKey().toString()))
-                .forEach(x -> CommonAlleles.add(x));
+                .forEach(CommonAlleles::add);
 
         if(!CommonAlleles.isEmpty())
         {
@@ -307,7 +308,7 @@ public class ReferenceData
 
         final HlaAllele allele4d = allele.asFourDigit();
 
-        if(EXCLUDED_ALLELES.stream().anyMatch(x -> allele4d.matches(x)))
+        if(EXCLUDED_ALLELES.stream().anyMatch(allele4d::matches))
             return true;
 
         if(mConfig == null)
@@ -416,7 +417,7 @@ public class ReferenceData
         }
     }
 
-    public void loadSequenceFile(final List<String> fileContents, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
+    public void loadSequenceFile(final Iterable<String> fileContents, final Collection<HlaSequenceLoci> sequenceData, boolean isProteinFile)
     {
         for(String line : fileContents)
         {
