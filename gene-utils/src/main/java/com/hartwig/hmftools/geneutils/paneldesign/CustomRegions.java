@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// TODO: unit test
+
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {

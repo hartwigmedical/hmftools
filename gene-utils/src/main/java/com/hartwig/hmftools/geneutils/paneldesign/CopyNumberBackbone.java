@@ -31,6 +31,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+// TODO: unit test
+
 // Probes based on Amber heterozygous sites, used to deduce copy number.
 // Methodology:
 //   - Divide chromosomes into large partitions;

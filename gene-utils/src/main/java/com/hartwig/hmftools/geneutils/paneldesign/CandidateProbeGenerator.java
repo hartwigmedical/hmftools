@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+// TODO: unit test
+
 // Utilities for creating candidate probes covering target regions.
 public class CandidateProbeGenerator
 {

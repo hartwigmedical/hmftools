@@ -8,6 +8,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// TODO: unit test
+
 // Holds the panel output data, including probes, target regions, and rejected regions.
 // It's a mutable data structure because it's also used during probe generation to check which regions are already covered.
 public class PanelData implements PanelCoverage

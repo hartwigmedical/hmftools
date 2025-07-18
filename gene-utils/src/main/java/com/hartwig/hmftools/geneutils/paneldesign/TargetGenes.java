@@ -40,6 +40,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+// TODO: unit test
+
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
 //   - Coding: Cover the full coding region of each exon, plus splice points.

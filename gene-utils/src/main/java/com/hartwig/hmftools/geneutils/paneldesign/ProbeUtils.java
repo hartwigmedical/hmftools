@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.P
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+// TODO: unit test
+
 // Miscellaneous probe maths and utilities.
 public class ProbeUtils
 {
@@ -35,8 +37,6 @@ public class ProbeUtils
         // end - PROBE_LENGTH + 1 <= targetPosition
         return targetPosition + PROBE_LENGTH - 1;
     }
-
-    // TODO: unit test
 
     // minProbeStartContaining() and maxProbeEndContaining() in one call.
     public static BaseRegion probeBoundsContaining(int targetPosition)
