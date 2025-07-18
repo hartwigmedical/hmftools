@@ -4,6 +4,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -91,7 +92,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
         // split homozygous allele coverage, and fill any missing allele if there was zero support
 
-        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().collect(Collectors.toList());
+        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().toList();
         mAlleleCoverage.clear();
 
         for(String gene : GENE_CACHE.GeneIds)
@@ -132,13 +133,13 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         return newCoverage;
     }
 
-    public void populateMissingCoverage(final List<HlaAllele> alleles)
+    public void populateMissingCoverage(final Iterable<HlaAllele> alleles)
     {
         if(mAlleleCoverage.size() == GENE_CACHE.ExpectAlleleCount)
             return;
 
         // fill any missing allele if there was zero support
-        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().collect(Collectors.toList());
+        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().toList();
         mAlleleCoverage.clear();
 
         for(HlaAllele allele : alleles)
@@ -174,7 +175,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         return 0;
     }
 
-    public static ComplexCoverage create(final List<AlleleCoverage> alleles)
+    public static ComplexCoverage create(final Iterable<AlleleCoverage> alleles)
     {
         int unique = 0;
         double shared = 0.0;
@@ -186,7 +187,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
             wild += coverage.WildCoverage;
         }
 
-        final List<AlleleCoverage> sortedAlleles = alleles.stream().collect(Collectors.toList());
+        final List<AlleleCoverage> sortedAlleles = Lists.newArrayList(alleles);
         Collections.sort(sortedAlleles, new AlleleCoverage.AlleleSorter());
 
         return new ComplexCoverage(unique, (int) round(shared), (int) round(wild), sortedAlleles);
