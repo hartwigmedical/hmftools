@@ -40,6 +40,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.read.Indel;
+import com.hartwig.hmftools.lilac.seq.HlaExonSequences;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -58,7 +59,7 @@ public class ReferenceData
     public final List<HlaSequenceLoci> HlaYAminoAcidSequences;
 
     // four-digit allele to seq
-    public final Map<HlaAllele, HlaSequenceLoci> AminoAcidSequenceLookup;
+    public final Map<HlaAllele, HlaExonSequences> ExonSequencesLookup;
 
     public final List<HlaAllele> CommonAlleles; // common in population
     public final Map<Indel, HlaAllele> KnownStopLossIndelAlleles;
@@ -126,7 +127,7 @@ public class ReferenceData
         HlaYNucleotideSequences = Lists.newArrayList();
         HlaYAminoAcidSequences = Lists.newArrayList();
 
-        AminoAcidSequenceLookup = Maps.newHashMap();
+        ExonSequencesLookup = Maps.newHashMap();
 
         mDeflatedSequenceTemplate = null;
 
@@ -174,7 +175,7 @@ public class ReferenceData
             if(!allele.equals(allele.asFourDigit()))
                 throw new RuntimeException(format("allele(%s) is not four-digit", allele));
 
-            AminoAcidSequenceLookup.computeIfAbsent(allele, k -> seq);
+            ExonSequencesLookup.computeIfAbsent(allele, k -> HlaExonSequences.create(GENE_CACHE.AminoAcidExonBoundaries, seq));
         }
     }
 
@@ -205,7 +206,7 @@ public class ReferenceData
             if(!allele.equals(allele.asFourDigit()))
                 throw new RuntimeException(format("allele(%s) is not four-digit", allele));
 
-            if(AminoAcidSequenceLookup.containsKey(allele))
+            if(ExonSequencesLookup.containsKey(allele))
                 continue;
 
             LL_LOGGER.warn("allele({}) with cohort frequency has no loaded sequences, dropping from allele frequencies", allele.toString());

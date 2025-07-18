@@ -5,7 +5,6 @@ import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_POPULATION_FREQUENCY;
 import static com.hartwig.hmftools.lilac.LilacConstants.RECOVERY_SCORE_PENALTY;
@@ -24,6 +23,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.CohortFrequency;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.seq.HlaExonSequences;
+import com.hartwig.hmftools.lilac.seq.HlaExonSequences.ExonSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 /* Rank candidates by:
@@ -151,7 +152,7 @@ public class ComplexCoverageRanking
     {
         int totalCoverage = complexCoverage.TotalCoverage;
 
-        int complexity = solutionComplexity(mRefData.AminoAcidSequenceLookup, ReferenceData.GENE_CACHE.AminoAcidExonBoundaries, complexCoverage);
+        int complexity = solutionComplexity(mRefData.ExonSequencesLookup, complexCoverage);
         double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
         double score = totalCoverage
                 + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage
@@ -163,49 +164,44 @@ public class ComplexCoverageRanking
     }
 
     @VisibleForTesting
-    public static int solutionComplexity(final Map<HlaAllele, HlaSequenceLoci> aminoAcidSequenceLookup,
-            final Map<String, List<Integer>> geneExonBoundaries, final ComplexCoverage complexCoverage)
+    public static int solutionComplexity(
+            final Map<HlaAllele, HlaExonSequences> exonSequencesLookup, final ComplexCoverage complexCoverage)
     {
-        if(aminoAcidSequenceLookup == null || aminoAcidSequenceLookup.isEmpty())
+        if(exonSequencesLookup == null || exonSequencesLookup.isEmpty())
             return 0;
 
-        Map<Integer, List<List<String>>> exonAcids = Maps.newTreeMap();
+        Map<Integer, List<ExonSequence>> exonAcids = Maps.newTreeMap();
         for(HlaAllele allele : complexCoverage.getAlleles())
         {
-            List<Integer> exonBoundaries = geneExonBoundaries.get(longGeneName(allele.Gene));
-            HlaSequenceLoci seq = aminoAcidSequenceLookup.get(allele.asFourDigit());
-
-            List<String> acids = seq.getSequences();
-
-            int index = 0;
-            int exonIndex = 0;
-            for(int exonBoundary : exonBoundaries)
+            List<ExonSequence> exonSeqs = exonSequencesLookup.get(allele.asFourDigit()).ExonSequences;
+            for(int i = 0; i < exonSeqs.size(); i++)
             {
-                exonAcids.computeIfAbsent(exonIndex, k -> Lists.newArrayList());
-                if(index >= acids.size())
-                    break;
-
-                int toIndex = min(exonBoundary + 1, acids.size());
-                exonAcids.get(exonIndex).add(acids.subList(index, toIndex));
-                index = exonBoundary + 1;
-                exonIndex++;
+                ExonSequence exonSeq = exonSeqs.get(i);
+                exonAcids.computeIfAbsent(i, k -> Lists.newArrayList());
+                exonAcids.get(i).add(exonSeq);
             }
         }
 
         int uniqExonAcidsCount = 0;
-        for(List<List<String>> acids : exonAcids.values())
+        for(List<ExonSequence> acids : exonAcids.values())
         {
             uniqExonAcidsCount++;
+            Collections.sort(acids, Comparator.comparingInt(x -> x.hasWildcards() ? 0 : 1));
             for(int i = 1; i < acids.size(); i++)
             {
-                List<String> acid1 = acids.get(i);
+                ExonSequence seq1 = acids.get(i);
+                List<String> acid1 = seq1.sequences();
                 boolean isUniq = true;
                 for(int j = 0; j < acids.size(); j++)
                 {
                     if(i == j)
                         continue;
 
-                    List<String> acid2 = acids.get(j);
+                    ExonSequence seq2 = acids.get(j);
+                    if(j > i && !seq2.hasWildcards())
+                        break;
+
+                    List<String> acid2 = seq2.sequences();
                     if(acid1.size() != acid2.size())
                         continue;
 

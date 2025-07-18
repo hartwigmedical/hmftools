@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.seq.HlaExonSequences;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -94,18 +95,20 @@ public class ComplexCoverageRankingTest
     @Test
     public void testSolutionComplexitySingle()
     {
-        HlaAllele allele = HlaAllele.fromString("A*01:02");
-        List<String> seq = List.of("A", "A", "A", "A", "A", "A");
-        Map<HlaAllele, HlaSequenceLoci> aminoAcidSequenceLookup = Stream.of(Pair.of(allele, new HlaSequenceLoci(allele, seq)))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-
         Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
         geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+
+        HlaAllele allele = HlaAllele.fromString("A*01:02");
+        List<String> seq = List.of("A", "A", "A", "A", "A", "A");
+        Map<HlaAllele, HlaExonSequences> aminoAcidSequenceLookup = Stream.of(Pair.of(allele, new HlaSequenceLoci(allele, seq)))
+                .collect(Collectors.toMap(
+                        Pair::getKey,
+                        (Pair<HlaAllele, HlaSequenceLoci> x) -> HlaExonSequences.create(geneExonBoundaries, x.getValue())));
 
         List<AlleleCoverage> alleleCoverages = List.of(new AlleleCoverage(allele, 0, 0, 0));
         ComplexCoverage complexCoverage = ComplexCoverage.create(alleleCoverages);
 
-        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, geneExonBoundaries, complexCoverage);
+        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, complexCoverage);
         int expectedComplexity = 3;
 
         assertEquals(expectedComplexity, actualComplexity);
@@ -114,26 +117,28 @@ public class ComplexCoverageRankingTest
     @Test
     public void testSolutionComplexityThreeIdentical()
     {
+        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
+        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+
         HlaAllele allele1 = HlaAllele.fromString("A*01:02");
         HlaAllele allele2 = HlaAllele.fromString("A*01:03");
         HlaAllele allele3 = HlaAllele.fromString("A*02:02");
 
         List<String> seq = List.of("A", "A", "A", "A", "A", "A");
-        Map<HlaAllele, HlaSequenceLoci> aminoAcidSequenceLookup = Stream.of(
+        Map<HlaAllele, HlaExonSequences> aminoAcidSequenceLookup = Stream.of(
                         Pair.of(allele1, new HlaSequenceLoci(allele1, seq)),
                         Pair.of(allele2, new HlaSequenceLoci(allele2, seq)),
                         Pair.of(allele3, new HlaSequenceLoci(allele3, seq)))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-
-        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
-        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+                .collect(Collectors.toMap(
+                        Pair::getKey,
+                        (Pair<HlaAllele, HlaSequenceLoci> x) -> HlaExonSequences.create(geneExonBoundaries, x.getValue())));
 
         List<AlleleCoverage> alleleCoverages = Stream.of(allele1, allele2, allele3)
                 .map(x -> new AlleleCoverage(x, 0, 0, 0))
                 .toList();
         ComplexCoverage complexCoverage = ComplexCoverage.create(alleleCoverages);
 
-        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, geneExonBoundaries, complexCoverage);
+        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, complexCoverage);
         int expectedComplexity = 3;
 
         assertEquals(expectedComplexity, actualComplexity);
@@ -142,25 +147,27 @@ public class ComplexCoverageRankingTest
     @Test
     public void testSolutionComplexityWithMismatches()
     {
+        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
+        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+
         HlaAllele allele1 = HlaAllele.fromString("A*01:02");
         HlaAllele allele2 = HlaAllele.fromString("A*01:03");
         HlaAllele allele3 = HlaAllele.fromString("A*02:02");
 
-        Map<HlaAllele, HlaSequenceLoci> aminoAcidSequenceLookup = Stream.of(
+        Map<HlaAllele, HlaExonSequences> aminoAcidSequenceLookup = Stream.of(
                         Pair.of(allele1, new HlaSequenceLoci(allele1, List.of("A", "A", "A", "A", "A", "A"))),
                         Pair.of(allele2, new HlaSequenceLoci(allele2, List.of("A", "B", "A", "A", "A", "A"))),
                         Pair.of(allele3, new HlaSequenceLoci(allele3, List.of("A", "A", "B", "A", "A", "A"))))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-
-        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
-        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+                .collect(Collectors.toMap(
+                        Pair::getKey,
+                        (Pair<HlaAllele, HlaSequenceLoci> x) -> HlaExonSequences.create(geneExonBoundaries, x.getValue())));
 
         List<AlleleCoverage> alleleCoverages = Stream.of(allele1, allele2, allele3)
                 .map(x -> new AlleleCoverage(x, 0, 0, 0))
                 .toList();
         ComplexCoverage complexCoverage = ComplexCoverage.create(alleleCoverages);
 
-        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, geneExonBoundaries, complexCoverage);
+        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, complexCoverage);
         int expectedComplexity = 5;
 
         assertEquals(expectedComplexity, actualComplexity);
@@ -169,25 +176,27 @@ public class ComplexCoverageRankingTest
     @Test
     public void testSolutionComplexityWithWildcards()
     {
+        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
+        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+
         HlaAllele allele1 = HlaAllele.fromString("A*01:02");
         HlaAllele allele2 = HlaAllele.fromString("A*01:03");
         HlaAllele allele3 = HlaAllele.fromString("A*02:02");
 
-        Map<HlaAllele, HlaSequenceLoci> aminoAcidSequenceLookup = Stream.of(
+        Map<HlaAllele, HlaExonSequences> aminoAcidSequenceLookup = Stream.of(
                         Pair.of(allele1, new HlaSequenceLoci(allele1, List.of("A", "A", "A", "A", "A", "A"))),
                         Pair.of(allele2, new HlaSequenceLoci(allele2, List.of("A", "B", "A", "A", "B", "A"))),
                         Pair.of(allele3, new HlaSequenceLoci(allele3, List.of("A", "A", "B", "A", "*", "A"))))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-
-        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
-        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+                .collect(Collectors.toMap(
+                        Pair::getKey,
+                        (Pair<HlaAllele, HlaSequenceLoci> x) -> HlaExonSequences.create(geneExonBoundaries, x.getValue())));
 
         List<AlleleCoverage> alleleCoverages = Stream.of(allele1, allele2, allele3)
                 .map(x -> new AlleleCoverage(x, 0, 0, 0))
                 .toList();
         ComplexCoverage complexCoverage = ComplexCoverage.create(alleleCoverages);
 
-        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, geneExonBoundaries, complexCoverage);
+        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, complexCoverage);
         int expectedComplexity = 5;
 
         assertEquals(expectedComplexity, actualComplexity);
@@ -196,25 +205,27 @@ public class ComplexCoverageRankingTest
     @Test
     public void testSolutionComplexityNonUniformLengths()
     {
+        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
+        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+
         HlaAllele allele1 = HlaAllele.fromString("A*01:02");
         HlaAllele allele2 = HlaAllele.fromString("A*01:03");
         HlaAllele allele3 = HlaAllele.fromString("A*02:02");
 
-        Map<HlaAllele, HlaSequenceLoci> aminoAcidSequenceLookup = Stream.of(
+        Map<HlaAllele, HlaExonSequences> aminoAcidSequenceLookup = Stream.of(
                         Pair.of(allele1, new HlaSequenceLoci(allele1, List.of("A", "A", "A", "A", "A", "A"))),
                         Pair.of(allele2, new HlaSequenceLoci(allele2, List.of("A", "B", "A", "A", "B", "A"))),
                         Pair.of(allele3, new HlaSequenceLoci(allele3, List.of("A", "A", "B", "A", "*", "A", "C"))))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-
-        Map<String, List<Integer>> geneExonBoundaries = Maps.newHashMap();
-        geneExonBoundaries.put("HLA-A", List.of(1, 2, 100));
+                .collect(Collectors.toMap(
+                        Pair::getKey,
+                        (Pair<HlaAllele, HlaSequenceLoci> x) -> HlaExonSequences.create(geneExonBoundaries, x.getValue())));
 
         List<AlleleCoverage> alleleCoverages = Stream.of(allele1, allele2, allele3)
                 .map(x -> new AlleleCoverage(x, 0, 0, 0))
                 .toList();
         ComplexCoverage complexCoverage = ComplexCoverage.create(alleleCoverages);
 
-        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, geneExonBoundaries, complexCoverage);
+        int actualComplexity = solutionComplexity(aminoAcidSequenceLookup, complexCoverage);
         int expectedComplexity = 7;
 
         assertEquals(expectedComplexity, actualComplexity);
