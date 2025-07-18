@@ -24,9 +24,10 @@ public class PanelData implements PanelCoverage
     }
 
     @Override
-    public boolean isCovered(final ChrBaseRegion target)
+    public boolean isCovered(final ChrBaseRegion region)
     {
-        return coveredRegions().anyMatch(probe -> probe.containsRegion(target));
+        // TODO: wrong, could have multiple probes fully covering region
+        return coveredRegions().anyMatch(probe -> probe.containsRegion(region));
     }
 
     @Override

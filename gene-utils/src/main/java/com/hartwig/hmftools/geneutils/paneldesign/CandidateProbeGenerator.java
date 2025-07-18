@@ -4,9 +4,11 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeBoundsContaining;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeCenteredAt;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeStartingAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionCenteredAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionStartingAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
 
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -38,8 +40,7 @@ public class CandidateProbeGenerator
             throw new IllegalArgumentException("target must be larger than a probe");
         }
 
-        int regionCentre = (region.start() + region.end()) / 2;
-        BasePosition initialPosition = new BasePosition(region.chromosome(), regionCentre);
+        BasePosition initialPosition = new BasePosition(region.chromosome(), regionCentre(region.baseRegion()));
         // Stop once the probes go outside the target region.
         int minProbeStart = region.start();
         int maxProbeEnd = region.end();
@@ -73,6 +74,8 @@ public class CandidateProbeGenerator
         minProbeStart = max(minProbeStart, 1);
         maxProbeEnd = min(maxProbeEnd, mChromosomeLengths.get(initialPosition.Chromosome));
 
+        // TODO: use probeUtils functions rather than hardcoding the full math
+
         // minProbeStart = initialPosition + offset - PROBE_LENGTH/2
         // minProbeStart - initialPosition + PROBE_LENGTH/2 = offset
         int minOffset = minProbeStart - initialPosition.Position + PROBE_LENGTH / 2;
@@ -84,7 +87,12 @@ public class CandidateProbeGenerator
         return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
                 .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
                 .filter(offset -> offset >= minOffset && offset <= maxOffset)
-                .mapToObj(offset -> probeCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset, context));
+                .mapToObj(offset ->
+                {
+                    ChrBaseRegion region =
+                            ChrBaseRegion.from(initialPosition.Chromosome, probeRegionCenteredAt(initialPosition.Position + offset));
+                    return context.createProbe(region);
+                });
     }
 
     // Generates probes shifting with offsets: 0, -1, -2, -3, ...
@@ -102,8 +110,10 @@ public class CandidateProbeGenerator
             throw new IllegalArgumentException("minProbeStart forbids all possible probes");
         }
 
+        // TODO: use probeUtils functions rather than hardcoding the full math
+
         minProbeStart = max(minProbeStart, 1);
-        int maxProbeEnd = min(initialPosition.Position + PROBE_LENGTH - 1, mChromosomeLengths.get(initialPosition.Chromosome));
+        int maxProbeEnd = min(maxProbeEndContaining(initialPosition.Position), mChromosomeLengths.get(initialPosition.Chromosome));
 
         // minProbeStart = initialPosition + offset
         int minOffset = minProbeStart - initialPosition.Position;
@@ -112,6 +122,11 @@ public class CandidateProbeGenerator
         int maxOffset = maxProbeEnd - initialPosition.Position - PROBE_LENGTH + 1;
 
         return IntStream.iterate(maxOffset, offset -> offset >= minOffset, offset -> offset - 1)
-                .mapToObj(offset -> probeStartingAt(initialPosition.Chromosome, initialPosition.Position + offset, context));
+                .mapToObj(offset ->
+                {
+                    ChrBaseRegion region =
+                            ChrBaseRegion.from(initialPosition.Chromosome, probeRegionStartingAt(initialPosition.Position + offset));
+                    return context.createProbe(region);
+                });
     }
 }

@@ -2,33 +2,10 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-
 import org.junit.Test;
 
 public class ProbeUtilsTest
 {
-    private static final TargetRegion TARGET_REGION = new TargetRegion(
-            new ChrBaseRegion("1", 100, 200),
-            new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra"));
-    private static final CandidateProbeContext PROBE_CONTEXT = new CandidateProbeContext(TARGET_REGION);
-
-    @Test
-    public void testProbeCenteredAt()
-    {
-        CandidateProbe expected = new CandidateProbe(TARGET_REGION, new ChrBaseRegion("1", 90, 209));
-        CandidateProbe actual = ProbeUtils.probeCenteredAt("1", 150, PROBE_CONTEXT);
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testProbeStartingAt()
-    {
-        CandidateProbe expected = new CandidateProbe(TARGET_REGION, new ChrBaseRegion("1", 100, 219));
-        CandidateProbe actual = ProbeUtils.probeStartingAt("1", 100, PROBE_CONTEXT);
-        assertEquals(expected, actual);
-    }
-
     @Test
     public void testMinProbeStartContaining()
     {

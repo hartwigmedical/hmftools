@@ -20,6 +20,8 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCenteredAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -228,7 +230,7 @@ public class TargetGenes
     private record GeneRegion(
             GeneTranscriptData gene,
             GeneRegionType type,
-            ChrBaseRegion baseRegion
+            ChrBaseRegion region
     )
     {
         public GeneRegion(GeneTranscriptData gene, GeneRegionType type, BaseRegion region)
@@ -294,13 +296,11 @@ public class TargetGenes
                     {
                         // Can fit 1 probe.
                         // TODO: doesn't expand region for larger introns - too restrictive?
-                        int intronMid = (lastExonEnd + 1 + exonData.Start) / 2;
+                        int intronCentre = regionCentre(new BaseRegion(lastExonEnd, exonData.Start));
                         regions.add(new GeneRegion(
                                 gene,
                                 GeneRegionType.EXON_FLANK,
-                                new BaseRegion(
-                                        intronMid - GENE_EXON_FLANK_REGION_MIN / 2,
-                                        intronMid + GENE_EXON_FLANK_REGION_MIN / 2 - 1)));
+                                regionCenteredAt(intronCentre, GENE_EXON_FLANK_REGION_MIN)));
                     }
                 }
             }
@@ -357,22 +357,20 @@ public class TargetGenes
         {
             case CODING ->
             {
-                TargetRegion target = new TargetRegion(geneRegion.baseRegion(), metadata);
+                TargetRegion target = new TargetRegion(geneRegion.region(), metadata);
                 CandidateProbeContext candidateContext = new CandidateProbeContext(target);
                 yield probeGenerator.coverRegion(target.region(), candidateContext, EXON_PROBE_SELECT_CRITERIA, null);
             }
             case UTR ->
             {
-                BasePosition position = new BasePosition(
-                        geneRegion.baseRegion().Chromosome,
-                        (geneRegion.baseRegion().start() + geneRegion.baseRegion().end()) / 2);
+                BasePosition position = new BasePosition(geneRegion.region().Chromosome, regionCentre(geneRegion.region().baseRegion()));
                 TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
                 CandidateProbeContext candidateContext = new CandidateProbeContext(target);
                 yield probeGenerator.coverPosition(position, candidateContext, EXON_PROBE_SELECT_CRITERIA);
             }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
             {
-                TargetRegion target = new TargetRegion(geneRegion.baseRegion(), metadata);
+                TargetRegion target = new TargetRegion(geneRegion.region(), metadata);
                 CandidateProbeContext candidateContext = new CandidateProbeContext(target);
                 yield probeGenerator.coverOneSubregion(target.region(), candidateContext, CN_PROBE_SELECT_CRITERIA);
             }

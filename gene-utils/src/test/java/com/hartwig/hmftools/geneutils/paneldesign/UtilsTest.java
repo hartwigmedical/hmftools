@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.computeUncoveredRegions;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.getBestScoringElement;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCenteredAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionEndingAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionStartingAt;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
@@ -18,7 +25,7 @@ public class UtilsTest
     {
         BaseRegion target = new BaseRegion(1000, 2000);
         List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, Stream.empty());
+        List<BaseRegion> actual = computeUncoveredRegions(target, Stream.empty());
         assertEquals(expected, actual);
     }
 
@@ -28,7 +35,7 @@ public class UtilsTest
         BaseRegion target = new BaseRegion(1000, 2000);
         Stream<BaseRegion> covered = Stream.of(new BaseRegion(100, 999));
         List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -41,7 +48,7 @@ public class UtilsTest
                 new BaseRegion(140, 160),
                 new BaseRegion(300, 999));
         List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -51,7 +58,7 @@ public class UtilsTest
         BaseRegion target = new BaseRegion(1000, 2000);
         Stream<BaseRegion> covered = Stream.of(new BaseRegion(2001, 4000));
         List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -64,7 +71,7 @@ public class UtilsTest
                 new BaseRegion(2500, 2900),
                 new BaseRegion(4000, 5000));
         List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -80,7 +87,7 @@ public class UtilsTest
                 new BaseRegion(2500, 2900),
                 new BaseRegion(4000, 5000));
         List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -91,7 +98,7 @@ public class UtilsTest
         Stream<BaseRegion> covered = Stream.of(
                 new BaseRegion(950, 1050));
         List<BaseRegion> expected = List.of(new BaseRegion(1051, 2000));
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -102,7 +109,7 @@ public class UtilsTest
         Stream<BaseRegion> covered = Stream.of(
                 new BaseRegion(1050, 2050));
         List<BaseRegion> expected = List.of(new BaseRegion(1000, 1049));
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -115,7 +122,7 @@ public class UtilsTest
         List<BaseRegion> expected = List.of(
                 new BaseRegion(1000, 1049),
                 new BaseRegion(1081, 2000));
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -151,7 +158,7 @@ public class UtilsTest
                 new BaseRegion(1121, 1124),
                 new BaseRegion(1141, 1144),
                 new BaseRegion(1166, 2000));
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -171,7 +178,7 @@ public class UtilsTest
                 new BaseRegion(1211, 1399),
                 new BaseRegion(1801, 2000)
         );
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -188,7 +195,7 @@ public class UtilsTest
                 new BaseRegion(1801, 2000)
         );
         List<BaseRegion> expected = Collections.emptyList();
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -198,7 +205,7 @@ public class UtilsTest
         BaseRegion target = new BaseRegion(1000, 2000);
         Stream<BaseRegion> covered = Stream.of(new BaseRegion(100, 3000));
         List<BaseRegion> expected = Collections.emptyList();
-        List<BaseRegion> actual = Utils.computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
         assertEquals(expected, actual);
     }
 
@@ -213,26 +220,71 @@ public class UtilsTest
     @Test
     public void testGetBestScoringElementOptimal()
     {
-        assertEquals(Optional.of(3), Utils.getBestScoringElement(Stream.of(1, 2, 3, 4, 5), e -> e, s -> s == 3, true));
-        assertEquals(Optional.of(3), Utils.getBestScoringElement(Stream.of(3, 2, 1, 4, 5), e -> e, s -> s == 3, true));
+        assertEquals(Optional.of(3), getBestScoringElement(Stream.of(1, 2, 3, 4, 5), e -> e, s -> s == 3, true));
+        assertEquals(Optional.of(3), getBestScoringElement(Stream.of(3, 2, 1, 4, 5), e -> e, s -> s == 3, true));
 
-        assertEquals(Optional.of(3), Utils.getBestScoringElement(Stream.of(5, 4, 3, 2, 1), e -> e, s -> s == 3, false));
-        assertEquals(Optional.of(3), Utils.getBestScoringElement(Stream.of(3, 4, 5, 2, 1), e -> e, s -> s == 3, false));
+        assertEquals(Optional.of(3), getBestScoringElement(Stream.of(5, 4, 3, 2, 1), e -> e, s -> s == 3, false));
+        assertEquals(Optional.of(3), getBestScoringElement(Stream.of(3, 4, 5, 2, 1), e -> e, s -> s == 3, false));
     }
 
     @Test
     public void testGetBestScoringElementNoOptimal()
     {
-        assertEquals(Optional.of(6), Utils.getBestScoringElement(Stream.of(1, 2, 6, 4, 5), e -> e, s -> s == 0, true));
-        assertEquals(Optional.of(6), Utils.getBestScoringElement(Stream.of(6, 2, 1, 4, 5), e -> e, s -> s == 0, true));
+        assertEquals(Optional.of(6), getBestScoringElement(Stream.of(1, 2, 6, 4, 5), e -> e, s -> s == 0, true));
+        assertEquals(Optional.of(6), getBestScoringElement(Stream.of(6, 2, 1, 4, 5), e -> e, s -> s == 0, true));
 
-        assertEquals(Optional.of(0), Utils.getBestScoringElement(Stream.of(5, 0, 3, 2, 1), e -> e, s -> s == 0, false));
-        assertEquals(Optional.of(0), Utils.getBestScoringElement(Stream.of(0, 5, 3, 2, 1), e -> e, s -> s == 0, false));
+        assertEquals(Optional.of(0), getBestScoringElement(Stream.of(5, 0, 3, 2, 1), e -> e, s -> s == 0, false));
+        assertEquals(Optional.of(0), getBestScoringElement(Stream.of(0, 5, 3, 2, 1), e -> e, s -> s == 0, false));
     }
 
     @Test
     public void testGetBestScoringElementScoreFunc()
     {
-        assertEquals(Optional.of(6), Utils.getBestScoringElement(Stream.of(2, 4, 6, 8, 10), e -> (double) e / 2, s -> s == 3.0, true));
+        assertEquals(Optional.of(6), getBestScoringElement(Stream.of(2, 4, 6, 8, 10), e -> (double) e / 2, s -> s == 3.0, true));
+    }
+
+    @Test
+    public void testRegionCentre()
+    {
+        assertEquals(1, regionCentre(new BaseRegion(1, 1)));
+        assertEquals(1, regionCentre(new BaseRegion(1, 2)));
+        assertEquals(5, regionCentre(new BaseRegion(1, 9)));
+        assertEquals(5, regionCentre(new BaseRegion(1, 10)));
+        assertEquals(15, regionCentre(new BaseRegion(10, 20)));
+    }
+
+    @Test
+    public void testRegionStartingAt()
+    {
+        assertEquals(new BaseRegion(10, 10), regionStartingAt(10, 1));
+        assertEquals(new BaseRegion(1, 10), regionStartingAt(1, 10));
+        assertEquals(new BaseRegion(10, 39), regionStartingAt(10, 30));
+    }
+
+    @Test
+    public void testRegionCenteredAt()
+    {
+        assertEquals(new BaseRegion(10, 10), regionCenteredAt(10, 1));
+        assertEquals(new BaseRegion(10, 11), regionCenteredAt(10, 2));
+        assertEquals(new BaseRegion(9, 11), regionCenteredAt(10, 3));
+    }
+
+    @Test
+    public void testRegionCentreConsistent()
+    {
+        assertEquals(10, regionCentre(regionCenteredAt(10, 1)));
+        assertEquals(10, regionCentre(regionCenteredAt(10, 2)));
+        assertEquals(10, regionCentre(regionCenteredAt(10, 3)));
+        assertEquals(11, regionCentre(regionCenteredAt(11, 1)));
+        assertEquals(11, regionCentre(regionCenteredAt(11, 2)));
+        assertEquals(11, regionCentre(regionCenteredAt(11, 3)));
+    }
+
+    @Test
+    public void testRegionEndingAt()
+    {
+        assertEquals(new BaseRegion(10, 10), regionEndingAt(10, 1));
+        assertEquals(new BaseRegion(1, 10), regionEndingAt(10, 10));
+        assertEquals(new BaseRegion(11, 40), regionEndingAt(40, 30));
     }
 }

@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeStartCovering;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartCovering;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.nextProbeStartPosition;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.calculateIdealProbeTiling;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.computeUncoveredRegions;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -73,53 +66,17 @@ public class ProbeGenerator
     private ProbeGenerationResult coverSubregion(final ChrBaseRegion region, final CandidateProbeContext context,
             final ProbeSelector.Criteria criteria)
     {
-        // TODO: this is not good because
-        //  - can make probe that only covers tiny bit of region
-        //  - can make probe that extends far past region - should centre probes instead
-        //  - shouldn't try to find best probe?
-
-        // Methodology:
-        //   - For each position in the target region, try to find the 1 best acceptable probe that covers it.
-        //   - If an acceptable probe is found, advance the position to the next position after the probe.
-        //   - If a position can't be covered by a probe, move to the next position.
-
         String chromosome = region.chromosome();
         BaseRegion targetBaseRegion = region.baseRegion();
 
-        List<EvaluatedProbe> probes = new ArrayList<>();
-        for(int position = targetBaseRegion.start(); position <= targetBaseRegion.end(); )
-        {
-            // Ensure:
-            //  - Probe covers this position;
-            //  - Limited overlap with the previous probe;
-            //  - Minimum overlap with the target region
-            int initialProbeStart = min(position, maxProbeStartCovering(targetBaseRegion));
-            int minProbeStart = max(minProbeStartContaining(position), minProbeStartCovering(targetBaseRegion));
-            if(!probes.isEmpty())
-            {
-                minProbeStart = max(minProbeStart, nextProbeStartPosition(probes.get(probes.size() - 1).candidate().probeRegion().end()));
-            }
-
-            if(initialProbeStart < minProbeStart)
-            {
-                // Not allowed to place any more probes due to the target region coverage constraint.
-                break;
-            }
-
-            Stream<CandidateProbe> candidates = mCandidateGenerator.leftMovingLeftAlignedProbes(
-                    new BasePosition(chromosome, initialProbeStart), minProbeStart, context);
-            Optional<EvaluatedProbe> bestCandidate = mProbeSelector.selectBestCandidate(candidates, criteria);
-
-            if(bestCandidate.isPresent())
-            {
-                probes.add(bestCandidate.get());
-                position = bestCandidate.get().candidate().probeRegion().end() + 1;
-            }
-            else
-            {
-                ++position;
-            }
-        }
+        // TODO: improve this or fix it up
+        
+        Stream<CandidateProbe> candidates = calculateIdealProbeTiling(region.baseRegion()).stream()
+                .map(probeRegion -> context.createProbe(ChrBaseRegion.from(chromosome, probeRegion)));
+        List<EvaluatedProbe> probes = candidates
+                .map(candidate -> mProbeSelector.mProbeEvaluator.evaluateCandidate(candidate, criteria.eval()))
+                .filter(EvaluatedProbe::accepted)
+                .toList();
 
         // Compute rejected regions based on what has been covered by the probes.
         String rejectionReason = "No probe covering region meeting criteria " + criteria.eval();

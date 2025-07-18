@@ -99,4 +99,45 @@ public class Utils
         }
         return bestElement;
     }
+
+    public static int regionCentre(final BaseRegion region)
+    {
+        if(!region.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+        return (region.start() + region.end()) / 2;
+    }
+
+    public static BaseRegion regionStartingAt(int startPosition, int length)
+    {
+        BaseRegion region = new BaseRegion(startPosition, startPosition + length - 1);
+        if(!region.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+        return region;
+    }
+
+    public static BaseRegion regionCenteredAt(int centrePosition, int length)
+    {
+        int start = centrePosition - length / 2 + (1 - length % 2);
+        int end = start + length - 1;
+        BaseRegion region = new BaseRegion(start, end);
+        if(!region.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+        return region;
+    }
+
+    public static BaseRegion regionEndingAt(int endPosition, int length)
+    {
+        BaseRegion region = new BaseRegion(endPosition - length + 1, endPosition);
+        if(!region.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+        return region;
+    }
 }
