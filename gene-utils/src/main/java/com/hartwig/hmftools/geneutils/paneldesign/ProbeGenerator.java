@@ -19,10 +19,16 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+
 public class ProbeGenerator
 {
     public final CandidateProbeGenerator mCandidateGenerator;
     public final ProbeSelector mProbeSelector;
+
+    private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
     public ProbeGenerator(final CandidateProbeGenerator candidateGenerator, final ProbeSelector probeSelector)
     {
@@ -31,7 +37,40 @@ public class ProbeGenerator
     }
 
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
-    public ProbeGenerationResult coverRegion(final TargetRegion target, final ProbeSelectCriteria criteria)
+    // If `coverage` is not null,
+    public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final CandidateProbeContext context,
+            final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
+    {
+        List<ChrBaseRegion> subregions;
+        if(coverage == null)
+        {
+            subregions = List.of(region);
+        }
+        else
+        {
+            // Split the region into subregions to avoid overlap with regions already covered by probes.
+            subregions =
+                    computeUncoveredRegions(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
+                            .stream()
+                            .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
+                            .toList();
+            if(subregions.size() > 1)
+            {
+                subregions.forEach(subregion -> LOGGER.debug("Split region into uncovered subregion: {}", subregion));
+            }
+        }
+
+        ProbeGenerationResult result = subregions.stream()
+                .map(subregion -> coverSubregion(subregion, context, criteria))
+                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        // TODO: static import of emptyList()
+        // Add in the target region that's not added by coverSubregion().
+        result = result.add(new ProbeGenerationResult(List.of(context.targetRegion()), Collections.emptyList(), Collections.emptyList()));
+        return result;
+    }
+
+    private ProbeGenerationResult coverSubregion(final ChrBaseRegion region, final CandidateProbeContext context,
+            final ProbeSelectCriteria criteria)
     {
         // TODO: this is not good because
         //  - can make probe that only covers tiny bit of region
@@ -39,15 +78,13 @@ public class ProbeGenerator
         //  - shouldn't try to find best probe?
 
         // Methodology:
-        //   - For each position in the target, try to find the 1 best acceptable probe that covers it.
+        //   - For each position in the target region, try to find the 1 best acceptable probe that covers it.
         //   - If an acceptable probe is found, advance the position to the next position after the probe.
         //   - If a position can't be covered by a probe, move to the next position.
 
-        ChrBaseRegion targetChrBaseRegion = target.region();
-        String chromosome = targetChrBaseRegion.chromosome();
-        BaseRegion targetBaseRegion = targetChrBaseRegion.baseRegion();
+        String chromosome = region.chromosome();
+        BaseRegion targetBaseRegion = region.baseRegion();
 
-        CandidateProbeFactory candidateFactory = new CandidateProbeFactory(target);
         List<EvaluatedProbe> probes = new ArrayList<>();
         for(int position = targetBaseRegion.start(); position <= targetBaseRegion.end(); )
         {
@@ -69,7 +106,7 @@ public class ProbeGenerator
             }
 
             Stream<CandidateProbe> candidates = mCandidateGenerator.leftMovingLeftAlignedProbes(
-                    new BasePosition(chromosome, initialProbeStart), minProbeStart, candidateFactory);
+                    new BasePosition(chromosome, initialProbeStart), minProbeStart, context);
             Optional<EvaluatedProbe> bestCandidate = mProbeSelector.selectBestCandidate(candidates, criteria);
 
             if(bestCandidate.isPresent())
@@ -88,42 +125,46 @@ public class ProbeGenerator
         List<RejectedRegion> rejectedRegions = computeUncoveredRegions(
                 targetBaseRegion, probes.stream().map(probe -> probe.candidate().probeRegion().baseRegion()))
                 .stream()
-                .map(region ->
-                        new RejectedRegion(ChrBaseRegion.from(chromosome, region), target, rejectionReason))
+                .map(r -> new RejectedRegion(ChrBaseRegion.from(chromosome, r), context.targetRegion(), rejectionReason))
                 .toList();
 
-        return new ProbeGenerationResult(List.of(target), probes, rejectedRegions);
+        // Target is not added here because it would be added multiple times if there are multiple calls to this function for 1 target.
+        // Target must be added by the caller.
+        return new ProbeGenerationResult(Collections.emptyList(), probes, rejectedRegions);
     }
 
     // Generates the 1 best acceptable probe that is contained within the specified region.
-    public ProbeGenerationResult coverOneSubregion(final TargetRegion target, final ProbeSelectCriteria criteria)
+    public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final CandidateProbeContext context,
+            final ProbeSelectCriteria criteria)
     {
-        return mProbeSelector.selectBestCandidate(mCandidateGenerator.coverOneSubregion(target), criteria)
-                .map(probe -> new ProbeGenerationResult(List.of(target), List.of(probe), Collections.emptyList()))
+        Stream<CandidateProbe> candidates = mCandidateGenerator.coverOneSubregion(region, context);
+        return mProbeSelector.selectBestCandidate(candidates, criteria)
+                .map(probe ->
+                        new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
                     String rejectionReason = "No probe in region meeting criteria " + criteria.eval();
                     return new ProbeGenerationResult(
-                            List.of(target),
+                            List.of(context.targetRegion()),
                             Collections.emptyList(),
-                            List.of(RejectedRegion.fromTargetRegion(target, rejectionReason)));
+                            List.of(RejectedRegion.fromTargetRegion(context.targetRegion(), rejectionReason)));
                 });
     }
 
     // Generates the 1 best acceptable probe which covers a position.
-    public ProbeGenerationResult coverPosition(final BasePosition position, final TargetMetadata metadata,
+    public ProbeGenerationResult coverPosition(final BasePosition position, final CandidateProbeContext context,
             final ProbeSelectCriteria criteria)
     {
-        TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
-        return mProbeSelector.selectBestCandidate(mCandidateGenerator.coverPosition(position, metadata), criteria)
-                .map(probe -> new ProbeGenerationResult(List.of(target), List.of(probe), Collections.emptyList()))
+        Stream<CandidateProbe> candidates = mCandidateGenerator.coverPosition(position, context);
+        return mProbeSelector.selectBestCandidate(candidates, criteria)
+                .map(probe -> new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), Collections.emptyList()))
                 .orElseGet(() ->
                 {
                     String rejectionReason = "No probe covering position meeting criteria " + criteria.eval();
                     return new ProbeGenerationResult(
-                            List.of(target),
+                            List.of(context.targetRegion()),
                             Collections.emptyList(),
-                            List.of(RejectedRegion.fromTargetRegion(target, rejectionReason)));
+                            List.of(RejectedRegion.fromTargetRegion(context.targetRegion(), rejectionReason)));
                 });
     }
 }

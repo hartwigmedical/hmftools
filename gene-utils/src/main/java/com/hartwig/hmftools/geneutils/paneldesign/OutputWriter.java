@@ -171,7 +171,7 @@ public class OutputWriter implements AutoCloseable
         LOGGER.debug("Writing {} rejected regions to file", regions.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
-        regions = regions.stream().sorted(Comparator.comparing(RejectedRegion::baseRegion)).toList();
+        regions = regions.stream().sorted(Comparator.comparing(RejectedRegion::region)).toList();
 
         for(RejectedRegion region : regions)
         {
@@ -182,9 +182,9 @@ public class OutputWriter implements AutoCloseable
 
     private static void writeRejectedRegionsTsvRow(final RejectedRegion region, DelimFileWriter.Row row)
     {
-        row.set(FLD_CHROMOSOME, region.baseRegion().chromosome());
-        row.set(FLD_POSITION_START, region.baseRegion().start());
-        row.set(FLD_POSITION_END, region.baseRegion().end());
+        row.set(FLD_CHROMOSOME, region.region().chromosome());
+        row.set(FLD_POSITION_START, region.region().start());
+        row.set(FLD_POSITION_END, region.region().end());
         row.set(FLD_TARGET_TYPE, region.target().metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, region.target().metadata().extra());
         row.set(FLD_REJECT_REASON, region.reason());
@@ -192,7 +192,7 @@ public class OutputWriter implements AutoCloseable
 
     private void writeRejectedRegionsBedRow(final RejectedRegion region) throws IOException
     {
-        mRejectedRegionsBedWriter.write(formatBedRow(region.baseRegion(), targetMetadataToBedName(region.target().metadata())));
+        mRejectedRegionsBedWriter.write(formatBedRow(region.region(), targetMetadataToBedName(region.target().metadata())));
     }
 
     public void writeCandidateProbe(final EvaluatedProbe probe)

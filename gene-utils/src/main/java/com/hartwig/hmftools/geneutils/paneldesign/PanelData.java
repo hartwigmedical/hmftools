@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 // Holds the panel output data, including probes, target regions, and rejected regions.
 // It's a mutable data structure because it's also used during probe generation to check which regions are already covered.
-public class PanelData
+public class PanelData implements PanelCoverage
 {
     private ProbeGenerationResult mData;
 
@@ -21,13 +21,14 @@ public class PanelData
         mData = new ProbeGenerationResult();
     }
 
-    // Checks if a target region is fully covered by probes in the panel.
+    @Override
     public boolean isCovered(final ChrBaseRegion target)
     {
-        return probeRegions().anyMatch(probe -> probe.containsRegion(target));
+        return coveredRegions().anyMatch(probe -> probe.containsRegion(target));
     }
 
-    private Stream<ChrBaseRegion> probeRegions()
+    @Override
+    public Stream<ChrBaseRegion> coveredRegions()
     {
         return mData.probes().stream().map(probe -> probe.candidate().probeRegion());
     }

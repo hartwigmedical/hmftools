@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+// TODO: put this inside ProbeSelector
 // When there are multiple acceptable candidate probes and only 1 probe is desired, how to select the best?
 public sealed interface ProbeSelectStrategy
         permits ProbeSelectStrategy.FirstAcceptable, ProbeSelectStrategy.MaxQuality, ProbeSelectStrategy.BestGc

@@ -12,14 +12,14 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 // Miscellaneous probe maths and utilities.
 public class ProbeUtils
 {
-    public static CandidateProbe probeCenteredAt(final String chromosome, int centrePosition, final CandidateProbeFactory factory)
+    public static CandidateProbe probeCenteredAt(final String chromosome, int centrePosition, final CandidateProbeContext context)
     {
-        return probeStartingAt(chromosome, centrePosition - PROBE_LENGTH / 2, factory);
+        return probeStartingAt(chromosome, centrePosition - PROBE_LENGTH / 2, context);
     }
 
-    public static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final CandidateProbeFactory factory)
+    public static CandidateProbe probeStartingAt(final String chromosome, int startPosition, final CandidateProbeContext context)
     {
-        return factory.create(new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH - 1));
+        return context.createProbe(new ChrBaseRegion(chromosome, startPosition, startPosition + PROBE_LENGTH - 1));
     }
 
     // Calculates the minimum probe starting position such that the specified position is contained within the probe.

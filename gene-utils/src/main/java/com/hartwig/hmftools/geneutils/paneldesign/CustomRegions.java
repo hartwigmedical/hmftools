@@ -30,8 +30,8 @@ public class CustomRegions
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
-    public static ProbeGenerationResult generateProbes(final String customRegionFile, final Map<String, Integer> chromosomeLengths,
-            final ProbeGenerator probeGenerator)
+    public static void generateProbes(final String customRegionFile, final Map<String, Integer> chromosomeLengths,
+            final ProbeGenerator probeGenerator, final PanelData panelData)
     {
         LOGGER.info("Generating custom region probes");
 
@@ -40,14 +40,15 @@ public class CustomRegions
         checkRegionBounds(customRegions, chromosomeLengths);
         checkNoOverlaps(customRegions);
 
-        // TODO: handle overlaps with existing probes
-
         ProbeGenerationResult result = customRegions.stream()
-                .map(region -> generateProbes(region, probeGenerator))
+                .map(region -> generateProbes(region, probeGenerator, panelData))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        // Mostly safe to generate the probes at once and then add to the result afterward,
+        // since we already checked that the custom region don't overlap, and assume any overlap from the probe generation is minimal.
+        // Potentially there could be small overlap if two custom regions were right next to each other.
+        panelData.addResult(result);
 
         LOGGER.info("Done generating custom region probes");
-        return result;
     }
 
     private record CustomRegion(
@@ -125,12 +126,14 @@ public class CustomRegions
         }
     }
 
-    private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator)
+    private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator,
+            final PanelCoverage coverage)
     {
         LOGGER.debug("Generating probes for {}", region);
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
         TargetRegion target = new TargetRegion(region.region(), metadata);
-        ProbeGenerationResult result = probeGenerator.coverRegion(target, PROBE_SELECT_CRITERIA);
+        CandidateProbeContext candidateContext = new CandidateProbeContext(target);
+        ProbeGenerationResult result = probeGenerator.coverRegion(target.region(), candidateContext, PROBE_SELECT_CRITERIA, coverage);
         return result;
     }
 }

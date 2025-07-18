@@ -86,6 +86,10 @@ public class TargetGenes
         LOGGER.debug("Creating gene target regions");
         List<GeneRegion> geneRegions = geneTranscriptDatas.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
 
+        // When generating probes, don't care about probe overlap. This is because:
+        //   - Gene probes are generated first, so nothing is covered beforehand, and
+        //   - Assume gene regions don't overlap, or if they do, it's small enough that the overlap is tolerable.
+
         LOGGER.debug("Generating probes");
         ProbeGenerationResult result = geneRegions.stream()
                 .map(region -> generateProbes(region, probeGenerator))
@@ -352,19 +356,23 @@ public class TargetGenes
             case CODING ->
             {
                 TargetRegion target = new TargetRegion(geneRegion.baseRegion(), metadata);
-                yield probeGenerator.coverRegion(target, EXON_PROBE_SELECT_CRITERIA);
+                CandidateProbeContext candidateContext = new CandidateProbeContext(target);
+                yield probeGenerator.coverRegion(target.region(), candidateContext, EXON_PROBE_SELECT_CRITERIA, null);
             }
             case UTR ->
             {
                 BasePosition position = new BasePosition(
                         geneRegion.baseRegion().Chromosome,
                         (geneRegion.baseRegion().start() + geneRegion.baseRegion().end()) / 2);
-                yield probeGenerator.coverPosition(position, metadata, EXON_PROBE_SELECT_CRITERIA);
+                TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
+                CandidateProbeContext candidateContext = new CandidateProbeContext(target);
+                yield probeGenerator.coverPosition(position, candidateContext, EXON_PROBE_SELECT_CRITERIA);
             }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
             {
                 TargetRegion target = new TargetRegion(geneRegion.baseRegion(), metadata);
-                yield probeGenerator.coverOneSubregion(target, CN_PROBE_SELECT_CRITERIA);
+                CandidateProbeContext candidateContext = new CandidateProbeContext(target);
+                yield probeGenerator.coverOneSubregion(target.region(), candidateContext, CN_PROBE_SELECT_CRITERIA);
             }
         };
     }

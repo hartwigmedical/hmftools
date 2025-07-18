@@ -70,6 +70,9 @@ public class CopyNumberBackbone
         populateAmberSites(partitions);
 
         ProbeGenerationResult result = generateProbes(partitions);
+        // Probes generated here cannot overlap with themselves since there is 1 probe per partition.
+        // So it's safe to generate all the probes together and then add them to the result at the end.
+        // No need to check overlap of generated probes with themselves.
         mPanelData.addResult(result);
 
         LOGGER.info("Done generating copy number backbone probes");
@@ -222,7 +225,9 @@ public class CopyNumberBackbone
 
     private Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final AmberSite site)
     {
-        return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), createTargetMetadata(partition.Region, site));
+        TargetRegion target = new TargetRegion(ChrBaseRegion.from(site.position()), createTargetMetadata(partition.Region, site));
+        CandidateProbeContext candidateContext = new CandidateProbeContext(target);
+        return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), candidateContext);
     }
 
     private static TargetMetadata createTargetMetadata(final ChrBaseRegion partitionRegion, @Nullable final AmberSite site)

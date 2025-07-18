@@ -79,8 +79,6 @@ public class PanelBuilder
             mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
         }
 
-        // TODO: strategy for handling overlapping probes
-
         // TODO: probe overlapping multiple target regions will only have 1 target associated. fix up to show multiple targets on 1 probe?
 
         mOutputWriter.close();
@@ -126,9 +124,8 @@ public class PanelBuilder
         }
         else
         {
-            ProbeGenerationResult result =
-                    CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator);
-            mPanelData.addResult(result);
+            CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData
         }
     }
 
