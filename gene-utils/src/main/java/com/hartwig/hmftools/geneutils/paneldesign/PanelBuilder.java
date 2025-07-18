@@ -31,8 +31,7 @@ public class PanelBuilder
     private final RefGenomeSource mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
-    // TODO: is this the best way to scope this?
-    private final CoveredRegions mCoveredRegions;
+    private PanelData mPanelData;
     @Nullable
     private OutputWriter mOutputWriter;
 
@@ -48,7 +47,7 @@ public class PanelBuilder
         ProbeSelector probeSelector = new ProbeSelector(probeEvaluator);
         CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
         mProbeGenerator = new ProbeGenerator(candidateGenerator, probeSelector);
-        mCoveredRegions = new CoveredRegions();
+        mPanelData = new PanelData();
     }
 
     public void run() throws IOException
@@ -65,75 +64,71 @@ public class PanelBuilder
                 mConfig.VerboseOutput ? mConfig.outputFilePath(CANDIDATE_PROBES_FILE_NAME) : null);
 
         LOGGER.info("Generating probes");
-        ProbeGenerationResult geneProbes = generateTargetGeneProbes();
-        ProbeGenerationResult cnBackboneProbes = generateCopyNumberBackboneProbes();
-        ProbeGenerationResult customRegionProbes = generateCustomRegionProbes();
+        mPanelData = new PanelData();
+        // Note the order of generation here determines the priority of probe overlap resolution.
+        // Probes generated first will exclude overlapping probes generated afterward.
+        generateTargetGeneProbes();
+        generateCopyNumberBackboneProbes();
+        generateCustomRegionProbes();
         LOGGER.info("Probe generation done");
 
         LOGGER.info("Writing output");
         {
-            ProbeGenerationResult aggregate = customRegionProbes.add(geneProbes).add(cnBackboneProbes);
-            mOutputWriter.writePanelProbes(aggregate.probes());
-            mOutputWriter.writeTargetRegions(aggregate.targetRegions());
-            mOutputWriter.writeRejectedRegions(aggregate.rejectedRegions());
+            mOutputWriter.writePanelProbes(mPanelData.probes());
+            mOutputWriter.writeTargetRegions(mPanelData.targetRegions());
+            mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
         }
 
         // TODO: strategy for handling overlapping probes
 
+        // TODO: probe overlapping multiple target regions will only have 1 target associated. fix up to show multiple targets on 1 probe?
+
         mOutputWriter.close();
         mOutputWriter = null;
-
-        mCoveredRegions.clear();
 
         LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private ProbeGenerationResult generateTargetGeneProbes()
+    private void generateTargetGeneProbes()
     {
         if(mConfig.TargetGenesFile == null)
         {
             LOGGER.info("Target genes not provided; skipping gene probes");
-            return new ProbeGenerationResult();
         }
         else
         {
             EnsemblDataCache ensemblData = loadEnsemblData();
             ProbeGenerationResult result = TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator);
-            mCoveredRegions.addFromProbes(result.probes());
-            return result;
+            mPanelData.addResult(result);
         }
     }
 
-    private ProbeGenerationResult generateCopyNumberBackboneProbes()
+    private void generateCopyNumberBackboneProbes()
     {
         if(mConfig.AmberSitesFile == null)
         {
             LOGGER.info("Amber sites not provided; skipping copy number backbone probes");
-            return new ProbeGenerationResult();
         }
         else
         {
             CopyNumberBackbone copyNumberBackbone =
-                    new CopyNumberBackbone(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator, mCoveredRegions);
-            ProbeGenerationResult result = copyNumberBackbone.generateProbes();
-            mCoveredRegions.addFromProbes(result.probes());
-            return result;
+                    new CopyNumberBackbone(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator, mPanelData);
+            copyNumberBackbone.generateProbes();
+            // Result is stored into mPanelData
         }
     }
 
-    private ProbeGenerationResult generateCustomRegionProbes()
+    private void generateCustomRegionProbes()
     {
         if(mConfig.CustomRegionsFile == null)
         {
             LOGGER.info("Custom regions not provided; skipping custom region probes");
-            return new ProbeGenerationResult();
         }
         else
         {
             ProbeGenerationResult result =
                     CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator);
-            mCoveredRegions.addFromProbes(result.probes());
-            return result;
+            mPanelData.addResult(result);
         }
     }
 
