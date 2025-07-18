@@ -20,11 +20,11 @@ import org.apache.logging.log4j.Logger;
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {
-    private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.CUSTOM;
+    private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CUSTOM;
 
-    private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
-            new ProbeSelectStrategy.MaxQuality());
+    private static final ProbeSelector.Criteria PROBE_SELECT_CRITERIA = new ProbeSelector.Criteria(
+            new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeSelector.Strategy.MaxQuality());
 
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
 

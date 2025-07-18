@@ -10,7 +10,7 @@ public class ProbeUtilsTest
 {
     private static final TargetRegion TARGET_REGION = new TargetRegion(
             new ChrBaseRegion("1", 100, 200),
-            new TargetMetadata(TargetRegionType.CUSTOM, "extra"));
+            new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra"));
     private static final CandidateProbeContext PROBE_CONTEXT = new CandidateProbeContext(TARGET_REGION);
 
     @Test

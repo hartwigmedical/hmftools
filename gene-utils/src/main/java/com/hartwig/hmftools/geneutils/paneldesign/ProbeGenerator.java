@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeStartCovering;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
@@ -10,7 +11,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.nextProbeSta
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.computeUncoveredRegions;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -39,7 +39,7 @@ public class ProbeGenerator
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     // If `coverage` is not null,
     public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final CandidateProbeContext context,
-            final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
+            final ProbeSelector.Criteria criteria, @Nullable final PanelCoverage coverage)
     {
         List<ChrBaseRegion> subregions;
         if(coverage == null)
@@ -63,14 +63,13 @@ public class ProbeGenerator
         ProbeGenerationResult result = subregions.stream()
                 .map(subregion -> coverSubregion(subregion, context, criteria))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
-        // TODO: static import of emptyList()
         // Add in the target region that's not added by coverSubregion().
-        result = result.add(new ProbeGenerationResult(List.of(context.targetRegion()), Collections.emptyList(), Collections.emptyList()));
+        result = result.add(new ProbeGenerationResult(List.of(context.targetRegion()), emptyList(), emptyList()));
         return result;
     }
 
     private ProbeGenerationResult coverSubregion(final ChrBaseRegion region, final CandidateProbeContext context,
-            final ProbeSelectCriteria criteria)
+            final ProbeSelector.Criteria criteria)
     {
         // TODO: this is not good because
         //  - can make probe that only covers tiny bit of region
@@ -130,40 +129,40 @@ public class ProbeGenerator
 
         // Target is not added here because it would be added multiple times if there are multiple calls to this function for 1 target.
         // Target must be added by the caller.
-        return new ProbeGenerationResult(Collections.emptyList(), probes, rejectedRegions);
+        return new ProbeGenerationResult(emptyList(), probes, rejectedRegions);
     }
 
     // Generates the 1 best acceptable probe that is contained within the specified region.
     public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final CandidateProbeContext context,
-            final ProbeSelectCriteria criteria)
+            final ProbeSelector.Criteria criteria)
     {
         Stream<CandidateProbe> candidates = mCandidateGenerator.coverOneSubregion(region, context);
         return mProbeSelector.selectBestCandidate(candidates, criteria)
                 .map(probe ->
-                        new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), Collections.emptyList()))
+                        new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), emptyList()))
                 .orElseGet(() ->
                 {
                     String rejectionReason = "No probe in region meeting criteria " + criteria.eval();
                     return new ProbeGenerationResult(
                             List.of(context.targetRegion()),
-                            Collections.emptyList(),
+                            emptyList(),
                             List.of(RejectedRegion.fromTargetRegion(context.targetRegion(), rejectionReason)));
                 });
     }
 
     // Generates the 1 best acceptable probe which covers a position.
     public ProbeGenerationResult coverPosition(final BasePosition position, final CandidateProbeContext context,
-            final ProbeSelectCriteria criteria)
+            final ProbeSelector.Criteria criteria)
     {
         Stream<CandidateProbe> candidates = mCandidateGenerator.coverPosition(position, context);
         return mProbeSelector.selectBestCandidate(candidates, criteria)
-                .map(probe -> new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), Collections.emptyList()))
+                .map(probe -> new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), emptyList()))
                 .orElseGet(() ->
                 {
                     String rejectionReason = "No probe covering position meeting criteria " + criteria.eval();
                     return new ProbeGenerationResult(
                             List.of(context.targetRegion()),
-                            Collections.emptyList(),
+                            emptyList(),
                             List.of(RejectedRegion.fromTargetRegion(context.targetRegion(), rejectionReason)));
                 });
     }

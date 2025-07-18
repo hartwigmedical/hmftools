@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 // Candidate probe which has been evaluated for suitability.
 public record EvaluatedProbe(
         CandidateProbe candidate,
-        ProbeEvalCriteria criteria,
+        ProbeEvaluator.Criteria criteria,
         // null if the probe is acceptable.
         @Nullable String rejectionReason,
         // All the following fields may be null if the probe was rejected, and the field didn't need to be checked.
@@ -14,7 +14,7 @@ public record EvaluatedProbe(
         @Nullable Double gcContent
 )
 {
-    public EvaluatedProbe(final CandidateProbe probe, final ProbeEvalCriteria criteria)
+    public EvaluatedProbe(final CandidateProbe probe, final ProbeEvaluator.Criteria criteria)
     {
         this(probe, criteria, null, null, null, null);
     }

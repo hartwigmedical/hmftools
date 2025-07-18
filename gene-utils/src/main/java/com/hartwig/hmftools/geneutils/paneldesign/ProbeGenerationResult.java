@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -12,7 +13,7 @@ public record ProbeGenerationResult(
 {
     public ProbeGenerationResult()
     {
-        this(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        this(emptyList(), emptyList(), emptyList());
     }
 
     public ProbeGenerationResult add(ProbeGenerationResult other)

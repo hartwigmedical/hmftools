@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 
+import java.text.DecimalFormat;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
@@ -11,6 +14,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 // Common candidate probe evaluation and filtering.
 public class ProbeEvaluator
@@ -31,7 +35,7 @@ public class ProbeEvaluator
         mCandidateCallback = candidateCallback;
     }
 
-    public EvaluatedProbe evaluateCandidate(final CandidateProbe probe, final ProbeEvalCriteria criteria)
+    public EvaluatedProbe evaluateCandidate(final CandidateProbe probe, final Criteria criteria)
     {
         EvaluatedProbe evaluatedProbe = new EvaluatedProbe(probe, criteria);
         evaluatedProbe = evaluateQualityScore(evaluatedProbe, criteria);
@@ -43,7 +47,7 @@ public class ProbeEvaluator
         return evaluatedProbe;
     }
 
-    private EvaluatedProbe evaluateQualityScore(EvaluatedProbe probe, final ProbeEvalCriteria criteria)
+    private EvaluatedProbe evaluateQualityScore(EvaluatedProbe probe, final Criteria criteria)
     {
         double qualityScore = getProbeQuality(probe.candidate());
         probe = probe.withQualityScore(qualityScore);
@@ -54,7 +58,7 @@ public class ProbeEvaluator
         return probe;
     }
 
-    private EvaluatedProbe evaluateGcContent(EvaluatedProbe probe, final ProbeEvalCriteria criteria)
+    private EvaluatedProbe evaluateGcContent(EvaluatedProbe probe, final Criteria criteria)
     {
         String sequence = getProbeSequence(probe.candidate());
         probe = probe.withSequence(sequence);
@@ -88,5 +92,59 @@ public class ProbeEvaluator
     {
         LOGGER.trace("Evaluated probe: {}", probe);
         mCandidateCallback.accept(probe);
+    }
+
+    public record Criteria(
+            // Quality score must be >= this value.
+            double qualityScoreMin,
+            // Target GC content.
+            double gcContentTarget,
+            // How much +/- gcContentTarget to accept.
+            double gcContentTolerance
+    )
+    {
+        private static final DecimalFormat DECIMAL_FORMAT;
+
+        static
+        {
+            DECIMAL_FORMAT = new DecimalFormat();
+            DECIMAL_FORMAT.setMinimumFractionDigits(0);
+        }
+
+        public Criteria
+        {
+            if(!(qualityScoreMin > 0 && qualityScoreMin <= 1))
+            {
+                // Note quality score is always required, quality=0 is never acceptable.
+                throw new IllegalArgumentException("qualityScoreMin must be in range (0, 1]");
+            }
+            if(!(gcContentMax() >= 0 && gcContentMin() <= 1))
+            {
+                throw new IllegalArgumentException("GC content range must overlap range [0, 1]");
+            }
+        }
+
+        public double gcContentMin()
+        {
+            return gcContentTarget - gcContentTolerance;
+        }
+
+        public double gcContentMax()
+        {
+            return gcContentTarget + gcContentTolerance;
+        }
+
+        @NotNull
+        @Override
+        public String toString()
+        {
+            String str = format("quality>=%s", DECIMAL_FORMAT.format(qualityScoreMin));
+            if(gcContentMin() > 0 || gcContentMax() < 1)
+            {
+                // Only show GC criteria if it does anything.
+                str += format(" gc=%s+-%s", DECIMAL_FORMAT.format(gcContentTarget), DECIMAL_FORMAT.format(gcContentTolerance));
+            }
+            return str;
+        }
     }
 }

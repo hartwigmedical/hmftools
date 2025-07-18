@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
@@ -14,7 +15,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,11 +44,11 @@ public class CopyNumberBackbone
     private final ProbeGenerator mProbeGenerator;
     private final PanelData mPanelData;
 
-    private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.CN_BACKBONE;
+    private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CN_BACKBONE;
 
-    private static final ProbeSelectCriteria PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
-            new ProbeSelectStrategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
+    private static final ProbeSelector.Criteria PROBE_SELECT_CRITERIA = new ProbeSelector.Criteria(
+            new ProbeEvaluator.Criteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
+            new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
@@ -183,12 +183,12 @@ public class CopyNumberBackbone
                     if(mPanelData.isCovered(target.region()))
                     {
                         LOGGER.debug("Copy number backbone target already covered by panel: {}", target);
-                        return new ProbeGenerationResult(List.of(target), Collections.emptyList(), Collections.emptyList());
+                        return new ProbeGenerationResult(List.of(target), emptyList(), emptyList());
                     }
                     else
                     {
                         // TODO: is this the best target region to use here?
-                        return new ProbeGenerationResult(List.of(target), List.of(bestProbe), Collections.emptyList());
+                        return new ProbeGenerationResult(List.of(target), List.of(bestProbe), emptyList());
                     }
                 })
                 .orElseGet(() ->
@@ -210,7 +210,7 @@ public class CopyNumberBackbone
                     }
                     RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, target, rejectionReason);
 
-                    return new ProbeGenerationResult(List.of(target), Collections.emptyList(), List.of(rejectedRegion));
+                    return new ProbeGenerationResult(List.of(target), emptyList(), List.of(rejectedRegion));
                 });
         return result;
     }

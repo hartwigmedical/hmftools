@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
@@ -22,7 +23,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,14 +50,14 @@ import org.jetbrains.annotations.Nullable;
 //     - Large introns: Select the best acceptable probe from each of 1-5kb regions near the adjacent exons.
 public class TargetGenes
 {
-    private static final TargetRegionType TARGET_REGION_TYPE = TargetRegionType.GENE;
+    private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.GENE;
 
-    private static final ProbeSelectCriteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(GENE_EXON_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
-            new ProbeSelectStrategy.MaxQuality());
-    private static final ProbeSelectCriteria CN_PROBE_SELECT_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvalCriteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
-            new ProbeSelectStrategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
+    private static final ProbeSelector.Criteria EXON_PROBE_SELECT_CRITERIA = new ProbeSelector.Criteria(
+            new ProbeEvaluator.Criteria(GENE_EXON_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeSelector.Strategy.MaxQuality());
+    private static final ProbeSelector.Criteria CN_PROBE_SELECT_CRITERIA = new ProbeSelector.Criteria(
+            new ProbeEvaluator.Criteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
+            new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
     private static final String FLD_INCLUDE_CODING = "IncludeCoding";
     private static final String FLD_INCLUDE_UTR = "IncludeUTR";
@@ -154,7 +154,7 @@ public class TargetGenes
                 boolean downstream = row.getBoolean(FLD_INCLUDE_DOWNSTREAM);
                 String extraTranscriptsStr = row.get(FLD_EXTRA_TRANSCRIPTS);
                 List<String> extraTranscripts =
-                        extraTranscriptsStr.isEmpty() ? Collections.emptyList() : Arrays.asList(extraTranscriptsStr.split(","));
+                        extraTranscriptsStr.isEmpty() ? emptyList() : Arrays.asList(extraTranscriptsStr.split(","));
                 GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream);
                 return new GeneDefinition(geneName, options, extraTranscripts);
             }).toList();
