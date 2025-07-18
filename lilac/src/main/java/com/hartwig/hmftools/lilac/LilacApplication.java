@@ -208,7 +208,7 @@ public class LilacApplication
 
         allValid &= validateFragments(mRefNucleotideFrags);
 
-        mAminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, mRefNucleotideFrags);
+        mAminoAcidPipeline = new AminoAcidFragmentPipeline(mRefNucleotideFrags);
 
         List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
@@ -386,7 +386,8 @@ public class LilacApplication
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
             List<HlaComplex> filteredComplexes = mRankedComplexes.stream().map(ComplexCoverage::toComplex).toList();
-            LL_LOGGER.info("Recalculating coverage for complexes({}) and ref alleles({})",
+
+            LL_LOGGER.debug("recalculating coverage for complexes({}) and ref alleles({})",
                     filteredComplexes.size(), mRefFragAlleles.size());
 
             calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);

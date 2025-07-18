@@ -27,8 +27,6 @@ public class AminoAcidFragmentPipeline
     public static final ConcurrentHashMap<String, SequenceCount> RAW_REF_NUCLEOTIDE_COUNTS = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<String, SequenceCount> RAW_REF_AMINO_ACID_COUNTS = new ConcurrentHashMap<>();
 
-    private final LilacConfig mConfig;
-
     private final List<Fragment> mHighQualRefAminoAcidFragments; // generated from input ref fragments, filtered and amino acids built
 
     // per-gene counts of bases and amino-acids with sufficient support
@@ -37,9 +35,8 @@ public class AminoAcidFragmentPipeline
 
     private final List<Fragment> mOriginalRefFragments; // copied and used for phasing only, will remain unchanged
 
-    public AminoAcidFragmentPipeline(final LilacConfig config, final Collection<Fragment> referenceFragments)
+    public AminoAcidFragmentPipeline(final Collection<Fragment> referenceFragments)
     {
-        mConfig = config;
         mOriginalRefFragments = referenceFragments.stream().map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
