@@ -113,8 +113,9 @@ public class PanelBuilder
         }
         else
         {
-            ProbeGenerationResult result =
-                    CopyNumberBackbone.generateProbes(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator, mCoveredRegions);
+            CopyNumberBackbone copyNumberBackbone =
+                    new CopyNumberBackbone(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator, mCoveredRegions);
+            ProbeGenerationResult result = copyNumberBackbone.generateProbes();
             mCoveredRegions.addFromProbes(result.probes());
             return result;
         }

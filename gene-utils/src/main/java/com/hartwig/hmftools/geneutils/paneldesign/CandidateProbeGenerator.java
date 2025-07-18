@@ -4,8 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeBoundsContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeCenteredAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeStartingAt;
