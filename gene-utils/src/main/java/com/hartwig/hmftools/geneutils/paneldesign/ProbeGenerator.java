@@ -37,7 +37,7 @@ public class ProbeGenerator
     }
 
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
-    // If `coverage` is not null,
+    // If `coverage` is not null, avoid placing probes in already covered regions.
     public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final CandidateProbeContext context,
             final ProbeSelector.Criteria criteria, @Nullable final PanelCoverage coverage)
     {

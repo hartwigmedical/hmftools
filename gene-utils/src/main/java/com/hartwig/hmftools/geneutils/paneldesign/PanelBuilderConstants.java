@@ -48,12 +48,12 @@ public class PanelBuilderConstants
     public static final double CN_GC_OPTIMAL_TOLERANCE = 0.001;
 
     // Custom regions parameters.
-    public static final double CUSTOM_REGION_QUALITY_MIN = 0.2;
+    public static final double CUSTOM_REGION_QUALITY_MIN = 0.1;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
     public static final String TARGET_REGIONS_FILE_NAME = "target_regions.bed";
     public static final String REJECTED_REGIONS_FILE_STEM = "rejected_regions";
-    // This output can get very large (10s of GB) so write it in compressed format.
+    // This output can get very large (multiple GB) so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
 }
