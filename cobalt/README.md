@@ -7,7 +7,7 @@
 ### Calculating read depths and masking
 COBALT starts with finding the mean read depth per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
 in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
-Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
+Windows with a GC content less than 0.24 or greater than 0.68 or with an average mappability below 0.85 are excluded from further analysis.
 
 ### GC normalisation
 Next we apply a GC normalization to calculate the read ratios. To do this we divide the read depth of each window by the median read depth of
