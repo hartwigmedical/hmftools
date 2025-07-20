@@ -190,7 +190,7 @@ It is also strongly recommended to run PURPLE with a high quality set of somatic
 COBALT determines the read depth ratios of the supplied tumor and reference genomes. 
 
 COBALT starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
-Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
+Windows with a GC content less than 0.24 or greater than 0.68 or with an average mappability below 0.85 are excluded from further analysis.
 
 Next we apply a GC normalization to calculate the read ratios. 
 We divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows. 
