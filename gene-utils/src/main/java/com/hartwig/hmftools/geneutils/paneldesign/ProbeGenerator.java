@@ -92,9 +92,12 @@ public class ProbeGenerator
         //   3. Within each acceptable region, tile probes according to the ideal tiling algorithm.
         //   4. For each probe, try shifting it left and right slightly and pick the local best probe.
 
+        // TODO: this will output no probes if the region is smaller than the probe. desirable?
+
         String chromosome = region.chromosome();
         BaseRegion baseRegion = region.baseRegion();
 
+        // TODO: respect chromosome bounds
         int minPlausibleProbeStart = minProbeStartOverlapping(baseRegion);
         int maxPlausibleProbeStart = maxProbeStartOverlapping(baseRegion);
         Stream<EvaluatedProbe> allPlausibleProbes = IntStream.rangeClosed(minPlausibleProbeStart, maxPlausibleProbeStart)

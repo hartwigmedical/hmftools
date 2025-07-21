@@ -15,5 +15,9 @@ public record CandidateProbe(
             // Not expecting this to ever occur but should check it to be safe.
             throw new IllegalArgumentException("Probe region and target region should have the same chromosome");
         }
+        if(!probeRegion.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
     }
 }

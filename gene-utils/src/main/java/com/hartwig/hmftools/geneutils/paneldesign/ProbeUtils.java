@@ -94,9 +94,9 @@ public class ProbeUtils
     // Returns the start positions of the probes.
     public static List<Integer> calculateOptimalProbeTiling(final BaseRegion region, final BaseRegion probeBounds)
     {
-        if(!region.hasValidPositions())
+        if(!region.hasValidPositions() || !probeBounds.hasValidPositions())
         {
-            throw new IllegalArgumentException("region must have valid bounds");
+            throw new IllegalArgumentException("Invalid region");
         }
         if(!probeBounds.containsRegion(region))
         {

@@ -15,6 +15,14 @@ public record EvaluatedProbe(
         @Nullable Double gcContent
 )
 {
+    public EvaluatedProbe
+    {
+        if(sequence != null && sequence.length() != candidate.probeRegion().baseLength())
+        {
+            throw new IllegalArgumentException("sequence length should match probe region length");
+        }
+    }
+
     public EvaluatedProbe(final CandidateProbe probe, final ProbeEvaluator.Criteria criteria)
     {
         this(probe, criteria, null, null, null, null);

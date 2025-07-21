@@ -11,4 +11,11 @@ public record TargetRegion(
         TargetMetadata metadata
 )
 {
+    public TargetRegion
+    {
+        if(!region.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+    }
 }

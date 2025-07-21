@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentreStartOffset;
 
 import java.util.Map;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BasePosition;

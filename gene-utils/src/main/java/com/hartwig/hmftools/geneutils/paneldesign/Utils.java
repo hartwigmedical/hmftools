@@ -54,6 +54,18 @@ public class Utils
     // Compute regions within `targetRegion` which do not overlap `coveredRegions`.
     public static List<BaseRegion> computeUncoveredRegions(final BaseRegion targetRegion, Stream<BaseRegion> coveredRegions)
     {
+        if(!targetRegion.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+        coveredRegions = coveredRegions.peek(coveredRegion ->
+        {
+            if(!coveredRegion.hasValidPositions())
+            {
+                throw new IllegalArgumentException("Invalid region");
+            }
+        });
+
         // Ignore covered positions which don't overlap the target region, since they can never produce an uncovered region.
         coveredRegions = coveredRegions.filter(targetRegion::overlaps);
 
@@ -121,7 +133,7 @@ public class Utils
         return true;
     }
 
-    public static double regionCentreFract(final BaseRegion region)
+    public static double regionCentreFloat(final BaseRegion region)
     {
         if(!region.hasValidPositions())
         {
@@ -132,7 +144,7 @@ public class Utils
 
     public static int regionCentre(final BaseRegion region)
     {
-        return (int) regionCentreFract(region);
+        return (int) regionCentreFloat(region);
     }
 
     public static BaseRegion regionStartingAt(int startPosition, int length)
@@ -174,12 +186,16 @@ public class Utils
 
     public static BaseRegion regionIntersection(final BaseRegion region1, final BaseRegion region2)
     {
+        if(!region1.hasValidPositions() || !region2.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
         return new BaseRegion(max(region1.start(), region2.start()), min(region1.end(), region2.end()));
     }
 
     public static long roundTowardsRegionEnds(double position, final BaseRegion region)
     {
-        double centre = regionCentreFract(region);
+        double centre = regionCentreFloat(region);
         if(position < region.start() || (position > centre && position < region.end()))
         {
             return (long) ceil(position);

@@ -12,6 +12,14 @@ public record RejectedRegion(
         String reason
 )
 {
+    public RejectedRegion
+    {
+        if(!region.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+    }
+
     public static RejectedRegion fromTargetRegion(TargetRegion target, String reason)
     {
         return new RejectedRegion(target.region(), target, reason);
