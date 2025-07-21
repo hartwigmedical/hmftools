@@ -90,7 +90,7 @@ public class Utils
         return uncoveredRegions;
     }
 
-    // Checks if `targetRegion` is cumulatively covered by `coveredRegions`.
+    // Checks if `targetRegion` is fully covered by `coveredRegions`.
     public static boolean isCoveredBy(final ChrBaseRegion targetRegion, Stream<ChrBaseRegion> coveredRegions)
     {
         // Similar to computeUncoveredRegions() but without tracking the uncovered regions.
@@ -98,6 +98,11 @@ public class Utils
         coveredRegions = coveredRegions.sorted(Comparator.comparing(ChrBaseRegion::start).thenComparing(ChrBaseRegion::end));
         Iterator<ChrBaseRegion> iterator = coveredRegions.iterator();
         int prevCovered = targetRegion.start() - 1;
+        if(!iterator.hasNext())
+        {
+            // No overlapping regions, therefore can't be covered.
+            return false;
+        }
         while(iterator.hasNext())
         {
             ChrBaseRegion coveredRegion = iterator.next();
@@ -108,6 +113,7 @@ public class Utils
             }
             prevCovered = max(prevCovered, coveredRegion.end());
         }
+        // If we got here then at least 1 region overlaps and there are no gaps in the coverage.
         return true;
     }
 
@@ -130,9 +136,14 @@ public class Utils
         return region;
     }
 
+    public static int regionCentreStartOffset(int length)
+    {
+        return -(length / 2) + (1 - length % 2);
+    }
+
     public static BaseRegion regionCenteredAt(int centrePosition, int length)
     {
-        int start = centrePosition - length / 2 + (1 - length % 2);
+        int start = centrePosition + regionCentreStartOffset(length);
         int end = start + length - 1;
         BaseRegion region = new BaseRegion(start, end);
         if(!region.hasValidPositions())

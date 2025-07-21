@@ -4,11 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeBoundsContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionCenteredAt;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionStartingAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentreStartOffset;
 
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -74,15 +73,14 @@ public class CandidateProbeGenerator
         minProbeStart = max(minProbeStart, 1);
         maxProbeEnd = min(maxProbeEnd, mChromosomeLengths.get(initialPosition.Chromosome));
 
-        // TODO: use probeUtils functions rather than hardcoding the full math
+        // Must be consistent with probeRegionCenteredAt().
+        int centreStartOffset = regionCentreStartOffset(PROBE_LENGTH);
 
-        // minProbeStart = initialPosition + offset - PROBE_LENGTH/2
-        // minProbeStart - initialPosition + PROBE_LENGTH/2 = offset
-        int minOffset = minProbeStart - initialPosition.Position + PROBE_LENGTH / 2;
+        // minProbeStart = initialPosition + offset + centreStartOffset
+        int minOffset = minProbeStart - initialPosition.Position - centreStartOffset;
 
-        // maxProbeEnd = initialPosition + offset - PROBE_LENGTH/2 + PROBE_LENGTH - 1;
-        // maxProbeEnd - initialPosition + PROBE_LENGTH/2 - PROBE_LENGTH + 1 = offset
-        int maxOffset = maxProbeEnd - initialPosition.Position + PROBE_LENGTH / 2 - PROBE_LENGTH + 1;
+        // maxProbeEnd = initialPosition + offset + centreStartOffset + PROBE_LENGTH - 1
+        int maxOffset = maxProbeEnd - initialPosition.Position - centreStartOffset - PROBE_LENGTH + 1;
 
         return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
                 .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
@@ -91,41 +89,6 @@ public class CandidateProbeGenerator
                 {
                     ChrBaseRegion region =
                             ChrBaseRegion.from(initialPosition.Chromosome, probeRegionCenteredAt(initialPosition.Position + offset));
-                    return context.createProbe(region);
-                });
-    }
-
-    // Generates probes shifting with offsets: 0, -1, -2, -3, ...
-    // Probes are aligned to the start position.
-    // Probe bounds:
-    //   - Can't start before start of chromosome
-    //   - Can't start before `minProbeStart`
-    //   - Can't end after end of chromosome
-    public Stream<CandidateProbe> leftMovingLeftAlignedProbes(final BasePosition initialPosition, int minProbeStart,
-            final CandidateProbeContext context)
-    {
-        if(initialPosition.Position < minProbeStart)
-        {
-            // Probably indicates a bug in the calling code.
-            throw new IllegalArgumentException("minProbeStart forbids all possible probes");
-        }
-
-        // TODO: use probeUtils functions rather than hardcoding the full math
-
-        minProbeStart = max(minProbeStart, 1);
-        int maxProbeEnd = min(maxProbeEndContaining(initialPosition.Position), mChromosomeLengths.get(initialPosition.Chromosome));
-
-        // minProbeStart = initialPosition + offset
-        int minOffset = minProbeStart - initialPosition.Position;
-
-        // maxProbeEnd = initialPosition + offset + PROBE_LENGTH - 1
-        int maxOffset = maxProbeEnd - initialPosition.Position - PROBE_LENGTH + 1;
-
-        return IntStream.iterate(maxOffset, offset -> offset >= minOffset, offset -> offset - 1)
-                .mapToObj(offset ->
-                {
-                    ChrBaseRegion region =
-                            ChrBaseRegion.from(initialPosition.Chromosome, probeRegionStartingAt(initialPosition.Position + offset));
                     return context.createProbe(region);
                 });
     }

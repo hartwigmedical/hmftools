@@ -72,7 +72,7 @@ public class ProbeUtils
         int maxUncovered = PROBE_LENGTH - PROBE_COVERAGE_MIN;
         int startUncoveredMax = startExtend ? maxUncovered : 0;
         int endUncoveredMax = endExtend ? maxUncovered : 0;
-        // maxProbes * PROBE_LENGTH - (maxProbes-1) * PROBE_OVERLAP_MAX <= region_size + startUncoveredMax + endUncoveredMax
+        // maxProbes * PROBE_LENGTH - (maxProbes-1) * PROBE_OVERLAP_MAX <= regionSize + startUncoveredMax + endUncoveredMax
         int maxProbes =
                 (region.baseLength() + startUncoveredMax + endUncoveredMax - PROBE_OVERLAP_MAX) / (PROBE_LENGTH - PROBE_OVERLAP_MAX);
 
