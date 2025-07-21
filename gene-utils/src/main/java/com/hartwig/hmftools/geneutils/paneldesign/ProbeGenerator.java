@@ -127,8 +127,7 @@ public class ProbeGenerator
                     return calculateOptimalProbeTiling(tilingTarget, probeBounds).stream()
                             // TODO: can try shifting probe a little and pick best probe
                             .map(acceptableProbes::get)
-                            // TODO: is this valid? is it possible to have no acceptable probe here?
-                            .map(Objects::requireNonNull);
+                            .filter(Objects::nonNull);
                 })
                 .toList();
 
