@@ -10,10 +10,9 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 // Evaluates and selects best candidate probes.
-// TODO: review interface. should this contain ProbeEvaluator?
 public class ProbeSelector
 {
-    public final ProbeEvaluator mProbeEvaluator;
+    private final ProbeEvaluator mProbeEvaluator;
 
     public ProbeSelector(final ProbeEvaluator probeEvaluator)
     {

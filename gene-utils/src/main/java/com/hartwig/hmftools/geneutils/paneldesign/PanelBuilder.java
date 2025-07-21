@@ -46,7 +46,7 @@ public class PanelBuilder
         ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
         ProbeSelector probeSelector = new ProbeSelector(probeEvaluator);
         CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
-        mProbeGenerator = new ProbeGenerator(candidateGenerator, probeSelector);
+        mProbeGenerator = new ProbeGenerator(candidateGenerator, probeEvaluator, probeSelector);
         mPanelData = new PanelData();
     }
 

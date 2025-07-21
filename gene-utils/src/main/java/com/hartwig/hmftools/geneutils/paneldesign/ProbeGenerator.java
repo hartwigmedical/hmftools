@@ -30,13 +30,16 @@ import org.jetbrains.annotations.Nullable;
 public class ProbeGenerator
 {
     public final CandidateProbeGenerator mCandidateGenerator;
+    public final ProbeEvaluator mProbeEvaluator;
     public final ProbeSelector mProbeSelector;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
-    public ProbeGenerator(final CandidateProbeGenerator candidateGenerator, final ProbeSelector probeSelector)
+    public ProbeGenerator(final CandidateProbeGenerator candidateGenerator, final ProbeEvaluator probeEvaluator,
+            final ProbeSelector probeSelector)
     {
         mCandidateGenerator = candidateGenerator;
+        mProbeEvaluator = probeEvaluator;
         mProbeSelector = probeSelector;
     }
 
@@ -86,7 +89,7 @@ public class ProbeGenerator
         int maxPlausibleProbeStart = maxProbeStartOverlapping(baseRegion);
         Stream<EvaluatedProbe> allPlausibleProbes = IntStream.range(minPlausibleProbeStart, maxPlausibleProbeStart + 1)
                 .mapToObj(start -> context.createProbe(probeRegionStartingAt(start)))
-                .map(candidate -> mProbeSelector.mProbeEvaluator.evaluateCandidate(candidate, criteria))
+                .map(candidate -> mProbeEvaluator.evaluateCandidate(candidate, criteria))
                 .filter(EvaluatedProbe::accepted);
 
         // These are the subregions in which probes can be placed.

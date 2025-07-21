@@ -3,6 +3,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 import org.jetbrains.annotations.Nullable;
 
 // Candidate probe which has been evaluated for suitability.
+// TODO: does this need to be separate from CandidateProbe?
 public record EvaluatedProbe(
         CandidateProbe candidate,
         ProbeEvaluator.Criteria criteria,
