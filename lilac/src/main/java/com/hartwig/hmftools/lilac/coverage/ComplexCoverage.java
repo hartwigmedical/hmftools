@@ -25,6 +25,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
     private double mCohortFrequencyTotal;
     private double mScore;
     private double mComplexityPenalty;
+    private int mComplexity;
     private final int mHomozygousCount;
     private int mRecoveredCount;
     private int mWildcardCount;
@@ -44,6 +45,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         mCohortFrequencyTotal = 0;
         mScore = 0;
         mComplexityPenalty = 0;
+        mComplexity = 0;
     }
 
     public List<AlleleCoverage> getAlleleCoverage() { return mAlleleCoverage; }
@@ -84,6 +86,8 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
     public double getScore() { return mScore; }
     public void setComplexityPenalty(double complexityPenalty) { mComplexityPenalty = complexityPenalty; }
     public double getComplexityPenalty() { return mComplexityPenalty; }
+    public void setComplexity(int complexity) { mComplexity = complexity; }
+    public int getComplexity() { return mComplexity; }
 
     public void expandToSixAlleles()
     {

@@ -161,6 +161,7 @@ public class ComplexCoverageRanking
 
         complexCoverage.setScore(score);
         complexCoverage.setComplexityPenalty(complexityPenalty);
+        complexCoverage.setComplexity(complexity);
     }
 
     @VisibleForTesting
