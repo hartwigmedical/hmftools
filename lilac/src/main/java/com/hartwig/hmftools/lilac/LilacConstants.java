@@ -49,7 +49,7 @@ public final class LilacConstants
 
     // scoring of allele combinations
     public static final double MIN_POPULATION_FREQUENCY = 0.0001;
-    public static final double FREQUENCY_SCORE_PENALTY = 0.0018;
+    public static final double FREQUENCY_SCORE_PENALTY = 0.0009;
     public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
