@@ -9,6 +9,7 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
@@ -34,16 +35,15 @@ public final class AminoAcidQualEnrichment
                 .collect(Collectors.toList());
 
         unfilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
-        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(context, x, highQualityAminoAcidCounts));
+        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(x, highQualityAminoAcidCounts, RAW_REF_AMINO_ACID_COUNTS.get(context.geneName())));
 
         return unfilteredAminoAcidFragments;
     }
 
-    private static void applyQualFilter(final HlaContext context, final Fragment fragment, final SequenceCount count)
+    @VisibleForTesting
+    public static void applyQualFilter(final Fragment fragment, final SequenceCount count, final SequenceCount rawAminoAcidCounts)
     {
-        SequenceCount rawAminoAcidCounts = RAW_REF_AMINO_ACID_COUNTS.get(context.geneName());
         NavigableSet<Integer> filteredIntersect = Sets.newTreeSet();
-
         fragment.aminoAcidsByLoci().values().stream()
                 .mapToInt(AminoAcid::locus)
                 .forEach(locus ->

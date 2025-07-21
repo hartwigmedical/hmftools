@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
@@ -30,15 +31,18 @@ public final class NucleotideFragmentQualEnrichment
         SequenceCount highQualCounts = SequenceCount.buildFromNucleotides(MIN_HIGH_QUAL_EVIDENCE_FACTOR, highQualFrags);
         SequenceCount rawCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, fragments);
 
-        return fragments.stream().map(x -> applyQualityFilter(context, x, highQualCounts, rawCounts)).collect(Collectors.toList());
+        SequenceCount rawNucleotideCounts = RAW_REF_NUCLEOTIDE_COUNTS.get(context.geneName());
+        return fragments.stream()
+                .map(x -> applyQualityFilter(x, highQualCounts, rawCounts, rawNucleotideCounts))
+                .collect(Collectors.toList());
     }
 
-    private static Fragment applyQualityFilter(final HlaContext context, final Fragment fragment, final SequenceCount highQualityCount,
-            final SequenceCount rawCount)
+    @VisibleForTesting
+    public static Fragment applyQualityFilter(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount,
+            final SequenceCount rawNucleotideCounts)
     {
         // checks whether all nucleotides have qual above the required level - if so return this fragment, otherwise build a
         // new fragment just with these filtered loci
-        SequenceCount rawNucleotideCounts = RAW_REF_NUCLEOTIDE_COUNTS.get(context.geneName());
         SortedMap<Integer, Nucleotide> nucleotidesByLoci = fragment.nucleotidesByLoci();
         boolean allPresent = true;
         final List<Nucleotide> filteredNucleotides = Lists.newArrayListWithExpectedSize(nucleotidesByLoci.size());
