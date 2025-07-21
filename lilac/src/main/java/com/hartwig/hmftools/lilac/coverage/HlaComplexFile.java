@@ -17,6 +17,7 @@ public class HlaComplexFile
         StringJoiner sb = new StringJoiner(TSV_DELIM);
         sb.add("Score");
         sb.add("ComplexityPenalty");
+        sb.add("Complexity");
         sb.add("HomozygousCount");
         sb.add("CohortFrequency");
         sb.add("RecoveryCount");
@@ -63,6 +64,7 @@ public class HlaComplexFile
 
         sj.add(String.format("%.2f", coverage.getScore()));
         sj.add(String.format("%.2f", coverage.getComplexityPenalty()));
+        sj.add(String.format("%d", coverage.getComplexity()));
         sj.add(String.valueOf(coverage.homozygousCount()));
         sj.add(String.format("%.2f", coverage.cohortFrequencyTotal()));
         sj.add(String.valueOf(coverage.recoveredCount()));
