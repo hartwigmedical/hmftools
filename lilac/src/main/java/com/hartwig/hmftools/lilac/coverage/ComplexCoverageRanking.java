@@ -154,18 +154,20 @@ public class ComplexCoverageRanking
 
         int complexity = solutionComplexity(mRefData.ExonSequencesLookup, complexCoverage);
         double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
+        double cohortFrequencyPenalty = complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage;
         double score = totalCoverage
-                + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage
+                + cohortFrequencyPenalty
                 + complexityPenalty
                 - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * totalCoverage;
 
         complexCoverage.setScore(score);
         complexCoverage.setComplexityPenalty(complexityPenalty);
+        complexCoverage.setComplexity(complexity);
+        complexCoverage.setCohortFrequencyPenalty(cohortFrequencyPenalty);
     }
 
     @VisibleForTesting
-    public static int solutionComplexity(
-            final Map<HlaAllele, HlaExonSequences> exonSequencesLookup, final ComplexCoverage complexCoverage)
+    public static int solutionComplexity(final Map<HlaAllele, HlaExonSequences> exonSequencesLookup, final ComplexCoverage complexCoverage)
     {
         if(exonSequencesLookup == null || exonSequencesLookup.isEmpty())
             return 0;
