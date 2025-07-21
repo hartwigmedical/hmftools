@@ -34,7 +34,7 @@ public class ProbeGenerator
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     // If `coverage` is not null, avoid placing probes in already covered regions.
     public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final CandidateProbeContext context,
-            final ProbeSelector.Criteria criteria, @Nullable final PanelCoverage coverage)
+            final ProbeEvaluator.Criteria criteria, @Nullable final PanelCoverage coverage)
     {
         List<ChrBaseRegion> subregions;
         if(coverage == null)
@@ -64,22 +64,23 @@ public class ProbeGenerator
     }
 
     private ProbeGenerationResult coverSubregion(final ChrBaseRegion region, final CandidateProbeContext context,
-            final ProbeSelector.Criteria criteria)
+            final ProbeEvaluator.Criteria criteria)
     {
         String chromosome = region.chromosome();
         BaseRegion targetBaseRegion = region.baseRegion();
 
-        // TODO: improve this or fix it up
-        
-        Stream<CandidateProbe> candidates = calculateIdealProbeTiling(region.baseRegion()).stream()
+        // TODO: unacceptable probes are simply dropped, instead should try to adjust tiling in response
+        // TODO: possible to incorporate probe selection strategy?
+
+        Stream<CandidateProbe> candidates = calculateIdealProbeTiling(region.baseRegion(), true, true).stream()
                 .map(probeRegion -> context.createProbe(ChrBaseRegion.from(chromosome, probeRegion)));
         List<EvaluatedProbe> probes = candidates
-                .map(candidate -> mProbeSelector.mProbeEvaluator.evaluateCandidate(candidate, criteria.eval()))
+                .map(candidate -> mProbeSelector.mProbeEvaluator.evaluateCandidate(candidate, criteria))
                 .filter(EvaluatedProbe::accepted)
                 .toList();
 
         // Compute rejected regions based on what has been covered by the probes.
-        String rejectionReason = "No probe covering region meeting criteria " + criteria.eval();
+        String rejectionReason = "No probe covering region meeting criteria " + criteria;
         List<RejectedRegion> rejectedRegions = computeUncoveredRegions(
                 targetBaseRegion, probes.stream().map(probe -> probe.candidate().probeRegion().baseRegion()))
                 .stream()

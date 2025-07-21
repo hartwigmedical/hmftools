@@ -11,7 +11,7 @@ public class PanelBuilderConstants
     public static final int PROBE_OVERLAP_MAX = 10;
     // When covering a large region with probes, how many bases in a probe must overlap with the target region?
     // (Unless the target is smaller than the probe).
-    public static final int PROBE_COVERAGE_MIN = PROBE_LENGTH * 33/100;
+    public static final int PROBE_COVERAGE_MIN = PROBE_LENGTH * 33 / 100;
 
     // Target genes constants.
     // All the region and gap sizes should be much larger than the probe size to avoid probe overlap.
@@ -56,4 +56,32 @@ public class PanelBuilderConstants
     public static final String REJECTED_REGIONS_FILE_STEM = "rejected_regions";
     // This output can get very large (multiple GB) so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
+
+    static
+    {
+        if(!(PROBE_OVERLAP_MAX >= 0 && PROBE_OVERLAP_MAX < PROBE_LENGTH))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(PROBE_COVERAGE_MIN >= 1 && PROBE_COVERAGE_MIN <= PROBE_LENGTH))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(GENE_UPDOWNSTREAM_REGION > PROBE_LENGTH))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(GENE_EXON_FLANK_REGION_MIN > PROBE_LENGTH))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(GENE_EXON_FLANK_REGION_MAX > GENE_EXON_FLANK_REGION_MIN))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(CN_BACKBONE_PARTITION_SIZE >= PROBE_LENGTH * 2))
+        {
+            throw new IllegalArgumentException();
+        }
+    }
 }

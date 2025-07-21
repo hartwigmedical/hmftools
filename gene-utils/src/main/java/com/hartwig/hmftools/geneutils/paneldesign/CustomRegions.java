@@ -24,9 +24,8 @@ public class CustomRegions
 {
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CUSTOM;
 
-    private static final ProbeSelector.Criteria PROBE_SELECT_CRITERIA = new ProbeSelector.Criteria(
-            new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
-            new ProbeSelector.Strategy.MaxQuality());
+    private static final ProbeEvaluator.Criteria PROBE_CRITERIA =
+            new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
 
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
 
@@ -135,7 +134,7 @@ public class CustomRegions
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
         TargetRegion target = new TargetRegion(region.region(), metadata);
         CandidateProbeContext candidateContext = new CandidateProbeContext(target);
-        ProbeGenerationResult result = probeGenerator.coverRegion(target.region(), candidateContext, PROBE_SELECT_CRITERIA, coverage);
+        ProbeGenerationResult result = probeGenerator.coverRegion(target.region(), candidateContext, PROBE_CRITERIA, coverage);
         return result;
     }
 }

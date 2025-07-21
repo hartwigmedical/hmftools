@@ -48,7 +48,7 @@ public class CopyNumberBackbone
 
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CN_BACKBONE;
 
-    private static final ProbeSelector.Criteria PROBE_SELECT_CRITERIA = new ProbeSelector.Criteria(
+    private static final ProbeSelector.Criteria PROBE_CRITERIA = new ProbeSelector.Criteria(
             new ProbeEvaluator.Criteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
@@ -175,7 +175,7 @@ public class CopyNumberBackbone
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
         Stream<CandidateProbe> candidates = generateCandidateProbes(partition);
-        Optional<EvaluatedProbe> bestCandidate = mProbeGenerator.mProbeSelector.selectBestCandidate(candidates, PROBE_SELECT_CRITERIA);
+        Optional<EvaluatedProbe> bestCandidate = mProbeGenerator.mProbeSelector.selectBestCandidate(candidates, PROBE_CRITERIA);
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
         ProbeGenerationResult result = bestCandidate
@@ -208,7 +208,7 @@ public class CopyNumberBackbone
                     }
                     else
                     {
-                        rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_SELECT_CRITERIA.eval();
+                        rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_CRITERIA.eval();
                     }
                     RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, target, rejectionReason);
 
