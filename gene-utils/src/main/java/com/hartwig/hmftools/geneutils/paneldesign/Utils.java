@@ -14,11 +14,14 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.DoublePredicate;
 import java.util.function.ToDoubleFunction;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
+
+// TODO: unit test
 
 // Miscellaneous utility functionality.
 public class Utils
@@ -185,5 +188,19 @@ public class Utils
         {
             return (long) position;
         }
+    }
+
+    // Generates the sequence: 0, 1, -1, 2, -2, 3, -3, ...
+    // With the constraint that no value will be outside the range [minOffset, maxOffset].
+    public static IntStream outwardMovingOffsets(int minOffset, int maxOffset)
+    {
+        if(minOffset > maxOffset)
+        {
+            // Probably a bug in the calling code.
+            throw new IllegalArgumentException("minOffset and maxOffset forbid all possible offsets");
+        }
+        return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
+                .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
+                .filter(offset -> offset >= minOffset && offset <= maxOffset);
     }
 }

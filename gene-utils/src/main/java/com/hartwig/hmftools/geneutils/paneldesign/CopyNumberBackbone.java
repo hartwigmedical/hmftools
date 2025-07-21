@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.C
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TOLERANCE;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeSelector.selectBestProbe;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +49,7 @@ public class CopyNumberBackbone
 
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CN_BACKBONE;
 
-    private static final ProbeSelector.Criteria PROBE_CRITERIA = new ProbeSelector.Criteria(
+    private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
@@ -175,7 +176,8 @@ public class CopyNumberBackbone
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
         Stream<CandidateProbe> candidates = generateCandidateProbes(partition);
-        Optional<EvaluatedProbe> bestCandidate = mProbeGenerator.mProbeSelector.selectBestCandidate(candidates, PROBE_CRITERIA);
+        Stream<EvaluatedProbe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateCandidates(candidates, PROBE_CRITERIA.eval());
+        Optional<EvaluatedProbe> bestCandidate = selectBestProbe(evaluatedCandidates, PROBE_CRITERIA.select());
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
         ProbeGenerationResult result = bestCandidate

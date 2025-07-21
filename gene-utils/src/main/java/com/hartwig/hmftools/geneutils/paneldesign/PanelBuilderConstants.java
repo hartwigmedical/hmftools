@@ -11,7 +11,9 @@ public class PanelBuilderConstants
     public static final int PROBE_OVERLAP_MAX = 10;
     // When covering a large region with probes, how many bases in a probe must overlap with the target region?
     // (Unless the target is smaller than the probe).
-    public static final int PROBE_COVERAGE_MIN = PROBE_LENGTH * 33 / 100;
+    public static final int PROBE_COVERAGE_MIN = PROBE_LENGTH * 50 / 100;
+    // When covering a large region with probes, how many bases a probe may be shifted left or right from its "ideal" tiled position.
+    public static final int PROBE_SHIFT_MAX = 5;
 
     // Target genes constants.
     // All the region and gap sizes should be much larger than the probe size to avoid probe overlap.

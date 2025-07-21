@@ -44,9 +44,8 @@ public class PanelBuilder
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
         ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
         ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
-        ProbeSelector probeSelector = new ProbeSelector(probeEvaluator);
         CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
-        mProbeGenerator = new ProbeGenerator(candidateGenerator, probeEvaluator, probeSelector);
+        mProbeGenerator = new ProbeGenerator(candidateGenerator, probeEvaluator);
         mPanelData = new PanelData();
     }
 

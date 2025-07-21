@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.P
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionCenteredAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.outwardMovingOffsets;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentreStartOffset;
 
@@ -83,9 +84,7 @@ public class CandidateProbeGenerator
         // maxProbeEnd = initialPosition + offset + centreStartOffset + PROBE_LENGTH - 1
         int maxOffset = maxProbeEnd - initialPosition.Position - centreStartOffset - PROBE_LENGTH + 1;
 
-        return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
-                .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
-                .filter(offset -> offset >= minOffset && offset <= maxOffset)
+        return outwardMovingOffsets(minOffset, maxOffset)
                 .mapToObj(offset -> context.createProbe(probeRegionCenteredAt(initialPosition.Position + offset)));
     }
 }

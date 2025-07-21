@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 
 import java.text.DecimalFormat;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -49,6 +50,11 @@ public class ProbeEvaluator
         return evaluatedProbe;
     }
 
+    public Stream<EvaluatedProbe> evaluateCandidates(Stream<CandidateProbe> probes, final Criteria criteria)
+    {
+        return probes.map(probe -> evaluateCandidate(probe, criteria));
+    }
+
     private EvaluatedProbe evaluateQualityScore(EvaluatedProbe probe, final Criteria criteria)
     {
         double qualityScore = getProbeQuality(probe.candidate());
@@ -79,7 +85,7 @@ public class ProbeEvaluator
         {
             // Never want to accept a probe with no quality score, so just return 0 in that case to simplify the code elsewhere.
             // Maybe be interesting to know when this happens because the probe quality profile ideally covers the whole genome.
-//            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore=0 probe={}", probe);
+            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore=0 probe={}", probe);
             return 0d;
         });
     }
@@ -92,7 +98,7 @@ public class ProbeEvaluator
 
     private void logCandidateProbe(final EvaluatedProbe probe)
     {
-//        LOGGER.trace("Evaluated probe: {}", probe);
+        LOGGER.trace("Evaluated probe: {}", probe);
         mCandidateCallback.accept(probe);
     }
 

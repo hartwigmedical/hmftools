@@ -56,10 +56,10 @@ public class TargetGenes
 {
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.GENE;
 
-    private static final ProbeSelector.Criteria EXON_PROBE_CRITERIA = new ProbeSelector.Criteria(
+    private static final ProbeSelectCriteria EXON_PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(GENE_EXON_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
             new ProbeSelector.Strategy.MaxQuality());
-    private static final ProbeSelector.Criteria CN_PROBE_CRITERIA = new ProbeSelector.Criteria(
+    private static final ProbeSelectCriteria CN_PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
@@ -359,7 +359,7 @@ public class TargetGenes
             {
                 TargetRegion target = new TargetRegion(geneRegion.region(), metadata);
                 CandidateProbeContext candidateContext = new CandidateProbeContext(target);
-                yield probeGenerator.coverRegion(target.region(), candidateContext, EXON_PROBE_CRITERIA.eval(), null);
+                yield probeGenerator.coverRegion(target.region(), candidateContext, EXON_PROBE_CRITERIA, null);
             }
             case UTR ->
             {

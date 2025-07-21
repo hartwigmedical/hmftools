@@ -68,6 +68,26 @@ public class ProbeUtils
         return prevProbeEnd - PROBE_OVERLAP_MAX + 1;
     }
 
+    // Calculates the previous position a probe may end at, respecting the probe overlap constraint.
+    public static int prevProbeEndPosition(int nextProbeStart)
+    {
+        return nextProbeStart + PROBE_OVERLAP_MAX - 1;
+    }
+
+    // Calculates the minimum probe starting position such that the probe overlaps an acceptable amount with the target.
+    public static int minProbeStartPartiallyCovering(final BaseRegion target)
+    {
+        int minEnd = target.start() + PROBE_COVERAGE_MIN - 1;
+        return probeRegionEndingAt(minEnd).start();
+    }
+
+    // Calculates the maximum probe ending position such that the probe overlaps an acceptable amount with the target.
+    public static int maxProbeEndPartiallyCovering(final BaseRegion target)
+    {
+        int maxStart = target.end() - PROBE_COVERAGE_MIN + 1;
+        return probeRegionStartingAt(maxStart).end();
+    }
+
     // Calculates the best probe tiling of a region, respecting the probe overlap and coverage constraints.
     // Generally the probes are tiled such that they are centered on the region and equally spaced.
     // `probeBounds` indicates hard bounds that probes must be fully contained within. Otherwise, some extension is allowed.
@@ -149,9 +169,10 @@ public class ProbeUtils
         }
 
         double tilingStartCopy = tilingStart;
-        return IntStream.range(0, probeCount)
+        List<Integer> probes = IntStream.range(0, probeCount)
                 // Round towards ends of region to prefer grouping uncovered regions in the middle rather than missing a base at the end.
                 .map(i -> (int) roundTowardsRegionEnds(tilingStartCopy + i * probeStartSpacing, region))
                 .boxed().toList();
+        return probes;
     }
 }

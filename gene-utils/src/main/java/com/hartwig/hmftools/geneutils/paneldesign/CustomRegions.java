@@ -24,8 +24,9 @@ public class CustomRegions
 {
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CUSTOM;
 
-    private static final ProbeEvaluator.Criteria PROBE_CRITERIA =
-            new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
+    private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
+            new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeSelector.Strategy.MaxQuality());
 
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
 
