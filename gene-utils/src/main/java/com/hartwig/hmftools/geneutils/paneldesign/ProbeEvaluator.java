@@ -79,7 +79,7 @@ public class ProbeEvaluator
         {
             // Never want to accept a probe with no quality score, so just return 0 in that case to simplify the code elsewhere.
             // Maybe be interesting to know when this happens because the probe quality profile ideally covers the whole genome.
-            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore=0 probe={}", probe);
+//            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore=0 probe={}", probe);
             return 0d;
         });
     }
@@ -92,7 +92,7 @@ public class ProbeEvaluator
 
     private void logCandidateProbe(final EvaluatedProbe probe)
     {
-        LOGGER.trace("Evaluated probe: {}", probe);
+//        LOGGER.trace("Evaluated probe: {}", probe);
         mCandidateCallback.accept(probe);
     }
 

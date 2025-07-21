@@ -4,7 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeBoundsContaining;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionCenteredAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentreStartOffset;
@@ -14,7 +15,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 // TODO: unit test
@@ -49,8 +49,9 @@ public class CandidateProbeGenerator
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
     public Stream<CandidateProbe> coverPosition(final BasePosition position, final CandidateProbeContext context)
     {
-        BaseRegion probeBounds = probeBoundsContaining(position.Position);
-        return outwardMovingCenterAlignedProbes(position, probeBounds.start(), probeBounds.end(), context);
+        int minProbeStart = minProbeStartContaining(position.Position);
+        int maxProbeEnd = maxProbeEndContaining(position.Position);
+        return outwardMovingCenterAlignedProbes(position, minProbeStart, maxProbeEnd, context);
     }
 
     // Returns candidate probes shifting left and right with offsets: 0, 1, -1, 2, -2, 3, -3, ...
@@ -85,11 +86,6 @@ public class CandidateProbeGenerator
         return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
                 .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
                 .filter(offset -> offset >= minOffset && offset <= maxOffset)
-                .mapToObj(offset ->
-                {
-                    ChrBaseRegion region =
-                            ChrBaseRegion.from(initialPosition.Chromosome, probeRegionCenteredAt(initialPosition.Position + offset));
-                    return context.createProbe(region);
-                });
+                .mapToObj(offset -> context.createProbe(probeRegionCenteredAt(initialPosition.Position + offset)));
     }
 }

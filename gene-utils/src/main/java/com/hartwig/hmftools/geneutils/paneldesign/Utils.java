@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
 import static java.lang.Double.POSITIVE_INFINITY;
+import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -117,13 +118,18 @@ public class Utils
         return true;
     }
 
-    public static int regionCentre(final BaseRegion region)
+    public static double regionCentreFract(final BaseRegion region)
     {
         if(!region.hasValidPositions())
         {
             throw new IllegalArgumentException("Invalid region");
         }
-        return (region.start() + region.end()) / 2;
+        return (region.start() + region.end()) / 2.0;
+    }
+
+    public static int regionCentre(final BaseRegion region)
+    {
+        return (int) regionCentreFract(region);
     }
 
     public static BaseRegion regionStartingAt(int startPosition, int length)
@@ -161,5 +167,23 @@ public class Utils
             throw new IllegalArgumentException("Invalid region");
         }
         return region;
+    }
+
+    public static BaseRegion regionIntersection(final BaseRegion region1, final BaseRegion region2)
+    {
+        return new BaseRegion(max(region1.start(), region2.start()), min(region1.end(), region2.end()));
+    }
+
+    public static long roundTowardsRegionEnds(double position, final BaseRegion region)
+    {
+        double centre = regionCentreFract(region);
+        if(position < region.start() || (position > centre && position < region.end()))
+        {
+            return (long) ceil(position);
+        }
+        else
+        {
+            return (long) position;
+        }
     }
 }

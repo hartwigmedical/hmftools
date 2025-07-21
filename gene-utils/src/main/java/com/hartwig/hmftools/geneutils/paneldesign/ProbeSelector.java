@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 // Evaluates and selects best candidate probes.
+// TODO: review interface. should this contain ProbeEvaluator?
 public class ProbeSelector
 {
     public final ProbeEvaluator mProbeEvaluator;
@@ -22,9 +23,13 @@ public class ProbeSelector
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there are no acceptable probes.
     public Optional<EvaluatedProbe> selectBestCandidate(Stream<CandidateProbe> probes, final Criteria criteria)
     {
-        Stream<EvaluatedProbe> acceptableProbes = probes
-                .map(probe -> mProbeEvaluator.evaluateCandidate(probe, criteria.eval()))
-                .filter(EvaluatedProbe::accepted);
+        Stream<EvaluatedProbe> evaluatedProbes = probes.map(probe -> mProbeEvaluator.evaluateCandidate(probe, criteria.eval()));
+        return selectBestProbe(evaluatedProbes, criteria);
+    }
+
+    private Optional<EvaluatedProbe> selectBestProbe(Stream<EvaluatedProbe> probes, final Criteria criteria)
+    {
+        Stream<EvaluatedProbe> acceptableProbes = probes.filter(EvaluatedProbe::accepted);
 
         Strategy strategy = criteria.strategy();
         if(strategy instanceof Strategy.FirstAcceptable)

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.round;
+import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_COVERAGE_MIN;
@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.P
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCenteredAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionEndingAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionStartingAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.roundTowardsRegionEnds;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -49,10 +50,16 @@ public class ProbeUtils
         return probeRegionStartingAt(targetPosition).end();
     }
 
-    // minProbeStartContaining() and maxProbeEndContaining() in one call.
-    public static BaseRegion probeBoundsContaining(int targetPosition)
+    // Calculates the minimum probe starting position such that the specified region overlaps the probe.
+    public static int minProbeStartOverlapping(final BaseRegion region)
     {
-        return new BaseRegion(minProbeStartContaining(targetPosition), maxProbeEndContaining(targetPosition));
+        return minProbeStartContaining(region.start());
+    }
+
+    // Calculates the maximum probe starting position such that the specified region overlaps the probe.
+    public static int maxProbeStartOverlapping(final BaseRegion region)
+    {
+        return region.end();
     }
 
     // Calculates the next position a probe may start at, respecting the probe overlap constraint.
@@ -62,19 +69,35 @@ public class ProbeUtils
     }
 
     // Calculates the best probe tiling of a region, respecting the probe overlap and coverage constraints.
-    // `startExtend` and `endExtend` indicate if the probes may extend past the start and end of the region.
-    public static List<BaseRegion> calculateIdealProbeTiling(final BaseRegion region, boolean startExtend, boolean endExtend)
+    // Generally the probes are tiled such that they are centered on the region and equally spaced.
+    // `probeBounds` indicates hard bounds that probes must be fully contained within. Otherwise, some extension is allowed.
+    // Returns the start positions of the probes.
+    public static List<Integer> calculateOptimalProbeTiling(final BaseRegion region, final BaseRegion probeBounds)
     {
+        if(!region.hasValidPositions())
+        {
+            throw new IllegalArgumentException("region must have valid bounds");
+        }
+        if(!probeBounds.containsRegion(region))
+        {
+            // Probably a bug in the caller.
+            throw new IllegalArgumentException("probeBounds forbids all possible tilings");
+        }
+
+        int maxUncovered = PROBE_LENGTH - PROBE_COVERAGE_MIN;
+        // Hard bounds on the region in which probes can be placed.
+        BaseRegion tilingBounds = new BaseRegion(
+                max(probeBounds.start(), region.start() - maxUncovered),
+                min(probeBounds.end(), region.end() + maxUncovered));
+
+        double centre = (region.start() + region.end()) / 2.0;
+
         // Lower bound is number of probes which fit completely within the target region without overlap.
         int minProbes = region.baseLength() / PROBE_LENGTH;
 
         // Upper bound is maximally overlapped and maximally extending outside target region.
-        int maxUncovered = PROBE_LENGTH - PROBE_COVERAGE_MIN;
-        int startUncoveredMax = startExtend ? maxUncovered : 0;
-        int endUncoveredMax = endExtend ? maxUncovered : 0;
-        // maxProbes * PROBE_LENGTH - (maxProbes-1) * PROBE_OVERLAP_MAX <= regionSize + startUncoveredMax + endUncoveredMax
-        int maxProbes =
-                (region.baseLength() + startUncoveredMax + endUncoveredMax - PROBE_OVERLAP_MAX) / (PROBE_LENGTH - PROBE_OVERLAP_MAX);
+        // maxProbes * PROBE_LENGTH - (maxProbes-1) * PROBE_OVERLAP_MAX <= regionSize + startExtend + endExtend
+        int maxProbes = (tilingBounds.baseLength() - PROBE_OVERLAP_MAX) / (PROBE_LENGTH - PROBE_OVERLAP_MAX);
 
         // Select the probe count which minimises the number of overlapping/uncovered (extra) bases.
         // This is always minProbes or minProbes + 1, since minProbes minimally undershoots and minProbes+1 will cause positive extra bases.
@@ -96,34 +119,39 @@ public class ProbeUtils
             // Can't even place a single probe with the given constraints.
             return emptyList();
         }
+
+        // Calculate the start of the tiling and the space between each probe start position.
+        // Then just tile the probes regularly from those parameters (since the constraints were checked earlier).
+        double tilingStart;
+        double probeStartSpacing;
+        if(extra == 0)
+        {
+            // Perfect tiling.
+            tilingStart = region.start();
+            probeStartSpacing = PROBE_LENGTH;
+        }
         else
         {
-            // Calculate the start of the tiling and the space between each probe start position.
-            // Then just tile the probes regularly from those parameters (since the constraints were checked earlier).
-            double tilingStart;
-            double probeStartSpacing;
-            if(extra == 0)
-            {
-                // Perfect tiling.
-                tilingStart = region.start();
-                probeStartSpacing = PROBE_LENGTH;
-            }
-            else
-            {
-                // General case.
-                probeStartSpacing = probeCount <= 1
-                        ? 0
-                        : max((region.baseLength() - PROBE_LENGTH) / (probeCount - 1), PROBE_LENGTH - PROBE_OVERLAP_MAX);
-                double tilingLength = (probeCount - 1) * probeStartSpacing + PROBE_LENGTH;
-                double regionCentreTrue = (region.start() + region.end()) / 2.0;
-                // Pick tiling start position based on start and end bounds (if present).
-                tilingStart =
-                        startExtend ? (endExtend ? regionCentreTrue - tilingLength / 2 : region.end() - tilingLength + 1) : region.start();
-            }
+            // General case.
+            probeStartSpacing = probeCount <= 1
+                    ? 0
+                    : max((region.baseLength() - PROBE_LENGTH) / (probeCount - 1), PROBE_LENGTH - PROBE_OVERLAP_MAX);
+            double tilingLength = (probeCount - 1) * probeStartSpacing + PROBE_LENGTH;
+            tilingStart = centre - tilingLength / 2;
 
-            return IntStream.range(0, probeCount)
-                    .mapToObj(i -> probeRegionStartingAt((int) round(tilingStart + i * probeStartSpacing)))
-                    .toList();
+            // Adjust the tiling alignment to adhere to the hard bounds.
+            tilingStart = max(tilingStart, tilingBounds.start());
+            double end = tilingStart + tilingLength / 2 - 1;
+            if(end > tilingBounds.end())
+            {
+                tilingStart -= end - tilingBounds.end();
+            }
         }
+
+        double tilingStartCopy = tilingStart;
+        return IntStream.range(0, probeCount)
+                // Round towards ends of region to prefer grouping uncovered regions in the middle rather than missing a base at the end.
+                .map(i -> (int) roundTowardsRegionEnds(tilingStartCopy + i * probeStartSpacing, region))
+                .boxed().toList();
     }
 }
