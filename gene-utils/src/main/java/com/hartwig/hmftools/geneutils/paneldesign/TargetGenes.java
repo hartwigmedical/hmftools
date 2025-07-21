@@ -363,7 +363,7 @@ public class TargetGenes
             }
             case UTR ->
             {
-                BasePosition position = new BasePosition(geneRegion.region().Chromosome, regionCentre(geneRegion.region().baseRegion()));
+                BasePosition position = new BasePosition(geneRegion.region().chromosome(), regionCentre(geneRegion.region().baseRegion()));
                 TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
                 CandidateProbeContext candidateContext = new CandidateProbeContext(target);
                 yield probeGenerator.coverPosition(position, candidateContext, EXON_PROBE_CRITERIA);

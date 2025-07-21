@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.isCoveredBy;
+
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -26,8 +28,7 @@ public class PanelData implements PanelCoverage
     @Override
     public boolean isCovered(final ChrBaseRegion region)
     {
-        // TODO: wrong, could have multiple probes fully covering region
-        return coveredRegions().anyMatch(probe -> probe.containsRegion(region));
+        return isCoveredBy(region, coveredRegions());
     }
 
     @Override
