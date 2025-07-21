@@ -161,11 +161,11 @@ public class ComplexCoverageRanking
 
         complexCoverage.setScore(score);
         complexCoverage.setComplexityPenalty(complexityPenalty);
+        complexCoverage.setComplexity(complexity);
     }
 
     @VisibleForTesting
-    public static int solutionComplexity(
-            final Map<HlaAllele, HlaExonSequences> exonSequencesLookup, final ComplexCoverage complexCoverage)
+    public static int solutionComplexity(final Map<HlaAllele, HlaExonSequences> exonSequencesLookup, final ComplexCoverage complexCoverage)
     {
         if(exonSequencesLookup == null || exonSequencesLookup.isEmpty())
             return 0;
