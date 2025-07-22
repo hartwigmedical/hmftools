@@ -73,6 +73,7 @@ public final class GeneCopyNumberFile
                 .add("minRegionMethod")
                 .add("minMinorAlleleCopyNumber")
                 .add("depthWindowCount")
+                .add("gcContent")
                 .toString();
     }
 
@@ -96,6 +97,7 @@ public final class GeneCopyNumberFile
                 .add(String.valueOf(geneCopyNumber.minRegionMethod()))
                 .add(FORMAT.format(geneCopyNumber.minMinorAlleleCopyNumber()))
                 .add(String.valueOf(geneCopyNumber.depthWindowCount()))
+                .add(FORMAT.format(geneCopyNumber.gcContent()))
                 .toString();
     }
 
@@ -123,6 +125,7 @@ public final class GeneCopyNumberFile
         int minRegionMethodIndex = fieldsIndexMap.get("minRegionMethod");
         int mmACnIndex = fieldsIndexMap.get("minMinorAlleleCopyNumber");
         Integer dwcIndex = fieldsIndexMap.get("depthWindowCount");
+        Integer gcIndex = fieldsIndexMap.get("gcContent");
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -148,7 +151,8 @@ public final class GeneCopyNumberFile
                     .minRegionStartSupport(SegmentSupport.valueOf(values[minRegionStartSupIndex]))
                     .minRegionEndSupport(SegmentSupport.valueOf(values[minRegionEndSupIndex]))
                     .minMinorAlleleCopyNumber(Double.parseDouble(values[mmACnIndex]))
-                    .depthWindowCount(dwcIndex != null ? Integer.parseInt(values[dwcIndex]) : 0);
+                    .depthWindowCount(dwcIndex != null ? Integer.parseInt(values[dwcIndex]) : 0)
+                    .gcContent(gcIndex != null ? Double.parseDouble(values[gcIndex]) : -1.0);
 
             geneCopyNumbers.add(builder.build());
         }

@@ -213,6 +213,9 @@ public class SampleAnalyser implements Callable<Void>
 
         final List<SvVarData> svDataList = createSvData(svRecords, mConfig);
 
+        if(!mConfig.IsGermline)
+            mCnDataLoader.loadSampleData(mCurrentSampleId, svRecords);
+
         if(svDataList.isEmpty())
         {
             LNX_LOGGER.info("sample({}) has no passing SVs", mCurrentSampleId);
@@ -222,9 +225,6 @@ public class SampleAnalyser implements Callable<Void>
 
             return;
         }
-
-        if(!mConfig.IsGermline)
-            mCnDataLoader.loadSampleData(mCurrentSampleId, svRecords);
 
         setSampleSVs(svDataList);
 
@@ -428,11 +428,12 @@ public class SampleAnalyser implements Callable<Void>
             }
             else
             {
+                mCohortDataWriter.getVisWriter().writeCopyNumberData(mVisSampleData, mCnDataLoader.getChrCnDataMap());
+
                 LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
                 LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
 
                 VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
-                VisCopyNumber.write(VisCopyNumber.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
                 VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
                 VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
                 VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);

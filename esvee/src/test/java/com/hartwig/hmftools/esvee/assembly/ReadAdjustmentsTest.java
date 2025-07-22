@@ -157,7 +157,6 @@ public class ReadAdjustmentsTest
         assertEquals(191, read.unclippedEnd());
         assertEquals("10S80M2S", read.cigarString());
 
-        // hits > 30% at index 5 but not again
         read = createRead(TEST_READ_ID, 110, readBases, makeCigarString(readBases, 10, 10));
 
         for(int i = 90; i < baseQualities.length; ++i)
@@ -172,8 +171,8 @@ public class ReadAdjustmentsTest
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(110, read.alignmentStart());
         assertEquals(189, read.alignmentEnd());
-        assertEquals(194, read.unclippedEnd());
-        assertEquals("10S80M5S", read.cigarString());
+        assertEquals(197, read.unclippedEnd());
+        assertEquals("10S80M8S", read.cigarString());
 
         read = createRead(TEST_READ_ID, 110, readBases, makeCigarString(readBases, 10, 10));
         read.bamRecord().setReadNegativeStrandFlag(true);

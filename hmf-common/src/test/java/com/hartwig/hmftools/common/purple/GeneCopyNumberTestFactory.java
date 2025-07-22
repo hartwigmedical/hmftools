@@ -26,6 +26,7 @@ public final class GeneCopyNumberTestFactory
                 .transName(Strings.EMPTY)
                 .isCanonical(true)
                 .minMinorAlleleCopyNumber(0)
-                .depthWindowCount(0);
+                .depthWindowCount(0)
+                .gcContent(1.0);
     }
 }

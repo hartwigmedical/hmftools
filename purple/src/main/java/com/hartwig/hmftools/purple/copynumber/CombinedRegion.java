@@ -187,7 +187,7 @@ public class CombinedRegion implements GenomeRegion
         mCombined.setDepthWindowCount(0);
     }
 
-    private double weightedAverage(long currentWeight, double currentValue, long newWeight, double newValue)
+    public static double weightedAverage(long currentWeight, double currentValue, long newWeight, double newValue)
     {
         if(Doubles.isZero(currentValue))
             return newValue;

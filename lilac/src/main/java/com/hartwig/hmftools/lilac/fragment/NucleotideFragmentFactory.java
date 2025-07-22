@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.utils.SuffixTree;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.utils.Nucleotide;
+import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 
 public class NucleotideFragmentFactory
 {

@@ -512,7 +512,7 @@ max_map_qual_ref_alt_difference| 15                  | 15                  | 15 
 maxEdgeDistance<sup>6</sup> | 0.001               | 0.001               | 0.001               | 0.001               | Derived from `MED` and `AD`
 fragmentStrandBias| 0.0                 | 0.0005              | 0.0005              | 0.0005              | SBLikelihood<sup>4</sup>
 readStrandBias| 0.0                 | 0.0005              | 0.0005              | 0.0005              | RSBLikelihood<sup>4</sup>
-minAvgBaseQualf<sup>8</sup>| 18                  | 25                  | 25                  | 25                  |`ABQ`
+minAvgBaseQual<sup>8</sup>| 18                  | 25                  | 25                  | 25                  |`ABQ`
 minFragmentCoords<sup>8</sup>| AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | Num distinct start/end fragment coordinates
 minStrongSupport| 2                   | 3                   | 3                   | 3                   | `RC_CNT[0+1+3]`
 altFragmentLength | 0.0001              | 0.0001              | 0.0001              | 0.0001              | p-score of alt fragment length

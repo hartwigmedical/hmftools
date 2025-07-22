@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.utils;
+package com.hartwig.hmftools.lilac.evidence;
 
 public record AminoAcid(int locus, String acid)
 {

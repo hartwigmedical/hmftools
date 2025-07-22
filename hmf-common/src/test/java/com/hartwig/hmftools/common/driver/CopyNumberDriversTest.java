@@ -252,6 +252,6 @@ public class CopyNumberDriversTest
     @NotNull
     private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene)
     {
-        return GeneCopyNumberTestFactory.builder().geneName(gene);
+        return GeneCopyNumberTestFactory.builder().geneName(gene).gcContent(1.0);
     }
 }

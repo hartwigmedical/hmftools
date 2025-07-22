@@ -170,6 +170,7 @@ public class OncoDriversTest
                 .isCanonical(true)
                 .minMinorAlleleCopyNumber(0)
                 .depthWindowCount(0)
+                .gcContent(1.0)
                 .build();
     }
 }

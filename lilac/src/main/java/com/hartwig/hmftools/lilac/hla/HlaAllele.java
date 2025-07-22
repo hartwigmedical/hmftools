@@ -22,7 +22,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     private final int mProteinNumber;
     private final HlaAllele mFourDigit;
     private final HlaAllele mGroup;
-    private final int mHashCode;;
+    private final int mHashCode;
     private boolean mHasWildcards;
 
     public HlaAllele(
@@ -70,7 +70,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         String protein = contigSplit.length < 2 ? "" : contigSplit[1];
 
         String synonymousCoding = contigSplit.length < 3 ? "" : contigSplit[2];
-        String synonymousNonCoding = contigSplit.length < 4 ? "": contigSplit[3];
+        String synonymousNonCoding = contigSplit.length < 4 ? "" : contigSplit[3];
 
         HlaAllele group = !protein.isEmpty() ?
                 new HlaAllele(gene, alleleGroup, "", "", "", null, null) : null;
@@ -101,7 +101,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         if(!(other instanceof HlaAllele))
             return false;
 
-        return hashCode() == other.hashCode();
+        return toString().equals(other.toString());
     }
 
     public int hashCode() { return mHashCode; }

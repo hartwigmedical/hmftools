@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class BamChecker
 {
@@ -169,6 +170,9 @@ public class BamChecker
             sortTasks.add(new BamSortTask(unsortedBamFilename, sortedBamFilename));
         }
 
+        partitionThreads.clear();
+        System.gc();
+
         List<Callable<Void>> threadTasks = sortTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(threadTasks, mConfig.Threads))
@@ -178,7 +182,8 @@ public class BamChecker
         }
 
         // merge sorted BAMs
-        String finalBam = mConfig.formFilename("final", BAM_EXTENSION);
+        String finalBam = mConfig.OutputBam != null ? mConfig.OutputBam : mConfig.formFilename("final", BAM_EXTENSION);
+
         if(!BamOperations.mergeBams(toolName, mConfig.BamToolPath, finalBam, sortedBams, mConfig.Threads))
         {
             BT_LOGGER.error("error merging sorted BAMs");

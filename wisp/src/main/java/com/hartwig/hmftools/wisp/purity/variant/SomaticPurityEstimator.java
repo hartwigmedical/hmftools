@@ -208,7 +208,8 @@ public class SomaticPurityEstimator
 
             double impliedTF = estimatedPurity(variantFragTotals.rawSampleVaf(), noiseRate, variantFragTotals);
 
-            sjOutlier.add(format("%s %.2f %s", outlier, sampleFragData.vaf(), formatPurityValue(impliedTF)));
+            sjOutlier.add(format("%s %d/%d %.2f %s",
+                    outlier, sampleFragData.AlleleCount, sampleFragData.Depth, sampleFragData.vaf(), formatPurityValue(impliedTF)));
         }
 
         return new SomaticPurityResult(true, totalVariantCount, sjOutlier.toString(), fragmentTotals, umiTypeCounts, purityCalcData);

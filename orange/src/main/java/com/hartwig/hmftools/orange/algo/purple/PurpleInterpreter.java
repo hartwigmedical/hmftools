@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.driver.AmplificationDrivers;
 import com.hartwig.hmftools.common.driver.DeletionDrivers;
@@ -394,6 +396,8 @@ public class PurpleInterpreter
         return somaticGainsDelsFromDrivers(allGainDels);
     }
 
+    private static final Set<DriverType> AMP_DEL_TYPES = Sets.newHashSet(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL);
+
     @NotNull
     private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(@NotNull List<DriverCatalog> drivers)
     {
@@ -404,8 +408,7 @@ public class PurpleInterpreter
         {
             DriverCatalog geneDriver = geneDriverMap.get(key);
 
-            if(geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
-                    || geneDriver.driver() == DriverType.DEL)
+            if(AMP_DEL_TYPES.contains(geneDriver.driver()))
             {
                 gainsDels.add(toGainDel(geneDriver));
             }

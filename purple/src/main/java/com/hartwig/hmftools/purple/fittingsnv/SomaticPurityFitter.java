@@ -284,11 +284,11 @@ public class SomaticPurityFitter
         return somaticFitPurity;
     }
 
-    public static boolean highlyDiploidSomaticOrPanel(final FittedPurity normalPurityFit)
+    public static boolean highlyDiploidSomaticOrPanel(final FittedPurity normalPurityFit, final boolean highlyDiploidByFitPurity)
     {
-        return normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
+        return (normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
             && normalPurityFit.ploidy() > SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN
-            && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
+            && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX) || highlyDiploidByFitPurity;
     }
 
     protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates)

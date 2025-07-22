@@ -24,6 +24,8 @@ public class QualityConfig
     public final boolean HighDepthMode;
     public final int HighBaseQualLimit;
 
+    public static final String HIGH_DEPTH_MODE = "high_depth_mode";
+
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
     private static final String BASE_QUAL_FIXED_PENALTY = "base_qual_fixed_penalty";
     private static final String MAP_QUAL_FIXED_PENALTY = "fixed_qual_penalty";
@@ -31,7 +33,6 @@ public class QualityConfig
     private static final String MAP_QUAL_READ_EVENTS_PENALTY = "read_events_qual_penalty";
     private static final String MAP_QUAL_RATIO_FACTOR = "map_qual_ratio_factor";
     private static final String HIGH_DEPTH_BASE_QUAL_LIMIT = "high_depth_base_qual";
-    private static final String HIGH_DEPTH_MODE = "high_depth_mode";
     private static final String POLYMORPHIC_GENES_MAX_QUALITY = "polymorphic_gene_max_qual";
 
     public QualityConfig(final ConfigBuilder configBuilder)

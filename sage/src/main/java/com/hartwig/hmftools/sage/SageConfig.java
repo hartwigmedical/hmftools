@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
+import static com.hartwig.hmftools.sage.quality.QualityConfig.HIGH_DEPTH_MODE;
 
 import java.io.File;
 import java.util.Arrays;
@@ -123,6 +124,11 @@ public class SageConfig
 
     public SageConfig(final String version, final ConfigBuilder configBuilder)
     {
+        this(version, configBuilder, false);
+    }
+
+    public SageConfig(final String version, final ConfigBuilder configBuilder, boolean isAppendMode)
+    {
         mIsValid = true;
         Version = version;
 
@@ -144,9 +150,6 @@ public class SageConfig
                     .forEach(x -> ReferenceBams.add(SampleDataDir + x));
         }
 
-
-        IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
-
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -155,8 +158,17 @@ public class SageConfig
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
         ReadContextFlankLength = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
 
-        MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
+
+        // ensure that when append is run in panel mode, that max depth is applied to all variants regardless of their tier
+        if(isAppendMode && configBuilder.hasFlag(HIGH_DEPTH_MODE) && !configBuilder.hasValue(MAX_READ_DEPTH))
+        {
+            MaxReadDepth = MaxReadDepthPanel;
+        }
+        else
+        {
+            MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
+        }
 
         mReadLength = configBuilder.getInteger(READ_LENGTH);
 
@@ -202,6 +214,8 @@ public class SageConfig
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
         Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 

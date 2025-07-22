@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -22,7 +21,7 @@ public class AminoAcidQC
     public final int UnusedAminoAcids;
     public final int UnusedAminoAcidMaxFrags;
 
-    public AminoAcidQC(final int unusedAminoAcids, final int unusedAminoAcidMaxFrags)
+    public AminoAcidQC(int unusedAminoAcids, int unusedAminoAcidMaxFrags)
     {
         UnusedAminoAcids = unusedAminoAcids;
         UnusedAminoAcidMaxFrags = unusedAminoAcidMaxFrags;
@@ -40,7 +39,7 @@ public class AminoAcidQC
 
     public static AminoAcidQC create(
             final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequenceLoci,
-            final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes, final int totalFragments)
+            final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes, int totalFragments)
     {
         int unused = 0;
         int largest = 0;
@@ -49,13 +48,11 @@ public class AminoAcidQC
         {
             // ignore amino acids in any unmatched haplotype
             if(unmatchedHaplotypes.stream().anyMatch(x -> positionWithin(locus, x.StartLocus, x.EndLocus)))
-            {
                 continue;
-            }
 
             // or those matching the winning or HLA-Y sequences
 
-            Multiset<String> expected = aminoAcidCount.seqCountsByLoci().getOrDefault(locus, HashMultiset.create());
+            Multiset<String> expected = aminoAcidCount.get(locus);
 
             Set<String> actualSequences = winners.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
@@ -64,30 +61,23 @@ public class AminoAcidQC
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
             if(actualSequences.stream().anyMatch(x -> x.equals(WILD_STR)))
-            {
                 continue;
-            }
+
 
             for(Multiset.Entry<String> entry : expected.entrySet())
             {
                 String aminoAcid = entry.getElement();
 
                 if(actualSequences.contains(aminoAcid))
-                {
                     continue;
-                }
 
                 if(hlaYSequences.contains(aminoAcid))
-                {
                     continue;
-                }
 
                 int count = entry.getCount();
 
                 if(count < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
-                {
                     continue;
-                }
 
                 LL_LOGGER.warn("  UNMATCHED_AMINO_ACID - amino acid sequence({} count={} locus={}) not in winning solution",
                         aminoAcid, count, locus);

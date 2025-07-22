@@ -60,7 +60,7 @@ public class Segmentation
         ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
 
         List<ObservedRegion> observedRegions = observedRegionFactory.formObservedRegions(
-                segments, amberData.ChromosomeBafs, cobaltData.Ratios, mGcProfiles);
+                segments, amberData.ChromosomeBafs, cobaltData.Ratios);
 
         return observedRegions;
     }

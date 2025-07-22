@@ -31,6 +31,7 @@ import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
 import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_AVG_VAF_MULTIPLE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_RETEST_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
@@ -423,6 +424,18 @@ public class SomaticVariants
         // recompute the total sample AD if any outlier variants are found and repeat
         double sampleTotalAD = initialSampleTotalAD;
 
+        // first compute an average VAF to test outliers against
+        double vafTotal = 0;
+
+        for(SomaticVariant variant : filteredVariants)
+        {
+            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+
+            vafTotal += sampleFragData.vaf();
+        }
+
+        double averageVaf = vafTotal / (double)filteredVariants.size();
+
         List<SomaticVariant> allOutlierVariants = Lists.newArrayList();
         List<SomaticVariant> outlierVariants = Lists.newArrayList();
         double minSamplePerc = OUTLIER_MIN_SAMPLE_PERC;
@@ -434,6 +447,9 @@ public class SomaticVariants
                 GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
                 if(sampleFragData.AlleleCount <= OUTLIER_MIN_ALLELE_FRAGS)
+                    continue;
+
+                if(sampleFragData.vaf() < OUTLIER_MIN_AVG_VAF_MULTIPLE * averageVaf)
                     continue;
 
                 if((sampleFragData.AlleleCount / variant.variantCnFloored()) / sampleTotalAD > minSamplePerc)

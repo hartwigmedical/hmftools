@@ -29,6 +29,8 @@ public interface GeneCopyNumber extends TranscriptRegion
 
     int depthWindowCount();
 
+    double gcContent();
+
     default int minRegionBases()
     {
         return minRegionEnd() - minRegionStart() + 1;

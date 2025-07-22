@@ -47,10 +47,7 @@ public class GeneTask implements Callable<Void>
         mPhasedEvidence = Lists.newArrayList();
     }
 
-    public List<PhasedEvidence> phasedEvidence()
-    {
-        return mPhasedEvidence;
-    }
+    public List<PhasedEvidence> phasedEvidence() { return mPhasedEvidence; }
 
     @Override
     public Void call()
@@ -59,8 +56,7 @@ public class GeneTask implements Callable<Void>
         List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
 
         // determine phasing of amino acids
-        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(
-                mConfig, mConfig.MinEvidenceFactor, mConfig.MinVafFilterDepth);
+        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig);
         mPhasedEvidence.addAll(phasedEvidenceFactory.evidence(mHlaContext, mCandidateFrags));
 
         // validate phasing against expected sequences
@@ -81,9 +77,7 @@ public class GeneTask implements Callable<Void>
     public void addPhasedCandidates(final List<HlaAllele> allAlleles)
     {
         if(mCandidatesAlleles.isEmpty())
-        {
             return;
-        }
 
         if(mConfig.MaxEliminationCandidates == 0 || mCandidatesAlleles.size() <= mConfig.MaxEliminationCandidates)
         {
@@ -94,6 +88,6 @@ public class GeneTask implements Callable<Void>
         final String gene = mCandidatesAlleles.get(0).Gene;
 
         mRefData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
-                .filter(x -> x.Gene.equals(gene)).forEach(allAlleles::add);
+                .filter(x -> x.Gene.equals(gene)).forEach(x -> allAlleles.add(x));
     }
 }

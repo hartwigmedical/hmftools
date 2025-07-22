@@ -505,7 +505,7 @@ public class VisDataWriter
         return true;
     }
 
-    private void writeCopyNumberData(final VisSampleData sampleData, final Map<String,List<SvCNData>> chrCNDataMap)
+    public void writeCopyNumberData(final VisSampleData sampleData, final Map<String,List<SvCNData>> chrCNDataMap)
     {
         List<VisCopyNumber> cnDataList = Lists.newArrayList();
 

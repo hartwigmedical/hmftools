@@ -213,6 +213,7 @@ public class SvTestUtils
                 .transName("")
                 .isCanonical(true)
                 .depthWindowCount(0)
+                .gcContent(1.0)
                 .build();
     }
 
