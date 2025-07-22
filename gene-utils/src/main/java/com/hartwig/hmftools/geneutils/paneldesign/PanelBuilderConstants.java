@@ -19,8 +19,6 @@ public class PanelBuilderConstants
     // Coding exons are expanded by this many bases each side to include splice points in probe coverage.
     public static final int GENE_CODING_REGION_EXPAND = 10;
     public static final double GENE_EXON_QUALITY_MIN = 0.05;
-    // Only probe intronic regions when the gene has <= this number of exons.
-    public static final int GENE_MAX_EXONS_TO_ADD_INTRON = 19;
     // Minimum space between exon and intron probe.
     public static final int GENE_EXON_FLANK_GAP = 1000;
     // Exon flank probes are selected within a region of this many bases.

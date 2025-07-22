@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_QUALITY_MIN;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MIN;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_MAX_EXONS_TO_ADD_INTRON;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCenteredAt;
@@ -260,10 +259,9 @@ public class TargetGenes
         }
 
         int lastExonEnd = -1;
-        boolean probeIntrons = options.exonFlank() && transcriptData.exons().size() <= GENE_MAX_EXONS_TO_ADD_INTRON;
         for(ExonData exonData : transcriptData.exons())
         {
-            if(probeIntrons && lastExonEnd != -1)
+            if(lastExonEnd != -1)
             {
                 int intronLength = exonData.Start - lastExonEnd;
 
