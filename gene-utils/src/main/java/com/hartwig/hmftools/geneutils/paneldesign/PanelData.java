@@ -34,7 +34,7 @@ public class PanelData implements PanelCoverage
     @Override
     public Stream<ChrBaseRegion> coveredRegions()
     {
-        return mData.probes().stream().map(probe -> probe.candidate().probeRegion());
+        return mData.probes().stream().map(Probe::region);
     }
 
     public void addResult(final ProbeGenerationResult result)
@@ -44,7 +44,7 @@ public class PanelData implements PanelCoverage
         mData = mData.add(result);
     }
 
-    public List<EvaluatedProbe> probes()
+    public List<Probe> probes()
     {
         return mData.probes();
     }

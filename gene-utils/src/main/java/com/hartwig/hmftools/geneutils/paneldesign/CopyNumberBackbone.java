@@ -175,15 +175,15 @@ public class CopyNumberBackbone
     {
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
-        Stream<CandidateProbe> candidates = generateCandidateProbes(partition);
-        Stream<EvaluatedProbe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateCandidates(candidates, PROBE_CRITERIA.eval());
-        Optional<EvaluatedProbe> bestCandidate = selectBestProbe(evaluatedCandidates, PROBE_CRITERIA.select());
+        Stream<Probe> candidates = generateCandidateProbes(partition);
+        Stream<Probe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateCandidates(candidates, PROBE_CRITERIA.eval());
+        Optional<Probe> bestCandidate = selectBestProbe(evaluatedCandidates, PROBE_CRITERIA.select());
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe ->
                 {
-                    TargetRegion target = bestProbe.candidate().target();
+                    TargetRegion target = bestProbe.target();
                     if(mPanelData.isCovered(target.region()))
                     {
                         LOGGER.debug("Copy number backbone target already covered by panel: {}", target);
@@ -219,19 +219,19 @@ public class CopyNumberBackbone
         return result;
     }
 
-    private Stream<CandidateProbe> generateCandidateProbes(final Partition partition)
+    private Stream<Probe> generateCandidateProbes(final Partition partition)
     {
         return partition.Sites.stream()
                 .flatMap(site -> generateCandidateProbes(partition, site))
                 // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
-                .filter(probe -> partition.Region.containsRegion(probe.probeRegion()));
+                .filter(probe -> partition.Region.containsRegion(probe.region()));
     }
 
-    private Stream<CandidateProbe> generateCandidateProbes(final Partition partition, final AmberSite site)
+    private Stream<Probe> generateCandidateProbes(final Partition partition, final AmberSite site)
     {
         TargetRegion target = new TargetRegion(ChrBaseRegion.from(site.position()), createTargetMetadata(partition.Region, site));
-        CandidateProbeContext candidateContext = new CandidateProbeContext(target);
-        return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), candidateContext);
+        ProbeContext context = new ProbeContext(target);
+        return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), context);
     }
 
     private static TargetMetadata createTargetMetadata(final ChrBaseRegion partitionRegion, @Nullable final AmberSite site)

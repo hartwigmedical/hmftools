@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 
 import java.text.DecimalFormat;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -25,12 +26,12 @@ public class ProbeEvaluator
     private final RefGenomeInterface mRefGenome;
     private final ProbeQualityProfile mQualityProfile;
     // Hook to catch all candidate probes for output.
-    private final Consumer<EvaluatedProbe> mCandidateCallback;
+    private final Consumer<Probe> mCandidateCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeEvaluator.class);
 
     public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
-            final Consumer<EvaluatedProbe> candidateCallback)
+            final Consumer<Probe> candidateCallback)
     {
         // During probe generation it's common to evaluate many nearby probes, which can be exploited with caching to improve performance.
         mRefGenome = refGenome instanceof CachedRefGenome ? refGenome : new CachedRefGenome(refGenome);
@@ -38,26 +39,31 @@ public class ProbeEvaluator
         mCandidateCallback = candidateCallback;
     }
 
-    public EvaluatedProbe evaluateCandidate(final CandidateProbe probe, final Criteria criteria)
+    public Probe evaluateCandidate(final Probe probe, final Criteria criteria)
     {
-        EvaluatedProbe evaluatedProbe = new EvaluatedProbe(probe, criteria);
-        evaluatedProbe = evaluateQualityScore(evaluatedProbe, criteria);
-        if(!evaluatedProbe.rejected())
-        {
-            evaluatedProbe = evaluateGcContent(evaluatedProbe, criteria);
-        }
-        logCandidateProbe(evaluatedProbe);
-        return evaluatedProbe;
+        return evaluateCandidate(probe.withEvalCriteria(criteria));
     }
 
-    public Stream<EvaluatedProbe> evaluateCandidates(Stream<CandidateProbe> probes, final Criteria criteria)
+    private Probe evaluateCandidate(Probe probe)
+    {
+        probe = evaluateQualityScore(probe);
+        if(!probe.rejected())
+        {
+            probe = evaluateGcContent(probe);
+        }
+        logCandidateProbe(probe);
+        return probe;
+    }
+
+    public Stream<Probe> evaluateCandidates(Stream<Probe> probes, final Criteria criteria)
     {
         return probes.map(probe -> evaluateCandidate(probe, criteria));
     }
 
-    private EvaluatedProbe evaluateQualityScore(EvaluatedProbe probe, final Criteria criteria)
+    private Probe evaluateQualityScore(Probe probe)
     {
-        double qualityScore = getProbeQuality(probe.candidate());
+        Criteria criteria = Objects.requireNonNull(probe.evalCriteria());
+        double qualityScore = getProbeQuality(probe);
         probe = probe.withQualityScore(qualityScore);
         if(!(qualityScore >= criteria.qualityScoreMin()))
         {
@@ -66,9 +72,10 @@ public class ProbeEvaluator
         return probe;
     }
 
-    private EvaluatedProbe evaluateGcContent(EvaluatedProbe probe, final Criteria criteria)
+    private Probe evaluateGcContent(Probe probe)
     {
-        String sequence = getProbeSequence(probe.candidate());
+        Criteria criteria = Objects.requireNonNull(probe.evalCriteria());
+        String sequence = getProbeSequence(probe);
         probe = probe.withSequence(sequence);
         double gcContent = calcGcPercent(sequence);
         probe = probe.withGcContent(gcContent);
@@ -79,9 +86,9 @@ public class ProbeEvaluator
         return probe;
     }
 
-    private double getProbeQuality(final CandidateProbe probe)
+    private double getProbeQuality(final Probe probe)
     {
-        return mQualityProfile.computeQualityScore(probe.probeRegion()).orElseGet(() ->
+        return mQualityProfile.computeQualityScore(probe.region()).orElseGet(() ->
         {
             // Never want to accept a probe with no quality score, so just return 0 in that case to simplify the code elsewhere.
             // Maybe be interesting to know when this happens because the probe quality profile ideally covers the whole genome.
@@ -90,13 +97,13 @@ public class ProbeEvaluator
         });
     }
 
-    private String getProbeSequence(final CandidateProbe probe)
+    private String getProbeSequence(final Probe probe)
     {
-        ChrBaseRegion region = probe.probeRegion();
+        ChrBaseRegion region = probe.region();
         return mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
     }
 
-    private void logCandidateProbe(final EvaluatedProbe probe)
+    private void logCandidateProbe(final Probe probe)
     {
         LOGGER.trace("Evaluated probe: {}", probe);
         mCandidateCallback.accept(probe);

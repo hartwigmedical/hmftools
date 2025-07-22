@@ -12,9 +12,9 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class ProbeSelector
 {
     // Gets the best acceptable probe from a set of candidate probes. Returns empty optional if there are no acceptable probes.
-    public static Optional<EvaluatedProbe> selectBestProbe(Stream<EvaluatedProbe> probes, final Strategy strategy)
+    public static Optional<Probe> selectBestProbe(Stream<Probe> probes, final Strategy strategy)
     {
-        Stream<EvaluatedProbe> acceptableProbes = probes.filter(EvaluatedProbe::accepted);
+        Stream<Probe> acceptableProbes = probes.filter(Probe::accepted);
 
         if(strategy instanceof Strategy.FirstAcceptable)
         {
@@ -26,7 +26,7 @@ public class ProbeSelector
             double optimalQuality = ((Strategy.MaxQuality) strategy).optimalQuality();
             return getBestScoringElement(
                     acceptableProbes,
-                    EvaluatedProbe::qualityScore,
+                    Probe::qualityScore,
                     quality -> Doubles.greaterOrEqual(quality, optimalQuality),
                     true);
         }
@@ -36,7 +36,7 @@ public class ProbeSelector
             double optimalGcTolerance = ((Strategy.BestGc) strategy).gcToleranceOptimal();
             return getBestScoringElement(
                     acceptableProbes,
-                    probe -> abs(probe.gcContent() - probe.criteria().gcContentTarget()),
+                    probe -> abs(probe.gcContent() - probe.evalCriteria().gcContentTarget()),
                     distance -> Doubles.lessOrEqual(distance, optimalGcTolerance),
                     false);
         }

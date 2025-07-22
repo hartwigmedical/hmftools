@@ -134,8 +134,8 @@ public class CustomRegions
         LOGGER.debug("Generating probes for {}", region);
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
         TargetRegion target = new TargetRegion(region.region(), metadata);
-        CandidateProbeContext candidateContext = new CandidateProbeContext(target);
-        ProbeGenerationResult result = probeGenerator.coverRegion(target.region(), candidateContext, PROBE_CRITERIA, coverage);
+        ProbeContext context = new ProbeContext(target);
+        ProbeGenerationResult result = probeGenerator.coverRegion(target.region(), context, PROBE_CRITERIA, coverage);
         return result;
     }
 }

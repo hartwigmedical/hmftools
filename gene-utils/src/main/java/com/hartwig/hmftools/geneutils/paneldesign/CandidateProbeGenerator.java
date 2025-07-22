@@ -36,7 +36,7 @@ public class CandidateProbeGenerator
 
     // Generates candidate probes covering any subregion within the target region.
     // Probes do not extend outside the target region.
-    public Stream<CandidateProbe> coverOneSubregion(final ChrBaseRegion region, final CandidateProbeContext context)
+    public Stream<Probe> coverOneSubregion(final ChrBaseRegion region, final ProbeContext context)
     {
         if(region.baseLength() < PROBE_LENGTH)
         {
@@ -52,7 +52,7 @@ public class CandidateProbeGenerator
     }
 
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
-    public Stream<CandidateProbe> coverPosition(final BasePosition position, final CandidateProbeContext context)
+    public Stream<Probe> coverPosition(final BasePosition position, final ProbeContext context)
     {
         int minProbeStart = minProbeStartContaining(position.Position);
         int maxProbeEnd = maxProbeEndContaining(position.Position);
@@ -67,8 +67,8 @@ public class CandidateProbeGenerator
     //   - Can't end after `maxProbeEnd`
     //   - Can't end after end of chromosome
     // Useful because we prefer to select probes which are closest to the target position or centre of a region.
-    public Stream<CandidateProbe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
-            int maxProbeEnd, final CandidateProbeContext context)
+    public Stream<Probe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
+            int maxProbeEnd, final ProbeContext context)
     {
         if(maxProbeEnd - minProbeStart + 1 < PROBE_LENGTH)
         {
@@ -93,7 +93,7 @@ public class CandidateProbeGenerator
     }
 
     // Generates all probes overlapping a region.
-    public Stream<CandidateProbe> allOverlapping(final ChrBaseRegion region, final CandidateProbeContext context)
+    public Stream<Probe> allOverlapping(final ChrBaseRegion region, final ProbeContext context)
     {
         int minProbeStart = max(minProbeStartOverlapping(region.baseRegion()), 1);
         int maxProbeEnd = min(maxProbeEndOverlapping(region.baseRegion()), mChromosomeLengths.get(region.chromosome()));

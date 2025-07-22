@@ -23,16 +23,16 @@ import org.jetbrains.annotations.Nullable;
 // Writes all file output data.
 public class OutputWriter implements AutoCloseable
 {
-    private final DelimFileWriter<EvaluatedProbe> mPanelProbesTsvWriter;
+    private final DelimFileWriter<Probe> mPanelProbesTsvWriter;
     private final BufferedWriter mPanelProbesBedWriter;
     private final BufferedWriter mPanelProbesFastaWriter;
     private final BufferedWriter mTargetRegionsWriter;
     private final DelimFileWriter<RejectedRegion> mRejectedRegionsTsvWriter;
     private final BufferedWriter mRejectedRegionsBedWriter;
     @Nullable
-    private final DelimFileWriter<EvaluatedProbe> mCandidateProbesWriter;
+    private final DelimFileWriter<Probe> mCandidateProbesWriter;
     @Nullable
-    private final List<EvaluatedProbe> mCandidateProbesBuffer;
+    private final List<Probe> mCandidateProbesBuffer;
 
     private static final String TSV_EXT = ".tsv";
     private static final String BED_EXT = ".bed";
@@ -97,14 +97,14 @@ public class OutputWriter implements AutoCloseable
         }
     }
 
-    public void writePanelProbes(List<EvaluatedProbe> probes) throws IOException
+    public void writePanelProbes(List<Probe> probes) throws IOException
     {
         LOGGER.debug("Writing {} panel probes to file", probes.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
-        probes = probes.stream().sorted(Comparator.comparing(probe -> probe.candidate().probeRegion())).toList();
+        probes = probes.stream().sorted(Comparator.comparing(Probe::region)).toList();
 
-        for(EvaluatedProbe probe : probes)
+        for(Probe probe : probes)
         {
             if(!probe.accepted())
             {
@@ -118,25 +118,24 @@ public class OutputWriter implements AutoCloseable
         }
     }
 
-    private static void writePanelProbesTsvRow(final EvaluatedProbe probe, DelimFileWriter.Row row)
+    private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
-        row.set(FLD_CHROMOSOME, probe.candidate().probeRegion().chromosome());
-        row.set(FLD_POSITION_START, probe.candidate().probeRegion().start());
-        row.set(FLD_POSITION_END, probe.candidate().probeRegion().end());
+        row.set(FLD_CHROMOSOME, probe.region().chromosome());
+        row.set(FLD_POSITION_START, probe.region().start());
+        row.set(FLD_POSITION_END, probe.region().end());
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_QUALITY_SCORE, probe.qualityScore());
         row.set(FLD_GC_CONTENT, probe.gcContent());
-        row.set(FLD_TARGET_TYPE, probe.candidate().target().metadata().type().name());
-        row.set(FLD_TARGET_EXTRA_INFO, probe.candidate().target().metadata().extra());
+        row.set(FLD_TARGET_TYPE, probe.target().metadata().type().name());
+        row.set(FLD_TARGET_EXTRA_INFO, probe.target().metadata().extra());
     }
 
-    private void writePanelProbesBedRow(final EvaluatedProbe probe) throws IOException
+    private void writePanelProbesBedRow(final Probe probe) throws IOException
     {
-        CandidateProbe candidate = probe.candidate();
-        mPanelProbesBedWriter.write(formatBedRow(candidate.probeRegion(), probeBedName(probe)));
+        mPanelProbesBedWriter.write(formatBedRow(probe.region(), probeBedName(probe)));
     }
 
-    private void writePanelProbesFastaRecord(final EvaluatedProbe probe) throws IOException
+    private void writePanelProbesFastaRecord(final Probe probe) throws IOException
     {
         String label = getProbeLabel(probe);
         String sequence = probe.sequence();
@@ -195,7 +194,7 @@ public class OutputWriter implements AutoCloseable
         mRejectedRegionsBedWriter.write(formatBedRow(region.region(), targetMetadataToBedName(region.target().metadata())));
     }
 
-    public void writeCandidateProbe(final EvaluatedProbe probe)
+    public void writeCandidateProbe(final Probe probe)
     {
         if(mCandidateProbesWriter != null)
         {
@@ -214,35 +213,35 @@ public class OutputWriter implements AutoCloseable
         }
     }
 
-    private void writeCandidateProbes(final List<EvaluatedProbe> probes)
+    private void writeCandidateProbes(final List<Probe> probes)
     {
         LOGGER.debug("Writing {} candidate probes to file", probes.size());
         probes.forEach(mCandidateProbesWriter::writeRow);
     }
 
-    private static void writeCandidateProbesRow(final EvaluatedProbe probe, DelimFileWriter.Row row)
+    private static void writeCandidateProbesRow(final Probe probe, DelimFileWriter.Row row)
     {
         // To save disk space, don't write these fields:
         //   - Probe end position (implied from start and probe length)
         //   - Base sequence (implied from probe region)
-        row.set(FLD_CHROMOSOME, probe.candidate().probeRegion().chromosome());
-        row.set(FLD_POSITION_START, probe.candidate().probeRegion().start());
-        row.set(FLD_TARGET_START, probe.candidate().target().region().start());
-        row.set(FLD_TARGET_END, probe.candidate().target().region().end());
-        row.set(FLD_TARGET_TYPE, probe.candidate().target().metadata().type().name());
-        row.set(FLD_TARGET_EXTRA_INFO, probe.candidate().target().metadata().extra());
+        row.set(FLD_CHROMOSOME, probe.region().chromosome());
+        row.set(FLD_POSITION_START, probe.region().start());
+        row.set(FLD_TARGET_START, probe.target().region().start());
+        row.set(FLD_TARGET_END, probe.target().region().end());
+        row.set(FLD_TARGET_TYPE, probe.target().metadata().type().name());
+        row.set(FLD_TARGET_EXTRA_INFO, probe.target().metadata().extra());
         row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
         row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
-        row.setOrNull(FLD_EVAL_CRITERIA, probe.criteria().toString());
+        row.setOrNull(FLD_EVAL_CRITERIA, probe.evalCriteria().toString());
         row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());
     }
 
-    private static String probeBedName(final EvaluatedProbe probe)
+    private static String probeBedName(final Probe probe)
     {
         // Purposely unbox here to throw on nulls.
         double qualityScore = probe.qualityScore();
         double gcContent = probe.gcContent();
-        String baseName = targetMetadataToBedName(probe.candidate().target().metadata());
+        String baseName = targetMetadataToBedName(probe.target().metadata());
         return format("%s:QS=%.2f:GC=%.2f", baseName, qualityScore, gcContent);
     }
 
@@ -256,12 +255,11 @@ public class OutputWriter implements AutoCloseable
         return format("%s\t%d\t%d\t%s\n", region.chromosome(), region.start() - 1, region.end(), name);
     }
 
-    private static String getProbeLabel(final EvaluatedProbe probe)
+    private static String getProbeLabel(final Probe probe)
     {
         // This should be unique enough.
-        ChrBaseRegion region = probe.candidate().probeRegion();
-        TargetMetadata metadata = probe.candidate().target().metadata();
-        return format("%s:%s:%d", metadata.type().name(), metadata.extra(), region.start());
+        TargetMetadata metadata = probe.target().metadata();
+        return format("%s:%s:%d", metadata.type().name(), metadata.extra(), probe.region().start());
     }
 
     @Override

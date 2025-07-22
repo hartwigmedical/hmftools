@@ -139,7 +139,7 @@ public class PanelBuilder
         return ensemblData;
     }
 
-    private void writeCandidateProbe(final EvaluatedProbe probe)
+    private void writeCandidateProbe(final Probe probe)
     {
         mOutputWriter.writeCandidateProbe(probe);
     }

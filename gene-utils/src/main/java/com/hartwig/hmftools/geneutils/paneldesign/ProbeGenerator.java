@@ -50,7 +50,7 @@ public class ProbeGenerator
 
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     // If `coverage` is not null, avoid placing probes in already covered regions.
-    public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final CandidateProbeContext context,
+    public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final ProbeContext context,
             final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
     {
         List<ChrBaseRegion> subregions;
@@ -80,7 +80,7 @@ public class ProbeGenerator
         return result;
     }
 
-    private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion region, final CandidateProbeContext context,
+    private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion region, final ProbeContext context,
             final ProbeSelectCriteria criteria)
     {
         // Methodology:
@@ -92,18 +92,18 @@ public class ProbeGenerator
         String chromosome = region.chromosome();
         BaseRegion baseRegion = region.baseRegion();
 
-        Stream<EvaluatedProbe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, context)
+        Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, context)
                 .map(candidate -> mProbeEvaluator.evaluateCandidate(candidate, criteria.eval()))
-                .filter(EvaluatedProbe::accepted);
+                .filter(Probe::accepted);
 
         // These are the subregions in which probes can be placed.
         // Probes are guaranteed to be rejected if they overlap subregions between the acceptable subregions.
         List<BaseRegion> acceptableSubregions = new ArrayList<>();
-        Map<Integer, EvaluatedProbe> acceptableProbes = new HashMap<>();
+        Map<Integer, Probe> acceptableProbes = new HashMap<>();
         // This requires sorted by position, but it's already in that order.
         allPlausibleProbes.forEach(probe ->
         {
-            BaseRegion probeRegion = probe.candidate().probeRegion().baseRegion();
+            BaseRegion probeRegion = probe.region().baseRegion();
             BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);
             if(prev != null && probeRegion.start() <= prev.end() + 1)
             {
@@ -116,7 +116,7 @@ public class ProbeGenerator
             acceptableProbes.put(probeRegion.start(), probe);
         });
 
-        List<EvaluatedProbe> probes = acceptableSubregions.stream()
+        List<Probe> probes = acceptableSubregions.stream()
                 .flatMap(acceptableSubregion ->
                 {
                     BaseRegion subregion = acceptableSubregion;
@@ -133,13 +133,13 @@ public class ProbeGenerator
 
                     // For each probe, if there is space around the probe within the tiling, try shifting the probe around to find the best.
                     List<Integer> tiling = calculateOptimalProbeTiling(tilingTarget, probeBounds);
-                    List<EvaluatedProbe> tiledProbes = new ArrayList<>();
+                    List<Probe> tiledProbes = new ArrayList<>();
                     for(int i = 0; i < tiling.size(); ++i)
                     {
                         BaseRegion originalProbe = probeRegionStartingAt(tiling.get(i));
                         BaseRegion prevProbe = tiledProbes.isEmpty()
                                 ? null
-                                : tiledProbes.get(tiledProbes.size() - 1).candidate().probeRegion().baseRegion();
+                                : tiledProbes.get(tiledProbes.size() - 1).region().baseRegion();
                         // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
                         BaseRegion nextProbe = i + 1 < tiling.size() ? probeRegionStartingAt(tiling.get(i + 1)) : null;
 
@@ -218,11 +218,11 @@ public class ProbeGenerator
                         // Iterate in an outward moving pattern so in the case of a tie, prefer probes closer to the original tiling position.
                         int minOffset = minStart - originalProbe.start();
                         int maxOffset = maxStart - originalProbe.start();
-                        Stream<EvaluatedProbe> candidates = outwardMovingOffsets(minOffset, maxOffset)
+                        Stream<Probe> candidates = outwardMovingOffsets(minOffset, maxOffset)
                                 .map(offset -> originalProbe.start() + offset)
                                 .mapToObj(acceptableProbes::get)
                                 .filter(Objects::nonNull);
-                        Optional<EvaluatedProbe> bestProbe = selectBestProbe(candidates, criteria.select());
+                        Optional<Probe> bestProbe = selectBestProbe(candidates, criteria.select());
                         bestProbe.ifPresent(tiledProbes::add);
                     }
 
@@ -233,7 +233,7 @@ public class ProbeGenerator
         // Compute rejected regions based on what has been covered by the probes.
         String rejectionReason = "No probe covering region, producing valid tiling, and meeting criteria " + criteria;
         List<RejectedRegion> rejectedRegions =
-                computeUncoveredRegions(region.baseRegion(), probes.stream().map(probe -> probe.candidate().probeRegion().baseRegion()))
+                computeUncoveredRegions(region.baseRegion(), probes.stream().map(probe -> probe.region().baseRegion()))
                         .stream()
                         .map(r -> new RejectedRegion(ChrBaseRegion.from(chromosome, r), context.targetRegion(), rejectionReason))
                         .toList();
@@ -244,11 +244,11 @@ public class ProbeGenerator
     }
 
     // Generates the 1 best acceptable probe that is contained within the specified region.
-    public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final CandidateProbeContext context,
+    public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final ProbeContext context,
             final ProbeSelectCriteria criteria)
     {
-        Stream<CandidateProbe> candidates = mCandidateGenerator.coverOneSubregion(region, context);
-        Stream<EvaluatedProbe> evaluatedCandidates = mProbeEvaluator.evaluateCandidates(candidates, criteria.eval());
+        Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, context);
+        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateCandidates(candidates, criteria.eval());
         return selectBestProbe(evaluatedCandidates, criteria.select())
                 .map(probe ->
                         new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), emptyList()))
@@ -263,11 +263,11 @@ public class ProbeGenerator
     }
 
     // Generates the 1 best acceptable probe which covers a position.
-    public ProbeGenerationResult coverPosition(final BasePosition position, final CandidateProbeContext context,
+    public ProbeGenerationResult coverPosition(final BasePosition position, final ProbeContext context,
             final ProbeSelectCriteria criteria)
     {
-        Stream<CandidateProbe> candidates = mCandidateGenerator.coverPosition(position, context);
-        Stream<EvaluatedProbe> evaluatedCandidates = mProbeEvaluator.evaluateCandidates(candidates, criteria.eval());
+        Stream<Probe> candidates = mCandidateGenerator.coverPosition(position, context);
+        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateCandidates(candidates, criteria.eval());
         return selectBestProbe(evaluatedCandidates, criteria.select())
                 .map(probe -> new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), emptyList()))
                 .orElseGet(() ->

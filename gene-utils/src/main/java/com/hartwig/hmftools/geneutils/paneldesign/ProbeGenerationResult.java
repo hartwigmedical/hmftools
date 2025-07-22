@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 public record ProbeGenerationResult(
         List<TargetRegion> targetRegions,
-        List<EvaluatedProbe> probes,
+        List<Probe> probes,
         List<RejectedRegion> rejectedRegions
 )
 {
