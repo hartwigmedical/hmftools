@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
@@ -70,6 +71,7 @@ public class Read
             Id, readInfo(), mIndels.size(), SoftClippedStart, SoftClippedEnd); }
 
     public List<Indel> getIndels() { return mIndels; }
+    public int trimmedBases() { return mTrimmedBases; }
 
     public SAMRecord bamRecord() { return mRecord; }
 
@@ -122,17 +124,74 @@ public class Read
 
     public static Read createRead(final BaseRegion codingRegion, final SAMRecord record, boolean includeSoftClips, boolean includeIndels)
     {
-        int softClipStart = leftSoftClipLength(record);
-        int softClipEnd = rightSoftClipLength(record);
+        int scLengthLeft = leftSoftClipLength(record);
+        int scLengthRight = rightSoftClipLength(record);
         int alignmentStart = record.getAlignmentStart();
         int alignmentEnd = record.getAlignmentEnd();
-        int recordStart = alignmentStart - softClipStart;
-        int recordEnd = alignmentEnd + softClipEnd;
+
+        // initialise positions and read indices to non-soft-clipped alignments
+        int positionStart = alignmentStart;
+        int positionEnd = alignmentEnd;
+
+        int readIndexStart = scLengthLeft;
+        int readIndexEnd = record.getReadBases().length - scLengthRight - 1;
+
+        int softClipStart = scLengthLeft;
+        int softClipEnd = scLengthRight;
+
+        // ignore soft-clip positions on the 3' end which run past the mate's 5' end for overlapping fragments
+        if(abs(record.getInferredInsertSize()) <= record.getReadBases().length)
+        {
+            if(record.getReadNegativeStrandFlag())
+                softClipStart = 0;
+            else
+                softClipEnd = 0;
+        }
 
         int lowQualTrimmedBases = findLowQualTrimmedBases(record);
 
-        int positionStart = max(codingRegion.start(), alignmentStart);
-        int positionEnd = min(codingRegion.end(), alignmentEnd);
+        if(lowQualTrimmedBases > 0)
+        {
+            // trim or cancel any soft-clip bases from low BQ trimming
+            if(record.getReadNegativeStrandFlag())
+            {
+                softClipStart = max(softClipStart - lowQualTrimmedBases, 0);
+
+                readIndexStart += (lowQualTrimmedBases - scLengthLeft);
+                positionStart = record.getReferencePositionAtReadPosition(readIndexStart + 1);
+            }
+            else
+            {
+                softClipEnd = max(softClipEnd - lowQualTrimmedBases, 0);
+
+                readIndexEnd -= (lowQualTrimmedBases - scLengthRight);
+                positionEnd = record.getReferencePositionAtReadPosition(readIndexEnd + 1);
+            }
+        }
+
+        int unclippedStart = softClipStart > 0 ? max(alignmentStart - softClipStart, codingRegion.start()) : 0;
+        int unclippedEnd = softClipEnd > 0 ? min(alignmentEnd + softClipEnd, codingRegion.end()) : 0;
+
+        // include soft-clip bases if permitted
+        if(includeSoftClips)
+        {
+            if(softClipStart > 0)
+                positionStart = unclippedStart;
+
+            if(softClipEnd > 0)
+                positionEnd = unclippedEnd;
+        }
+
+        // restrict to coding region
+        positionStart = max(positionStart, codingRegion.start());
+        positionEnd = min(positionEnd, codingRegion.end());
+
+        // use our bespoke method since it allows positions in the soft-clipped region
+        readIndexStart = getReadIndexFromPosition(
+                alignmentStart, record.getCigar().getCigarElements(), positionStart, false, true);
+
+        readIndexEnd = getReadIndexFromPosition(
+                alignmentStart, record.getCigar().getCigarElements(), positionEnd, false, true);
 
         if(record.getCigar().containsOperator(CigarOperator.N))
         {
@@ -149,49 +208,11 @@ public class Read
 
                 positionStart = max(max(positionStart, mappedCoord[SE_START]), codingRegion.start());
                 positionEnd = min(min(positionEnd, mappedCoord[SE_END]), codingRegion.end());
+
+                readIndexStart = record.getReadPositionAtReferencePosition(positionStart, true) - 1;
+                readIndexEnd = record.getReadPositionAtReferencePosition(positionEnd, true) - 1;
                 break;
             }
-        }
-
-        int readIndexStart = record.getReadPositionAtReferencePosition(positionStart, true) - 1;
-        int readIndexEnd = record.getReadPositionAtReferencePosition(positionEnd, true) - 1;
-
-        if(lowQualTrimmedBases > 0)
-        {
-            if(record.getReadNegativeStrandFlag())
-                readIndexStart += lowQualTrimmedBases;
-            else
-                readIndexEnd -= lowQualTrimmedBases;
-        }
-
-        positionStart = record.getReferencePositionAtReadPosition(readIndexStart + 1);
-        positionEnd = record.getReferencePositionAtReadPosition(readIndexEnd + 1);
-
-        // ignore soft-clip positions on the 3' end which run past the mate's 5' end for overlapping fragments
-        boolean restrictSoftclipStart = false;
-        boolean restrictSoftclipEnd = false;
-
-        if(abs(record.getInferredInsertSize()) <= record.getReadBases().length)
-        {
-            if(record.getReadNegativeStrandFlag())
-                restrictSoftclipStart = true;
-            else
-                restrictSoftclipEnd = true;
-        }
-
-        // add soft clip start and end
-        if(positionStart == alignmentStart && softClipStart > 0 && includeSoftClips && !restrictSoftclipStart)
-        {
-            int earliestStart = max(codingRegion.start(), recordStart);
-            readIndexStart = readIndexStart - positionStart + earliestStart;
-            positionStart = earliestStart;
-        }
-
-        if(positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips && !restrictSoftclipEnd)
-        {
-            int latestEnd = min(codingRegion.end(), recordEnd);
-            readIndexEnd = readIndexEnd + latestEnd - positionEnd;
-            positionEnd = latestEnd;
         }
 
         int softClippedStart = max(alignmentStart - positionStart, 0);
@@ -239,7 +260,7 @@ public class Read
         return indels;
     }
 
-    public static int findLowQualTrimmedBases(final SAMRecord record)
+    private static int findLowQualTrimmedBases(final SAMRecord record)
     {
         boolean fromStart = record.getReadNegativeStrandFlag();
         int baseIndex = fromStart ? 0 : record.getReadBases().length - 1;
@@ -254,8 +275,11 @@ public class Read
             {
                 currentScore -= LOW_QUAL_SCORE;
 
-                if(currentScore < lowestScore)
+                if(currentScore <= lowestScore)
+                {
+                    lowestScore = currentScore;
                     lastLowestScoreIndex = baseIndex;
+                }
             }
             else
             {
