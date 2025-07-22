@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.ProbeSelector.selectBes
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.calculateOptimalProbeTiling;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndOverlapping;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndWithoutGap;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeStartOverlapping;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartOverlapping;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartWithoutGap;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionEndingAt;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -94,11 +92,7 @@ public class ProbeGenerator
         String chromosome = region.chromosome();
         BaseRegion baseRegion = region.baseRegion();
 
-        // TODO: respect chromosome bounds
-        int minPlausibleProbeStart = minProbeStartOverlapping(baseRegion);
-        int maxPlausibleProbeStart = maxProbeStartOverlapping(baseRegion);
-        Stream<EvaluatedProbe> allPlausibleProbes = IntStream.rangeClosed(minPlausibleProbeStart, maxPlausibleProbeStart)
-                .mapToObj(start -> context.createProbe(probeRegionStartingAt(start)))
+        Stream<EvaluatedProbe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, context)
                 .map(candidate -> mProbeEvaluator.evaluateCandidate(candidate, criteria.eval()))
                 .filter(EvaluatedProbe::accepted);
 

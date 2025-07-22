@@ -5,13 +5,18 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndContaining;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndOverlapping;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartContaining;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartOverlapping;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionCenteredAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionEndingAt;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionStartingAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.outwardMovingOffsets;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentreStartOffset;
 
 import java.util.Map;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -85,5 +90,15 @@ public class CandidateProbeGenerator
 
         return outwardMovingOffsets(minOffset, maxOffset)
                 .mapToObj(offset -> context.createProbe(probeRegionCenteredAt(initialPosition.Position + offset)));
+    }
+
+    // Generates all probes overlapping a region.
+    public Stream<CandidateProbe> allOverlapping(final ChrBaseRegion region, final CandidateProbeContext context)
+    {
+        int minProbeStart = max(minProbeStartOverlapping(region.baseRegion()), 1);
+        int maxProbeEnd = min(maxProbeEndOverlapping(region.baseRegion()), mChromosomeLengths.get(region.chromosome()));
+        int maxProbeStart = probeRegionEndingAt(maxProbeEnd).start();
+        return IntStream.rangeClosed(minProbeStart, maxProbeStart)
+                .mapToObj(start -> context.createProbe(probeRegionStartingAt(start)));
     }
 }
