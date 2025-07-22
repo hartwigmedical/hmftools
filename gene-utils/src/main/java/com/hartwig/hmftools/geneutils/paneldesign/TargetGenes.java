@@ -241,6 +241,8 @@ public class TargetGenes
 
     private static List<GeneRegion> createGeneRegions(final GeneTranscriptData gene)
     {
+        // TODO: possible to generate same exon multiple times with multiple transcripts, which is wrong
+
         List<GeneRegion> regions = new ArrayList<>();
 
         GeneData geneData = gene.gene();

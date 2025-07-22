@@ -17,11 +17,4 @@ public class ProbeUtilsTest
     {
         assertEquals(219, ProbeUtils.maxProbeEndContaining(100));
     }
-
-    @Test
-    public void testNextProbeStartPosition()
-    {
-        // Max overlap: 200, 199, 198, 197, 196, 195, 194, 193, 192, 191
-        assertEquals(191, ProbeUtils.nextProbeStartPosition(200));
-    }
 }

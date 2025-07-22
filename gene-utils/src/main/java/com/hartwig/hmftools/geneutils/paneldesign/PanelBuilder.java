@@ -78,6 +78,9 @@ public class PanelBuilder
             mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
         }
 
+        // TODO: output summary of number of probes per target region
+        // TODO: output % rejected or similar
+
         // TODO: probe overlapping multiple target regions will only have 1 target associated. fix up to show multiple targets on 1 probe?
 
         mOutputWriter.close();

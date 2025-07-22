@@ -2,7 +2,6 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
 import static java.lang.Double.POSITIVE_INFINITY;
-import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -191,19 +190,6 @@ public class Utils
             throw new IllegalArgumentException("Invalid region");
         }
         return new BaseRegion(max(region1.start(), region2.start()), min(region1.end(), region2.end()));
-    }
-
-    public static long roundTowardsRegionEnds(double position, final BaseRegion region)
-    {
-        double centre = regionCentreFloat(region);
-        if(position < region.start() || (position > centre && position < region.end()))
-        {
-            return (long) ceil(position);
-        }
-        else
-        {
-            return (long) position;
-        }
     }
 
     // Generates the sequence: 0, 1, -1, 2, -2, 3, -3, ...

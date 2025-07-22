@@ -7,12 +7,11 @@ import static java.util.Collections.emptyList;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_SHIFT_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeSelector.selectBestProbe;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.calculateOptimalProbeTiling;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndPartiallyCovering;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndOverlapping;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndWithoutGap;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeStartOverlapping;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartPartiallyCovering;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartOverlapping;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.nextProbeStartPosition;
-import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.prevProbeEndPosition;
+import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.minProbeStartWithoutGap;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.probeRegionStartingAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.computeUncoveredRegions;
@@ -92,8 +91,6 @@ public class ProbeGenerator
         //   3. Within each acceptable region, tile probes according to the ideal tiling algorithm.
         //   4. For each probe, try shifting it left and right slightly and pick the local best probe.
 
-        // TODO: this will output no probes if the region is smaller than the probe. desirable?
-
         String chromosome = region.chromosome();
         BaseRegion baseRegion = region.baseRegion();
 
@@ -146,30 +143,29 @@ public class ProbeGenerator
                     for(int i = 0; i < tiling.size(); ++i)
                     {
                         BaseRegion originalProbe = probeRegionStartingAt(tiling.get(i));
+                        BaseRegion prevProbe = tiledProbes.isEmpty()
+                                ? null
+                                : tiledProbes.get(tiledProbes.size() - 1).candidate().probeRegion().baseRegion();
+                        // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
+                        BaseRegion nextProbe = i + 1 < tiling.size() ? probeRegionStartingAt(tiling.get(i + 1)) : null;
 
                         // Shift must ensure:
                         //  - Can't extend outside the hard bounds;
-                        //  - Can't overlap the adjacent probes too much;
-                        //  - Can't cover too few target bases;
                         //  - Can't reduce coverage of the target region;
                         //  - Can't shift further than a configured amount.
 
                         // Apply hard bounds and min coverage constraints.
-                        int minStart = max(probeBounds.start(), minProbeStartPartiallyCovering(baseRegion));
-                        int maxEnd = min(probeBounds.end(), maxProbeEndPartiallyCovering(baseRegion));
+                        int minStart = max(probeBounds.start(), minProbeStartOverlapping(baseRegion));
+                        int maxEnd = min(probeBounds.end(), maxProbeEndOverlapping(baseRegion));
 
-                        // TODO: possible to avoid increasing the total overlap?
-                        // Apply probe overlap constraint.
-                        // For the previous adjacent probe, use the actual probe selected.
-                        // For the next adjacent probe, use the original tiling position to ensure at least 1 option for the next iteration.
-                        if(!tiledProbes.isEmpty())
+                        // If the probe is adjacent to a probe, don't shift it such that it creates a gap.
+                        if(prevProbe != null)
                         {
-                            minStart = max(minStart,
-                                    nextProbeStartPosition(tiledProbes.get(tiledProbes.size() - 1).candidate().probeRegion().end()));
+                            maxEnd = min(maxEnd, maxProbeEndWithoutGap(prevProbe));
                         }
-                        if(i + 1 < tiling.size())
+                        if(nextProbe != null)
                         {
-                            maxEnd = min(maxEnd, prevProbeEndPosition(tiling.get(i + 1)));
+                            minStart = max(minStart, minProbeStartWithoutGap(nextProbe));
                         }
 
                         // If the probe is on the edge, don't shift it such that it reduces the target coverage.

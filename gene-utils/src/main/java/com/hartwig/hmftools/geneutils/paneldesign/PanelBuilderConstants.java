@@ -6,12 +6,7 @@ public class PanelBuilderConstants
     public static final int PROBE_LENGTH = 120;
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
-    public static final double GENERAL_GC_TOLERANCE = 1;
-    // When covering a large region with probes, how many bases can a probe overlap with another?
-    public static final int PROBE_OVERLAP_MAX = 10;
-    // When covering a large region with probes, how many bases in a probe must overlap with the target region?
-    // (Unless the target is smaller than the probe).
-    public static final int PROBE_COVERAGE_MIN = PROBE_LENGTH * 50 / 100;
+    public static final double GENERAL_GC_TOLERANCE = 1;    // I.e. any GC is ok
     // When covering a large region with probes, how many bases a probe may be shifted left or right from its "ideal" tiled position.
     public static final int PROBE_SHIFT_MAX = 5;
 
@@ -45,7 +40,7 @@ public class PanelBuilderConstants
     // GC content bounds for probes used for determining copy number.
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.
     public static final double CN_GC_TARGET = 0.45;
-    public static final double CN_GC_TOLERANCE = 0.025;
+    public static final double CN_GC_TOLERANCE = 0.05;
     // Early stopping on the probe search if the GC is within this tolerance. (Performance tuning parameter.)
     public static final double CN_GC_OPTIMAL_TOLERANCE = 0.001;
 
@@ -61,15 +56,20 @@ public class PanelBuilderConstants
 
     static
     {
-        if(!(PROBE_OVERLAP_MAX >= 0 && PROBE_OVERLAP_MAX < PROBE_LENGTH))
+        if(!(PROBE_LENGTH >= 50))
         {
+            // Wouldn't recommend going much smaller than this because it was designed to work with 120b probe
             throw new IllegalArgumentException();
         }
-        if(!(PROBE_COVERAGE_MIN >= 1 && PROBE_COVERAGE_MIN <= PROBE_LENGTH))
+        if(!(PROBE_SHIFT_MAX >= 0 && PROBE_SHIFT_MAX < PROBE_LENGTH))
         {
             throw new IllegalArgumentException();
         }
         if(!(GENE_UPDOWNSTREAM_REGION > PROBE_LENGTH))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(GENE_EXON_FLANK_GAP > GENE_CODING_REGION_EXPAND))
         {
             throw new IllegalArgumentException();
         }
