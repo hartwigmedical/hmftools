@@ -149,20 +149,52 @@ public final class ReadAdjustments
             }
         }
 
-        int baseIndex = fromStart ? 0 : read.basesLength() - 1;
+        int readIndexStart, readIndexEnd;
+
+        int scCheckLength = scBaseCount - lineExclusionLength;
+
+        if(fromStart)
+        {
+            readIndexStart = 0;
+            readIndexEnd = readIndexStart + scCheckLength - 1;
+        }
+        else
+        {
+            readIndexEnd = read.basesLength() - 1;
+            readIndexStart = readIndexEnd - scCheckLength + 1;
+
+        }
+
+        int trimCount = findLowBaseQualTrimCount(read, readIndexStart, readIndexEnd);
+
+        if(trimCount <= 0)
+            return false;
+
+        read.trimBases(trimCount, fromStart);
+        return true;
+    }
+
+    public static int findLowBaseQualTrimCount(final Read read, int readIndexStart, int readIndexEnd)
+    {
+        boolean fromStart = read.negativeStrand();
 
         double lowestScore = 0;
         double currentScore = 0;
-        int lastLowestScoreIndex = 0;
+        int lastLowestScoreIndex = -1;
 
-        for(int i = 1; i <= scBaseCount - lineExclusionLength; ++i)
+        int baseIndex = fromStart ? readIndexStart : readIndexEnd;
+
+        while(baseIndex >= readIndexStart && baseIndex <= readIndexEnd)
         {
             if(belowMinQual(read.getBaseQuality()[baseIndex]))
             {
                 currentScore -= LOW_QUAL_SCORE;
 
-                if(currentScore < lowestScore)
-                    lastLowestScoreIndex = i;
+                if(currentScore <= lowestScore)
+                {
+                    lastLowestScoreIndex = baseIndex;
+                    lowestScore = currentScore;
+                }
             }
             else
             {
@@ -175,11 +207,10 @@ public final class ReadAdjustments
                 --baseIndex;
         }
 
-        if(lastLowestScoreIndex == 0)
-            return false;
+        if(lastLowestScoreIndex < 0)
+            return 0;
 
-        read.trimBases(lastLowestScoreIndex, fromStart);
-        return true;
+        return fromStart ? lastLowestScoreIndex - readIndexStart + 1 : readIndexEnd - lastLowestScoreIndex + 1;
     }
 
     protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
