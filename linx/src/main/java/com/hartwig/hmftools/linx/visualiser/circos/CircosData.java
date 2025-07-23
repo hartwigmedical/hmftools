@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -224,11 +223,7 @@ public class CircosData
                 midPosition = (overlappingPositions.get(midIndexLeft).position() + overlappingPositions.get(midIndex).position()) / 2;
             }
 
-            CobaltRatio realignedCobaltRatio = ImmutableCobaltRatio.builder().from(cobaltRatio)
-                    .position(midPosition)
-                    .build();
-
-            realignedCobaltRatios.add(realignedCobaltRatio);
+            realignedCobaltRatios.add(cobaltRatio.realign(midPosition));
         }
 
         return realignedCobaltRatios;

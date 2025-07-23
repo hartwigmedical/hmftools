@@ -33,6 +33,7 @@
         <module>patient-db</module>
         <module>purple</module>
         <module>pave</module>
+        <module>pave-reverse</module>
         <module>peach</module>
         <module>redux</module>
         <module>sage</module>

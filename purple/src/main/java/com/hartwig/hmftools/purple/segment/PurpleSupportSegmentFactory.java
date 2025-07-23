@@ -23,13 +23,13 @@ import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 
-public class PurpleSegmentFactory
+public class PurpleSupportSegmentFactory
 {
     private final int mWindowSize;
     private final Map<Chromosome, GenomePosition> mLengths;
     private final Map<Chromosome, GenomePosition> mCentromeres;
 
-    public PurpleSegmentFactory(final int windowSize, final Map<Chromosome, GenomePosition> centromeres,
+    public PurpleSupportSegmentFactory(final int windowSize, final Map<Chromosome, GenomePosition> centromeres,
             final Map<Chromosome, GenomePosition> lengths)
     {
         mWindowSize = windowSize;

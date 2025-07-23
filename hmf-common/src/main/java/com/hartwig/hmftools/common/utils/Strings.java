@@ -11,4 +11,9 @@ public final class Strings
     {
         return new StringBuilder(str).reverse().toString();
     }
+
+    public static String last(String str)
+    {
+        return str.substring(str.length() - 1);
+    }
 }

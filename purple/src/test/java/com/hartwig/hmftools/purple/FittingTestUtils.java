@@ -7,8 +7,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -52,18 +52,18 @@ public class FittingTestUtils
         return new AmberBAF(chromosome, position, tumorBAF, DEFAULT_TUMOR_DEPTH, normalBAF, DEFAULT_REF_DEPTH);
     }
 
-    public static CobaltRatio createCobaltRatio(final String chromosome, int position, double tumorRatio)
+    public static CobaltRatio createCobaltRatio(final Chromosome chromosome, int position, double tumorRatio, double tumorGcContent)
     {
-        return ImmutableCobaltRatio.builder()
-                .chromosome(chromosome)
-                .position(position)
-                .tumorReadDepth(0)
-                .referenceReadDepth(0)
-                .referenceGCRatio(1)
-                .referenceGCDiploidRatio(1)
-                .tumorGCRatio(tumorRatio)
-                .referenceGcContent(0.5)
-                .tumorGcContent(0.5).build();
+        return new CobaltRatio(
+                chromosome.toString(),
+                position,
+                0,
+                0,
+                1,
+                1,
+                0.5,
+                tumorRatio,
+                tumorGcContent);
     }
 
     public static ObservedRegion createObservedRegion(final String chromosome, final int start, final int end)

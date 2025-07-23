@@ -36,7 +36,7 @@ public final class LilacConstants
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;
 
-    public static final double DEFAULT_HLA_Y_FRAGMENT_THRESHOLD = 0.005;
+    public static final double DEFAULT_HLA_Y_FRAGMENT_THRESHOLD = 0.003;
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.005;
     public static final double RARE_ALLELES_FREQ_CUTOFF = 0.0001;
 
@@ -49,7 +49,10 @@ public final class LilacConstants
 
     // scoring of allele combinations
     public static final double MIN_POPULATION_FREQUENCY = 0.0001;
-    public static final double FREQUENCY_SCORE_PENALTY = 0.0018;
+
+    public static final double DEFAULT_FREQUENCY_SCORE_PENALTY = 0.009;
+    public static double FREQUENCY_SCORE_PENALTY = DEFAULT_FREQUENCY_SCORE_PENALTY;
+
     public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
