@@ -181,17 +181,16 @@ public final class CobaltRatioFile
                 double refGcContent = hasGcContent ? row.getDouble(refGcContentIndex) : 0;
                 double tumorGcContent = hasGcContent ? row.getDouble(tumorGcContentIndex) : 0;
 
-                CobaltRatio ratio = ImmutableCobaltRatio.builder()
-                        .chromosome(chromosome)
-                        .position(row.getInt(posIndex))
-                        .referenceReadDepth(refReadDepth)
-                        .tumorReadDepth(tumorReadDepth)
-                        .tumorGCRatio(tumorGCRatio)
-                        .referenceGCRatio(refGcRatio)
-                        .referenceGCDiploidRatio(refGcDiploadRatio)
-                        .referenceGcContent(refGcContent)
-                        .tumorGcContent(tumorGcContent)
-                        .build();
+                CobaltRatio ratio = new CobaltRatio(
+                        chromosome,
+                        row.getInt(posIndex),
+                        refReadDepth,
+                        refGcRatio,
+                        refGcContent,
+                        refGcDiploadRatio,
+                        tumorReadDepth,
+                        tumorGCRatio,
+                        tumorGcContent);
 
                 ratios.add(ratio);
             }

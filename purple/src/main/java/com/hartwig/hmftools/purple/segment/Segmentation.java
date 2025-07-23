@@ -1,68 +1,55 @@
 package com.hartwig.hmftools.purple.segment;
 
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
-import static com.hartwig.hmftools.purple.segment.PurpleSegmentFactory.validateSegments;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.segment.PurpleSupportSegmentFactory.validateSegments;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.gc.GCProfile;
-import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.AmberData;
 import com.hartwig.hmftools.purple.CobaltData;
 import com.hartwig.hmftools.purple.ReferenceData;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 public class Segmentation
 {
-    private final Multimap<Chromosome,GCProfile> mGcProfiles;
-    private final ReferenceData mReferenceData;
+    private final SegmentationReferenceData mReferenceData;
     private final int mWindowSize;
 
     public Segmentation(final ReferenceData referenceData) throws IOException
     {
+        this(new SegmentationReferenceData(referenceData));
+    }
+
+    Segmentation(final SegmentationReferenceData referenceData)
+    {
         mReferenceData = referenceData;
         mWindowSize = WINDOW_SIZE;
-
-        if(referenceData.GcProfileFilename != null)
-        {
-            PPL_LOGGER.info("reading GC Profiles from {}", referenceData.GcProfileFilename);
-            mGcProfiles = GCProfileFactory.loadGCContent(referenceData.GcProfileFilename);
-        }
-        else
-        {
-            mGcProfiles = ArrayListMultimap.create();
-        }
     }
 
     public List<ObservedRegion> createObservedRegions(
             final List<StructuralVariant> structuralVariants, final AmberData amberData, final CobaltData cobaltData)
     {
-        Map<Chromosome,List<PCFPosition>> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
+        Map<Chromosome, List<PCFPosition>> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
 
-        PurpleSegmentFactory factory = new PurpleSegmentFactory(
-                mWindowSize, mReferenceData.Centromeres, mReferenceData.ChromosomeLengths);
+        PurpleSupportSegmentFactory factory = new PurpleSupportSegmentFactory(
+                mWindowSize, mReferenceData.centromeres(), mReferenceData.chromosomeLengths());
 
         List<PurpleSupportSegment> segments = factory.createSegments(structuralVariants, pcfPositions, cobaltData.Ratios);
 
         if(!validateSegments(segments))
+        {
             return Lists.newArrayList();
+        }
 
-        ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
-
-        List<ObservedRegion> observedRegions = observedRegionFactory.formObservedRegions(
-                segments, amberData.ChromosomeBafs, cobaltData.Ratios);
-
-        return observedRegions;
+        return new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes).formObservedRegions(segments, amberData.ChromosomeBafs, cobaltData.Ratios);
     }
 
     public static boolean validateObservedRegions(final List<ObservedRegion> observedRegions)
@@ -95,7 +82,9 @@ public class Segmentation
             ObservedRegion prevRegion = observedRegions.get(i - 1);
 
             if(!observedRegion.chromosome().equals(prevRegion.chromosome()))
+            {
                 continue;
+            }
 
             if(observedRegion.start() <= prevRegion.end())
             {

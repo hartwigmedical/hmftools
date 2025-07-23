@@ -2,25 +2,24 @@ package com.hartwig.hmftools.common.cobalt;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CobaltRatio extends GenomePosition
+public record CobaltRatio(
+        @NotNull String chromosome,
+        int position,
+        double referenceReadDepth,
+        double referenceGCRatio,
+        double referenceGcContent,
+        double referenceGCDiploidRatio,
+        double tumorReadDepth,
+        double tumorGCRatio,
+        double tumorGcContent
+) implements GenomePosition
 {
-    double referenceReadDepth();
 
-    double tumorReadDepth();
-
-    double referenceGCRatio();
-
-    double referenceGCDiploidRatio();
-
-    double tumorGCRatio();
-
-    double referenceGcContent();
-
-    double tumorGcContent();
+    public CobaltRatio realign(int newPosition)
+    {
+        return new CobaltRatio(chromosome, newPosition, referenceReadDepth, referenceGCRatio, referenceGcContent,
+                referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
+    }
 }
