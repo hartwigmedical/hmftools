@@ -176,7 +176,7 @@ public class CopyNumberBackbone
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
         Stream<Probe> candidates = generateCandidateProbes(partition);
-        Stream<Probe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateCandidates(candidates, PROBE_CRITERIA.eval());
+        Stream<Probe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateProbes(candidates, PROBE_CRITERIA.eval());
         Optional<Probe> bestCandidate = selectBestProbe(evaluatedCandidates, PROBE_CRITERIA.select());
         LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
 

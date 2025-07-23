@@ -97,7 +97,7 @@ public class ProbeGenerator
         BaseRegion baseRegion = region.baseRegion();
 
         Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, context)
-                .map(candidate -> mProbeEvaluator.evaluateCandidate(candidate, criteria.eval()))
+                .map(candidate -> mProbeEvaluator.evaluateProbe(candidate, criteria.eval()))
                 .filter(Probe::accepted);
 
         // These are the subregions in which probes can be placed.
@@ -342,7 +342,7 @@ public class ProbeGenerator
             final ProbeSelectCriteria criteria)
     {
         Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, context);
-        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateCandidates(candidates, criteria.eval());
+        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria.eval());
         return selectBestProbe(evaluatedCandidates, criteria.select())
                 .map(probe ->
                         new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), emptyList()))
@@ -361,7 +361,7 @@ public class ProbeGenerator
             final ProbeSelectCriteria criteria)
     {
         Stream<Probe> candidates = mCandidateGenerator.coverPosition(position, context);
-        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateCandidates(candidates, criteria.eval());
+        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria.eval());
         return selectBestProbe(evaluatedCandidates, criteria.select())
                 .map(probe -> new ProbeGenerationResult(List.of(context.targetRegion()), List.of(probe), emptyList()))
                 .orElseGet(() ->

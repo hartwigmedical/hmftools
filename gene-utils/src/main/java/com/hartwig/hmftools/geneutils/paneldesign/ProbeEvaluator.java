@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // TODO: unit test
 
@@ -26,12 +27,13 @@ public class ProbeEvaluator
     private final RefGenomeInterface mRefGenome;
     private final ProbeQualityProfile mQualityProfile;
     // Hook to catch all candidate probes for output.
+    @Nullable
     private final Consumer<Probe> mCandidateCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeEvaluator.class);
 
     public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
-            final Consumer<Probe> candidateCallback)
+            final @Nullable Consumer<Probe> candidateCallback)
     {
         // During probe generation it's common to evaluate many nearby probes, which can be exploited with caching to improve performance.
         mRefGenome = refGenome instanceof CachedRefGenome ? refGenome : new CachedRefGenome(refGenome);
@@ -39,12 +41,12 @@ public class ProbeEvaluator
         mCandidateCallback = candidateCallback;
     }
 
-    public Probe evaluateCandidate(final Probe probe, final Criteria criteria)
+    public Probe evaluateProbe(final Probe probe, final Criteria criteria)
     {
-        return evaluateCandidate(probe.withEvalCriteria(criteria));
+        return evaluateProbe(probe.withEvalCriteria(criteria));
     }
 
-    private Probe evaluateCandidate(Probe probe)
+    private Probe evaluateProbe(Probe probe)
     {
         probe = evaluateQualityScore(probe);
         if(!probe.rejected())
@@ -55,9 +57,9 @@ public class ProbeEvaluator
         return probe;
     }
 
-    public Stream<Probe> evaluateCandidates(Stream<Probe> probes, final Criteria criteria)
+    public Stream<Probe> evaluateProbes(Stream<Probe> probes, final Criteria criteria)
     {
-        return probes.map(probe -> evaluateCandidate(probe, criteria));
+        return probes.map(probe -> evaluateProbe(probe, criteria));
     }
 
     private Probe evaluateQualityScore(Probe probe)
@@ -106,7 +108,10 @@ public class ProbeEvaluator
     private void logCandidateProbe(final Probe probe)
     {
         LOGGER.trace("Evaluated probe: {}", probe);
-        mCandidateCallback.accept(probe);
+        if(mCandidateCallback != null)
+        {
+            mCandidateCallback.accept(probe);
+        }
     }
 
     public record Criteria(

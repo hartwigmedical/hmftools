@@ -31,26 +31,50 @@ import org.apache.logging.log4j.Logger;
 // See ProbeQualityProfiler class for more context.
 public class ProbeQualityProfile
 {
+    private final int mBaseWindowLength;
+    private final int mBaseWindowSpacing;
     // Keyed by chromosome.
-    public final Map<String, List<ProbeQualityWindow>> mWindows;
+    protected final Map<String, List<ProbeQualityWindow>> mWindows;
 
     public static final String CFG_PROBE_QUALITY_FILE = "probe_quality_profile";
     private static final String DESC_PROBE_QUALITY_FILE = "Genome regions to probe quality";
 
-    // Must match the config used for generating the file
-    private static final int BASE_WINDOW_LENGTH = 40;
-    private static final int BASE_WINDOW_SPACING = 20;
+    // Must match the config used for generating the file.
+    private static final int RESOURCE_BASE_WINDOW_LENGTH = 40;
+    private static final int RESOURCE_BASE_WINDOW_SPACING = 20;
     private static final String FLD_QUALITY_SCORE = "QualityScore";
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
-    public ProbeQualityProfile(final String filePath)
+    public ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows, int baseWindowLength, int baseWindowSpacing)
     {
-        this(loadProbeQualityWindows(filePath));
-    }
-
-    private ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows)
-    {
+        if(baseWindowLength < 1)
+        {
+            throw new IllegalArgumentException("baseWindowLength must be >= 1");
+        }
+        if(!(1 <= baseWindowSpacing && baseWindowSpacing <= baseWindowLength))
+        {
+            throw new IllegalArgumentException("baseWindowSpacing must be in range [1, baseWindowLength]");
+        }
+        windows.forEach((chromosome, chrWindows) -> chrWindows.forEach(window ->
+        {
+            // The code will probably still work but better to be safe than sorry.
+            // No reason why the windows should not be aligned to the grid we expect.
+            if((window.region().start() - 1) % baseWindowSpacing != 0)
+            {
+                String error = format("Invalid window start: %s:%d", chromosome, window.region().start());
+                LOGGER.error(error);
+                throw new RuntimeException(error);
+            }
+            if(window.region().baseLength() != baseWindowLength)
+            {
+                String error = format("Invalid window length: %s:%s", chromosome, window.region());
+                LOGGER.error(error);
+                throw new RuntimeException(error);
+            }
+        }));
+        mBaseWindowLength = baseWindowLength;
+        mBaseWindowSpacing = baseWindowSpacing;
         mWindows = windows;
     }
 
@@ -59,7 +83,14 @@ public class ProbeQualityProfile
         configBuilder.addPath(CFG_PROBE_QUALITY_FILE, true, DESC_PROBE_QUALITY_FILE);
     }
 
-    private static Map<String, List<ProbeQualityWindow>> loadProbeQualityWindows(final String filePath)
+    public static ProbeQualityProfile loadFromResourceFile(final String filePath)
+    {
+        return new ProbeQualityProfile(
+                loadProbeQualityWindows(filePath, RESOURCE_BASE_WINDOW_LENGTH),
+                RESOURCE_BASE_WINDOW_LENGTH, RESOURCE_BASE_WINDOW_SPACING);
+    }
+
+    private static Map<String, List<ProbeQualityWindow>> loadProbeQualityWindows(final String filePath, int baseWindowLength)
     {
         LOGGER.debug("Loading probe quality profile file: {}", filePath);
 
@@ -79,16 +110,8 @@ public class ProbeQualityProfile
             {
                 String chromosome = row.getRawValue(chromosomeField);
                 int start = parseInt(row.getRawValue(startField));
-                if((start - 1) % BASE_WINDOW_SPACING != 0)
-                {
-                    // The code will probably still work but better to be safe than sorry.
-                    // No reason why the windows should not be aligned to the grid we expect.
-                    String error = format("Invalid base with start: %s:%d", chromosome, start);
-                    LOGGER.error(error);
-                    throw new RuntimeException(error);
-                }
                 double qualityScore = parseFloat(row.getRawValue(qualityScoreField));
-                int end = start + BASE_WINDOW_LENGTH;
+                int end = start + baseWindowLength - 1;
                 ProbeQualityWindow window = new ProbeQualityWindow(start, end, (float) qualityScore);
 
                 // File is typically sorted by chromosome so we can improve performance by only doing the hash table lookup when the
@@ -122,10 +145,10 @@ public class ProbeQualityProfile
     // Returns empty optional if the profile doesn't cover the probe region.
     public OptionalDouble computeQualityScore(final ChrBaseRegion probe)
     {
-        if(probe.baseLength() < BASE_WINDOW_LENGTH)
+        if(probe.baseLength() < mBaseWindowLength)
         {
             // The aggregation of the quality score is design to work for probes that cover multiple windows.
-            throw new IllegalArgumentException(format("probe length must be >= %d", BASE_WINDOW_LENGTH));
+            throw new IllegalArgumentException(format("probe length must be >= %d", mBaseWindowLength));
         }
 
         // If the profile doesn't completely cover the probe then we say we can't assess its quality
@@ -181,7 +204,7 @@ public class ProbeQualityProfile
 
     // Compute the final quality score from windows which overlap the probe.
     // `windows` must not be empty.
-    private static double aggregateQualityScore(final List<ProbeQualityWindow> windows, final BaseRegion probe)
+    private double aggregateQualityScore(final List<ProbeQualityWindow> windows, final BaseRegion probe)
     {
         // Pick the minimum quality score, however need to take into account partial overlap of the windows on the edge of the probe.
         // Windows fully overlapping the probe are used as-is.
@@ -214,13 +237,13 @@ public class ProbeQualityProfile
         return minQuality;
     }
 
-    private static double adjustedWindowQualityScore(final ProbeQualityWindow window, double adjacentQualityScore, final BaseRegion probe)
+    private double adjustedWindowQualityScore(final ProbeQualityWindow window, double adjacentQualityScore, final BaseRegion probe)
     {
         int overlap = min(window.region().end(), probe.end()) - max(window.region().start(), probe.start());
         double qualityScore = window.qualityScore();
-        if(overlap < BASE_WINDOW_LENGTH)
+        if(overlap < mBaseWindowLength)
         {
-            double overlapFract = (double) overlap / BASE_WINDOW_LENGTH;
+            double overlapFract = (double) overlap / mBaseWindowLength;
             qualityScore = interpolateQualityScores(window.qualityScore(), adjacentQualityScore, overlapFract);
         }
         return qualityScore;

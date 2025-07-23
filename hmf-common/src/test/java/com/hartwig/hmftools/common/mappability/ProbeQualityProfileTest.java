@@ -19,7 +19,7 @@ public class ProbeQualityProfileTest
     public ProbeQualityProfileTest()
     {
         String testFile = Resources.getResource("mappability/test_probe_quality.tsv").getPath();
-        mProfile = new ProbeQualityProfile(testFile);
+        mProfile = ProbeQualityProfile.loadFromResourceFile(testFile);
     }
 
     @Test
@@ -28,80 +28,80 @@ public class ProbeQualityProfileTest
         Map<String, List<ProbeQualityWindow>> expectedWindows = Map.of(
                 // General semi-realistic data.
                 "1", List.of(
-                        new ProbeQualityWindow(101, 141, 0.1f),
-                        new ProbeQualityWindow(121, 161, 0.2f),
-                        new ProbeQualityWindow(141, 181, 0.3f),
+                        new ProbeQualityWindow(101, 140, 0.1f),
+                        new ProbeQualityWindow(121, 160, 0.2f),
+                        new ProbeQualityWindow(141, 180, 0.3f),
                         // Gap
-                        new ProbeQualityWindow(181, 221, 0.4f),
-                        new ProbeQualityWindow(201, 241, 0.5f)
+                        new ProbeQualityWindow(181, 220, 0.4f),
+                        new ProbeQualityWindow(201, 240, 0.5f)
                 ),
                 "2", List.of(
                         // No gaps
-                        new ProbeQualityWindow(221, 261, 0.1f),
-                        new ProbeQualityWindow(241, 281, 0.2f),
-                        new ProbeQualityWindow(261, 301, 0.3f),
-                        new ProbeQualityWindow(281, 321, 0.4f)
+                        new ProbeQualityWindow(221, 260, 0.1f),
+                        new ProbeQualityWindow(241, 280, 0.2f),
+                        new ProbeQualityWindow(261, 300, 0.3f),
+                        new ProbeQualityWindow(281, 320, 0.4f)
                 ),
                 "10", List.of(
-                        new ProbeQualityWindow(761, 801, 0.1f),
-                        new ProbeQualityWindow(781, 821, 0.2f),
+                        new ProbeQualityWindow(761, 800, 0.1f),
+                        new ProbeQualityWindow(781, 820, 0.2f),
                         // Gap
-                        new ProbeQualityWindow(841, 881, 0.3f),
+                        new ProbeQualityWindow(841, 880, 0.3f),
                         // Gap
-                        new ProbeQualityWindow(901, 941, 0.4f),
-                        new ProbeQualityWindow(921, 961, 0.5f),
+                        new ProbeQualityWindow(901, 940, 0.4f),
+                        new ProbeQualityWindow(921, 960, 0.5f),
                         // Gap
-                        new ProbeQualityWindow(981, 1021, 0.6f)
+                        new ProbeQualityWindow(981, 1020, 0.6f)
                 ),
                 "11", List.of(
-                        new ProbeQualityWindow(1, 41, 1.0f)
+                        new ProbeQualityWindow(1, 40, 1.0f)
                 ),
                 // Data specifically for testing probe quality calculations.
                 "LowQuality", List.of(
-                        new ProbeQualityWindow(81, 121, 0.01f),
-                        new ProbeQualityWindow(101, 141, 0.01f),
-                        new ProbeQualityWindow(121, 161, 0.01f),
-                        new ProbeQualityWindow(141, 181, 0.01f),
-                        new ProbeQualityWindow(161, 201, 0.01f),
-                        new ProbeQualityWindow(181, 221, 0.01f),
-                        new ProbeQualityWindow(201, 241, 0.01f),
-                        new ProbeQualityWindow(221, 261, 0.01f),
-                        new ProbeQualityWindow(241, 281, 0.01f)
+                        new ProbeQualityWindow(81, 120, 0.01f),
+                        new ProbeQualityWindow(101, 140, 0.01f),
+                        new ProbeQualityWindow(121, 160, 0.01f),
+                        new ProbeQualityWindow(141, 180, 0.01f),
+                        new ProbeQualityWindow(161, 200, 0.01f),
+                        new ProbeQualityWindow(181, 220, 0.01f),
+                        new ProbeQualityWindow(201, 240, 0.01f),
+                        new ProbeQualityWindow(221, 260, 0.01f),
+                        new ProbeQualityWindow(241, 280, 0.01f)
                 ),
                 "HighQuality", List.of(
-                        new ProbeQualityWindow(81, 121, 1.0f),
-                        new ProbeQualityWindow(101, 141, 1.0f),
-                        new ProbeQualityWindow(121, 161, 1.0f),
-                        new ProbeQualityWindow(141, 181, 1.0f),
-                        new ProbeQualityWindow(161, 201, 1.0f),
-                        new ProbeQualityWindow(181, 221, 1.0f),
-                        new ProbeQualityWindow(201, 241, 1.0f),
-                        new ProbeQualityWindow(221, 261, 1.0f),
-                        new ProbeQualityWindow(241, 281, 1.0f)
+                        new ProbeQualityWindow(81, 120, 1.0f),
+                        new ProbeQualityWindow(101, 140, 1.0f),
+                        new ProbeQualityWindow(121, 160, 1.0f),
+                        new ProbeQualityWindow(141, 180, 1.0f),
+                        new ProbeQualityWindow(161, 200, 1.0f),
+                        new ProbeQualityWindow(181, 220, 1.0f),
+                        new ProbeQualityWindow(201, 240, 1.0f),
+                        new ProbeQualityWindow(221, 260, 1.0f),
+                        new ProbeQualityWindow(241, 280, 1.0f)
                 ),
                 "MixedQuality", List.of(
-                        new ProbeQualityWindow(81, 121, 0.1f),
-                        new ProbeQualityWindow(101, 141, 0.2f),
-                        new ProbeQualityWindow(121, 161, 0.4f),
-                        new ProbeQualityWindow(141, 181, 0.3f),
-                        new ProbeQualityWindow(161, 201, 0.6f),
-                        new ProbeQualityWindow(181, 221, 0.5f),
-                        new ProbeQualityWindow(201, 241, 0.8f),
-                        new ProbeQualityWindow(221, 261, 0.7f),
-                        new ProbeQualityWindow(241, 281, 0.9f)
+                        new ProbeQualityWindow(81, 120, 0.1f),
+                        new ProbeQualityWindow(101, 140, 0.2f),
+                        new ProbeQualityWindow(121, 160, 0.4f),
+                        new ProbeQualityWindow(141, 180, 0.3f),
+                        new ProbeQualityWindow(161, 200, 0.6f),
+                        new ProbeQualityWindow(181, 220, 0.5f),
+                        new ProbeQualityWindow(201, 240, 0.8f),
+                        new ProbeQualityWindow(221, 260, 0.7f),
+                        new ProbeQualityWindow(241, 280, 0.9f)
                 ),
                 "QualityStep", List.of(
-                        new ProbeQualityWindow(81, 121, 0.1f),
-                        // 101-121 overlaps low and high quality.
-                        new ProbeQualityWindow(101, 141, 1.0f),
-                        new ProbeQualityWindow(121, 161, 1.0f),
-                        new ProbeQualityWindow(141, 181, 1.0f),
-                        new ProbeQualityWindow(161, 201, 1.0f),
-                        new ProbeQualityWindow(181, 221, 1.0f),
-                        new ProbeQualityWindow(201, 241, 1.0f),
-                        new ProbeQualityWindow(221, 261, 1.0f),
-                        // 241-261 overlaps low and high quality.
-                        new ProbeQualityWindow(241, 281, 0.1f)
+                        new ProbeQualityWindow(81, 120, 0.1f),
+                        // 101-120 overlaps low and high quality.
+                        new ProbeQualityWindow(101, 140, 1.0f),
+                        new ProbeQualityWindow(121, 160, 1.0f),
+                        new ProbeQualityWindow(141, 180, 1.0f),
+                        new ProbeQualityWindow(161, 200, 1.0f),
+                        new ProbeQualityWindow(181, 220, 1.0f),
+                        new ProbeQualityWindow(201, 240, 1.0f),
+                        new ProbeQualityWindow(221, 260, 1.0f),
+                        // 241-260 overlaps low and high quality.
+                        new ProbeQualityWindow(241, 280, 0.1f)
                 )
         );
         assertEquals(expectedWindows, mProfile.mWindows);
@@ -110,7 +110,7 @@ public class ProbeQualityProfileTest
     @Test
     public void testComputeQualityScoreAllLow()
     {
-        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("LowQuality", 101, 201));
+        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("LowQuality", 101, 200));
         assertTrue(actual.isPresent());
         assertEquals(0.01, actual.getAsDouble(), 1e-6);
     }
@@ -118,7 +118,7 @@ public class ProbeQualityProfileTest
     @Test
     public void testComputeQualityScoreAllHigh()
     {
-        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("HighQuality", 101, 201));
+        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("HighQuality", 101, 200));
         assertTrue(actual.isPresent());
         assertEquals(1.0, actual.getAsDouble(), 1e-6);
         // Quality score should never exceed 1.
@@ -128,7 +128,7 @@ public class ProbeQualityProfileTest
     @Test
     public void testComputeQualityScoreBounds()
     {
-        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("MixedQuality", 101, 201));
+        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("MixedQuality", 101, 200));
         assertTrue(actual.isPresent());
         // No need to duplicate the maths to find the exact score. It should be somewhere in between the scores of the windows.
         assertTrue(actual.getAsDouble() > 0.1 && actual.getAsDouble() < 0.8);
@@ -137,7 +137,7 @@ public class ProbeQualityProfileTest
     @Test
     public void testComputeQualityScoreEdge1()
     {
-        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("QualityStep", 101, 201));
+        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("QualityStep", 101, 200));
         assertTrue(actual.isPresent());
         // Interpolating between 0.1 and 1.0 quality score, overlaps of 20b and 20b.
         // Risk1 ~= 1/0.1 - 1 = 9
@@ -150,7 +150,7 @@ public class ProbeQualityProfileTest
     @Test
     public void testComputeQualityScoreEdge2()
     {
-        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("QualityStep", 111, 201));
+        OptionalDouble actual = mProfile.computeQualityScore(new ChrBaseRegion("QualityStep", 111, 200));
         assertTrue(actual.isPresent());
         // Interpolating between 0.1 and 1.0 quality score, with overlaps of 10 and 30
         // Risk1 ~= 1/0.1 - 1 = 9

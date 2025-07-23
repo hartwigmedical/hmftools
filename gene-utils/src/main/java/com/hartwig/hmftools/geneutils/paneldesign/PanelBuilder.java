@@ -39,7 +39,7 @@ public class PanelBuilder
         mConfig = new PanelBuilderConfig(configBuilder);
         mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
-        ProbeQualityProfile probeQualityProfile = new ProbeQualityProfile(mConfig.ProbeQualityProfileFile);
+        ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.ProbeQualityProfileFile);
         ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
         CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
         mProbeGenerator = new ProbeGenerator(candidateGenerator, probeEvaluator);
@@ -72,6 +72,7 @@ public class PanelBuilder
         }
 
         // TODO: output % rejected or similar
+        // TODO: output probe overlap or similar
 
         // TODO: probe overlapping multiple target regions will only have 1 target associated. fix up to show multiple targets on 1 probe?
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -18,25 +19,26 @@ public class ProbeTest
     private static final String PROBE_SEQUENCE = "ACGTACGTAC";
     private static final ProbeEvaluator.Criteria EVAL_CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.45, 0.1);
 
+    private final Probe mProbe = new Probe(TARGET_REGION, PROBE_REGION);
+
     @Test
     public void testConstructor()
     {
-        Probe probe = new Probe(TARGET_REGION, PROBE_REGION);
         assertEquals(
                 new Probe(TARGET_REGION, PROBE_REGION, null, null, null, null, null),
-                probe);
-        assertEquals(TARGET_REGION, probe.target());
-        assertEquals(PROBE_REGION, probe.region());
-        assertNull(probe.evalCriteria());
-        assertNull(probe.sequence());
-        assertNull(probe.qualityScore());
-        assertNull(probe.gcContent());
+                mProbe);
+        assertEquals(TARGET_REGION, mProbe.target());
+        assertEquals(PROBE_REGION, mProbe.region());
+        assertNull(mProbe.evalCriteria());
+        assertNull(mProbe.sequence());
+        assertNull(mProbe.qualityScore());
+        assertNull(mProbe.gcContent());
     }
 
     @Test
     public void testWith()
     {
-        Probe probe = new Probe(TARGET_REGION, PROBE_REGION);
+        Probe probe = mProbe;
 
         probe = probe.withEvalCriteria(EVAL_CRITERIA);
         assertEquals(EVAL_CRITERIA, probe.evalCriteria());
@@ -50,11 +52,13 @@ public class ProbeTest
 
         double qualityScore = 0.1;
         probe = probe.withQualityScore(qualityScore);
-        assertEquals(qualityScore, probe.qualityScore().doubleValue(), 0);
+        assertNotNull(probe.qualityScore());
+        assertEquals(qualityScore, probe.qualityScore(), 0);
 
         double gcContent = 0.2;
         probe = probe.withGcContent(gcContent);
-        assertEquals(gcContent, probe.gcContent().doubleValue(), 0);
+        assertNotNull(probe.gcContent());
+        assertEquals(gcContent, probe.gcContent(), 0);
 
         assertEquals(new Probe(TARGET_REGION, PROBE_REGION, EVAL_CRITERIA, rejectionReason, PROBE_SEQUENCE, qualityScore, gcContent), probe);
     }
@@ -62,7 +66,8 @@ public class ProbeTest
     @Test
     public void testEvalAccepted()
     {
-        Probe probe = new Probe(TARGET_REGION, PROBE_REGION);
+        Probe probe = mProbe;
+
         assertFalse(probe.evaluated());
         assertFalse(probe.accepted());
         assertFalse(probe.rejected());
@@ -79,7 +84,8 @@ public class ProbeTest
     @Test
     public void testEvalRejected()
     {
-        Probe probe = new Probe(TARGET_REGION, PROBE_REGION);
+        Probe probe = mProbe;
+
         assertFalse(probe.evaluated());
         assertFalse(probe.accepted());
         assertFalse(probe.rejected());
