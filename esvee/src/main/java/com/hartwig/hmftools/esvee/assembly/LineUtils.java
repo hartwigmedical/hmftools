@@ -305,7 +305,9 @@ public final class LineUtils
             insertedBases = otherBases + lineBases;
         }
 
-        return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, "");
+        AssemblyLink link = new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, "");
+        link.markInsertSite();
+        return link;
     }
 
     private static String findLineInsertionSequence(final JunctionAssembly assembly)

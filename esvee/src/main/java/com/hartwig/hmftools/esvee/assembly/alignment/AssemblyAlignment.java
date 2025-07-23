@@ -297,7 +297,16 @@ public class AssemblyAlignment
             if(insertedBaseLength > 0)
             {
                 // keep inserted bases in the same direction as the assembly is added
-                String insertedBases = extractInsertSequence(assembly, assemblyReversed, nextAssembly, nextReversed, insertedBaseLength);
+                String insertedBases;
+
+                if(link.isInsertSite())
+                {
+                    insertedBases = link.insertedBases();
+                }
+                else
+                {
+                    insertedBases = extractInsertSequence(assembly, assemblyReversed, nextAssembly, nextReversed, insertedBaseLength);
+                }
 
                 fullSequence.append(insertedBases);
 
