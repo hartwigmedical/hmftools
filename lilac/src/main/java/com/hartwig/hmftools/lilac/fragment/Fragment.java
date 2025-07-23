@@ -9,17 +9,17 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
+import com.hartwig.hmftools.lilac.read.Read;
 
 public class Fragment
 {
@@ -28,15 +28,15 @@ public class Fragment
     private final Set<String> mGenes; // other potentially applicable genes
 
     // initial nucleotide values
-    private final SortedMap<Integer, Nucleotide> mRawNucleotidesByLoci;
+    private final NavigableMap<Integer, Nucleotide> mRawNucleotidesByLoci;
 
     // values which may be filtered
-    private final SortedMap<Integer, Nucleotide> mNucleotidesByLoci;
+    private final NavigableMap<Integer, Nucleotide> mNucleotidesByLoci;
 
     private boolean mIsQualFiltered;
 
     private int mAminoAcidConversionCount; // set true once nucleotides are converted into amino acids
-    private final SortedMap<Integer, AminoAcid> mAminoAcidsByLoci;
+    private final NavigableMap<Integer, AminoAcid> mAminoAcidsByLoci;
 
     private FragmentScope mScope;
 
@@ -50,7 +50,7 @@ public class Fragment
     }
 
     public Fragment(
-            final Read read, final String readGene, final Set<String> genes, final Collection<Nucleotide> nucleotides)
+            final Read read, final String readGene, final Set<String> genes, final Iterable<Nucleotide> nucleotides)
     {
         mReads = Lists.newArrayListWithCapacity(2);
         mReads.add(read);
@@ -93,8 +93,8 @@ public class Fragment
     public String readGene() { return mReadGene; }
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
 
-    public SortedMap<Integer, Nucleotide> nucleotidesByLoci() { return mNucleotidesByLoci; }
-    public SortedMap<Integer, Nucleotide> rawNucleotidesByLoci() { return mRawNucleotidesByLoci; }
+    public NavigableMap<Integer, Nucleotide> nucleotidesByLoci() { return mNucleotidesByLoci; }
+    public NavigableMap<Integer, Nucleotide> rawNucleotidesByLoci() { return mRawNucleotidesByLoci; }
 
     public void addNucleotide(final Nucleotide nucleotide)
     {
@@ -124,7 +124,7 @@ public class Fragment
 
     public boolean containsIndel()
     {
-        return mNucleotidesByLoci.values().stream().map(Nucleotide::bases).anyMatch(x -> x.equals(".") || x.length() > 1);
+        return mNucleotidesByLoci.values().stream().map(Nucleotide::bases).anyMatch(x -> ".".equals(x) || x.length() > 1);
     }
 
     public boolean containsNucleotideLocus(int locus)
@@ -137,7 +137,7 @@ public class Fragment
         return loci.stream().allMatch(this::containsNucleotideLocus);
     }
 
-    public String nucleotides(final Collection<Integer> loci)
+    public String nucleotides(final Iterable<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
         loci.forEach(x -> sj.add(nucleotide(x)));
@@ -156,7 +156,7 @@ public class Fragment
     public int minNucleotideLocus() { return mNucleotidesByLoci.isEmpty() ? -1 : mNucleotidesByLoci.firstKey(); }
     public int maxNucleotideLocus() { return mNucleotidesByLoci.isEmpty() ? -1 : mNucleotidesByLoci.lastKey(); }
 
-    public SortedMap<Integer, AminoAcid> aminoAcidsByLoci() { return mAminoAcidsByLoci; }
+    public NavigableMap<Integer, AminoAcid> aminoAcidsByLoci() { return mAminoAcidsByLoci; }
     public int minAminoAcidLocus() { return mAminoAcidsByLoci.isEmpty() ? -1 : mAminoAcidsByLoci.firstKey(); }
     public int maxAminoAcidLocus() { return mAminoAcidsByLoci.isEmpty() ? -1 : mAminoAcidsByLoci.lastKey(); }
 
@@ -223,7 +223,7 @@ public class Fragment
         return aminoAcid.acid();
     }
 
-    public String aminoAcids(final Collection<Integer> loci)
+    public String aminoAcids(final Iterable<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
         loci.forEach(x -> sj.add(aminoAcid(x)));
@@ -263,9 +263,9 @@ public class Fragment
     public void clearScope() { mScope = UNSET; }
     public boolean isScopeSet() { return mScope != UNSET; }
 
-    public void setScope(FragmentScope scope) { setScope(scope, false); }
+    public void setScope(final FragmentScope scope) { setScope(scope, false); }
 
-    public void setScope(FragmentScope scope, boolean override)
+    public void setScope(final FragmentScope scope, boolean override)
     {
         if(mScope != UNSET)
         {
@@ -305,7 +305,7 @@ public class Fragment
     public boolean validate() { return FragmentUtils.validateFragment(this); }
 
     @VisibleForTesting
-    public void setAminoAcids(final Collection<AminoAcid> aminoAcids)
+    public void setAminoAcids(final Iterable<AminoAcid> aminoAcids)
     {
         for(AminoAcid aminoAcid : aminoAcids)
             mAminoAcidsByLoci.put(aminoAcid.locus(), aminoAcid);
