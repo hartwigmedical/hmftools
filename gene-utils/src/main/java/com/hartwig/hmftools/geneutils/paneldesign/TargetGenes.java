@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CN_GC_TARGET;
@@ -21,9 +22,11 @@ import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.G
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCenteredAt;
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionCentre;
+import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionOverlapsOrAdjacent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,10 +39,11 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 // TODO: unit test
 
@@ -77,11 +81,10 @@ public class TargetGenes
         LOGGER.info("Generating gene probes");
 
         List<GeneDefinition> geneDefs = loadTargetGenesFile(targetGeneFile);
-        List<GeneTranscriptDefinition> geneTranscriptDefs = makeGeneTranscriptDefinitions(geneDefs);
-        geneTranscriptDefs.forEach(gene -> LOGGER.debug("{}", gene));
+        geneDefs.forEach(gene -> LOGGER.debug("{}", gene));
 
         LOGGER.debug("Loading gene transcript data");
-        List<GeneTranscriptData> geneTranscriptDatas = geneTranscriptDefs.stream()
+        List<GeneTranscriptData> geneTranscriptDatas = geneDefs.stream()
                 .map(gene -> loadGeneTranscriptData(gene, ensemblData))
                 .flatMap(Optional::stream)
                 .toList();
@@ -91,7 +94,8 @@ public class TargetGenes
 
         // When generating probes, don't care about probe overlap. This is because:
         //   - Gene probes are generated first, so nothing is covered beforehand, and
-        //   - Assume gene regions don't overlap, or if they do, it's small enough that the overlap is tolerable.
+        //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
+        //   - Within one gene, multiple transcripts are merged to avoid overlap.
 
         LOGGER.debug("Generating probes");
         ProbeGenerationResult result = geneRegions.stream()
@@ -128,19 +132,6 @@ public class TargetGenes
         }
     }
 
-    private record GeneTranscriptDefinition(
-            String geneName,
-            // Null if canonical transcript.
-            @Nullable String transcriptName,
-            GeneOptions options
-    )
-    {
-        public boolean canonical()
-        {
-            return transcriptName == null;
-        }
-    }
-
     private static List<GeneDefinition> loadTargetGenesFile(final String filePath)
     {
         LOGGER.debug("Loading target genes files: {}", filePath);
@@ -167,18 +158,9 @@ public class TargetGenes
         }
     }
 
-    private static List<GeneTranscriptDefinition> makeGeneTranscriptDefinitions(final List<GeneDefinition> genes)
-    {
-        return genes.stream()
-                .flatMap(gene -> gene.transcriptNames().stream()
-                        .map(trans -> new GeneTranscriptDefinition(gene.geneName(), trans, gene.options()))
-                )
-                .toList();
-    }
-
     private record GeneTranscriptData(
             GeneData gene,
-            TranscriptData transcript,
+            List<TranscriptData> transcripts,
             GeneOptions options
     )
     {
@@ -186,11 +168,11 @@ public class TargetGenes
         @Override
         public String toString()
         {
-            return format("GeneTranscriptData[gene=%s, transcript=%s, options=%s]", gene.GeneName, transcript.TransName, options);
+            return format("GeneTranscriptsData[gene=%s, options=%s]", gene.GeneName, options);
         }
     }
 
-    private static Optional<GeneTranscriptData> loadGeneTranscriptData(final GeneTranscriptDefinition geneDef,
+    private static Optional<GeneTranscriptData> loadGeneTranscriptData(final GeneDefinition geneDef,
             final EnsemblDataCache ensemblData)
     {
         GeneData geneData = ensemblData.getGeneDataByName(geneDef.geneName());
@@ -199,22 +181,38 @@ public class TargetGenes
             throw new UserInputError(format("Gene not found: %s", geneDef.geneName()));
         }
 
-        TranscriptData transcriptData = geneDef.canonical() ?
-                ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
-                ensemblData.getTranscriptData(geneData.GeneId, geneDef.transcriptName());
-        if(transcriptData == null)
-        {
-            throw new UserInputError(format("Gene not found: %s:%s", geneDef.geneName(), geneDef.transcriptName()));
-        }
+        List<TranscriptData> transcriptDatas = geneDef.transcriptNames().stream()
+                .map(transName ->
+                {
+                    TranscriptData transcriptData = transName == null ?
+                            ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
+                            ensemblData.getTranscriptData(geneData.GeneId, transName);
+                    if(transcriptData == null)
+                    {
+                        throw new UserInputError(format("Gene not found: %s:%s", geneDef.geneName(), transName));
+                    }
+                    return transcriptData;
+                })
+                .filter(transcriptData ->
+                {
+                    if(transcriptData.nonCoding())
+                    {
+                        // User should add as a custom region instead.
+                        LOGGER.warn("Noncoding gene skipped: {}:{}", geneDef.geneName(), transcriptData.TransName);
+                        return false;
+                    }
+                    return true;
+                })
+                .toList();
 
-        if(transcriptData.nonCoding())
+        if(transcriptDatas.isEmpty())
         {
-            // User should add as a custom region instead.
-            LOGGER.warn("Noncoding gene skipped: {}:{}", geneDef.geneName(), geneDef.transcriptName());
             return Optional.empty();
         }
-
-        return Optional.of(new GeneTranscriptData(geneData, transcriptData, geneDef.options));
+        else
+        {
+            return Optional.of(new GeneTranscriptData(geneData, transcriptDatas, geneDef.options()));
+        }
     }
 
     private enum GeneRegionType
@@ -240,30 +238,38 @@ public class TargetGenes
 
     private static List<GeneRegion> createGeneRegions(final GeneTranscriptData gene)
     {
-        // TODO: possible to generate same exon multiple times with multiple transcripts, which is wrong
+        // Methodology to handle multiple transcripts without producing overlapping probes:
+        //   - Upstream/downstream: use the minimum/maximum start/end point of all transcripts.
+        //   - Coding: superset of exons from all transcripts where any part of the exon is coding.
+        //   - UTR: superset of exons from all transcripts where no part of the exon is coding.
+        //   - Exon flanks: based on superset of exons from all transcripts.
 
         List<GeneRegion> regions = new ArrayList<>();
 
         GeneData geneData = gene.gene();
-        TranscriptData transcriptData = gene.transcript();
+        List<TranscriptData> transcripts = gene.transcripts();
         GeneOptions options = gene.options();
 
         if(geneData.forwardStrand() ? options.upstream() : options.downstream())
         {
+            int minTransStart = transcripts.stream().mapToInt(trans -> trans.TransStart).min().orElseThrow();
             regions.add(new GeneRegion(
                     gene,
                     geneData.forwardStrand() ? GeneRegionType.UP_STREAM : GeneRegionType.DOWN_STREAM,
                     new BaseRegion(
-                            transcriptData.TransStart - GENE_UPDOWNSTREAM_GAP - GENE_UPDOWNSTREAM_REGION,
-                            transcriptData.TransStart - GENE_UPDOWNSTREAM_GAP - 1)));
+                            minTransStart - GENE_UPDOWNSTREAM_GAP - GENE_UPDOWNSTREAM_REGION,
+                            minTransStart - GENE_UPDOWNSTREAM_GAP - 1)));
         }
 
-        int lastExonEnd = -1;
-        for(ExonData exonData : transcriptData.exons())
+        List<MergedExonRegion> mergedExons = mergeExons(transcripts);
+
+        int lastExonEnd = 0;
+        for(MergedExonRegion mergedExon : mergedExons)
         {
-            if(lastExonEnd != -1)
+            BaseRegion exonRegion = mergedExon.Region;
+            if(lastExonEnd > 0)
             {
-                int intronLength = exonData.Start - lastExonEnd;
+                int intronLength = exonRegion.start() - lastExonEnd;
 
                 int minGap = 2 * GENE_EXON_FLANK_GAP;
                 int available = intronLength - minGap;
@@ -289,14 +295,14 @@ public class TargetGenes
                                 gene,
                                 GeneRegionType.EXON_FLANK,
                                 new BaseRegion(
-                                        exonData.Start - GENE_EXON_FLANK_GAP - regionSize,
-                                        exonData.Start - GENE_EXON_FLANK_GAP - 1)));
+                                        exonRegion.start() - GENE_EXON_FLANK_GAP - regionSize,
+                                        exonRegion.start() - GENE_EXON_FLANK_GAP - 1)));
                     }
                     else
                     {
                         // Can fit 1 probe.
                         // TODO: doesn't expand region for larger introns - too restrictive?
-                        int intronCentre = regionCentre(new BaseRegion(lastExonEnd, exonData.Start));
+                        int intronCentre = regionCentre(new BaseRegion(lastExonEnd, exonRegion.start()));
                         regions.add(new GeneRegion(
                                 gene,
                                 GeneRegionType.EXON_FLANK,
@@ -305,8 +311,7 @@ public class TargetGenes
                 }
             }
 
-            boolean isCoding = positionsOverlap(exonData.Start, exonData.End, transcriptData.CodingStart, transcriptData.CodingEnd);
-            if(isCoding)
+            if(mergedExon.IsCoding)
             {
                 if(options.coding())
                 {
@@ -314,8 +319,8 @@ public class TargetGenes
                             gene,
                             GeneRegionType.CODING,
                             new BaseRegion(
-                                    Math.max(exonData.Start - GENE_CODING_REGION_EXPAND, transcriptData.CodingStart),
-                                    min(exonData.End + GENE_CODING_REGION_EXPAND, transcriptData.CodingEnd))));
+                                    max(exonRegion.start() - GENE_CODING_REGION_EXPAND, mergedExon.CodingStart),
+                                    min(exonRegion.end() + GENE_CODING_REGION_EXPAND, mergedExon.CodingEnd))));
                 }
             }
             else
@@ -325,26 +330,84 @@ public class TargetGenes
                     regions.add(new GeneRegion(
                             gene,
                             GeneRegionType.UTR,
-                            new BaseRegion(exonData.Start, exonData.End)));
+                            new BaseRegion(exonRegion.start(), exonRegion.end())));
                 }
             }
 
-            lastExonEnd = exonData.End;
+            lastExonEnd = mergedExon.Region.end();
         }
 
         if(geneData.forwardStrand() ? options.downstream() : options.upstream())
         {
+            int maxTransEnd = transcripts.stream().mapToInt(trans -> trans.TransEnd).max().orElseThrow();
             regions.add(new GeneRegion(
                     gene,
                     geneData.forwardStrand() ? GeneRegionType.DOWN_STREAM : GeneRegionType.UP_STREAM,
                     new BaseRegion(
-                            transcriptData.TransEnd + GENE_UPDOWNSTREAM_GAP,
-                            transcriptData.TransEnd + GENE_UPDOWNSTREAM_GAP + GENE_UPDOWNSTREAM_REGION - 1)));
+                            maxTransEnd + GENE_UPDOWNSTREAM_GAP,
+                            maxTransEnd + GENE_UPDOWNSTREAM_GAP + GENE_UPDOWNSTREAM_REGION - 1)));
         }
 
         regions.forEach(region -> LOGGER.trace("Gene region: {}", region));
 
         return regions;
+    }
+
+    private static class MergedExonRegion
+    {
+        public BaseRegion Region;
+        public boolean IsCoding = false;
+        public int CodingStart = Integer.MAX_VALUE;
+        public int CodingEnd = Integer.MIN_VALUE;
+        public List<ExonData> Exons = new ArrayList<>();
+    }
+
+    private static List<MergedExonRegion> mergeExons(final List<TranscriptData> transcripts)
+    {
+        List<MergedExonRegion> mergedExons = new ArrayList<>();
+        // Standard region merging algorithm...
+        List<ImmutablePair<TranscriptData, ExonData>> sortedExons = transcripts.stream()
+                .flatMap(trans -> trans.exons().stream().map(exon -> new ImmutablePair<>(trans, exon)))
+                .sorted(Comparator.comparing(pair -> pair.getRight().Start))
+                .toList();
+        for(Pair<TranscriptData, ExonData> pair : sortedExons)
+        {
+            TranscriptData transcript = pair.getLeft();
+            ExonData exon = pair.getRight();
+
+            BaseRegion codingRegion = new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
+            BaseRegion exonRegion = new BaseRegion(exon.Start, exon.End);
+            boolean isCoding = codingRegion.overlaps(exonRegion);
+
+            mergedExons.stream()
+                    .filter(region -> regionOverlapsOrAdjacent(region.Region, exonRegion))
+                    .findFirst()
+                    .ifPresentOrElse(merged ->
+                            {
+                                merged.Region.setEnd(exon.End);
+                                if(isCoding)
+                                {
+                                    merged.IsCoding = true;
+                                    merged.CodingStart = min(merged.CodingStart, codingRegion.start());
+                                    merged.CodingEnd = max(merged.CodingEnd, codingRegion.end());
+                                }
+                                merged.Exons.add(exon);
+                            },
+                            () ->
+                            {
+                                MergedExonRegion merged = new MergedExonRegion();
+                                merged.Region = exonRegion;
+                                merged.IsCoding = isCoding;
+                                if(isCoding)
+                                {
+                                    merged.CodingStart = codingRegion.start();
+                                    merged.CodingEnd = codingRegion.end();
+                                }
+                                merged.Exons.add(exon);
+                                mergedExons.add(merged);
+                            });
+        }
+        return mergedExons;
     }
 
     private static ProbeGenerationResult generateProbes(final GeneRegion geneRegion, final ProbeGenerator probeGenerator)
@@ -380,9 +443,22 @@ public class TargetGenes
     private static TargetMetadata createTargetMetadata(final GeneRegion geneRegion)
     {
         GeneData geneData = geneRegion.gene().gene();
-        TranscriptData transcriptData = geneRegion.gene().transcript();
-        String transcriptName = transcriptData.IsCanonical ? "canon" : transcriptData.TransName;
-        String extraInfo = format("%s:%s:%s", geneData.GeneName, transcriptName, geneRegion.type().name());
+        List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(TargetGenes::transcriptDataName).toList();
+        // If there are multiple transcripts, merge their names, since the region is determined based on 1 or more transcripts.
+        String transcripts = join("/", transcriptNames);
+        String extraInfo = format("%s:%s:%s", geneData.GeneName, transcripts, geneRegion.type().name());
         return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
+    }
+
+    private static String transcriptDataName(final TranscriptData transcriptData)
+    {
+        if(transcriptData.IsCanonical)
+        {
+            return "canon";
+        }
+        else
+        {
+            return transcriptData.TransName;
+        }
     }
 }

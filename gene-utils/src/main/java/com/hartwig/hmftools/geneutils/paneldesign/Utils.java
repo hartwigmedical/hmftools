@@ -192,6 +192,11 @@ public class Utils
         return new BaseRegion(max(region1.start(), region2.start()), min(region1.end(), region2.end()));
     }
 
+    public static boolean regionOverlapsOrAdjacent(final BaseRegion region1, final BaseRegion region2)
+    {
+        return region1.overlaps(region2) || region1.end() + 1 == region2.start() || region2.end() + 1 == region1.start();
+    }
+
     // Generates the sequence: 0, 1, -1, 2, -2, 3, -3, ...
     // With the constraint that no value will be outside the range [minOffset, maxOffset].
     public static IntStream outwardMovingOffsets(int minOffset, int maxOffset)
