@@ -27,7 +27,7 @@ public class FragmentData
 
         if(read.Chromosome.equals(suppData.Chromosome))
         {
-            ReadIsLowerVsSuppData = read.start() <= suppData.Position;
+            ReadIsLowerVsSuppData = read.AlignmentStart <= suppData.Position;
         }
         else
         {
@@ -60,7 +60,7 @@ public class FragmentData
 
     public static int unclippedPosition(final PrepRead read)
     {
-        return read.orientation().isForward() ? read.unclippedStart() : read.unclippedEnd();
+        return read.orientation().isForward() ? read.UnclippedStart : read.UnclippedEnd;
     }
 
     public String toString()

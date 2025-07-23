@@ -249,7 +249,7 @@ public class ReadGroup
             if(read.isSupplementaryAlignment() != otherRead.isSupplementaryAlignment())
                 continue;
 
-            if(read.MateChromosome.equals(otherRead.Chromosome) && read.MatePosStart == otherRead.start())
+            if(read.MateChromosome.equals(otherRead.Chromosome) && read.MatePosStart == otherRead.AlignmentStart)
                 return true;
         }
 
@@ -259,7 +259,7 @@ public class ReadGroup
     public String toString()
     {
         return format("reads(%d) initRead(%s:%d-%d) id(%s) partitions(%d) state(%s)",
-                mReads.size(), mReads.get(0).Chromosome, mReads.get(0).start(), mReads.get(0).end(), id(), partitionCount(), mStatus);
+                mReads.size(), mReads.get(0).Chromosome, mReads.get(0).AlignmentStart, mReads.get(0).AlignmentEnd, id(), partitionCount(), mStatus);
     }
 
     private static boolean supplementaryInRegion(final SupplementaryReadData suppData, final ChrBaseRegion region)
@@ -283,7 +283,7 @@ public class ReadGroup
     {
         public int compare(final ReadGroup first, final ReadGroup second)
         {
-            return first.reads().get(0).start() - second.reads().get(0).start();
+            return first.reads().get(0).AlignmentStart - second.reads().get(0).AlignmentStart;
         }
     }
 }

@@ -25,17 +25,16 @@ import htsjdk.samtools.SAMRecord;
 public class PrepRead
 {
     public final String Chromosome;
-
-    private int mAlignmentStart;
-    private int mAlignmentEnd;
-    private int mUnclippedStart;
-    private int mUnclippedEnd;
+    public final int AlignmentStart;
+    public final int AlignmentEnd;
+    public final int UnclippedStart;
+    public final int UnclippedEnd;
 
     public String MateChromosome;
     public int MatePosStart;
 
     private final SAMRecord mRecord;
-    private int mFragmentInsertSize;
+    private final int mFragmentInsertSize;
     private final SupplementaryReadData mSupplementaryAlignment;
 
     // read filtering and evaluation state
@@ -45,6 +44,7 @@ public class PrepRead
     private final int mMaxIndelLength;
     private boolean mCheckedIndelCoords;
     private IndelCoords mIndelCoords;
+    private boolean mHasLineTail;
     private int mFilters;
 
     private ReadType mReadType; // junction classification
@@ -97,18 +97,18 @@ public class PrepRead
         if(!record.getReadUnmappedFlag())
         {
             Chromosome = record.getReferenceName();
-            mAlignmentStart = record.getStart();
-            mAlignmentEnd = record.getEnd();
-            mUnclippedStart = mAlignmentStart - mSoftClipLengthLeft;
-            mUnclippedEnd = mAlignmentEnd + mSoftClipLengthRight;
+            AlignmentStart = record.getStart();
+            AlignmentEnd = record.getEnd();
+            UnclippedStart = AlignmentStart - mSoftClipLengthLeft;
+            UnclippedEnd = AlignmentEnd + mSoftClipLengthRight;
         }
         else
         {
             Chromosome = UNMAPPED_CHR;
-            mAlignmentStart = 0;
-            mAlignmentEnd = 0;
-            mUnclippedStart = 0;
-            mUnclippedEnd = 0;
+            AlignmentStart = 0;
+            AlignmentEnd = 0;
+            UnclippedStart = 0;
+            UnclippedEnd = 0;
         }
 
         if(!mateUnmapped(record) && record.getMateAlignmentStart() > 0)
@@ -137,11 +137,7 @@ public class PrepRead
 
     public String id() { return mRecord.getReadName(); }
     public final SAMRecord record() { return mRecord; }
-    public int start() { return mAlignmentStart; }
-    public int end() { return mAlignmentEnd; }
 
-    public int unclippedStart()  { return mUnclippedStart; }
-    public int unclippedEnd() { return mUnclippedEnd; }
     public boolean isLeftClipped() { return mSoftClipLengthLeft > 0; }
     public boolean isRightClipped() { return mSoftClipLengthRight > 0; }
     public int leftClipLength() { return mSoftClipLengthLeft; }
@@ -201,7 +197,7 @@ public class PrepRead
             mCheckedIndelCoords = true;
 
             if(mMaxIndelLength >= MIN_INDEL_SUPPORT_LENGTH)
-                mIndelCoords = findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+                mIndelCoords = findIndelCoords(AlignmentStart, cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
         }
 
         return mIndelCoords;
@@ -210,7 +206,7 @@ public class PrepRead
     public String toString()
     {
         return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s) hasSupp(%s) type(%s)",
-                Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id(),
+                Chromosome, AlignmentStart, AlignmentEnd, cigar().toString(), MateChromosome, MatePosStart, id(),
                 isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null, mReadType);
     }
 }

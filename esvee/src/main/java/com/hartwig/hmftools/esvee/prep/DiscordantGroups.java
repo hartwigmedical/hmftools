@@ -93,7 +93,7 @@ public class DiscordantGroups
 
                     PrepRead nextRead = firstPrimaryRead(nextGroup);
 
-                    if(nextRead.start() > discordantGroup.Region.end())
+                    if(nextRead.AlignmentStart > discordantGroup.Region.end())
                         break;
 
                     discordantGroup.tryAddReadGroup(nextGroup, nextRead);
@@ -174,18 +174,18 @@ public class DiscordantGroups
 
             if(discordantGroup.Orient.isForward())
             {
-                if(innerRead == null || read.end() > innerRead.end())
+                if(innerRead == null || read.AlignmentEnd > innerRead.AlignmentEnd)
                 {
                     innerRead = read;
-                    innerPosition = read.end();
+                    innerPosition = read.AlignmentEnd;
                 }
             }
             else
             {
-                if(innerRead == null || read.start() < innerRead.start())
+                if(innerRead == null || read.AlignmentStart < innerRead.AlignmentStart)
                 {
                     innerRead = read;
-                    innerPosition = read.start();
+                    innerPosition = read.AlignmentStart;
                 }
             }
         }
@@ -217,7 +217,7 @@ public class DiscordantGroups
             // reads must be within the observed max concordant fragment length to be potentially relevant for this group
             if(discordantGroup.Orient.isForward())
             {
-                if(readGroup.reads().stream().noneMatch(x -> positionWithin(x.start(), minReadPosStart, minReadPosEnd)))
+                if(readGroup.reads().stream().noneMatch(x -> positionWithin(x.AlignmentStart, minReadPosStart, minReadPosEnd)))
                 {
                     excludedReadIds.add(readGroup.id());
                     continue;
@@ -225,7 +225,7 @@ public class DiscordantGroups
             }
             else
             {
-                if(readGroup.reads().stream().noneMatch(x -> positionWithin(x.end(), minReadPosStart, minReadPosEnd)))
+                if(readGroup.reads().stream().noneMatch(x -> positionWithin(x.AlignmentEnd, minReadPosStart, minReadPosEnd)))
                 {
                     excludedReadIds.add(readGroup.id());
                     continue;
@@ -343,7 +343,7 @@ public class DiscordantGroups
         if(!firstRead.Chromosome.equals(firstRead.MateChromosome) || firstRead.orientation() == firstRead.mateOrientation())
             return false;
 
-        int length = abs(firstRead.start() - firstRead.record().getMateAlignmentStart());
+        int length = abs(firstRead.AlignmentStart - firstRead.record().getMateAlignmentStart());
         return length <= DISCORDANT_GROUP_MAX_LOCAL_LENGTH;
     }
 
@@ -353,7 +353,7 @@ public class DiscordantGroups
         {
             PrepRead firstRead = firstPrimaryRead(first);
             PrepRead secondRead = firstPrimaryRead(second);
-            return Integer.compare(firstRead.start(), secondRead.start());
+            return Integer.compare(firstRead.AlignmentStart, secondRead.AlignmentStart);
         }
     }
 
