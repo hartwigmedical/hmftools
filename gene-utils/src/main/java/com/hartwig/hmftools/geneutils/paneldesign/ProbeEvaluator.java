@@ -19,8 +19,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-// TODO: unit test
-
 // Common candidate probe evaluation and filtering.
 public class ProbeEvaluator
 {
