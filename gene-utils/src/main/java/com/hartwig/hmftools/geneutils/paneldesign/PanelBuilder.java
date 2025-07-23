@@ -7,12 +7,9 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
-import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.TARGET_REGIONS_FILE_NAME;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -56,29 +53,24 @@ public class PanelBuilder
         long startTimeMs = System.currentTimeMillis();
 
         checkCreateOutputDir(mConfig.OutputDir);
-        mOutputWriter = new OutputWriter(
-                mConfig.outputFilePath(PANEL_PROBES_FILE_STEM),
-                mConfig.outputFilePath(TARGET_REGIONS_FILE_NAME),
-                mConfig.outputFilePath(REJECTED_REGIONS_FILE_STEM),
-                mConfig.VerboseOutput ? mConfig.outputFilePath(CANDIDATE_PROBES_FILE_NAME) : null);
+        mOutputWriter = new OutputWriter(mConfig.OutputDir, mConfig.OutputPrefix, mConfig.VerboseOutput);
 
         LOGGER.info("Generating probes");
         mPanelData = new PanelData();
         // Note the order of generation here determines the priority of probe overlap resolution.
         // Probes generated first will exclude overlapping probes generated afterward.
-        generateTargetGeneProbes();
+        Optional<TargetGenes.Stats> geneStats = generateTargetGeneProbes();
         generateCopyNumberBackboneProbes();
         generateCustomRegionProbes();
-        LOGGER.info("Probe generation done");
 
         LOGGER.info("Writing output");
         {
             mOutputWriter.writePanelProbes(mPanelData.probes());
             mOutputWriter.writeTargetRegions(mPanelData.targetRegions());
             mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
+            geneStats.ifPresent(stats -> mOutputWriter.writeGeneStats(stats.perGene()));
         }
 
-        // TODO: output summary of number of probes per target region
         // TODO: output % rejected or similar
 
         // TODO: probe overlapping multiple target regions will only have 1 target associated. fix up to show multiple targets on 1 probe?
@@ -89,17 +81,19 @@ public class PanelBuilder
         LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private void generateTargetGeneProbes()
+    private Optional<TargetGenes.Stats> generateTargetGeneProbes()
     {
         if(mConfig.TargetGenesFile == null)
         {
             LOGGER.info("Target genes not provided; skipping gene probes");
+            return Optional.empty();
         }
         else
         {
             EnsemblDataCache ensemblData = loadEnsemblData();
-            ProbeGenerationResult result = TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator);
-            mPanelData.addResult(result);
+            TargetGenes.Stats stats = TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData
+            return Optional.of(stats);
         }
     }
 

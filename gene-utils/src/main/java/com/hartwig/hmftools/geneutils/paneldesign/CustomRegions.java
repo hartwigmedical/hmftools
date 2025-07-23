@@ -33,7 +33,7 @@ public class CustomRegions
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
     public static void generateProbes(final String customRegionFile, final Map<String, Integer> chromosomeLengths,
-            final ProbeGenerator probeGenerator, final PanelData panelData)
+            final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating custom region probes");
 

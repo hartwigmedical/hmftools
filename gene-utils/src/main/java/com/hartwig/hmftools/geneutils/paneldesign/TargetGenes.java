@@ -43,7 +43,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 // TODO: unit test
 
@@ -75,8 +74,21 @@ public class TargetGenes
 
     private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);
 
-    public static ProbeGenerationResult generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
-            final ProbeGenerator probeGenerator)
+    public record Stats(
+            List<GeneStats> perGene
+    )
+    {
+    }
+
+    public record GeneStats(
+            String geneName,
+            int probeCount
+    )
+    {
+    }
+
+    public static Stats generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
+            final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating gene probes");
 
@@ -89,21 +101,32 @@ public class TargetGenes
                 .flatMap(Optional::stream)
                 .toList();
 
-        LOGGER.debug("Creating gene target regions");
-        List<GeneRegion> geneRegions = geneTranscriptDatas.stream().flatMap(gene -> createGeneRegions(gene).stream()).toList();
-
         // When generating probes, don't care about probe overlap. This is because:
         //   - Gene probes are generated first, so nothing is covered beforehand, and
         //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
-        //   - Within one gene, multiple transcripts are merged to avoid overlap.
+        //   - Within one gene, multiple transcripts are merged beforehand to avoid overlap.
 
         LOGGER.debug("Generating probes");
-        ProbeGenerationResult result = geneRegions.stream()
-                .map(region -> generateProbes(region, probeGenerator))
-                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        ProbeGenerationResult result = new ProbeGenerationResult();
+        List<GeneStats> geneStats = new ArrayList<>();
+        for(GeneTranscriptData gene : geneTranscriptDatas)
+        {
+            List<GeneRegion> geneRegions = createGeneRegions(gene);
+
+            ProbeGenerationResult geneResult = geneRegions.stream()
+                    .map(geneRegion -> generateProbes(geneRegion, probeGenerator))
+                    .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+            result = result.add(geneResult);
+
+            geneStats.add(new GeneStats(gene.gene().GeneName, geneResult.probes().size()));
+        }
+        Stats stats = new Stats(geneStats);
+
+        panelData.addResult(result);
 
         LOGGER.info("Done generating gene probes");
-        return result;
+
+        return stats;
     }
 
     private record GeneOptions(
@@ -164,12 +187,6 @@ public class TargetGenes
             GeneOptions options
     )
     {
-        @NotNull
-        @Override
-        public String toString()
-        {
-            return format("GeneTranscriptsData[gene=%s, options=%s]", gene.GeneName, options);
-        }
     }
 
     private static Optional<GeneTranscriptData> loadGeneTranscriptData(final GeneDefinition geneDef,

@@ -3,15 +3,23 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.TARGET_REGIONS_FILE_NAME;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
@@ -33,6 +41,7 @@ public class OutputWriter implements AutoCloseable
     private final DelimFileWriter<Probe> mCandidateProbesWriter;
     @Nullable
     private final List<Probe> mCandidateProbesBuffer;
+    private final DelimFileWriter<TargetGenes.GeneStats> mGeneStatsWriter;
 
     private static final String TSV_EXT = ".tsv";
     private static final String BED_EXT = ".bed";
@@ -47,6 +56,7 @@ public class OutputWriter implements AutoCloseable
     private static final String FLD_TARGET_START = "TargetPositionStart";
     private static final String FLD_TARGET_END = "TargetPositionEnd";
     private static final String FLD_EVAL_CRITERIA = "EvalCriteria";
+    private static final String FLD_PROBE_COUNT = "ProbeCount";
 
     private static final List<String> PANEL_PROBES_COLUMNS = List.of(
             FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_SEQUENCE,
@@ -65,36 +75,51 @@ public class OutputWriter implements AutoCloseable
             FLD_QUALITY_SCORE, FLD_GC_CONTENT,
             FLD_EVAL_CRITERIA, FLD_REJECT_REASON);
 
+    private static final List<String> GENE_STATS_COLUMNS = List.of(
+            FLD_GENE_NAME,
+            FLD_PROBE_COUNT
+    );
+
     private static final int CANDIDATE_PROBES_BUFFER_SIZE = 1_000_000;
 
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    public OutputWriter(final String panelProbesFileStem, final String targetRegionsFilePath, final String rejectedRegionsFileStem,
-            final String candidateProbesFilePath) throws IOException
+    public OutputWriter(String outputDir, String outputPrefix, boolean verboseOutput) throws IOException
     {
-        mPanelProbesTsvWriter =
-                new DelimFileWriter<>(panelProbesFileStem + TSV_EXT, PANEL_PROBES_COLUMNS, OutputWriter::writePanelProbesTsvRow);
-        mPanelProbesBedWriter = createBufferedWriter(panelProbesFileStem + BED_EXT);
-        mPanelProbesFastaWriter = createBufferedWriter(panelProbesFileStem + FASTA_EXT);
+        Function<String, String> outputFilePath = fileName -> Paths.get(outputDir, format("%s.%s", outputPrefix, fileName)).toString();
 
-        mTargetRegionsWriter = createBufferedWriter(targetRegionsFilePath);
+        String panelProbesTsvFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + TSV_EXT);
+        String panelProbesBedFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + BED_EXT);
+        String panelProbesFastaFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + FASTA_EXT);
+        String targetRegionsFile = outputFilePath.apply(TARGET_REGIONS_FILE_NAME);
+        String rejectedRegionsTsvFile = outputFilePath.apply(REJECTED_REGIONS_FILE_STEM + TSV_EXT);
+        String rejectedRegionsBedFile = outputFilePath.apply(REJECTED_REGIONS_FILE_STEM + BED_EXT);
+        String candidateProbesFile = outputFilePath.apply(CANDIDATE_PROBES_FILE_NAME);
+        String geneStatsFile = outputFilePath.apply(GENE_STATS_FILE_NAME);
+
+        mPanelProbesTsvWriter = new DelimFileWriter<>(panelProbesTsvFile, PANEL_PROBES_COLUMNS, OutputWriter::writePanelProbesTsvRow);
+        mPanelProbesBedWriter = createBufferedWriter(panelProbesBedFile);
+        mPanelProbesFastaWriter = createBufferedWriter(panelProbesFastaFile);
+
+        mTargetRegionsWriter = createBufferedWriter(targetRegionsFile);
 
         mRejectedRegionsTsvWriter =
-                new DelimFileWriter<>(
-                        rejectedRegionsFileStem + TSV_EXT, REJECTED_REGIONS_COLUMNS, OutputWriter::writeRejectedRegionsTsvRow);
-        mRejectedRegionsBedWriter = createBufferedWriter(rejectedRegionsFileStem + BED_EXT);
+                new DelimFileWriter<>(rejectedRegionsTsvFile, REJECTED_REGIONS_COLUMNS, OutputWriter::writeRejectedRegionsTsvRow);
+        mRejectedRegionsBedWriter = createBufferedWriter(rejectedRegionsBedFile);
 
-        if(candidateProbesFilePath == null)
+        if(verboseOutput)
+        {
+            mCandidateProbesWriter =
+                    new DelimFileWriter<>(candidateProbesFile, CANDIDATE_PROBES_COLUMNS, OutputWriter::writeCandidateProbesRow);
+            mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
+        }
+        else
         {
             mCandidateProbesWriter = null;
             mCandidateProbesBuffer = null;
         }
-        else
-        {
-            mCandidateProbesWriter =
-                    new DelimFileWriter<>(candidateProbesFilePath, CANDIDATE_PROBES_COLUMNS, OutputWriter::writeCandidateProbesRow);
-            mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
-        }
+
+        mGeneStatsWriter = new DelimFileWriter<>(geneStatsFile, GENE_STATS_COLUMNS, OutputWriter::writeGeneStatsRow);
     }
 
     public void writePanelProbes(List<Probe> probes) throws IOException
@@ -236,6 +261,17 @@ public class OutputWriter implements AutoCloseable
         row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());
     }
 
+    public void writeGeneStats(final List<TargetGenes.GeneStats> geneStats)
+    {
+        geneStats.forEach(mGeneStatsWriter::writeRow);
+    }
+
+    private static void writeGeneStatsRow(final TargetGenes.GeneStats stats, DelimFileWriter.Row row)
+    {
+        row.set(FLD_GENE_NAME, stats.geneName());
+        row.set(FLD_PROBE_COUNT, stats.probeCount());
+    }
+
     private static String probeBedName(final Probe probe)
     {
         // Purposely unbox here to throw on nulls.
@@ -281,5 +317,7 @@ public class OutputWriter implements AutoCloseable
             checkFlushCandidateProbes(true);
             mCandidateProbesWriter.close();
         }
+
+        mGeneStatsWriter.close();
     }
 }

@@ -58,11 +58,6 @@ public class PanelBuilderConfig
         VerboseOutput = configBuilder.hasFlag(CFG_VERBOSE_OUTPUT);
     }
 
-    public String outputFilePath(final String fileName)
-    {
-        return Paths.get(OutputDir, format("%s.%s", OutputPrefix, fileName)).toString();
-    }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);

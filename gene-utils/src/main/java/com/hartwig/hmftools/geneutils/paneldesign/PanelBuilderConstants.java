@@ -51,6 +51,7 @@ public class PanelBuilderConstants
     public static final String REJECTED_REGIONS_FILE_STEM = "rejected_regions";
     // This output can get very large (multiple GB) so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
+    public static final String GENE_STATS_FILE_NAME = "target_gene_stats.tsv";
 
     static
     {

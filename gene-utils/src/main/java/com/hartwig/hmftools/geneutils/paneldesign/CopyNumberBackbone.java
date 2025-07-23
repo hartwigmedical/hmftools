@@ -56,7 +56,7 @@ public class CopyNumberBackbone
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
     public CopyNumberBackbone(final String amberSitesFile, final RefGenomeVersion refGenomeVersion, final ProbeGenerator probeGenerator,
-            final PanelData panelData)
+            PanelData panelData)
     {
         mAmberSitesFile = amberSitesFile;
         mRefGenomeVersion = refGenomeVersion;
@@ -212,7 +212,7 @@ public class CopyNumberBackbone
                     {
                         rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_CRITERIA.eval();
                     }
-                    RejectedRegion rejectedRegion = new RejectedRegion(partition.Region, target, rejectionReason);
+                    RejectedRegion rejectedRegion = RejectedRegion.fromTargetRegion(target, rejectionReason);
 
                     return new ProbeGenerationResult(List.of(target), emptyList(), List.of(rejectedRegion));
                 });
