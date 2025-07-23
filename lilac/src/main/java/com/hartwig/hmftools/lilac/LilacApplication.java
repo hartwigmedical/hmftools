@@ -215,7 +215,7 @@ public class LilacApplication
 
         LL_LOGGER.info(format("totalFrags(%d)", totalFragmentCount));
 
-        Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(

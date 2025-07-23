@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -54,7 +55,8 @@ public class CandidatesTest
         SequenceCount localCounts = mock(SequenceCount.class, new ThrowOnUnstubbed());
         doReturn(localAcids).when(localCounts).get(anyInt());
 
-        List<HlaSequenceLoci> candidates = filterSequencesByMinSupport(initialCandidates, pooledCounts, aminoAcidBoundaries, localCounts);
+        List<HlaSequenceLoci> candidates = filterSequencesByMinSupport(
+                initialCandidates, pooledCounts, Sets.newTreeSet(aminoAcidBoundaries), localCounts);
 
         assertEquals(1, candidates.size());
         assertEquals("MM", candidates.get(0).sequence());
@@ -90,7 +92,8 @@ public class CandidatesTest
         doReturn(localHighAcids).when(localCounts).get(0);
         doReturn(localLowAcids).when(localCounts).get(1);
 
-        List<HlaSequenceLoci> candidates = filterSequencesByMinSupport(initialCandidates, pooledCounts, aminoAcidBoundaries, localCounts);
+        List<HlaSequenceLoci> candidates = filterSequencesByMinSupport(
+                initialCandidates, pooledCounts, Sets.newTreeSet(aminoAcidBoundaries), localCounts);
 
         assertEquals(2, candidates.size());
     }

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_NUCLEOTIDE_COUNTS;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,8 +21,10 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public final class NucleotideFragmentQualEnrichment
 {
+    private NucleotideFragmentQualEnrichment() {}
+
     public static List<Fragment> qualityFilterFragments(
-            final HlaContext context, final List<Fragment> fragments, final List<Fragment> highQualFrags)
+            final HlaContext context, final Collection<Fragment> fragments, final Iterable<Fragment> highQualFrags)
     {
         // fragments are all in nucleotide-space
 

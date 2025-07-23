@@ -8,7 +8,7 @@ import org.mockito.stubbing.Answer;
 public class ThrowOnUnstubbed implements Answer<Object>
 {
     @Override
-    public Object answer(final InvocationOnMock invocation) throws Throwable
+    public Object answer(final InvocationOnMock invocation)
     {
         final String errMsg = "Unstubbed method call to: "
                 + invocation.getMethod().getName()

@@ -50,7 +50,7 @@ public class Fragment
     }
 
     public Fragment(
-            final Read read, final String readGene, final Set<String> genes, final Collection<Nucleotide> nucleotides)
+            final Read read, final String readGene, final Set<String> genes, final Iterable<Nucleotide> nucleotides)
     {
         mReads = Lists.newArrayListWithCapacity(2);
         mReads.add(read);
@@ -137,7 +137,7 @@ public class Fragment
         return loci.stream().allMatch(this::containsNucleotideLocus);
     }
 
-    public String nucleotides(final Collection<Integer> loci)
+    public String nucleotides(final Iterable<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
         loci.forEach(x -> sj.add(nucleotide(x)));
@@ -223,7 +223,7 @@ public class Fragment
         return aminoAcid.acid();
     }
 
-    public String aminoAcids(final Collection<Integer> loci)
+    public String aminoAcids(final Iterable<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
         loci.forEach(x -> sj.add(aminoAcid(x)));
@@ -305,7 +305,7 @@ public class Fragment
     public boolean validate() { return FragmentUtils.validateFragment(this); }
 
     @VisibleForTesting
-    public void setAminoAcids(final Collection<AminoAcid> aminoAcids)
+    public void setAminoAcids(final Iterable<AminoAcid> aminoAcids)
     {
         for(AminoAcid aminoAcid : aminoAcids)
             mAminoAcidsByLoci.put(aminoAcid.locus(), aminoAcid);
