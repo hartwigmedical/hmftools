@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_WINDOW_SIZE;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_JUNCTION;
@@ -154,12 +155,17 @@ public class PartitionSlicer
             SV_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
         }
 
-        if(mReadFilters.ignoreRead(record))
+        boolean hasLineTail = hasLineTail(record);
+
+        if(mReadFilters.ignoreRead(record, hasLineTail))
             return;
 
         record.setAttribute(BAM_RECORD_SAMPLE_ID_TAG, mCurrentSampleId);
 
         PrepRead read = new PrepRead(record);
+
+        if(hasLineTail)
+            read.markLineTail();
 
         mReadFilters.checkFilters(read);
 

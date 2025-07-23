@@ -8,10 +8,8 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.POLY_G_TRIM_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.LineUtils.findBaseRepeatCount;
-import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_REPEAT_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
 
@@ -61,38 +59,14 @@ public final class ReadAdjustments
             if(scBaseCount == 0)
                 continue;
 
-            if(scBaseCount >= LINE_POLY_AT_REQ)
+            byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
+
+            int softClipIndex = fromStart ? scBaseCount - 1 : read.basesLength() - scBaseCount;
+
+            if(hasLineTail(read.getBases(), softClipIndex, fromStart, lineBase))
             {
-                int scIndexStart, scIndexEnd;
-                int lineTestLength = min(scBaseCount, LINE_POLY_AT_TEST_LEN);
-
-                if(fromStart)
-                {
-                    scIndexEnd = scBaseCount - 1;
-                    scIndexStart = scIndexEnd - lineTestLength + 1;
-                }
-                else
-                {
-                    scIndexStart = read.basesLength() - scBaseCount;
-                    scIndexEnd = scIndexStart + lineTestLength - 1;
-                }
-
-                byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
-                int lineBaseCount = findLineSequenceCount(read.getBases(), scIndexStart, scIndexEnd, lineBase);
-
-                if(lineBaseCount == 0)
-                    continue;
-
-                // test that the LINE sequence doesn't extend a long repeat of the same base
-                int refBaseIndex = fromStart ? scBaseCount : read.basesLength() - scBaseCount - 1;
-
-                int refRepeatLength = findBaseRepeatCount(read.getBases(), refBaseIndex, fromStart, lineBase);
-
-                if(lineBaseCount >= refRepeatLength * LINE_REF_BASE_REPEAT_FACTOR)
-                {
-                    read.markLineTail();
-                    return;
-                }
+                read.markLineTail();
+                return;
             }
         }
     }

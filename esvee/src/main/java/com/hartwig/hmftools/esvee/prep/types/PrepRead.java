@@ -145,6 +145,9 @@ public class PrepRead
     public int maxIndelLength()  { return mMaxIndelLength; }
     public int alignedBaseLength()  { return mAlignedBaseLength; }
 
+    public void markLineTail() { mHasLineTail = true; }
+    public boolean hasLineTail() { return mHasLineTail; }
+
     public Orientation orientation() { return !isReadReversed() ? FORWARD : REVERSE; }
     public Orientation mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? FORWARD : REVERSE; }
 

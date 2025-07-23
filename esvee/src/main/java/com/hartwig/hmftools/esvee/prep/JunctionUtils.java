@@ -26,6 +26,8 @@ import static com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus.DUPLICATE;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -297,7 +299,12 @@ public final class JunctionUtils
 
     public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
+        Collection<PrepRead> junctionReads = junctionData.readTypeReads().get(ReadType.JUNCTION);
+
+        if(junctionReads.stream().anyMatch(x -> x.hasLineTail()))
+            return true;
+
+        for(PrepRead read : junctionReads)
         {
             double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, MIN_CALC_ALIGNMENT_SCORE, true);
 
