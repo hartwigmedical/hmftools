@@ -33,6 +33,7 @@
         <module>patient-db</module>
         <module>purple</module>
         <module>pave</module>
+        <module>pave-reverse</module>
         <module>peach</module>
         <module>redux</module>
         <module>sage</module>
@@ -69,7 +70,7 @@
         <compar.version>1.4</compar.version>
         <crest.version>1.0.0</crest.version>
         <cuppa.version>2.3</cuppa.version>
-        <esvee.version>1.1</esvee.version>
+        <esvee.version>1.2</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.2</gene-utils.version>
         <health-checker.version>3.6</health-checker.version>

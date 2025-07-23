@@ -17,18 +17,19 @@ import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
+import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
-import com.hartwig.hmftools.lilac.evidence.AminoAcid;
-import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 
 public class FragmentAlleleMapper
 {
@@ -188,8 +189,10 @@ public class FragmentAlleleMapper
         }
 
         // otherwise look for matching nuc and amino-acid full matches
+        Set<HlaAllele> fullAminoAcidMatchSet = Sets.newHashSet(fullAminoAcidMatch);
+        Set<HlaAllele> homLociAminoAcidMatchSet = Sets.newHashSet(homLociAminoAcidMatch);
         List<HlaAllele> consistentFull = fullNucleotideMatch.stream()
-                .filter(x -> fullAminoAcidMatch.contains(x) || homLociAminoAcidMatch.contains(x)).collect(Collectors.toList());
+                .filter(x -> fullAminoAcidMatchSet.contains(x) || homLociAminoAcidMatchSet.contains(x)).collect(Collectors.toList());
 
         // otherwise down-grade the full matches to wild
         fullAminoAcidMatch.stream()
@@ -348,9 +351,9 @@ public class FragmentAlleleMapper
         {
             Map<Integer,Set<String>> hetLociSeqMap = geneEntry.getValue();
 
-            List<Integer> fragAminoAcidLoci = fragment.aminoAcidsByLoci().keySet().stream()
+            NavigableSet<Integer> fragAminoAcidLoci = fragment.aminoAcidsByLoci().keySet().stream()
                     .filter(x -> hetLociSeqMap.containsKey(x))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toCollection(Sets::newTreeSet));
 
             // also attempt to retrieve amino acids from low-qual nucleotides
             Map<Integer,String> missedAminoAcids = Maps.newHashMap();
@@ -374,8 +377,6 @@ public class FragmentAlleleMapper
                 }
             }
 
-            Collections.sort(fragAminoAcidLoci);
-
             final List<String> fragmentAminoAcids = Lists.newArrayListWithExpectedSize(fragAminoAcidLoci.size());
 
             for(Integer locus : fragAminoAcidLoci)
@@ -386,7 +387,7 @@ public class FragmentAlleleMapper
                     fragmentAminoAcids.add(fragment.aminoAcid(locus));
             }
 
-            fragGeneLociMap.put(geneEntry.getKey(), fragAminoAcidLoci);
+            fragGeneLociMap.put(geneEntry.getKey(), Lists.newArrayList(fragAminoAcidLoci));
             fragGeneSequenceMap.put(geneEntry.getKey(), fragmentAminoAcids);
         }
 
@@ -549,20 +550,8 @@ public class FragmentAlleleMapper
         }
     }
 
-    private static void removeUnsupportedWildcardAlleles(final List<HlaAllele> alleleList, final List<HlaAllele> unsupportedAlleles)
+    private static void removeUnsupportedWildcardAlleles(final Set<HlaAllele> alleleList, final List<HlaAllele> unsupportedAlleles)
     {
-        int index = 0;
-        while(index < alleleList.size())
-        {
-            if(unsupportedAlleles.contains(alleleList.get(index)))
-            {
-                alleleList.remove(index);
-            }
-            else
-            {
-                ++index;
-            }
-        }
+        alleleList.removeAll(unsupportedAlleles);
     }
-
 }

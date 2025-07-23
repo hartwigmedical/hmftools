@@ -178,7 +178,6 @@ java -cp bam-tools.jar com.hartwig.hmftools.bamtools.checker.BamChecker \
    -bam_file SAMPLE.bam \
    -ref_genome ref_genome.fasta \
    -bamtool /tools/sambamba \
-   -write_incompletes \
    -output_dir /output_dir/ \
    -threads 16 \
 ```
@@ -197,9 +196,11 @@ threads | As above
 
 Filter | Description
 ---|---
+output_bam | Specific output BAM name
 specific_regions | List of regions to analyse. Format 'chr:posStart-posEnd; etc'
 bamtool | As above
 write_incompletes | Write information about incomplete or invalid fragments to TSV file
+drop_incompletes | Drop unmatched pair reads from output BAM
 
 
 

@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
@@ -53,8 +54,7 @@ public class GeneTask implements Callable<Void>
     public Void call()
     {
         // determine un-phased Candidates
-        List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles,
-                mAminoAcidPipeline.getRawReferenceAminoAcidCounts().get(mHlaContext.geneName()));
+        List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
 
         // determine phasing of amino acids
         PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig);
@@ -70,7 +70,7 @@ public class GeneTask implements Callable<Void>
         }
 
         // gather all phased candidates
-        mCandidatesAlleles.addAll(mCandidateFactory.phasedCandidates(mHlaContext, unphasedCandidates, mPhasedEvidence));
+        mCandidatesAlleles.addAll(mCandidateFactory.phasedCandidates(mHlaContext, Sets.newHashSet(unphasedCandidates), mPhasedEvidence));
 
         return null;
     }
@@ -89,6 +89,6 @@ public class GeneTask implements Callable<Void>
         final String gene = mCandidatesAlleles.get(0).Gene;
 
         mRefData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
-                .filter(x -> x.Gene.equals(gene)).forEach(x -> allAlleles.add(x));
+                .filter(x -> x.Gene.equals(gene)).forEach(allAlleles::add);
     }
 }

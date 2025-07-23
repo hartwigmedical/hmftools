@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.purple.region;
 
+import static com.hartwig.hmftools.purple.MiscTestUtils.gcProfile;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
-import com.hartwig.hmftools.common.genome.gc.ImmutableGCProfile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
@@ -93,13 +94,6 @@ public class GCAccumulatorTest
     @NotNull
     private static GCProfile create(int start, double mappability, double gcContent)
     {
-        return ImmutableGCProfile.builder()
-                .chromosome(CHROMOSOME)
-                .start(start)
-                .end(start + WINDOW_SIZE - 1)
-                .mappablePercentage(mappability)
-                .gcContent(gcContent)
-                .nonNPercentage(1)
-                .build();
+        return gcProfile(CHROMOSOME, start, WINDOW_SIZE, mappability, gcContent);
     }
 }

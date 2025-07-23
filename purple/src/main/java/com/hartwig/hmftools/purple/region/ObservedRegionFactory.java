@@ -167,10 +167,10 @@ public class ObservedRegionFactory
         return mStatusFactory.calcStatus(region.chromosome(), normalRatio, tumorRatio, depthWindowCount);
     }
 
-    private boolean isGermlineAmpDelCandidate(
+    private static boolean isGermlineAmpDelCandidate(
             final PurpleSupportSegment region, final GermlineStatus germlineStatus, double rawNormalRatio, double normalRatio)
     {
-        if(germlineStatus != DIPLOID || normalRatio <= 0 || HumanChromosome.fromString(region.Chromosome).isAllosome())
+        if(germlineStatus != DIPLOID || normalRatio <= 0 || region.chr().isAllosome())
             return false;
 
         if(GERMLINE_AMP_DEL_EXCLUSIONS.stream()
@@ -391,7 +391,6 @@ public class ObservedRegionFactory
             return mUnnormalisedReferenceAccumulator.meanRatio();
         }
 
-        double tumorMeanRatio() { return mTumorGcRatioAccumulator.meanRatio(); }
         double tumorMedianRatio() { return mTumorGcRatioAccumulator.medianRatio(); }
         double tumorMeanContent() { return mTumorGcContentAccumulator.meanRatio(); }
 

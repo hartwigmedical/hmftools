@@ -58,9 +58,9 @@ public class KnownHotspot
 
             for(PrepRead read : readGroup.reads())
             {
-                matchesStart |= knownHotspot.RegionStart.overlaps(read.Chromosome, read.start(), read.end());
+                matchesStart |= knownHotspot.RegionStart.overlaps(read.Chromosome, read.AlignmentStart, read.AlignmentEnd);
                 matchesStart |= knownHotspot.RegionStart.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
-                matchesEnd |= knownHotspot.RegionEnd.overlaps(read.Chromosome, read.start(), read.end());
+                matchesEnd |= knownHotspot.RegionEnd.overlaps(read.Chromosome, read.AlignmentStart, read.AlignmentEnd);
                 matchesEnd |= knownHotspot.RegionEnd.containsPosition(read.MateChromosome, read.record().getMateAlignmentStart());
 
                 if(!matchesStart || !matchesEnd)

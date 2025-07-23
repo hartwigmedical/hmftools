@@ -14,7 +14,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -140,7 +139,16 @@ class ScalePosition
         {
             ScaleContig positionMap = mContigMap.get(cobaltRatio.chromosome());
             int newPosition = positionMap.interpolate(cobaltRatio.position());
-            CobaltRatio newCobaltRatio = ImmutableCobaltRatio.builder().from(cobaltRatio).position(newPosition).build();
+            CobaltRatio newCobaltRatio = new CobaltRatio(
+                    cobaltRatio.chromosome(),
+                    newPosition,
+                    cobaltRatio.referenceReadDepth(),
+                    cobaltRatio.referenceGCRatio(),
+                    cobaltRatio.referenceGcContent(),
+                    cobaltRatio.referenceGCDiploidRatio(),
+                    cobaltRatio.tumorReadDepth(),
+                    cobaltRatio.tumorGCRatio(),
+                    cobaltRatio.tumorGcContent());
             results.add(newCobaltRatio);
         }
 

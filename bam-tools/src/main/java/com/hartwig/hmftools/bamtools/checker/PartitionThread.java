@@ -21,6 +21,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class PartitionThread extends Thread
 {
@@ -41,6 +42,7 @@ public class PartitionThread extends Thread
 
         mSamReader = SamReaderFactory.makeDefault()
                 .referenceSequence(new File(config.RefGenomeFile))
+                .validationStringency(ValidationStringency.SILENT)
                 .open(new File(config.BamFile));
 
         if(config.writeBam())

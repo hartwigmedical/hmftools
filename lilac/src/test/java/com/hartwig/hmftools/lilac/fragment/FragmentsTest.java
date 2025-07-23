@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_MILLISECOND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
@@ -54,6 +55,180 @@ public class FragmentsTest
         assertRange(1, 2, calcAminoAcidIndices(3, 8));
         assertRange(1, 2, calcAminoAcidIndices(3, 9));
         assertRange(1, 2, calcAminoAcidIndices(3, 10));
+    }
+
+    @Test
+    public void testReadPositions()
+    {
+        BaseRegion codingRegion = new BaseRegion(100, 200);
+
+        // test the low-qual bases are trimming up until the lowest score point only
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                TEST_READ_ID, CHR_1, 120, TEST_READ_BASES.substring(0, 50), "10S30M10S", CHR_1, 300,
+                false, false, null);
+
+        Read read = createRead(codingRegion, record, false, false);
+        assertNotNull(read);
+
+        assertEquals(120, read.PositionStart);
+        assertEquals(149, read.PositionEnd);
+        assertEquals(0, read.SoftClippedStart);
+        assertEquals(0, read.SoftClippedEnd);
+        assertEquals(10, read.ReadIndexStart);
+        assertEquals(39, read.ReadIndexEnd);
+
+        read = createRead(codingRegion, record, true, false);
+        assertNotNull(read);
+
+        assertEquals(110, read.PositionStart);
+        assertEquals(159, read.PositionEnd);
+        assertEquals(10, read.SoftClippedStart);
+        assertEquals(10, read.SoftClippedEnd);
+        assertEquals(0, read.ReadIndexStart);
+        assertEquals(49, read.ReadIndexEnd);
+
+        // now capped by the coding region
+        codingRegion = new BaseRegion(115, 155);
+
+        read = createRead(codingRegion, record, true, false);
+        assertNotNull(read);
+
+        assertEquals(115, read.PositionStart);
+        assertEquals(155, read.PositionEnd);
+        assertEquals(5, read.SoftClippedStart);
+        assertEquals(6, read.SoftClippedEnd);
+        assertEquals(5, read.ReadIndexStart);
+        assertEquals(45, read.ReadIndexEnd);
+
+        // within the aligned positions
+        codingRegion = new BaseRegion(125, 135);
+
+        read = createRead(codingRegion, record, true, false);
+        assertNotNull(read);
+
+        assertEquals(125, read.PositionStart);
+        assertEquals(135, read.PositionEnd);
+        assertEquals(0, read.SoftClippedStart);
+        assertEquals(0, read.SoftClippedEnd);
+        assertEquals(15, read.ReadIndexStart);
+        assertEquals(25, read.ReadIndexEnd);
+
+    }
+
+    @Test
+    public void testReadLowQualBaseTrimming()
+    {
+        BaseRegion codingRegion = new BaseRegion(100, 1000);
+
+        // test the low-qual bases are trimming up until the lowest score point only
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                TEST_READ_ID, CHR_1, 100, TEST_READ_BASES.substring(0, 50), "50M", CHR_1, 300,
+                false, false, null);
+
+        byte lowBaseQual = DEFAULT_MIN_BASE_QUAL - 1;
+        setBaseQualities(record, 40, 49, lowBaseQual);
+
+        Read read = createRead(codingRegion, record, true, false);
+        assertNotNull(read);
+
+        assertEquals(10, read.trimmedBases());
+        assertEquals(100, read.PositionStart);
+        assertEquals(139, read.PositionEnd);
+        assertEquals(0, read.ReadIndexStart);
+        assertEquals(39, read.ReadIndexEnd);
+
+        // with a second low point but less than the first
+        setBaseQualities(record, 28, 31, lowBaseQual);
+
+        read = createRead(codingRegion, record, false, false);
+        assertNotNull(read);
+
+        assertEquals(10, read.trimmedBases());
+        assertEquals(100, read.PositionStart);
+        assertEquals(139, read.PositionEnd);
+        assertEquals(0, read.ReadIndexStart);
+        assertEquals(39, read.ReadIndexEnd);
+
+        // test that trimmed bases factor in the coding region - first low qual ending mid way between read end and coding end
+        codingRegion = new BaseRegion(100, 130);
+
+        read = createRead(codingRegion, record, false, false);
+        assertNotNull(read);
+
+        assertEquals(10, read.trimmedBases());
+        assertEquals(100, read.PositionStart);
+        assertEquals(130, read.PositionEnd);
+        assertEquals(0, read.ReadIndexStart);
+        assertEquals(30, read.ReadIndexEnd);
+
+        // now low qual extending inside the coding region
+        setBaseQualities(record, 25, 49, lowBaseQual);
+
+        read = createRead(codingRegion, record, false, false);
+        assertNotNull(read);
+
+        assertEquals(25, read.trimmedBases());
+        assertEquals(100, read.PositionStart);
+        assertEquals(124, read.PositionEnd);
+        assertEquals(0, read.ReadIndexStart);
+        assertEquals(24, read.ReadIndexEnd);
+
+        // repeat on the negative strand
+        record.setReadNegativeStrandFlag(true);
+        setBaseQualities(record, 0, 49, DEFAULT_MIN_BASE_QUAL); // reset
+
+        setBaseQualities(record, 0, 9, lowBaseQual);
+
+        codingRegion = new BaseRegion(100, 200);
+
+        read = createRead(codingRegion, record, false, false);
+        assertNotNull(read);
+
+        assertEquals(10, read.trimmedBases());
+        assertEquals(110, read.PositionStart);
+        assertEquals(149, read.PositionEnd);
+        assertEquals(10, read.ReadIndexStart);
+        assertEquals(49, read.ReadIndexEnd);
+
+        // also with soft-clipped bases being trimmed
+        record = SamRecordTestUtils.createSamRecord(
+                TEST_READ_ID, CHR_1, 120, TEST_READ_BASES.substring(0, 50), "20S30M", CHR_1, 300,
+                false, false, null);
+
+        record.setReadNegativeStrandFlag(true);
+        setBaseQualities(record, 0, 9, lowBaseQual);
+
+        read = createRead(codingRegion, record, true, false);
+        assertNotNull(read);
+
+        assertEquals(10, read.trimmedBases());
+        assertEquals(110, read.PositionStart);
+        assertEquals(149, read.PositionEnd);
+        assertEquals(10, read.ReadIndexStart);
+        assertEquals(49, read.ReadIndexEnd);
+        assertEquals(10, read.SoftClippedStart);
+        assertEquals(0, read.SoftClippedEnd);
+
+        setBaseQualities(record, 0, 29, lowBaseQual);
+
+        read = createRead(codingRegion, record, true, false);
+        assertNotNull(read);
+
+        assertEquals(30, read.trimmedBases());
+        assertEquals(130, read.PositionStart);
+        assertEquals(149, read.PositionEnd);
+        assertEquals(30, read.ReadIndexStart);
+        assertEquals(49, read.ReadIndexEnd);
+        assertEquals(0, read.SoftClippedStart);
+        assertEquals(0, read.SoftClippedEnd);
+    }
+
+    private static void setBaseQualities(final SAMRecord record, int rangeStart, int rangeEnd, byte baseQual)
+    {
+        for(int i = rangeStart; i <= rangeEnd; ++i)
+        {
+            record.getBaseQualities()[i] = baseQual;
+        }
     }
 
     @Test

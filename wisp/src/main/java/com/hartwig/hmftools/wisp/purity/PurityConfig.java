@@ -29,6 +29,9 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_BQR_MIN_Q
 import static com.hartwig.hmftools.wisp.purity.SampleData.sampleIdsFromStr;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
+import static com.hartwig.hmftools.wisp.purity.WriteType.CN_WRITE_TYPES;
+import static com.hartwig.hmftools.wisp.purity.WriteType.LOH_WRITE_TYPES;
+import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATIC_WRITE_TYPES;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -174,9 +177,20 @@ public class PurityConfig
             String writeTypes = configBuilder.getValue(WRITE_TYPES);
 
             if(writeTypes.equals(WriteType.ALL))
-                Arrays.stream(WriteType.values()).forEach(x -> WriteTypes.add(x));
+            {
+                if(PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
+                    WriteTypes.addAll(SOMATIC_WRITE_TYPES);
+
+                if(PurityMethods.contains(PurityMethod.COPY_NUMBER))
+                    WriteTypes.addAll(CN_WRITE_TYPES);
+
+                if(PurityMethods.contains(PurityMethod.AMBER_LOH))
+                    WriteTypes.addAll(LOH_WRITE_TYPES);
+            }
             else
+            {
                 Arrays.stream(writeTypes.split(ITEM_DELIM, -1)).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
+            }
         }
 
         WriteAllSummaryMethods = configBuilder.hasFlag(WRITE_ALL_SUMMARY_METHODS);

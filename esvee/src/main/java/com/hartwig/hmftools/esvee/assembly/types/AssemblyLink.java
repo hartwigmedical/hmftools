@@ -18,6 +18,7 @@ public class AssemblyLink
 
     private final String mInsertedBases;
     private final String mOverlapBases;
+    private boolean mInsertSite;
 
     public AssemblyLink(
             final JunctionAssembly first, final JunctionAssembly second, final LinkType type,
@@ -28,11 +29,15 @@ public class AssemblyLink
         mType = type;
         mInsertedBases = insertedBases;
         mOverlapBases = overlapBases;
+        mInsertSite = false;
     }
 
     public LinkType type() { return mType; }
     public JunctionAssembly first() { return mFirst; }
     public JunctionAssembly second() { return mSecond; }
+
+    public void markInsertSite() { mInsertSite = true; }
+    public boolean isInsertSite() { return mInsertSite; }
 
     public JunctionAssembly otherAssembly(final JunctionAssembly assembly) { return mFirst == assembly ? mSecond : mFirst; }
 

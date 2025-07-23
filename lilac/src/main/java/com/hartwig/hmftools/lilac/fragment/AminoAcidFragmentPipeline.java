@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
 
@@ -24,37 +23,31 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class AminoAcidFragmentPipeline
 {
-    private final LilacConfig mConfig;
+    // raw per-gene counts of bases and amino-acids
+    public static final ConcurrentHashMap<String, SequenceCount> RAW_REF_NUCLEOTIDE_COUNTS = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, SequenceCount> RAW_REF_AMINO_ACID_COUNTS = new ConcurrentHashMap<>();
 
     private final List<Fragment> mHighQualRefAminoAcidFragments; // generated from input ref fragments, filtered and amino acids built
 
     // per-gene counts of bases and amino-acids with sufficient support
     private final ConcurrentHashMap<String, SequenceCount> mRefNucleotideCounts;
     private final ConcurrentHashMap<String, SequenceCount> mRefAminoAcidCounts;
-    private final ConcurrentHashMap<String, SequenceCount> mRawRefNucleotideCounts;
-    private final ConcurrentHashMap<String, SequenceCount> mRawRefAminoAcidCounts;
 
     private final List<Fragment> mOriginalRefFragments; // copied and used for phasing only, will remain unchanged
 
-    public AminoAcidFragmentPipeline(final LilacConfig config, final Collection<Fragment> referenceFragments)
+    public AminoAcidFragmentPipeline(final Collection<Fragment> referenceFragments)
     {
-        mConfig = config;
         mOriginalRefFragments = referenceFragments.stream().map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
 
         mRefNucleotideCounts = new ConcurrentHashMap<>();
         mRefAminoAcidCounts = new ConcurrentHashMap<>();
-        mRawRefNucleotideCounts = new ConcurrentHashMap<>();
-        mRawRefAminoAcidCounts = new ConcurrentHashMap<>();
     }
 
     public List<Fragment> highQualRefFragments() { return mHighQualRefAminoAcidFragments; }
 
     public Map<String, SequenceCount> getReferenceAminoAcidCounts() { return mRefAminoAcidCounts; }
-
-    public Map<String, SequenceCount> getRawRefNucleotideCounts() { return mRawRefNucleotideCounts; }
-    public Map<String, SequenceCount> getRawReferenceAminoAcidCounts() { return mRawRefAminoAcidCounts; }
 
     private static List<Fragment> createHighQualAminoAcidFragments(final Iterable<Fragment> fragments)
     {
@@ -108,10 +101,13 @@ public class AminoAcidFragmentPipeline
         // start with the unfiltered fragments again
         List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream().filter(x -> x.containsGene(gene)).toList();
 
-        SequenceCount rawNucCount = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, geneRefNucFrags);
-        List<Fragment> geneRefAcidFrags = geneRefNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
+        List<Fragment> rawGeneNucFrags = mOriginalRefFragments.stream().filter(x -> x.readGene().equals(gene)).toList();
+        SequenceCount rawNucCount = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, rawGeneNucFrags);
+        List<Fragment> geneRefAcidFrags = rawGeneNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
         geneRefAcidFrags.forEach(Fragment::buildAminoAcids);
         SequenceCount rawAcidCount = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, geneRefAcidFrags);
+        RAW_REF_NUCLEOTIDE_COUNTS.put(gene, rawNucCount);
+        RAW_REF_AMINO_ACID_COUNTS.put(gene, rawAcidCount);
 
         if(geneRefNucFrags.isEmpty())
             return Collections.emptyList();
@@ -121,7 +117,7 @@ public class AminoAcidFragmentPipeline
         highQualFrags = highQualFrags.stream().filter(Fragment::hasNucleotides).toList();
 
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
-                context, MIN_EVIDENCE_FACTOR, MIN_HIGH_QUAL_EVIDENCE_FACTOR, geneRefNucFrags, highQualFrags);
+                context, geneRefNucFrags, highQualFrags);
 
         int maxCommonAminoAcidExonBoundary = GENE_CACHE.MaxCommonAminoAcidExonBoundary;
 
@@ -132,23 +128,20 @@ public class AminoAcidFragmentPipeline
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
         List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(
-                context, rawAcidCount, spliceEnrichedNucFrags, MIN_EVIDENCE_FACTOR);
+                context, spliceEnrichedNucFrags, MIN_EVIDENCE_FACTOR);
 
         // cache support at each base and amino acid for later writing and recovery of low-qual support
         SequenceCount refNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, enrichedAminoAcidFrags);
         SequenceCount refAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, enrichedAminoAcidFrags);
-        setCounts(gene, refNucleotideCounts, refAminoAcidCounts, rawNucCount, rawAcidCount);
+        setCounts(gene, refNucleotideCounts, refAminoAcidCounts);
 
         return enrichedAminoAcidFrags;
     }
 
-    private void setCounts(final String gene, final SequenceCount refNucleotideCounts, final SequenceCount refAminoAcidCounts,
-            final SequenceCount rawRefNucleotideCounts, final SequenceCount rawRefAminoAcidCounts)
+    private void setCounts(final String gene, final SequenceCount refNucleotideCounts, final SequenceCount refAminoAcidCounts)
     {
         mRefNucleotideCounts.put(gene, refNucleotideCounts);
         mRefAminoAcidCounts.put(gene, refAminoAcidCounts);
-        mRawRefNucleotideCounts.put(gene, rawRefNucleotideCounts);
-        mRawRefAminoAcidCounts.put(gene, rawRefAminoAcidCounts);
     }
 
     public List<Fragment> calcComparisonCoverageFragments(final Iterable<Fragment> comparisonFragments)
@@ -198,13 +191,13 @@ public class AminoAcidFragmentPipeline
         for(Map.Entry<String, SequenceCount> entry : mRefAminoAcidCounts.entrySet())
         {
             String gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene + ".aminoacids.txt"), mRawRefAminoAcidCounts.get(gene).geneSeqCountsByLoci(gene));
+            entry.getValue().writeVertically(config.formFileId(gene + ".aminoacids.txt"), RAW_REF_AMINO_ACID_COUNTS.get(gene));
         }
 
         for(Map.Entry<String, SequenceCount> entry : mRefNucleotideCounts.entrySet())
         {
             String gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene + ".nucleotides.txt"), mRawRefNucleotideCounts.get(gene).geneSeqCountsByLoci(gene));
+            entry.getValue().writeVertically(config.formFileId(gene + ".nucleotides.txt"), RAW_REF_NUCLEOTIDE_COUNTS.get(gene));
         }
     }
 }

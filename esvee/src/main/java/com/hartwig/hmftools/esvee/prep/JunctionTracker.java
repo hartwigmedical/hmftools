@@ -424,7 +424,7 @@ public class JunctionTracker
 
                 Orientation orientation = (i == 0) ? REVERSE : FORWARD;
 
-                int position = orientation.isReverse() ? read.start() : read.end();
+                int position = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
 
                 // junctions cannot fall in blacklist regions
                 if(positionInBlacklist(position))
@@ -473,7 +473,7 @@ public class JunctionTracker
 
     private boolean readInBlacklist(final PrepRead read)
     {
-        return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.start(), read.end()));
+        return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.AlignmentStart, read.AlignmentEnd));
     }
 
     private boolean readMateInBlacklist(final PrepRead read)
@@ -519,8 +519,8 @@ public class JunctionTracker
         if(indelCoords == null)
             return;
 
-        int impliedUnclippedStart = read.start();
-        int impliedUnclippedEnd = read.end();
+        int impliedUnclippedStart = read.AlignmentStart;
+        int impliedUnclippedEnd = read.AlignmentEnd;
 
         if(indelCoords.isInsert())
         {
@@ -533,8 +533,8 @@ public class JunctionTracker
             impliedUnclippedEnd -= indelCoords.Length;
         }
 
-        int readBoundsMin = min(read.start(), impliedUnclippedStart);
-        int readBoundsMax = max(read.end(), impliedUnclippedEnd);
+        int readBoundsMin = min(read.AlignmentStart, impliedUnclippedStart);
+        int readBoundsMax = max(read.AlignmentEnd, impliedUnclippedEnd);
 
         // reads with a sufficiently long indel only need to cover a junction with any of their read bases, not the indel itself
         for(JunctionData junctionData : mJunctions)
@@ -580,7 +580,7 @@ public class JunctionTracker
 
     private JunctionData getOrCreateJunction(final PrepRead read, final Orientation orientation)
     {
-        int junctionPosition = orientation.isReverse() ? read.start() : read.end();
+        int junctionPosition = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
         return getOrCreateJunction(read, junctionPosition, orientation);
     }
 
@@ -768,7 +768,7 @@ public class JunctionTracker
             if(readWithinJunctionRange(read, junctionData, maxSupportDistance))
                 return currentIndex;
 
-            if(read.end() < junctionData.Position)
+            if(read.AlignmentEnd < junctionData.Position)
             {
                 // search lower
                 if(lowerIndex + 1 == currentIndex)
@@ -777,7 +777,7 @@ public class JunctionTracker
                 upperIndex = currentIndex;
                 currentIndex = (lowerIndex + upperIndex) / 2;
             }
-            else if(read.start() > junctionData.Position)
+            else if(read.AlignmentStart > junctionData.Position)
             {
                 // search higher
                 if(currentIndex + 1 == upperIndex)
@@ -806,10 +806,10 @@ public class JunctionTracker
 
     private boolean readWithinJunctionRange(final PrepRead read, final JunctionData junctionData, int maxDistance)
     {
-        if(abs(read.end() - junctionData.Position) <= maxDistance)
+        if(abs(read.AlignmentEnd - junctionData.Position) <= maxDistance)
             return true;
 
-        if(abs(read.start() - junctionData.Position) <= maxDistance)
+        if(abs(read.AlignmentStart - junctionData.Position) <= maxDistance)
             return true;
 
         return false;

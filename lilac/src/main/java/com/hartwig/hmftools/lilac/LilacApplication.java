@@ -208,14 +208,14 @@ public class LilacApplication
 
         allValid &= validateFragments(mRefNucleotideFrags);
 
-        mAminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, mRefNucleotideFrags);
+        mAminoAcidPipeline = new AminoAcidFragmentPipeline(mRefNucleotideFrags);
 
         List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
 
         LL_LOGGER.info(format("totalFrags(%d)", totalFragmentCount));
 
-        Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
         geneTasks.add(
@@ -386,6 +386,10 @@ public class LilacApplication
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
             List<HlaComplex> filteredComplexes = mRankedComplexes.stream().map(ComplexCoverage::toComplex).toList();
+
+            LL_LOGGER.debug("recalculating coverage for complexes({}) and ref alleles({})",
+                    filteredComplexes.size(), mRefFragAlleles.size());
+
             calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
             complexRanker = new ComplexCoverageRanking(0, mRefData);
             mRankedComplexes.clear();
@@ -692,7 +696,7 @@ public class LilacApplication
 
         if(!mConfig.ReferenceBam.isEmpty() && totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
         {
-            LL_LOGGER.warn("Exiting due to too low coverage. Number of bases with <{} coverage per gene: A={}, B={}, C={}. Total={} exceeds threshold={}",
+            LL_LOGGER.warn("exiting due to too low coverage: bases with <{} coverage per gene(A={}, B={}, C={}) total({}) exceeds threshold({})",
                     WARN_LOW_COVERAGE_DEPTH, aLowCoveragePositions, bLowCoveragePositions, cLowCoveragePositions,
                     totalLowCoveragePositions, mConfig.FatalTotalLowCoveragePositions);
             return false;
