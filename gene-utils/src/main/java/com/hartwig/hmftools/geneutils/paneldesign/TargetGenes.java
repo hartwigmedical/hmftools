@@ -284,7 +284,7 @@ public class TargetGenes
         for(MergedExonRegion mergedExon : mergedExons)
         {
             BaseRegion exonRegion = mergedExon.Region;
-            if(lastExonEnd > 0)
+            if(options.exonFlank() && lastExonEnd > 0)
             {
                 int intronLength = exonRegion.start() - lastExonEnd;
 
