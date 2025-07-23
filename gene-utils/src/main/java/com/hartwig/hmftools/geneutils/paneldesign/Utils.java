@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-// TODO: unit test
-
 // Miscellaneous utility functionality.
 public class Utils
 {
@@ -128,8 +126,8 @@ public class Utils
             }
             prevCovered = max(prevCovered, coveredRegion.end());
         }
-        // If we got here then at least 1 region overlaps and there are no gaps in the coverage.
-        return true;
+        // Could be a gap at the end, if not then the whole region must be covered.
+        return prevCovered >= targetRegion.end();
     }
 
     public static double regionCentreFloat(final BaseRegion region)
@@ -183,13 +181,21 @@ public class Utils
         return region;
     }
 
-    public static BaseRegion regionIntersection(final BaseRegion region1, final BaseRegion region2)
+    public static Optional<BaseRegion> regionIntersection(final BaseRegion region1, final BaseRegion region2)
     {
         if(!region1.hasValidPositions() || !region2.hasValidPositions())
         {
             throw new IllegalArgumentException("Invalid region");
         }
-        return new BaseRegion(max(region1.start(), region2.start()), min(region1.end(), region2.end()));
+        BaseRegion result = new BaseRegion(max(region1.start(), region2.start()), min(region1.end(), region2.end()));
+        if(result.hasValidPositions())
+        {
+            return Optional.of(result);
+        }
+        else
+        {
+            return Optional.empty();
+        }
     }
 
     public static boolean regionOverlapsOrAdjacent(final BaseRegion region1, final BaseRegion region2)

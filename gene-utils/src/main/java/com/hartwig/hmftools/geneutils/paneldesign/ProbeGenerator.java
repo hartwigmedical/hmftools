@@ -124,7 +124,7 @@ public class ProbeGenerator
                     // Bound the subregion to the target region to prevent producing too many probes (our bounds for generating candidates
                     // earlier were the least strict possible).
                     // calculateOptimalProbeTiling() will produce probes extending past the target region if that's allowed and optimal.
-                    BaseRegion tilingTarget = regionIntersection(subregion, baseRegion);
+                    BaseRegion tilingTarget = regionIntersection(subregion, baseRegion).orElseThrow();
 
                     // The acceptable subregions are maximal because we checked all probes which overlap the target region.
                     // Thus, the subregion is bounded on both sides by unacceptable regions or completely off-target regions, and probes
