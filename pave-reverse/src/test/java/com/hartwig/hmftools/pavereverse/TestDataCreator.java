@@ -118,7 +118,7 @@ public class TestDataCreator
         return false;
     }
 
-    @Test
+//    @Test
     public void produceReducedChrFile() throws IOException
     {
         File outputDir = new File("/Users/timlavers/work/junk");
