@@ -10,7 +10,6 @@ public record TargetMetadata(
     {
         GENE,
         CN_BACKBONE,
-        CUSTOM,
-        MIXED  // TODO: needed?
+        CUSTOM
     }
 }

@@ -55,12 +55,6 @@ public class ProbeUtils
         return minProbeStartContaining(region.start());
     }
 
-    // Calculates the maximum probe starting position such that the specified region overlaps the probe.
-    public static int maxProbeStartOverlapping(final BaseRegion region)
-    {
-        return probeRegionEndingAt(maxProbeEndOverlapping(region)).start();
-    }
-
     // Calculates the maximum probe ending position such that the specified region overlaps the probe.
     public static int maxProbeEndOverlapping(final BaseRegion region)
     {
