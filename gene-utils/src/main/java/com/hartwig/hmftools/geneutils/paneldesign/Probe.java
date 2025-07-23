@@ -39,14 +39,19 @@ public record Probe(
         this(target, probeRegion, null, null, null, null, null);
     }
 
+    public boolean evaluated()
+    {
+        return evalCriteria != null;
+    }
+
     public boolean accepted()
     {
-        return rejectionReason == null;
+        return evaluated() && rejectionReason == null;
     }
 
     public boolean rejected()
     {
-        return !accepted();
+        return evaluated() && rejectionReason != null;
     }
 
     public Probe withEvalCriteria(final ProbeEvaluator.Criteria value)
