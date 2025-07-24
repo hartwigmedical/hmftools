@@ -317,7 +317,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--hla_level", default=AlleleGroup.DIGITS_2,
+        "--hla_level", default=AlleleGroup.DIGITS_4,
         help="Optional. HLA locus type. Valid values: " + ",".join([str(enum.value) for enum in AlleleGroup])
     )
 
