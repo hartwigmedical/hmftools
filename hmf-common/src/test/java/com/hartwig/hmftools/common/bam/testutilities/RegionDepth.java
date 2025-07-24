@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.remapper.testutilities;
+package com.hartwig.hmftools.common.bam.testutilities;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;

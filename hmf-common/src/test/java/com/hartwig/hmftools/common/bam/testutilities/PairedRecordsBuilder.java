@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.remapper.testutilities;
+package com.hartwig.hmftools.common.bam.testutilities;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
@@ -9,8 +9,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class PairedRecordsBuilder
 {
-    private String readName;
-    private SAMFileHeader header;
+    private final String readName;
+    private final SAMFileHeader header;
 
     public PairedRecordsBuilder(final String readName, final SAMFileHeader header)
     {

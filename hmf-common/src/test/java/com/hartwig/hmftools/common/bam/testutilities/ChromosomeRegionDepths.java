@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.remapper.testutilities;
+package com.hartwig.hmftools.common.bam.testutilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import htsjdk.samtools.SAMFileWriter;
 
 public class ChromosomeRegionDepths
 {
-    private final int mChromosome;
+    public final int mChromosome;
     private final List<RegionDepth> ranges = new ArrayList<>();
 
     public ChromosomeRegionDepths(final int mChromosome)
@@ -31,6 +31,6 @@ public class ChromosomeRegionDepths
 
     public void writeToBam(SAMFileWriter bamWriter, RefGenomeSource refGenomeSource)
     {
-        ranges.forEach(range -> range.singleBlockBamRegionWriter().writeEntries(bamWriter, refGenomeSource));
+        ranges.forEach(range -> range.length100ReadsBamRegionWriter().writeEntries(bamWriter, refGenomeSource));
     }
 }

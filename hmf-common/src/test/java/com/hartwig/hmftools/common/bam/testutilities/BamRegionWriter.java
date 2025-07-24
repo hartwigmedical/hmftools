@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.remapper.testutilities;
+package com.hartwig.hmftools.common.bam.testutilities;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;

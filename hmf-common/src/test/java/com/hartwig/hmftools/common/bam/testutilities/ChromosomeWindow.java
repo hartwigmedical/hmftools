@@ -1,8 +1,5 @@
-package com.hartwig.hmftools.bamtools.remapper.testutilities;
+package com.hartwig.hmftools.common.bam.testutilities;
 
-import java.util.Arrays;
-
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 record ChromosomeWindow(int chromosome, int start, int end)
