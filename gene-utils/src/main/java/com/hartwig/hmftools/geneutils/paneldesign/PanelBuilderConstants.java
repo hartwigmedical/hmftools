@@ -40,7 +40,7 @@ public class PanelBuilderConstants
     public static final double CN_GC_TARGET = 0.45;
     public static final double CN_GC_TOLERANCE = 0.05;
     // Early stopping on the probe search if the GC is within this tolerance. (Performance tuning parameter.)
-    public static final double CN_GC_OPTIMAL_TOLERANCE = 0.001;
+    public static final double CN_GC_OPTIMAL_TOLERANCE = 0.005;
 
     // Custom regions parameters.
     public static final double CUSTOM_REGION_QUALITY_MIN = 0.1;
@@ -49,6 +49,7 @@ public class PanelBuilderConstants
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
     public static final String TARGET_REGIONS_FILE_NAME = "target_regions.bed";
     public static final String REJECTED_REGIONS_FILE_STEM = "rejected_regions";
+    public static final String CANDIDATE_REGIONS_FILE_NAME = "candidate_regions.bed";
     // This output can get very large (multiple GB) so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
     public static final String GENE_STATS_FILE_NAME = "target_gene_stats.tsv";

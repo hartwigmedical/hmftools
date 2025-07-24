@@ -5,6 +5,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -99,9 +100,9 @@ public class ProbeQualityProfile
 
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
-            int chromosomeField = reader.getColumnIndex(FLD_CHROMOSOME);
-            int startField = reader.getColumnIndex(FLD_POSITION_START);
-            int qualityScoreField = reader.getColumnIndex(FLD_QUALITY_SCORE);
+            int chromosomeField = requireNonNull(reader.getColumnIndex(FLD_CHROMOSOME));
+            int startField = requireNonNull(reader.getColumnIndex(FLD_POSITION_START));
+            int qualityScoreField = requireNonNull(reader.getColumnIndex(FLD_QUALITY_SCORE));
 
             String curChromosome = null;
             List<ProbeQualityWindow> curWindows = null;

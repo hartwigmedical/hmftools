@@ -6,8 +6,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 public record RejectedRegion(
         // The exact region that could not be covered.
         ChrBaseRegion region,
-        // The full region we were interested in covering.
-        TargetRegion target,
+        TargetMetadata metadata,
         // The reason the region could not be covered.
         String reason
 )
@@ -20,8 +19,9 @@ public record RejectedRegion(
         }
     }
 
-    public static RejectedRegion fromTargetRegion(TargetRegion target, String reason)
+    // Convenience method for creating a rejected region from an entire target region.
+    public static RejectedRegion rejectTarget(TargetRegion target, String reason)
     {
-        return new RejectedRegion(target.region(), target, reason);
+        return new RejectedRegion(target.region(), target.metadata(), reason);
     }
 }

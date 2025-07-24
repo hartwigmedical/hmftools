@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.util.Objects.requireNonNull;
+
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 
@@ -26,9 +28,9 @@ public class AmberSites
 
         try(DelimFileReader reader = new DelimFileReader(path))
         {
-            int chrIndex = reader.getColumnIndex(FLD_CHROMOSOME);
-            int posIndex = reader.getColumnIndex(FLD_POSITION);
-            int gnomadIndex = reader.getColumnIndex(FLD_GNOMAD_FREQ);
+            int chrIndex = requireNonNull(reader.getColumnIndex(FLD_CHROMOSOME));
+            int posIndex = requireNonNull(reader.getColumnIndex(FLD_POSITION));
+            int gnomadIndex = requireNonNull(reader.getColumnIndex(FLD_GNOMAD_FREQ));
 
             List<AmberSite> sites = reader.stream().map(row ->
             {

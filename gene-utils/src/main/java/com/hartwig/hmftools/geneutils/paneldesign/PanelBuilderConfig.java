@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
+import org.jetbrains.annotations.Nullable;
+
 public class PanelBuilderConfig
 {
     public final String AmberSitesFile;
@@ -22,6 +24,7 @@ public class PanelBuilderConfig
     public final String EnsemblDir;
     public final String ProbeQualityProfileFile;
 
+    @Nullable
     public final String OutputPrefix;
     public final String OutputDir;
     public final boolean VerboseOutput;
@@ -49,7 +52,7 @@ public class PanelBuilderConfig
 
         ProbeQualityProfileFile = configBuilder.getValue(CFG_PROBE_QUALITY_FILE);
 
-        OutputPrefix = configBuilder.getValue(CFG_OUTPUT_PREFIX);
+        OutputPrefix = configBuilder.hasValue(CFG_OUTPUT_PREFIX) ? configBuilder.getValue(CFG_OUTPUT_PREFIX) : null;
         OutputDir = parseOutputDir(configBuilder);
         VerboseOutput = configBuilder.hasFlag(CFG_VERBOSE_OUTPUT);
     }
@@ -66,7 +69,7 @@ public class PanelBuilderConfig
 
         ProbeQualityProfile.registerConfig(configBuilder);
 
-        configBuilder.addConfigItem(CFG_OUTPUT_PREFIX, true, DESC_OUTPUT_PREFIX);
+        configBuilder.addConfigItem(CFG_OUTPUT_PREFIX, false, DESC_OUTPUT_PREFIX);
         addOutputDir(configBuilder);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 

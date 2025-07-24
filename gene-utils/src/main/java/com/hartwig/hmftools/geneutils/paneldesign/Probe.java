@@ -5,8 +5,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import org.jetbrains.annotations.Nullable;
 
 public record Probe(
-        TargetRegion target,
         ChrBaseRegion region,
+        TargetMetadata metadata,
         // null if the probe hasn't been evaluated yet.
         @Nullable ProbeEvaluator.Criteria evalCriteria,
         // null if the probe is acceptable.
@@ -19,11 +19,6 @@ public record Probe(
 {
     public Probe
     {
-        if(!region.chromosome().equals(target.region().chromosome()))
-        {
-            // Not expecting this to ever occur but should check it to be safe.
-            throw new IllegalArgumentException("Probe region and target region should have the same chromosome");
-        }
         if(!region.hasValidPositions())
         {
             throw new IllegalArgumentException("Invalid region");
@@ -32,11 +27,15 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence length should match probe region length");
         }
+        if(rejectionReason != null && (rejectionReason.isBlank()))
+        {
+            throw new IllegalArgumentException("rejectionReason should not be blank");
+        }
     }
 
-    public Probe(final TargetRegion target, final ChrBaseRegion probeRegion)
+    public Probe(final ChrBaseRegion region, final TargetMetadata metadata)
     {
-        this(target, probeRegion, null, null, null, null, null);
+        this(region, metadata, null, null, null, null, null);
     }
 
     public boolean evaluated()
@@ -56,26 +55,26 @@ public record Probe(
 
     public Probe withEvalCriteria(final ProbeEvaluator.Criteria value)
     {
-        return new Probe(target, region, value, rejectionReason, sequence, qualityScore, gcContent);
+        return new Probe(region, metadata, value, rejectionReason, sequence, qualityScore, gcContent);
     }
 
     public Probe withRejectionReason(final String value)
     {
-        return new Probe(target, region, evalCriteria, value, sequence, qualityScore, gcContent);
+        return new Probe(region, metadata, evalCriteria, value, sequence, qualityScore, gcContent);
     }
 
     public Probe withSequence(String value)
     {
-        return new Probe(target, region, evalCriteria, rejectionReason, value, qualityScore, gcContent);
+        return new Probe(region, metadata, evalCriteria, rejectionReason, value, qualityScore, gcContent);
     }
 
     public Probe withQualityScore(double value)
     {
-        return new Probe(target, region, evalCriteria, rejectionReason, sequence, value, gcContent);
+        return new Probe(region, metadata, evalCriteria, rejectionReason, sequence, value, gcContent);
     }
 
     public Probe withGcContent(double value)
     {
-        return new Probe(target, region, evalCriteria, rejectionReason, sequence, qualityScore, value);
+        return new Probe(region, metadata, evalCriteria, rejectionReason, sequence, qualityScore, value);
     }
 }

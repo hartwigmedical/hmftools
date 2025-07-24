@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
@@ -183,16 +184,18 @@ public class CopyNumberBackbone
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe ->
                 {
-                    TargetRegion target = bestProbe.target();
+                    TargetMetadataExtra metadataExtra = (TargetMetadataExtra) requireNonNull(bestProbe.metadata().extraData());
+                    AmberSite site = requireNonNull(metadataExtra.site());
+                    TargetRegion target = new TargetRegion(ChrBaseRegion.from(site.position()), bestProbe.metadata());
                     if(mPanelData.isCovered(target.region()))
                     {
                         LOGGER.debug("Copy number backbone target already covered by panel: {}", target);
-                        return new ProbeGenerationResult(List.of(target), emptyList(), emptyList());
+                        return new ProbeGenerationResult(emptyList(), List.of(target), emptyList(), emptyList());
                     }
                     else
                     {
                         // TODO: is this the best target region to use here?
-                        return new ProbeGenerationResult(List.of(target), List.of(bestProbe), emptyList());
+                        return new ProbeGenerationResult(List.of(bestProbe), List.of(target), List.of(target), emptyList());
                     }
                 })
                 .orElseGet(() ->
@@ -212,9 +215,8 @@ public class CopyNumberBackbone
                     {
                         rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_CRITERIA.eval();
                     }
-                    RejectedRegion rejectedRegion = RejectedRegion.fromTargetRegion(target, rejectionReason);
 
-                    return new ProbeGenerationResult(List.of(target), emptyList(), List.of(rejectedRegion));
+                    return ProbeGenerationResult.rejectTarget(target, rejectionReason);
                 });
         return result;
     }
@@ -229,9 +231,15 @@ public class CopyNumberBackbone
 
     private Stream<Probe> generateCandidateProbes(final Partition partition, final AmberSite site)
     {
-        TargetRegion target = new TargetRegion(ChrBaseRegion.from(site.position()), createTargetMetadata(partition.Region, site));
-        ProbeContext context = new ProbeContext(target);
+        TargetMetadata metadata = createTargetMetadata(partition.Region, site);
+        ProbeContext context = new ProbeContext(metadata);
         return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), context);
+    }
+
+    public record TargetMetadataExtra(
+            @Nullable AmberSite site
+    ) implements TargetMetadata.ExtraData
+    {
     }
 
     private static TargetMetadata createTargetMetadata(final ChrBaseRegion partitionRegion, @Nullable final AmberSite site)
@@ -241,6 +249,7 @@ public class CopyNumberBackbone
         {
             extraInfo += format(":%d", site.position().Position);
         }
-        return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
+        TargetMetadataExtra extraData = new TargetMetadataExtra(site);
+        return new TargetMetadata(TARGET_REGION_TYPE, extraInfo, extraData);
     }
 }

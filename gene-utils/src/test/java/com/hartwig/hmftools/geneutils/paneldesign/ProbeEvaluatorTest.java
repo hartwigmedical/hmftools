@@ -23,9 +23,7 @@ public class ProbeEvaluatorTest
 {
     private static final ProbeEvaluator.Criteria CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.45, 0.1);
 
-    private static final TargetRegion TARGET_REGION = new TargetRegion(
-            new ChrBaseRegion("1", 100, 200),
-            new TargetMetadata(TargetMetadata.Type.CUSTOM, "test"));
+    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
 
     private static final double EPSILON = 1e-6;
 
@@ -81,10 +79,10 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesAcceptable()
     {
-        Probe probe = new Probe(TARGET_REGION, new ChrBaseRegion("1", 1, 10));
+        Probe probe = new Probe(new ChrBaseRegion("1", 1, 10), METADATA);
         Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
-        assertEquals(probe.target(), evalProbe.target());
+        assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
         assertNotNull(evalProbe.qualityScore());
         assertEquals(1, evalProbe.qualityScore(), EPSILON);
@@ -99,10 +97,10 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectGc()
     {
-        Probe probe = new Probe(TARGET_REGION, new ChrBaseRegion("1", 11, 20));
+        Probe probe = new Probe(new ChrBaseRegion("1", 11, 20), METADATA);
         Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
-        assertEquals(probe.target(), evalProbe.target());
+        assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
         assertEquals("AAAAAAAAAA", evalProbe.sequence());
         assertNotNull(evalProbe.gcContent());
@@ -116,10 +114,10 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectQuality()
     {
-        Probe probe = new Probe(TARGET_REGION, new ChrBaseRegion("1", 21, 30));
+        Probe probe = new Probe(new ChrBaseRegion("1", 21, 30), METADATA);
         Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
-        assertEquals(probe.target(), evalProbe.target());
+        assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
         assertNotNull(evalProbe.qualityScore());
         assertEquals(0.1, evalProbe.qualityScore(), EPSILON);

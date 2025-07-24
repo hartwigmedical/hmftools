@@ -401,7 +401,11 @@ public class TargetGenes
                     .findFirst()
                     .ifPresentOrElse(merged ->
                             {
-                                merged.Region.setEnd(exon.End);
+                                if(exon.End > merged.Region.end())
+                                {
+                                    // Don't mutate in place because we borrowed the object from the exon data.
+                                    merged.Region = new BaseRegion(merged.Region.start(), exon.End);
+                                }
                                 if(isCoding)
                                 {
                                     merged.IsCoding = true;
@@ -437,22 +441,19 @@ public class TargetGenes
         {
             case CODING ->
             {
-                TargetRegion target = new TargetRegion(geneRegion.region(), metadata);
-                ProbeContext context = new ProbeContext(target);
-                yield probeGenerator.coverRegion(target.region(), context, EXON_PROBE_CRITERIA, null);
+                ProbeContext context = new ProbeContext(metadata);
+                yield probeGenerator.coverRegion(geneRegion.region(), context, EXON_PROBE_CRITERIA, null);
             }
             case UTR ->
             {
                 BasePosition position = new BasePosition(geneRegion.region().chromosome(), regionCentre(geneRegion.region().baseRegion()));
-                TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
-                ProbeContext context = new ProbeContext(target);
+                ProbeContext context = new ProbeContext(metadata);
                 yield probeGenerator.coverPosition(position, context, EXON_PROBE_CRITERIA);
             }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
             {
-                TargetRegion target = new TargetRegion(geneRegion.region(), metadata);
-                ProbeContext context = new ProbeContext(target);
-                yield probeGenerator.coverOneSubregion(target.region(), context, CN_PROBE_CRITERIA);
+                ProbeContext context = new ProbeContext(metadata);
+                yield probeGenerator.coverOneSubregion(geneRegion.region(), context, CN_PROBE_CRITERIA);
             }
         };
     }

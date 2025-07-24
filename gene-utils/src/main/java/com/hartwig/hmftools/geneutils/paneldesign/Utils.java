@@ -198,9 +198,45 @@ public class Utils
         }
     }
 
+    public static Optional<ChrBaseRegion> regionIntersection(final ChrBaseRegion region1, final ChrBaseRegion region2)
+    {
+        if(region1.chromosome().equals(region2.chromosome()))
+        {
+            return regionIntersection(region1.baseRegion(), region2.baseRegion())
+                    .map(intersection -> ChrBaseRegion.from(region1.chromosome(), intersection));
+        }
+        else
+        {
+            return Optional.empty();
+        }
+    }
+
     public static boolean regionOverlapsOrAdjacent(final BaseRegion region1, final BaseRegion region2)
     {
         return region1.overlaps(region2) || region1.end() + 1 == region2.start() || region2.end() + 1 == region1.start();
+    }
+
+    public static List<ChrBaseRegion> mergeOverlapAndAdjacentRegions(Stream<ChrBaseRegion> regions)
+    {
+        regions = regions.sorted();
+        List<ChrBaseRegion> result = new ArrayList<>();
+        regions.forEach(region ->
+        {
+            ChrBaseRegion prev = result.isEmpty() ? null : result.get(result.size() - 1);
+            if(prev != null && region.start() <= prev.end() + 1)
+            {
+                if(region.end() > prev.end())
+                {
+                    // Don't mutate in place because we borrowed the object from the input stream.
+                    result.set(result.size() - 1, new ChrBaseRegion(prev.chromosome(), prev.start(), region.end()));
+                }
+            }
+            else
+            {
+                result.add(region);
+            }
+        });
+        return result;
     }
 
     // Generates the sequence: 0, 1, -1, 2, -2, 3, -3, ...

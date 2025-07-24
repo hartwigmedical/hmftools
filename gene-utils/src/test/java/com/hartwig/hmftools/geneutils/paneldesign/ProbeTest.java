@@ -12,22 +12,20 @@ import org.junit.Test;
 
 public class ProbeTest
 {
-    private static final TargetRegion TARGET_REGION = new TargetRegion(
-            new ChrBaseRegion("1", 100, 200),
-            new TargetMetadata(TargetMetadata.Type.CUSTOM, "test"));
-    private static final ChrBaseRegion PROBE_REGION = new ChrBaseRegion("1", 100, 109);
-    private static final String PROBE_SEQUENCE = "ACGTACGTAC";
+    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
+    private static final ChrBaseRegion PROBE_REGION = new ChrBaseRegion("1", 100, 129);
+    private static final String PROBE_SEQUENCE = "ACGTACGTACACGTACGTACACGTACGTAC";
     private static final ProbeEvaluator.Criteria EVAL_CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.45, 0.1);
 
-    private final Probe mProbe = new Probe(TARGET_REGION, PROBE_REGION);
+    private final Probe mProbe = new Probe(PROBE_REGION, METADATA);
 
     @Test
     public void testConstructor()
     {
         assertEquals(
-                new Probe(TARGET_REGION, PROBE_REGION, null, null, null, null, null),
+                new Probe(PROBE_REGION, METADATA, null, null, null, null, null),
                 mProbe);
-        assertEquals(TARGET_REGION, mProbe.target());
+        assertEquals(METADATA, mProbe.metadata());
         assertEquals(PROBE_REGION, mProbe.region());
         assertNull(mProbe.evalCriteria());
         assertNull(mProbe.sequence());
@@ -60,7 +58,7 @@ public class ProbeTest
         assertNotNull(probe.gcContent());
         assertEquals(gcContent, probe.gcContent(), 0);
 
-        assertEquals(new Probe(TARGET_REGION, PROBE_REGION, EVAL_CRITERIA, rejectionReason, PROBE_SEQUENCE, qualityScore, gcContent), probe);
+        assertEquals(new Probe(PROBE_REGION, METADATA, EVAL_CRITERIA, rejectionReason, PROBE_SEQUENCE, qualityScore, gcContent), probe);
     }
 
     @Test

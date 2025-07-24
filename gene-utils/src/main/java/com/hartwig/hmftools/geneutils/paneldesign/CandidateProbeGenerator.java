@@ -89,7 +89,10 @@ public class CandidateProbeGenerator
         int maxOffset = maxProbeEnd - initialPosition.Position - centreStartOffset - PROBE_LENGTH + 1;
 
         return outwardMovingOffsets(minOffset, maxOffset)
-                .mapToObj(offset -> context.createProbe(probeRegionCenteredAt(initialPosition.Position + offset)));
+                .mapToObj(offset ->
+                        context.createProbe(ChrBaseRegion.from(
+                                initialPosition.Chromosome,
+                                probeRegionCenteredAt(initialPosition.Position + offset))));
     }
 
     // Generates all probes overlapping a region.
@@ -99,6 +102,6 @@ public class CandidateProbeGenerator
         int maxProbeEnd = min(maxProbeEndOverlapping(region.baseRegion()), mChromosomeLengths.get(region.chromosome()));
         int maxProbeStart = probeRegionEndingAt(maxProbeEnd).start();
         return IntStream.rangeClosed(minProbeStart, maxProbeStart)
-                .mapToObj(start -> context.createProbe(probeRegionStartingAt(start)));
+                .mapToObj(start -> context.createProbe(ChrBaseRegion.from(region.chromosome(), probeRegionStartingAt(start))));
     }
 }

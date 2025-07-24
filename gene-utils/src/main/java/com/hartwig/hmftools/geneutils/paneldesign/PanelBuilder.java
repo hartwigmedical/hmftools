@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.System.exit;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -60,21 +61,17 @@ public class PanelBuilder
         // Note the order of generation here determines the priority of probe overlap resolution.
         // Probes generated first will exclude overlapping probes generated afterward.
         Optional<TargetGenes.Stats> geneStats = generateTargetGeneProbes();
-        generateCopyNumberBackboneProbes();
         generateCustomRegionProbes();
+        generateCopyNumberBackboneProbes();
 
         LOGGER.info("Writing output");
         {
             mOutputWriter.writePanelProbes(mPanelData.probes());
-            mOutputWriter.writeTargetRegions(mPanelData.targetRegions());
+            mOutputWriter.writeTargetRegions(mPanelData.coveredTargetRegions());
+            mOutputWriter.writeCandidateRegions(mPanelData.candidateTargetRegions());
             mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
             geneStats.ifPresent(stats -> mOutputWriter.writeGeneStats(stats.perGene()));
         }
-
-        // TODO: output % rejected or similar
-        // TODO: output probe overlap or similar
-
-        // TODO: probe overlapping multiple target regions will only have 1 target associated. fix up to show multiple targets on 1 probe?
 
         mOutputWriter.close();
         mOutputWriter = null;
@@ -136,7 +133,7 @@ public class PanelBuilder
 
     private void writeCandidateProbe(final Probe probe)
     {
-        mOutputWriter.writeCandidateProbe(probe);
+        requireNonNull(mOutputWriter).writeCandidateProbe(probe);
     }
 
     public static void main(@NotNull final String[] args)

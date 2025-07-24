@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
+import static java.util.Objects.requireNonNull;
+
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
@@ -67,10 +69,10 @@ public class CustomRegions
 
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
-            int chromosomeIdx = reader.getColumnIndex(FLD_CHROMOSOME);
-            int posStartIdx = reader.getColumnIndex(FLD_POSITION_START);
-            int posEndIdx = reader.getColumnIndex(FLD_POSITION_END);
-            int extraInfoIdx = reader.getColumnIndex(FLD_EXTRA_INFO);
+            int chromosomeIdx = requireNonNull(reader.getColumnIndex(FLD_CHROMOSOME));
+            int posStartIdx = requireNonNull(reader.getColumnIndex(FLD_POSITION_START));
+            int posEndIdx = requireNonNull(reader.getColumnIndex(FLD_POSITION_END));
+            int extraInfoIdx = requireNonNull(reader.getColumnIndex(FLD_EXTRA_INFO));
 
             List<CustomRegion> regions = reader.stream().map(row ->
             {
@@ -133,9 +135,8 @@ public class CustomRegions
     {
         LOGGER.debug("Generating probes for {}", region);
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
-        TargetRegion target = new TargetRegion(region.region(), metadata);
-        ProbeContext context = new ProbeContext(target);
-        ProbeGenerationResult result = probeGenerator.coverRegion(target.region(), context, PROBE_CRITERIA, coverage);
+        ProbeContext context = new ProbeContext(metadata);
+        ProbeGenerationResult result = probeGenerator.coverRegion(region.region(), context, PROBE_CRITERIA, coverage);
         return result;
     }
 }

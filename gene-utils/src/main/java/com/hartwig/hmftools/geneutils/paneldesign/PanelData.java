@@ -37,8 +37,9 @@ public class PanelData implements PanelCoverage
 
     public void addResult(final ProbeGenerationResult result)
     {
-        LOGGER.debug("Adding to panel: probes={} targetRegions={} rejectedRegions={}",
-                result.probes().size(), result.targetRegions().size(), result.rejectedRegions().size());
+        LOGGER.debug("Adding to panel: probes={} candidateTargetRegions={} coveredTargetRegions={} rejectedRegions={}",
+                result.probes().size(), result.candidateTargetRegions().size(), result.coveredTargetRegions().size(),
+                result.rejectedRegions().size());
         mData = mData.add(result);
     }
 
@@ -47,9 +48,18 @@ public class PanelData implements PanelCoverage
         return mData.probes();
     }
 
-    public List<TargetRegion> targetRegions()
+    // All the target regions, regardless of how they were covered by probes.
+    // This is mostly useful for informational and debugging purposes, since the regions may or may not be meaningful depending on the probe
+    // source type.
+    public List<TargetRegion> candidateTargetRegions()
     {
-        return mData.targetRegions();
+        return mData.candidateTargetRegions();
+    }
+
+    // The target regions which the probes aim to hit. This is the intersection of the probe and its target region.
+    public List<TargetRegion> coveredTargetRegions()
+    {
+        return mData.coveredTargetRegions();
     }
 
     public List<RejectedRegion> rejectedRegions()
