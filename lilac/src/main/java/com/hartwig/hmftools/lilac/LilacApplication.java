@@ -696,7 +696,7 @@ public class LilacApplication
 
         if(!mConfig.ReferenceBam.isEmpty() && totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
         {
-            LL_LOGGER.warn("exiting due to too low coverage: bases with <{} coverage per gene(A={}, B={}, C={}) total({}) exceeds threshold({})",
+            LL_LOGGER.warn("Exiting due to too low coverage. Number of bases with <{} coverage per gene: A={}, B={}, C={}. Total={} exceeds threshold={}",
                     WARN_LOW_COVERAGE_DEPTH, aLowCoveragePositions, bLowCoveragePositions, cLowCoveragePositions,
                     totalLowCoveragePositions, mConfig.FatalTotalLowCoveragePositions);
             return false;

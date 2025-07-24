@@ -17,7 +17,7 @@ public class VariantTest extends ReversePaveTestBase
     private final ExonData exon0 = new ExonData(transcriptId, 10, 24, 1, 0, 0);
     private final ExonData exon1 = new ExonData(transcriptId, 28, 42, 2, 0, 0);
     GeneData gene = new GeneData("GeneId", "BLAH", "chr5", (byte) 1, 3, 46, "q13.1");
-    TranscriptData transcript = new TranscriptData(500, "TrName", gene.GeneId, true, (byte) 1, 9, 42, 10, 42, "protein_coding", "ref_seq_id");
+    TranscriptData transcript = new TranscriptData(500, "TrName", gene.GeneId, true, (byte) 1, 9, 42, 10, 42, "protein_coding");
     TranscriptAminoAcids taa = new TranscriptAminoAcids(gene.GeneId, gene.GeneName, transcript.TransName, true, MAAQVAPAAS);
     AminoAcidRange aar = new AminoAcidRange(aas(3, "A"), aas(4, "Q"));
     String exon0Bases = "ATGGCCGCGCAGGTC";

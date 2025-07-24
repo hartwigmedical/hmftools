@@ -200,16 +200,7 @@ public class BamRecordReader implements BamReader
 
         for(Read read : codingRecords)
         {
-            Fragment fragment = null;
-
-            try
-            {
-                fragment = mFragmentFactory.createFragment(read, geneName, geneStrand);
-            }
-            catch(Exception e)
-            {
-                LL_LOGGER.error("read({}) failed to build fragment", read.toString());
-            }
+            Fragment fragment = mFragmentFactory.createFragment(read, geneName, geneStrand);
 
             if(fragment != null)
             {

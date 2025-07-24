@@ -29,7 +29,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MAX_REF_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
@@ -124,7 +123,6 @@ public class LilacConfig
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
     private static final String TOP_SCORE_THRESHOLD = "top_score_threshold";
     private static final String HLA_Y_THRESHOLD = "hla_y_threshold";
-    private static final String FREQUENCY_SCORE_PENALTY = "freq_score_penalty";
 
     // debug and technical config
     private static final String ACTUAL_ALLELES = "actual_alleles";
@@ -206,8 +204,6 @@ public class LilacConfig
         LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
         LilacConstants.MIN_EVIDENCE_SUPPORT = configBuilder.getInteger(MIN_EVIDENCE_SUPPORT);
         LilacConstants.MIN_DEPTH_FILTER = configBuilder.getInteger(MIN_DEPTH_FILTER);
-
-        LilacConstants.FREQUENCY_SCORE_PENALTY = configBuilder.getDecimal(FREQUENCY_SCORE_PENALTY);
 
         MaxRefFragments = configBuilder.getInteger(MAX_REF_FRAGMENTS);
         HlaYPercentThreshold = configBuilder.getDecimal(HLA_Y_THRESHOLD);
@@ -332,7 +328,6 @@ public class LilacConfig
 
         configBuilder.addInteger(FATAL_TOTAL_LOW_COVERAGE_POSITIONS, "Fatal total low coverage positions across all HLA loci", DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS);
         configBuilder.addDecimal(HLA_Y_THRESHOLD, "HLA-Y percent threshold", DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
-        configBuilder.addDecimal(FREQUENCY_SCORE_PENALTY, "Population frequency penalty", DEFAULT_FREQUENCY_SCORE_PENALTY);
 
         configBuilder.addDecimal(TOP_SCORE_THRESHOLD, "Max distance from top score", DEFAULT_TOP_SCORE_THRESHOLD);
         configBuilder.addConfigItem(ACTUAL_ALLELES, "Comma separated known actual alleles for the sample");
