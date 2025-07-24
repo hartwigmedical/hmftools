@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.geneutils.paneldesign.Utils.regionIntersectio
 import java.util.List;
 import java.util.stream.Stream;
 
-// TODO: unit test
-
 public record ProbeGenerationResult(
         List<Probe> probes,
         // Regions which potentially targeted to be covered.

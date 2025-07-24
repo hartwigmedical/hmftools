@@ -318,7 +318,6 @@ public class TargetGenes
                     else
                     {
                         // Can fit 1 probe.
-                        // TODO: doesn't expand region for larger introns - too restrictive?
                         int intronCentre = regionCentre(new BaseRegion(lastExonEnd, exonRegion.start()));
                         regions.add(new GeneRegion(
                                 gene,

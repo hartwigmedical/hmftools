@@ -13,8 +13,6 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO: unit test
-
 // Amber heterozygous sites file loading.
 public class AmberSites
 {
