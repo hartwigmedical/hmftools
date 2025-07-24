@@ -194,7 +194,6 @@ public class CopyNumberBackbone
                     }
                     else
                     {
-                        // TODO: is this the best target region to use here?
                         return new ProbeGenerationResult(List.of(bestProbe), List.of(target), List.of(target), emptyList());
                     }
                 })

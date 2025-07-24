@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.geneutils.paneldesign;
 
 import static java.lang.Math.abs;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.Utils.getBestScoringElement;
 
@@ -26,7 +27,7 @@ public class ProbeSelector
             double optimalQuality = ((Strategy.MaxQuality) strategy).optimalQuality();
             return getBestScoringElement(
                     acceptableProbes,
-                    Probe::qualityScore,
+                    probe -> requireNonNull(probe.qualityScore()),
                     quality -> Doubles.greaterOrEqual(quality, optimalQuality),
                     true);
         }
@@ -36,7 +37,7 @@ public class ProbeSelector
             double optimalGcTolerance = ((Strategy.BestGc) strategy).gcToleranceOptimal();
             return getBestScoringElement(
                     acceptableProbes,
-                    probe -> abs(probe.gcContent() - probe.evalCriteria().gcContentTarget()),
+                    probe -> abs(requireNonNull(probe.gcContent()) - requireNonNull(probe.evalCriteria()).gcContentTarget()),
                     distance -> Doubles.lessOrEqual(distance, optimalGcTolerance),
                     false);
         }
