@@ -53,35 +53,7 @@ The reference data required to run LILAC can be downloaded from the `oncoanalyse
 
 Allele sequences and frequencies files are found in the `hmf_pipeline_resources.*.tar.gz` bundle from `oncoanalyser`.
 
-### Allele population frequencies
-
-Allele population frequencies were scrapped from the Allele Frequency Net Database (AFND; http://www.allelefrequencies.net/) on 2025-01-28 
-using the [hla_allele_freq_downloader.py](./src/main/resources/frequencies/hla_allele_freq_downloader.py) Python script:
-
-```
-python hla_allele_freq_downloader.py \
-  --output_dir /output_dir/ \
-  --locus A,B,C \
-  --hla_level 4 \
-  --hla_locus_type Classical \
-  --population_standard g
-```
-
-### Allele sequences
-Allele sequences were derived from the IMGT/HLA database (downloaded on 2024-12-19), accessible with these links:
-- https://www.ebi.ac.uk/ipd/imgt/hla/download/ or 
-- https://github.com/ANHIG/IMGTHLA
-
-The required database files are:
-- Nucleotide: `A_nuc.txt`, `B_nuc.txt`, `C_nuc.txt`, `Y_nuc.txt`
-- Amino acid: `A_prot.txt`, `B_prot.txt`, `C_prot.txt`
-
-These files are converted to the LILAC allele sequences files with the following command:
-```
-java -cp lilac.jar com.hartwig.hmftools.lilac.utils.GenerateReferenceSequences \
-   -resource_dir /dir_containing/*.txt \ 
-   -output_dir /output_dir/
-```
+See section [Reference data generation](#reference-data-generation) for details on how the allele reference data files are derived.
 
 ## Usage
 
@@ -182,19 +154,114 @@ Notes:
 | `-log_level`                      | INFO               | Logs level. Can be: TRACE, DEBUG, INFO, WARN, ERROR                                                                                             |
 | `-log_debug`                      | Off (logs at INFO) | Alias for `-log_level DEBUG`                                                                                                                    |
 
+
+## Reference data generation
+
+### Allele population frequencies
+
+Allele population frequencies were scraped from the Allele Frequency Net Database (AFND; http://www.allelefrequencies.net/) on 2025-01-28
+using the [hla_allele_freq_downloader.py](./src/main/resources/frequencies/hla_allele_freq_downloader.py) Python script:
+
+```
+python hla_allele_freq_downloader.py \
+  --output_dir /output_dir/ \
+  --locus A,B,C \
+  --hla_level 4 \
+  --hla_locus_type Classical \
+  --population_standard g
+```
+
+The AFND entry represents the frequency of an allele in a population (typically country or ethnicity). Each frequency may have been 
+calculated as part of a larger study. 
+
+Due to the variability in sample sizes, we calculate a 'rescaled mean frequency' with the below procedure:
+- Exclude entries where frequency is 0 
+- Calculate approx_observations (= sample_size * raw_allele_frequency), and exclude entries where this is ≤2
+- Calculate the mean frequency **per allele**, weighted by study cohort size, where study cohort size is capped at 1000 samples
+- Scale frequencies to add to 1 **per HLA gene**
+
+### Allele sequences
+Allele sequences were derived from the IMGT/HLA database (downloaded on 2024-12-19), accessible with these links:
+- https://www.ebi.ac.uk/ipd/imgt/hla/download/ or
+- https://github.com/ANHIG/IMGTHLA
+
+LILAC constructs its own sequence files using the nucleotide multiple sequence alignment files from the database:
+`A_nuc.txt`, `B_nuc.txt`, `C_nuc.txt`, `Y_nuc.txt`. The procedure is described below.
+
+#### Wildcard handling
+
+> [!NOTE]
+> This is currently performed using a Python script; to be implemented in Java in `GenerateReferenceSequences`
+
+Wildcards (`*`) are present in some allele nucleotide sequences (e.g. due to incomplete sequencing). The nucleotide sequence of
+wildcard sequences are inferred by first generating a consensus sequence per 2-digit allele group.
+
+First we determine the representative set of 4-digit alleles. If a 4-digit allele is only represented by its 6-digit (synonymous variants)
+or 8-digit (intronic variants) alleles we greedily select the first (e.g. for `A*34:01` we select `A*34:01:01:01` from 
+`A*34:01:01:01`, `A*34:01:01:02`, `A*34:01:02`, ...)
+
+For each 2-digit allele group, (e.g. group `A*34` is composed of alleles `A*34:01`, `A*34:02`, `A*34:03`, ...), we select the 4-digit 
+alleles fulfilling the below criteria:
+- ≥0.001 population frequency
+- Has no wildcards
+- Has no expression suffix (last letter in allele name, e.g. `C*04:09N`)
+
+As a fallback, if no 4-digit alleles fulfill the above criteria, we select the most common. This usually occurs when all alleles in the 
+group have wildcards. Note, in case of this fallback condition, the most common allele is by definition the consensus sequence.
+
+A consensus sequence is then created from the selected 4-digit allele sequences, with wildcards being are assigned if alleles in the 
+2-digit group have conflicting nucleotides, for example in `A*34`:
+
+```
+A*34:01:        ATG GCC ATC ...
+A*34:02:        ATG GCC GTC ...
+A*34 consensus: ATG GCC *TC ...
+```
+
+#### Generate LILAC sequences
+
+These files are converted to the LILAC allele sequences files with the following command:
+```
+java -cp lilac.jar com.hartwig.hmftools.lilac.utils.GenerateReferenceSequences \
+   -resource_dir /dir_containing/*.txt \ 
+   -output_dir /output_dir/
+```
+
 ## Algorithm
-The starting point for the LILAC algorithm is the complete set of possible 4 digit alleles and all the fragments aligned to HLA-A, HLA-B and HLA-C. Where multiple 6 digit or 8 digit types are present in the IMGT/HLA database, LILAC uses the numerically lowest type for all calculations. Note that 3 HLA-A alleles {A\*31:135, A\*33:191,A\*02:783} and 1 HLA-B gene {B\*08:282} have been removed from the database due to it frequently being found as a low level artefact (likely due to the high similarity to closely related genes and pseudogenes such as HLA-H).
 
-LILAC algorithm begins with collecting all fragments which are not duplicates and have:
-- At least one read with an alignment overlapping a coding base of HLA-A, HLA-B or HLA-C; and
-- all alignments within 1000 bases of a HLA coding region; and
-- a mapping quality of at least 1
+The starting data for the LILAC algorithm is:
+- HLA-A, HLA-B, HLA-C and HLA-Y allele sequences from the IMGT/HLA database
+- All fragments aligned to HLA-A, HLA-B and HLA-C gene regions
 
-Note that all reads are trimmed of any bases that overlap the aligned 5' end of it's mate (to remove adapter).
+The algorithm has 2 main phases to determine the germline alleles:
+1) Elimination phase: Aims to remove allele candidates that are clearly not present
+2) Evidence phase: Consider all possible sets of 6 alleles amongst the remaining candidates and chooses the solution that best explains the
+   fragments observed
 
-The algorithm then has 2 main phases to determine the germline alleles: an ‘elimination’ phase which aims to remove allele candidates that are clearly not present and an ‘evidence’ phase where LILAC considers all possible sets of 6 alleles amongst the remaining candidates and chooses the solution that best explains the fragments observed. 
+After the germline alleles are determined, LILAC determines the tumor copy number and any somatic mutations in each allele. Note that if
+more than 300 bases of the HLA-A,HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with errors and will not
+try to fit the sample.
 
-After the germline alleles are determined, LILAC determines the tumor copy number and any somatic mutations in each allele.   Note that if more than 300 bases of the HLA-A,HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with errors and will not try to fit the sample. 
+### Allele set initialisation
+
+The complete set of 4-digit alleles are determined from the 4, 6 and 8 digit alleles in the IMGT/HLA database.
+
+If a 4-digit allele is not explicitly present (e.g. `A*01:02`) but its corresponding 6-digit or 8 digit alleles are
+(e.g. `A*01:02:01`, `A*01:02:02`), the numerically lowest is chosen as the representative allele (i.e. `A*01:02:01`).
+
+Some alleles are excluded due to their high similarity closely related pseudogenes, including:
+- HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`
+- HLA-Y: `A*30:205`, `A*30:207`, `A*30:225`, `A*30:228`, `A*01:81`, `A*01:237`
+
+### Read pre-processing
+
+All fragments are collected which:
+- Are not duplicates
+- Have at least 1 read with an alignment overlapping a coding base of HLA-A, HLA-B or HLA-C
+- Have all alignments within 1000 bases of an HLA coding region
+- Have a mapping quality of at least 1
+
+All reads are trimmed of any bases that overlap the aligned 5' end of its mate (to remove adapter).
 
 ### Elimination phase
 The elimination phase is primarily an optimization. The goal is simply to reduce the number of possible alleles from ~22k present in the IMGT/HLA database to a manageable number such that the evidence phase can run efficiently.   The principle in the elimination phase is to remove any allele that does not have at least a certain minimal coverage of each of it’s amino acids and bases.    To mitigate the chance of inadvertently eliminating a true allele, common alleles may be recovered at the end of the elimination phase if they have sufficient unique support, but are then penalised in the subsequent evidence phase relative to other candidate alleles.
