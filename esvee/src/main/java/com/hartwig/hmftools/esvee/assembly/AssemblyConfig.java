@@ -53,6 +53,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_I
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Ref;
 import java.util.Collections;
 import java.util.List;
 
@@ -162,19 +163,23 @@ public class AssemblyConfig
 
         TumorIds = parseSampleBamLists(configBuilder, TUMOR);
 
-        if(configBuilder.hasValue(TUMOR_BAM))
-            TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
+        List<String> prepTumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+
+        if(prepTumorBams.size() == TumorIds.size())
+            TumorBams = prepTumorBams;
         else
-            TumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+            TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
 
         if(configBuilder.hasValue(REFERENCE))
         {
             ReferenceIds = parseSampleBamLists(configBuilder, REFERENCE);
 
-            if(configBuilder.hasValue(REFERENCE_BAM))
-                ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
+            List<String> prepRefBams = formPrepBamFilenames(PrepDir, ReferenceIds);
+
+            if(prepRefBams.size() == ReferenceIds.size())
+                ReferenceBams = prepRefBams;
             else
-                ReferenceBams = formPrepBamFilenames(PrepDir, ReferenceIds);
+                ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
         }
         else
         {
