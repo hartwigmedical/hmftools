@@ -3,8 +3,12 @@
 ## Introduction
 
 LILAC determines the most likely combination of HLA class I alleles present in a patient, aka HLA typing. 
-The tool performs HLA typing to 4 digit allele resolution, meaning it uniquely identifies a specific protein, but ignores synonymous variants (6 digits) and intronic 
-differences (8 digits). 
+HLA typing is performed to 4 digit allele resolution, meaning LILAC uniquely identifies a specific protein, but ignores synonymous variants 
+(6 digits) and intronic differences (8 digits). LILAC is described and validated in the publication:
+*Genetic immune escape landscape in primary and metastatic cancer, Nature 2023* ([link](https://www.nature.com/articles/s41588-023-01367-1)).
+
+To get started using LILAC, please [download the reference data](#reference-data), and see section [Usage](#usage) to download the LILAC jar
+and see the run commands.
 
 Notable existing tools for HLA class I typing include Polysolver, xHLA, Optitype and DRAGEN-HLA. LILAC offers a number of potential 
 advantages including:
@@ -17,15 +21,14 @@ complete loss of alleles
 - Identification of HLA-Y presence, a pseudogene with high similarity to HLA-A which is present in up to 20% of the population but is not
 present in the reference genome
 
-LILAC is described and validated in the publication:
-*Genetic immune escape landscape in primary and metastatic cancer, Nature 2023* ([link](https://www.nature.com/articles/s41588-023-01367-1))
-
 ## Sample inputs
 LILAC performs HLA typing from GRCh37 or GRCh38 (no alt) BAMs. It can run in various sample modes: 
 - **Germline-only** or **tumor-only**: Basic HLA typing 
 - **Paired tumor/normal**: Call allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles. This mode 
-can take somatic variant calls from [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) and copy number variant calls from 
-[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) as inputs, but outputs from other callers are also accepted. 
+can take somatic variant calls and copy number variant calls from [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) 
+as inputs, but outputs from other callers are also accepted. 
+
+LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
 
 > [!WARNING]
 > BAMs aligned to a GRCh38 genome build containing HLA alt contigs must be realigned to a GRCh38 genome build without HLA alt contigs.
@@ -82,86 +85,102 @@ java -cp lilac.jar com.hartwig.hmftools.lilac.utils.GenerateReferenceSequences \
 
 ## Usage
 
-### Mandatory Arguments
+The LILAC jar version can be downloaded [here](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1). Older LILAC jar 
+versions can be downloaded from [hmftools > releases](https://github.com/hartwigmedical/hmftools/releases?q=lilac).
 
-Argument | Description 
----|---
-sample | Sample ID
-ref_genome | Reference genome fasta file
-ref_genome_version | V37 (default) or V38
-reference_bam | Sample's germline BAM 
-resource_dir | Path to Lilac resource files, ie hla_ref_aminoacid_sequences.csv, hla_ref_nucleotide_sequences.csv and lilac_allele_frequencies.csv.
+### Examples
 
-NOTE: Lilac handles BAMs which have been sliced for the HLA gene regions.
+#### Reference-only mode
 
-If a sample's tumor BAM is provided in place of the reference BAM, then Lilac will determine the allele solution from it instead.
+HLA-typing from a reference sample (e.g. blood or normal tissue) BAM.
 
-### Optional Inputs
-
-Argument | Description 
----|---
-tumor_bam | Sample's tumor BAM
-rna_bam | Sample's RNA BAM if available
-gene_copy_number | Sample gene copy number file from Purple
-somatic_vcf | Sample's somatic variant VCF file, for annotation of HLA gene variants
-
-### Optional Arguments
-
-Argument | Default | Description 
----|---|---
-min_base_qual | 30 | Min base quality for BAM reads, see documentation for details 
-min_evidence | 2 | Min absolute required fragments for evidence phase
-min_evidence_factor | 0.00075 | Min relative required fragments for evidence phase, as a fraction of total fragments
-min_high_qual_evidence_factor | 0.000375 | Minimum relative required high base-quality fragments for evidence phase, as a fraction of total fragments
-min_fragments_per_allele | 7 | See documentation for details 
-min_fragments_to_remove_single | 40 | See documentation for details 
-top_score_threshold | 5 | Maximum difference in candidate solution score vs top score as a percentage of total fragments 
-write_all_files | false | Produce more detailed output about candidates and fragment counts per allele and loci
-log_debug | Off (logs at INFO) | Logs in verbose mode 
-debug_phasing | Off | Logs phasing evidence construction 
-expected_alleles | Not applied | List of alleles separated by ';'. These alleles will have their coverage and ranking reported even if not in the winning solution
-restricted_alleles | Not applied | List of alleles separated by ';'. Restrict evaluation to only these alleles.
-threads | 1 | Number of threads to use for complex evaluation
-
-
-### Example Usage
 
 ```
 java -jar lilac.jar \
-   -sample COLO829T 
-   -ref_genome /path_to_ref_genome_fasta_file/ \
-   -ref_genome_version V37 \
-   -resource_dir /path_to_lilac_resource_files/ \ 
-   -reference_bam /sample_data_path/COLO829R.bam \
-   -output_dir /output_dir/ \
+    -sample COLO829R 
+    -ref_genome /path/to/ref_genome.fasta \
+    -ref_genome_version V37 \
+    -resource_dir /path/to/lilac_resources_dir/ \
+    -output_dir /output_dir/ \
+    -reference_bam COLO829R.bam
 ```
 
-Or with tumor BAM, somatic variants VCF and Purple gene copy number inputs:
+#### Tumor-only mode
 
-```
-java -jar lilac.jar \
-   -sample COLO829T 
-   -ref_genome /path_to_ref_genome_fasta_file/ \
-   -resource_dir /path_to_lilac_resource_files/ \ 
-   -ref_genome_version V37 \
-   -reference_bam /sample_data_path/COLO829R.bam \
-   -tumor_bam /sample_data_path/COLO829T.bam \
-   -somatic_vcf /sample_data_path/COLO829T.purple.somatic.vcf.gz \
-   -gene_copy_number /sample_data_path/COLO829T.purple.cnv.gene.tsv \
-   -output_dir /output_dir/ \
-```
-
-Or in tumor-only mode, where the tumor BAM is used to find the alleles:
+HLA-typing from the tumor sample BAM.
 
 ```
 java -jar lilac.jar \
-   -sample COLO829T 
-   -ref_genome /path_to_ref_genome_fasta_file/ \
-   -resource_dir /path_to_lilac_resource_files/ \ 
-   -tumor_bam /sample_data_path/COLO829T.bam \
-   -output_dir /output_dir/ \
+    -sample COLO829T \
+    -ref_genome /path/to/ref_genome.fasta \
+    -ref_genome_version V37 \
+    -resource_dir /path/to/lilac_resources_dir/ \
+    -output_dir /output_dir/ \
+    -tumor_bam COLO829T.bam
 ```
 
+#### Paired tumor/normal mode
+
+HLA-typing, and calling allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles in the tumor sample. Provide 
+the reference and tumor BAMs, as well as somatic variants VCF and gene copy number TSV from 
+[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) (or other variant callers).
+
+```
+java -jar lilac.jar \
+    -sample COLO829T 
+    -ref_genome /path/to/ref_genome.fasta \
+    -ref_genome_version V37 \
+    -resource_dir /path/to/lilac_resources_dir/ \ 
+    -output_dir /output_dir/ \
+    -reference_bam COLO829R.bam \
+    -tumor_bam COLO829T.bam \
+    -somatic_vcf COLO829T.purple.somatic.vcf.gz \
+    -gene_copy_number COLO829T.purple.cnv.gene.tsv
+```
+
+### Mandatory input paths
+
+| Argument              | Description                                                                                                                                                         |
+|:----------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-sample`             | Sample ID                                                                                                                                                           |
+| `-ref_genome`         | Reference genome fasta file                                                                                                                                         |
+| `-ref_genome_version` | V37 (default) or V38                                                                                                                                                |
+| `-reference_bam`      | Sample germline BAM                                                                                                                                                 |
+| `-resource_dir`       | Path to LILAC resource directory containing: <br/>- `hla_ref_aminoacid_sequences.csv`<br/>- `hla_ref_nucleotide_sequences.csv`<br/>- `lilac_allele_frequencies.csv` |
+
+Notes:
+- LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
+- If a tumor BAM is provided in place of the reference BAM, then Lilac will determine the allele solution from the tumor instead.
+
+### Optional input paths
+
+| Argument            | Description                                                          |
+|:--------------------|:---------------------------------------------------------------------|
+| `-tumor_bam`        | Sample tumor BAM                                                     |
+| `-rna_bam`          | Sample RNA BAM if available                                          |
+| `-gene_copy_number` | Sample gene copy number file from PURPLE                             |
+| `-somatic_vcf`      | Sample somatic variant VCF file, for annotation of HLA gene variants |
+
+### Optional parameters
+
+| Argument                          | Default            | Description                                                                                                                                     |
+|:----------------------------------|:-------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-min_base_qual`                  | 30                 | Min base quality for BAM reads, see documentation for details                                                                                   |
+| `-min_evidence_support`           | 1                  | Min absolute fragment support for an allele to proceed to evidence phase                                                                        |
+| `-min_evidence_factor`            | 0.006              | Min relative fragment support for an allele to proceed to evidence phase, as fraction of total fragments                                        |
+| `-min_high_qual_evidence_factor`  | 0.003              | Min relative high base-quality fragment support for an allele to proceed to evidence phase, as fraction of total fragments                      |
+| `-min_fragments_per_allele`       | 7                  | See documentation for details                                                                                                                   |
+| `-min_fragments_to_remove_single` | 40                 | See documentation for details                                                                                                                   |
+| `-top_score_threshold`            | 5                  | Max difference in candidate solution score vs top score as a percentage of total fragments, used for selecting final set of candidate solutions |
+| `-hla_y_threshold`                | 0.003              | Min fraction of total reads supporting HLA-Y to consider it present. If present, HLA-Y supporting reads are discarded from HLA typing           |
+| `-freq_score_penalty`             | 0.009              | Weight for penalising the score of solutions containing rare alleles                                                                            |
+| `-write_types`                    | SUMMARY            | List of output file types to write, separated by `,`. Can be: ALL, SUMMARY, FRAGMENTS, READS, REF_COUNTS                                        |
+| `-debug_phasing`                  | Off                | Logs phasing evidence construction                                                                                                              |
+| `-expected_alleles`               | Not applied        | List of alleles separated by `;`. These alleles will have their coverage and ranking reported even if not in the winning solution               |
+| `-restricted_alleles`             | Not applied        | List of alleles separated by `;`. Restrict evaluation to only these alleles.                                                                    |
+| `-threads`                        | 1                  | Number of threads to use for complex evaluation                                                                                                 |
+| `-log_level`                      | INFO               | Logs level. Can be: TRACE, DEBUG, INFO, WARN, ERROR                                                                                             |
+| `-log_debug`                      | Off (logs at INFO) | Alias for `-log_level DEBUG`                                                                                                                    |
 
 ## Algorithm
 The starting point for the LILAC algorithm is the complete set of possible 4 digit alleles and all the fragments aligned to HLA-A, HLA-B and HLA-C. Where multiple 6 digit or 8 digit types are present in the IMGT/HLA database, LILAC uses the numerically lowest type for all calculations. Note that 3 HLA-A alleles {A\*31:135, A\*33:191,A\*02:783} and 1 HLA-B gene {B\*08:282} have been removed from the database due to it frequently being found as a low level artefact (likely due to the high similarity to closely related genes and pseudogenes such as HLA-H).
