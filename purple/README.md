@@ -254,6 +254,7 @@ Tumor only mode impacts PURPLE in the following ways:
   - No germline chromosomal aberrations are detected 
   - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
   - somatic SNV/INDEL and SV with PON_ filters are hardfiltered and ignored
+  - Regions outside the diploid regions file (if provided) are masked (not recomended for targeted mode)
   
 Example command:
 
