@@ -11,8 +11,11 @@ For each impacted transcript it will add the following fields:
 | Transcript        | Ensembl transcript ID                                                                                 |
 | Effects           | list of effects separated by '&'                                                                      |
 | SpliceRegion      | true/false - if variant overlaps with the 8 intronic bases or 3 exonic bases around a splice junction |
-| HgvsCodingImpact  | HGVS coding impact                                                                                    |
-| HgvsProteinImpact | HGVS protein impact                                                                                   |
+| Hgvs.c  | HGVS coding impact                                                                                    |
+| Hgvs.p| HGVS protein impact                                                                                   |
+| RefSeqId| RefSeq TranscriptId                                                                                   |
+| Exon| Affected Exon                                                                                   |
+| Codon| Affected Codon                                                                                   |
 
 For any variant with one or more impacted transcripts, the following summary data is written:
 
