@@ -388,9 +388,7 @@ The Deviation Penalty and Event Penalty are aggregated independently across all 
 
 The following chart shows the combined shape of the deviation and event penalty:
 
-
 ![Combined Ploidy Penalty](src/main/resources/readme/FittedPurityPenalty.png)
-
 
 #### Somatic Penalty
 
@@ -625,6 +623,9 @@ Note that additional restrictions apply on amplification and deletion drivers fo
 - If warning = WARN_DELETED_GENES or WARN_HIGH_COPY_NUMBER_NOISE, DELs must be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases).
 - If warning = WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV.   
 
+The following special rules apply to the construction of the driver catalog in targeted mode:
+- **DELS**: Don’t report DELS if the copy number segment has onlh 1 depth windows and GC <0.35 or >0.6 (unless supported by SV on both sides)
+- **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
 
 ## Output
 
