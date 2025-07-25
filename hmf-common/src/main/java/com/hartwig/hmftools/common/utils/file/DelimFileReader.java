@@ -219,7 +219,20 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
                     String line = nextLine;
                     nextLine = null;
                     assert line != null;
-                    String[] values = line.split(mDelim, -1);
+
+                    // Split the line on the delimiter. This algorithm is about twice as fast as String.split().
+                    String[] values = new String[mColumnIndexMap.size()];
+                    int fieldBegin = 0;
+                    for (int i = 0; i < values.length; ++i)
+                    {
+                        int delimIdx = line.indexOf(mDelim, fieldBegin);
+                        if (delimIdx < 0)
+                        {
+                            delimIdx = line.length();
+                        }
+                        values[i] = line.substring(fieldBegin, delimIdx);
+                        fieldBegin = delimIdx + 1;
+                    }
                     return new Row(mColumnIndexMap, values);
                 }
                 else
@@ -493,6 +506,15 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             String v = getOrNull(columnIndex);
             return v == null ? null : Long.parseLong(v);
+        }
+
+        // Gets the raw field value by column index, provided for speed reasons.
+        // Onus is on caller to:
+        //   - Ensure the column index are valid or IndexOutOfBoundsException will be thrown.
+        //   - Handle the raw file value appropriately, including nulls.
+        public String getRawValue(int column)
+        {
+            return mValues[column];
         }
 
         // get the value that is stored in the row
