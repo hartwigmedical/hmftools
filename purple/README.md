@@ -418,7 +418,7 @@ Note that a segment is diploid only if both the major and minor allele are betwe
 #### Somatic Purity - Tumor Normal 
 
 If any of the candidate solutions are highly diploid (>= 0.97), PURPLE checks first for the presence of TUMOR.  If NONE of the following criteria are satisfied, then PURPLE sets qcStatus = FAIL_NO_TUMOR, fitMethod=NO_TUMOR and sets purity to min_purity value [0.08]:
-- Tumor has one or more HOTSPOT SV or point mutation
+- Tumor has one or more HOTSPOT SV or point mutation or small variant with ‘TIER=PANEL + CLINSIG=PATHOGENIC’
 - SNV sum(allele read count) > 1000
 - SV sum(startTumorVariantFragmentSupport) > 1000 (excluding SGL breakends)
 - Tumor has 3000 BAF points in germline DIPLOID regions with tumor ratio < 0.8 OR > 1.2 (ie. evidence of at least some aneuploidy)
@@ -439,7 +439,7 @@ Finally, in case of tumors with very low SNV counts (<1000 total SNV) but with k
 
 #### Somatic Purity - Tumor Only 
 
-In Tumor-only, PURPLE selects initial fits that are highly diploid (1.8 <= ploidy <= 2.2) and has a high purity (purity >= 0.92) or if any of the candidate solutions are highly diploid (>= 0.97). It then checks for the number of variants that are subjected to tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) with VAF >= 0.05 and VAF <= 0.35) in the sample.
+In Tumor-only, PURPLE selects initial fits that are highly diploid (1.8 <= ploidy <= 2.2) and has a high purity (purity >= 0.92) or if any of the candidate solutions are highly diploid (>= 0.97). It then checks for the number of SNV and INDEL (with repeat count <=4) that are subjected to tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) with VAF >= 0.05 and VAF <= 0.35) in the sample.
 
 If the variant counts are less than one, then the sample is marked as NO_TUMOR. Otherwise the SOMATIC mode is triggered and the purity is calculated as 2 times the 75th percentile VAF in the sample.
 
