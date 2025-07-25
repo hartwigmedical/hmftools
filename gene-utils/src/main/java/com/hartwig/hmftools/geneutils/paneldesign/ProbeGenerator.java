@@ -7,7 +7,9 @@ import static java.lang.Math.round;
 import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_OVERLAP_EXTENSION_BALANCE;
 import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.PROBE_SHIFT_MAX;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.REGION_UNCOVERED_MAX;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeSelector.selectBestProbe;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndOverlapping;
 import static com.hartwig.hmftools.geneutils.paneldesign.ProbeUtils.maxProbeEndWithoutGap;
@@ -114,7 +116,11 @@ public class ProbeGenerator
             BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);
             if(prev != null && probeRegion.start() <= prev.end() + 1)
             {
-                prev.setEnd(probeRegion.end());
+                if(probeRegion.end() > prev.end())
+                {
+                    // Don't mutate in place because we borrowed the object from the probe.
+                    acceptableSubregions.set(acceptableSubregions.size() - 1, new BaseRegion(prev.start(), probeRegion.end()));
+                }
             }
             else
             {
@@ -123,126 +129,23 @@ public class ProbeGenerator
             acceptableProbes.put(probeRegion.start(), probe);
         });
 
-        List<Probe> probes = acceptableSubregions.stream()
-                .flatMap(acceptableSubregion ->
-                {
-                    BaseRegion subregion = acceptableSubregion;
-
-                    // Bound the subregion to the target region to prevent producing too many probes (our bounds for generating candidates
-                    // earlier were the least strict possible).
-                    // calculateOptimalProbeTiling() will produce probes extending past the target region if that's allowed and optimal.
-                    BaseRegion tilingTarget = regionIntersection(subregion, baseRegion).orElseThrow();
-
-                    // The acceptable subregions are maximal because we checked all probes which overlap the target region.
-                    // Thus, the subregion is bounded on both sides by unacceptable regions or completely off-target regions, and probes
-                    // cannot be placed outside it.
-                    BaseRegion probeBounds = subregion;
-
-                    // For each probe, if there is space around the probe within the tiling, try shifting the probe around to find the best.
-                    List<Integer> tiling = calculateOptimalProbeTiling(tilingTarget, probeBounds);
-                    List<Probe> tiledProbes = new ArrayList<>();
-                    for(int i = 0; i < tiling.size(); ++i)
-                    {
-                        BaseRegion originalProbe = probeRegionStartingAt(tiling.get(i));
-                        BaseRegion prevProbe = tiledProbes.isEmpty()
-                                ? null
-                                : tiledProbes.get(tiledProbes.size() - 1).region().baseRegion();
-                        // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
-                        BaseRegion nextProbe = i + 1 < tiling.size() ? probeRegionStartingAt(tiling.get(i + 1)) : null;
-
-                        // Shift must ensure:
-                        //  - Can't extend outside the hard bounds;
-                        //  - Can't reduce coverage of the target region;
-                        //  - Can't shift further than a configured amount.
-
-                        // Apply hard bounds and min coverage constraints.
-                        int minStart = max(probeBounds.start(), minProbeStartOverlapping(baseRegion));
-                        int maxEnd = min(probeBounds.end(), maxProbeEndOverlapping(baseRegion));
-
-                        // If the probe is adjacent to a probe, don't shift it such that it creates a gap.
-                        if(prevProbe != null)
-                        {
-                            maxEnd = min(maxEnd, maxProbeEndWithoutGap(prevProbe));
-                        }
-                        if(nextProbe != null)
-                        {
-                            minStart = max(minStart, minProbeStartWithoutGap(nextProbe));
-                        }
-
-                        // If the probe is on the edge, don't shift it such that it reduces the target coverage.
-                        if(i == 0)
-                        {
-                            if(originalProbe.start() < baseRegion.start())
-                            {
-                                // First probe, extending before the target region:
-                                //   - Can't shift left at all
-                                //   - Can't shift right past the target start
-                                minStart = originalProbe.start();
-                                maxEnd = min(maxEnd, probeRegionStartingAt(baseRegion.start()).end());
-                            }
-                            else
-                            {
-                                // First probe, starting after the target start:
-                                //   - Can't shift left before the target start
-                                //   - Can't shift right at all
-                                minStart = max(minStart, baseRegion.start());
-                                maxEnd = originalProbe.end();
-                            }
-                        }
-                        if(i == tiling.size() - 1)
-                        {
-                            if(originalProbe.end() > baseRegion.end())
-                            {
-                                // Last probe, extending after the target region:
-                                //   - Can't shift left before target end
-                                //   - Can't shift right at all
-                                minStart = max(minStart, probeRegionEndingAt(baseRegion.end()).start());
-                                maxEnd = originalProbe.end();
-                            }
-                            else
-                            {
-                                // Last probe, ending before the target end:
-                                //   - Can't shift left at all
-                                //   - Can't shift right past target end
-                                minStart = originalProbe.start();
-                                maxEnd = min(maxEnd, baseRegion.end());
-                            }
-                        }
-
-                        // Max shift amount constraint.
-                        minStart = max(minStart, originalProbe.start() - PROBE_SHIFT_MAX);
-                        maxEnd = min(maxEnd, originalProbe.end() + PROBE_SHIFT_MAX);
-
-                        int maxStart = probeRegionEndingAt(maxEnd).start();
-
-                        // In case our additional checks here fail, just use the original tiling position as we have no better alternative.
-                        if(minStart > maxStart)
-                        {
-                            minStart = maxStart = originalProbe.start();
-                        }
-
-                        // Iterate in an outward moving pattern so in the case of a tie, prefer probes closer to the original tiling position.
-                        int minOffset = minStart - originalProbe.start();
-                        int maxOffset = maxStart - originalProbe.start();
-                        Stream<Probe> candidates = outwardMovingOffsets(minOffset, maxOffset)
-                                .map(offset -> originalProbe.start() + offset)
-                                .mapToObj(acceptableProbes::get)
-                                .filter(Objects::nonNull);
-                        Optional<Probe> bestProbe = selectBestProbe(candidates, criteria.select());
-                        bestProbe.ifPresent(tiledProbes::add);
-                    }
-
-                    return tiledProbes.stream();
-                })
-                .toList();
-
-        // Compute rejected regions based on what has been covered by the probes.
+        List<Probe> probes = new ArrayList<>();
         String rejectionReason = "No probe covering region, producing valid tiling, and meeting criteria " + criteria;
-        List<RejectedRegion> rejectedRegions =
-                computeUncoveredRegions(region.baseRegion(), probes.stream().map(probe -> probe.region().baseRegion()))
-                        .stream()
-                        .map(r -> new RejectedRegion(ChrBaseRegion.from(chromosome, r), context.metadata(), rejectionReason))
-                        .toList();
+        List<RejectedRegion> rejectedRegions = new ArrayList<>();
+        acceptableSubregions.forEach(acceptableSubregion ->
+        {
+            CoverAcceptableSubregionResult result =
+                    coverAcceptableSubregion(acceptableSubregion, baseRegion, acceptableProbes, criteria.select());
+            probes.addAll(result.probes());
+            // Compute rejected regions based on what has been covered by the probes.
+            // Not that the reference region here is not necessarily the target region, but the subregion of the target which the tiling
+            // algorithm found to be optimal to cover. This may exclude a few bases on the edge which are uncovered. However, we want to
+            // count those as covered and not mark them as rejected.
+            Stream<BaseRegion> probeRegions = result.probes().stream().map(probe -> probe.region().baseRegion());
+            computeUncoveredRegions(result.tilingIntendedCoverage(), probeRegions).stream()
+                    .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), context.metadata(), rejectionReason))
+                    .forEach(rejectedRegions::add);
+        });
 
         // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
         List<TargetRegion> coveredTargets = mergeOverlapAndAdjacentRegions(probes.stream().map(Probe::region)).stream()
@@ -254,9 +157,139 @@ public class ProbeGenerator
         return new ProbeGenerationResult(probes, emptyList(), coveredTargets, rejectedRegions);
     }
 
+    private record CoverAcceptableSubregionResult(
+            List<Probe> probes,
+            // Region that the tiling algorithm found was optimal to cover, taking into account the edges which may be left uncovered.
+            BaseRegion tilingIntendedCoverage
+    )
+    {
+    }
+
+    private static CoverAcceptableSubregionResult coverAcceptableSubregion(final BaseRegion acceptableSubregion,
+            final BaseRegion targetRegion, final Map<Integer, Probe> acceptableProbes, final ProbeSelector.Strategy strategy)
+    {
+        BaseRegion subregion = acceptableSubregion;
+
+        // Bound the subregion to the target region to prevent producing too many probes (our bounds for generating candidates
+        // earlier were the least strict possible).
+        // calculateOptimalProbeTiling() will produce probes extending past the target region if that's allowed and optimal.
+        BaseRegion tilingTarget = regionIntersection(subregion, targetRegion).orElseThrow();
+
+        // The acceptable subregions are maximal because we checked all probes which overlap the target region.
+        // Thus, the subregion is bounded on both sides by unacceptable regions or completely off-target regions, and probes
+        // cannot be placed outside it.
+        BaseRegion probeBounds = subregion;
+
+        List<BaseRegion> tiling = calculateOptimalProbeTiling(tilingTarget, probeBounds).stream()
+                .map(ProbeUtils::probeRegionStartingAt)
+                .toList();
+
+        // For each probe, if there is space around the probe within the tiling, try shifting the probe around to find the best.
+        List<Probe> finalProbes = new ArrayList<>();
+        for(int i = 0; i < tiling.size(); ++i)
+        {
+            BaseRegion originalProbe = tiling.get(i);
+            BaseRegion prevProbe = finalProbes.isEmpty()
+                    ? null
+                    : finalProbes.get(finalProbes.size() - 1).region().baseRegion();
+            // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
+            BaseRegion nextProbe = i + 1 < tiling.size() ? tiling.get(i + 1) : null;
+
+            // Shift must ensure:
+            //  - Can't extend outside the hard bounds;
+            //  - Can't reduce coverage of the target region;
+            //  - Can't shift further than a configured amount.
+
+            // Apply hard bounds and min coverage constraints.
+            int minStart = max(probeBounds.start(), minProbeStartOverlapping(targetRegion));
+            int maxEnd = min(probeBounds.end(), maxProbeEndOverlapping(targetRegion));
+
+            // If the probe is adjacent to a probe, don't shift it such that it creates a gap.
+            if(prevProbe != null)
+            {
+                maxEnd = min(maxEnd, maxProbeEndWithoutGap(prevProbe));
+            }
+            if(nextProbe != null)
+            {
+                minStart = max(minStart, minProbeStartWithoutGap(nextProbe));
+            }
+
+            // If the probe is on the edge, don't shift it such that it reduces the target coverage.
+            if(i == 0)
+            {
+                if(originalProbe.start() < targetRegion.start())
+                {
+                    // First probe, extending before the target region:
+                    //   - Can't shift left at all
+                    //   - Can't shift right past the target start
+                    minStart = originalProbe.start();
+                    maxEnd = min(maxEnd, probeRegionStartingAt(targetRegion.start()).end());
+                }
+                else
+                {
+                    // First probe, starting after the target start:
+                    //   - Can't shift left before the target start
+                    //   - Can't shift right at all
+                    minStart = max(minStart, targetRegion.start());
+                    maxEnd = originalProbe.end();
+                }
+            }
+            if(i == tiling.size() - 1)
+            {
+                if(originalProbe.end() > targetRegion.end())
+                {
+                    // Last probe, extending after the target region:
+                    //   - Can't shift left before target end
+                    //   - Can't shift right at all
+                    minStart = max(minStart, probeRegionEndingAt(targetRegion.end()).start());
+                    maxEnd = originalProbe.end();
+                }
+                else
+                {
+                    // Last probe, ending before the target end:
+                    //   - Can't shift left at all
+                    //   - Can't shift right past target end
+                    minStart = originalProbe.start();
+                    maxEnd = min(maxEnd, targetRegion.end());
+                }
+            }
+
+            // Max shift amount constraint.
+            minStart = max(minStart, originalProbe.start() - PROBE_SHIFT_MAX);
+            maxEnd = min(maxEnd, originalProbe.end() + PROBE_SHIFT_MAX);
+
+            int maxStart = probeRegionEndingAt(maxEnd).start();
+
+            // In case our additional checks here fail, just use the original tiling position as we have no better alternative.
+            if(minStart > maxStart)
+            {
+                minStart = maxStart = originalProbe.start();
+            }
+
+            // Iterate in an outward moving pattern so in the case of a tie, prefer probes closer to the original tiling position.
+            int minOffset = minStart - originalProbe.start();
+            int maxOffset = maxStart - originalProbe.start();
+            Stream<Probe> candidates = outwardMovingOffsets(minOffset, maxOffset)
+                    .map(offset -> originalProbe.start() + offset)
+                    .mapToObj(acceptableProbes::get)
+                    .filter(Objects::nonNull);
+            Optional<Probe> bestProbe = selectBestProbe(candidates, strategy);
+            bestProbe.ifPresent(finalProbes::add);
+        }
+
+        // The region where tiling found was acceptable to cover.
+        // This may be equal to the target region or smaller if the tiling found it was optimal to leave some bases uncovered at the edges.
+        // We want the uncovered edges to count as covered though (don't want to mark as rejected) so we pass this back to the caller.
+        BaseRegion intendedRegion = tiling.isEmpty()
+                ? targetRegion
+                : regionIntersection(targetRegion, new BaseRegion(tiling.get(0).start(), tiling.get(tiling.size() - 1).end())).orElse(null);
+
+        return new CoverAcceptableSubregionResult(finalProbes, intendedRegion);
+    }
+
     // Calculates the best probe tiling of a region.
     // Objectives:
-    //   - Cover the whole region;
+    //   - Cover most of the region, with possibly a few bases on the edge uncovered;
     //   - Centre the tiling on the region;
     //   - Equally spaced probes;
     //   - Probes cannot extend outside `probeBounds`.
@@ -273,23 +306,21 @@ public class ProbeGenerator
             throw new IllegalArgumentException("probeBounds forbids all possible tilings");
         }
 
-        // TODO: parameter to allow some uncovered bases at ends of the region
-
-        int maxUncovered = PROBE_LENGTH - 1;
+        int maxProbeOffTarget = PROBE_LENGTH - 1;
         // Hard bounds on the region in which probes can be placed.
         BaseRegion tilingBounds = new BaseRegion(
-                max(probeBounds.start(), region.start() - maxUncovered),
-                min(probeBounds.end(), region.end() + maxUncovered));
+                max(probeBounds.start(), region.start() - maxProbeOffTarget),
+                min(probeBounds.end(), region.end() + maxProbeOffTarget));
 
         double centre = regionCentreFloat(region);
 
-        // Lower bound is number of probes which completely cover the region.
-        int minProbes = (int) ceil((double) region.baseLength() / PROBE_LENGTH);
+        // Lower bound is number of probes which completely cover the region, possibly excluding the max allowed uncovered bases.
+        int minProbes = (int) ceil((double) (region.baseLength() - REGION_UNCOVERED_MAX) / PROBE_LENGTH);
 
         // Upper bound is maximally overlapped and maximally extending outside the target region.
-        int maxOverlap = PROBE_LENGTH - 1;
-        // maxProbes * PROBE_LENGTH - (maxProbes-1) * maxOverlap <= regionSize + startExtend + endExtend
-        int maxProbes = (tilingBounds.baseLength() - maxOverlap) / (PROBE_LENGTH - maxOverlap);
+        int maxProbeOverlap = PROBE_LENGTH - 1;
+        // maxProbes * PROBE_LENGTH - (maxProbes-1) * maxProbeOverlap <= regionSize + startExtend + endExtend
+        int maxProbes = (tilingBounds.baseLength() - maxProbeOverlap) / (PROBE_LENGTH - maxProbeOverlap);
 
         if(minProbes > maxProbes)
         {
@@ -297,8 +328,8 @@ public class ProbeGenerator
             return emptyList();
         }
 
-        // The optimal number of probes is always the minimum possible, since we guaranteed the minimum covers the whole region, and adding
-        // more probes will only increase overlap or extension for no gain.
+        // The optimal number of probes is always the minimum possible, since we guaranteed the minimum acceptably covers the region,
+        // and adding more probes will only increase overlap or extension for no gain.
         int probeCount = minProbes;
         // How many probe bases "left over" from covering the region?
         int extra = minProbes * PROBE_LENGTH - region.baseLength();
@@ -322,10 +353,17 @@ public class ProbeGenerator
         else
         {
             // General case.
-            // TODO: parameter to balance overlap and extension
+
+            // If extra is negative (i.e. some bases uncovered) then reduce the desired tiling region.
+            // If extra is positive (i.e. some overlap) then distribute that between overlap and extension based on the parameter.
+            double tilingSpace = min(
+                    region.baseLength() + min(0, extra) + max(0, extra * PROBE_OVERLAP_EXTENSION_BALANCE),
+                    tilingBounds.baseLength());
             probeStartSpacing = probeCount <= 1
                     ? 0.0
-                    : max((region.baseLength() - PROBE_LENGTH) / (probeCount - 1.0), PROBE_LENGTH - maxOverlap);
+                    : max(
+                            (tilingSpace - PROBE_LENGTH) / (probeCount - 1.0),
+                            PROBE_LENGTH - maxProbeOverlap);
             double tilingLength = (probeCount - 1) * probeStartSpacing + PROBE_LENGTH;
             tilingStart = centre - tilingLength / 2;
 

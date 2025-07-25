@@ -7,8 +7,17 @@ public class PanelBuilderConstants
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;    // I.e. any GC is ok
-    // When covering a large region with probes, how many bases a probe may be shifted left or right from its "ideal" tiled position.
+
+    // Parameters when covering a large region with probes.
+    // How many bases a probe may be shifted left or right from its "ideal" tiled position.
     public static final int PROBE_SHIFT_MAX = 5;
+    // How many bases may be uncovered before we add another probe?
+    // Uncovered bases will always be on the edges of the regions.
+    // This is desirable because reads from sequencing will include an area slightly larger than the probe.
+    public static final int REGION_UNCOVERED_MAX = 20;
+    // When probes cover more than the target region, how much to allocate to probe overlap vs. extension outside the target region.
+    // 0 = maximise overlap. 1 = maximise extension.
+    public static final double PROBE_OVERLAP_EXTENSION_BALANCE = 0.5;
 
     // Target genes constants.
     // All the region and gap sizes should be much larger than the probe size to avoid probe overlap.
@@ -62,6 +71,10 @@ public class PanelBuilderConstants
             throw new IllegalArgumentException();
         }
         if(!(PROBE_SHIFT_MAX >= 0 && PROBE_SHIFT_MAX < PROBE_LENGTH))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(0 <= PROBE_OVERLAP_EXTENSION_BALANCE && PROBE_OVERLAP_EXTENSION_BALANCE <= 1))
         {
             throw new IllegalArgumentException();
         }
