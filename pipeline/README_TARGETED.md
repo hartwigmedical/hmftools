@@ -313,9 +313,9 @@ The following filters are applied:
 * AMBER loci must be within 300 bases of a target region
 
 #### PURPLE
+**MSI estimate**
 To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.
 
-**MSI estimate**
 For a set of microsatellite sites defined in the MSI target bed file count the number of passing variants at MSI sites ignoring SNV, MNV and 1 base deletes and requiring a VAF cutoff of > 0.15 for 2 and 3 base deletes or 0.08 for 4+ base deletes or any length insertion.
 
 We estimate MSI rate as:
@@ -347,13 +347,6 @@ The 0.05 conversion from TML to TMB is the empirically observed relationship in 
 
 For driver likelihood calculations, we assume 20% of variants are biallelic for targeted sequencing samples.
 
-**Other**
-
-The following special rules apply to the construction of the driver catalog:
-- **DELS**: Don’t report DELS >10Mb or if the copy number segment has less than 3 depth windows (unless supported by SV on both sides)
-- **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
-
-There is also no somatic fit mode or somatic penalty and no SV recovery in PURPLE in targeted mode.
 
 #### ISOFOX
 TPM is normalised to bring panel gene expression in-line with WGS expression rates.

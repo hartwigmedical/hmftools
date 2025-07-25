@@ -11,8 +11,11 @@ For each impacted transcript it will add the following fields:
 | Transcript        | Ensembl transcript ID                                                                                 |
 | Effects           | list of effects separated by '&'                                                                      |
 | SpliceRegion      | true/false - if variant overlaps with the 8 intronic bases or 3 exonic bases around a splice junction |
-| HgvsCodingImpact  | HGVS coding impact                                                                                    |
-| HgvsProteinImpact | HGVS protein impact                                                                                   |
+| Hgvs.c  | HGVS coding impact                                                                                    |
+| Hgvs.p| HGVS protein impact                                                                                   |
+| RefSeqId| RefSeq TranscriptId                                                                                   |
+| Exon| Affected Exon                                                                                   |
+| Codon| Affected Codon                                                                                   |
 
 For any variant with one or more impacted transcripts, the following summary data is written:
 
@@ -261,7 +264,6 @@ The filters for the HMF cohort PON depend on the ref genome version and are as f
 | 38      | 98      | PON_MAX>=5 & PON_COUNT>=5  | PON_MAX>=5 & PON_COUNT>=2 | PON_COUNT>=2 |
 
 ## Known Issues
-- Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
 - Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple records first (eg.  the -m none option in bcftools).
 - Duplications may sometimes be marked as insertions 
 - Inserts between the translation/coding start base and the previous base may not be classified correctly and/or have the wrong codon impact due to left alignment
