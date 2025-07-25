@@ -146,11 +146,11 @@ public class Utils
 
     public static BaseRegion regionStartingAt(int startPosition, int length)
     {
-        BaseRegion region = new BaseRegion(startPosition, startPosition + length - 1);
-        if(!region.hasValidPositions())
+        if(length < 1)
         {
-            throw new IllegalArgumentException("Invalid region");
+            throw new IllegalArgumentException("Invalid length");
         }
+        BaseRegion region = new BaseRegion(startPosition, startPosition + length - 1);
         return region;
     }
 
@@ -161,23 +161,23 @@ public class Utils
 
     public static BaseRegion regionCenteredAt(int centrePosition, int length)
     {
+        if(length < 1)
+        {
+            throw new IllegalArgumentException("Invalid length");
+        }
         int start = centrePosition + regionCentreStartOffset(length);
         int end = start + length - 1;
         BaseRegion region = new BaseRegion(start, end);
-        if(!region.hasValidPositions())
-        {
-            throw new IllegalArgumentException("Invalid region");
-        }
         return region;
     }
 
     public static BaseRegion regionEndingAt(int endPosition, int length)
     {
-        BaseRegion region = new BaseRegion(endPosition - length + 1, endPosition);
-        if(!region.hasValidPositions())
+        if(length < 1)
         {
-            throw new IllegalArgumentException("Invalid region");
+            throw new IllegalArgumentException("Invalid length");
         }
+        BaseRegion region = new BaseRegion(endPosition - length + 1, endPosition);
         return region;
     }
 
@@ -243,11 +243,6 @@ public class Utils
     // With the constraint that no value will be outside the range [minOffset, maxOffset].
     public static IntStream outwardMovingOffsets(int minOffset, int maxOffset)
     {
-        if(minOffset > maxOffset)
-        {
-            // Probably a bug in the calling code.
-            throw new IllegalArgumentException("minOffset and maxOffset forbid all possible offsets");
-        }
         return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
                 .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
                 .filter(offset -> offset >= minOffset && offset <= maxOffset);

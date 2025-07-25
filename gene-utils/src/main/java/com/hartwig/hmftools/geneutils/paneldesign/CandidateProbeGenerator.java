@@ -22,8 +22,6 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-// TODO: unit test
-
 // Utilities for creating candidate probes covering target regions.
 public class CandidateProbeGenerator
 {
@@ -67,7 +65,7 @@ public class CandidateProbeGenerator
     //   - Can't end after `maxProbeEnd`
     //   - Can't end after end of chromosome
     // Useful because we prefer to select probes which are closest to the target position or centre of a region.
-    public Stream<Probe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
+    private Stream<Probe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
             int maxProbeEnd, final ProbeContext context)
     {
         if(maxProbeEnd - minProbeStart + 1 < PROBE_LENGTH)
@@ -95,7 +93,7 @@ public class CandidateProbeGenerator
                                 probeRegionCenteredAt(initialPosition.Position + offset))));
     }
 
-    // Generates all probes overlapping a region.
+    // Generates all probes overlapping a region, in order from left to right.
     public Stream<Probe> allOverlapping(final ChrBaseRegion region, final ProbeContext context)
     {
         int minProbeStart = max(minProbeStartOverlapping(region.baseRegion()), 1);

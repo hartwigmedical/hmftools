@@ -33,14 +33,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-// TODO: unit test
-
 // Probes based on Amber heterozygous sites, used to deduce copy number.
 // Methodology:
 //   - Divide chromosomes into large partitions;
 //   - In each partition, generate candidate probes on each Amber site;
 //   - In each partition, select the acceptable probe with the best GC content.
-// TODO: this should probably be a predefined list rather than generate every time
 public class CopyNumberBackbone
 {
     private final String mAmberSitesFile;
@@ -202,7 +199,6 @@ public class CopyNumberBackbone
                     LOGGER.debug("No acceptable probe for copy number backbone partition: {}", partition.Region);
 
                     TargetMetadata metadata = createTargetMetadata(partition.Region, null);
-                    // TODO: is this the best target region to use here?
                     TargetRegion target = new TargetRegion(partition.Region, metadata);
 
                     String rejectionReason;

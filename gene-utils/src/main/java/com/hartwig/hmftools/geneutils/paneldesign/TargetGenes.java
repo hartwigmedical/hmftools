@@ -44,8 +44,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO: unit test
-
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
 //   - Coding: Cover the full coding region of each exon, plus splice points.

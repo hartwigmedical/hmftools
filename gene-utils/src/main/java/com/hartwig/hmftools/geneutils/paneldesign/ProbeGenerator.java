@@ -38,8 +38,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-// TODO: unit test
-
 public class ProbeGenerator
 {
     public final CandidateProbeGenerator mCandidateGenerator;
@@ -193,7 +191,6 @@ public class ProbeGenerator
                         }
                         if(i == tiling.size() - 1)
                         {
-                            // TODO: technically could shift right more if there was overlap with the previous probe
                             if(originalProbe.end() > baseRegion.end())
                             {
                                 // Last probe, extending after the target region:
@@ -275,6 +272,8 @@ public class ProbeGenerator
             // Probably a bug in the caller.
             throw new IllegalArgumentException("probeBounds forbids all possible tilings");
         }
+
+        // TODO: parameter to allow some uncovered bases at ends of the region
 
         int maxUncovered = PROBE_LENGTH - 1;
         // Hard bounds on the region in which probes can be placed.
