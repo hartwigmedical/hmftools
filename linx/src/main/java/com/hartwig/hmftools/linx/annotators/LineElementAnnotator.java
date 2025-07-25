@@ -89,7 +89,7 @@ public class LineElementAnnotator {
             }
 
             mKnownLineElements.addAll(loadConfigFile(fileContents, REF_GENOME_VERSION));
-            LNX_LOGGER.info("loaded {} known line elements", mKnownLineElements.size());
+            LNX_LOGGER.debug("loaded {} known line elements", mKnownLineElements.size());
         }
         catch(IOException e)
         {

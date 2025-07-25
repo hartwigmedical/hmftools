@@ -3,7 +3,9 @@ package com.hartwig.hmftools.linx.types;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
@@ -23,6 +25,7 @@ import static com.hartwig.hmftools.linx.types.SglMapping.convertFromInsertSequen
 
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -37,6 +40,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.ClusteringReason;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 public class SvVarData
 {
@@ -170,12 +174,12 @@ public class SvVarData
     {
         if(isSglBreakend())
         {
-            return String.format("id(%s) pos(%s:%d:%d)",
+            return format("id(%s) pos(%s:%d:%d)",
                     id(), mChr[SE_START], orientation(true), position(true));
         }
         else
         {
-            return String.format("id(%s) pos(%s:%d:%d -> %s:%d:%d)",
+            return format("id(%s) pos(%s:%d:%d -> %s:%d:%d)",
                     id(), mChr[SE_START], orientation(true), position(true),
                     mChr[SE_END], orientation(false), position(false));
         }
@@ -183,7 +187,7 @@ public class SvVarData
 
     public String posId(boolean useStart)
     {
-        return String.format("%s: %s %s:%d:%d",
+        return format("%s: %s %s:%d:%d",
                 id(), useStart ? "start" :"end", mChr[seIndex(useStart)], orientation(useStart), position(useStart));
     }
 
@@ -423,11 +427,50 @@ public class SvVarData
 
     public String getGeneInBreakend(boolean isStart, boolean includeId)
     {
+        return getGeneInBreakend(isStart, includeId, false);
+    }
+
+    public String getGeneInBreakend(boolean isStart, boolean includeId, boolean includeTransImpact)
+    {
         // create a list of any genes which this breakend touches, but exclude the upstream distance used for fusions
         final List<BreakendGeneData> genesList = getGenesList(isStart).stream()
                 .filter(x -> x.breakendWithinGene(PRE_TRANSCRIPT_DISTANCE))
                 .collect(Collectors.toList());
 
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+        for(final BreakendGeneData gene : genesList)
+        {
+            StringJoiner geneSj = new StringJoiner("|");
+
+            if(includeId)
+                geneSj.add(gene.geneId());
+
+            geneSj.add(gene.geneName());
+
+            if(includeTransImpact)
+            {
+                BreakendTransData transData = gene.canonical();
+
+                if(transData != null)
+                {
+                    geneSj.add(String.valueOf(transData.regionType()));
+                    geneSj.add(String.valueOf(transData.codingType()));
+
+                    if(transData.isDisruptive())
+                        geneSj.add("disruptive");
+
+                    if(transData.codingType() == CODING)
+                        geneSj.add(format("exon=%d", transData.ExonUpstream));
+                }
+            }
+
+            sj.add(geneSj.toString());
+        }
+
+        return sj.toString();
+
+        /*
         String genesStr = "";
         for(final BreakendGeneData gene : genesList)
         {
@@ -436,6 +479,7 @@ public class SvVarData
         }
 
         return genesStr;
+        */
     }
 
     public boolean hasAssemblyLink(boolean isStart)

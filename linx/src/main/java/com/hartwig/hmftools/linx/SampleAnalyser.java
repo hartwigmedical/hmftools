@@ -89,7 +89,7 @@ public class SampleAnalyser implements Callable<Void>
     public static final String PERF_COUNTER_PREP = "Preparation";
     public static final String PERF_COUNTER_CLUSTER = "ClusterAndAnalyse";
     public static final String PERF_COUNTER_ANNOTATE = "Annotation";
-    public static final String PERF_COUNTER_WRITE = "WriteAndUpload";
+    public static final String PERF_COUNTER_WRITE = "Write";
 
     public SampleAnalyser(
             int instanceId, final LinxConfig config, final SvAnnotators svAnnotators,

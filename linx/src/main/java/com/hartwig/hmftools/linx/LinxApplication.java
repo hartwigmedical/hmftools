@@ -147,7 +147,7 @@ public class LinxApplication
 
         cohortDataWriter.close();
 
-        if(config.hasMultipleSamples())
+        if(config.hasMultipleSamples() && config.PerfDebug)
         {
             // combine and log performance counters
             Map<String, PerformanceCounter> combinedPerfCounters = sampleAnalysers.get(0).getPerfCounters();
