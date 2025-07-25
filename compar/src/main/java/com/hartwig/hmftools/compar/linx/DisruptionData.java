@@ -23,6 +23,7 @@ public class DisruptionData implements ComparableItem
     private final Category mSubCategory;
 
     protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
+    protected static final String FLD_UNMATCHED_SV = "unmatchedSv";
 
     public DisruptionData(final Category category, final String geneName, final List<BreakendData> breakends)
     {
@@ -118,7 +119,7 @@ public class DisruptionData implements ComparableItem
             else
             {
                 // record an unmatched breakend or SV
-                diffs.add(format("unmatchedSv(%s/)", breakendData.svInfoStr()));
+                diffs.add(format(FLD_UNMATCHED_SV + "(%s/)", breakendData.svInfoStr()));
 
                 ++index;
             }
@@ -127,7 +128,7 @@ public class DisruptionData implements ComparableItem
         for(BreakendData otherBreakendData : otherBreakends)
         {
             // record an unmatched breakend or SV on the other side
-            diffs.add(format("unmatchedSv(/%s)", otherBreakendData.svInfoStr()));
+            diffs.add(format(FLD_UNMATCHED_SV + "(/%s)", otherBreakendData.svInfoStr()));
         }
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);

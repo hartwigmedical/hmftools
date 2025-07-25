@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestSomaticVariantDataBuilder
 {
@@ -27,7 +29,7 @@ public class TestSomaticVariantDataBuilder
     public boolean hasLPS = false;
     public int qual = 275;
     public double subclonalLikelihood = 0.;
-    public Set<String> filters = Set.of("PASS");
+    public Set<String> filters = Collections.emptySet();
     public double variantCopyNumber = 1.1;
     public double purityAdjustedVaf = 0.45;
     public int tumorTotalReadCount = 116;
@@ -37,7 +39,7 @@ public class TestSomaticVariantDataBuilder
     public String comparisonChromosome = "7";
     public int comparisonPosition = 140453136;
 
-    private static final Consumer<TestSomaticVariantDataBuilder> ALTERNATE_DEFAULT_INITIALIZER = b ->
+    private static final Consumer<TestSomaticVariantDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
         b.chromosome = "8";
         b.position = 10000;
@@ -66,34 +68,12 @@ public class TestSomaticVariantDataBuilder
         b.comparisonPosition = 10000;
     };
 
-    private TestSomaticVariantDataBuilder()
-    {
-    }
-
-    public static SomaticVariantData create(final Consumer<TestSomaticVariantDataBuilder> initializer)
-    {
-        TestSomaticVariantDataBuilder builder = new TestSomaticVariantDataBuilder();
-        initializer.accept(builder);
-        return builder.build();
-    }
-
-    public static SomaticVariantData create()
-    {
-        return create(b -> {});
-    }
-
-    public static SomaticVariantData createWithAlternateDefaults(final Consumer<TestSomaticVariantDataBuilder> initializer)
-    {
-        TestSomaticVariantDataBuilder builder = new TestSomaticVariantDataBuilder();
-        ALTERNATE_DEFAULT_INITIALIZER.accept(builder);
-        initializer.accept(builder);
-        return builder.build();
-    }
-
-    public static SomaticVariantData createWithAlternateDefaults()
-    {
-        return createWithAlternateDefaults(b -> {});
-    }
+    public static final TestComparableItemBuilder<TestSomaticVariantDataBuilder, SomaticVariantData> BUILDER =
+            new TestComparableItemBuilder<>(
+                    TestSomaticVariantDataBuilder::new,
+                    TestSomaticVariantDataBuilder::build,
+                    ALTERNATE_INITIALIZER
+            );
 
     private SomaticVariantData build()
     {

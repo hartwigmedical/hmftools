@@ -94,6 +94,15 @@ public class CopyNumberComparer implements ItemComparer
                 copyNumber.chromosome(), copyNumber.start(), fileSource, mConfig.RequiresLiftover, mConfig.LiftoverCache);
         BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
                 copyNumber.chromosome(), copyNumber.end(), fileSource, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-        return new CopyNumberData(copyNumber, comparisonPositionStart, comparisonPositionEnd);
+        return new CopyNumberData(
+                copyNumber.chromosome(),
+                copyNumber.start(),
+                copyNumber.end(),
+                copyNumber.averageTumorCopyNumber(),
+                copyNumber.majorAlleleCopyNumber(),
+                copyNumber.method(),
+                comparisonPositionStart,
+                comparisonPositionEnd
+        );
     }
 }
