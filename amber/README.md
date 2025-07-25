@@ -87,7 +87,7 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 
 | Argument               | Default | Description                                   |
 |------------------------|---------|-----------------------------------------------|
-| tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor-only mode     |
+| tumor_only_min_vaf     | 0.025    | Min VAF in ref and alt in tumor-only mode     |
 | tumor_only_min_support | 2       | Min support in ref and alt in tumor-only mode |
 
 ### Example Usage
