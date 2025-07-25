@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -193,7 +194,7 @@ public class SliceConfig
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
         configBuilder.addFlag(ONLY_SUPPS, "Only capture supplementary reads");
         configBuilder.addFlag(LOG_MISSING_READS, "Log missing reads");
-        configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         BamToolName.addConfig(configBuilder);
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder);

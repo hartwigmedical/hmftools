@@ -187,12 +187,11 @@ public class CohortDataWriter
             {
                 // extra copy number info
                 if(mConfig.isSomatic())
-                    sj.add("MinorAPStartPrev").add("MinorAPStartPost").add("MinorAPEndPrev").add("MinorAPEndPost").add("AFStart").add("AFEnd");
+                    sj.add("MinorAPStartPrev").add("MinorAPStartPost").add("MinorAPEndPrev").add("MinorAPEndPost");
 
                 // SV table info
-                sj.add("HomologyStart").add("HomologyEnd").add("InsertSeq").add("QualScore");
-                sj.add("InsSeqAlignments");
-                sj.add("RepeatClass").add("RepeatType").add("AnchorStart").add("AnchorEnd");
+                sj.add("HomologyStart").add("HomologyEnd").add("InsertSeq").add("QualScore").add("AFStart").add("AFEnd");
+                sj.add("InsSeqAlignments").add("RepeatClass").add("RepeatType").add("AnchorStart").add("AnchorEnd");
             }
 
             writer.write(sj.toString());
@@ -363,8 +362,6 @@ public class CohortDataWriter
                         sj.add(format("%.2f", var.getBreakend(true).minorAlleleJcn(false)));
                         sj.add(format("%.2f", !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(true) : 0));
                         sj.add(format("%.2f", !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(false) : 0));
-                        sj.add(format("%.2f", dbData.adjustedStartAF()));
-                        sj.add(format("%.2f", dbData.adjustedEndAF()));
                     }
 
                     final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
@@ -373,8 +370,10 @@ public class CohortDataWriter
                     sj.add(dbData.endHomologySequence());
                     sj.add(dbData.insertSequence());
                     sj.add(format("%.0f", dbData.qualityScore()));
-                    sj.add(insSeqAlignments);
+                    sj.add(format("%.2f", dbData.adjustedStartAF()));
+                    sj.add(format("%.2f", dbData.adjustedEndAF()));
 
+                    sj.add(insSeqAlignments);
                     sj.add(dbData.insertSequenceRepeatClass());
                     sj.add(dbData.insertSequenceRepeatType());
                     sj.add(String.valueOf(dbData.startAnchoringSupportDistance()));

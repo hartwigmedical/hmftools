@@ -469,17 +469,6 @@ public class SvVarData
         }
 
         return sj.toString();
-
-        /*
-        String genesStr = "";
-        for(final BreakendGeneData gene : genesList)
-        {
-            String geneStr = includeId ? gene.geneId() + ":" + gene.geneName() : gene.geneName();
-            genesStr = appendStr(genesStr, geneStr, ITEM_DELIM_CHR);
-        }
-
-        return genesStr;
-        */
     }
 
     public boolean hasAssemblyLink(boolean isStart)
