@@ -218,6 +218,14 @@ A*34:02:        ATG GCC GTC ...
 A*34 consensus: ATG GCC *TC ...
 ```
 
+For every allele nucleotide sequence, wildcard nucleotides are then replaced with the nucleotide from the corresponding 2-digit group 
+consensus sequence, and these new sequences written to new `*_nuc.txt` files. For example, the sequence of `A*34:01:02` becomes:
+
+```
+Original sequence A*34:01:02: *** *** *** ... GCT CCC ...
+Replaced sequence A*34:01:02: ATG GCC *TC ... GCT CCC ...
+```
+
 #### Generate LILAC sequences
 
 These files are converted to the LILAC allele sequences files with the following command:
