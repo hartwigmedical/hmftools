@@ -14,7 +14,7 @@ The full algorithm for each step is described in the algorithm section below.
 
 ### Command
 
-Esvee can be run as a single command or by making the 4 steps described below in turn. 
+Esvee can be run as a single command or by running the 4 steps described below in turn. 
 A single command example is:
 
 ```
@@ -29,7 +29,7 @@ java -jar esvee.jar
   -known_hotspot_file /ref_data/known_fusions.38.bedpe
   -pon_sgl_file /ref_data/sgl_pon.38.bed.gz
   -pon_sv_file /ref_data/sv_pon.38.bedpe.gz
-  -repeat_mask_file /ref_data/repeat_mask_data.37.fa.gz
+  -repeat_mask_file /ref_data/repeat_mask_data.38.fa.gz
   -bamtool /tools/sambamba/sambamba 
   -output_dir /sample_data/output/ 
   -threads 16
@@ -159,7 +159,7 @@ java -cp esvee.jar com.hartwig.hmftools.esvee.caller.CallerApplication
   -pon_sgl_file /ref_data/sgl_pon.38.bed.gz
   -pon_sv_file /ref_data/sv_pon.38.bedpe.gz
   -known_hotspot_file /ref_data/known_fusions.38.bedpe
-  -repeat_mask_file /ref_data/repeat_mask_data.37.fa.gz
+  -repeat_mask_file /ref_data/repeat_mask_data.38.fa.gz
   -output_dir /sample_data/output/ 
 ```
 
