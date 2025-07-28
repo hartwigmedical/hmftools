@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.variant.PurpleVcfTags;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.Multimaps;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 
 import org.jetbrains.annotations.Nullable;
