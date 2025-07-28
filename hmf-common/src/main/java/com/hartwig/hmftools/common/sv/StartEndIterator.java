@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils.sv;
+package com.hartwig.hmftools.common.sv;
 
 public class StartEndIterator
 {

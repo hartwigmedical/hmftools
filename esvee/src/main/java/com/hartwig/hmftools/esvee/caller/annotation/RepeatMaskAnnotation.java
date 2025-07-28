@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.caller.annotation;
 
 import static java.lang.String.format;
 
-import com.hartwig.hmftools.common.gripss.RepeatMaskData;
+import com.hartwig.hmftools.common.sv.RepeatMaskData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 
 public class RepeatMaskAnnotation

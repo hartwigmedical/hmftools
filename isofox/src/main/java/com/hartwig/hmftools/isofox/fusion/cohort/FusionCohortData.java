@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.isofox.fusion.FusionData;

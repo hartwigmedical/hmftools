@@ -2,8 +2,8 @@ package com.hartwig.hmftools.neo.epitope;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 
 import htsjdk.samtools.Cigar;
 

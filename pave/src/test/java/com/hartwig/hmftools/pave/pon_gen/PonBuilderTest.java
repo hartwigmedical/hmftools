@@ -10,8 +10,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.variant.VariantHotspot;
 
 import org.junit.Test;
 

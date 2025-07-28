@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.hotspot;
+package com.hartwig.hmftools.common.variant;
 
 import java.io.IOException;
 
@@ -6,7 +6,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.teal
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
-import com.hartwig.hmftools.common.utils.version.VersionInfo
+import com.hartwig.hmftools.common.utils.config.VersionInfo
 import com.hartwig.hmftools.teal.breakend.BreakEndApp
 import com.hartwig.hmftools.teal.telbam.TelbamApp
 import com.hartwig.hmftools.teal.tellength.SampleType

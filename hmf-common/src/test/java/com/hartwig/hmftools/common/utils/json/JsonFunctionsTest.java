@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.file.JsonFunctions;
 
 import org.junit.Test;
 

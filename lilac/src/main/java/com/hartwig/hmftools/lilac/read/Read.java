@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPositio
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 

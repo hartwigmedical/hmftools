@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.hotspot;
+package com.hartwig.hmftools.common.variant;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 

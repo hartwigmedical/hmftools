@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.doid;
 
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalBool;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.file.JsonFunctions.optionalBool;
+import static com.hartwig.hmftools.common.utils.file.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.common.utils.file.JsonFunctions.optionalJsonObject;
+import static com.hartwig.hmftools.common.utils.file.JsonFunctions.optionalString;
+import static com.hartwig.hmftools.common.utils.file.JsonFunctions.optionalStringList;
+import static com.hartwig.hmftools.common.utils.file.JsonFunctions.string;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
+import com.hartwig.hmftools.common.utils.file.JsonDatamodelChecker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

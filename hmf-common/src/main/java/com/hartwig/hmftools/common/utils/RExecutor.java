@@ -1,9 +1,8 @@
-package com.hartwig.hmftools.common.utils.r;
+package com.hartwig.hmftools.common.utils;
 
 import static java.lang.String.format;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

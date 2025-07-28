@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 
 import java.util.List;
 import java.util.Map;

@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.utils.sv;
+package com.hartwig.hmftools.common.sv;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 
 import java.util.Objects;
 

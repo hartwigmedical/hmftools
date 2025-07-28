@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.gripss;
+package com.hartwig.hmftools.common.sv;
 
 import static java.lang.String.format;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils.version;
+package com.hartwig.hmftools.common.utils.config;
 
 import static java.lang.String.format;
 import static java.time.ZoneOffset.UTC;

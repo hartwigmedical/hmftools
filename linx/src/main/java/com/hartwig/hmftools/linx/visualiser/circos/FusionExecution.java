@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter.PROTE
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 
 public class FusionExecution

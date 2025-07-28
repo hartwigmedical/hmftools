@@ -15,9 +15,9 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_5_PRIM
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_INTRON;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_2;
 

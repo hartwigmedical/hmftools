@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.msi;
+package com.hartwig.hmftools.common.purple;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 

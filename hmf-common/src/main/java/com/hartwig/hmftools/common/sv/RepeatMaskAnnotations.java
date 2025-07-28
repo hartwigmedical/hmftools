@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.gripss;
+package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;

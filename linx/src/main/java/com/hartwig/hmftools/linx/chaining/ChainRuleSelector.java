@@ -31,9 +31,9 @@ import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_MATCHED;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
 import static com.hartwig.hmftools.linx.types.LinkedPair.hasLinkClash;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.isStart;
 
 import java.util.Comparator;
 import java.util.List;

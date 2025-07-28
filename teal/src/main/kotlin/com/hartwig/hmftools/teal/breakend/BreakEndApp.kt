@@ -3,7 +3,7 @@ package com.hartwig.hmftools.teal.breakend
 import com.beust.jcommander.JCommander
 import com.hartwig.hmftools.common.utils.config.LoggingOptions
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
-import com.hartwig.hmftools.common.utils.version.VersionInfo
+import com.hartwig.hmftools.common.utils.config.VersionInfo
 import org.apache.logging.log4j.LogManager
 import java.time.Duration
 import java.time.Instant

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.hotspot;
+package com.hartwig.hmftools.common.variant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
