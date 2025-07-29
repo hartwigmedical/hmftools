@@ -218,20 +218,20 @@ As a fallback, if no 4-digit alleles fulfill the above criteria, we select the m
 group have wildcards. Note, in case of this fallback condition, the most common allele is by definition the consensus sequence.
 
 A consensus sequence is then created from the selected 4-digit allele sequences, with wildcards being are assigned if alleles in the 
-2-digit group have conflicting nucleotides, for example in `A*34`:
+2-digit group have conflicting nucleotides. For example, for the first few nucleotides of `A*34`:
 
 ```
-A*34:01:        ATG GCC ATC ...
-A*34:02:        ATG GCC GTC ...
-A*34 consensus: ATG GCC *TC ...
+A*34:01 sequence: ATG GCC ATC
+A*34:02 sequence: ATG GCC GTC
+A*34 consensus:   ATG GCC *TC
 ```
 
 For every allele nucleotide sequence, wildcard nucleotides are then replaced with the nucleotide from the corresponding 2-digit group 
-consensus sequence, and these new sequences written to new `*_nuc.txt` files. For example, the sequence of `A*34:01:02` becomes:
+consensus sequence, and these new sequences written to new `*_nuc.txt` files. For example, for the first few nucleotides of `A*34:01:02`:
 
 ```
-Original sequence A*34:01:02: *** *** *** ... GCT CCC ...
-Replaced sequence A*34:01:02: ATG GCC *TC ... GCT CCC ...
+A*34:01:02 original: *** *** ***
+A*34:01:02 replaced: ATG GCC *TC
 ```
 
 #### Generate LILAC sequences
@@ -243,11 +243,28 @@ java -cp lilac.jar com.hartwig.hmftools.lilac.utils.GenerateReferenceSequences \
    -output_dir /output_dir/
 ```
 
+This routine first selects the representative set of 4-digit alleles. If a 4-digit allele is only represented by its 6-digit 
+(synonymous variants) or 8-digit (intronic variants) alleles we greedily select the first (e.g. for `A*34:01` we select `A*34:01:01:01` 
+from `A*34:01:01:01`,  `A*34:01:01:02`, `A*34:01:02`, ...).
+
+Then, the nucleotide multiple sequence alignments are converted into nucleotide and amino acid sequences, 
+with deletions represented by a dot (`.`). For example, for the beginning sequence of `A*30:220Q`:
+
+```
+Reference sequence:    ATG GCC GTC ATG GCG CCC CGA ACC CTC CTC CTG CTA CTC
+A*30:220Q alignment:   --- --- --- --- --- --- --- --- --. ... ... ..- ---
+
+# Spaces shown for here clarity but absent in the LILAC nucleotides file
+A*30:220Q nucleotides: ATG GCC GTC ATG GCG CCC CGA ACC CT. ... ... ..A CTC 
+
+A*30:220Q amino acids: MAVMAPRTLL...SG
+```
+
 ## Algorithm
 
 The starting data for the LILAC algorithm is:
-- HLA-A, HLA-B, HLA-C and HLA-Y allele sequences from the IMGT/HLA database
-- All fragments aligned to HLA-A, HLA-B and HLA-C gene regions
+- HLA-A, HLA-B, HLA-C and HLA-Y [4-digit allele sequences](#allele-sequences) 
+- All fragments in a BAM aligned to HLA-A, HLA-B and HLA-C gene regions
 
 The algorithm has 2 main phases to determine the germline alleles:
 1) Elimination phase: Aims to remove allele candidates that are clearly not present
@@ -260,12 +277,8 @@ try to fit the sample.
 
 ### Allele set initialisation
 
-The complete set of 4-digit alleles are determined from the 4, 6 and 8 digit alleles in the IMGT/HLA database.
-
-If a 4-digit allele is not explicitly present (e.g. `A*01:02`) but its corresponding 6-digit or 8 digit alleles are
-(e.g. `A*01:02:01`, `A*01:02:02`), the numerically lowest is chosen as the representative allele (i.e. `A*01:02:01`).
-
-Some alleles are excluded due to their high similarity closely related pseudogenes, including:
+Some alleles are excluded (at runtime to avoid modifying LILAC resource files) due to their high similarity closely related pseudogenes, 
+including:
 - HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`
 - HLA-Y: `A*30:205`, `A*30:207`, `A*30:225`, `A*30:228`, `A*01:81`, `A*01:237`
 
