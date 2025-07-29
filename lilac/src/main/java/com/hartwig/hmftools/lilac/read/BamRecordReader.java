@@ -10,15 +10,23 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MAX_LOW_BASE_PERC;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
 import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
-import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
+import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -26,21 +34,16 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 public class BamRecordReader implements BamReader
 {
-    private final Map<String,GeneCodingRegions> mGeneCodingRegions;
+    private final Map<HlaGene, GeneCodingRegions> mGeneCodingRegions;
 
     private final String mBamFile;
     private final SamReader mSamReader;
@@ -57,7 +60,7 @@ public class BamRecordReader implements BamReader
     public static final int MAX_DISTANCE = 1000;
 
     public BamRecordReader(
-            final String bamFile, final LilacConfig config, final Map<String,TranscriptData> transcripts, final NucleotideFragmentFactory factory)
+            final String bamFile, final LilacConfig config, final Map<HlaGene, TranscriptData> transcripts, final NucleotideFragmentFactory factory)
     {
         mBamFile = bamFile;
 
@@ -70,7 +73,7 @@ public class BamRecordReader implements BamReader
 
         mGeneCodingRegions = Maps.newHashMap();
 
-        for(String geneName : GENE_CACHE.GeneNames)
+        for(HlaGene geneName : GENE_CACHE.GeneNames)
         {
             TranscriptData transcriptData = transcripts.get(geneName);
             mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, HLA_CHR, transcriptData));
@@ -110,7 +113,7 @@ public class BamRecordReader implements BamReader
     {
         final List<Fragment> fragments = Lists.newArrayList();
 
-        for(String geneName : GENE_CACHE.GeneNames)
+        for(HlaGene geneName : GENE_CACHE.GeneNames)
         {
             GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
 
@@ -122,7 +125,7 @@ public class BamRecordReader implements BamReader
 
     private List<Fragment> findGeneFragments(final GeneCodingRegions geneCodingRegions)
     {
-        LL_LOGGER.trace("querying HLA gene({})", geneCodingRegions.GeneName);
+        LL_LOGGER.trace("querying gene({})", geneCodingRegions.GeneName.toString());
 
         // slice for the whole coding region rather than per exon
         ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
@@ -147,7 +150,7 @@ public class BamRecordReader implements BamReader
             {
                 LL_LOGGER.trace("filter read: id({}) coords({}-{}) cigar({}) from gene region({}:{}-{})",
                         record.getReadName(), record.getAlignmentStart(), record.getAlignmentEnd(), record.getCigarString(),
-                        geneCodingRegions.GeneName, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
+                        geneCodingRegions.GeneName.toString(), geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
 
                 ++mFilteredRecordCount;
             }
@@ -157,7 +160,7 @@ public class BamRecordReader implements BamReader
             }
         }
 
-        Map<String,Fragment> readIdFragments = createFragments(geneCodingRegions.GeneName, geneCodingRegions.Strand, reads);
+        Map<String, Fragment> readIdFragments = createFragments(geneCodingRegions.GeneName, geneCodingRegions.Strand, reads);
 
         List<Fragment> readFragments = readIdFragments.values().stream()
                 .filter(x -> !mDiscardIndelReadIds.contains(x.id()))
@@ -194,9 +197,9 @@ public class BamRecordReader implements BamReader
         return false;
     }
 
-    private Map<String,Fragment> createFragments(final String geneName, final byte geneStrand, final List<Read> codingRecords)
+    private Map<String, Fragment> createFragments(final HlaGene geneName, final byte geneStrand, final Iterable<Read> codingRecords)
     {
-        Map<String,Fragment> readIdFragments = Maps.newHashMap();
+        Map<String, Fragment> readIdFragments = Maps.newHashMap();
 
         for(Read read : codingRecords)
         {
@@ -300,7 +303,7 @@ public class BamRecordReader implements BamReader
         // slice the BAM for the variant, get the mates if they are within the same gene's coding region,
         // then create and filter fragments
 
-        for(String geneName : GENE_CACHE.GeneNames)
+        for(HlaGene geneName : GENE_CACHE.GeneNames)
         {
             GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
 

@@ -6,12 +6,11 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_MILLI
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 import static com.hartwig.hmftools.lilac.read.Read.createRead;
@@ -302,11 +301,11 @@ public class FragmentsTest
         String readId = "01";
         Read read = createReadRecord(readId);
         Fragment frag1 = new Fragment(
-                read, GENE_A, Sets.newHashSet(GENE_A),
+                read, HLA_A, Sets.newHashSet(HLA_A),
                 Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
         Fragment frag2 = new Fragment(
-                read, GENE_B, Sets.newHashSet(GENE_B),
+                read, HLA_B, Sets.newHashSet(HLA_B),
                 Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
         Fragment mergedFrag = mergeFragments(frag1, frag2);
@@ -318,7 +317,7 @@ public class FragmentsTest
         assertEquals(1, mergedFrag.nucleotidesByLoci().size());
 
         frag2 = new Fragment(
-                read, GENE_A, Sets.newHashSet(GENE_A),
+                read, HLA_A, Sets.newHashSet(HLA_A),
                 Lists.newArrayList(0, 1, 2, 3),
                 Lists.newArrayList((byte) 30, (byte) 30, (byte) 30, (byte) 30),
                 Lists.newArrayList("A", "A", "A", "A"));
@@ -333,7 +332,7 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.nucleotidesByLoci().size());
 
         frag2 = new Fragment(
-                read, GENE_C, Sets.newHashSet(GENE_C),
+                read, HLA_C, Sets.newHashSet(HLA_C),
                 Lists.newArrayList(3, 4, 5),
                 Lists.newArrayList((byte) 30, (byte) 30, (byte) 30),
                 Lists.newArrayList("A", "A", "A"));

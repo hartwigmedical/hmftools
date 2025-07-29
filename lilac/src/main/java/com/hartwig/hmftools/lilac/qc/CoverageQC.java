@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.lilac.qc;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -81,9 +81,9 @@ public class CoverageQC {
             final List<Fragment> fragments, final ComplexCoverage winner)
     {
         List<HlaAllele> alleles = winner.getAlleleCoverage().stream().map(x -> x.Allele).collect(Collectors.toList());
-        int aTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_A)).collect(Collectors.toSet()).size();
-        int bTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_B)).collect(Collectors.toSet()).size();
-        int cTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_C)).collect(Collectors.toSet()).size();
+        int aTypes = alleles.stream().filter(x -> x.Gene == HLA_A).collect(Collectors.toSet()).size();
+        int bTypes = alleles.stream().filter(x -> x.Gene == HLA_B).collect(Collectors.toSet()).size();
+        int cTypes = alleles.stream().filter(x -> x.Gene == HLA_C).collect(Collectors.toSet()).size();
 
         if (aTypes == 0 || bTypes == 0 || cTypes == 0)
         {

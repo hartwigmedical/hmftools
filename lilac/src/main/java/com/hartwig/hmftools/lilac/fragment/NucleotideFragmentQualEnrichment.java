@@ -34,7 +34,7 @@ public final class NucleotideFragmentQualEnrichment
         SequenceCount highQualCounts = SequenceCount.buildFromNucleotides(MIN_HIGH_QUAL_EVIDENCE_FACTOR, highQualFrags);
         SequenceCount rawCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, fragments);
 
-        SequenceCount rawNucleotideCounts = RAW_REF_NUCLEOTIDE_COUNTS.get(context.geneName());
+        SequenceCount rawNucleotideCounts = RAW_REF_NUCLEOTIDE_COUNTS.get(context.Gene);
         return fragments.stream()
                 .map(x -> applyQualityFilter(x, highQualCounts, rawCounts, rawNucleotideCounts))
                 .collect(Collectors.toList());

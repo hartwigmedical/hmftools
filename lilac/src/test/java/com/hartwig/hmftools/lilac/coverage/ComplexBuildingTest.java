@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -36,7 +36,7 @@ public class ComplexBuildingTest
         List<HlaAllele> confirmedGroup = confirmedProtein.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
         // distinct
 
-        List<HlaComplex> result = ComplexBuilder.buildComplexesByGene(GENE_A, confirmedGroup, all);
+        List<HlaComplex> result = ComplexBuilder.buildComplexesByGene(HLA_A, confirmedGroup, all);
         assertEquals(confirmedProtein, result.get(0).Alleles);
     }
 
@@ -90,11 +90,11 @@ public class ComplexBuildingTest
 
     private HlaAllele createA(int group, int protein)
     {
-        return new HlaAllele(GENE_A, String.valueOf(group), String.valueOf(protein), "", "", null, null);
+        return new HlaAllele(HLA_A, String.valueOf(group), String.valueOf(protein), "", "", null, null);
     }
 
     private HlaAllele createB(int group, int protein)
     {
-        return new HlaAllele(GENE_B, String.valueOf(group), String.valueOf(protein), "", "", null, null);
+        return new HlaAllele(HLA_B, String.valueOf(group), String.valueOf(protein), "", "", null, null);
     }
 }

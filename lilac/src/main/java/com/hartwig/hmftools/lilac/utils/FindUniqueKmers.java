@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.lilac.LilacConfig.MHC_CLASS;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.registerCommonConfig;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import java.io.File;
@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -28,6 +27,7 @@ import com.hartwig.hmftools.lilac.GeneCache;
 import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -59,7 +59,7 @@ public class FindUniqueKmers
 
         mClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
 
-        Map<String,TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, mClassType);
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, mClassType);
         mGeneCache = new GeneCache(mClassType, hlaTranscriptMap);
 
         mAminoAcidSequences = Lists.newArrayList();
@@ -205,7 +205,7 @@ public class FindUniqueKmers
 
                 HlaAllele allele = mAlleleCache.requestFourDigit(alleleStr);
 
-                if(!mGeneCache.GeneIds.contains(allele.Gene) && !allele.Gene.equals(GENE_Y))
+                if(!mGeneCache.GeneNames.contains(allele.Gene) && allele.Gene != HLA_Y)
                     continue;
 
                 String sequenceStr = items[1];
@@ -213,7 +213,7 @@ public class FindUniqueKmers
                 HlaSequenceLoci newSequence = HlaSequenceFile.createFromReference(allele, sequenceStr, true);
                 HlaSequence sequence = new HlaSequence(newSequence.Allele, newSequence.sequence());
 
-                if(allele.Gene.equals(GENE_Y))
+                if(allele.Gene == HLA_Y)
                     mHlaYAminoAcidSequences.add(sequence);
                 else
                     mAminoAcidSequences.add(sequence);
@@ -250,14 +250,14 @@ public class FindUniqueKmers
 
                 HlaAllele allele = mAlleleCache.request(alleleStr);
 
-                if(!mGeneCache.GeneIds.contains(allele.Gene) && !allele.Gene.equals(GENE_Y))
+                if(!mGeneCache.GeneNames.contains(allele.Gene) && allele.Gene != HLA_Y)
                     continue;
 
                 String sequenceStr = items[1];
 
                 HlaSequenceLoci sequence = HlaSequenceFile.createFromReference(allele, sequenceStr, false);
 
-                if(allele.Gene.equals(GENE_Y))
+                if(allele.Gene == HLA_Y)
                     mHlaYNucleotideSequences.add(sequence);
                 else
                     mNucleotideSequences.add(sequence);

@@ -2,11 +2,11 @@ package com.hartwig.hmftools.lilac.misc;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -15,6 +15,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.lilac.MhcClass;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 import org.junit.Test;
 
@@ -23,7 +24,7 @@ public class LociPositionTest
     @Test
     public void testNucleotideLocus()
     {
-        Map<String,TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, MhcClass.CLASS_1);
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, MhcClass.CLASS_1);
 
         List<TranscriptData> transcripts = hlaTranscriptMap.values().stream().toList();
 

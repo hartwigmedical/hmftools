@@ -5,11 +5,11 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.MHC_CLASS;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
@@ -42,6 +42,7 @@ import com.hartwig.hmftools.lilac.GeneCache;
 import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -71,7 +72,7 @@ public class GenerateReferenceSequences
             System.exit(1);
         }
 
-        Map<String,TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, classType);
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, classType);
         mGeneCache = new GeneCache(classType, hlaTranscriptMap);
 
         mNucleotideSequences = Lists.newArrayList();
@@ -303,10 +304,10 @@ public class GenerateReferenceSequences
             writer.newLine();
 
             // then actual transcript positions for the exon boundaries
-            for(String gene : mGeneCache.GeneNames)
+            for(HlaGene gene : mGeneCache.GeneNames)
             {
                 TranscriptData transData = mGeneCache.GeneTranscriptMap.get(gene);
-                String geneStr = padString(gene, alleleNameLength);
+                String geneStr = padString(gene.shortName(), alleleNameLength);
                 writer.write(geneStr);
 
                 if(transData.Strand == POS_STRAND)

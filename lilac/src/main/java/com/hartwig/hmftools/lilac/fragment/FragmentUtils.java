@@ -21,7 +21,7 @@ public class FragmentUtils
         // merge paired reads but keep any single reads as well
         final List<Fragment> mergedFragments = Lists.newArrayList(); // by readId
 
-        Map<String,List<Fragment>> readGroupFrags = Maps.newHashMap();
+        Map<String, List<Fragment>> readGroupFrags = Maps.newHashMap();
 
         for(Fragment fragment : fragments)
         {
@@ -36,7 +36,7 @@ public class FragmentUtils
             idFrags.add(fragment);
         }
 
-        for(Map.Entry<String,List<Fragment>> readGroup : readGroupFrags.entrySet())
+        for(Map.Entry<String, List<Fragment>> readGroup : readGroupFrags.entrySet())
         {
             List<Fragment> idFrags = readGroup.getValue();
 
@@ -111,7 +111,7 @@ public class FragmentUtils
         String second = bases.get(1);
         String third = bases.get(2);
 
-        if(first == DEL_STR && second == DEL_STR && third == DEL_STR)
+        if(first.equals(DEL_STR) && second.equals(DEL_STR) && third.equals(DEL_STR))
             return DEL_STR;
 
         return Codons.aminoAcidFromBases(first + second + third);

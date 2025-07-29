@@ -2,8 +2,6 @@ package com.hartwig.hmftools.lilac.hla;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
-
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -13,7 +11,7 @@ import com.google.common.collect.Sets;
 
 public class HlaAllele implements Comparable<HlaAllele>
 {
-    public final String Gene;
+    public final HlaGene Gene;
     public final String AlleleGroup;
     public final String Protein;
     public final String Synonymous;
@@ -26,7 +24,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     private boolean mHasWildcards;
 
     public HlaAllele(
-            final String gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding,
+            final HlaGene gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding,
             final HlaAllele fourDigit, final HlaAllele group)
     {
         Gene = gene;
@@ -61,7 +59,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     public static HlaAllele fromString(final String line)
     {
         int starIndex = line.indexOf("*");
-        String gene = line.substring(0, starIndex);
+        HlaGene gene = HlaGene.fromString(line.substring(0, starIndex));
         String contigRemainder = line.substring(starIndex + 1);
         String[] contigSplit = contigRemainder.split(":");
 
@@ -81,7 +79,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         return new HlaAllele(gene, alleleGroup, protein, synonymousCoding, synonymousNonCoding, fourDigit, group);
     }
 
-    public String geneName() { return HLA_PREFIX + Gene; }
+    public String geneName() { return Gene.toString(); }
 
     public final HlaAllele asAlleleGroup()
     {
@@ -113,7 +111,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         if(hashCode() == other.hashCode())
             return 0;
 
-        int geneCompare = Gene.compareTo(other.Gene);
+        int geneCompare = Integer.compare(Gene.ordinal(), other.Gene.ordinal());
         if(geneCompare != 0)
         {
             return geneCompare;
@@ -149,24 +147,25 @@ public class HlaAllele implements Comparable<HlaAllele>
         return alleleStr.equals(toString());
     }
 
+    @Override
     public String toString()
     {
         CharSequence charSequence = Protein;
         if(charSequence.length() == 0)
         {
-            return Gene + '*' + AlleleGroup;
+            return Gene.shortName() + '*' + AlleleGroup;
         }
         charSequence = Synonymous;
         if(charSequence.length() == 0)
         {
-            return Gene + '*' + AlleleGroup + ':' + Protein;
+            return Gene.shortName() + '*' + AlleleGroup + ':' + Protein;
         }
         charSequence = SynonymousNonCoding;
         if(charSequence.length() == 0)
         {
-            return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous;
+            return Gene.shortName() + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous;
         }
-        return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous + ':' + SynonymousNonCoding;
+        return Gene.shortName() + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous + ':' + SynonymousNonCoding;
     }
 
     public static String toString(final List<HlaAllele> alleles)

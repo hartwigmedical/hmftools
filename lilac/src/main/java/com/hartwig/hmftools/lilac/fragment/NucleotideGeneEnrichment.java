@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public class NucleotideGeneEnrichment
 {
@@ -89,7 +90,7 @@ public class NucleotideGeneEnrichment
         }
     }
 
-    private boolean considerAddingGene(final Fragment fragment, final String gene, int maxFragmentNucleotideLocus)
+    private static boolean considerAddingGene(final Fragment fragment, final HlaGene gene, int maxFragmentNucleotideLocus)
     {
         if(fragment.containsGene(gene))
             return false;
@@ -99,7 +100,7 @@ public class NucleotideGeneEnrichment
     }
 
     private boolean checkAddAdditionalGene(
-            final Fragment fragment, int maxFragmentNucleotideLocus, final String otherGene, int geneComboUniqueAminoAcidBoundary)
+            final Fragment fragment, int maxFragmentNucleotideLocus, final HlaGene otherGene, int geneComboUniqueAminoAcidBoundary)
     {
         if(!fragment.containsGene(otherGene))
             return false;

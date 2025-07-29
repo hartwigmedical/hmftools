@@ -15,6 +15,7 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class GeneTask implements Callable<Void>
@@ -86,9 +87,9 @@ public class GeneTask implements Callable<Void>
             return;
         }
 
-        final String gene = mCandidatesAlleles.get(0).Gene;
+        final HlaGene gene = mCandidatesAlleles.get(0).Gene;
 
         mRefData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
-                .filter(x -> x.Gene.equals(gene)).forEach(allAlleles::add);
+                .filter(x -> x.Gene == gene).forEach(allAlleles::add);
     }
 }
