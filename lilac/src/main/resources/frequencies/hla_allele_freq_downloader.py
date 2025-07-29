@@ -22,7 +22,6 @@ import pandas as pd
 
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)-5s] %(message)s", datefmt="%H:%M:%S")
-logging.addLevelName(logging.WARNING,  "WARN ")
 
 
 class PopulationStandard(Enum):

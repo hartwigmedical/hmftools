@@ -171,10 +171,18 @@ python hla_allele_freq_downloader.py \
   --population_standard g
 ```
 
-The AFND entry represents the frequency of an allele in a population (typically country or ethnicity). Each frequency may have been 
-calculated as part of a larger study. 
+The AFND entry represents the frequency of an allele in a population (typically country or ethnicity). However, each frequency may have been 
+calculated as part of a larger study. Since sample sizes and method of frequency calculation vary between studies, we calculated normalised 
+frequencies using the [hla_allele_freq_normaliser.py](src/main/resources/frequencies/hla_allele_freq_normaliser.py) Python script:
 
-Due to the variability in sample sizes, we calculate a 'rescaled mean frequency' with the below procedure:
+```
+python hla_allele_freq_normaliser.py \
+--input_file afnd.hla.gold_standard.tsv.gz \
+--output_dir /output_dir/ \
+--write_debug_files
+```
+
+This script performs the below procedure:
 - Exclude entries where frequency is 0 
 - Calculate approx_observations (= sample_size * raw_allele_frequency), and exclude entries where this is ≤2
 - Calculate the mean frequency **per allele**, weighted by study cohort size, where study cohort size is capped at 1000 samples
