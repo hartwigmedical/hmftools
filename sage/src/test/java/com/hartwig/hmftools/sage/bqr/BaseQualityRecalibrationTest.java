@@ -33,7 +33,7 @@ public class BaseQualityRecalibrationTest
         BqrRegionReader bqrCounter = new BqrRegionReader(
                 config, null, null, new BaseQualityResults(), new BqrRecordWriter(config, SAMPLE_ID));
 
-        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300), Collections.emptySet());
+        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300));
 
         int pos1 = 100;
         BqrKey key1 = createKey('A', 'G', 30, BqrReadType.NONE);
@@ -105,7 +105,7 @@ public class BaseQualityRecalibrationTest
         BqrRegionReader bqrCounter = new BqrRegionReader(
                 config, null, null, new BaseQualityResults(), new BqrRecordWriter(config, SAMPLE_ID));
 
-        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300), Collections.emptySet());
+        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300));
 
         char refBase = 'G';
         char altBase = 'G';

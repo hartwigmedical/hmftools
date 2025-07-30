@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToP
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.BQR_SAMPLE_SIZE;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,16 +29,13 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.qual.BqrFile;
 import com.hartwig.hmftools.common.qual.BqrKey;
 import com.hartwig.hmftools.common.qual.BqrRecord;
-import com.hartwig.hmftools.common.region.PartitionUtils;
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.sage.SageConfig;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class BaseQualityRecalibration
 {
@@ -50,7 +46,6 @@ public class BaseQualityRecalibration
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String,BqrRecordMap> mSampleRecalibrationMap;
-    private final Map<String,List<Integer>> mKnownVariantMap;
     private final Queue<ChrBaseRegion> mRegions;
     private final BaseQualityResults mResults;
     private boolean mIsValid;
@@ -66,7 +61,6 @@ public class BaseQualityRecalibration
         mPanelBedFile = panelBedFile;
 
         mSampleRecalibrationMap = Maps.newHashMap();
-        mKnownVariantMap = Maps.newHashMap();
         mRegions = new ConcurrentLinkedQueue<>();
         mResults = new BaseQualityResults();
         mIsValid = true;
@@ -75,27 +69,6 @@ public class BaseQualityRecalibration
     public boolean isValid(){ return mIsValid; }
 
     public Map<String,BqrRecordMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
-
-    public void setKnownVariants(final List<VariantContext> variants)
-    {
-        for(VariantContext variant : variants)
-        {
-            if(VariantType.type(variant) != VariantType.SNP)
-                continue;
-
-            String chromosome = variant.getContig();
-
-            List<Integer> positions = mKnownVariantMap.get(chromosome);
-
-            if(positions == null)
-            {
-                positions = Lists.newArrayList();
-                mKnownVariantMap.put(chromosome, positions);
-            }
-
-            positions.add(variant.getStart());
-        }
-    }
 
     public void produceRecalibrationMap()
     {
@@ -165,7 +138,7 @@ public class BaseQualityRecalibration
 
         for(int i = 0; i < min(mRegions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new BqrThread(mConfig, mRefGenome, bamFile, mRegions, mResults, recordWriter, mKnownVariantMap));
+            workers.add(new BqrThread(mConfig, mRefGenome, bamFile, mRegions, mResults, recordWriter));
         }
 
         if(!runThreadTasks(workers))
@@ -312,25 +285,12 @@ public class BaseQualityRecalibration
     {
         List<ChrBaseRegion> regionTasks = Lists.newArrayList();
 
-        if(!mConfig.BQR.UsePanel && !mConfig.SpecificChrRegions.Regions.isEmpty())
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
             for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
             {
                 regionTasks.add(new ChrBaseRegion(
                         region.Chromosome, region.start() - REGION_SIZE, region.end() + REGION_SIZE - 1));
-            }
-
-            return regionTasks;
-        }
-
-        if(mConfig.BQR.FullBam)
-        {
-            for(HumanChromosome chromosome : HumanChromosome.values())
-            {
-                if(chromosome.isAutosome())
-                {
-                    regionTasks.addAll(PartitionUtils.partitionChromosome(chromosome.toString(), mConfig.RefGenVersion, BQR_SAMPLE_SIZE));
-                }
             }
 
             return regionTasks;
@@ -383,8 +343,6 @@ public class BaseQualityRecalibration
 
         return regionTasks;
     }
-
-
 
     private void writeSampleData(final String sampleId, final Collection<BqrRecord> records)
     {
