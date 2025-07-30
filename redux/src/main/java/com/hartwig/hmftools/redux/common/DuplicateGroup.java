@@ -111,7 +111,7 @@ public class DuplicateGroup
                     .filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag())
                     .count();
             int nonPolyGReadCount = mReads.size() + mNonConsensusReads.size();
-            boolean isPrimaryGroup = nonPolyGFirstInPairCount >= nonPolyGReadCount / 2;
+            boolean isPrimaryGroup = nonPolyGFirstInPairCount >= 0.5f * nonPolyGReadCount;
 
             if(!isPrimaryGroup)
                 nonPolyGFirstInPairCount = nonPolyGReadCount - nonPolyGFirstInPairCount; // adjusted so both reads report the same ratio

@@ -52,7 +52,7 @@ public class DiscordantStats
         PrepRead read = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
 
         addToCounts(
-                read.Chromosome, read.MateChromosome, read.start(), read.MatePosStart, read.orientation(), read.mateOrientation(),
+                read.Chromosome, read.MateChromosome, read.AlignmentStart, read.MatePosStart, read.orientation(), read.mateOrientation(),
                 inferredInsertSizeAbs(read.record()));
     }
 

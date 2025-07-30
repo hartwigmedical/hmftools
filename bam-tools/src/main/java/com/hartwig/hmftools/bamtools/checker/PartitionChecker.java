@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.bamtools.checker.CheckConfig.LOG_READ_COUNT;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.BamSlicer.createIntervals;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.genome.chromosome.Chromosome.isAltRegionContig;
 
@@ -11,6 +12,7 @@ import static org.apache.logging.log4j.Level.DEBUG;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamSlicer;
@@ -18,8 +20,10 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.Level;
 
+import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
 public class PartitionChecker
@@ -82,7 +86,8 @@ public class PartitionChecker
 
         mCurrentStats.reset();
 
-        mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
+        customSlice();
+        // mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
 
         handleIncompleteFragments();
         mStats.merge(mCurrentStats);
@@ -94,6 +99,39 @@ public class PartitionChecker
                 mRegion, mReadCount, mCompleteFragments, mFragmentMap.size());
 
         mFragmentMap.clear();
+    }
+
+    private void customSlice()
+    {
+        final QueryInterval[] queryIntervals = createIntervals(List.of(mRegion), mSamReader.getFileHeader());
+
+        if(queryIntervals == null)
+            return;
+
+        try(final SAMRecordIterator iterator = mSamReader.queryOverlapping(queryIntervals))
+        {
+            SAMRecord lastRecord = null;
+
+            try
+            {
+
+                while(iterator.hasNext())
+                {
+                    final SAMRecord record = iterator.next();
+                    processSamRecord(record);
+                    lastRecord = record;
+                }
+            }
+            catch(Exception e)
+            {
+                BT_LOGGER.warn("failed to process record: {}", e.toString());
+
+                if(lastRecord != null)
+                {
+                    BT_LOGGER.debug("last record: {}", readToString(lastRecord));
+                }
+            }
+        }
     }
 
     private void processSamRecord(final SAMRecord read)

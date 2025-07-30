@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
@@ -505,7 +505,7 @@ public class VisDataWriter
         return true;
     }
 
-    private void writeCopyNumberData(final VisSampleData sampleData, final Map<String,List<SvCNData>> chrCNDataMap)
+    public void writeCopyNumberData(final VisSampleData sampleData, final Map<String,List<SvCNData>> chrCNDataMap)
     {
         List<VisCopyNumber> cnDataList = Lists.newArrayList();
 

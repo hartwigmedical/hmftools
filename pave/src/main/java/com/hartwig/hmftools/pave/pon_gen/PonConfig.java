@@ -108,7 +108,6 @@ public class PonConfig
         addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
 
-        addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
     }
 }

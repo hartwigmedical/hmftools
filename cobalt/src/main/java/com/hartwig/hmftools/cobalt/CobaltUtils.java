@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -40,16 +39,15 @@ public class CobaltUtils
 
     public static CobaltRatio rowToCobaltRatio(Row row, ChromosomePositionCodec chromosomePosCodec)
     {
-        return ImmutableCobaltRatio.builder()
-                .chromosome(chromosomePosCodec.decodeChromosome(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)))
-                .position(chromosomePosCodec.decodePosition(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)))
-                .referenceReadDepth(row.getDouble(CobaltColumns.REFERENCE_READ_DEPTH))
-                .tumorReadDepth(row.getDouble(CobaltColumns.TUMOR_READ_DEPTH))
-                .referenceGCRatio(row.getDouble("referenceGCRatio"))
-                .tumorGCRatio(row.getDouble("tumorGCRatio"))
-                .referenceGCDiploidRatio(row.getDouble("referenceGCDiploidRatio"))
-                .referenceGcContent(row.getDouble(CobaltColumns.REFERENCE_GC_CONTENT))
-                .tumorGcContent(row.getDouble(CobaltColumns.TUMOR_GC_CONTENT))
-                .build();
+        return new CobaltRatio(
+                chromosomePosCodec.decodeChromosome(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)),
+                chromosomePosCodec.decodePosition(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)),
+                row.getDouble(CobaltColumns.REFERENCE_READ_DEPTH),
+                row.getDouble("referenceGCRatio"),
+                row.getDouble(CobaltColumns.REFERENCE_GC_CONTENT),
+                row.getDouble("referenceGCDiploidRatio"),
+                row.getDouble(CobaltColumns.TUMOR_READ_DEPTH),
+                row.getDouble("tumorGCRatio"),
+                row.getDouble(CobaltColumns.TUMOR_GC_CONTENT));
     }
 }

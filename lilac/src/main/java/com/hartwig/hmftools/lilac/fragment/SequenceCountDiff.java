@@ -17,7 +17,7 @@ public class SequenceCountDiff
     public final int TumorCount;
     public final int TumorDepth;
 
-    public SequenceCountDiff(final int locus, final String sequence, final int referenceCount, final int referenceDepth, final int tumorCount, final int tumorDepth)
+    public SequenceCountDiff(int locus, final String sequence, int referenceCount, int referenceDepth, int tumorCount, int tumorDepth)
     {
         Loci = locus;
         Sequence = sequence;

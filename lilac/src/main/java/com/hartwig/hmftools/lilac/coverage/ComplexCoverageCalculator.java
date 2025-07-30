@@ -4,12 +4,14 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.lilac.LilacConfig;
@@ -26,10 +28,11 @@ public class ComplexCoverageCalculator
 
     public List<ComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
     {
-        List<HlaAllele> alleles = Lists.newArrayList();
+        Set<HlaAllele> alleles = Sets.newHashSet();
+        for(HlaComplex complex : complexes)
+            alleles.addAll(complex.Alleles);
 
-        complexes.stream().forEach(x -> x.Alleles.stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
-        FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
+        FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, Lists.newArrayList(alleles));
 
         if(mConfig.Threads == 1 || complexes.size() < 10000) // no point in allocating to threads if complex count is small
         {

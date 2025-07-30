@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.common.genome.region;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosomal;
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import org.jetbrains.annotations.NotNull;
-
-public interface GenomeRegion extends Comparable<GenomeRegion>
+public interface GenomeRegion extends Chromosomal, Comparable<GenomeRegion>
 {
-    @NotNull
-    String chromosome();
-
     int start();
 
     int end();

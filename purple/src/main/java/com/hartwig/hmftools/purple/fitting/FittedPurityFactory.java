@@ -25,7 +25,7 @@ import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fittingsnv.SomaticDeviation;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.collection.Downsample;
+import com.hartwig.hmftools.common.utils.Downsample;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class FittedPurityFactory

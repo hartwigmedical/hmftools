@@ -5,9 +5,7 @@ import static com.hartwig.hmftools.common.utils.pcf.PCFSource.TUMOR_RATIO;
 import static com.hartwig.hmftools.purple.FittingConfig.MIN_PURITY;
 import static com.hartwig.hmftools.purple.FittingTestUtils.buildCobaltChromosomes;
 import static com.hartwig.hmftools.purple.FittingTestUtils.createAmberBaf;
-import static com.hartwig.hmftools.purple.FittingTestUtils.createCobaltRatio;
 import static com.hartwig.hmftools.purple.FittingTestUtils.createObservedRegion;
-import static com.hartwig.hmftools.purple.FittingTestUtils.createSegmentation;
 import static com.hartwig.hmftools.purple.FittingConfig.MAX_PLOIDY;
 import static com.hartwig.hmftools.purple.FittingConfig.PURITY_INCREMENT;
 import static com.hartwig.hmftools.purple.MiscTestUtils.REF_SAMPLE_ID;
@@ -36,7 +34,6 @@ import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.purple.SampleData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.Segmentation;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
@@ -55,7 +52,6 @@ public class PurityPloidyFitTest
     private final RegionFitCalculator mRegionFitCalculator;
 
     private final ReferenceData mReferenceData;
-    private final Segmentation mSegmentation;
 
     public PurityPloidyFitTest()
     {
@@ -79,7 +75,6 @@ public class PurityPloidyFitTest
         mRegionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, mAmberData.AverageTumorDepth);
 
         mReferenceData = new ReferenceData(mConfig);
-        mSegmentation = createSegmentation(mReferenceData);
 
         mSampleData = new SampleData(REF_SAMPLE_ID, SAMPLE_ID, mAmberData, mCobaltData, mSvCache, mSomaticCache);
 
@@ -99,10 +94,10 @@ public class PurityPloidyFitTest
         mCobaltData.TumorSegments.put(chr1, new PCFPosition(TUMOR_RATIO, chr1.toString(), 100000));
 
         List<CobaltRatio> cobaltRatios = Lists.newArrayList();
-        cobaltRatios.add(createCobaltRatio(chr1.toString(), 1000, 0.5));
-        cobaltRatios.add(createCobaltRatio(chr1.toString(), 2000, 0.5));
-        cobaltRatios.add(createCobaltRatio(chr1.toString(), 3000, 1));
-        cobaltRatios.add(createCobaltRatio(chr1.toString(), 4000, 0.5));
+        cobaltRatios.add(FittingTestUtils.createCobaltRatio(chr1, 1000, 0.5, 0.5));
+        cobaltRatios.add(FittingTestUtils.createCobaltRatio(chr1, 2000, 0.5, 0.5));
+        cobaltRatios.add(FittingTestUtils.createCobaltRatio(chr1, 3000, 1, 0.5));
+        cobaltRatios.add(FittingTestUtils.createCobaltRatio(chr1, 4000, 0.5, 0.5));
         mCobaltData.Ratios.put(chr1, cobaltRatios);
     }
 

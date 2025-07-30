@@ -44,7 +44,7 @@ AMBER supports both BAM and CRAM file formats.
 | Argument               | Default | Description                                                                                       |
 |------------------------|---------|---------------------------------------------------------------------------------------------------|
 | min_mapping_quality    | 50      | Minimum mapping quality for an alignment to be used                                               |
-| min_base_quality       | 13      | Minimum quality for a base to be considered                                                       |
+| min_base_quality       | 30      | Minimum quality for a base to be considered                                                       |
 | tumor_min_depth        | 8 / 25  | Min tumor depth for a site to be considered, uses 25 in tumor-only mode                           |
 | min_depth_percent      | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
 | max_depth_percent      | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
@@ -87,7 +87,7 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 
 | Argument               | Default | Description                                   |
 |------------------------|---------|-----------------------------------------------|
-| tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor-only mode     |
+| tumor_only_min_vaf     | 0.025    | Min VAF in ref and alt in tumor-only mode     |
 | tumor_only_min_support | 2       | Min support in ref and alt in tumor-only mode |
 
 ### Example Usage

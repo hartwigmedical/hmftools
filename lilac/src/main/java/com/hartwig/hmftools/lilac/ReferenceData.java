@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
 import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V37;
 import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V38;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES;
+import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_H;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
@@ -22,21 +24,24 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.read.Indel;
+import com.hartwig.hmftools.lilac.seq.HlaExonSequences;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -54,8 +59,11 @@ public class ReferenceData
     public final List<HlaSequenceLoci> HlaYNucleotideSequences;
     public final List<HlaSequenceLoci> HlaYAminoAcidSequences;
 
+    // four-digit allele to seq
+    public final Map<HlaAllele, HlaExonSequences> ExonSequencesLookup;
+
     public final List<HlaAllele> CommonAlleles; // common in population
-    public final Map<Indel,HlaAllele> KnownStopLossIndelAlleles;
+    public final Map<Indel, HlaAllele> KnownStopLossIndelAlleles;
 
     private final CohortFrequency mAlleleFrequencies;
 
@@ -90,9 +98,9 @@ public class ReferenceData
         mResourceDir = resourceDir;
         mConfig = config;
 
-        Map<String,TranscriptData> hlaTranscriptMap = loadHlaTranscripts(config.RefGenVersion, config.ClassType);
+        Map<String, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(config.RefGenVersion, config.ClassType);
 
-        LilacConstants.HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
+        HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
 
         GENE_CACHE = new GeneCache(mConfig.ClassType, hlaTranscriptMap);
 
@@ -120,6 +128,8 @@ public class ReferenceData
         HlaYNucleotideSequences = Lists.newArrayList();
         HlaYAminoAcidSequences = Lists.newArrayList();
 
+        ExonSequencesLookup = Maps.newHashMap();
+
         mDeflatedSequenceTemplate = null;
 
         setPonIndels(config.RefGenVersion);
@@ -135,9 +145,9 @@ public class ReferenceData
 
         final List<String> ponLines = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream(refFile)))
-                .lines().collect(Collectors.toList());
+                .lines().toList();
 
-        ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
+        ponLines.stream().map(Indel::fromString).forEach(INDEL_PON::add);
     }
 
     public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
@@ -158,43 +168,62 @@ public class ReferenceData
         return GENE_CACHE.NucleotideExonBoundaries.get(longGeneName(gene));
     }
 
+    private void populateAminoAcidSequenceLookup()
+    {
+        for(HlaSequenceLoci seq : AminoAcidSequences)
+        {
+            HlaAllele allele = seq.Allele;
+            if(!allele.equals(allele.asFourDigit()))
+                throw new RuntimeException(format("allele(%s) is not four-digit", allele));
+
+            ExonSequencesLookup.computeIfAbsent(allele, k -> HlaExonSequences.create(GENE_CACHE.AminoAcidExonBoundaries, seq));
+        }
+    }
+
     public boolean load()
     {
-        if(!mResourceDir.isEmpty())
+        if(mResourceDir.isEmpty()) // a condition for unit testing, otherwise is checked by config loading validation
+            return true;
+
+        String nucleotideFilename = mResourceDir + NUC_REF_FILE;
+
+        LL_LOGGER.info("reading nucleotide file: {}", nucleotideFilename);
+
+        if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, false))
+            return false;
+
+        String aminoAcidFilename = mResourceDir + AA_REF_FILE;
+
+        LL_LOGGER.info("reading protein file: {}", aminoAcidFilename);
+
+        if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
+            return false;
+
+        populateAminoAcidSequenceLookup();
+
+        Set<HlaAllele> allelesWithFreqs = Sets.newHashSet(mAlleleFrequencies.getAlleleFrequencies().keySet());
+        for(HlaAllele allele : allelesWithFreqs)
         {
-            String nucleotideFilename = mResourceDir + NUC_REF_FILE;
+            if(!allele.equals(allele.asFourDigit()))
+                throw new RuntimeException(format("allele(%s) is not four-digit", allele));
 
-            LL_LOGGER.info("reading nucleotide file: {}", nucleotideFilename);
+            if(ExonSequencesLookup.containsKey(allele))
+                continue;
 
-            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, false))
-                return false;
-
-            String aminoAcidFilename = mResourceDir + AA_REF_FILE;
-
-            LL_LOGGER.info("reading protein file: {}", aminoAcidFilename);
-
-            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
-                return false;
+            LL_LOGGER.warn("allele({}) with cohort frequency has no loaded sequences, dropping from allele frequencies", allele.toString());
+            mAlleleFrequencies.getAlleleFrequencies().remove(allele);
         }
 
         // load and register configured and known alleles
         mAlleleCache.rebuildProteinAlleles(mConfig.ActualAlleles);
         mAlleleCache.rebuildProteinAlleles(mConfig.RestrictedAlleles);
 
-        // apply PON
-        // "A*01:81", "A*01:237", "A*11:126", "A*11:353", "A*25:68", "A*30:95", "A*30:136", "A*31:135", "A*33:191");
-
         loadCommonAlleles();
-
-        if(!CommonAlleles.isEmpty())
-        {
-            LL_LOGGER.info("loaded {} common alleles", CommonAlleles.size());
-        }
 
         loadStopLossRecoveryAllele();
 
-        HlaYNucleotideSequences.addAll(NucleotideSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
-        HlaYNucleotideSequences.forEach(x -> NucleotideSequences.remove(x));
+        HlaYNucleotideSequences.addAll(NucleotideSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).toList());
+        HlaYNucleotideSequences.forEach(NucleotideSequences::remove);
 
         for(HlaSequenceLoci sequenceLoci : AminoAcidSequences)
         {
@@ -217,11 +246,11 @@ public class ReferenceData
     private void buildHlaYAminoAcidSequences()
     {
         // construct the AA allele sequences for HLA-Y from the nucleotides if it wasn't loaded
-        HlaYAminoAcidSequences.addAll(AminoAcidSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
+        HlaYAminoAcidSequences.addAll(AminoAcidSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).toList());
 
         if(!HlaYAminoAcidSequences.isEmpty())
         {
-            HlaYAminoAcidSequences.forEach(x -> AminoAcidSequences.remove(x));
+            HlaYAminoAcidSequences.forEach(AminoAcidSequences::remove);
         }
         else
         {
@@ -252,7 +281,12 @@ public class ReferenceData
         mAlleleFrequencies.getAlleleFrequencies().entrySet().stream()
                 .filter(x -> x.getValue() >= COMMON_ALLELES_FREQ_CUTOFF)
                 .map(x -> mAlleleCache.requestFourDigit(x.getKey().toString()))
-                .forEach(x -> CommonAlleles.add(x));
+                .forEach(CommonAlleles::add);
+
+        if(!CommonAlleles.isEmpty())
+        {
+            LL_LOGGER.info("loaded {} common alleles", CommonAlleles.size());
+        }
     }
 
     private void loadStopLossRecoveryAllele()
@@ -274,7 +308,7 @@ public class ReferenceData
 
         final HlaAllele allele4d = allele.asFourDigit();
 
-        if(EXCLUDED_ALLELES.stream().anyMatch(x -> allele4d.matches(x)))
+        if(EXCLUDED_ALLELES.stream().anyMatch(allele4d::matches))
             return true;
 
         if(mConfig == null)
@@ -285,30 +319,29 @@ public class ReferenceData
             if(mConfig.ActualAlleles.stream().anyMatch(x -> x.matches(allele4d)))
                 return false;
 
-            if(mConfig.RestrictedAlleles.stream().noneMatch(x -> x.matches(allele4d)))
-                return true;
+            return mConfig.RestrictedAlleles.stream().noneMatch(x -> x.matches(allele4d));
         }
 
         return false;
     }
 
     public static void populateHlaTranscripts(
-            final Map<String,TranscriptData> hlaTranscriptMap, final RefGenomeVersion refGenomeVersion, final MhcClass mhcClass)
+            final Map<String, TranscriptData> hlaTranscriptMap, final RefGenomeVersion refGenomeVersion, final MhcClass mhcClass)
     {
         hlaTranscriptMap.clear();
         hlaTranscriptMap.putAll(loadHlaTranscripts(refGenomeVersion, mhcClass));
     }
 
-    public static Map<String,TranscriptData> loadHlaTranscripts(final RefGenomeVersion refGenomeVersion, final MhcClass mhcClass)
+    public static Map<String, TranscriptData> loadHlaTranscripts(final RefGenomeVersion refGenomeVersion, final MhcClass mhcClass)
     {
-        Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
+        Map<String, TranscriptData> hlaTranscriptMap = Maps.newHashMap();
 
         String transcriptsFile = refGenomeVersion.is37() ? "/transcripts/hla_transcripts_v37.csv" : "/transcripts/hla_transcripts_v38.csv";
 
         final List<String> hlaTranscriptData = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream(transcriptsFile))).lines().collect(Collectors.toList());
 
-        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(hlaTranscriptData.get(0), ENSEMBL_DELIM);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(hlaTranscriptData.get(0), ENSEMBL_DELIM);
         hlaTranscriptData.remove(0);
 
         int geneIdIndex = fieldsIndexMap.get("GeneId");
@@ -377,14 +410,14 @@ public class ReferenceData
             LL_LOGGER.info("loaded {} sequences from file {}", sequenceData.size(), filename);
             return true;
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LL_LOGGER.error("failed to load ref sequence data from file({}): {}", filename, e.toString());
             return false;
         }
     }
 
-    public void loadSequenceFile(final List<String> fileContents, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
+    public void loadSequenceFile(final Iterable<String> fileContents, final Collection<HlaSequenceLoci> sequenceData, boolean isProteinFile)
     {
         for(String line : fileContents)
         {
@@ -415,4 +448,3 @@ public class ReferenceData
         }
     }
 }
-

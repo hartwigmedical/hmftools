@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_REPEAT_FACTOR;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.Collections;
@@ -31,6 +32,10 @@ import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
 
 public final class LineUtils
 {
@@ -77,6 +82,81 @@ public final class LineUtils
         }
 
         return lineBaseCount >= LINE_POLY_AT_REQ ? lineBaseCount : 0;
+    }
+
+    public static boolean hasLineTail(final SAMRecord record)
+    {
+        List<CigarElement> cigarElements = record.getCigar().getCigarElements();
+
+        if(cigarElements.size() <= 1)
+            return false;
+
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean fromStart = (i == 0);
+            CigarElement element = fromStart ? cigarElements.get(0) : cigarElements.get(cigarElements.size() - 1);
+
+            if(element.getOperator() != CigarOperator.S)
+                continue;
+
+            int scBaseCount = element.getLength();
+
+            if(scBaseCount == 0)
+                continue;
+
+            byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
+
+            int softClipIndex = fromStart ? scBaseCount - 1 : record.getReadBases().length - scBaseCount;
+
+            if(hasLineTail(record.getReadBases(), softClipIndex, fromStart, lineBase))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static boolean hasLineTail(final byte[] bases, final int softClipIndex, boolean leftClipped, final byte lineBase)
+    {
+        int scLength = leftClipped ? softClipIndex + 1 : bases.length - softClipIndex;
+
+        if(scLength < LINE_POLY_AT_REQ) // too short to test
+            return false;
+
+        int index = softClipIndex;
+        int totalBaseCount = 0;
+        int nonLineBaseCount = 0;
+        int lineBaseCount = 0;
+
+        while(index >= 0 && index < bases.length)
+        {
+            ++totalBaseCount;
+
+            if(bases[index] != lineBase)
+            {
+                ++nonLineBaseCount;
+
+                if(totalBaseCount > LINE_POLY_AT_TEST_LEN)
+                    break;
+
+                if(nonLineBaseCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
+                    return false;
+            }
+            else
+            {
+                ++lineBaseCount;
+            }
+
+            index += leftClipped ? -1 : 1;
+        }
+
+        // will have returned if initial bases fail the line test, otherwise will be the total number of line bases
+        // including the max permitted non-line bases
+
+        // now look for a ref bases having the same line base
+        int refIndexStart = leftClipped ? softClipIndex + 1 : softClipIndex - 1;
+        int refLineBaseCount = findBaseRepeatCount(bases, refIndexStart, leftClipped, lineBase);
+
+        return lineBaseCount >= refLineBaseCount * LINE_REF_BASE_REPEAT_FACTOR;
     }
 
     public static int findConsensusLineExtension(final List<Read> reads, final Junction junction)
@@ -305,7 +385,9 @@ public final class LineUtils
             insertedBases = otherBases + lineBases;
         }
 
-        return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, "");
+        AssemblyLink link = new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, "");
+        link.markInsertSite();
+        return link;
     }
 
     private static String findLineInsertionSequence(final JunctionAssembly assembly)

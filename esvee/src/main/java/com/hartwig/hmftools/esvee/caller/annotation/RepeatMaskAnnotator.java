@@ -15,8 +15,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
-import com.hartwig.hmftools.common.gripss.RepeatMaskData;
+import com.hartwig.hmftools.common.sv.RepeatMaskAnnotations;
+import com.hartwig.hmftools.common.sv.RepeatMaskData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.caller.Variant;

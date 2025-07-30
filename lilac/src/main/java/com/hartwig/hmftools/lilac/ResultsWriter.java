@@ -3,14 +3,14 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
+import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
+import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_AA;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_FRAGS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_NUC;
-import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_READS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SOMATIC_VCF;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
@@ -29,7 +29,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
@@ -66,7 +66,7 @@ public class ResultsWriter
         SUMMARY,
         FRAGMENTS,
         READS,
-        REF_COUNTS
+        REF_COUNTS;
     }
 
     public ResultsWriter(final LilacConfig config, final ConfigBuilder configBuilder)
@@ -79,7 +79,7 @@ public class ResultsWriter
 
         if(writeTypesStr.equals(WRITE_TYPES_ALL))
         {
-            Arrays.stream(WriteType.values()).forEach(mWriteTypes::add);
+            Arrays.stream(WriteType.values()).forEach(x -> mWriteTypes.add(x));
         }
         else
         {
@@ -98,9 +98,7 @@ public class ResultsWriter
         closeBufferedWriter(mReadWriter);
 
         if(mVcfWriter != null)
-        {
             mVcfWriter.close();
-        }
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -113,9 +111,7 @@ public class ResultsWriter
             final LilacQC summaryMetrics, final SolutionSummary solutionSummary, final List<ComplexCoverage> rankedComplexes)
     {
         if(mConfig.OutputDir.isEmpty())
-        {
             return;
-        }
 
         solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
         summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
@@ -128,9 +124,7 @@ public class ResultsWriter
             final AminoAcidFragmentPipeline aminoAcidPipeline, final HlaYCoverage hlaYCoverage)
     {
         if(mConfig.OutputDir.isEmpty())
-        {
             return;
-        }
 
         if(mWriteTypes.contains(WriteType.REF_COUNTS))
         {
@@ -141,25 +135,21 @@ public class ResultsWriter
         }
     }
 
-    public void writeReferenceFragments(final List<ComplexCoverage> rankedComplexes, final Iterable<Fragment> refNucleotideFrags,
-            final List<FragmentAlleles> refFragAlleles)
+    public void writeReferenceFragments(
+            final List<ComplexCoverage> rankedComplexes, final List<Fragment> refNucleotideFrags, final List<FragmentAlleles> refFragAlleles)
     {
         if(!mWriteTypes.contains(WriteType.FRAGMENTS))
-        {
             return;
-        }
 
         HlaComplexFile.writeFragmentAssignment(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS), rankedComplexes, refFragAlleles);
 
         writeFragments(mConfig.tumorOnly() ? TUMOR : REFERENCE, refNucleotideFrags);
     }
 
-    public void writeFailedSampleFileOutputs(final Map<String, int[]> geneBaseDepth)
+    public void writeFailedSampleFileOutputs(final Map<String,int[]> geneBaseDepth, int medianBaseQuality)
     {
         if(mConfig.OutputDir.isEmpty())
-        {
             return;
-        }
 
         LL_LOGGER.info("writing failed-sample output to {}", mConfig.OutputDir);
 
@@ -171,7 +161,7 @@ public class ResultsWriter
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
         LilacQC summaryMetrics = new LilacQC(
-                0, "", (byte) 0, null,
+                0, "", 0, null,
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
 
         SolutionSummary solutionSummary = new SolutionSummary(
@@ -200,19 +190,17 @@ public class ResultsWriter
         }
     }
 
-    public void writeFragments(final FragmentSource source, final Iterable<Fragment> fragments)
+    public void writeFragments(final FragmentSource source, final List<Fragment> fragments)
     {
         if(mFragmentWriter == null)
-        {
             return;
-        }
 
         try
         {
             for(Fragment fragment : fragments)
             {
                 StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
-                fragment.genes().forEach(genesStr::add);
+                fragment.genes().forEach(x -> genesStr.add(x));
 
                 mFragmentWriter.write(String.format("%s\t%s\t%s\t%s",
                         source.toString(), fragment.id(), fragment.readInfo(), genesStr));
@@ -251,10 +239,8 @@ public class ResultsWriter
 
     public void writeVariant(final VariantContext context, final List<HlaAllele> alleles)
     {
-        if(mConfig.OutputDir.isEmpty() || context == null)
-        {
+        if(mConfig.OutputDir.isEmpty() || context != null)
             return;
-        }
 
         if(mVcfWriter == null)
         {

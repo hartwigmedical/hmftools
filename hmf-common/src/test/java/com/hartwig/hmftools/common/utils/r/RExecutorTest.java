@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.utils.r;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.common.utils.RExecutor;
+
 import org.junit.Ignore;
 import org.junit.Test;
 

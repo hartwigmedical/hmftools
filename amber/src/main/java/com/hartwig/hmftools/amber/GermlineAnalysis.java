@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.PositionEvidenceChecker.fromAmberSite;
-import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
+import static com.hartwig.hmftools.common.utils.Multimaps.filterEntries;
 
 import java.io.IOException;
 import java.util.Collection;

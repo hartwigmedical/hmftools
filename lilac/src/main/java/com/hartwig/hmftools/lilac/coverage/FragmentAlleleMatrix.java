@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-
 import java.util.List;
 import java.util.Map;
 

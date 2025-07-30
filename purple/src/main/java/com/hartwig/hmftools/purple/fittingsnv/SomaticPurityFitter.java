@@ -44,7 +44,7 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.Multimaps;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -284,11 +284,11 @@ public class SomaticPurityFitter
         return somaticFitPurity;
     }
 
-    public static boolean highlyDiploidSomaticOrPanel(final FittedPurity normalPurityFit)
+    public static boolean highlyDiploidSomaticOrPanel(final FittedPurity normalPurityFit, final boolean highlyDiploidByFitPurity)
     {
-        return normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
+        return (normalPurityFit.purity() > SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN
             && normalPurityFit.ploidy() > SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN
-            && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
+            && normalPurityFit.ploidy() < SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX) || highlyDiploidByFitPurity;
     }
 
     protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates)

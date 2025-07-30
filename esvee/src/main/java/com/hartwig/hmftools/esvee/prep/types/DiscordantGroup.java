@@ -34,7 +34,7 @@ public class DiscordantGroup
         if(mInnermostRead == null)
             return Orient.isForward() ? Region.end() : Region.start();
 
-        return Orient.isForward() ? mInnermostRead.end() : mInnermostRead.start();
+        return Orient.isForward() ? mInnermostRead.AlignmentEnd : mInnermostRead.AlignmentStart;
     }
 
     public void setInnerRead(final PrepRead read) { mInnermostRead = read; }
@@ -47,19 +47,19 @@ public class DiscordantGroup
         if(read.orientation() != Orient)
             return false;
 
-        if(!Region.overlaps(read.Chromosome, read.start(), read.end()))
+        if(!Region.overlaps(read.Chromosome, read.AlignmentStart, read.AlignmentEnd))
             return false;
 
         mReadGroups.add(readGroup);
 
-        if(read.end() > Region.end())
+        if(read.AlignmentEnd > Region.end())
         {
-            Region.setEnd(read.end());
+            Region.setEnd(read.AlignmentEnd);
         }
 
-        if(read.start() < Region.start())
+        if(read.AlignmentStart < Region.start())
         {
-            Region.setStart(read.start());
+            Region.setStart(read.AlignmentStart);
         }
 
         addRemoteRegionRead(readGroup, read);
@@ -137,7 +137,7 @@ public class DiscordantGroup
     {
         PrepRead firstRead = firstPrimaryRead(readGroup);
 
-        ChrBaseRegion region = new ChrBaseRegion(firstRead.Chromosome, firstRead.start(), firstRead.end());
+        ChrBaseRegion region = new ChrBaseRegion(firstRead.Chromosome, firstRead.AlignmentStart, firstRead.AlignmentEnd);
         DiscordantGroup discordantGroup = new DiscordantGroup(region, firstRead.orientation(), readGroup);
 
         discordantGroup.addRemoteRegionRead(readGroup, firstRead);

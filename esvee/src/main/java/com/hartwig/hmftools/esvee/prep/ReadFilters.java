@@ -5,7 +5,6 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
@@ -14,13 +13,10 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIB
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
-import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
-import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
-import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
@@ -28,7 +24,6 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_LENGTH;
@@ -38,7 +33,6 @@ import static htsjdk.samtools.CigarOperator.M;
 import java.util.List;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
@@ -60,10 +54,10 @@ public class ReadFilters
 
     private static final int MIN_CHECK_SC_BASES = min(LINE_POLY_AT_REQ, POLY_G_LENGTH);
 
-    public boolean ignoreRead(final SAMRecord record)
+    public boolean ignoreRead(final SAMRecord record, boolean hasLineTail)
     {
         // ignore reads with the majority of bases low qual - the assembly routine has this same check for now
-        if(filterLowQualRead(record))
+        if(!hasLineTail && filterLowQualRead(record))
             return true;
 
         // ignore local, non-chimeric, locally-aligned reads
@@ -169,10 +163,11 @@ public class ReadFilters
         int scLeft = read.leftClipLength();
         int scRight = read.rightClipLength();
 
-        // a read with an indel junction does not need to meet the min soft-clip length condition, but other SC inserts are checked
-        if(read.maxIndelLength() < mConfig.MinIndelLength)
+        // require a minimum soft-clip length, other than line reads
+        if(!read.hasLineTail() && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
         {
-            if(scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
+            // a read with an indel junction does not need to meet the min soft-clip length condition
+            if(read.maxIndelLength() < mConfig.MinIndelLength)
                 read.addFilter(ReadFilterType.SOFT_CLIP_LENGTH);
         }
 
@@ -198,7 +193,7 @@ public class ReadFilters
                     scBaseArray[scIndex++] = record.getReadBases()[i];
             }
 
-            if(aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
+            if(!read.hasLineTail() && aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
             {
                 read.addFilter(ReadFilterType.SOFT_CLIP_BASE_QUAL);
 
@@ -222,17 +217,6 @@ public class ReadFilters
                 && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
                     read.addFilter(ReadFilterType.BREAK_IN_REPEAT);
-                }
-            }
-            else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
-            {
-                // make an exception if the soft-clip sequence meets the LINE criteria
-                Orientation orientation = useLeftClip ? REVERSE : FORWARD;
-
-                if(isMobileLineElement(orientation.asByte(), scBases)
-                && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
-                {
-                    read.removefilter(ReadFilterType.SOFT_CLIP_LENGTH);
                 }
             }
         }

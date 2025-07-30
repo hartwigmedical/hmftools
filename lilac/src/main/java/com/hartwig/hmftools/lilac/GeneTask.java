@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
@@ -47,10 +48,7 @@ public class GeneTask implements Callable<Void>
         mPhasedEvidence = Lists.newArrayList();
     }
 
-    public List<PhasedEvidence> phasedEvidence()
-    {
-        return mPhasedEvidence;
-    }
+    public List<PhasedEvidence> phasedEvidence() { return mPhasedEvidence; }
 
     @Override
     public Void call()
@@ -59,8 +57,7 @@ public class GeneTask implements Callable<Void>
         List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
 
         // determine phasing of amino acids
-        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(
-                mConfig, mConfig.MinEvidenceFactor, mConfig.MinVafFilterDepth);
+        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig);
         mPhasedEvidence.addAll(phasedEvidenceFactory.evidence(mHlaContext, mCandidateFrags));
 
         // validate phasing against expected sequences
@@ -73,7 +70,7 @@ public class GeneTask implements Callable<Void>
         }
 
         // gather all phased candidates
-        mCandidatesAlleles.addAll(mCandidateFactory.phasedCandidates(mHlaContext, unphasedCandidates, mPhasedEvidence));
+        mCandidatesAlleles.addAll(mCandidateFactory.phasedCandidates(mHlaContext, Sets.newHashSet(unphasedCandidates), mPhasedEvidence));
 
         return null;
     }
@@ -81,9 +78,7 @@ public class GeneTask implements Callable<Void>
     public void addPhasedCandidates(final List<HlaAllele> allAlleles)
     {
         if(mCandidatesAlleles.isEmpty())
-        {
             return;
-        }
 
         if(mConfig.MaxEliminationCandidates == 0 || mCandidatesAlleles.size() <= mConfig.MaxEliminationCandidates)
         {

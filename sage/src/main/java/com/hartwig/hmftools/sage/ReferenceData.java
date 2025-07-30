@@ -26,8 +26,8 @@ import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.VariantHotspotFile;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;

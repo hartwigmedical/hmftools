@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

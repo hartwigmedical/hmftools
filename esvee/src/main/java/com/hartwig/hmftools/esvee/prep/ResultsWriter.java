@@ -182,8 +182,8 @@ public class ResultsWriter
                     {
                         // check the read supports this junction (it can also support another junction)
                         boolean supportsJunction =
-                                (expectLeftClipped && read.start() == junctionData.Position && read.isLeftClipped())
-                                        || (!expectLeftClipped && read.end() == junctionData.Position && read.isRightClipped());
+                                (expectLeftClipped && read.AlignmentStart == junctionData.Position && read.isLeftClipped())
+                            || (!expectLeftClipped && read.AlignmentEnd  == junctionData.Position && read.isRightClipped());
 
                         if(!supportsJunction)
                             continue;
@@ -340,8 +340,8 @@ public class ResultsWriter
             sj.add(String.valueOf(spansPartitions));
             sj.add(String.valueOf(read.readType()));
             sj.add(read.Chromosome);
-            sj.add(String.valueOf(read.start()));
-            sj.add(String.valueOf(read.end()));
+            sj.add(String.valueOf(read.AlignmentStart));
+            sj.add(String.valueOf(read.AlignmentEnd));
             sj.add(String.valueOf(read.cigar()));
             sj.add(String.valueOf(read.fragmentInsertSize()));
             sj.add(read.MateChromosome);

@@ -20,8 +20,10 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class DeletionDrivers
 {
     public static final double MAX_COPY_NUMBER_DEL = 0.5;
-    public static final int SHORT_DEL_LENGTH = 10_000_000;
-    public static final int TARGET_REGIONS_MIN_DEPTH_COUNT = 1;
+
+    private static final int SHORT_DEL_LENGTH = 10_000_000;
+    private static final double SINGLE_DEPTH_GC_MIN = 0.35;
+    private static final double SINGLE_DEPTH_GC_MAX = 0.6;
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
@@ -52,14 +54,10 @@ public class DeletionDrivers
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
             if(geneCopyNumber.minCopyNumber() >= MAX_COPY_NUMBER_DEL)
-            {
                 continue;
-            }
 
             if(!mDeletionTargets.containsKey(geneCopyNumber.geneName()))
-            {
                 continue;
-            }
 
             boolean hasFullSvSupport = supportedByTwoSVs(geneCopyNumber);
             boolean isShort = geneCopyNumber.minRegionBases() < SHORT_DEL_LENGTH;
@@ -69,13 +67,12 @@ public class DeletionDrivers
                 if(!hasFullSvSupport)
                 {
                     if(checkQcStatus)
-                    {
                         continue;
-                    }
 
-                    if(geneCopyNumber.depthWindowCount() < TARGET_REGIONS_MIN_DEPTH_COUNT)
+                    if(geneCopyNumber.depthWindowCount() == 1)
                     {
-                        continue;
+                        if(geneCopyNumber.gcContent() < SINGLE_DEPTH_GC_MIN || geneCopyNumber.gcContent() > SINGLE_DEPTH_GC_MAX)
+                            continue;
                     }
                 }
             }
@@ -84,9 +81,7 @@ public class DeletionDrivers
                 if(checkQcStatus)
                 {
                     if(!hasFullSvSupport && !(isShort && supportedByOneSVAndMere(geneCopyNumber)))
-                    {
                         continue;
-                    }
                 }
             }
 

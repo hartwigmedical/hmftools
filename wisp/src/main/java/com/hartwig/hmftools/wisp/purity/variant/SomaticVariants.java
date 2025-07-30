@@ -31,6 +31,7 @@ import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
 import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_AVG_VAF_MULTIPLE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_RETEST_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
@@ -41,7 +42,6 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.AVG_EDGE_DIST;
-import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.OUTLIER;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GC_RATIO;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
@@ -64,7 +64,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -423,6 +423,18 @@ public class SomaticVariants
         // recompute the total sample AD if any outlier variants are found and repeat
         double sampleTotalAD = initialSampleTotalAD;
 
+        // first compute an average VAF to test outliers against
+        double vafTotal = 0;
+
+        for(SomaticVariant variant : filteredVariants)
+        {
+            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+
+            vafTotal += sampleFragData.vaf();
+        }
+
+        double averageVaf = vafTotal / (double)filteredVariants.size();
+
         List<SomaticVariant> allOutlierVariants = Lists.newArrayList();
         List<SomaticVariant> outlierVariants = Lists.newArrayList();
         double minSamplePerc = OUTLIER_MIN_SAMPLE_PERC;
@@ -434,6 +446,9 @@ public class SomaticVariants
                 GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
                 if(sampleFragData.AlleleCount <= OUTLIER_MIN_ALLELE_FRAGS)
+                    continue;
+
+                if(sampleFragData.vaf() < OUTLIER_MIN_AVG_VAF_MULTIPLE * averageVaf)
                     continue;
 
                 if((sampleFragData.AlleleCount / variant.variantCnFloored()) / sampleTotalAD > minSamplePerc)

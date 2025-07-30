@@ -51,7 +51,7 @@ public class EsveeApplication
 
     private void runAssembly()
     {
-        AssemblyApplication assemblyApplication = new AssemblyApplication(mConfigBuilder);
+        AssemblyApplication assemblyApplication = new AssemblyApplication(mConfigBuilder, true);
         assemblyApplication.run();
         assemblyApplication.close();
         System.gc();

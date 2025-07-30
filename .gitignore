@@ -7,6 +7,9 @@
 .attach_pid*
 .run/
 
+# Ignore vscode project files
+.vscode/
+
 # ignore dependency reduced poms
 dependency-reduced-pom.xml
 

@@ -16,7 +16,10 @@ public class HlaComplexFile
     {
         StringJoiner sb = new StringJoiner(TSV_DELIM);
         sb.add("Score");
+        sb.add("ComplexityPenalty");
+        sb.add("Complexity");
         sb.add("HomozygousCount");
+        sb.add("CohortFrequencyPenalty");
         sb.add("CohortFrequency");
         sb.add("RecoveryCount");
         sb.add("WildcardCount");
@@ -53,7 +56,6 @@ public class HlaComplexFile
         catch(IOException e)
         {
             LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
         }
     }
 
@@ -62,7 +64,10 @@ public class HlaComplexFile
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(String.format("%.2f", coverage.getScore()));
+        sj.add(String.format("%.2f", coverage.getComplexityPenalty()));
+        sj.add(String.format("%d", coverage.getComplexity()));
         sj.add(String.valueOf(coverage.homozygousCount()));
+        sj.add(String.format("%.2f", coverage.getCohortFrequencyPenalty()));
         sj.add(String.format("%.2f", coverage.cohortFrequencyTotal()));
         sj.add(String.valueOf(coverage.recoveredCount()));
         sj.add(String.valueOf(coverage.wildcardCount()));
@@ -113,7 +118,7 @@ public class HlaComplexFile
 
                     writer.write(String.format("%s\t%s\t%s\t%s\t%s\t%s",
                             complexStr, fragAllele.getFragment().id(), fragAllele.getFragment().readInfo(),
-                            type, fullAlleles.toString(), wildAlleles.toString()));
+                            type, fullAlleles, wildAlleles));
 
                     writer.newLine();
                 }
@@ -124,7 +129,6 @@ public class HlaComplexFile
         catch(IOException e)
         {
             LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
         }
     }
 

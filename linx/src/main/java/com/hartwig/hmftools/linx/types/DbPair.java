@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.types;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
 public class DbPair

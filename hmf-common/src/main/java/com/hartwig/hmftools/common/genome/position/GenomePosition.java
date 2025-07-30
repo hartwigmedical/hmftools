@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.common.genome.position;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosomal;
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface GenomePosition extends Comparable<GenomePosition>
+public interface GenomePosition extends Chromosomal, Comparable<GenomePosition>
 {
-    @NotNull
-    String chromosome();
-
     int position();
 
     @Override

@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.NavigableSet;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -20,16 +20,12 @@ import org.apache.commons.math3.util.Pair;
 
 public class PhasedEvidenceFactory
 {
-    private final double mMinEvidenceFactor;
-    private final int mVafFilterMinDepth;
-    private final boolean mDebugPhasing;
     private final LilacConfig mConfig;
+    private final boolean mDebugPhasing;
 
-    public PhasedEvidenceFactory(final LilacConfig config, final double minEvidenceFactor, final int vafFilterMinDepth)
+    public PhasedEvidenceFactory(final LilacConfig config)
     {
         mConfig = config;
-        mMinEvidenceFactor = minEvidenceFactor;
-        mVafFilterMinDepth = vafFilterMinDepth;
         mDebugPhasing = mConfig.DebugPhasing;
     }
 
@@ -55,17 +51,16 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<Fragment> fragments)
     {
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mVafFilterMinDepth, mMinEvidenceFactor, fragments);
+        SequenceCount aminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, fragments);
 
-        NavigableSet<Integer> heterozygousIndices = aminoAcidCounts.heterozygousLoci();
+        List<Integer> heterozygousIndices = Lists.newArrayList(aminoAcidCounts.heterozygousLoci());
 
         if(mDebugPhasing)
         {
             LL_LOGGER.debug("  heterozygous Indices: {}", heterozygousIndices);
         }
 
-        ExtendEvidence heterozygousEvidence =
-                new ExtendEvidence(mConfig, Lists.newArrayList(heterozygousIndices), fragments, expectedAlleles);
+        ExtendEvidence heterozygousEvidence = new ExtendEvidence(mConfig, heterozygousIndices, fragments, expectedAlleles);
 
         List<PhasedEvidence> finalisedEvidence = Lists.newArrayList();
         List<PhasedEvidence> unprocessedEvidence = Lists.newArrayList();
@@ -117,7 +112,6 @@ public class PhasedEvidenceFactory
 
     private static class PhasedEvidenceSorter implements Comparator<PhasedEvidence>
     {
-        @Override
         public int compare(final PhasedEvidence first, final PhasedEvidence second)
         {
             int firstAA = first.getAminoAcidLoci().get(0);

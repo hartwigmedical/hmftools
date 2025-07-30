@@ -308,14 +308,17 @@ public class LilacAppTest
     }
 
     private List<Fragment> createFragments(
-            final ReferenceData refData, final HlaAllele allele, final int fragCount, final int startLoci, final int endLoci, final int length, final int gap)
+            final ReferenceData refData, final HlaAllele allele, final int fragCount, final int startLoci, final int endLoci,
+            final int length, final int gap)
     {
         List<Fragment> fragments = Lists.newArrayList();
 
         HlaSequenceLoci sequenceLoci = refData.NucleotideSequences.stream().filter(x -> x.Allele.matches(allele)).findFirst().orElse(null);
 
         if(sequenceLoci == null)
+        {
             return fragments;
+        }
 
         int startLocus = startLoci;
         for(int i = 0; i < fragCount; ++i)
@@ -328,7 +331,8 @@ public class LilacAppTest
             int endLocus = startLocus + length;
 
             fragments.add(createFragment(
-                    String.format("READ_%03d", ++mReadIdCounter), longGeneName(sequenceLoci.Allele.Gene), sequenceLoci.sequence(), startLocus, endLocus));
+                    String.format("READ_%03d", ++mReadIdCounter), longGeneName(sequenceLoci.Allele.Gene),
+                    sequenceLoci.sequence(), startLocus, endLocus));
 
             startLocus += gap;
         }
@@ -336,7 +340,7 @@ public class LilacAppTest
         return fragments;
     }
 
-    private static void loadTestReferenceData(final ReferenceData refData)
+    private void loadTestReferenceData(final ReferenceData refData)
     {
         final List<String> nucleotides = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream("/test_allele_nucleotides.csv")))
@@ -355,7 +359,9 @@ public class LilacAppTest
             HlaSequenceLoci seqLoci = refData.AminoAcidSequences.stream().filter(x -> x.Allele.matches(alleleStr)).findFirst().orElse(null);
 
             if(seqLoci == null)
+            {
                 continue;
+            }
 
             refData.getAlleleFrequencies().getAlleleFrequencies().put(seqLoci.Allele, 0.1);
         }

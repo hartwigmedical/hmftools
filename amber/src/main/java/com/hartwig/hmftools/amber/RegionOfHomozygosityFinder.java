@@ -2,7 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_38;
-import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
+import static com.hartwig.hmftools.common.utils.Multimaps.filterEntries;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;

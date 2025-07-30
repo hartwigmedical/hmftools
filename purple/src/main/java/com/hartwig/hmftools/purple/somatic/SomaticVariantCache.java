@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_LEVEL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.parseTincLevel;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
@@ -15,12 +14,11 @@ import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.purple.PurpleConfig;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SomaticVariantCache
 {

@@ -95,7 +95,7 @@ public class LilacAppendRna
 
         NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mRefData);
 
-        AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, Collections.emptyList());
+        AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(Collections.emptyList());
 
         int totalFragmentCount = solutionAlleles.stream().mapToInt(x -> x.refFragments()).sum();
 

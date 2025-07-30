@@ -62,6 +62,6 @@ public class CobaltAccumulatorTest
     @NotNull
     private static CobaltRatio ratio(int position)
     {
-        return PurpleTestUtils.cobalt(CHROMOSOME, position, 1).build();
+        return PurpleTestUtils.cobalt(CHROMOSOME, position, 1);
     }
 }

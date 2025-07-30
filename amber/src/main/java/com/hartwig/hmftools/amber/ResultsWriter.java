@@ -13,9 +13,8 @@ import com.hartwig.hmftools.common.amber.AmberQC;
 import com.hartwig.hmftools.common.amber.AmberQCFile;
 import com.hartwig.hmftools.common.amber.ImmutableAmberQC;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.utils.config.VersionInfo;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ResultsWriter

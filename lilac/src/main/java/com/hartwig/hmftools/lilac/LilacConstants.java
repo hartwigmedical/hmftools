@@ -23,13 +23,21 @@ public final class LilacConstants
 
     public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.006;
     public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.003;
-    public static final int DEFAULT_EVIDENCE_VAF_FILTER_MIN_DEPTH = 10;
+    public static final int DEFAULT_MIN_EVIDENCE_SUPPORT = 1;
+    public static final int DEFAULT_MIN_DEPTH_FILTER = 10;
+
+    // can be overridden in config
+    public static double MIN_EVIDENCE_FACTOR = DEFAULT_MIN_EVIDENCE_FACTOR;
+    public static double MIN_HIGH_QUAL_EVIDENCE_FACTOR = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
+    public static int MIN_EVIDENCE_SUPPORT = DEFAULT_MIN_EVIDENCE_SUPPORT;
+    public static int MIN_DEPTH_FILTER = DEFAULT_MIN_DEPTH_FILTER;
+
     public static final int DEFAULT_MAX_REF_FRAGMENTS = 1000;
 
     public static final double BASE_QUAL_PERCENTILE = 0.25;
 
-    public static final double DEFAULT_HLA_Y_FRAGMENT_THRESHOLD = 0.01;
-    public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
+    public static final double DEFAULT_HLA_Y_FRAGMENT_THRESHOLD = 0.003;
+    public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.005;
     public static final double RARE_ALLELES_FREQ_CUTOFF = 0.0001;
 
     // candidate filtering
@@ -41,13 +49,16 @@ public final class LilacConstants
 
     // scoring of allele combinations
     public static final double MIN_POPULATION_FREQUENCY = 0.0001;
-    public static final double FREQUENCY_SCORE_PENALTY = 0.0018;
-    public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0036;
+
+    public static final double DEFAULT_FREQUENCY_SCORE_PENALTY = 0.009;
+    public static double FREQUENCY_SCORE_PENALTY = DEFAULT_FREQUENCY_SCORE_PENALTY;
+
+    public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
     // QC thresholds
-    public static int FAIL_LOW_COVERAGE_THRESHOLD = 200;
-    public static double WARN_LOW_COVERAGE_THRESHOLD = 50;
+    public static int FAIL_LOW_COVERAGE_THRESHOLD = 360;
+    public static double WARN_LOW_COVERAGE_THRESHOLD = 180;
     public static final double WARN_LOW_BASE_QUAL_THRESHOLD = 25;
     public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;

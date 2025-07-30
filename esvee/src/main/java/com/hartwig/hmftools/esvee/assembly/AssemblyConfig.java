@@ -53,6 +53,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_I
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Ref;
 import java.util.Collections;
 import java.util.List;
 
@@ -146,6 +147,11 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
+        this(configBuilder, false);
+    }
+
+    public AssemblyConfig(final ConfigBuilder configBuilder, boolean asSubRoutine)
+    {
         if(!configBuilder.hasValue(OUTPUT_DIR) && configBuilder.hasValue(TUMOR_BAM))
         {
             List<String> tumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
@@ -162,24 +168,33 @@ public class AssemblyConfig
 
         TumorIds = parseSampleBamLists(configBuilder, TUMOR);
 
-        if(configBuilder.hasValue(TUMOR_BAM))
-            TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
-        else
-            TumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+        TumorBams = Lists.newArrayList();
+        ReferenceBams = Lists.newArrayList();
+        ReferenceIds = Lists.newArrayList();
+
+        List<String> prepTumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+
+        if(prepTumorBams.size() == TumorIds.size())
+            TumorBams.addAll(prepTumorBams);
+        else if(!asSubRoutine)
+            TumorBams.addAll(parseSampleBamLists(configBuilder, TUMOR_BAM));
 
         if(configBuilder.hasValue(REFERENCE))
         {
-            ReferenceIds = parseSampleBamLists(configBuilder, REFERENCE);
+            ReferenceIds.addAll(parseSampleBamLists(configBuilder, REFERENCE));
 
-            if(configBuilder.hasValue(REFERENCE_BAM))
-                ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
-            else
-                ReferenceBams = formPrepBamFilenames(PrepDir, ReferenceIds);
+            List<String> prepRefBams = formPrepBamFilenames(PrepDir, ReferenceIds);
+
+            if(prepRefBams.size() == ReferenceIds.size())
+                ReferenceBams.addAll(prepRefBams);
+            else if(!asSubRoutine)
+                ReferenceBams.addAll(parseSampleBamLists(configBuilder, REFERENCE_BAM));
         }
-        else
+
+        if(TumorIds.isEmpty() && ReferenceIds.isEmpty())
         {
-            ReferenceIds = Collections.emptyList();
-            ReferenceBams = Collections.emptyList();
+            SV_LOGGER.error("no tumor oe reference IDs provided");
+            System.exit(1);
         }
 
         if(TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())

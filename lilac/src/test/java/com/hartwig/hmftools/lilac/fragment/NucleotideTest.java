@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
@@ -13,14 +14,28 @@ import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.Set;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.LilacConstants;
+import com.hartwig.hmftools.lilac.evidence.Nucleotide;
+import com.hartwig.hmftools.lilac.read.Read;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
+import com.hartwig.hmftools.lilac.util.ThrowOnUnstubbed;
 
 import org.junit.Test;
+
+import htsjdk.samtools.SAMRecord;
 
 public class NucleotideTest
 {
@@ -52,6 +67,85 @@ public class NucleotideTest
         assertGene(enricher, Sets.newHashSet(HLA_B), HLA_B, indices);
     }
 
+    @Test
+    public void testApplyQualityFilterSingleNucleotideFilteredOut()
+    {
+        LilacConstants.MIN_DEPTH_FILTER = DEFAULT_MIN_DEPTH_FILTER;
+
+        List<Nucleotide> fragmentNucleotides = Lists.newArrayList(
+                new Nucleotide(0, (byte) 40, "A"),
+                new Nucleotide(1, (byte) 40, "T"));
+        final NavigableMap<Integer, Nucleotide> fragmentNucleotidesByLoci = Maps.newTreeMap();
+        fragmentNucleotides.forEach(x -> fragmentNucleotidesByLoci.put(x.locus(), x));
+
+        SAMRecord samRecord = mock(SAMRecord.class);
+        Read read = mock(Read.class);
+        doReturn(samRecord).when(read).bamRecord();
+        List<Read> reads = Lists.newArrayList(read);
+
+        Fragment fragment = mock(Fragment.class, new ThrowOnUnstubbed());
+        doReturn(fragmentNucleotidesByLoci).when(fragment).nucleotidesByLoci();
+        doReturn(reads).when(fragment).reads();
+        doReturn("HLA-A").when(fragment).readGene();
+        doReturn(Sets.newHashSet("HLA-A")).when(fragment).genes();
+
+        List<String> minEvidenceSequences = Lists.newArrayList("A");
+        SequenceCount pooledCounts = mock(SequenceCount.class, new ThrowOnUnstubbed());
+        doReturn(minEvidenceSequences).when(pooledCounts).getMinEvidenceSequences(anyInt());
+
+        Multiset<String> localNucleotides = HashMultiset.create();
+        localNucleotides.setCount("A", DEFAULT_MIN_DEPTH_FILTER);
+        SequenceCount localCounts = mock(SequenceCount.class, new ThrowOnUnstubbed());
+        doReturn(localNucleotides).when(localCounts).get(anyInt());
+
+        Fragment result = NucleotideFragmentQualEnrichment.applyQualityFilter(fragment, pooledCounts, pooledCounts, localCounts);
+        NavigableMap<Integer, Nucleotide> actualNucleotides = result.nucleotidesByLoci();
+        NavigableMap<Integer, Nucleotide> expectedNucleotides = Maps.newTreeMap();
+        expectedNucleotides.put(0, fragmentNucleotides.get(0));
+
+        assertEquals(expectedNucleotides, actualNucleotides);
+    }
+
+    @Test
+    public void testApplyQualityFilterSingleNucleotideSavedDueToLowDepth()
+    {
+        LilacConstants.MIN_DEPTH_FILTER = DEFAULT_MIN_DEPTH_FILTER;
+
+        List<Nucleotide> fragmentNucleotides = Lists.newArrayList(
+                new Nucleotide(0, (byte) 40, "A"),
+                new Nucleotide(1, (byte) 40, "T"));
+        final NavigableMap<Integer, Nucleotide> fragmentNucleotidesByLoci = Maps.newTreeMap();
+        fragmentNucleotides.forEach(x -> fragmentNucleotidesByLoci.put(x.locus(), x));
+
+        SAMRecord samRecord = mock(SAMRecord.class);
+        Read read = mock(Read.class);
+        doReturn(samRecord).when(read).bamRecord();
+        List<Read> reads = Lists.newArrayList(read);
+
+        Fragment fragment = mock(Fragment.class, new ThrowOnUnstubbed());
+        doReturn(fragmentNucleotidesByLoci).when(fragment).nucleotidesByLoci();
+        doReturn(reads).when(fragment).reads();
+        doReturn("HLA-A").when(fragment).readGene();
+        doReturn(Sets.newHashSet("HLA-A")).when(fragment).genes();
+
+        List<String> minEvidenceSequences = Lists.newArrayList("A");
+        SequenceCount pooledCounts = mock(SequenceCount.class, new ThrowOnUnstubbed());
+        doReturn(minEvidenceSequences).when(pooledCounts).getMinEvidenceSequences(anyInt());
+
+        Multiset<String> localHighNucleotides = HashMultiset.create();
+        localHighNucleotides.setCount("A", DEFAULT_MIN_DEPTH_FILTER);
+        Multiset<String> localLowNucleotides = HashMultiset.create();
+        localHighNucleotides.setCount("A", DEFAULT_MIN_DEPTH_FILTER - 1);
+        SequenceCount localCounts = mock(SequenceCount.class, new ThrowOnUnstubbed());
+        doReturn(localHighNucleotides).when(localCounts).get(0);
+        doReturn(localLowNucleotides).when(localCounts).get(1);
+
+        Fragment result = NucleotideFragmentQualEnrichment.applyQualityFilter(fragment, pooledCounts, pooledCounts, localCounts);
+        NavigableMap<Integer, Nucleotide> actualNucleotides = result.nucleotidesByLoci();
+
+        assertEquals(fragmentNucleotidesByLoci, actualNucleotides);
+    }
+
     private static void assertGene(
             final NucleotideGeneEnrichment enricher,
             final Set<String> expectedGenes, final String alignedGene, final List<Integer> aminoAcideIndices)
@@ -75,5 +169,4 @@ public class NucleotideTest
 
         return new Fragment(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, nucleotides);
     }
-
 }

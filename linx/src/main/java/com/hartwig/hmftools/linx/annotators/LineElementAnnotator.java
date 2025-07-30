@@ -4,9 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
@@ -89,7 +89,7 @@ public class LineElementAnnotator {
             }
 
             mKnownLineElements.addAll(loadConfigFile(fileContents, REF_GENOME_VERSION));
-            LNX_LOGGER.info("loaded {} known line elements", mKnownLineElements.size());
+            LNX_LOGGER.debug("loaded {} known line elements", mKnownLineElements.size());
         }
         catch(IOException e)
         {

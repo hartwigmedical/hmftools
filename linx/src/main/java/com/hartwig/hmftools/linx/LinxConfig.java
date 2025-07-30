@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
@@ -69,6 +71,7 @@ public class LinxConfig
     public final boolean RunFusions;
     public final boolean RunDrivers;
     public final boolean FailOnMissing;
+    public final boolean PerfDebug;
 
     public final int Threads;
 
@@ -162,6 +165,7 @@ public class LinxConfig
 
         LogVerbose = configBuilder.hasFlag(LOG_VERBOSE);
         Threads = parseThreads(configBuilder);
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
 
         ChainingSvLimit = configBuilder.getInteger(CHAINING_SV_LIMIT);
 
@@ -177,6 +181,8 @@ public class LinxConfig
     public final List<String> getSampleIds() { return mSampleIds; }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
+
+    public boolean isSomatic() { return !IsGermline; }
 
     private void setSamplesFromConfig(final ConfigBuilder configBuilder)
     {
@@ -246,6 +252,7 @@ public class LinxConfig
         RunFusions = true;
         FailOnMissing = false;
         Threads = 0;
+        PerfDebug = false;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -270,6 +277,7 @@ public class LinxConfig
 
         LinxOutput.addConfig(configBuilder);
         configBuilder.addFlag(FAIL_ON_MISSING_SAMPLE, "Failing all processing in batch mode if any sample is missing");
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(LOG_VERBOSE, "Log extra detail");
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);

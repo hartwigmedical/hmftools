@@ -37,7 +37,7 @@ import java.util.stream.DoubleStream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
+import com.hartwig.hmftools.common.utils.KernelEstimator;
 import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
