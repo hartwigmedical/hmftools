@@ -187,7 +187,7 @@ public class BqrRegionReader implements CigarHandler
     }
 
     @VisibleForTesting
-    protected void buildQualityCounts()
+    public void buildQualityCounts()
     {
         for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
         {
@@ -384,7 +384,8 @@ public class BqrRegionReader implements CigarHandler
         }
     }
 
-    protected BaseQualityData getOrCreateBaseQualData(
+    @VisibleForTesting
+    public BaseQualityData getOrCreateBaseQualData(
             int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
     {
         int posIndex = mCurrentRefSequence.index(position);
@@ -420,5 +421,12 @@ public class BqrRegionReader implements CigarHandler
         }
     }
 
+    @VisibleForTesting
+    public void initialise(final ChrBaseRegion region, final RefGenomeInterface refGenome)
+    {
+        mPartitionOverlapRegion = region;
+        mCurrentRefSequence = new RefSequence(region.Chromosome, region.start(), region.end(), refGenome);
 
+        mBaseQualityData = new BaseQualityDataCollection[mCurrentRefSequence.length()];
+    }
 }
