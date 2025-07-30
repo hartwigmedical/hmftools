@@ -6,8 +6,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class JitterCountsTable
@@ -15,7 +13,6 @@ public class JitterCountsTable
     // store the data for each MS table for a repeat unit such as (A/T)
     // each row is a number of unit repeat in reference
     // the row stores the jitter, read counts map.
-    public static final Logger sLogger = LogManager.getLogger(JitterCountsTable.class);
 
     public final String RepeatUnit;
     public final ConsensusType ConsensusType;

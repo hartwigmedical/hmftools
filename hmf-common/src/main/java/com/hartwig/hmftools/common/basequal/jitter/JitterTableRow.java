@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.basequal.jitter;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
 
@@ -43,8 +42,6 @@ public class JitterTableRow
         mTotalReadCount += numReads;
         mJitterCounts.merge(jitter, numReads, Integer::sum);
     }
-
-    public Set<Integer> getJitterKeys() { return mJitterCounts.keySet(); }
 
     public int getJitterReadCount(int jitter)
     {
