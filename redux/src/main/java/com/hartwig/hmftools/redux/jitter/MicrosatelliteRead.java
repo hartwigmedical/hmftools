@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
 
 import static com.hartwig.hmftools.common.sequencing.ConsensusType.IGNORE;
 import static com.hartwig.hmftools.common.sequencing.ConsensusType.NONE;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
 
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
 

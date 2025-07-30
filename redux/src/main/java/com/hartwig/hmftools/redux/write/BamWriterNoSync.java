@@ -3,7 +3,7 @@ package com.hartwig.hmftools.redux.write;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
 import org.jetbrains.annotations.Nullable;

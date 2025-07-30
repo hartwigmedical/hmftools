@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -59,7 +59,7 @@ public class ReduxApplication
         JitterAnalyser jitterAnalyser = null;
 
         if(mConfig.JitterConfig != null)
-            jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig, RD_LOGGER);
+            jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig);
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
         UnmapStats unmapStats = mConfig.UnmapRegions.stats();

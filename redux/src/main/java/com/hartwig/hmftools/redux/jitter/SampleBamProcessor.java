@@ -17,8 +17,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
-import com.hartwig.hmftools.common.basequal.jitter.SampleReadProcessor;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
 
 import java.io.File;
 import java.util.ArrayList;

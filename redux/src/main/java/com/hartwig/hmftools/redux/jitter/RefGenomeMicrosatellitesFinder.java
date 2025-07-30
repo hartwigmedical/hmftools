@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
 
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE_DESC;

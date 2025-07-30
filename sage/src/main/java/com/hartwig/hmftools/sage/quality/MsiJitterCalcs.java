@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
 import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTableFile;
@@ -178,10 +179,10 @@ public class MsiJitterCalcs
 
             sampleParamList.add(sampleModelParams);
 
-            for(JitterCountsTable.Row perRepeatData : unitParams.getRows())
+            for(JitterTableRow perRepeatData : unitParams.getRows())
             {
-                int refLength = perRepeatData.refNumUnits;
-                for(Map.Entry<Integer, Integer> entry : perRepeatData.jitterCounts.entrySet())
+                int refLength = perRepeatData.refNumUnits();
+                for(Map.Entry<Integer, Integer> entry : perRepeatData.jitterCounts().entrySet())
                 {
                     int jitterLength = entry.getKey();
 

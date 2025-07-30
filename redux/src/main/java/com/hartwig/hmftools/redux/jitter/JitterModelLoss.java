@@ -1,12 +1,14 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
+
+import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
 
 public class JitterModelLoss
 {
-    private JitterCountsTable.Row mStatsTableRow;
+    private JitterTableRow mStatsTableRow;
     private double mNumRepeats;
     private double mLengthMinusOneScale;
 
-    public JitterModelLoss(JitterCountsTable.Row statsTableRow, double numRepeats, double lengthMinusOneScale)
+    public JitterModelLoss(JitterTableRow statsTableRow, double numRepeats, double lengthMinusOneScale)
     {
         this.mStatsTableRow = statsTableRow;
         this.mNumRepeats = numRepeats;
@@ -44,6 +46,6 @@ public class JitterModelLoss
 
     private double freq(int x)
     {
-        return ((double)mStatsTableRow.getJitterReadCount(x)) / mStatsTableRow.totalReadCount;
+        return ((double)mStatsTableRow.getJitterReadCount(x)) / mStatsTableRow.totalReadCount();
     }
 }

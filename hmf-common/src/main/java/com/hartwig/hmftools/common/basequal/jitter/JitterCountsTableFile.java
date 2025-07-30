@@ -56,12 +56,12 @@ public class JitterCountsTableFile
 				COUNT_m10, COUNT_m9, COUNT_m8, COUNT_m7, COUNT_m6, COUNT_m5, COUNT_m4, COUNT_m3, COUNT_m2, COUNT_m1,
 				COUNT_p0, COUNT_p1, COUNT_p2, COUNT_p3, COUNT_p4, COUNT_p5, COUNT_p6, COUNT_p7, COUNT_p8, COUNT_p9, COUNT_p10);
 
-		try(DelimFileWriter<JitterCountsTable.Row> writer = new DelimFileWriter<>(filename, columns, (msStatsTableRow, row) ->
+		try(DelimFileWriter<JitterTableRow> writer = new DelimFileWriter<>(filename, columns, (msStatsTableRow, row) ->
 			{
 				row.set(UNIT,  msStatsTableRow.getRepeatUnit());
                 row.set(CONSENSUS_TYPE, msStatsTableRow.getConsensusType().name());
-				row.set(NUM_UNITS,  msStatsTableRow.refNumUnits);
-				row.set(READ_COUNT,  msStatsTableRow.totalReadCount);
+				row.set(NUM_UNITS,  msStatsTableRow.refNumUnits());
+				row.set(READ_COUNT,  msStatsTableRow.totalReadCount());
 				row.set(COUNT_p0, msStatsTableRow.getJitterReadCount(0));
 
 				row.set(COUNT_p10, msStatsTableRow.getJitterReadCount(10));
@@ -89,9 +89,9 @@ public class JitterCountsTableFile
 		{
 			for(JitterCountsTable table : msStatsTables)
 			{
-				for(JitterCountsTable.Row row : table.getRows())
+				for(JitterTableRow row : table.getRows())
 				{
-					if(row.refNumUnits <= MAX_UNITS)
+					if(row.refNumUnits() <= MAX_UNITS)
 					{
 						writer.writeRow(row);
 					}
@@ -129,8 +129,10 @@ public class JitterCountsTableFile
 			{
 				unitConsensusData = new JitterCountsTable(unit, consensusType, 1.0);
 			}
-			JitterCountsTable.Row countRow = unitConsensusData.getOrCreateRow(row.getInt(NUM_UNITS));
-			countRow.totalReadCount = row.getInt(READ_COUNT);
+
+			JitterTableRow countRow = unitConsensusData.getOrCreateRow(row.getInt(NUM_UNITS));
+
+			countRow.setTotalReadCount(row.getInt(READ_COUNT));
 			countRow.setJitterReadCount(0, row.getInt(COUNT_p0));
 
 			countRow.setJitterReadCount(10, row.getInt(COUNT_p10));

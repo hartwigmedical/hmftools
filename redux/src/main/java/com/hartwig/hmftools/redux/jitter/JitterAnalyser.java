@@ -1,21 +1,31 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
 
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_1;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_2;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_3;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DUAL_BASE_4;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.SINGLE_BASE_1;
-import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.SINGLE_BASE_2;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DUAL_BASE_1;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DUAL_BASE_2;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DUAL_BASE_3;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DUAL_BASE_4;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.SINGLE_BASE_1;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.SINGLE_BASE_2;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
+import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
+import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTableFile;
+import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
+import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.utils.RExecutor;
 
@@ -26,17 +36,14 @@ import htsjdk.samtools.SAMRecord;
 public class JitterAnalyser
 {
     private final JitterAnalyserConfig mConfig;
-    private final Logger mLogger;
     private final BamSlicerFilter mBamSlicerFilter;
     private final SampleReadProcessor mSampleReadProcessor;
 
     private EnumSet<ConsensusType> mConsensusTypes;
 
-    public JitterAnalyser(final JitterAnalyserConfig config, final Logger logger)
+    public JitterAnalyser(final JitterAnalyserConfig config)
     {
-
         mConfig = config;
-        mLogger = logger;
 
         mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
 
@@ -90,7 +97,7 @@ public class JitterAnalyser
     private List<RefGenomeMicrosatellite> loadRefGenomeMicrosatellites()
     {
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = RefGenomeMicrosatelliteFile.read(mConfig.RefGenomeMsiFile);
-        mLogger.info("loaded {} microsatellites regions", refGenomeMicrosatellites.size());
+        RD_LOGGER.info("loaded {} microsatellites regions", refGenomeMicrosatellites.size());
         return refGenomeMicrosatellites;
     }
 
@@ -106,7 +113,7 @@ public class JitterAnalyser
         {
             for(MicrosatelliteSelector s : createMicrosatelliteSelectorsForCharts())
             {
-                JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                JitterCountsTable msStatsTable = buildJitterCountsTable(
                         s.unitName(), consensusType, config.MaxSingleSiteAltContribution,
                         microsatelliteSiteAnalysers.stream().filter(s::select).collect(Collectors.toList()));
                 msStatsTables.add(msStatsTable);
@@ -115,6 +122,61 @@ public class JitterAnalyser
 
         JitterCountsTableFile.write(filename, msStatsTables);
     }
+
+    static JitterCountsTable buildJitterCountsTable(
+            final String repeatUnit, final ConsensusType consensusType, final double maxSingleAltSiteContributionPerc,
+            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
+    {
+        // In order to filter out outliers, we perform the stats summation in a loop
+        // We create a table of all read stats, then use that table to filter out outliers and create a
+        // new table. We do this iteratively until no outlier is found.
+        JitterCountsTable outlierTestTable = null;
+        boolean outlierFound = false;
+        Set<MicrosatelliteSiteAnalyser> outliers = Collections.newSetFromMap(new IdentityHashMap<>());
+
+        while(true)
+        {
+            JitterCountsTable newTable = new JitterCountsTable(repeatUnit, consensusType, maxSingleAltSiteContributionPerc);
+
+            for(MicrosatelliteSiteAnalyser microsatelliteSiteAnalyser : microsatelliteSiteAnalysers)
+            {
+                if(outliers.contains(microsatelliteSiteAnalyser))
+                {
+                    continue;
+                }
+
+                if(!microsatelliteSiteAnalyser.shouldKeepSite(JitterAnalyserConstants.ALT_COUNT_FRACTION_INIT,
+                        JitterAnalyserConstants.ALT_COUNT_FRACTION_STEP,
+                        JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION,
+                        JitterAnalyserConstants.MIN_PASSING_SITE_READS))
+                {
+                    continue;
+                }
+
+                // get all the read counts into a row object
+                JitterTableRow row = new JitterTableRow(
+                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().numRepeat, newTable.RepeatUnit, newTable.ConsensusType);
+
+                for(Map.Entry<Integer, Integer> entry : microsatelliteSiteAnalyser.passingJitterCounts(consensusType).entrySet())
+                {
+                    int jitter = entry.getKey();
+                    int numReads = entry.getValue();
+                    row.addReads(jitter, numReads);
+                }
+
+                newTable.mergeCounts(row);
+            }
+
+            if(outlierTestTable != null && !outlierFound)
+            {
+                return newTable;
+            }
+
+            outlierFound = false;
+            outlierTestTable = newTable;
+        }
+    }
+
 
     private static List<MicrosatelliteSelector> createMicrosatelliteSelectorsForCharts()
     {
@@ -154,7 +216,7 @@ public class JitterAnalyser
         {
             for(MicrosatelliteSelector selector : selectors)
             {
-                JitterCountsTable msStatsTable = JitterCountsTable.summariseFrom(
+                JitterCountsTable msStatsTable = buildJitterCountsTable(
                         selector.unitName(), consensusType, maxSingleSiteAltContribution,
                         microsatelliteSiteAnalysers.stream().filter(selector::select).collect(Collectors.toList()));
 

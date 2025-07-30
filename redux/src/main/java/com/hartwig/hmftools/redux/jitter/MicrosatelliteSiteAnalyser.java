@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
 
 import java.util.Collections;
 import java.util.EnumMap;

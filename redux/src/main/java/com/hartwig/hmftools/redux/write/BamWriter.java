@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;

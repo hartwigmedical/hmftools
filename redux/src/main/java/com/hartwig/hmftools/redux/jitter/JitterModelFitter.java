@@ -1,10 +1,13 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.redux.jitter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
+import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
@@ -99,10 +102,10 @@ public class JitterModelFitter
                     defaultScale = relevantDefaults.scale_six;
                     break;
             }
-            JitterCountsTable.Row row = mStatsTable.getRow(numRepeats);
+            JitterTableRow row = mStatsTable.getRow(numRepeats);
             if(row != null)
             {
-                for(Map.Entry<Integer, Integer> entry : row.jitterCounts.entrySet())
+                for(Map.Entry<Integer, Integer> entry : row.jitterCounts().entrySet())
                 {
                     if(entry.getKey() < 0) { totalShortenedCount += entry.getValue(); }
                     if(entry.getKey() > 0) { totalLengthenedCount += entry.getValue(); }
@@ -234,7 +237,7 @@ public class JitterModelFitter
     }
 
     @Nullable
-    public ScaleSkew gridSearch(int numRepeats, JitterCountsTable.Row row, Double fallbackScale)
+    public ScaleSkew gridSearch(int numRepeats, JitterTableRow row, Double fallbackScale)
     {
         double minLoss = Double.MAX_VALUE;
         double bestScale = Double.NaN;
@@ -268,7 +271,7 @@ public class JitterModelFitter
                 }
             }
         }
-        double scaleToReturn = row.totalReadCount < 20000 && !Double.isNaN(fallbackScale) ? fallbackScale : bestScale;
+        double scaleToReturn = row.totalReadCount() < 20000 && !Double.isNaN(fallbackScale) ? fallbackScale : bestScale;
         return ScaleSkew.of(scaleToReturn, bestSkew, minLoss);
     }
 
