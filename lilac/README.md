@@ -354,9 +354,15 @@ Deletions are represented as strings of one or more Ns, for example:
 
 ##### Filtering for nucleotide candidates
 
-For each position, nucleotide candidates (i.e. bases) are filtered for those with fragment support greater or equal to:
-- `minHiQualFragmentSupport`: defined as `max(1, 0.003 * hiQualFragmentSupportAtPosition)`, where "high quality" is defined as `baseQual > min(30, medianBaseQuality)`
-- `minOverallFragmentSupport`: defined as `max(2, 0.006 * overallFragmentSupportAtPosition)`
+For each position, candidate nucleotide bases are filtered for those with fragment support greater than or equal to:
+- `min_hi_qual_fragment_support` = `max(1, min_high_qual_evidence_factor * hi_qual_fragment_support)` where:
+  - `min_high_qual_evidence_factor`: 0.003 by default
+  - `hi_qual_fragment_support`: number of fragment bases with at least `min(30, median_base_quality)` supporting a candidate base
+
+- `min_overall_fragment_support` = `max(2, min_evidence_factor * overall_fragment_support)` where:
+  - `min_evidence_factor`: 0.006 by default
+  - `overall_fragment_support`: total number of fragment bases supporting a candidate base
+
 
 #### Elimination based on nucleotide matrix
 
@@ -408,7 +414,7 @@ Amino acid candidates are filtered for those with fragment support greater or eq
 
 #### Elimination based on amino acid matrix
 
-Alleles are eliminated based on the amino acid matrix based on the same logic as for the nucleotide matrix. 
+Alleles are eliminated based on the amino acid matrix using the same logic as for the nucleotide matrix. 
 See: [Elimination based on nucleotide matrix](#elimination-based-on-nucleotide-matrix)
 
 #### Elimination based on phased haplotypes
@@ -416,17 +422,23 @@ In this step, we phase the heterozygous amino acid locations and eliminate any a
 sufficient overall shared coverage.
 
 First, we find phased evidence of each consecutive pair of heterozygous codons and record the haplotypes of all fragments containing both 
-codons. This is performed separately for each of HLA-A, HLA-B and HLA-C to account for differences in exon boundaries. Fragments which 
-overlap amino acid 338 onwards will only be assignable to a subset of the alleles, since the exon boundaries differ after this amino acid. 
-The points are only phased if the total coverage is at least 7 fragments per allele [minFragmentsPerAllele] included in the subset at that 
-location (i.e. between 14 and 42 fragments with shared coverage depending on the amino acid location). A phased haplotype with only 1 
-supporting fragment will be removed if the total fragments supporting the pair is 40 or more [minFragmentsToRemoveSingle] (assumed to be a 
-sequencing error).
+codons. This is performed separately for each of HLA-A, HLA-B and HLA-C to account for differences in exon boundaries. 
+
+Fragments which overlap amino acid 338 onwards will only be assignable to a subset of the alleles, since the exon boundaries differ after 
+this amino acid.
+
+The points are only phased if the total coverage is at least 7 fragments per allele (`min_fragments_per_allele`) included in the subset at 
+that location (i.e. between 14 and 42 fragments with shared coverage depending on the amino acid location). A phased haplotype with only 1 
+supporting fragment will be removed if the total fragments supporting the pair is 40 or more (`min_fragments_to_remove_single`) as it is 
+assumed to be a sequencing error.
 
 We then iteratively choose the phased haplotype with the most support and perform the following routine:
 - Find other phased evidence that overlaps it.
-- Find the minimum number of codon locations required to uniquely identify each phased evidence, eg, if the left evidence has haplotypes [SP, ST] you only need the last codon but if the right evidence has haplotypes [PD, TD, TS] you would need both codon locations.
-- Find evidence of fragments that contain all the required codons. As with the paired evidence, there must be at least 7 fragments per allele supporting the pair [minFragmentsPerAllele] and a haplotype with only 1 supporting fragment will be removed if the total fragments supporting the pair is 40 or more [minFragmentsToRemoveSingle].
+- Find the minimum number of codon locations required to uniquely identify each phased evidence, eg, if the left evidence has haplotypes 
+[SP, ST] you only need the last codon but if the right evidence has haplotypes [PD, TD, TS] you would need both codon locations.
+- Find evidence of fragments that contain all the required codons. As with the paired evidence, there must be at least 7 fragments per 
+allele supporting the pair (`min_fragments_per_allele`) and a haplotype with only 1 supporting fragment will be removed if the total 
+fragments supporting the pair is 40 or more (`min_fragments_to_remove_single`).
 - Check that the new overlapping evidence is consistent with the existing evidence.
 - Merge the new evidence with the existing paired evidence.
 - Replace the two pieces of used evidence with the new merged evidence.
