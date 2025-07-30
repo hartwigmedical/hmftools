@@ -159,6 +159,8 @@ Notes:
 
 ### Allele population frequencies
 
+#### Web scraping of AFND
+
 Allele population frequencies were scraped from the Allele Frequency Net Database (AFND; http://www.allelefrequencies.net/) on 2025-01-28
 using the [hla_allele_freq_downloader.py](./src/main/resources/frequencies/hla_allele_freq_downloader.py) Python script:
 
@@ -170,6 +172,8 @@ python hla_allele_freq_downloader.py \
   --hla_locus_type Classical \
   --population_standard g
 ```
+
+#### Normalising frequencies
 
 The AFND entry represents the frequency of an allele in a population (typically country or ethnicity). However, each frequency may have been 
 calculated as part of a larger study. Since sample sizes and method of frequency calculation vary between studies, we calculated normalised 
@@ -263,78 +267,153 @@ A*30:220Q amino acids: MAVMAPRTLL...SG
 ## Algorithm
 
 The starting data for the LILAC algorithm is:
-- HLA-A, HLA-B, HLA-C and HLA-Y [4-digit allele sequences](#allele-sequences) 
-- All fragments in a BAM aligned to HLA-A, HLA-B and HLA-C gene regions
+- HLA-A, HLA-B, HLA-C and HLA-Y [4-digit allele sequences](#allele-sequences), excluding the following due to their high similarity closely 
+related pseudogenes:
+  - HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`
+  - HLA-Y: `A*30:205`, `A*30:207`, `A*30:225`, `A*30:228`, `A*01:81`, `A*01:237`
+- All fragments in a BAM aligned to HLA-A, HLA-B and HLA-C gene regions, which:
+  - Are not duplicates
+  - Have at least 1 read with an alignment overlapping a coding base of HLA-A, HLA-B or HLA-C
+  - Have all alignments within 1000 bases of an HLA coding region
+  - Have a mapping quality of at least 1
 
-The algorithm has 2 main phases to determine the germline alleles:
-1) Elimination phase: Aims to remove allele candidates that are clearly not present
-2) Evidence phase: Consider all possible sets of 6 alleles amongst the remaining candidates and chooses the solution that best explains the
-   fragments observed
+The main steps of the algorithm are:
+- Elimination phase - eliminate candidate alleles: 
+  - Construct **nucleotide** matrix (position x fragment support per base). Eliminate alleles with sequences not matching possible **nucleotide** sequences
+  - Construct **amino acid** matrix (position x fragment support per residue). Eliminate alleles with sequences not matching possible **amino acid** sequences
+  - Eliminate based on **phased haplotypes**
+  - Exclude HLA-Y pseudogene fragments
+  - Conditionally eliminate and recover alleles
+- Evidence phase - score and rank allele combinations
 
 After the germline alleles are determined, LILAC determines the tumor copy number and any somatic mutations in each allele. Note that if
-more than 300 bases of the HLA-A,HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with errors and will not
+more than 300 bases of the HLA-A, HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with errors and will not
 try to fit the sample.
 
-### Allele set initialisation
+### Candidate allele elimination
+The elimination phase removes alleles that are unlikely part of the final solution, namely, if they do not have sufficient fragment support 
+at each nucleotide / amino acid position. This reduces runtime by reducing the number of allele combinations LILAC needs to consider in 
+the evidence phase.
 
-Some alleles are excluded (at runtime to avoid modifying LILAC resource files) due to their high similarity closely related pseudogenes, 
-including:
-- HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`
-- HLA-Y: `A*30:205`, `A*30:207`, `A*30:225`, `A*30:228`, `A*01:81`, `A*01:237`
+#### Nucleotide matrix construction
 
-### Read pre-processing
+For each HLA gene, create a matrix containing the nucleotide counts (i.e. high quality fragment support) for each position, resulting in the
+below output (bases with 0 fragment support not shown):
 
-All fragments are collected which:
-- Are not duplicates
-- Have at least 1 read with an alignment overlapping a coding base of HLA-A, HLA-B or HLA-C
-- Have all alignments within 1000 bases of an HLA coding region
-- Have a mapping quality of at least 1
+```
+#index count1 base1 count2 base2 etc...
+0	766	A	991
+1	769	T	997
+2	768	G	999
+3	774	G	772	C	237
+4	776	C	773	G	167	T	74
+5	778	C	776	G	237
+6	786	G	1025
+7	792	T	1034
+8	793	C	1033
+9	803	A	1048
+...
+```
 
-All reads are trimmed of any bases that overlap the aligned 5' end of its mate (to remove adapter).
+> [!NOTE]
+> In subsequent steps, sites with more than 1 nucleotide candidate are deemed heterozygous, and sites with only 1 are considered to be
+> homozygous across all 6 alleles
 
-### Elimination phase
-The elimination phase is primarily an optimization. The goal is simply to reduce the number of possible alleles from ~22k present in the 
-IMGT/HLA database to a manageable number such that the evidence phase can run efficiently. The principle in the elimination phase is to 
-remove any allele that does not have at least a certain minimal coverage of each of its amino acids and bases. To mitigate the chance of 
-inadvertently eliminating a true allele, common alleles may be recovered at the end of the elimination phase if they have sufficient unique 
-support, but are then penalised in the subsequent evidence phase relative to other candidate alleles.
+Construction of the nucleotide matrix has several steps / conditions which are described in the below subsections.
 
-The steps in the elimination phase are:
+##### Shared fragment support across genes
 
-#### 1. Nucleotide matrix
-At each coding position, create a matrix of (high quality) nucleotide count and determine all bases which are heterozygous across all 6 
-alleles. 
+Firstly, fragment bases aligned at exons with boundaries identical across two or more HLA genes will count towards fragment support for the 
+corresponding nucleotide positions and genes. For example, the below table shows the exon boundaries (nucleotide end positions) for each 
+HLA class I gene. Fragment bases at exons 1-4 will contribute to fragment counts in the HLA-A, HLA-B and HLA-C matrices, whereas fragment 
+bases at exons 5-6 will support only contribute to the HLA-A/B matrices or the HLA-C matrix.
 
-We do this 3 separate times for HLA-A, B and C. Each time we consider fragments from any of the alignment records that have similar exon 
-boundaries to the type in question. For instance, fragments from the earlier exons which have identical boundaries across all 3 genes will
-be used to construct the A, B and C matrices, but fragments from the later exons may only contribute to A and B or perhaps only C. 
-The counts of supporting fragments are then aggregated at each position to construct the nucleotide matrix. 
+| Gene \ Exon | 1  | 2   | 3   | 4   | 5    | 6    | 7    |
+|-------------|----|-----|-----|-----|------|------|------|
+| HLA-A       | 72 | 342 | 618 | 894 | 1011 | 1044 | 1092 |
+| HLA-B       | 72 | 342 | 618 | 894 | 1011 | 1044 | 1086 |
+| HLA-C       | 72 | 342 | 618 | 894 | 1014 | 1047 | 1095 |
 
-Fragments with in-frame indels are only included if the indel matches an existing hla type allowing for realignment. Fragments with 
-out-of-frame indels are always excluded (note for the special case of C\*04:09N, a relatively common allele without of frame indel, it is 
-explicitly rescued at a later stage
+##### Indel handling
 
-During the elimination phase, nucleotide candidates are filtered to include only those with at least max(1,0.000375 \* FragmentCount) high 
-quality (base qual > min(30,medianBaseQuality)) fragment and at least max(2,0.00075 \* FragmentCount) fragments overall support. 
-\Subsequently, base quality is not considered.   Sites with more than 1 nucleotide candidate are deemed heterozygous and sites with only 1 
-are considered to be homozygous across all 6 alleles.
+Insertions are represented as multi-character strings, for example:
 
-Any alleles with bases that do not match both the heterozygous and homozygous locations of the nucleotide matrix are eliminated.
+```
+286	1167	A	3682
+287	1181	G	3120	A	522	AATAAGCAAAACAAACACACAA	55
+288	1179	A	3412	G	289
+```
 
-#### 2. Amino acid matrix
-Similarly to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates. 
-Again, amino acid candidates are filtered to those where at least max(1,0.000375 \* FragmentCount) fragments support with high base quality 
-(all 3 nucleotides) and at least max(2,0.00075 \* FragmentCount)  fragments over all. The codon matrix can include inframe insertions and 
-deletions where these match at least one known allele (base quality is not considered).
+Deletions are represented as strings of one or more Ns, for example:
 
-Exon boundary ‘enrichment’ is applied for all shared amino acids across all 3 genes (amino acids index < 298). This enriches any fragment 
-with nucleotides on one side of an exon boundary with any homozygous nucleotides from the other side so that an amino acid can be constructed. 
+```
+1036 5       A       226
+1037 5       G       221     N       1
+1038 6       G       224
+```
 
-Similarly to the nucleotide matrix, any alleles with an amino acid or inframe indel that do not match the amino acid matrix are eliminated.
+##### Filtering for nucleotide candidates
 
-#### 3. Phased haplotypes
-In this step we phase the heterozygous amino acid locations and eliminate any alleles that are not supported by phased locations with 
-sufficient overall shared coverage.   
+For each position, nucleotide candidates (i.e. bases) are filtered for those with fragment support greater or equal to:
+- `minHiQualFragmentSupport`: defined as `max(1, 0.003 * hiQualFragmentSupportAtPosition)`, where "high quality" is defined as `baseQual > min(30, medianBaseQuality)`
+- `minOverallFragmentSupport`: defined as `max(2, 0.006 * overallFragmentSupportAtPosition)`
+
+#### Elimination based on nucleotide matrix
+
+Alleles are eliminated if their sequences do not match any of the possible sequences based on the nucleotide matrix. For example,
+`A*01:237` would be eliminated because the `G` at index 9 does not match the `A` in the above example [nucleotide matrix](#nucleotide-matrix):
+```
+Sequence: ATGGCCGTCG...
+Index:    0123456789...
+```
+
+An exception is that if a position in the nucleotide matrix has <10 total fragment support, that position will not be used to eliminate 
+alleles. Some samples (especially panel sequencing samples) have variable read depth across the regions sequenced, which may be due to 
+sequencing issues, e.g. due certain SNVs reducing probe binding affinity. This exception prevents inadvertently eliminating alleles because
+of such issues.
+
+#### Amino acid matrix
+
+LILAC also constructs a matrix of amino acid candidates (where fragment support is the sum of nucleotide fragment support per codon), 
+similar to the [nucleotide matrix](#nucleotide-matrix) but with some differences.
+
+##### Indel handling
+
+Insertions are represented as multi-character strings, for example:
+
+```
+94	1103	S	1542	T	1090	A	936
+95	1155	Q	3556	QISKTNTQ	55
+96	1178	T	3385	A	285
+```
+
+Deletions are represented as strings of one or more dots (`.`):
+
+```
+344	4	T	144	S	77	I	1
+345	5	Q	221	.	1
+346	6	A	220
+```
+
+##### Exon boundary enrichment
+
+Exon boundary 'enrichment' is applied to exons 1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes)
+(i.e. before nucleotide index 894, amino acid index 298). For codons crossing these exon boundaries, any associated fragment is enriched 
+with *homozygous* nucleotides on the other side of the exon boundary so that an amino acid can constructed.
+
+##### Filtering for amino acid candidates
+
+Amino acid candidates are filtered for those with fragment support greater or equal to
+`minHiQualFragmentSupport` and `minOverallFragmentSupport`, similarly as when [filtering for nucleotide candidates](#filtering-for-nucleotide-candidates).
+
+#### Elimination based on amino acid matrix
+
+Alleles are eliminated based on the amino acid matrix based on the same logic as for the nucleotide matrix. 
+See: [Elimination based on nucleotide matrix](#elimination-based-on-nucleotide-matrix)
+
+#### Elimination based on phased haplotypes
+In this step, we phase the heterozygous amino acid locations and eliminate any alleles that are not supported by phased locations with 
+sufficient overall shared coverage.
 
 First, we find phased evidence of each consecutive pair of heterozygous codons and record the haplotypes of all fragments containing both 
 codons. This is performed separately for each of HLA-A, HLA-B and HLA-C to account for differences in exon boundaries. Fragments which 
@@ -347,40 +426,43 @@ sequencing error).
 We then iteratively choose the phased haplotype with the most support and perform the following routine:
 - Find other phased evidence that overlaps it.
 - Find the minimum number of codon locations required to uniquely identify each phased evidence, eg, if the left evidence has haplotypes [SP, ST] you only need the last codon but if the right evidence has haplotypes [PD, TD, TS] you would need both codon locations.
-- Find evidence of fragments that contain all the required codons. As with the paired evidence, there must be at least at least 7 fragments per allele supporting the pair [minFragmentsPerAllele] and a haplotype with only 1 supporting fragment will be removed if the total fragments supporting the pair is 40 or more [minFragmentsToRemoveSingle].
+- Find evidence of fragments that contain all the required codons. As with the paired evidence, there must be at least 7 fragments per allele supporting the pair [minFragmentsPerAllele] and a haplotype with only 1 supporting fragment will be removed if the total fragments supporting the pair is 40 or more [minFragmentsToRemoveSingle].
 - Check that the new overlapping evidence is consistent with the existing evidence.
 - Merge the new evidence with the existing paired evidence.
 - Replace the two pieces of used evidence with the new merged evidence.
 
 Once complete, we can eliminate any alleles that do not match the phased evidence. 
 
-#### 4. Recover common alleles
-As a failsafe for phasing, any ‘common alleles’ with more than 0.1% population frequency are recovered. The frequencies of alleles are 
-specified in a resource file and are derived from the Hartwig cohort.   
+#### Excluding HLA-Y pseudogene fragments
+HLA-Y is a pseudogene that is highly similar to HLA-A, but is not present in the human ref genome, and is found in approximately 17% of the
+Hartwig cohort. The presence of HLA-Y can cause confusion in HLA typing, particularly of HLA-A alleles.
 
-Additionally, C\*04:09N (the most common HLA allele with a frameshift variant) specifically is also rescued if the out of frame indel 
-6:31237115 CN>C (hg38: chr6:31269338 CN>C) is present.
+HLA-Y is considered present in a sample if **>0.3%** of fragments align uniquely to any of the HLA-Y allele sequences. If HLA-Y is present,
+**any** fragment which matches exactly to an HLA-Y allele (uniquely or shared with other alleles) are excluded from further analysis.
 
-#### 5. Detect HLA-Y presence 
-HLA-Y is a pseudogene that is highly similar to HLA-A and is not present in the human ref genome but is found in approximately 17% of the 
-Hartwig cohort. The presence of HLA-Y can cause confusion in typing particularly in determining the HLA-A types. To detect HLA-Y, LILAC 
-counts the number of fragments that can be assigned uniquely to one of the 3 known HLA-Y alleles and no other candidate alleles. 
-If at least 1% of fragments align uniquely to HLA-Y then HLA-Y is considered to be present in the sample. 
-If HLA-Y is found to be present ANY fragment which matches exactly to a HLA-Y allele (uniquely or shared with other alleles) are excluded 
-from further analysis to prevent confusion with highly similar HLA-A alleles. 
+#### Conditionally eliminate and recover alleles
 
-#### 6. Test for 2 digit types with unique evidence
-To further reduce the number of candidate alleles, If any 2-digit types are sufficiently unique (i.e. uniquely supported by at least 2% of 
-fragments, they are required to contain at least one 4 digit type belonging to that 2 digit type in the evidence phase. If two 2 digit 
-types from the same gene are found to be sufficiently unique all other alleles are discarded at this point. If more than two groups are 
-found to be unique the 2 with the highest evidence are supported Any recovered alleles are also discarded at this point unless the 2 digit 
-group has at least one fragment of unique support.   
+The below steps are performed to further eliminate alleles, while preventing inadvertently eliminating a potential true allele.
 
-#### 7. Remove incomplete alleles with insufficient unique evidence
-Many alleles in the IMGT database are incomplete (ie contain ‘\*’ characters), all of which are rare in population frequency. 
-To prevent spurious matches to these wildcard containing alleles in the evidence phase, we eliminate unlikely candidates. 
-Wildcard containing alleles are eliminated unless they contain at least 2 fragments support for the non wildcard sequence which do not 
-support any remaining candidate allele with a complete sequence defined.
+1) Identify high confidence 2-digit allele groups (**>2%** unique fragment support). Discard any 4-digit alleles not belonging to the high 
+confidence 2-digit allele groups.
+
+
+2) Identify low confidence 2-digit allele groups (**>0.1%** unique fragment support, or >3.5% of total fragment support). Recover maximally 
+two common 4-digit alleles per HLA gene from each group. A common allele is defined as having 
+(>0.0001 [population frequency](#normalising-frequencies)). 
+
+
+3) For each remaining 4-digit allele that is 1) not common or 2) has wildcards (`*`) in its sequence, determine the 2-digit allele group and 
+recover common 4-digit alleles belonging to this group.
+
+
+4) Recover `C*04:09N`, the most common HLA allele with a frameshift variant leading to a stop loss
+
+
+5) Identify high confidence 4-digit alleles (**>1%** unique fragment support). These alleles **must** be a part of the allele combinations
+considered in the evidence phase.
+
 
 ### Evidence phase
 In the evidence phase, LILAC evaluates all possible ‘complexes’ (ie. combinations) of remaining alleles that satisfy the following conditions
