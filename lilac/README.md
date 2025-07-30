@@ -298,7 +298,7 @@ the evidence phase.
 #### Nucleotide matrix construction
 
 For each HLA gene, create a matrix containing the nucleotide counts (i.e. high quality fragment support) for each position, resulting in the
-below output (bases with 0 fragment support not shown):
+below output. Bases with 0 fragment support not shown, and soft-clipped bases are represented as multi-character strings.
 
 ```
 #index count1 base1 count2 base2 etc...
@@ -312,12 +312,18 @@ below output (bases with 0 fragment support not shown):
 7	792	T	1034
 8	793	C	1033
 9	803	A	1048
+
+...
+
+286	1167	A	3682
+287	1181	G	3120	A	522	AATAAGCAAAACAAACACACAA	55
+288	1179	A	3412	G	289
+
 ...
 ```
 
-> [!NOTE]
-> In subsequent steps, sites with more than 1 nucleotide candidate are deemed heterozygous, and sites with only 1 are considered to be
-> homozygous across all 6 alleles
+In subsequent steps, sites with more than 1 nucleotide candidate are deemed **heterozygous**, and sites with only 1 are considered to be
+**homozygous** across all 6 alleles.
 
 Construction of the nucleotide matrix has several steps / conditions which are described in the below subsections.
 
@@ -336,21 +342,8 @@ bases at exons 5-6 will support only contribute to the HLA-A/B matrices or the H
 
 ##### Indel handling
 
-Insertions are represented as multi-character strings, for example:
-
-```
-286	1167	A	3682
-287	1181	G	3120	A	522	AATAAGCAAAACAAACACACAA	55
-288	1179	A	3412	G	289
-```
-
-Deletions are represented as strings of one or more Ns, for example:
-
-```
-1036 5       A       226
-1037 5       G       221     N       1
-1038 6       G       224
-```
+Fragments with in-frame indels only contribute to counts in the nucleotide matrix if the indel matches an existing HLA allele allowing for 
+realignment. Fragments with out-of-frame indels are always excluded.
 
 ##### Filtering for nucleotide candidates
 
@@ -363,43 +356,26 @@ For each position, candidate nucleotide bases are filtered for those with fragme
   - `min_evidence_factor`: 0.006 by default
   - `overall_fragment_support`: total number of fragment bases supporting a candidate base
 
-
 #### Elimination based on nucleotide matrix
 
-Alleles are eliminated if their sequences do not match any of the possible sequences based on the nucleotide matrix. For example,
-`A*01:237` would be eliminated because the `G` at index 9 does not match the `A` in the above example [nucleotide matrix](#nucleotide-matrix):
+Any alleles with a nucleotide or inframe indel that do not match the possible sequences of nucleotide matrix are eliminated.
+
+For example, `A*01:237` would be eliminated because the `G` at index 9 does not match the `A` in the above example 
+[nucleotide matrix](#nucleotide-matrix):
+
 ```
 Sequence: ATGGCCGTCG...
 Index:    0123456789...
 ```
 
 An exception is that if a position in the nucleotide matrix has <10 total fragment support, that position will not be used to eliminate 
-alleles. Some samples (especially panel sequencing samples) have variable read depth across the regions sequenced, which may be due to 
-sequencing issues, e.g. due certain SNVs reducing probe binding affinity. This exception prevents inadvertently eliminating alleles because
-of such issues.
+alleles. This prevents inadvertently eliminating alleles due to low depth as a result of sequencing issues, e.g. due certain SNVs reducing 
+probe binding affinity.
 
 #### Amino acid matrix
 
-LILAC also constructs a matrix of amino acid candidates (where fragment support is the sum of nucleotide fragment support per codon), 
-similar to the [nucleotide matrix](#nucleotide-matrix) but with some differences.
-
-##### Indel handling
-
-Insertions are represented as multi-character strings, for example:
-
-```
-94	1103	S	1542	T	1090	A	936
-95	1155	Q	3556	QISKTNTQ	55
-96	1178	T	3385	A	285
-```
-
-Deletions are represented as strings of one or more dots (`.`):
-
-```
-344	4	T	144	S	77	I	1
-345	5	Q	221	.	1
-346	6	A	220
-```
+LILAC also constructs a matrix of amino acid candidates by translating the nucleotide matrix, with fragment support being the sum of 
+nucleotide fragment support per codon.
 
 ##### Exon boundary enrichment
 
@@ -409,15 +385,17 @@ with *homozygous* nucleotides on the other side of the exon boundary so that an 
 
 ##### Filtering for amino acid candidates
 
-Amino acid candidates are filtered for those with fragment support greater or equal to
-`minHiQualFragmentSupport` and `minOverallFragmentSupport`, similarly as when [filtering for nucleotide candidates](#filtering-for-nucleotide-candidates).
+Amino acid candidates are filtered in the same way as for the [nucleotide matrix](#filtering-for-nucleotide-candidates), i.e.
+requiring those with fragment support greater or equal to `minHiQualFragmentSupport` and `minOverallFragmentSupport`.
 
 #### Elimination based on amino acid matrix
 
-Alleles are eliminated based on the amino acid matrix using the same logic as for the nucleotide matrix. 
-See: [Elimination based on nucleotide matrix](#elimination-based-on-nucleotide-matrix)
+Alleles are eliminated based on the amino acid matrix in the same way as for the 
+[nucleotide matrix](#elimination-based-on-nucleotide-matrix), i.e. any alleles with an amino acid or inframe indel that do not match the 
+possible sequences of amino acid matrix are eliminated.
 
 #### Elimination based on phased haplotypes
+
 In this step, we phase the heterozygous amino acid locations and eliminate any alleles that are not supported by phased locations with 
 sufficient overall shared coverage.
 
