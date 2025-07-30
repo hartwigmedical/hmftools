@@ -20,7 +20,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.redux.bqr;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
@@ -18,16 +16,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
-import com.hartwig.hmftools.common.qual.BqrKey;
-import com.hartwig.hmftools.common.qual.BqrReadType;
+import com.hartwig.hmftools.common.redux.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrReadType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
@@ -40,7 +38,9 @@ public class BqrRegionReader implements CigarHandler
     private final BaseQualityResults mResults;
 
     private final List<ChrBaseRegion> mAllBqrRegions;
-    private ChrBaseRegion mCurrentRegion;
+
+    private boolean mHasActiveRegion;
+    private ChrBaseRegion mPartitionOverlapRegion; // overlap between a BQR region and the current partition
     private RefSequence mCurrentRefSequence;
 
     private final Set<BqrKeyCounter> mQualityCounts; // summarised counts with position removed
@@ -66,8 +66,10 @@ public class BqrRegionReader implements CigarHandler
         mRefGenome = refGenome;
         mResults = results;
         mAllBqrRegions = allRegions;
-        mCurrentRegion = null;
+
+        mPartitionOverlapRegion = null;
         mCurrentRefSequence = null;
+        mHasActiveRegion = false;
 
         mCurrentReadType = BqrReadType.NONE;
         mSequencingType = sequencingType;
@@ -82,35 +84,81 @@ public class BqrRegionReader implements CigarHandler
         mReadCounter = 0;
     }
 
-    public boolean isActive() { return mCurrentRegion != null; }
+    public boolean isActive() { return mHasActiveRegion; }
 
     public void initialise(final ChrBaseRegion region)
     {
         if(mRefGenome == null)
             return;
 
-        mCurrentRegion = mAllBqrRegions.stream().filter(x -> x.overlaps(region)).findFirst().orElse(null);
+        List<ChrBaseRegion> overlappedBqrRegions = mAllBqrRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
 
-        if(mCurrentRegion == null)
+        if(overlappedBqrRegions.isEmpty())
         {
+            mHasActiveRegion = false;
+            mPartitionOverlapRegion = null;
             mCurrentRefSequence = null;
             return;
         }
 
-        mCurrentRefSequence = new RefSequence(
-                mCurrentRegion.Chromosome, mCurrentRegion.start(), mCurrentRegion.start() + REF_BASE_REGION_SIZE, mRefGenome);
+        ChrBaseRegion firstRegion = overlappedBqrRegions.get(0);
+        ChrBaseRegion lastRegion = overlappedBqrRegions.get(overlappedBqrRegions.size() - 1);
+        mPartitionOverlapRegion = new ChrBaseRegion(firstRegion.Chromosome, firstRegion.start(), lastRegion.end());
+        mHasActiveRegion = true;
+    }
 
-        if(mBaseQualityData == null || mBaseQualityData.length != region.baseLength())
+    private void checkLocalRegion(int position)
+    {
+        // work in blocks of 100K (could consider even less for panels)
+        if(mCurrentRefSequence != null && mCurrentRefSequence.positionWithinBounds(position))
+            return;
+
+        if(position < mPartitionOverlapRegion.start())
+            return;
+
+        if(mHasActiveRegion)
+            processCompletedLocalRegion();
+
+        if(position > mPartitionOverlapRegion.end())
         {
-            int regionPositionCount = region.baseLength();
-            mBaseQualityData = new BaseQualityDataCollection[regionPositionCount];
+            // de-activate if the reads are now outside the required BQR region(s)
+            mHasActiveRegion = false;
+            return;
         }
-        else
+
+        // extract the next block of ref bases
+        int refBaseStart = position;
+        int refBaseEnd = min(position + REF_BASE_REGION_SIZE, mPartitionOverlapRegion.end());
+
+        if(refBaseEnd <= refBaseStart)
+            return;
+
+        mCurrentRefSequence = new RefSequence(mPartitionOverlapRegion.Chromosome, refBaseStart, refBaseEnd, mRefGenome);
+
+        if(!mCurrentRefSequence.IsValid)
+            return;
+
+        if(mBaseQualityData == null || mBaseQualityData.length != mCurrentRefSequence.length())
         {
-            for(int i = 0; i < mBaseQualityData.length; ++i)
-            {
-                mBaseQualityData[i] = null;
-            }
+            mBaseQualityData = new BaseQualityDataCollection[mCurrentRefSequence.length()];
+        }
+
+        mPerfCounter.reset();
+    }
+
+    private void processCompletedLocalRegion()
+    {
+        if(mBaseQualityData == null)
+            return;
+
+        buildQualityCounts();
+
+        mResults.addBaseQualityRegionCounter(this);
+        mResults.addPerfCounter(mPerfCounter);
+
+        for(int i = 0; i < mBaseQualityData.length; ++i)
+        {
+            mBaseQualityData[i] = null;
         }
 
         mKeyCountsMap.clear();
@@ -118,20 +166,6 @@ public class BqrRegionReader implements CigarHandler
         mReadCounter = 0;
         mPurgeIndex = 0;
         mMaxIndex = 0;
-
-        mPerfCounter.reset();
-    }
-
-    public Collection<BqrKeyCounter> getQualityCounts() { return mQualityCounts; }
-
-    public void onRegionComplete()
-    {
-        if(mBaseQualityData == null)
-            return;
-
-        buildQualityCounts();
-
-        mKeyCountsMap.clear();
 
         mPerfCounter.stop();
 
@@ -143,8 +177,13 @@ public class BqrRegionReader implements CigarHandler
         }
         */
 
-        mResults.addBaseQualityRegionCounter(this);
-        mResults.addPerfCounter(mPerfCounter);
+    }
+
+    public Collection<BqrKeyCounter> getQualityCounts() { return mQualityCounts; }
+
+    public void onRegionComplete()
+    {
+        processCompletedLocalRegion();
     }
 
     @VisibleForTesting
@@ -195,22 +234,10 @@ public class BqrRegionReader implements CigarHandler
 
     public void processRecord(final SAMRecord record)
     {
-        if(record.getAlignmentStart() < mCurrentRegion.start())
-            return;
+        checkLocalRegion(record.getAlignmentStart());
 
-        if(record.getAlignmentStart() > mCurrentRegion.end())
-        {
-            mCurrentRegion = null;
-            mCurrentRefSequence = null;
+        if(!mHasActiveRegion || mCurrentRefSequence == null || !mCurrentRefSequence.IsValid)
             return;
-        }
-
-        // check need to update the current ref sequence
-        if(record.getAlignmentStart() >= mCurrentRefSequence.End - 3) // a buffer for TNC
-        {
-            mCurrentRefSequence = new RefSequence(
-                    mCurrentRegion.Chromosome, mCurrentRefSequence.End, mCurrentRefSequence.End + REF_BASE_REGION_SIZE, mRefGenome);
-        }
 
         if(record.getMappingQuality() < BQR_MIN_MAP_QUAL)
             return;
@@ -290,7 +317,7 @@ public class BqrRegionReader implements CigarHandler
 
     private void markIndelPosition(int position)
     {
-        if(!mCurrentRegion.containsPosition(position))
+        if(!mCurrentRefSequence.positionWithinBounds(position))
             return;
 
         byte ref = mCurrentRefSequence.base(position);
@@ -302,14 +329,16 @@ public class BqrRegionReader implements CigarHandler
     @Override
     public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)
     {
+        byte[] trinucleotideContext = new byte[3];
+
         for(int i = 0; i < cigarElement.getLength(); i++)
         {
             int position = refPos + i;
 
-            if(position > mCurrentRegion.end())
+            if(mCurrentRefSequence.afterEnd(position))
                 return;
 
-            if(position < mCurrentRegion.start())
+            if(mCurrentRefSequence.beforeStart(position))
                 continue;
 
             if(mMinReadStartPosition > 0 && position < mMinReadStartPosition)
@@ -322,15 +351,16 @@ public class BqrRegionReader implements CigarHandler
 
             byte ref = mCurrentRefSequence.base(position);
             byte alt = record.getReadBases()[readIndex];
+
+            if(alt == DNA_N_BYTE)
+                continue;
+
             byte quality = record.getBaseQualities()[readIndex];
 
             if(mSequencingType == ULTIMA && quality != ULTIMA_MAX_QUAL)
                 continue;
 
-            byte[] trinucleotideContext = mCurrentRefSequence.trinucleotideContext(position);
-
-            if(alt == DNA_N_BYTE || !isValid(trinucleotideContext))
-                continue;
+            mCurrentRefSequence.populateTrinucleotideContext(position, trinucleotideContext);
 
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
             baseQualityData.processReadBase(alt, quality);
@@ -357,7 +387,7 @@ public class BqrRegionReader implements CigarHandler
     protected BaseQualityData getOrCreateBaseQualData(
             int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
     {
-        int posIndex = position - mCurrentRegion.start();
+        int posIndex = mCurrentRefSequence.index(position);
         BaseQualityDataCollection bqDataCollection = mBaseQualityData[posIndex];
 
         if(bqDataCollection == null)
@@ -378,17 +408,6 @@ public class BqrRegionReader implements CigarHandler
         return bqData;
     }
 
-    private static boolean isValid(final byte[] trinucleotideContext)
-    {
-        for(byte b : trinucleotideContext)
-        {
-            if(!Nucleotides.isValidDnaBase((char) b))
-                return false;
-        }
-
-        return trinucleotideContext.length == 3;
-    }
-
     private class BaseQualityDataCollection
     {
         public final int Position;
@@ -401,48 +420,5 @@ public class BqrRegionReader implements CigarHandler
         }
     }
 
-    private class RefSequence
-    {
-        public final int Start;
-        public final int End;
-        public final byte[] Bases;
 
-        private static final int BUFFER = 5;
-
-        public RefSequence(final String chromosome, final int posStart, final int posEnd, final RefGenomeInterface refGenome)
-        {
-            final int sequenceEnd = refGenome.getChromosomeLength(chromosome);
-
-            Start = max(1, posStart - BUFFER);
-            End = min(sequenceEnd, posEnd) + BUFFER;
-            Bases = refGenome.getBases(chromosome, Start, End);
-        }
-
-        public int index(int position)
-        {
-            return position - Start;
-        }
-
-        public int length()
-        {
-            return Bases.length;
-        }
-
-        public byte base(int position)
-        {
-            return Bases[index(position)];
-        }
-
-        public byte[] trinucleotideContext(int position)
-        {
-            int index = index(position);
-            return new byte[] { Bases[index - 1], Bases[index], Bases[index + 1] };
-        }
-
-        public String toString()
-        {
-            return format("%d-%d len(%d)", Start, End, length());
-        }
-
-    }
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.bqr;
 
-import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrKey;
 
 public class BqrKeyCounter
 {

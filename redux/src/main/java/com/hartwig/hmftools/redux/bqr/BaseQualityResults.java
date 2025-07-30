@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
-import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrKey;
 
 public class BaseQualityResults
 {

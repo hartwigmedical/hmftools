@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQual;
+import static com.hartwig.hmftools.common.redux.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
+import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
-import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
-import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTableFile;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
+import com.hartwig.hmftools.common.redux.JitterCountsTable;
+import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
+import com.hartwig.hmftools.common.redux.JitterModelParams;
+import com.hartwig.hmftools.common.redux.JitterModelParamsFile;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 

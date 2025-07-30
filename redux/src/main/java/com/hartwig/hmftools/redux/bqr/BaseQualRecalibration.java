@@ -5,12 +5,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQual;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.Constants.BQR_CHR_END_BUFFER;
 import static com.hartwig.hmftools.redux.common.Constants.BQR_SAMPLE_SIZE;
-import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,9 +21,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.qual.BqrFile;
-import com.hartwig.hmftools.common.qual.BqrKey;
-import com.hartwig.hmftools.common.qual.BqrRecord;
+import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.common.redux.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.redux.ReduxConfig;
@@ -58,7 +56,7 @@ public class BaseQualRecalibration
     }
 
     public boolean enabled() { return mEnabled; }
-
+    public BaseQualityResults results() { return mResults; }
     public List<ChrBaseRegion> regions() { return mRegions; }
 
     private void formRegions()
@@ -122,14 +120,14 @@ public class BaseQualRecalibration
 
     public void finalise()
     {
+        RD_LOGGER.debug("writing base quality recalibration");
+
         String sampleId = mConfig.SampleId;;
 
         // merge results for this sample across all regions
-        final Map<BqrKey,Integer> allQualityCounts = mResults.getCombinedQualityCounts();
+        Map<BqrKey,Integer> allQualityCounts = mResults.getCombinedQualityCounts();
 
-        final List<BqrRecord> records = convertToRecords(allQualityCounts);
-
-        // mSampleRecalibrationMap.put(sampleId, new BqrRecordMap(records));
+        List<BqrRecord> records = convertToRecords(allQualityCounts);
 
         // write results to file
         writeSampleData(sampleId, records);
@@ -246,8 +244,7 @@ public class BaseQualRecalibration
     {
         try
         {
-            final String tsvFile = mConfig.OutputDir + sampleId + "." + FILE_ID + TSV_EXTENSION;
-            RD_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
+            String tsvFile = BqrFile.generateFilename(mConfig.OutputDir, sampleId);
 
             BqrFile.write(tsvFile, records.stream().collect(Collectors.toList()));
 

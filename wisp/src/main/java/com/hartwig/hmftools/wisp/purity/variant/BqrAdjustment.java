@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.qual.BqrFile;
-import com.hartwig.hmftools.common.qual.BqrKey;
-import com.hartwig.hmftools.common.qual.BqrReadType;
-import com.hartwig.hmftools.common.qual.BqrRecord;
+import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.common.redux.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrReadType;
+import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 
 public class BqrAdjustment

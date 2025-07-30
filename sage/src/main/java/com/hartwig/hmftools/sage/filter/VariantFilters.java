@@ -55,7 +55,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
+import static com.hartwig.hmftools.common.redux.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.redux.JitterModelParams;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RepeatInfo;

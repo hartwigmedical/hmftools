@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.qual;
+package com.hartwig.hmftools.common.redux;
 
 import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.sequencing.UltimaConsensusType;

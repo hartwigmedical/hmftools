@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.jitter;
 
-import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
+import com.hartwig.hmftools.common.redux.JitterTableRow;
 
 public class JitterModelLoss
 {

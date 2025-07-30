@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.qual.BqrKey;
-import com.hartwig.hmftools.common.qual.BqrReadType;
-import com.hartwig.hmftools.common.qual.BqrRecord;
+import com.hartwig.hmftools.common.redux.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrReadType;
+import com.hartwig.hmftools.common.redux.BqrRecord;
 
 public class BqrRecordMap
 {

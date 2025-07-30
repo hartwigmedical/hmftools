@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.common.DuplicateFrequency.roundFrequency;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
@@ -123,11 +125,13 @@ public class Statistics
             String filename = config.formFilename("duplicate_freq");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("DuplicateReadCount\tFrequency");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("DuplicateReadCount").add("Frequency");
 
             if(config.UMIs.Enabled)
-                writer.write("\tDualStrandFrequency");
+                sj.add("DualStrandFrequency");
 
+            writer.write(sj.toString());
             writer.newLine();
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
@@ -137,11 +141,15 @@ public class Statistics
             {
                 DuplicateFrequency dupFreq = DuplicateFrequencies.get(frequency);
 
-                writer.write(format("%d\t%d", frequency, dupFreq.Frequency));
+                sj = new StringJoiner(TSV_DELIM);
+
+                sj.add(String.valueOf(frequency));
+                sj.add(String.valueOf(dupFreq.Frequency));
 
                 if(config.UMIs.Enabled)
-                    writer.write(format("\t%d", dupFreq.DualStrandFrequency));
+                    sj.add(String.valueOf(dupFreq.DualStrandFrequency));
 
+                writer.write(sj.toString());
                 writer.newLine();
             }
 

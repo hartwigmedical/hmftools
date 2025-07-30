@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.common.redux;
+
+import static com.hartwig.hmftools.common.redux.ReduxCommon.REDUX_FILE_ID;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +27,7 @@ public class JitterModelParamsFile
         microsatelliteSkew,
     }
 
-    private static String FILE_EXTENSION = ".jitter_params.tsv";
+    private static String FILE_EXTENSION = "." + REDUX_FILE_ID + ".jitter_params.tsv";
 
     public static String generateFilename(String basePath, String sample)
     {

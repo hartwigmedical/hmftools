@@ -21,15 +21,13 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
-import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
-import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTableFile;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParamsFile;
-import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
+import com.hartwig.hmftools.common.redux.JitterCountsTable;
+import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
+import com.hartwig.hmftools.common.redux.JitterModelParams;
+import com.hartwig.hmftools.common.redux.JitterModelParamsFile;
+import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.utils.RExecutor;
-
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SAMRecord;
 

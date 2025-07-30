@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.BASE_MISMATCH;
@@ -21,7 +21,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;

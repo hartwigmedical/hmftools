@@ -52,7 +52,7 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
-        mBqrProcessor = new BqrRegionReader(config.Sequencing, config.RefGenome, new BaseQualityResults(), bqr.regions());
+        mBqrProcessor = new BqrRegionReader(config.Sequencing, config.RefGenome, bqr.results(), bqr.regions());
 
         mRecomputeFragCoords = mReadDataWriter.enabled() && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse)
                 || (config.Sequencing == ILLUMINA && config.UMIs.Enabled));

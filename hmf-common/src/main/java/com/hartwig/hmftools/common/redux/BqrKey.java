@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.qual;
+package com.hartwig.hmftools.common.redux;
 
 import java.util.Arrays;
 import java.util.Objects;

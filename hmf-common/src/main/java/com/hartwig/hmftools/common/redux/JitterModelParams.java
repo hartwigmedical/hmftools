@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.common.redux;
 
 import com.hartwig.hmftools.common.sequencing.ConsensusType;
 

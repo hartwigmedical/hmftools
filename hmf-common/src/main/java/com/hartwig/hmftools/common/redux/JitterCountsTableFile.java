@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.common.basequal.jitter;
+package com.hartwig.hmftools.common.redux;
+
+import static com.hartwig.hmftools.common.redux.ReduxCommon.REDUX_FILE_ID;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +43,7 @@ public class JitterCountsTableFile
 	private static String COUNT_p9 = "count+9";
 	private static String COUNT_p10 = "count+10";
 
-	private static String FILE_EXTENSION = ".ms_table.tsv.gz";
+	private static String FILE_EXTENSION = "." + REDUX_FILE_ID + ".ms_table.tsv.gz";
 
 	private static int MAX_UNITS = 20;
 

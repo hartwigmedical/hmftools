@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
-import com.hartwig.hmftools.common.basequal.jitter.JitterTableRow;
+import com.hartwig.hmftools.common.redux.JitterCountsTable;
+import com.hartwig.hmftools.common.redux.JitterModelParams;
+import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
