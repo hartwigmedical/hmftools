@@ -66,6 +66,7 @@ import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
+import com.hartwig.hmftools.purple.region.ObservedRegionFile;
 import com.hartwig.hmftools.purple.segment.Segmentation;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
@@ -355,6 +356,14 @@ public class PurpleApplication
         }
 
         List<DriverSourceData> driverSourceData = Lists.newArrayList();
+
+        if (mConfig.TargetRegionsMode)
+        {
+            TargetRegionsCopyNumbers targetRegionsCopyNumbers = new TargetRegionsCopyNumbers(mReferenceData.TargetRegions, sampleData.Cobalt.Ratios, mReferenceData.RefGenVersion);
+            List<TargetRegionsCopyNumber> copyNumberData = targetRegionsCopyNumbers.copyNumbersData();
+            String fileName = TargetRegionsCopyNumberFile.generateFilename(mConfig.OutputDir, tumorId);
+            TargetRegionsCopyNumberFile.write(fileName, copyNumberData);
+        }
 
         if(mConfig.RunDrivers)
         {

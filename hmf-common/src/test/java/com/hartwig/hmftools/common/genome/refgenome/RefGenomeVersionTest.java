@@ -5,10 +5,19 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+
 import org.junit.Test;
 
 public class RefGenomeVersionTest
 {
+    @Test
+    public void versionedChromosomeTest()
+    {
+        assertEquals("19", V37.versionedChromosome(HumanChromosome._19));
+        assertEquals("chr19", V38.versionedChromosome(HumanChromosome._19));
+    }
+
     @Test
     public void canVersionChromosomes()
     {

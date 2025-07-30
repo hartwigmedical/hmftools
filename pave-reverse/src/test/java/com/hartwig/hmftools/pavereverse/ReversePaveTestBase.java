@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.hartwig.hmftools.common.utils.EnsemblMini;
 import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcid;
 import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSpecification;
@@ -38,16 +39,7 @@ public class ReversePaveTestBase
 
     public ReversePaveTestBase()
     {
-        URL resourceUrl = getClass().getClassLoader().getResource("ensembl_mini");
-        try
-        {
-            assert resourceUrl != null;
-            ensemblDataDir = new File(resourceUrl.toURI());
-        }
-        catch(URISyntaxException e)
-        {
-            throw new RuntimeException(e);
-        }
+        ensemblDataDir = EnsemblMini.ensemblMiniDataDir();
         reversePave = new ReversePave(ensemblDataDir, RefGenomeVersion.V38, genome);
     }
 

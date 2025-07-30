@@ -1,19 +1,16 @@
 package com.hartwig.hmftools.common.region;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.checkMergeOverlaps;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,99 +40,91 @@ public final class BedFileReader
 
     public static List<ChrBaseRegion> loadBedFile(final String filename, boolean checkSortedMerged) throws Exception
     {
-        BufferedReader reader = createBufferedReader(filename);
-
-        List<String> lines = Lists.newArrayList();
-        String line = null;
-
-        while((line = reader.readLine()) != null)
-        {
-            lines.add(line);
-        }
-
-        List<ChrBaseRegion> regions = loadBedFile(lines, checkSortedMerged);
-        return regions;
+        List<String> lines = FileWriterUtils.readLines(filename);
+        return loadBedFile(lines, checkSortedMerged);
     }
 
-    public static List<ChrBaseRegion> loadBedFile(final List<String> lines) throws Exception
+    public static List<ChrBaseRegion> loadBedFile(final List<String> lines)
     {
         return loadBedFile(lines, true);
     }
 
-    public static List<ChrBaseRegion> loadBedFile(final List<String> lines, boolean checkSortedMerged) throws Exception
+    public static List<ChrBaseRegion> loadBedFile(final List<String> lines, boolean checkSortedMerged)
+    {
+        return loadBedFile(lines, checkSortedMerged, BedLine.factory());
+    }
+
+    public static List<ChrBaseRegion> loadBedFile(final List<String> lines, boolean checkSortedMerged,
+            Function<String, ChrBaseRegion> factory)
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();
 
         for(String line : lines)
         {
             if(line.contains(FLD_CHROMOSOME))
-                continue;
-
-            final String[] values = line.split(TSV_DELIM, -1);
-
-            if(values.length < 3)
             {
-                throw new Exception("invalid slice BED entry: " + line);
+                continue;
             }
-
-            String chromosome = values[0];
-            int posStart = Integer.parseInt(values[1]) + 1;
-            int posEnd = Integer.parseInt(values[2]);
-            regions.add(new ChrBaseRegion(chromosome, posStart, posEnd));
+            regions.add(factory.apply(line));
         }
 
         if(checkSortedMerged)
+        {
             ChrBaseRegion.checkMergeOverlaps(regions, true);
+        }
 
         return regions;
     }
 
-    public static Map<Chromosome,List<BaseRegion>> loadBedFileChrMap(final String filename)
+    public static Map<Chromosome, List<BaseRegion>> loadBedFileChrMap(final String filename)
     {
         return loadBedFileChrMap(filename, false);
     }
 
-    public static Map<Chromosome,List<BaseRegion>> loadBedFileChrMap(final String filename, boolean checkSortedMerged)
+    public static Map<Chromosome, List<BaseRegion>> loadBedFileChrMap(final String filename, boolean checkSortedMerged)
     {
-        final Map<Chromosome,List<BaseRegion>> chrRegionsMap = Maps.newHashMap();
+        return loadBedFileChrMap(filename, checkSortedMerged, BedLine.factory(), chrBaseRegion -> new BaseRegion(chrBaseRegion.start(), chrBaseRegion.end()));
+    }
+
+    public static <R extends BaseRegion, T extends ChrBaseRegion> Map<Chromosome, List<R>> loadBedFileChrMap(final String filename,
+            boolean checkSortedMerged, Function<String, T> factory, Function<T, R> converter)
+    {
+        final Map<Chromosome, List<R>> chrRegionsMap = Maps.newHashMap();
 
         try
         {
-            BufferedReader fileReader = createBufferedReader(filename);
+            List<String> lines = FileWriterUtils.readLines(filename);
 
-            String line = "";
-
-            List<BaseRegion> chrRegions = null;
+            List<R> chrRegions = null;
             Chromosome currentChr = null;
 
-            while((line = fileReader.readLine()) != null)
+            for(String line : lines)
             {
                 if(line.contains(FLD_CHROMOSOME))
-                    continue;
-
-                final String[] values = line.split(TSV_DELIM, -1);
-
-                String chrStr = values[0];
-
-                if(!HumanChromosome.contains(chrStr))
-                    continue;
-
-                Chromosome chromosome = HumanChromosome.fromString(chrStr);
-                int posStart = Integer.parseInt(values[1]) + 1; // as per convention
-                int posEnd = Integer.parseInt(values[2]);
-
-                if(currentChr != chromosome)
                 {
-                    currentChr = chromosome;
-                    chrRegions = Lists.newArrayList();
-                    chrRegionsMap.put(chromosome, chrRegions);
+                    continue;
+                }
+                T chrRegion = factory.apply(line);
+                if(chrRegion == null)
+                {
+                    continue;
                 }
 
-                chrRegions.add(new BaseRegion(posStart, posEnd));
+                if(currentChr != chrRegion.humanChromosome())
+                {
+                    currentChr = chrRegion.humanChromosome();
+                    chrRegions = Lists.newArrayList();
+                    chrRegionsMap.put(currentChr, chrRegions);
+                }
+
+                assert chrRegions != null;
+                chrRegions.add(converter.apply(chrRegion));
             }
 
             if(checkSortedMerged)
-                chrRegionsMap.values().forEach(x -> checkMergeOverlaps(x));
+            {
+                chrRegionsMap.values().forEach(BaseRegion::checkMergeOverlaps);
+            }
         }
         catch(IOException e)
         {

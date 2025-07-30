@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -53,6 +53,11 @@ public enum RefGenomeVersion
     public boolean is38 () { return !mIs37; }
 
     public String identifier() { return mIdentifier; }
+
+    public String versionedChromosome(@NotNull Chromosome chromosome)
+    {
+        return versionedChromosome(chromosome.toString());
+    }
 
     @NotNull
     public String versionedChromosome(@NotNull String chromosome)
