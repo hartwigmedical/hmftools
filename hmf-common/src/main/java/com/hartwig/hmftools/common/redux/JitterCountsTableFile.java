@@ -43,7 +43,7 @@ public class JitterCountsTableFile
 	private static String COUNT_p9 = "count+9";
 	private static String COUNT_p10 = "count+10";
 
-	private static String FILE_EXTENSION = "." + REDUX_FILE_ID + ".ms_table.tsv.gz";
+	private static String FILE_EXTENSION = REDUX_FILE_ID + ".ms_table.tsv.gz";
 
 	private static int MAX_UNITS = 20;
 

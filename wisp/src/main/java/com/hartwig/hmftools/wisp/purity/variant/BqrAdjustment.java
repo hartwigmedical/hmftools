@@ -2,7 +2,6 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_ERROR_RATE;
@@ -96,7 +95,7 @@ public class BqrAdjustment
         else
             bqrFileDir = mConfig.SomaticDir;
 
-        String bqrFilename = generateBqrFilename(bqrFileDir, sampleId);
+        String bqrFilename = BqrFile.generateFilename(bqrFileDir, sampleId);
 
         if(!Files.exists(Paths.get(bqrFilename)))
         {

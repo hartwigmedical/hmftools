@@ -23,7 +23,7 @@ public final class BqrFile
 {
     private static final Logger LOGGER = LogManager.getLogger(BqrFile.class);
 
-    private static String FILE_EXTENSION = "." + REDUX_FILE_ID + ".bqr.tsv";
+    private static String FILE_EXTENSION = REDUX_FILE_ID + ".bqr.tsv";
 
     public static String generateFilename(String basePath, String sample)
     {
