@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.FastBamWriter;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
 import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.redux.ReduxConfig;
@@ -44,10 +45,10 @@ public class FileWriterCache
 
     private final BamWriterSync mFullUnmappedWriter;
 
-    private boolean mHasWrittenFirstSorted;
     private String mFinalBamFilename;
 
     private final JitterAnalyser mJitterAnalyser;
+    private final BaseQualRecalibration mBaseQualRecalibration;
 
     private static final String SORTED_ID = "sorted";
 
@@ -56,16 +57,16 @@ public class FileWriterCache
     private static final String UNMAPPING_SORTED = "unmapping_sorted";
     private static final String FULL_UNMAPPED = "full_unmapped";
 
-    public FileWriterCache(final ReduxConfig config, @Nullable final JitterAnalyser jitterAnalyser)
+    public FileWriterCache(final ReduxConfig config, @Nullable final JitterAnalyser jitterAnalyser, final BaseQualRecalibration bqr)
     {
         mConfig = config;
         mJitterAnalyser = jitterAnalyser;
+        mBaseQualRecalibration = bqr;
 
         mReadDataWriter = new ReadDataWriter(mConfig);
 
         mPartitions = Lists.newArrayList();
         mBamWriters = Lists.newArrayList();
-        mHasWrittenFirstSorted = false;
 
         mCompletedPartitionsQueue = new LinkedBlockingQueue<>();
         mCompletedPartitionCount = 0;
@@ -73,7 +74,7 @@ public class FileWriterCache
         // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
         if(!mConfig.WriteBam)
         {
-            BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter, jitterAnalyser);
+            BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter, jitterAnalyser, mBaseQualRecalibration);
             mBamWriters.add(bamWriter);
 
             mUnmappingWriter = (BamWriterSync)bamWriter;
@@ -115,7 +116,6 @@ public class FileWriterCache
     public BamWriterSync getUnmappingBamWriter() { return mUnmappingWriter; }
     public BamWriterSync getFullUnmappedBamWriter() { return mFullUnmappedWriter; }
 
-    public ReadDataWriter readDataWriter() { return mReadDataWriter; }
     public List<BamWriter> bamWriters() { return mBamWriters; }
 
     public String unmappedSortedBamFilename() { return mUnmappingSortedBamFilename; }
@@ -162,11 +162,11 @@ public class FileWriterCache
 
         if(synchronousUnsorted)
         {
-            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, mBaseQualRecalibration);
         }
         else
         {
-            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
+            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, mBaseQualRecalibration);
         }
 
         mBamWriters.add(bamWriter);

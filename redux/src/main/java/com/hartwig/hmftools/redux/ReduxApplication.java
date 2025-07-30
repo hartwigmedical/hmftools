@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
+import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
 import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.perf.TaskQueue;
@@ -61,7 +62,9 @@ public class ReduxApplication
         if(mConfig.JitterConfig != null)
             jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig);
 
-        FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
+        BaseQualRecalibration baseQualRecalibration = new BaseQualRecalibration(mConfig);
+
+        FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser, baseQualRecalibration);
         UnmapStats unmapStats = mConfig.UnmapRegions.stats();
 
         if(mConfig.UnmapRegions.enabled())
@@ -122,6 +125,8 @@ public class ReduxApplication
                 System.exit(1);
             }
         }
+
+        baseQualRecalibration.finalise();
 
         if(mConfig.JitterMsiOnly)
         {

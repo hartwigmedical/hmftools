@@ -147,7 +147,7 @@ public class PartitionReader
 
         setUnmappedRegions();
 
-        mBamWriter.initialiseRegion(region.Chromosome, region.start());
+        mBamWriter.initialiseRegion(region);
     }
 
     public void processRegion()
@@ -166,7 +166,7 @@ public class PartitionReader
         // post-slice clean-up
         processReadGroups(mReadCache.evictAll());
 
-        mBamWriter.onRegionComplete();
+        mBamWriter.regionComplete();
 
         Level logLevel = isAltContigRegion() ? TRACE : DEBUG;
         RD_LOGGER.log(logLevel, "region({}) complete, processed {} reads", mCurrentRegion, mProcessedReads);
@@ -243,7 +243,7 @@ public class PartitionReader
 
         if(mConfig.JitterMsiOnly)
         {
-            mBamWriter.processJitterRead(read);
+            mBamWriter.captureReadInfo(read);
             return;
         }
 

@@ -10,6 +10,10 @@ import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
+import com.hartwig.hmftools.redux.bqr.BaseQualityResults;
+import com.hartwig.hmftools.redux.bqr.BqrRegionReader;
 import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
@@ -30,7 +34,10 @@ public abstract class BamWriter
     protected final String mFilename;
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
+
     private final JitterAnalyser mJitterAnalyser;
+    private final BqrRegionReader mBqrProcessor;
+
     private final boolean mRecomputeFragCoords;
 
     protected final AtomicLong mNonConsensusReadCount;
@@ -38,22 +45,23 @@ public abstract class BamWriter
 
     public BamWriter(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser)
+            @Nullable final JitterAnalyser jitterAnalyser, final BaseQualRecalibration bqr)
     {
         mFilename = filename;
         mConfig = config;
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
-        mRecomputeFragCoords = mReadDataWriter.enabled() && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse) || (
-                config.Sequencing == ILLUMINA && config.UMIs.Enabled));
+        mBqrProcessor = new BqrRegionReader(config.Sequencing, config.RefGenome, new BaseQualityResults(), bqr.regions());
+
+        mRecomputeFragCoords = mReadDataWriter.enabled() && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse)
+                || (config.Sequencing == ILLUMINA && config.UMIs.Enabled));
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
     }
 
     public String filename() { return mFilename; }
-    public SAMFileWriter samFileWriter() { return mSamFileWriter; }
 
     public long nonConsensusWriteCount() { return mNonConsensusReadCount.get(); }
     public long consensusWriteCount() { return mConsensusReadCount.get(); }
@@ -62,8 +70,24 @@ public abstract class BamWriter
 
     public abstract boolean isSorted();
 
+    public void initialiseRegion(final ChrBaseRegion region)
+    {
+        // initialise BQR tracking
+        mBqrProcessor.initialise(region);
+
+        onRegionInitialised(region.Chromosome, region.start());
+    }
+
+    public void regionComplete()
+    {
+        // flush BQR results
+        mBqrProcessor.onRegionComplete();
+
+        onRegionComplete();
+    }
+
     // methods to guide the sorted BAM writer
-    public abstract void initialiseRegion(final String chromosome, int startPosition);
+    public abstract void onRegionInitialised(final String chromosome, int startPosition);
     public abstract void setBoundaryPosition(int position, boolean isLower);
     public abstract void onRegionComplete();
 
@@ -137,16 +161,17 @@ public abstract class BamWriter
 
     protected final void processRecord(final SAMRecord read)
     {
-        processJitterRead(read);
+        captureReadInfo(read);
         writeRecord(read);
     }
 
-    public void processJitterRead(final SAMRecord read)
+    public void captureReadInfo(final SAMRecord read)
     {
         if(mJitterAnalyser != null && mJitterAnalyser.bamSlicerFilter().passesFilters(read))
-        {
             mJitterAnalyser.processRead(read);
-        }
+
+        if(mBqrProcessor.isActive())
+            mBqrProcessor.processRecord(read);
     }
 
     public abstract void close();
