@@ -312,18 +312,14 @@ below output. Bases with 0 fragment support not shown, and soft-clipped bases ar
 7	792	T	1034
 8	793	C	1033
 9	803	A	1048
-
 ...
-
 286	1167	A	3682
 287	1181	G	3120	A	522	AATAAGCAAAACAAACACACAA	55
 288	1179	A	3412	G	289
-
 ...
 ```
 
-In subsequent steps, sites with more than 1 nucleotide candidate are deemed **heterozygous**, and sites with only 1 are considered to be
-**homozygous** across all 6 alleles.
+Positions with more than 1 amino acid candidate are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
 
 Construction of the nucleotide matrix has several steps / conditions which are described in the below subsections.
 
@@ -374,19 +370,32 @@ probe binding affinity.
 
 #### Amino acid matrix
 
-LILAC also constructs a matrix of amino acid candidates by translating the nucleotide matrix, with fragment support being the sum of 
-nucleotide fragment support per codon.
+Similar to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates. Amino acids with 0 fragment support not shown, 
+and amino acids derived from soft-clipped bases are represented as multi-character strings.
 
-##### Exon boundary enrichment
+```
+0	749	M	971
+1	755	A	752	R	164	L	72
+2	776	V	1009
+3	792	M	1019	T	14
+...
+94	1103	S	1542	T	1090	A	936
+95	1155	Q	3556	QISKTNTQ	55
+96	1178	T	3385	A	285
+...
+```
 
-Exon boundary 'enrichment' is applied to exons 1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes)
+Positions with more than 1 amino acid candidate are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
+
+The same steps used in nucleotide matrix construction are used in amino acid matrix construction, namely: 
+- [Calculating shared fragment support across genes](#shared-fragment-support-across-genes)
+- [Indel handling](#indel-handling)
+- [Filtering of amino acid candidates](#filtering-for-nucleotide-candidates)
+
+An addition step, exon boundary 'enrichment', is applied to exons 1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes)
 (i.e. before nucleotide index 894, amino acid index 298). For codons crossing these exon boundaries, any associated fragment is enriched 
-with *homozygous* nucleotides on the other side of the exon boundary so that an amino acid can constructed.
+with **homozygous** nucleotide candidates on the other side of the exon boundary so that an amino acid can constructed.
 
-##### Filtering for amino acid candidates
-
-Amino acid candidates are filtered in the same way as for the [nucleotide matrix](#filtering-for-nucleotide-candidates), i.e.
-requiring those with fragment support greater or equal to `minHiQualFragmentSupport` and `minOverallFragmentSupport`.
 
 #### Elimination based on amino acid matrix
 
@@ -396,32 +405,39 @@ possible sequences of amino acid matrix are eliminated.
 
 #### Elimination based on phased haplotypes
 
-In this step, we phase the heterozygous amino acid locations and eliminate any alleles that are not supported by phased locations with 
-sufficient overall shared coverage.
+In this step, we identify 'phased haplotypes', consecutive **heterozygous** amino acids ('haplotype') supported by contiguously
+overlapping fragments ('phased'). We eliminate any alleles whose (sub)sequences do not match with any identified phased haplotype.
 
-First, we find phased evidence of each consecutive pair of heterozygous codons and record the haplotypes of all fragments containing both 
-codons. This is performed separately for each of HLA-A, HLA-B and HLA-C to account for differences in exon boundaries. 
-
-Fragments which overlap amino acid 338 onwards will only be assignable to a subset of the alleles, since the exon boundaries differ after 
-this amino acid.
-
-The points are only phased if the total coverage is at least 7 fragments per allele (`min_fragments_per_allele`) included in the subset at 
-that location (i.e. between 14 and 42 fragments with shared coverage depending on the amino acid location). A phased haplotype with only 1 
-supporting fragment will be removed if the total fragments supporting the pair is 40 or more (`min_fragments_to_remove_single`) as it is 
-assumed to be a sequencing error.
+First, we find phased evidence of each consecutive **pair** of heterozygous amino acids and record the haplotypes of all fragments 
+containing both amino acids:
+- This is performed separately for each of HLA-A, HLA-B and HLA-C genes to account for differences in exon 
+boundaries. Fragments overlapping amino acid index 298 (i.e. [nucleotide index 894](#shared-fragment-support-across-genes)) onwards will 
+only be assignable to a subset of the alleles, since the exon boundaries differ after this amino acid.
+- The points are only phased together if the total coverage is at least 7 fragments per allele (`min_fragments_per_allele`) included in the 
+subset at that location . This effectively means between 14 fragments (for 2 alleles) and fragments 42 (for 6 alleles) with shared 
+coverage depending on the amino acid location.
+- A phased haplotype with only 1 supporting fragment will be removed if the total fragments supporting the pair is 
+40 or more (`min_fragments_to_remove_single`) as it is assumed to be a sequencing error.
 
 We then iteratively choose the phased haplotype with the most support and perform the following routine:
-- Find other phased evidence that overlaps it.
-- Find the minimum number of codon locations required to uniquely identify each phased evidence, eg, if the left evidence has haplotypes 
-[SP, ST] you only need the last codon but if the right evidence has haplotypes [PD, TD, TS] you would need both codon locations.
-- Find evidence of fragments that contain all the required codons. As with the paired evidence, there must be at least 7 fragments per 
+
+1) Find other phased evidence that overlaps it.
+
+2) Find the minimum number of amino acid locations required to uniquely identify each phased evidence. For example, if the left evidence has 
+haplotypes [SP, ST] you only need the last amino acid but if the right evidence has haplotypes [PD, TD, TS] you would need both amino acid 
+locations.
+
+3) Find evidence of fragments that contain all the required amino acids. As with the paired evidence, there must be at least 7 fragments per 
 allele supporting the pair (`min_fragments_per_allele`) and a haplotype with only 1 supporting fragment will be removed if the total 
 fragments supporting the pair is 40 or more (`min_fragments_to_remove_single`).
-- Check that the new overlapping evidence is consistent with the existing evidence.
-- Merge the new evidence with the existing paired evidence.
-- Replace the two pieces of used evidence with the new merged evidence.
 
-Once complete, we can eliminate any alleles that do not match the phased evidence. 
+4) Check that the new overlapping evidence is consistent with the existing evidence.
+
+5) Merge the new evidence with the existing paired evidence.
+
+6) Replace the two pieces of used evidence with the new merged evidence.
+
+Once complete, we eliminate any alleles that do not match the phased evidence. 
 
 #### Excluding HLA-Y pseudogene fragments
 HLA-Y is a pseudogene that is highly similar to HLA-A, but is not present in the human ref genome, and is found in approximately 17% of the
@@ -437,18 +453,14 @@ The below steps are performed to further eliminate alleles, while preventing ina
 1) Identify high confidence 2-digit allele groups (**>2%** unique fragment support). Discard any 4-digit alleles not belonging to the high 
 confidence 2-digit allele groups.
 
-
 2) Identify low confidence 2-digit allele groups (**>0.1%** unique fragment support, or >3.5% of total fragment support). Recover maximally 
 two common 4-digit alleles per HLA gene from each group. A common allele is defined as having 
 (>0.0001 [population frequency](#normalising-frequencies)). 
 
-
 3) For each remaining 4-digit allele that is 1) not common or 2) has wildcards (`*`) in its sequence, determine the 2-digit allele group and 
 recover common 4-digit alleles belonging to this group.
 
-
 4) Recover `C*04:09N`, the most common HLA allele with a frameshift variant leading to a stop loss
-
 
 5) Identify high confidence 4-digit alleles (**>1%** unique fragment support). These alleles **must** be a part of the allele combinations
 considered in the evidence phase.
