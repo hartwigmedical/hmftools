@@ -205,8 +205,8 @@ LILAC constructs its own sequence files using the nucleotide multiple sequence a
 > [!NOTE]
 > This is currently performed using a Python script; to be implemented in Java in `GenerateReferenceSequences`
 
-Wildcards (`*`) are present in some allele nucleotide sequences (e.g. due to incomplete sequencing). The nucleotide sequence of
-wildcard sequences are inferred by first generating a consensus sequence per 2-digit allele group.
+Wildcards (`*`) are present in some allele nucleotide sequences particularly in exon 1 and exons 4-8 (e.g. due to incomplete sequencing). 
+The nucleotide sequence of wildcard sequences are inferred by first generating a consensus sequence per 2-digit allele group.
 
 First we determine the representative set of 4-digit alleles. If a 4-digit allele is only represented by its 6-digit (synonymous variants)
 or 8-digit (intronic variants) alleles we greedily select the first (e.g. for `A*34:01` we select `A*34:01:01:01` from 
@@ -467,49 +467,103 @@ considered in the evidence phase.
 
 
 ### Evidence phase
-In the evidence phase, LILAC evaluates all possible ‘complexes’ (ie. combinations) of remaining alleles that satisfy the following conditions
-- There must be either 1 (homozygous) or 2 (heterozygous) alleles belonging to each gene
-- At least 1 allele must match each uniquely supported 2 digit type
 
-For each complex, LILAC counts the number of fragments that can be aligned exactly to at least one allele in the complex at all 
-heterozygous locations.  If a fragment has an amino acid which does not match ANY of the amino acid candidates at a heterozygous location, 
-but has at least 1 nucleotide with base qual<min(medianBaseQuality,30), then the amino acid is deemed to match all amino acid candidates. 
-For exon boundaries only exact nucleotide matches are permitted. Any fragments that can be aligned to 2 or more alleles are apportioned 
-equally between the alleles and counted as shared fragments.  
+From the remaining 4-digit alleles, all possible 'complexes' (i.e. candidate allele combinations) are evaluated, which each complex 
+requiring:
+- 1 or 2 alleles assigned per gene (as each gene can be homozygous or heterozygous)
+- At least 1 allele must match each uniquely supported 2-digit allele group
 
-Since many allele definitions have undetermined (‘wildcard’) sequences, particularly in exon 1 and exons 4-8, these require special 
-treatment so that these wildcard alleles are neither unfairly favoured or discriminated against in the fitting. To achieve this balance, 
-fragments which don’t match an exact sequence in any candidate allele are dropped altogether from consideration such that random sequencing 
-errors or other artefacts overlapping wildcard regions cannot contribute to the complex count for wildcard containing alleles, but any 
-remaining fragments are considered to match an allele if they match all non wildcard sequences (i.e. any amino acid is deemed a match to 
-a wildcard).   
+#### Determining fragment support per complex
 
-Complexes are scored based on the total fragments that can be aligned to at least one allele in the complex, with a small penalty applied 
-base on allele frequency in the population, a penalty for each allele included that was eliminated but subsequently recovered, and a bonus 
-to boost scores of complexes with homozygous allele, and a penalty for solutions with wildcard characters which may cause spurious matches. 
-The final score is given by:
+For each complex, LILAC counts the number of fragments that can be aligned exactly to at least one allele in the complex at all heterozygous 
+locations (i.e. where the amino acids differ between alleles).
+- When checking if a fragment can be aligned to an allele, if a fragment has an amino acid which does not match **any** of the amino acid
+candidates at a heterozygous position, but has at least 1 nucleotide with base quality >`min(30, median_base_quality)`, then the amino 
+acid is deemed to match all amino acid candidates.
+- Any fragments that can be aligned to multiple alleles are apportioned equally between the alleles and counted as shared fragments.
+- For exon boundaries only exact nucleotide matches are permitted. 
+
+Wildcards in allele sequences are handled as below:
+- Fragments which don't match the exact (sub)sequence of any candidate allele are dropped altogether from consideration
+- For each remaining fragments, a fragment is considered to support an allele if the fragment sequence matches all non-wildcard sequences 
+of that allele (i.e. any amino acid is deemed a match to a wildcard)
+
+#### Scoring
+
+Each complex gets an initial score `total_coverage` = sum of the aligned fragments of every allele in the complex.
+
+`total_coverage` is penalised based on several factors:
+- `frequency_penalty`: penalise having rare alleles (see: [Frequency penalty](#frequency-penalty))
+- `solution_complexity_penalty`: penalise having more alleles in the complex (see: [Solution complexity penalty](#solution-complexity-penalty))
+- `recovery_penalty`: penalise having recovered alleles (see: [Recovery penalty](#recovery-penalty))
+
+Score for a complex is calculated like so:
+```
+score = total_coverage - frequency_penalty - solution_complexity_penalty - recovery_penalty
+```
+
+Two performance optimisations are made at this stage of scoring:
+- If there are predicted to be more than 1 million complexes, then the evidence phase is first performed individually for complexes of 2
+alleles per gene to find the top candidates for each gene. LILAC retains only the top 5 pairs including each individual allele candidate and 
+then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained. The evidence phase 
+is then subsequently run using this reduced set of candidate alleles.
+- Complexes are scored with the number of fragments is downsampled to a maximum of 10k for the evaluation
+
+Then, complexes within `top_score * 0.005` (`top_score_threshold`) are rescored with all fragments (i.e. without downsampling) to calculate 
+the final complex scores. 
+
+If 2 or more complexes have the exact same score, the solution with the lowest alphabetical 4-digit alleles is chosen.
+
+##### Frequency penalty
+
+Given a complex with 3 alleles, one of which does not have [frequency data](#allele-population-frequencies):  
 
 ```
-Complex Score = AlignedFragments + FreqPenalty + HomBonus + RecoveryPenalty + Wildcard penalty
-where
-   FreqPenalty = 0.0018 * SUM[max(log10(Frequency),1e-4)] * AlignedFragments
-   HomBonus = 0.0036 * (# of Homozygous alleles) * Fragments
-   RecoveryPenalty = 0.0055 * (# of Recovered alleles) * Fragments
-   WildcardPenalty = 0.000015 * (# of wildcard characters in alleles) * Fragments
+frequencies_raw = [0.112, 0.019, NaN]
 ```
 
-If 2 complexes are precisely equally scored, then the solution with the lowest alphabetical 4 digit allele types is chosen. 
+Fill the missing frequencies with `min_population_frequency` = 0.0001
 
-The matching unique, apportioned shared, and wildcard (in rare cases where the full allele is not present in the IMGT/HLA database) support 
-for each allele is recorded in both tumor and normal.
+```
+frequencies_filled = [0.112, 0.019, 0.0001]
+```
 
-2 further performance improvements are made at this step:
-- the number of fragments is downsampled to a maximum of 10k for the evaluation.
-- if there are predicted to be more than 1 million complexes, then the evidence phase is first performed individually for complexes of 2 
-alleles per gene to find the top candidates for each of HLA-A, HLA-B & HLA-C. 
-LILAC retains only the top 5 pairs including each individual allele candidate and then chooses the first 10 unique alleles appearing in the 
-ranked list of pairs, with any common alleles also retained. The evidence phase is then subsequently run using this reduced set of 
-candidate alleles. 
+Calculate the penalty:
+``` 
+sum_log_frequency = sum(-log10(frequencies_filled))
+frequency_penalty = sum_log_frequency * frequency_penalty_weight * total_coverage
+                  = sum_log_frequency * 0.009 * total_coverage
+```
+
+##### Solution complexity penalty
+
+Consider a complex with 3 allele sequences:
+
+| exon    | 1    | 2    | 3    | 4    | 5    | 6    | 7    |
+|---------|------|------|------|------|------|------|------|
+| allele1 | MAVM | SHSM | SHTV | APKT | LSSQ | RKGG | SDSA |
+| allele2 | MRVT | SHSM | SHII | PPKT | LSSQ | GKGG | SDSA |
+| allele3 | MRVM | SHSM | SHTL | HPKT | LSSQ | GKGG | SNSA |
+
+The solution complexity is the total number of unique sequences per exon:
+
+```
+unique_sequences_per_exon = [ 3, 1, 3, 3, 1, 2, 2 ]
+solution_complexity = sum(unique_sequences_per_exon)
+solution_complexity_penalty = solution_complexity * solution_complexity_penalty_weight * total_coverage
+                            = solution_complexity * 0.002 * total_coverage 
+```
+
+##### Recovery penalty 
+
+>[!NOTE]
+> The recovery penalty is currently turned off
+
+Recovery penalty is calculated like so:
+```
+recovery_penalty = recover_alleles_count * recovery_penalty_weight * total_coverage
+                 = recover_alleles_count * 0 * total_coverage
+```
 
 ### Tumor and RNA status of alleles
 #### Tumor allele specific copy number
