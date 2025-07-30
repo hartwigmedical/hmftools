@@ -58,6 +58,9 @@ public class ProbeQualityProfiler
     private static final int QUALITY_SCORE_PRECISION = 2;
     private static final int QUALITY_SCORE_PRECISION_VERBOSE = 6;
 
+    private static final String BWA_INDEX_IMAGE_FILE_CONFIG = "bwa_index_image";
+    private static final String BWA_INDEX_IMAGE_FILE_DESC = "Reference genome BWA-MEM2 index GATK image file";
+
     private static final String BASE_WINDOW_LENGTH_CONFIG = "window_length";
     private static final String BASE_WINDOW_LENGTH_DESC = "Base window length for analysis";
     private static final int BASE_WINDOW_LENGTH_DEFAULT = 40;
@@ -96,6 +99,10 @@ public class ProbeQualityProfiler
         String refGenomePath = configBuilder.getValue(REF_GENOME);
         LOGGER.debug("Ref genome: {}", refGenomePath);
         RefGenomeSource refGenome = loadRefGenome(refGenomePath);
+        if(refGenome == null)
+        {
+            throw new RuntimeException("Failed to load reference genome");
+        }
 
         SpecificRegions specificRegions = SpecificRegions.from(configBuilder);
         if(specificRegions == null)
@@ -143,7 +150,8 @@ public class ProbeQualityProfiler
         }
         LOGGER.debug("Threads: {}", threads);
 
-        String bwaIndexImageFile = refGenomePath + ".img";
+        String bwaIndexImageFile = configBuilder.getValue(BWA_INDEX_IMAGE_FILE_CONFIG, refGenomePath + ".img");
+        LOGGER.debug("BWA-MEM2 index image: {}", bwaIndexImageFile);
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
         Supplier<BwaMemAligner> alignerFactory = () -> createAligner(bwaIndexImageFile, threads);
 
@@ -312,6 +320,8 @@ public class ProbeQualityProfiler
 
         addRefGenomeFile(configBuilder, true);
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
+
+        configBuilder.addPath(BWA_INDEX_IMAGE_FILE_CONFIG, false, BWA_INDEX_IMAGE_FILE_DESC);
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
