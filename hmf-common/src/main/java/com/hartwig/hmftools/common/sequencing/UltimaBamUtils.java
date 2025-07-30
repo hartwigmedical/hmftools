@@ -10,8 +10,8 @@ public final class UltimaBamUtils
     public static final byte ULTIMA_MAX_QUAL = 40;
     public static final byte ULTIMA_INVALID_QUAL = -1;
 
-    public static final String TP_TAG = "tp";
-    public static final String T0_TAG = "t0";
+    public static final String ULTIMA_TP_TAG = "tp";
+    public static final String ULTIMA_T0_TAG = "t0";
 
     private static final String PPM_STRAND_AS = "as";
     private static final String PPM_STRAND_TS = "ts";
@@ -27,12 +27,12 @@ public final class UltimaBamUtils
 
     public static byte[] extractTpValues(final SAMRecord record)
     {
-        return record.getByteArrayAttribute(TP_TAG);
+        return record.getByteArrayAttribute(ULTIMA_TP_TAG);
     }
 
     public static short[] extractT0Values(final SAMRecord record)
     {
-        String strValue = record.getStringAttribute(T0_TAG);
+        String strValue = record.getStringAttribute(ULTIMA_T0_TAG);
         short[] results = new short[record.getBaseQualities().length];
         return results;
     }

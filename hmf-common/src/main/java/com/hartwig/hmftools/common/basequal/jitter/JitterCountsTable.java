@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +60,7 @@ public class JitterCountsTable
 
         String getRepeatUnit() { return RepeatUnit; }
 
-        ConsensusType getConsensusType() { return ConsensusType; }
+        com.hartwig.hmftools.common.sequencing.ConsensusType getConsensusType() { return ConsensusType; }
     }
 
     public final String RepeatUnit;

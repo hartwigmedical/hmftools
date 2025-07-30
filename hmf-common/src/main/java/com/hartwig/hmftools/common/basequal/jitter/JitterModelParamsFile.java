@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 

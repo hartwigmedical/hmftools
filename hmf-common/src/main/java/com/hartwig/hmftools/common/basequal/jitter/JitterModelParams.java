@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
+
 public class JitterModelParams
 {
     public final String RepeatUnit;
-    public final ConsensusType ConsensusType;
+    public final com.hartwig.hmftools.common.sequencing.ConsensusType ConsensusType;
     public final double OptimalScaleRepeat4;
     public final double OptimalScaleRepeat5;
     public final double OptimalScaleRepeat6;

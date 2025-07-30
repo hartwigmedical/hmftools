@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.apache.commons.lang3.tuple.Pair;

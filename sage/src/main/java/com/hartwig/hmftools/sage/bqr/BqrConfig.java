@@ -2,9 +2,7 @@ package com.hartwig.hmftools.sage.bqr;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MIN_MAP_QUAL;
 
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.SageConstants;
 
 public class BqrConfig

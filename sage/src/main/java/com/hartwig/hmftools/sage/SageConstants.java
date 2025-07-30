@@ -1,11 +1,5 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
-
-import java.util.List;
-
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
 public class SageConstants

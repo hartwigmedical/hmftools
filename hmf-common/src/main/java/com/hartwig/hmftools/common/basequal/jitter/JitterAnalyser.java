@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicerFilter;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.utils.RExecutor;
 
 import org.apache.logging.log4j.Logger;
@@ -61,7 +62,7 @@ public class JitterAnalyser
         if(mConsensusTypes != null)
             return mConsensusTypes;
 
-        mConsensusTypes = ConsensusType.consensusTypes(mConfig);
+        mConsensusTypes = JitterAnalyserConfig.consensusTypes(mConfig);
         return mConsensusTypes;
     }
 

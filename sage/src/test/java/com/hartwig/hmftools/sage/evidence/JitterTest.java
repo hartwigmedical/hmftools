@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;

@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTable;
 import com.hartwig.hmftools.common.basequal.jitter.JitterCountsTableFile;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;

@@ -1,8 +1,17 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 
+import java.util.Collections;
+import java.util.EnumSet;
+
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -81,4 +90,33 @@ public class JitterAnalyserConfig
         configBuilder.addFlag(JITTER_WRITE_MSI_PLOTS, JITTER_WRITE_MSI_PLOTS_DESC);
         configBuilder.addFlag(JITTER_WRITE_SITE_FILE, JITTER_WRITE_SITE_FILE_DESC);
     }
+
+    public static EnumSet<ConsensusType> consensusTypes(final JitterAnalyserConfig config)
+    {
+        SequencingType sequencingType = config.Sequencing;
+        EnumSet<ConsensusType> consensusTypes = Sets.newEnumSet(Collections.emptyList(), ConsensusType.class);
+
+        consensusTypes.add(ConsensusType.NONE);
+
+        if(sequencingType == ILLUMINA && config.UsesDuplexUMIs)
+        {
+            consensusTypes.add(ConsensusType.SINGLE);
+            consensusTypes.add(ConsensusType.DUAL);
+        }
+        else if(sequencingType == SBX)
+        {
+            consensusTypes.add(ConsensusType.DUAL);
+        }
+        else if(sequencingType == ULTIMA)
+        {
+            consensusTypes.add(ConsensusType.DUAL);
+        }
+        else if(sequencingType == BIOMODAL)
+        {
+            consensusTypes.add(ConsensusType.DUAL);
+        }
+
+        return consensusTypes;
+    }
+
 }

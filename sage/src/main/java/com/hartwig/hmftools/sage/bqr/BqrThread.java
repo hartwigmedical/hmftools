@@ -13,7 +13,6 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.PartitionTask;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;

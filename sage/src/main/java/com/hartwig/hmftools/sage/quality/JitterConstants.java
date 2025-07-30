@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPE
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 
 public final class JitterConstants

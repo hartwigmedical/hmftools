@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.bqr;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;

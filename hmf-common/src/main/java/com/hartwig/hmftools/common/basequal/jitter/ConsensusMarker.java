@@ -3,11 +3,10 @@ package com.hartwig.hmftools.common.basequal.jitter;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.DUAL;
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.HIGH_QUAL;
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.IGNORE;
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.NONE;
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.SINGLE;
+import static com.hartwig.hmftools.common.sequencing.ConsensusType.DUAL;
+import static com.hartwig.hmftools.common.sequencing.ConsensusType.IGNORE;
+import static com.hartwig.hmftools.common.sequencing.ConsensusType.NONE;
+import static com.hartwig.hmftools.common.sequencing.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.SIMPLEX_QUAL;
@@ -21,6 +20,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import org.apache.commons.lang3.Validate;
@@ -189,7 +189,7 @@ public abstract class ConsensusMarker
                 minQual = min(minQual, quals[i]);
 
             if(minQual > LOW_QUAL_CUTOFF)
-                return HIGH_QUAL;
+                return DUAL;
 
             return NONE;
         }

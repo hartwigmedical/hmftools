@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.T0_TAG;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.TP_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
@@ -439,8 +439,8 @@ public class UltimaQualModelTest
     {
         String cigar = format("%dM", qualities.length);
         SAMRecord record = buildSamRecord(readStart, cigar, readBases, qualities);
-        record.setAttribute(TP_TAG, tpValues);
-        record.setAttribute(T0_TAG, new String(t0Values));
+        record.setAttribute(ULTIMA_TP_TAG, tpValues);
+        record.setAttribute(ULTIMA_T0_TAG, new String(t0Values));
 
         return record;
     }

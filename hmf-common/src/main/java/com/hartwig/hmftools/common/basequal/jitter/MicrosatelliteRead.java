@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.basequal.jitter;
 
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.IGNORE;
-import static com.hartwig.hmftools.common.basequal.jitter.ConsensusType.NONE;
+import static com.hartwig.hmftools.common.sequencing.ConsensusType.IGNORE;
+import static com.hartwig.hmftools.common.sequencing.ConsensusType.NONE;
 import static com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
+
+import com.hartwig.hmftools.common.sequencing.ConsensusType;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;

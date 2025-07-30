@@ -44,6 +44,8 @@ public class SBXBamUtils
     public static int SIMPLEX_QUAL = 18;
     public static int DUPLEX_ERROR_QUAL = 0;
 
+    public static final String SBX_YC_TAG = "YC";
+
     @Nullable
     private static String parseInt(final String s, int start)
     {
@@ -121,7 +123,7 @@ public class SBXBamUtils
         }
 
         String chromosome = record.getReferenceName();
-        String ycTagStr = record.getStringAttribute("YC");
+        String ycTagStr = record.getStringAttribute(SBX_YC_TAG);
         if(ycTagStr == null)
         {
             throw new IllegalArgumentException(format("Read must have YC tag: %s", record.getSAMString()));
