@@ -28,7 +28,7 @@ import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 

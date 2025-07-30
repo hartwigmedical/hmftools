@@ -4,20 +4,19 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.redux.BqrReadType.extractReadType;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
-import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.redux.BqrReadType;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;

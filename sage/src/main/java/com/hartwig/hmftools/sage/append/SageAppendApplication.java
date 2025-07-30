@@ -32,8 +32,8 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.sage.SageCommon;
-import com.hartwig.hmftools.sage.bqr.BaseQualityRecalibration;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
@@ -171,10 +171,7 @@ public class SageAppendApplication
 
         SageCommon.setReadLength(mConfig.Common, Collections.emptyMap(), mConfig.Common.ReferenceBams.get(0));
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
-                mConfig.Common, mRefGenome, "", Collections.emptyList(), Collections.emptyList());
-
-        baseQualityRecalibration.produceRecalibrationMap();
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig.Common, Collections.emptyList());
 
         if(!baseQualityRecalibration.isValid())
             System.exit(1);

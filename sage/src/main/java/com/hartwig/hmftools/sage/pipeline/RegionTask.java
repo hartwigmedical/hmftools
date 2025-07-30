@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.sage.SageCallConfig;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;

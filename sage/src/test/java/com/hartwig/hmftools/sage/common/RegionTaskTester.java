@@ -15,7 +15,7 @@ import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.RegionResults;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 public class RegionTaskTester

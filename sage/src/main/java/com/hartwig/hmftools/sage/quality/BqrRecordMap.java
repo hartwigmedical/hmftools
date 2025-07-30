@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.bqr;
+package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.redux.BqrRecord;
 
 public class BqrRecordMap
 {
-    // recalibration results per sampleId
+    // base qual recalibration data per sample
     private final Map<BqrKey, BqrRecord> mMap;
 
     public BqrRecordMap(final List<BqrRecord> records)

@@ -30,7 +30,7 @@ import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.sync.FragmentData;

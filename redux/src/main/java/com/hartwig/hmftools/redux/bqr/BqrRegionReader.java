@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
+import static com.hartwig.hmftools.common.redux.BqrReadType.extractReadType;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractConsensusType;
@@ -254,14 +255,6 @@ public class BqrRegionReader implements CigarHandler
         {
             purgeBaseDataList(record.getAlignmentStart());
         }
-    }
-
-    public static BqrReadType extractReadType(final SAMRecord record, final SequencingType sequencingType)
-    {
-        if(sequencingType == SequencingType.ILLUMINA)
-            return BqrReadType.fromUmiType(extractUmiType(record));
-        else
-            return BqrReadType.fromUltimaType(extractConsensusType(record));
     }
 
     private static final int SHORT_FRAG_BOUNDARY_NONE = -1;
