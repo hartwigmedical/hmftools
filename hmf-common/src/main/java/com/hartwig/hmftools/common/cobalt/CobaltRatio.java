@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.cobalt;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,5 +22,10 @@ public record CobaltRatio(
     {
         return new CobaltRatio(chromosome, newPosition, referenceReadDepth, referenceGCRatio, referenceGcContent,
                 referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
+    }
+
+    public BaseRegion baseRegion()
+    {
+        return new BaseRegion(position, position + 1000);
     }
 }

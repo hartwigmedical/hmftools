@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
 
-public class ObservedRegion implements GenomeRegion
+public class ObservedRegion implements FittingRegion
 {
     private final String mChromosome;
     private int mPosStart;
