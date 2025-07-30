@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
+import static com.hartwig.hmftools.common.bwa.BwaUtils.LIBBWA_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
@@ -59,7 +60,7 @@ public class ProbeQualityProfiler
     private static final int QUALITY_SCORE_PRECISION_VERBOSE = 6;
 
     private static final String BWA_INDEX_IMAGE_FILE_CONFIG = "bwa_index_image";
-    private static final String BWA_INDEX_IMAGE_FILE_DESC = "Reference genome BWA-MEM2 index GATK image file";
+    private static final String BWA_INDEX_IMAGE_FILE_DESC = "Reference genome BWA-MEM index GATK image file";
 
     private static final String BASE_WINDOW_LENGTH_CONFIG = "window_length";
     private static final String BASE_WINDOW_LENGTH_DESC = "Base window length for analysis";
@@ -79,7 +80,7 @@ public class ProbeQualityProfiler
 
     private static final String BATCH_SIZE_CONFIG = "batch_size";
     private static final String BATCH_SIZE_DESC = "Number of windows to align simultaneously";
-    private static final int BATCH_SIZE_DEFAULT = 100000;
+    private static final int BATCH_SIZE_DEFAULT = 25000;
 
     private static final String OUTPUT_FILE_CONFIG = "output_file";
     private static final String OUTPUT_FILE_DESC = "Output filename";
@@ -150,9 +151,11 @@ public class ProbeQualityProfiler
         }
         LOGGER.debug("Threads: {}", threads);
 
-        String bwaIndexImageFile = configBuilder.getValue(BWA_INDEX_IMAGE_FILE_CONFIG, refGenomePath + ".img");
-        LOGGER.debug("BWA-MEM2 index image: {}", bwaIndexImageFile);
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
+        LOGGER.debug("BWA-MEM library path: {}", System.getProperty(LIBBWA_PATH));
+
+        String bwaIndexImageFile = configBuilder.getValue(BWA_INDEX_IMAGE_FILE_CONFIG, refGenomePath + ".img");
+        LOGGER.debug("BWA-MEM index image: {}", bwaIndexImageFile);
         Supplier<BwaMemAligner> alignerFactory = () -> createAligner(bwaIndexImageFile, threads);
 
         mVerboseOutput = configBuilder.hasFlag(VERBOSE_OUTPUT_CONFIG);
