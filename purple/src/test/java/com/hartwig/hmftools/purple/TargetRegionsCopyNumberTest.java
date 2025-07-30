@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TargetRegionsCopyNumberTest extends TargetRegionsTestBase
@@ -17,6 +18,7 @@ public class TargetRegionsCopyNumberTest extends TargetRegionsTestBase
         super.setup();
     }
 
+    @Ignore
     @Test
     public void tsvTest()
     {

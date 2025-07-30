@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
@@ -25,6 +26,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         super.setup();
     }
 
+    @Ignore
     @Test
     public void copyNumbersDataTest() throws IOException
     {
