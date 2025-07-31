@@ -7,8 +7,7 @@ HLA typing is performed to 4 digit allele resolution, meaning LILAC uniquely ide
 (6 digits) and intronic differences (8 digits). LILAC is described and validated in the publication:
 *Genetic immune escape landscape in primary and metastatic cancer, Nature 2023* ([link](https://www.nature.com/articles/s41588-023-01367-1)).
 
-To get started using LILAC, please [download the reference data](#reference-data), and see section [Usage](#usage) to download the LILAC jar
-and see the run commands.
+To get started using LILAC, please jump to [Usage](#usage).
 
 Notable existing tools for HLA class I typing include Polysolver, xHLA, Optitype and DRAGEN-HLA. LILAC offers a number of potential 
 advantages including:
@@ -21,43 +20,11 @@ complete loss of alleles
 - Identification of HLA-Y presence, a pseudogene with high similarity to HLA-A which is present in up to 20% of the population but is not
 present in the reference genome
 
-## Sample inputs
-LILAC performs HLA typing from GRCh37 or GRCh38 (no alt) BAMs. It can run in various sample modes: 
-- **Germline-only** or **tumor-only**: Basic HLA typing 
-- **Paired tumor/normal**: Call allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles. This mode 
-can take somatic variant calls and copy number variant calls from [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) 
-as inputs, but outputs from other callers are also accepted. 
-
-LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
-
-> [!WARNING]
-> BAMs aligned to a GRCh38 genome build containing HLA alt contigs must be realigned to a GRCh38 genome build without HLA alt contigs.
-> [AltContigRemapper](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#altcontigremapper) from hmftools/bam-tools can be
-> used for this task.
-
-LILAC has been optimised on:
-- WGS samples: 30-40x germline depth, 100x tumor depth, paired 151bp reads
-- Panel samples: 1000x coverage, paired 86bp reads
-
-Generally, shorter read length and lower depths are problematic for LILAC. In tumor samples with high purity and LOH, the lost allele in 
-the tumor may also be difficult to detect.
-
-## Reference data
-
-The reference data required to run LILAC can be downloaded from the `oncoanalyser` 
-[downloads](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls) page:
-- Reference genome FASTA
-- Allele population frequencies: `lilac_allele_frequencies.csv`
-- Allele nucleotide sequences: `hla_ref_nucleotide_sequences.csv`
-- Allele amino acid sequences: `hla_ref_aminoacid_sequences.csv`
-
-Allele sequences and frequencies files are found in the `hmf_pipeline_resources.*.tar.gz` bundle from `oncoanalyser`.
-
-See section [Reference data generation](#reference-data-generation) for details on how the allele reference data files are derived.
-
 ## Usage
 
-The latest LILAC version is: [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1)
+### Versions
+
+The latest LILAC jar version can be downloaded here: [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1)
 
 Older versions:
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.6)
@@ -68,7 +35,39 @@ Older versions:
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
 
-### Examples
+### Sample inputs
+
+LILAC performs HLA typing from GRCh37 or GRCh38 (no alt) BAMs. It can run in various sample modes:
+- **Germline-only** or **tumor-only**: Basic HLA typing
+- **Paired tumor/normal**: Call allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles. This mode
+  can take somatic variant calls and copy number variant calls from [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple)
+  as inputs, but outputs from other callers are also accepted.
+
+LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
+
+> [!WARNING]
+> BAMs aligned to a GRCh38 genome build containing HLA alt contigs must be realigned to a GRCh38 genome build without HLA alt contigs.
+> [AltContigRemapper](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#altcontigremapper) from hmftools/bam-tools can be
+> used for this task.
+
+LILAC has been tested on WGS samples (30-40x germline depth, 100x tumor depth, paired 151 bp reads) and panel samples 
+(1000x coverage, paired 86 bp reads). Generally, shorter read length and lower depths are problematic for LILAC. In tumor samples with high purity and LOH, the lost allele in
+the tumor may also be difficult to detect.
+
+### Reference data
+
+The reference data required to run LILAC can be downloaded from the `oncoanalyser`
+[downloads](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls) page:
+- Reference genome FASTA
+- Allele population frequencies: `lilac_allele_frequencies.csv`
+- Allele nucleotide sequences: `hla_ref_nucleotide_sequences.csv`
+- Allele amino acid sequences: `hla_ref_aminoacid_sequences.csv`
+
+Allele sequences and frequencies files are found in the `hmf_pipeline_resources.*.tar.gz` bundle from `oncoanalyser`.
+
+See section [Reference data generation](#reference-data-generation) for details on how the allele reference data files are derived.
+
+### Example commands
 
 #### Reference-only mode
 
