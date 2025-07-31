@@ -7,6 +7,14 @@ public record ProbeQualityWindow(
         float qualityScore
 ) implements Comparable<ProbeQualityWindow>
 {
+    public ProbeQualityWindow
+    {
+        if(!(qualityScore >= 0 && qualityScore <= 1))
+        {
+            throw new IllegalArgumentException("qualityScore must be in the range [0, 1]");
+        }
+    }
+
     public ProbeQualityWindow(int posStart, int posEnd, float qualityScore)
     {
         this(new BaseRegion(posStart, posEnd), qualityScore);

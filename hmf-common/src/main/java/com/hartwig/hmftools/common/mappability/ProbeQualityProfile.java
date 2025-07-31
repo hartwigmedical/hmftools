@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.mappability;
 
+import static java.lang.Double.isFinite;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.max;
@@ -253,7 +254,16 @@ public class ProbeQualityProfile
     private static double interpolateQualityScores(double q1, double q2, double t)
     {
         // Interpolating in the "risk space" because it's the risk that's proportional to the overlap. (The quality is a reciprocal value.)
-        return q1 * q2 / (q1 + t * q2 - t * q1);
+        double value = q1 * q2 / (q1 + t * q2 - t * q1);
+        if(isFinite(value))
+        {
+            return value;
+        }
+        else
+        {
+            // If the input qualities are near 0 the result could be NaN. Desired result is 0.
+            return 0;
+        }
     }
 
     // Gets the last index >= `index` in `windows` which overlaps `region`.
