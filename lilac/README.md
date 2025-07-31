@@ -540,27 +540,36 @@ The complex with the top score is chosen as the final solution. If 2 or more com
 lowest alphabetical 4-digit alleles is chosen.
 
 ### Tumor and RNA status of alleles
-#### Tumor allele specific copy number
-LILAC optionally accepts a tumor bam and a gene copy number file (produced by PURPLE) which contains the minimum copy number and minimum 
-minor allele copy number of each gene. If a tumor sample is provided, then fragments are counted for each allele in the determined type. 
-For each of HLA-A, HLA-B & HLA-C, the minor allele copy number is assigned to the allele with the lowest ratio of supporting fragments for 
-the allele in the tumor compared to the normal. The other allele for each is assigned the implied major allele copy number from the gene 
-copy number file. If a gene is homozygous present in the normal sample, then the minor and major allele copy numbers are arbitrarily 
-assigned in the tumor.
 
 #### Somatic variant assignment to alleles
-LILAC optionally accepts a VCF input of somatic small indel and point mutations (called by Sage in the HMF pipeline) and can assign somatic 
-variants to the specific allele which is damaged.
 
-LILAC gathers the set of variants from the vcf (filter = PASS) that overlap either a coding or canonical splice region in any of HLA-A, 
-HLA-B and HLA-C and finds all fragments that contain that variant. LILAC assigns aportions the fragment to the allele which matches the 
-fragment at all heterozygous locations after excluding any somatic variants from the fragment. The allele with the highest matching 
-fragment count is determined to contain the somatic variant. If the variant is assigned to 2 alleles with identical weight it is 
+LILAC optionally accepts a somatic SNV/indel VCF (e.g. from 
+[SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) or 
+[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple)) 
+to assign somatic variants to the specific allele which is damaged.
+
+LILAC gathers the set of PASS variants from the VCF that overlap either a coding or canonical splice region in any of HLA-A,
+HLA-B and HLA-C and finds all fragments that contain that variant. LILAC assigns apportions the fragment to the allele which matches the
+fragment at all heterozygous locations after excluding any somatic variants from the fragment. The allele with the highest matching
+fragment count is determined to contain the somatic variant. If the variant is assigned to 2 alleles with identical weight, it is
 assigned with 0.5 weight to each. In the case of homozygous alleles, the variant is assigned arbitrarily to the 1st allele.
 
-#### RNA ‘expression’ of alleles
-LILAC also optionally accepts an RNA bam.  As per the fragments in the bam are counted for each allele in the determined type. 
-This can be interpreted as a proxy for allele specific expression.
+
+#### Tumor allele specific copy number
+
+LILAC optionally accepts a tumor BAM file and a [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) 
+gene copy number file (containing minimum copy number and minimum minor allele copy number per gene) to calculate tumor allele specific 
+copy number.
+
+If these inputs are provided, then fragments are counted for each allele in the determined type. For each HLA gene (HLA-A,
+HLA-B, HLA-C), the minor allele copy number is assigned to the allele with the lowest ratio of supporting fragments for the allele in the 
+tumor compared to the normal. The other allele for each is assigned the implied major allele copy number from the gene copy number file. 
+If a gene is homozygous present in the normal sample, then the minor and major allele copy numbers are arbitrarily assigned in the tumor.
+
+#### RNA 'expression' of alleles
+
+LILAC also optionally accepts an RNA BAM. Similar to determining [tumor allele specific copy number](#tumor-allele-specific-copy-number) 
+fragments in the BAM are counted for each allele in the determined type. This can be interpreted as a proxy for allele specific expression.
 
 ### QC metrics and PON
 
