@@ -2,9 +2,12 @@ package com.hartwig.hmftools.geneutils.probequality;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.geneutils.probequality.Utils.partitionStream;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,18 +76,56 @@ public class ProbeQualityModel
             }
         });
 
-        LOGGER.debug("Running BWA-MEM alignment");
-        List<List<BwaMemAlignment>> alignments = mAligner.alignSeqs(probes);
-        if(alignments.size() != probes.size())
-        {
-            // Presumably this shouldn't occur, but we'll check to give a nicer error just in case.
-            throw new RuntimeException("Alignment failed");
-        }
+        List<List<BwaMemAlignment>> alignments = runAlignment(probes, 0);
         LOGGER.debug("Running risk model");
         return alignments.stream().map(this::computeFromAlignments).toList();
     }
 
-    public Result computeFromAlignments(final List<BwaMemAlignment> alignments)
+    private List<List<BwaMemAlignment>> runAlignment(List<byte[]> probes, int batchSize)
+    {
+        if(batchSize <= 0)
+        {
+            batchSize = probes.size();
+        }
+        try
+        {
+            Stream<List<byte[]>> batches = batchSize < probes.size() ? partitionStream(probes.stream(), batchSize) : Stream.of(probes);
+            return batches
+                    .flatMap(batch ->
+                    {
+                        LOGGER.debug("Running BWA-MEM alignment");
+                        List<List<BwaMemAlignment>> batchAlignments = mAligner.alignSeqs(batch);
+                        if(batchAlignments.size() != batch.size())
+                        {
+                            // Presumably this shouldn't occur, but we'll check to give a nicer error just in case.
+                            throw new RuntimeException("Alignment failed");
+                        }
+                        return batchAlignments.stream();
+                    })
+                    .toList();
+        }
+        catch(IllegalArgumentException e)
+        {
+            // Silly issue with the BWA-MEM JNI wrapper where it may try to allocate a ByteBuffer larger than is allowed (which is
+            // subsequently a silly issue with ByteBuffer being limited to 2^31 bytes).
+            // We don't have much control over this issue since the number of alignments produced can't be predicted or tightly controlled.
+            // Further, modifying the wrapper code is a pain.
+            // So instead we will catch the error and shrink the sequence set, hopefully reducing the allocation to an acceptable size.
+            int newBatchSize = batchSize / 10;
+            if(newBatchSize >= 1)
+            {
+                LOGGER.warn("Aligning sequences with batch size {} failed, trying again with batch size {}",
+                        batchSize, newBatchSize);
+                return runAlignment(probes, newBatchSize);
+            }
+            else
+            {
+                throw e;
+            }
+        }
+    }
+
+    private Result computeFromAlignments(final List<BwaMemAlignment> alignments)
     {
         // Order by best match first.
         alignments.sort(Comparator.comparing(BwaMemAlignment::getAlignerScore, Comparator.reverseOrder()));
@@ -110,13 +151,13 @@ public class ProbeQualityModel
     private void setBwaMemParams(BwaMemAligner aligner)
     {
         // Ensure we can find alignments fitting our parameters.
-        aligner.setMinSeedLengthOption(min(min(19, mMatchScoreThreshold + 10), mTargetProbeLength / 2));
+        aligner.setMinSeedLengthOption(min(19, mTargetProbeLength / 2));
         // Output many alignments per query.
         aligner.setFlagOption(aligner.getFlagOption() | BwaMemAligner.MEM_F_ALL);
         aligner.setOutputScoreThresholdOption(mMatchScoreThreshold);
         // Don't prune seeds with many occurrences in the genome. This is a key performance tuning parameter.
         aligner.setMaxMemIntvOption(2000);
-        aligner.setMaxSeedOccurencesOption(10000);
+        aligner.setMaxSeedOccurencesOption(2000);
         // Other minor params to encourage more alignments to be found.
         aligner.setBandwidthOption(mTargetProbeLength);
         aligner.setSplitFactorOption(0.5f);

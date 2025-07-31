@@ -253,6 +253,13 @@ public class DelimFileWriter<T> implements AutoCloseable
         // record.set("rate", 0.27572, new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH)));
         public void set(String key, double value, NumberFormat format) { set(key, format.format(value)); }
 
+        public void setOrNull(String key, String value) { set(key, value == null ? sNullIndicator : value); }
+        public void setOrNull(String key, Double value) { setOrNull(key, value, sDefaultNumberFormat); }
+        public void setOrNull(String key, Double value, NumberFormat format)
+        {
+            set(key, value == null ? sNullIndicator : format.format(value));
+        }
+
         // overloads to allow using enum as key
         public void set(Enum<?> key, String value) { set(key.name(), value); }
         public void set(Enum<?> key, int value) { set(key.name(), value); }
