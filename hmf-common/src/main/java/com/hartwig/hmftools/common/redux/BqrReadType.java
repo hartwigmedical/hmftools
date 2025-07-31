@@ -13,9 +13,7 @@ public enum BqrReadType
 {
     NONE(false),
     SINGLE(false),
-    DUAL(true),
-    ULT_BALANCED(true),
-    ULT_STANDARD(false);
+    DUAL(true);
 
     private final boolean mIsHighQuality;
 

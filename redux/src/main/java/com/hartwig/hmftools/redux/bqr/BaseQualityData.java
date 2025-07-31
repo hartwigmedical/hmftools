@@ -9,45 +9,52 @@ import static com.hartwig.hmftools.redux.common.Constants.BQR_NON_DUAL_AF_LOW;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.redux.BqrKey;
 import com.hartwig.hmftools.common.redux.BqrReadType;
 
 public class BaseQualityData
 {
-    public final byte Ref;
     public final byte[] TrinucleotideContext;
-    public final BqrReadType ReadType;
 
-    private final List<AltQualityCount> mAltQualityCounts;
+    private final Map<BqrReadType,List<AltQualityCount>> mAltQualityCountsMap;
     private boolean mHasIndel;
 
-    public BaseQualityData(final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
+    public BaseQualityData(final byte[] trinucleotideContext)
     {
-        Ref = ref;
         TrinucleotideContext = trinucleotideContext;
-        ReadType = readType;
 
         mHasIndel = false;
-        mAltQualityCounts = Lists.newArrayList();
+        mAltQualityCountsMap = Maps.newHashMap();
     }
 
-    public List<AltQualityCount> altQualityCounts() { return mAltQualityCounts; }
+    public byte ref() { return TrinucleotideContext[1]; }
 
-    public void processReadBase(byte alt, byte quality)
+    public void processReadBase(final BqrReadType readType, byte alt, byte quality, boolean posStrand)
     {
-        for(AltQualityCount altQualityCount : mAltQualityCounts)
+        List<AltQualityCount> altQualityCounts = mAltQualityCountsMap.get(readType);
+
+        if(altQualityCounts == null)
+        {
+            altQualityCounts = Lists.newArrayList();
+            mAltQualityCountsMap.put(readType, altQualityCounts);
+        }
+
+        for(AltQualityCount altQualityCount : altQualityCounts)
         {
             if(altQualityCount.Alt == alt && altQualityCount.Quality == quality)
             {
-                ++altQualityCount.Count;
+                altQualityCount.increment(posStrand);
                 return;
             }
         }
 
-        mAltQualityCounts.add(new AltQualityCount(alt, quality));
+        altQualityCounts.add(new AltQualityCount(alt, quality, posStrand));
     }
 
     public void setHasIndel() { mHasIndel = true; }
@@ -58,48 +65,100 @@ public class BaseQualityData
         Map<BqrKey,Integer> keyCounts = Maps.newHashMap();
 
         // exclude any alt with too much support (regardless of quality)
-        Map<Byte,Integer> altCounts = Maps.newHashMap();
+        Map<Byte,Integer> standardAltCounts = Maps.newHashMap();
+        Map<Byte,Integer> dualAltCounts = Maps.newHashMap();
 
-        int totalCount = 0;
-        for(AltQualityCount aqCount : mAltQualityCounts)
+        int standardTotalCount = 0;
+        int dualTotalCount = 0;
+        Set<Byte> allAlts = Sets.newHashSet();
+
+        for(Map.Entry<BqrReadType,List<AltQualityCount>> entry : mAltQualityCountsMap.entrySet())
         {
-            totalCount += aqCount.Count;
+            boolean isDual = entry.getKey().isHighQuality();
 
-            if(aqCount.Alt == Ref)
-                continue;
+            for(AltQualityCount aqCount : entry.getValue())
+            {
+                int altTotalCount = aqCount.totalCount();
 
-            Integer altCount = altCounts.get(aqCount.Alt);
-            altCounts.put(aqCount.Alt, altCount != null ? altCount + aqCount.Count : aqCount.Count);
+                if(isDual)
+                    dualTotalCount += altTotalCount;
+                else
+                    standardTotalCount += altTotalCount;
+
+                if(aqCount.Alt == ref())
+                    continue;
+
+                allAlts.add(aqCount.Alt);
+
+                Map<Byte,Integer> altCountMap = isDual ? dualAltCounts : standardAltCounts;
+                Integer altCount = altCountMap.get(aqCount.Alt);
+                altCountMap.put(aqCount.Alt, altCount != null ? altCount + altTotalCount : altTotalCount);
+            }
         }
 
-        double lowAfLimit = ReadType.isHighQuality() ? BQR_DUAL_AF_LOW : BQR_NON_DUAL_AF_LOW;
-        double highAfLimit = ReadType.isHighQuality() ? BQR_DUAL_AF_HIGH : BQR_NON_DUAL_AF_HIGH;
-        int adLimit = ReadType.isHighQuality() ? BQR_DUAL_AD : BQR_NON_DUAL_AD;
+        Set<Byte> failedAlts = Sets.newHashSet();
 
-        for(AltQualityCount aqCount : mAltQualityCounts)
+        for(Byte alt : allAlts)
         {
-            if(altCounts.containsKey(aqCount.Alt))
+            boolean includeAlt = true;
+
+            Integer standardAltCount = standardAltCounts.get(alt);
+
+            if(standardAltCount != null)
             {
-                int altCount = altCounts.get(aqCount.Alt);
-                double altVaf = altCount / (double)totalCount;
+                double standardAltVaf = standardAltCount / (double)standardTotalCount;
 
-                // for the dual condition it means: use a site if (AF<1% | AD<3) & AF <7.5%, or equivalently, AF<1% | (AD<3 & AF<7.5%)
-                boolean includeAlt = altVaf < lowAfLimit || (altVaf < highAfLimit && altCount <= adLimit);
-
-                if(!includeAlt)
-                    continue;
+                includeAlt = passesAltTest(standardAltCount, standardAltVaf, BQR_NON_DUAL_AF_LOW, BQR_NON_DUAL_AF_HIGH, BQR_NON_DUAL_AD);
             }
 
-            keyCounts.put(new BqrKey(Ref, aqCount.Alt, TrinucleotideContext, aqCount.Quality, ReadType), aqCount.Count);
+            if(includeAlt && dualAltCounts.containsKey(alt))
+            {
+                int dualAltCount = dualAltCounts.get(alt);
+                double dualAltVaf = dualAltCount / (double)dualTotalCount;
+
+                // for the dual condition it means: use a site if (AF<1% | AD<3) & AF <7.5%, or equivalently, AF<1% | (AD<3 & AF<7.5%)
+                includeAlt = passesAltTest(dualAltCount, dualAltVaf, BQR_DUAL_AF_LOW, BQR_DUAL_AF_HIGH, BQR_DUAL_AD);
+            }
+
+            if(!includeAlt)
+                failedAlts.add(alt);
+        }
+
+        for(Map.Entry<BqrReadType,List<AltQualityCount>> entry : mAltQualityCountsMap.entrySet())
+        {
+            BqrReadType readType = entry.getKey();
+
+            for(AltQualityCount aqCount : entry.getValue())
+            {
+                if(failedAlts.contains(aqCount.Alt))
+                    continue;
+
+                if(aqCount.PosStrandCount > 0)
+                {
+                    keyCounts.put(new BqrKey(ref(), aqCount.Alt, TrinucleotideContext, aqCount.Quality, readType), aqCount.PosStrandCount);
+                }
+
+                if(aqCount.NegStrandCount > 0)
+                {
+                    byte[] tncReversed = Nucleotides.reverseComplementBases(TrinucleotideContext);
+                    byte altReversed = Nucleotides.swapDnaBase(aqCount.Alt);
+                    keyCounts.put(new BqrKey(tncReversed[1], altReversed, tncReversed, aqCount.Quality, readType), aqCount.NegStrandCount);
+                }
+            }
         }
 
         return keyCounts;
     }
 
-    public String toString()
+    private static boolean passesAltTest(int altCount, double altVaf, double lowAfLimit, double highAfLimit, int adLimit)
     {
-        return String.format("ref(%s) context(%s) readType(%s) alts(%d)",
-                (char)Ref, new String(TrinucleotideContext), ReadType, mAltQualityCounts.size());
+        return altVaf < lowAfLimit || (altVaf < highAfLimit && altCount <= adLimit);
     }
 
+    public String toString()
+    {
+        return String.format("ref(%s) context(%s) readTypes(%d) alts(%d)",
+                (char)ref(), new String(TrinucleotideContext), mAltQualityCountsMap.size(),
+                mAltQualityCountsMap.values().stream().mapToInt(x -> x.size()).sum());
+    }
 }

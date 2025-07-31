@@ -126,7 +126,8 @@ public class ReduxApplication
             }
         }
 
-        baseQualRecalibration.finalise();
+        if(baseQualRecalibration.enabled())
+            baseQualRecalibration.finalise();
 
         if(mConfig.JitterMsiOnly)
         {

@@ -133,6 +133,8 @@ public class BaseQualRecalibration
         writeSampleData(sampleId, records);
     }
 
+    private static final byte NO_BASE_OR_QUAL = 1; // value is irrelevant, just to complete a map entry
+
     public static List<BqrRecord> convertToRecords(final Map<BqrKey,Integer> allQualityCounts)
     {
         List<BqrRecord> result = Lists.newArrayList();
@@ -144,7 +146,6 @@ public class BaseQualRecalibration
 
         // make a map of (per-type) trinuc totals across all entries
         Map<BqrKey,Integer> triNucMap = Maps.newHashMap();
-        byte noBaseOrQual = 1;
 
         for(Map.Entry<BqrKey,Integer> entry : allQualityCounts.entrySet())
         {
@@ -154,7 +155,7 @@ public class BaseQualRecalibration
             if(key.Quality == 0)
                 continue;
 
-            BqrKey triNucKey = new BqrKey(noBaseOrQual, noBaseOrQual, key.TrinucleotideContext, noBaseOrQual, key.ReadType);
+            BqrKey triNucKey = new BqrKey(NO_BASE_OR_QUAL, NO_BASE_OR_QUAL, key.TrinucleotideContext, NO_BASE_OR_QUAL, key.ReadType);
 
             Integer triNucCount = triNucMap.get(triNucKey);
             triNucMap.put(triNucKey, triNucCount != null ? triNucCount + count : count);
@@ -208,8 +209,6 @@ public class BaseQualRecalibration
 
         return result;
     }
-
-    private static final byte NO_BASE_OR_QUAL = 1; // value is irrelevant, just to complete a map entry
 
     private static double calcRecalibratedQual(
             final BqrKey key, final int observedCount, final Map<BqrKey,Integer> refCountMap, final Map<BqrKey,Integer> triNucMap)
