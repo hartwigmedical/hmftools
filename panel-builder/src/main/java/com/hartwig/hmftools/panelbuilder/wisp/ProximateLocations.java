@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.wisp.probe;
+package com.hartwig.hmftools.panelbuilder.wisp;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 
 public class ProximateLocations
 {
-    private final Map<String,List<Location>> mRegisteredLocations;
+    private final Map<String, List<Location>> mRegisteredLocations;
 
     private final byte NO_ORIENTATION = 0;
     private static final int NEAR_DISTANCE = 50;
@@ -33,7 +33,9 @@ public class ProximateLocations
         List<Location> positions = mRegisteredLocations.get(chromosome);
 
         if(positions == null)
+        {
             return false;
+        }
 
         return positions.stream()
                 .anyMatch(x -> abs(x.Position - position) <= NEAR_DISTANCE && x.Orientations.contains(orientation));
@@ -66,7 +68,9 @@ public class ProximateLocations
             }
 
             if(location.Position > position)
+            {
                 ++index;
+            }
 
             break;
         }
@@ -74,7 +78,7 @@ public class ProximateLocations
         positions.add(index, new Location(position, orientation));
     }
 
-    private class Location
+    private static class Location
     {
         public final int Position;
         public final Set<Byte> Orientations;
@@ -86,6 +90,9 @@ public class ProximateLocations
             Orientations.add(orientation);
         }
 
-        public String toString() { return format("%d orients(%d)", Position, Orientations.size()); }
+        public String toString()
+        {
+            return format("%d orients(%d)", Position, Orientations.size());
+        }
     }
 }

@@ -1,26 +1,30 @@
-package com.hartwig.hmftools.wisp.probe;
+package com.hartwig.hmftools.panelbuilder.wisp;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.GERMLINE_SV;
+import static com.hartwig.hmftools.common.wisp.CategoryType.GERMLINE_SV;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
+import com.hartwig.hmftools.common.wisp.CategoryType;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GermlineSv extends Variant
 {
     private final LinxGermlineDisruption mVariant;
 
-    private List<String> mRefSequences;
+    private final List<String> mRefSequences;
+
+    private static final Logger LOGGER = LogManager.getLogger(GermlineSv.class);
 
     public GermlineSv(final LinxGermlineDisruption variant)
     {
@@ -29,7 +33,10 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public CategoryType categoryType() { return GERMLINE_SV; }
+    public CategoryType categoryType()
+    {
+        return GERMLINE_SV;
+    }
 
     @Override
     public String description()
@@ -40,13 +47,22 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public String gene() { return mVariant.GeneName; }
+    public String gene()
+    {
+        return mVariant.GeneName;
+    }
 
     @Override
-    public List<String> refSequences() { return mRefSequences; }
+    public List<String> refSequences()
+    {
+        return mRefSequences;
+    }
 
     @Override
-    public double copyNumber() { return 0; }
+    public double copyNumber()
+    {
+        return 0;
+    }
 
     @Override
     public double vaf()
@@ -56,13 +72,22 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public int tumorFragments() { return max(mVariant.TumorReferenceFragmentsStart, mVariant.TumorReferenceFragmentsEnd); }
+    public int tumorFragments()
+    {
+        return max(mVariant.TumorReferenceFragmentsStart, mVariant.TumorReferenceFragmentsEnd);
+    }
 
     @Override
-    public boolean hasPhaseVariants() { return false; }
+    public boolean hasPhaseVariants()
+    {
+        return false;
+    }
 
     @Override
-    public boolean reported() { return true; }
+    public boolean reported()
+    {
+        return true;
+    }
 
     @Override
     public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
@@ -78,13 +103,16 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    boolean checkFilters() { return false; }
+    boolean checkFilters()
+    {
+        return false;
+    }
 
     @Override
     public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
     {
         if(registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart)
-        || registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd))
+                || registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd))
         {
             return false;
         }
@@ -107,25 +135,31 @@ public class GermlineSv extends Variant
         String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxGermlineDir);
 
         if(linxDir == null)
+        {
             return variants;
+        }
 
         String germlineSvFile = LinxGermlineDisruption.generateFilename(linxDir, sampleId);
         String germlineBreakendsFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
 
         if(!Files.exists(Paths.get(germlineSvFile)) || !Files.exists(Paths.get(germlineBreakendsFile)))
+        {
             return variants;
+        }
 
         List<LinxGermlineDisruption> germlineSvs = LinxGermlineDisruption.read(germlineSvFile);
         List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendsFile).stream()
-                .filter(x -> x.reportedDisruption()).collect(Collectors.toList());
+                .filter(LinxBreakend::reportedDisruption).toList();
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
             if(germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
+            {
                 variants.add(new GermlineSv(germlineSv));
+            }
         }
 
-        CT_LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), germlineSvFile);
+        LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), germlineSvFile);
 
         return variants;
     }

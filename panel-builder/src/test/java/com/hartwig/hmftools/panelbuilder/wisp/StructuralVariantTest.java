@@ -1,14 +1,10 @@
-package com.hartwig.hmftools.wisp;
+package com.hartwig.hmftools.panelbuilder.wisp;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.wisp.TestUtils.MOCK_REF_GENOME;
-import static com.hartwig.hmftools.wisp.TestUtils.REF_BASES_CHR_1;
-import static com.hartwig.hmftools.wisp.TestUtils.REF_BASES_CHR_2;
-import static com.hartwig.hmftools.wisp.TestUtils.TEST_CONFIG;
 
 import static org.junit.Assert.assertEquals;
 
@@ -21,17 +17,18 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.wisp.probe.StructuralVariant;
 
 import org.junit.Test;
+
+// TODO
 
 public class StructuralVariantTest
 {
     @Test
     public void testStructuralVariantSequences()
     {
-        MOCK_REF_GENOME.RefGenomeMap.put(CHR_1, REF_BASES_CHR_1);
-        MOCK_REF_GENOME.RefGenomeMap.put(CHR_2, REF_BASES_CHR_2);
+        TestUtils.MOCK_REF_GENOME.RefGenomeMap.put(CHR_1, TestUtils.REF_BASES_CHR_1);
+        TestUtils.MOCK_REF_GENOME.RefGenomeMap.put(CHR_2, TestUtils.REF_BASES_CHR_2);
 
         // a DEL
         StructuralVariant var = new StructuralVariant(
@@ -40,11 +37,11 @@ public class StructuralVariantTest
                 Lists.newArrayList(), Lists.newArrayList());
         var.markAmpDelDriver(false);
 
-        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
-        String sequence = REF_BASES_CHR_1.substring(11, 21) + REF_BASES_CHR_1.substring(30, 40);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        String sequence = TestUtils.REF_BASES_CHR_1.substring(11, 21) + TestUtils.REF_BASES_CHR_1.substring(30, 40);
         assertEquals(sequence, var.sequence());
-        assertEquals(REF_BASES_CHR_1.substring(10, 10 + TEST_CONFIG.ProbeLength), var.refSequences().get(0));
-        assertEquals(REF_BASES_CHR_1.substring(20, 20 + TEST_CONFIG.ProbeLength), var.refSequences().get(1));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(20, 20 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(1));
 
         // DUP with an insert
         String insertSeq = "AAAAA";
@@ -53,8 +50,8 @@ public class StructuralVariantTest
                         2, 2, insertSeq),
                 Lists.newArrayList(), Lists.newArrayList());
 
-        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
-        sequence = REF_BASES_CHR_1.substring(33, 41) + insertSeq + REF_BASES_CHR_1.substring(20, 27);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        sequence = TestUtils.REF_BASES_CHR_1.substring(33, 41) + insertSeq + TestUtils.REF_BASES_CHR_1.substring(20, 27);
         assertEquals(sequence, var.sequence());
 
         // BND with -1/-1
@@ -64,8 +61,9 @@ public class StructuralVariantTest
                         2, 2, insertSeq),
                 Lists.newArrayList(), Lists.newArrayList());
 
-        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
-        sequence = Nucleotides.reverseComplementBases(REF_BASES_CHR_2.substring(40, 47)) + insertSeq + REF_BASES_CHR_1.substring(20, 27);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        sequence = Nucleotides.reverseComplementBases(TestUtils.REF_BASES_CHR_2.substring(40, 47)) + insertSeq
+                + TestUtils.REF_BASES_CHR_1.substring(20, 27);
         assertEquals(sequence, var.sequence());
 
         // SGL with positive orientation
@@ -76,10 +74,10 @@ public class StructuralVariantTest
                         2, 0, insertSeq),
                 Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
-        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
-        sequence = REF_BASES_CHR_1.substring(6, 21) + insertSeq;
+        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        sequence = TestUtils.REF_BASES_CHR_1.substring(6, 21) + insertSeq;
         assertEquals(sequence, var.sequence());
-        assertEquals(REF_BASES_CHR_1.substring(10, 10 + TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
 
         // with a longer insert sequence - will only allocate half the probe length
         insertSeq = "AAAAAGGGGGCCCCCTTTTT";
@@ -88,10 +86,10 @@ public class StructuralVariantTest
                         2, 0, insertSeq),
                 Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
-        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
-        sequence = REF_BASES_CHR_1.substring(11, 21) + insertSeq.substring(0, 10);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        sequence = TestUtils.REF_BASES_CHR_1.substring(11, 21) + insertSeq.substring(0, 10);
         assertEquals(sequence, var.sequence());
-        assertEquals(REF_BASES_CHR_1.substring(10, 10 + TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
 
         // negative orientation
         var = new StructuralVariant(
@@ -99,10 +97,10 @@ public class StructuralVariantTest
                         2, 0, insertSeq),
                 Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
-        var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
-        sequence = insertSeq.substring(insertSeq.length() - 10) + REF_BASES_CHR_1.substring(20, 30);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        sequence = insertSeq.substring(insertSeq.length() - 10) + TestUtils.REF_BASES_CHR_1.substring(20, 30);
         assertEquals(sequence, var.sequence());
-        assertEquals(REF_BASES_CHR_1.substring(10, 10 + TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
     }
 
     public static StructuralVariantData createSv(
@@ -111,56 +109,56 @@ public class StructuralVariantTest
             double cnChgStart, double cnChgEnd, final String insertSeq)
     {
         return ImmutableStructuralVariantData.builder()
-                        .id(varId)
-                        .vcfIdStart(vcfId)
-                        .vcfIdEnd(vcfId)
-                        .startChromosome(chrStart)
-                        .endChromosome(chrEnd)
-                        .startPosition(posStart)
-                        .endPosition(posEnd)
-                        .startOrientation((byte) orientStart)
-                        .endOrientation((byte) orientEnd)
-                        .startHomologySequence("")
-                        .endHomologySequence("")
-                        .startAF(1.0)
-                        .endAF(1.0)
-                        .junctionCopyNumber(1)
-                        .adjustedStartAF(1.0)
-                        .adjustedEndAF(1.0)
-                        .adjustedStartCopyNumber(2)
-                        .adjustedEndCopyNumber(2)
-                        .adjustedStartCopyNumberChange(cnChgStart)
-                        .adjustedEndCopyNumberChange(cnChgEnd)
-                        .insertSequence(insertSeq)
-                        .type(type)
-                        .filter(PASS)
-                        .qualityScore(0.0)
-                        .event("")
-                        .startTumorVariantFragmentCount(10)
-                        .startTumorReferenceFragmentCount(10)
-                        .startNormalVariantFragmentCount(10)
-                        .startNormalReferenceFragmentCount(10)
-                        .endTumorVariantFragmentCount(10)
-                        .endTumorReferenceFragmentCount(10)
-                        .endNormalVariantFragmentCount(10)
-                        .endNormalReferenceFragmentCount(10)
-                        .startIntervalOffsetStart(0)
-                        .startIntervalOffsetEnd(0)
-                        .endIntervalOffsetStart(0)
-                        .endIntervalOffsetEnd(0)
-                        .inexactHomologyOffsetStart(0)
-                        .inexactHomologyOffsetEnd(0)
-                        .startLinkedBy("")
-                        .endLinkedBy("")
-                        .insertSequenceAlignments("")
-                        .insertSequenceRepeatClass("")
-                        .insertSequenceRepeatType("")
-                        .insertSequenceRepeatOrientation((byte) 0)
-                        .insertSequenceRepeatCoverage(0.0)
-                        .startAnchoringSupportDistance(0)
-                        .endAnchoringSupportDistance(0)
-                        .ponCount(0)
-                        .build();
+                .id(varId)
+                .vcfIdStart(vcfId)
+                .vcfIdEnd(vcfId)
+                .startChromosome(chrStart)
+                .endChromosome(chrEnd)
+                .startPosition(posStart)
+                .endPosition(posEnd)
+                .startOrientation((byte) orientStart)
+                .endOrientation((byte) orientEnd)
+                .startHomologySequence("")
+                .endHomologySequence("")
+                .startAF(1.0)
+                .endAF(1.0)
+                .junctionCopyNumber(1)
+                .adjustedStartAF(1.0)
+                .adjustedEndAF(1.0)
+                .adjustedStartCopyNumber(2)
+                .adjustedEndCopyNumber(2)
+                .adjustedStartCopyNumberChange(cnChgStart)
+                .adjustedEndCopyNumberChange(cnChgEnd)
+                .insertSequence(insertSeq)
+                .type(type)
+                .filter(PASS)
+                .qualityScore(0.0)
+                .event("")
+                .startTumorVariantFragmentCount(10)
+                .startTumorReferenceFragmentCount(10)
+                .startNormalVariantFragmentCount(10)
+                .startNormalReferenceFragmentCount(10)
+                .endTumorVariantFragmentCount(10)
+                .endTumorReferenceFragmentCount(10)
+                .endNormalVariantFragmentCount(10)
+                .endNormalReferenceFragmentCount(10)
+                .startIntervalOffsetStart(0)
+                .startIntervalOffsetEnd(0)
+                .endIntervalOffsetStart(0)
+                .endIntervalOffsetEnd(0)
+                .inexactHomologyOffsetStart(0)
+                .inexactHomologyOffsetEnd(0)
+                .startLinkedBy("")
+                .endLinkedBy("")
+                .insertSequenceAlignments("")
+                .insertSequenceRepeatClass("")
+                .insertSequenceRepeatType("")
+                .insertSequenceRepeatOrientation((byte) 0)
+                .insertSequenceRepeatCoverage(0.0)
+                .startAnchoringSupportDistance(0)
+                .endAnchoringSupportDistance(0)
+                .ponCount(0)
+                .build();
     }
 
     private static LinxBreakend createBreakend(boolean reportable)

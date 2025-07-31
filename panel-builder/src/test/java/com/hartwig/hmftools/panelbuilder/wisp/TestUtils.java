@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.wisp;
+package com.hartwig.hmftools.panelbuilder.wisp;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.wisp.probe.ProbeConfig;
+
+// TODO
 
 public final class TestUtils
 {

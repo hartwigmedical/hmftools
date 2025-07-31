@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.wisp.probe;
+package com.hartwig.hmftools.panelbuilder.wisp;
 
 public final class ProbeConstants
 {

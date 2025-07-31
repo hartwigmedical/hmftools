@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.wisp.probe;
+package com.hartwig.hmftools.panelbuilder.wisp;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -9,30 +9,32 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_BATCH_ID;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_CATEGORY;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_VARIANT;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.NO_BATCH_ID;
+import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConfig.NO_BATCH_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.common.wisp.CategoryType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,6 +44,8 @@ public class ProbeFinder
     private final List<Variant> mCommonVariants;
     private final RefGenomeInterface mRefGenome;
     private final Map<String, BufferedWriter> mWriters;
+
+    private static final Logger LOGGER = LogManager.getLogger(ProbeFinder.class);
 
     public ProbeFinder(final ConfigBuilder configBuilder)
     {
@@ -56,7 +60,9 @@ public class ProbeFinder
     public void run()
     {
         if(!mConfig.isValid() || mRefGenome == null)
+        {
             System.exit(1);
+        }
 
         // create the batch writers
         if(mConfig.isMultiSample())
@@ -72,16 +78,22 @@ public class ProbeFinder
         }
 
         if(mConfig.isMultiSample())
-            CT_LOGGER.info("running probe variant selection for {} samples", mConfig.SampleIds.size());
+        {
+            LOGGER.info("running probe variant selection for {} samples", mConfig.SampleIds.size());
+        }
         else
-            CT_LOGGER.info("sample({}) running probe variant selection", mConfig.sample());
+        {
+            LOGGER.info("sample({}) running probe variant selection", mConfig.sample());
+        }
 
         if(mConfig.ReferenceVariantsFile != null)
         {
             List<Variant> referenceVariants = ReferenceMutation.loadKnownMutations(mConfig.ReferenceVariantsFile);
 
             if(referenceVariants == null)
+            {
                 System.exit(1);
+            }
 
             mCommonVariants.addAll(referenceVariants);
         }
@@ -113,7 +125,9 @@ public class ProbeFinder
                 for(String sampleId : mConfig.SampleIds)
                 {
                     if(taskIndex >= sampleTasks.size())
+                    {
                         taskIndex = 0;
+                    }
 
                     sampleTasks.get(taskIndex).addSampleId(sampleId);
 
@@ -125,7 +139,9 @@ public class ProbeFinder
                 for(String batchId : mConfig.BatchSampleIds.keySet())
                 {
                     if(taskIndex >= sampleTasks.size())
+                    {
                         taskIndex = 0;
+                    }
 
                     sampleTasks.get(taskIndex).addBatchId(batchId);
 
@@ -133,20 +149,20 @@ public class ProbeFinder
                 }
             }
 
-            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = new ArrayList<>(sampleTasks);
             TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
         {
             SampleTask sampleTask = new SampleTask(0);
-            mConfig.SampleIds.forEach(x -> sampleTask.addSampleId(x));
+            mConfig.SampleIds.forEach(sampleTask::addSampleId);
             sampleTasks.add(sampleTask);
             sampleTask.call();
         }
 
-        mWriters.values().forEach(x -> closeBufferedWriter(x));
+        mWriters.values().forEach(FileWriterUtils::closeBufferedWriter);
 
-        CT_LOGGER.info("Probe variation selection complete");
+        LOGGER.info("Probe variation selection complete");
     }
 
     private class SampleTask implements Callable<Void>
@@ -162,8 +178,15 @@ public class ProbeFinder
             mBatchIds = Lists.newArrayList();
         }
 
-        public void addSampleId(final String sampleId) { mSampleIds.add(sampleId); }
-        public void addBatchId(final String batchId) { mBatchIds.add(batchId); }
+        public void addSampleId(final String sampleId)
+        {
+            mSampleIds.add(sampleId);
+        }
+
+        public void addBatchId(final String batchId)
+        {
+            mBatchIds.add(batchId);
+        }
 
         @Override
         public Void call()
@@ -183,8 +206,8 @@ public class ProbeFinder
                     }
 
                     StringJoiner sj = new StringJoiner(",");
-                    sampleVariantMap.keySet().forEach(x -> sj.add(x));
-                    CT_LOGGER.debug("batching {} samples: {}", sampleVariantMap.size(), sj.toString());
+                    sampleVariantMap.keySet().forEach(sj::add);
+                    LOGGER.debug("batching {} samples: {}", sampleVariantMap.size(), sj.toString());
 
                     finaliseBatchVariants(sampleVariantMap);
                     writeVariants(CategoryType.REFERENCE.toString(), batchId, mCommonVariants);
@@ -205,14 +228,14 @@ public class ProbeFinder
 
                     if(i > 0 && (i % 10) == 0)
                     {
-                        CT_LOGGER.info("{}: processed {} samples", mTaskId, i);
+                        LOGGER.info("{}: processed {} samples", mTaskId, i);
                     }
                 }
             }
 
             if(mConfig.Threads > 1)
             {
-                CT_LOGGER.info("{}: tasks complete for {} samples", mTaskId, max(mSampleIds.size(), mBatchIds.size()));
+                LOGGER.info("{}: tasks complete for {} samples", mTaskId, max(mSampleIds.size(), mBatchIds.size()));
             }
 
             return null;
@@ -221,7 +244,9 @@ public class ProbeFinder
         private List<Variant> selectSampleVariants(final String sampleId)
         {
             if(!mConfig.checkSampleDirectories(sampleId))
+            {
                 return Collections.emptyList();
+            }
 
             try
             {
@@ -238,11 +263,13 @@ public class ProbeFinder
             }
             catch(Exception e)
             {
-                CT_LOGGER.error("sample data loading error: {}", e.toString());
+                LOGGER.error("sample data loading error: {}", e.toString());
                 e.printStackTrace();
 
                 if(mConfig.AllowMissing)
+                {
                     return Collections.emptyList();
+                }
 
                 System.exit(1);
             }
@@ -272,9 +299,13 @@ public class ProbeFinder
                     {
                         // remove based on proximity to another
                         if(variant.checkAndRegisterLocation(registeredLocations))
+                        {
                             ++index;
+                        }
                         else
+                        {
                             variants.remove(index);
+                        }
                     }
                 }
             }
@@ -284,22 +315,32 @@ public class ProbeFinder
     private BufferedWriter initialiseWriter(@Nullable final String batchId)
     {
         if(mConfig.SampleIds.isEmpty())
+        {
             return null;
+        }
 
         try
         {
             String filename = mConfig.OutputDir;
 
             if(mConfig.isMultiSample())
+            {
                 filename += "cohort_probe_variants";
+            }
             else
+            {
                 filename += mConfig.sample() + ".probe_variants";
+            }
 
             if(mConfig.OutputId != null)
+            {
                 filename += "." + mConfig.OutputId;
+            }
 
             if(batchId != null)
+            {
                 filename += "." + batchId;
+            }
 
             filename += TSV_EXTENSION;
 
@@ -308,12 +349,22 @@ public class ProbeFinder
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             if(mConfig.isMultiSample())
+            {
                 sj.add("SampleId");
+            }
 
             if(mConfig.BatchSampleIds.size() > 1)
-                sj.add(FLD_BATCH_ID);
+            {
+                sj.add(CommonUtils.FLD_BATCH_ID);
+            }
 
-            sj.add(FLD_CATEGORY).add("Status").add(FLD_VARIANT).add("Reported").add("CopyNumber").add("Vaf").add("TumorFrags");
+            sj.add(CommonUtils.FLD_CATEGORY)
+                    .add("Status")
+                    .add(CommonUtils.FLD_VARIANT)
+                    .add("Reported")
+                    .add("CopyNumber")
+                    .add("Vaf")
+                    .add("TumorFrags");
             sj.add("PhasedVariants").add("Gene").add("Type").add("Sequence").add("GcPercent").add("OtherData");
 
             writer.write(sj.toString());
@@ -322,7 +373,7 @@ public class ProbeFinder
         }
         catch(IOException e)
         {
-            CT_LOGGER.error("failed to initialise output file: {}", e.toString());
+            LOGGER.error("failed to initialise output file: {}", e.toString());
             return null;
         }
     }
@@ -333,22 +384,30 @@ public class ProbeFinder
         BufferedWriter writer = batchId != null ? mWriters.get(batchId) : mWriters.get(NO_BATCH_ID);
 
         if(writer == null)
+        {
             return;
+        }
 
         try
         {
             for(Variant variant : selectedVariants)
             {
                 if(!mConfig.WriteAll && !variant.isSelected())
+                {
                     continue;
+                }
 
                 StringJoiner variantInfo = new StringJoiner(TSV_DELIM);
 
                 if(mConfig.isMultiSample())
+                {
                     variantInfo.add(sampleId);
+                }
 
                 if(batchId != null)
+                {
                     variantInfo.add(batchId);
+                }
 
                 variantInfo.add(variant.categoryType().toString());
                 variantInfo.add(variant.selectionStatus().toString());
@@ -385,13 +444,13 @@ public class ProbeFinder
         }
         catch(IOException e)
         {
-            CT_LOGGER.error(" failed to write variants: {}", e.toString());
+            LOGGER.error(" failed to write variants: {}", e.toString());
         }
     }
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        ConfigBuilder configBuilder = new ConfigBuilder(CommonUtils.APP_NAME);
         ProbeConfig.addConfig(configBuilder);
 
         addLoggingOptions(configBuilder);

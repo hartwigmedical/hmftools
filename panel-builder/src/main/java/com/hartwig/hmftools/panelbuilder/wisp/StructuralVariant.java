@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.wisp.probe;
+package com.hartwig.hmftools.panelbuilder.wisp;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -15,14 +15,13 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.AMP;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.DISRUPTION;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.FUSION;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_SV_BREAKENDS_PER_GENE;
-import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_POLY_A_T_BASES;
+import static com.hartwig.hmftools.common.wisp.CategoryType.AMP;
+import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
+import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
+import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
+import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_SV_BREAKENDS_PER_GENE;
+import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.MAX_POLY_A_T_BASES;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
@@ -47,6 +47,10 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
+import com.hartwig.hmftools.common.wisp.CategoryType;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class StructuralVariant extends Variant
 {
@@ -55,7 +59,9 @@ public class StructuralVariant extends Variant
     private final List<LinxFusion> mFusions;
     private CategoryType mCategoryType;
 
-    private List<String> mRefSequences;
+    private final List<String> mRefSequences;
+
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariant.class);
 
     public StructuralVariant(
             final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
@@ -68,7 +74,10 @@ public class StructuralVariant extends Variant
         setCategoryType();
     }
 
-    public StructuralVariantData variantData() { return mVariant; }
+    public StructuralVariantData variantData()
+    {
+        return mVariant;
+    }
 
     public void markAmpDelDriver(boolean isAmp)
     {
@@ -76,7 +85,10 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public CategoryType categoryType() { return mCategoryType; }
+    public CategoryType categoryType()
+    {
+        return mCategoryType;
+    }
 
     private void setCategoryType()
     {
@@ -88,7 +100,7 @@ public class StructuralVariant extends Variant
         {
             return;
         }
-        else if(mBreakends.stream().anyMatch(x -> x.reportedDisruption()))
+        else if(mBreakends.stream().anyMatch(LinxBreakend::reportedDisruption))
         {
             mCategoryType = DISRUPTION;
         }
@@ -118,30 +130,49 @@ public class StructuralVariant extends Variant
     public String gene()
     {
         if(!mFusions.isEmpty())
+        {
             return mFusions.get(0).name();
+        }
 
-        LinxBreakend breakend = mBreakends.stream().filter(x -> x.reportedDisruption()).findFirst().orElse(null);
+        LinxBreakend breakend = mBreakends.stream().filter(LinxBreakend::reportedDisruption).findFirst().orElse(null);
 
         if(breakend != null)
+        {
             return breakend.gene();
+        }
 
         return !mBreakends.isEmpty() ? mBreakends.get(0).gene() : "";
     }
 
     @Override
-    public List<String> refSequences() { return mRefSequences; }
+    public List<String> refSequences()
+    {
+        return mRefSequences;
+    }
 
     @Override
-    public double copyNumber() { return max(mVariant.adjustedStartCopyNumberChange(), mVariant.adjustedEndCopyNumberChange()); }
+    public double copyNumber()
+    {
+        return max(mVariant.adjustedStartCopyNumberChange(), mVariant.adjustedEndCopyNumberChange());
+    }
 
     @Override
-    public double vaf() { return mVariant.adjustedStartAF(); }
+    public double vaf()
+    {
+        return mVariant.adjustedStartAF();
+    }
 
     @Override
-    public int tumorFragments() { return max(mVariant.startTumorVariantFragmentCount(), mVariant.endTumorVariantFragmentCount()); }
+    public int tumorFragments()
+    {
+        return max(mVariant.startTumorVariantFragmentCount(), mVariant.endTumorVariantFragmentCount());
+    }
 
     @Override
-    public boolean hasPhaseVariants() { return false; }
+    public boolean hasPhaseVariants()
+    {
+        return false;
+    }
 
     @Override
     public boolean reported()
@@ -153,8 +184,8 @@ public class StructuralVariant extends Variant
     public String otherData()
     {
         return format("GcRefMin=%.2f GcRefMax=%.2f",
-                mRefSequences.stream().mapToDouble(x -> calcGcPercent(x)).min().orElse(0),
-                mRefSequences.stream().mapToDouble(x -> calcGcPercent(x)).max().orElse(0));
+                mRefSequences.stream().mapToDouble(GcCalcs::calcGcPercent).min().orElse(0),
+                mRefSequences.stream().mapToDouble(GcCalcs::calcGcPercent).max().orElse(0));
     }
 
     protected static List<String> generateSvReferenceSequences(
@@ -172,7 +203,9 @@ public class StructuralVariant extends Variant
             int position = se == SE_START ? positionStart : positionEnd;
 
             if(position <= 0) // ie SGLs
+            {
                 continue;
+            }
 
             int probeStart = position - halfProbeLength;
 
@@ -213,7 +246,7 @@ public class StructuralVariant extends Variant
 
         if(sequence.length() != probeLength)
         {
-            CT_LOGGER.error("variant({}:{}) invalid sequenceLength({}): {}", chromosome, position, sequence.length(), sequence);
+            LOGGER.error("variant({}:{}) invalid sequenceLength({}): {}", chromosome, position, sequence.length(), sequence);
         }
 
         return sequence;
@@ -282,7 +315,7 @@ public class StructuralVariant extends Variant
 
         if(sequence.length() != probeLength)
         {
-            CT_LOGGER.error("variant({}:{} - {}:{}) invalid sequenceLength({}): {}",
+            LOGGER.error("variant({}:{} - {}:{}) invalid sequenceLength({}): {}",
                     chrStart, positionStart, chrEnd, positionEnd, sequence.length(), sequence);
         }
 
@@ -316,33 +349,48 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    boolean checkFilters() { return mCategoryType != FUSION && mCategoryType != AMP && mCategoryType != CategoryType.DEL; }
+    boolean checkFilters()
+    {
+        return mCategoryType != FUSION && mCategoryType != AMP && mCategoryType != CategoryType.DEL;
+    }
 
     @Override
     public boolean passNonReportableFilters(final ProbeConfig config, boolean useLowerLimits)
     {
         if(reported() && mCategoryType != DISRUPTION)
+        {
             return true;
+        }
 
         if(!passesGcRatioLimit(gc(), config, useLowerLimits))
+        {
             return false;
+        }
 
         for(String refSequence : mRefSequences)
         {
             double gcRatio = calcGcPercent(refSequence);
 
             if(!passesGcRatioLimit(gcRatio, config, useLowerLimits))
+            {
                 return false;
+            }
 
             if(exceedsPolyAtThreshold(refSequence))
+            {
                 return false;
+            }
         }
 
         if(vaf() < config.VafMin)
+        {
             return false;
+        }
 
         if(!passesFragmentCountLimit(tumorFragments(), config, useLowerLimits))
+        {
             return false;
+        }
 
         return true;
     }
@@ -375,7 +423,7 @@ public class StructuralVariant extends Variant
     public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
     {
         if(registeredLocations.isNearRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation())
-        || registeredLocations.isNearRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()))
+                || registeredLocations.isNearRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()))
         {
             return false;
         }
@@ -386,7 +434,7 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterGeneLocation(final Map<String,Integer> geneDisruptions)
+    public boolean checkAndRegisterGeneLocation(final Map<String, Integer> geneDisruptions)
     {
         for(LinxBreakend breakend : mBreakends)
         {
@@ -395,7 +443,9 @@ public class StructuralVariant extends Variant
             if(breakendCount != null)
             {
                 if(breakendCount >= DEFAULT_SV_BREAKENDS_PER_GENE)
+                {
                     return false;
+                }
 
                 geneDisruptions.put(breakend.gene(), breakendCount + 1);
             }
@@ -418,7 +468,9 @@ public class StructuralVariant extends Variant
         List<Variant> variants = Lists.newArrayList();
 
         if(config.LinxDir == null)
+        {
             return variants;
+        }
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
         String purpleDir = ProbeConfig.getSampleFilePath(sampleId, config.PurpleDir);
@@ -436,7 +488,7 @@ public class StructuralVariant extends Variant
 
         List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(linxDir, sampleId))
                 .stream().filter(x -> x.eventType() == DEL || x.eventType() == GAIN)
-                .collect(Collectors.toList());
+                .toList();
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -445,30 +497,36 @@ public class StructuralVariant extends Variant
             String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
             GeneCopyNumberFile.read(geneCopyNumberFile).stream()
                     .filter(x -> drivers.stream().anyMatch(y -> y.gene().equals(x.geneName())))
-                    .forEach(x -> geneCopyNumbers.add(x));
+                    .forEach(geneCopyNumbers::add);
         }
 
         List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
 
-        Map<Integer,List<StructuralVariant>> clusterSVs = Maps.newHashMap();
+        Map<Integer, List<StructuralVariant>> clusterSVs = Maps.newHashMap();
         drivers.forEach(x -> clusterSVs.put(x.clusterId(), Lists.newArrayList()));
 
         for(EnrichedStructuralVariant variant : enrichedVariants)
         {
             if(variant.type() == StructuralVariantType.INF)
+            {
                 continue;
+            }
 
             if(!variant.filter().equals(PASS))
+            {
                 continue;
+            }
 
             if(variant.insertSequence().length() >= MAX_INSERT_BASES && variant.type() != SGL)
+            {
                 continue;
+            }
 
             LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(variant.id())).findFirst().orElse(null);
 
             if(annotation == null)
             {
-                CT_LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
+                LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
                 // return Lists.newArrayList();
                 continue;
             }
@@ -476,19 +534,23 @@ public class StructuralVariant extends Variant
             List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == annotation.svId()).collect(Collectors.toList());
 
             List<LinxFusion> svFusions = fusions.stream()
-                    .filter(x -> x.reported())
+                    .filter(LinxFusion::reported)
                     .filter(x -> x.chainLinks() == 0)
                     .filter(x -> svBreakends.stream().anyMatch(y -> y.id() == x.fivePrimeBreakendId()))
                     .collect(Collectors.toList());
 
             // only use SGLs if in a reportable fusion
             if(variant.type() == SGL && svFusions.isEmpty())
-                 continue;
+            {
+                continue;
+            }
 
             LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
 
             if(cluster == null || cluster.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT))
+            {
                 continue;
+            }
 
             StructuralVariantData variantData = convertSvData(variant, annotation.svId());
 
@@ -501,7 +563,7 @@ public class StructuralVariant extends Variant
             }
         }
 
-        CT_LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
+        LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
 
         // find SVs related to DEL and AMP events
         for(LinxDriver driver : drivers)
@@ -524,20 +586,25 @@ public class StructuralVariant extends Variant
             }
             else
             {
-                GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream().filter(x -> x.geneName().equals(driver.gene())).findFirst().orElse(null);
+                GeneCopyNumber geneCopyNumber =
+                        geneCopyNumbers.stream().filter(x -> x.geneName().equals(driver.gene())).findFirst().orElse(null);
 
                 if(geneCopyNumber != null)
                 {
                     for(StructuralVariant sv : svList)
                     {
                         if(matchesDelRegion(sv, geneCopyNumber))
+                        {
                             sv.markAmpDelDriver(false);
+                        }
                     }
                 }
             }
 
             if(driverSv != null)
+            {
                 driverSv.markAmpDelDriver(true);
+            }
         }
 
         return variants;
@@ -545,17 +612,26 @@ public class StructuralVariant extends Variant
 
     public static boolean matchesDelRegion(final StructuralVariant sv, final GeneCopyNumber geneCopyNumber)
     {
-        if(sv.variantData().startOrientation() == ORIENT_FWD && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(sv.variantData().startOrientation() == ORIENT_FWD
+                && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        {
             return true;
+        }
 
         if(sv.variantData().endOrientation() == ORIENT_FWD && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        {
             return true;
+        }
 
         if(sv.variantData().startOrientation() == ORIENT_REV && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        {
             return true;
+        }
 
         if(sv.variantData().endOrientation() == ORIENT_REV && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        {
             return true;
+        }
 
         return false;
     }

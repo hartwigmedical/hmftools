@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.wisp.probe;
+package com.hartwig.hmftools.common.wisp;
 
 public enum CategoryType
 {
