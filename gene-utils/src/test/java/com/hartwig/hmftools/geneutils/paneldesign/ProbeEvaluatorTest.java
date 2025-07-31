@@ -124,6 +124,6 @@ public class ProbeEvaluatorTest
         assertNotNull(evalProbe.rejectionReason());
         assertTrue(evalProbe.rejected());
         assertFalse(evalProbe.accepted());
-        assertTrue(evalProbe.rejectionReason().toLowerCase().contains("quality"));
+        assertTrue(evalProbe.rejectionReason().toLowerCase().contains("qs"));
     }
 }
