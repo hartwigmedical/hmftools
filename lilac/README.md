@@ -432,17 +432,21 @@ related pseudogenes:
   - Have a mapping quality of at least 1
 
 The main steps of the algorithm are:
-- Elimination phase - eliminate candidate alleles: 
-  - Construct **nucleotide** matrix (position x fragment support per base). Eliminate alleles with sequences not matching possible **nucleotide** sequences
-  - Construct **amino acid** matrix (position x fragment support per residue). Eliminate alleles with sequences not matching possible **amino acid** sequences
-  - Eliminate based on **phased haplotypes**
-  - Exclude HLA-Y pseudogene fragments
-  - Conditionally eliminate and recover alleles
-- Evidence phase - score and rank allele combinations
+- [Elimination phase](#elimination-phase) (eliminate unlikely candidate alleles): 
+  - [Construct nucleotide matrix](#nucleotide-matrix-construction) (position x fragment support per base). Eliminate alleles with sequences not matching possible **nucleotide** sequences
+  - [Construct amino acid matrix](#amino-acid-matrix) (position x fragment support per residue). Eliminate alleles with sequences not matching possible **amino acid** sequences
+  - Eliminate based on [phased haplotypes](#elimination-based-on-phased-haplotypes)
+  - Exclude [HLA-Y](#excluding-hla-y-pseudogene-fragments) pseudogene fragments
+  - [Conditionally eliminate and recover alleles](#conditionally-eliminate-and-recover-alleles)
+- [Evidence phase](#evidence-phase):
+  - [Determine fragment support](#determining-fragment-support-per-complex) per allele combination
+  - [Score](#scoring) and rank allele combinations
 
-After the germline alleles are determined, LILAC determines the tumor copy number and any somatic mutations in each allele. Note that if
-more than 300 bases of the HLA-A, HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with errors and will not
-try to fit the sample.
+After the germline alleles are determined, LILAC determines the tumor copy number and any somatic mutations in each allele 
+(see: [Tumor and RNA status of alleles](#tumor-and-rna-status-of-alleles)).
+
+Note that if more than 300 bases (~9%) of the HLA-A, HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with 
+errors and will not try to fit the sample.
 
 ### Elimination phase
 The elimination phase removes alleles that are unlikely part of the final solution, namely, if they do not have sufficient fragment support 
