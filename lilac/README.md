@@ -57,15 +57,22 @@ See section [Reference data generation](#reference-data-generation) for details 
 
 ## Usage
 
-The LILAC jar version can be downloaded [here](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1). Older LILAC jar 
-versions can be downloaded from [hmftools > releases](https://github.com/hartwigmedical/hmftools/releases?q=lilac).
+The latest LILAC version is: [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1)
+
+Older versions:
+- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.6)
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.5.2)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.2)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.3)
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
 
 ### Examples
 
 #### Reference-only mode
 
 HLA-typing from a reference sample (e.g. blood or normal tissue) BAM.
-
 
 ```
 java -jar lilac.jar \
@@ -768,12 +775,5 @@ candidate nucleotides at the bases locations with qual < min(30,medianBaseQualit
 nucleotide matches are permitted.
  </pre>
 
-## Version History and Download Links
-- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.5.2)
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.2)
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.3)
-- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
 
  
