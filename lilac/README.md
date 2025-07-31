@@ -456,7 +456,9 @@ the evidence phase.
 #### Nucleotide matrix construction
 
 For each HLA gene, create a matrix containing the nucleotide counts (i.e. high quality fragment support) for each position, resulting in the
-below output. Bases with 0 fragment support not shown, and soft-clipped bases are represented as multi-character strings.
+below output. Bases with 0 fragment support not shown, and soft-clipped bases are represented as multi-character strings. Positions with 
+multiple nucleotides candidate are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
+
 
 ```
 #index count1 base1 count2 base2 etc...
@@ -477,13 +479,11 @@ below output. Bases with 0 fragment support not shown, and soft-clipped bases ar
 ...
 ```
 
-Positions with more than 1 amino acid candidate are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
-
-Construction of the nucleotide matrix has several steps / conditions which are described in the below subsections.
+Construction of the nucleotide matrix has some conditions/caveats which are described in the below subsections.
 
 ##### Shared fragment support across genes
 
-Firstly, fragment bases aligned at exons with boundaries identical across two or more HLA genes will count towards fragment support for the 
+Fragment bases aligned at exons with boundaries identical across two or more HLA genes will count towards fragment support for the 
 corresponding nucleotide positions and genes. For example, the below table shows the exon boundaries (nucleotide end positions) for each 
 HLA class I gene. Fragment bases at exons 1-4 will contribute to fragment counts in the HLA-A, HLA-B and HLA-C matrices, whereas fragment 
 bases at exons 5-6 will support only contribute to the HLA-A/B matrices or the HLA-C matrix.
@@ -501,14 +501,23 @@ realignment. Fragments with out-of-frame indels are always excluded.
 
 ##### Filtering for nucleotide candidates
 
-For each position, candidate nucleotide bases are filtered for those with fragment support greater than or equal to:
-- `min_hi_qual_fragment_support` = `max(1, min_high_qual_evidence_factor * hi_qual_fragment_support)` where:
-  - `min_high_qual_evidence_factor`: 0.003 by default
-  - `hi_qual_fragment_support`: number of fragment bases with at least `min(30, median_base_quality)` supporting a candidate base
+For each position, candidate bases are kept if they have at least:
 
-- `min_overall_fragment_support` = `max(2, min_evidence_factor * overall_fragment_support)` where:
-  - `min_evidence_factor`: 0.006 by default
-  - `overall_fragment_support`: total number of fragment bases supporting a candidate base
+```
+min_fragment_support = max(1, 0.006 * fragment_support)
+                           ^    ^
+        min_evidence_support    min_evidence_factor
+```
+
+and at least:
+
+```
+min_hi_qual_fragment_support = max(1, 0.003 * hi_qual_fragment_support)
+                                   ^    ^
+                min_evidence_support    min_high_qual_evidence_factor
+```
+where only bases with `>min(30, median_base_quality)` count towards `hi_qual_fragment_support`.
+
 
 #### Elimination based on nucleotide matrix
 
@@ -529,7 +538,8 @@ probe binding affinity.
 #### Amino acid matrix
 
 Similar to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates. Amino acids with 0 fragment support not shown, 
-and amino acids derived from soft-clipped bases are represented as multi-character strings.
+and amino acids derived from soft-clipped bases are represented as multi-character strings. Positions with multiple amino acid candidates 
+are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
 
 ```
 0	749	M	971
@@ -543,17 +553,16 @@ and amino acids derived from soft-clipped bases are represented as multi-charact
 ...
 ```
 
-Positions with more than 1 amino acid candidate are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
+Amino acid matrix construction has the similar conditions/caveats as for the nucleotide matrix, namely: 
+- [Shared fragment support across genes](#shared-fragment-support-across-genes) is taken into account
+- Fragments with in-frame indels only contribute to counts in the matrix if the indel matches an existing HLA allele, 
+and fragments with out-of-frame indels are always excluded
+- Amino acid candidates are filtered for those with at least `min_fragment_support` and `min_hi_qual_fragment_support` 
+(see [Filtering for nucleotide candidates](#filtering-for-nucleotide-candidates)) for all nucleotides in each codon
 
-The same steps used in nucleotide matrix construction are used in amino acid matrix construction, namely: 
-- [Calculating shared fragment support across genes](#shared-fragment-support-across-genes)
-- [Indel handling](#indel-handling)
-- [Filtering of amino acid candidates](#filtering-for-nucleotide-candidates)
-
-An addition step, exon boundary 'enrichment', is applied to exons 1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes)
+Additionally, exon boundary 'enrichment', is applied to exons 1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes)
 (i.e. before nucleotide index 894, amino acid index 298). For codons crossing these exon boundaries, any associated fragment is enriched 
 with **homozygous** nucleotide candidates on the other side of the exon boundary so that an amino acid can constructed.
-
 
 #### Elimination based on amino acid matrix
 
