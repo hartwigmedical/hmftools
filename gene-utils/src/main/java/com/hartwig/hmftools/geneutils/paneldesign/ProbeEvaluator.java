@@ -3,6 +3,7 @@ package com.hartwig.hmftools.geneutils.paneldesign;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
+import static com.hartwig.hmftools.geneutils.paneldesign.PanelBuilderConstants.DEFAULT_PROBE_QUALITY;
 
 import java.text.DecimalFormat;
 import java.util.Objects;
@@ -63,11 +64,11 @@ public class ProbeEvaluator
     private Probe evaluateQualityScore(Probe probe)
     {
         Criteria criteria = Objects.requireNonNull(probe.evalCriteria());
-        double qualityScore = getProbeQuality(probe);
+        double qualityScore = getProbeQualityScore(probe);
         probe = probe.withQualityScore(qualityScore);
         if(!(qualityScore >= criteria.qualityScoreMin()))
         {
-            probe = probe.withRejectionReason("quality");
+            probe = probe.withRejectionReason("QS");
         }
         return probe;
     }
@@ -81,19 +82,19 @@ public class ProbeEvaluator
         probe = probe.withGcContent(gcContent);
         if(!(gcContent >= criteria.gcContentMin() && gcContent <= criteria.gcContentMax()))
         {
-            probe = probe.withRejectionReason("gc");
+            probe = probe.withRejectionReason("GC");
         }
         return probe;
     }
 
-    private double getProbeQuality(final Probe probe)
+    private double getProbeQualityScore(final Probe probe)
     {
         return mQualityProfile.computeQualityScore(probe.region()).orElseGet(() ->
         {
-            // Never want to accept a probe with no quality score, so just return 0 in that case to simplify the code elsewhere.
-            // Maybe be interesting to know when this happens because the probe quality profile ideally covers the whole genome.
-            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore=0 probe={}", probe);
-            return 0d;
+            double quality = DEFAULT_PROBE_QUALITY;
+            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore={} probe={}",
+                    quality, probe);
+            return quality;
         });
     }
 
@@ -156,11 +157,11 @@ public class ProbeEvaluator
         @Override
         public String toString()
         {
-            String str = format("quality>=%s", DECIMAL_FORMAT.format(qualityScoreMin));
+            String str = format("QS>=%s", DECIMAL_FORMAT.format(qualityScoreMin));
             if(gcContentMin() > 0 || gcContentMax() < 1)
             {
                 // Only show GC criteria if it does anything.
-                str += format(" gc=%s+-%s", DECIMAL_FORMAT.format(gcContentTarget), DECIMAL_FORMAT.format(gcContentTolerance));
+                str += format(" GC=%s+-%s", DECIMAL_FORMAT.format(gcContentTarget), DECIMAL_FORMAT.format(gcContentTolerance));
             }
             return str;
         }

@@ -7,6 +7,8 @@ public class PanelBuilderConstants
     // By default, have wide GC content tolerance since it matters less for general probes.
     public static final double GENERAL_GC_TARGET = 0.45;
     public static final double GENERAL_GC_TOLERANCE = 1;    // I.e. any GC is ok
+    // If we can't calculate the quality score of a probe, what quality score do we assign?
+    public static final double DEFAULT_PROBE_QUALITY = 0;
 
     // Parameters when covering a large region with probes.
     // How many bases a probe may be shifted left or right from its "ideal" tiled position.
