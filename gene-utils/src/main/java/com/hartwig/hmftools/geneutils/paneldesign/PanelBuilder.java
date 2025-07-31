@@ -99,7 +99,7 @@ public class PanelBuilder
     {
         if(mConfig.AmberSitesFile == null)
         {
-            LOGGER.info("Amber sites not provided; skipping copy number backbone probes");
+            LOGGER.warn("Amber sites not provided; skipping copy number backbone probes");
         }
         else
         {

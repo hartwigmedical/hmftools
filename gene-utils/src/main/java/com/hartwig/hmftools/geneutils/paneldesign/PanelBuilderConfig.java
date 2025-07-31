@@ -16,14 +16,20 @@ import org.jetbrains.annotations.Nullable;
 
 public class PanelBuilderConfig
 {
-    public final String AmberSitesFile;
-    public final String TargetGenesFile;
-    public final String CustomRegionsFile;
-
+    // Reference data files.
     public final String RefGenomeFile;
     public final String EnsemblDir;
     public final String ProbeQualityProfileFile;
+    @Nullable
+    public final String AmberSitesFile;
 
+    // User input files.
+    @Nullable
+    public final String TargetGenesFile;
+    @Nullable
+    public final String CustomRegionsFile;
+
+    // Output config.
     @Nullable
     public final String OutputPrefix;
     public final String OutputDir;
@@ -42,32 +48,28 @@ public class PanelBuilderConfig
 
     public PanelBuilderConfig(final ConfigBuilder configBuilder)
     {
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
+        EnsemblDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
+        ProbeQualityProfileFile = configBuilder.getValue(CFG_PROBE_QUALITY_FILE);
         AmberSitesFile = configBuilder.getValue(CFG_AMBER_SITES_FILE);
+
         TargetGenesFile = configBuilder.getValue(CFG_TARGET_GENES_FILE);
         CustomRegionsFile = configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE);
-
-        RefGenomeFile = configBuilder.getValue(REF_GENOME);
-
-        EnsemblDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
-
-        ProbeQualityProfileFile = configBuilder.getValue(CFG_PROBE_QUALITY_FILE);
 
         OutputPrefix = configBuilder.hasValue(CFG_OUTPUT_PREFIX) ? configBuilder.getValue(CFG_OUTPUT_PREFIX) : null;
         OutputDir = parseOutputDir(configBuilder);
         VerboseOutput = configBuilder.hasFlag(CFG_VERBOSE_OUTPUT);
     }
 
-    public static void registerConfig(final ConfigBuilder configBuilder)
+    public static void registerConfig(ConfigBuilder configBuilder)
     {
+        addRefGenomeFile(configBuilder, true);
+        EnsemblDataCache.addEnsemblDir(configBuilder, true);
+        ProbeQualityProfile.registerConfig(configBuilder);
         configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);
+
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
         configBuilder.addPath(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
-
-        EnsemblDataCache.addEnsemblDir(configBuilder, true);
-
-        addRefGenomeFile(configBuilder, true);
-
-        ProbeQualityProfile.registerConfig(configBuilder);
 
         configBuilder.addConfigItem(CFG_OUTPUT_PREFIX, false, DESC_OUTPUT_PREFIX);
         addOutputDir(configBuilder);
