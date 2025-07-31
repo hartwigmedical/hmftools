@@ -2,9 +2,10 @@ package com.hartwig.hmftools.geneutils.probequality;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.geneutils.probequality.Utils.partitionStream;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -178,18 +179,9 @@ public class BaseWindowGenerator
     }
 
     // Batches the stream into lists of fixed size for immediate processing.
-    public Stream<List<ChrBaseRegion>> batchRegions(Stream<ChrBaseRegion> regions)
+    private Stream<List<ChrBaseRegion>> batchRegions(Stream<ChrBaseRegion> regions)
     {
-        Iterator<ChrBaseRegion> iterator = regions.iterator();
-        return Stream.generate(() ->
-        {
-            List<ChrBaseRegion> batch = new ArrayList<>(mBatchSize);
-            for(int i = 0; i < mBatchSize && iterator.hasNext(); i++)
-            {
-                batch.add(iterator.next());
-            }
-            return batch;
-        }).takeWhile(b -> !b.isEmpty());
+        return partitionStream(regions, mBatchSize);
     }
 
     // Checks if a base sequence is "normal" for the purposes of this analysis.
