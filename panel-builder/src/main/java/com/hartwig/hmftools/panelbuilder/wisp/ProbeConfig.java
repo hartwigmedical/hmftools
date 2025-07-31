@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder.wisp;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -11,17 +13,10 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_FRAG_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_FRAG_COUNT_MIN_LOWER;
@@ -32,15 +27,9 @@ import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_GC_T
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_PROBE_COUNT;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_VAF_MIN;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -49,8 +38,7 @@ import org.apache.logging.log4j.Logger;
 
 public class ProbeConfig
 {
-    public final List<String> SampleIds;
-    public final Map<String, List<String>> BatchSampleIds;
+    public final String SampleId;
     public final String LinxDir;
     public final String LinxGermlineDir;
     public final String PurpleDir;
@@ -75,9 +63,7 @@ public class ProbeConfig
     public final int NonReportableSvCount;
     public final int SubclonalCount;
     public final boolean WriteAll;
-    public final boolean AllowMissing;
 
-    public final int Threads;
     public final String OutputDir;
     public final String OutputId;
 
@@ -91,27 +77,12 @@ public class ProbeConfig
     private static final String NON_REPORTABLE_SV_COUNT = "non_reportable_sv_count";
     private static final String SUBCLONAL_COUNT = "subclonal_count";
     private static final String WRITE_ALL = "write_all";
-    private static final String ALLOW_MISSING = "allow_missing";
-    private static final String SAMPLE_BATCH_COUNT = "sample_batch_count";
-
-    public static final String NO_BATCH_ID = "NONE";
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeConfig.class);
 
     public ProbeConfig(final ConfigBuilder configBuilder)
     {
-        SampleIds = Lists.newArrayList();
-        BatchSampleIds = Maps.newHashMap();
-
-        if(configBuilder.hasValue(SAMPLE))
-        {
-            SampleIds.add(configBuilder.getValue(SAMPLE));
-        }
-        else
-        {
-            loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
-        }
-
+        SampleId = configBuilder.getValue(SAMPLE);
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         LinxDir = configBuilder.getValue(LINX_DIR_CFG);
         LinxGermlineDir = configBuilder.getValue(LINX_GERMLINE_DIR_CFG);
@@ -139,18 +110,6 @@ public class ProbeConfig
         GcRatioLimitLowerMax = DEFAULT_GC_THRESHOLD_MAX_LOWER;
 
         WriteAll = configBuilder.hasFlag(WRITE_ALL);
-        AllowMissing = configBuilder.hasFlag(ALLOW_MISSING);
-        Threads = parseThreads(configBuilder);
-    }
-
-    public boolean isMultiSample()
-    {
-        return SampleIds.size() > 1;
-    }
-
-    public String sample()
-    {
-        return SampleIds.get(0);
     }
 
     public static String getSampleFilePath(final String sampleId, final String filePath)
@@ -158,18 +117,7 @@ public class ProbeConfig
         return convertWildcardSamplePath(filePath, sampleId);
     }
 
-    public boolean isValid()
-    {
-        if(SampleIds.isEmpty())
-        {
-            LOGGER.error("missing sampleId config");
-            return false;
-        }
-
-        return true;
-    }
-
-    public boolean checkSampleDirectories(final String sampleId)
+    public void checkSampleDirectories(final String sampleId)
     {
         String purpleDir = getSampleFilePath(sampleId, PurpleDir);
 
@@ -181,59 +129,9 @@ public class ProbeConfig
                 || (linxDir != null && !Files.exists(Paths.get(linxDir)))
                 || (linxGermlineDir != null && !Files.exists(Paths.get(linxGermlineDir))))
         {
-            if(!AllowMissing)
-            {
-                LOGGER.error("sample({}) missing Purple or Linx directories", sampleId);
-                System.exit(1);
-            }
-
-            LOGGER.warn("sample({}) missing Purple or Linx directories", sampleId);
-            return false;
-        }
-
-        return true;
-    }
-
-    private void loadSampleIdsFile(final String filename)
-    {
-        try
-        {
-            List<String> lines = Files.readAllLines(new File(filename).toPath());
-            String header = lines.get(0);
-            lines.remove(0);
-
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
-
-            int idIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
-            Integer batchIndex = fieldsIndexMap.get("BatchId");
-
-            for(String line : lines)
-            {
-                String[] values = line.split(CSV_DELIM, -1);
-
-                String sampleId = values[idIndex];
-
-                String batchId = batchIndex != null ? values[batchIndex] : NO_BATCH_ID;
-
-                List<String> sampleIds = BatchSampleIds.computeIfAbsent(batchId, k -> Lists.newArrayList());
-
-                sampleIds.add(sampleId);
-
-                SampleIds.add(sampleId);
-            }
-
-            if(!BatchSampleIds.isEmpty())
-            {
-                LOGGER.info("loaded {} samples in {} batches from file({})", SampleIds.size(), BatchSampleIds.size(), filename);
-            }
-            else
-            {
-                LOGGER.info("loaded {} samples from file({})", SampleIds.size(), filename);
-            }
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to read sample ID file({}): {}", filename, e.toString());
+            String error = format("sample(%s) missing Purple or Linx directories", sampleId);
+            LOGGER.error(error);
+            throw new RuntimeException(error);
         }
     }
 
@@ -250,8 +148,7 @@ public class ProbeConfig
         GcRatioLimitMax = DEFAULT_GC_THRESHOLD_MAX;
         GcRatioLimitLowerMin = DEFAULT_GC_THRESHOLD_MIN_LOWER;
         GcRatioLimitLowerMax = DEFAULT_GC_THRESHOLD_MAX_LOWER;
-        SampleIds = Lists.newArrayList();
-        BatchSampleIds = Maps.newHashMap();
+        SampleId = "";
         PurpleDir = "";
         LinxDir = "";
         LinxGermlineDir = "";
@@ -261,14 +158,11 @@ public class ProbeConfig
         ReferenceVariantsFile = "";
         RefGenVersion = V37;
         WriteAll = false;
-        AllowMissing = false;
-        Threads = 1;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
-        addSampleIdFile(configBuilder, false);
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
@@ -285,15 +179,12 @@ public class ProbeConfig
 
         configBuilder.addInteger(PROBE_COUNT, "Probe count", DEFAULT_PROBE_COUNT);
         configBuilder.addInteger(PROBE_LENGTH, "Probe length", CommonUtils.DEFAULT_PROBE_LENGTH);
-        configBuilder.addInteger(SAMPLE_BATCH_COUNT, "Sample batching count", 1);
 
         configBuilder.addInteger(NON_REPORTABLE_SV_COUNT, "Max count of non-reportable SVs", 0);
         configBuilder.addInteger(SUBCLONAL_COUNT, "Max count of subclonal mutations", 0);
 
         configBuilder.addFlag(WRITE_ALL, "Write all variants to file");
-        configBuilder.addFlag(ALLOW_MISSING, "Continue on missing sample data");
 
         addOutputOptions(configBuilder);
-        addThreadOptions(configBuilder);
     }
 }

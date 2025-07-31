@@ -8,8 +8,6 @@ public final class ProbeConstants
     public static final int DEFAULT_FRAG_COUNT_MIN = 11;
     public static final int DEFAULT_FRAG_COUNT_MIN_LOWER = 7;
 
-    public static final int DEFAULT_NON_REPORTABLE_SV_COUNT = 30;
-
     public static final double DEFAULT_GC_THRESHOLD_MIN = 0.4;
     public static final double DEFAULT_GC_THRESHOLD_MAX = 0.6;
     public static final double DEFAULT_GC_THRESHOLD_MIN_LOWER = 0.3;
