@@ -54,6 +54,16 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return new ChrBaseRegion(region.chromosome(), region.start(), region.end());
     }
 
+    public static ChrBaseRegion from(final String chromosome, final BaseRegion region)
+    {
+        return new ChrBaseRegion(chromosome, region.start(), region.end());
+    }
+
+    public static ChrBaseRegion from(final BasePosition position)
+    {
+        return new ChrBaseRegion(position.Chromosome, position.Position, position.Position);
+    }
+
     public GenomeRegion genomeRegion()
     {
         return GenomeRegions.create(chromosome(), start(), end());
@@ -155,6 +165,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
     public boolean containsPosition(final String chromosome, int position)
     {
         return Chromosome.equals(chromosome) && positionWithin(position, start(), end());
+    }
+
+    public boolean containsRegion(final ChrBaseRegion region)
+    {
+        return Chromosome.equals(region.Chromosome) && baseRegion().containsRegion(region.baseRegion());
     }
 
     public boolean matches(final ChrBaseRegion other)
