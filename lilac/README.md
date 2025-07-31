@@ -67,9 +67,11 @@ Allele sequences and frequencies files are found in the `hmf_pipeline_resources.
 
 See section [Reference data generation](#reference-data-generation) for details on how the allele reference data files are derived.
 
-### Example commands
+### Arguments
 
-#### Reference-only mode
+#### Example commands
+
+##### Reference-only mode
 
 HLA-typing from a reference sample (e.g. blood or normal tissue) BAM.
 
@@ -83,7 +85,7 @@ java -jar lilac.jar \
     -reference_bam COLO829R.bam
 ```
 
-#### Tumor-only mode
+##### Tumor-only mode
 
 HLA-typing from the tumor sample BAM.
 
@@ -97,7 +99,7 @@ java -jar lilac.jar \
     -tumor_bam COLO829T.bam
 ```
 
-#### Paired tumor/normal mode
+##### Paired tumor/normal mode
 
 HLA-typing, and calling allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles in the tumor sample. Provide 
 the reference and tumor BAMs, as well as somatic variants VCF and gene copy number TSV from 
@@ -116,7 +118,7 @@ java -jar lilac.jar \
     -gene_copy_number COLO829T.purple.cnv.gene.tsv
 ```
 
-### Mandatory input paths
+#### Mandatory input paths
 
 | Argument              | Description                                                                                                                                                         |
 |:----------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -130,7 +132,7 @@ Notes:
 - LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
 - If a tumor BAM is provided in place of the reference BAM, then Lilac will determine the allele solution from the tumor instead.
 
-### Optional input paths
+#### Optional input paths
 
 | Argument            | Description                                                          |
 |:--------------------|:---------------------------------------------------------------------|
@@ -139,7 +141,7 @@ Notes:
 | `-gene_copy_number` | Sample gene copy number file from PURPLE                             |
 | `-somatic_vcf`      | Sample somatic variant VCF file, for annotation of HLA gene variants |
 
-### Optional parameters
+#### Optional parameters
 
 | Argument                          | Default            | Description                                                                                                                                     |
 |:----------------------------------|:-------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
