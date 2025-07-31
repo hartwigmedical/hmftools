@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
-import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
+import com.hartwig.hmftools.sage.quality.BqrCache;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.tinc.TincAnalyser;
@@ -84,12 +84,12 @@ public class SageApplication implements AutoCloseable
 
         SageCommon.setReadLength(mConfig.Common, mRefData.PanelWithHotspots, mConfig.TumorBams.get(0));
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig.Common, mConfig.TumorIds);
+        BqrCache bqrCache = new BqrCache(mConfig.Common, mConfig.TumorIds);
 
-        if(!baseQualityRecalibration.isValid())
+        if(!bqrCache.isValid())
             System.exit(1);
 
-        final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+        final Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
 
         List<String> combinedSampleIds = Lists.newArrayList(mConfig.TumorIds);
         combinedSampleIds.addAll(mConfig.Common.ReferenceIds);

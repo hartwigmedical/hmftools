@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.sage.SageConfig;
 
-public class BaseQualityRecalibration
+public class BqrCache
 {
     private final SageConfig mConfig;
     private final List<String> mTumorIds;
@@ -19,7 +19,7 @@ public class BaseQualityRecalibration
     private final Map<String,BqrRecordMap> mSampleRecalibrationMap;
     private boolean mIsValid;
 
-    public BaseQualityRecalibration(final SageConfig config, final List<String> tumorIds)
+    public BqrCache(final SageConfig config, final List<String> tumorIds)
     {
         mConfig = config;
         mTumorIds = tumorIds;

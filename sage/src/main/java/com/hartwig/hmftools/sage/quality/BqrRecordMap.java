@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.redux.BqrRecord;
 public class BqrRecordMap
 {
     // base qual recalibration data per sample
-    private final Map<BqrKey, BqrRecord> mMap;
+    private final Map<BqrKey,BqrRecord> mMap;
 
     public BqrRecordMap(final List<BqrRecord> records)
     {
@@ -33,7 +33,7 @@ public class BqrRecordMap
         }
     }
 
-    public double getQualityAdjustment(byte ref, byte alt, byte[] trinucleotideContext, byte qual, BqrReadType readType)
+    public double getQualityAdjustment(byte ref, byte alt, byte[] trinucleotideContext, byte qual, final BqrReadType readType)
     {
         final BqrKey key = new BqrKey(ref, alt, trinucleotideContext, qual, readType);
 
