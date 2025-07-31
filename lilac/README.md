@@ -156,9 +156,10 @@ Notes:
 
 ## Output
 
-### Top solution summary: `<sample_id>.lilac.tsv`
+### Top solution summary
 
-Summary of top solution. Tumor and/or RNA results are only shown if [tumor and/or RNA inputs](#tumor-and-rna-status-of-alleles) are provided.
+The `<sample_id>.lilac.tsv` file contains a summary of top solution. 
+Tumor and/or RNA results are only shown if [tumor and/or RNA inputs](#tumor-and-rna-status-of-alleles) are provided.
 
 | Field(s)                                | Description                                                                                                               |
 |:----------------------------------------|:--------------------------------------------------------------------------------------------------------------------------|
@@ -186,9 +187,10 @@ C*02:02  3582     2772      810       0       0          ...
 C*07:02  3011     2288      723       0       0          ...
 ```
 
-### Top ranked solutions summary: `<sample_id>.lilac.candidates.coverage.tsv`
+### Top ranked solutions summary
 
-Coverage (i.e. fragment support) for all candidate solutions within X% of the top solution's score.
+The `<sample_id>.lilac.candidates.coverage.tsv` file contains coverage (i.e. fragment support) info for all candidate solutions within X% 
+of the top solution's score.
 
 | Field(s)                                    | Description                                                                                                                                           |
 |:--------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -223,7 +225,9 @@ A*02:01[3642,2326,1316,0] A*33:03[4332,3034,1298,0] B*51:12[2041,739,1302,0] ...
 ...                       ...                       ...                      ...
 ```
 
-### QC metrics: `<sample_id>.lilac.qc.tsv`
+### QC metrics
+
+The `<sample_id>.lilac.qc.tsv` file contains comprehensive QC metrics.
 
 | Field(s)                                                         | Description                                                                                                                                                                             |
 |:-----------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
