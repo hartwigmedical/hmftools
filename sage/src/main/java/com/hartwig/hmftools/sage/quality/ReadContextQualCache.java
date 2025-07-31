@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_Q
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
-import com.hartwig.hmftools.common.qual.BqrReadType;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BqrReadType;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 public class ReadContextQualCache

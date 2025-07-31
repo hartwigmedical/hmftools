@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;

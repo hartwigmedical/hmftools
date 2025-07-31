@@ -46,7 +46,6 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.sage.bqr.BqrConfig;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
@@ -68,7 +67,7 @@ public class SageConfig
     public final String OutputFile;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
-    public final BqrConfig BQR;
+    public final boolean SkipBqr;
     public final String JitterParamsDir;
     public final boolean SkipMsiJitter;
     public final boolean IncludeMT;
@@ -114,6 +113,7 @@ public class SageConfig
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
     private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
+    private static final String SKIP_BQR = "skip_bqr";
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
 
@@ -181,7 +181,8 @@ public class SageConfig
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
-        BQR = new BqrConfig(configBuilder);
+
+        SkipBqr = configBuilder.hasFlag(SKIP_BQR);
 
         if(configBuilder.hasValue(JITTER_PARAMS_DIR))
         {
@@ -349,8 +350,6 @@ public class SageConfig
         return false;
     }
 
-    public boolean bqrRecordWritingOnly() { return BQR.WriteReads; }
-
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
@@ -382,7 +381,7 @@ public class SageConfig
 
         FilterConfig.registerConfig(configBuilder);
         QualityConfig.registerConfig(configBuilder);
-        BqrConfig.registerConfig(configBuilder);
+        configBuilder.addFlag(SKIP_BQR, "Disable base quality recalibration");
         SequencingType.registerConfig(configBuilder);
 
         configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
@@ -413,7 +412,7 @@ public class SageConfig
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
-        BQR = new BqrConfig();
+        SkipBqr = true;
         JitterParamsDir = null;
         SkipMsiJitter = false;
         SpecificChrRegions = new SpecificRegions();

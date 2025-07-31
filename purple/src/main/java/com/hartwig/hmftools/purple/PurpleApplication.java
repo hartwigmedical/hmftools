@@ -356,6 +356,14 @@ public class PurpleApplication
 
         List<DriverSourceData> driverSourceData = Lists.newArrayList();
 
+        if (mConfig.TargetRegionsMode)
+        {
+            TargetRegionsCopyNumbers targetRegionsCopyNumbers = new TargetRegionsCopyNumbers(mReferenceData.TargetRegions, sampleData.Cobalt.Ratios, mReferenceData.RefGenVersion);
+            List<TargetRegionsCopyNumber> copyNumberData = targetRegionsCopyNumbers.copyNumbersData();
+            String fileName = TargetRegionsCopyNumberFile.generateFilename(mConfig.OutputDir, tumorId);
+            TargetRegionsCopyNumberFile.write(fileName, copyNumberData);
+        }
+
         if(mConfig.RunDrivers)
         {
             findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions, driverSourceData);

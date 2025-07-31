@@ -46,7 +46,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bamops.BamToolName;
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
+import com.hartwig.hmftools.redux.bqr.BqrConfig;
+import com.hartwig.hmftools.redux.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -88,6 +89,8 @@ public class ReduxConfig
     public final UmiConfig UMIs;
     public final boolean FormConsensus;
     public final boolean JitterMsiOnly;
+
+    public final BqrConfig BQR;
 
     public final ReadUnmapper UnmapRegions;
     public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
@@ -201,6 +204,8 @@ public class ReduxConfig
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
+
+        BQR = new BqrConfig(configBuilder);
 
         // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         RD_LOGGER.info("output({})", OutputDir);
@@ -322,6 +327,8 @@ public class ReduxConfig
         SequencingType.registerConfig(configBuilder);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
 
+        BqrConfig.registerConfig(configBuilder);
+
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
 
@@ -382,6 +389,8 @@ public class ReduxConfig
 
         UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
         FormConsensus = umiEnabled || formConsensus;
+
+        BQR = new BqrConfig();
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;

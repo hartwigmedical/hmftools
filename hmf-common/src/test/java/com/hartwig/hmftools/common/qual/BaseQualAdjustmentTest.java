@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.common.qual;
 
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.phredQualToProbability;
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQual;
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQualInt;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.phredQualToProbability;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQualInt;
 
 import static org.junit.Assert.assertEquals;
+
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 import org.junit.Test;
 

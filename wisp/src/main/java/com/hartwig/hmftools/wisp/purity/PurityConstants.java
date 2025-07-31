@@ -3,7 +3,7 @@ package com.hartwig.hmftools.wisp.purity;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 public class PurityConstants
 {

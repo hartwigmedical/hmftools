@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.purple.FittingConfig;
+import com.hartwig.hmftools.purple.region.FittingRegion;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.region.PloidyDeviation;
 import com.hartwig.hmftools.purple.segment.ExpectedBAF;
@@ -76,7 +77,7 @@ public class RegionFitCalculator
         return fittedRegion;
     }
 
-    public RegionFitCalcs calculateRegionFit(final double purity, final double normFactor, final ObservedRegion observedRegion)
+    public RegionFitCalcs calculateRegionFit(final double purity, final double normFactor, final FittingRegion observedRegion)
     {
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
 

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BASE_MODIFICATIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
-import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MM_PREFIX;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MM_SUFFIX;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMValueFromModCReadIndices;

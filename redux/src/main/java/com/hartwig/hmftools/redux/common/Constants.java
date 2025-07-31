@@ -27,4 +27,18 @@ public class Constants
 
     // consensus building
     public static int CONSENSUS_MAX_DEPTH = 100;
+
+    // base qual recalibration
+    public static final int BQR_SAMPLE_SIZE = 2_000_000;
+    public static final int BQR_MIN_MAP_QUAL = 50;
+    public static final int BQR_CHR_END_BUFFER = 1000000;
+
+    // base quality recalibration
+    public static final double BQR_DUAL_AF_LOW = 0.01;
+    public static final double BQR_DUAL_AF_HIGH = 0.075;
+    public static final int BQR_DUAL_AD = 2;
+
+    public static final double BQR_NON_DUAL_AF_LOW = 0.05;
+    public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
+    public static final int BQR_NON_DUAL_AD = 3;
 }

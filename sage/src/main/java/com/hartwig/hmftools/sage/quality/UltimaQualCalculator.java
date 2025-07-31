@@ -6,7 +6,7 @@ import static java.lang.String.format;
 
 import static com.google.common.primitives.UnsignedBytes.max;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQual;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
@@ -245,7 +245,7 @@ public class UltimaQualCalculator
                     return ULTIMA_MAX_QUAL;
             }
 
-            final byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
+            final byte[] t0Values = record.getStringAttribute(ULTIMA_T0_TAG).getBytes();
             byte qual1 = t0Values[varReadIndex + mStraddleIndexStart];
             byte qual2 = t0Values[varReadIndex + mStraddleIndexEnd];
 
@@ -436,7 +436,7 @@ public class UltimaQualCalculator
             if(mLeftDeletion != null || mRightDeletion != null)
             {
                 // any HP deletion can just use the SNV base itself
-                final byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
+                final byte[] t0Values = record.getStringAttribute(ULTIMA_T0_TAG).getBytes();
                 return t0Values[varReadIndex];
             }
 
