@@ -65,13 +65,11 @@ public class PanelBuilderApplication
         generateCopyNumberBackboneProbes();
 
         LOGGER.info("Writing output");
-        {
-            mOutputWriter.writePanelProbes(mPanelData.probes());
-            mOutputWriter.writeTargetRegions(mPanelData.coveredTargetRegions());
-            mOutputWriter.writeCandidateRegions(mPanelData.candidateTargetRegions());
-            mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
-            geneStats.ifPresent(stats -> mOutputWriter.writeGeneStats(stats.perGene()));
-        }
+        mOutputWriter.writePanelProbes(mPanelData.probes());
+        mOutputWriter.writeTargetRegions(mPanelData.coveredTargetRegions());
+        mOutputWriter.writeCandidateRegions(mPanelData.candidateTargetRegions());
+        mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
+        geneStats.ifPresent(stats -> mOutputWriter.writeGeneStats(stats.perGene()));
 
         mOutputWriter.close();
         mOutputWriter = null;
