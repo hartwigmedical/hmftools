@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PanelBuilder
+public class PanelBuilderApplication
 {
     private final PanelBuilderConfig mConfig;
     private final RefGenomeSource mRefGenome;
@@ -33,9 +33,9 @@ public class PanelBuilder
     @Nullable
     private OutputWriter mOutputWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(PanelBuilder.class);
+    private static final Logger LOGGER = LogManager.getLogger(PanelBuilderApplication.class);
 
-    public PanelBuilder(final ConfigBuilder configBuilder)
+    public PanelBuilderApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new PanelBuilderConfig(configBuilder);
         mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
@@ -146,7 +146,7 @@ public class PanelBuilder
 
         try
         {
-            PanelBuilder panelBuilder = new PanelBuilder(configBuilder);
+            PanelBuilderApplication panelBuilder = new PanelBuilderApplication(configBuilder);
             panelBuilder.run();
         }
         catch(IOException e)
