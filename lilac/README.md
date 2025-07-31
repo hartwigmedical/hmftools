@@ -20,6 +20,31 @@ complete loss of alleles
 - Identification of HLA-Y presence, a pseudogene with high similarity to HLA-A which is present in up to 20% of the population but is not
 present in the reference genome
 
+## Table of contents
+
+<!-- TOC -->
+* [Introduction](#introduction)
+* [Usage](#usage)
+  * [Versions](#versions)
+  * [Sample inputs](#sample-inputs)
+  * [Reference data](#reference-data)
+  * [Arguments](#arguments)
+* [Output](#output)
+  * [Top solution summary](#top-solution-summary)
+  * [Top ranked solutions summary](#top-ranked-solutions-summary)
+  * [QC metrics](#qc-metrics)
+  * [Additional output files](#additional-output-files)
+* [Reference data generation](#reference-data-generation)
+  * [Allele population frequencies](#allele-population-frequencies)
+  * [Allele sequences](#allele-sequences)
+* [Algorithm](#algorithm)
+  * [Elimination phase](#elimination-phase)
+  * [Evidence phase](#evidence-phase)
+  * [Tumor and RNA status of alleles](#tumor-and-rna-status-of-alleles)
+  * [QC metrics and PON](#qc-metrics-and-pon)
+* [Known issues / future improvements](#known-issues--future-improvements)
+<!-- TOC -->
+
 ## Usage
 
 ### Versions
@@ -271,7 +296,7 @@ Status ScoreMargin NextSolutionAlleles MedianBaseQuality HlaYAllele ...
 PASS   26.513      C*02:175            37                NONE       ...
 ```
 
-#### Additional output files
+### Additional output files
 
 | File                                           | Description                                                                                                       |
 |:-----------------------------------------------|:------------------------------------------------------------------------------------------------------------------|
@@ -419,7 +444,7 @@ After the germline alleles are determined, LILAC determines the tumor copy numbe
 more than 300 bases of the HLA-A, HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with errors and will not
 try to fit the sample.
 
-### Candidate allele elimination
+### Elimination phase
 The elimination phase removes alleles that are unlikely part of the final solution, namely, if they do not have sufficient fragment support 
 at each nucleotide / amino acid position. This reduces runtime by reducing the number of allele combinations LILAC needs to consider in 
 the evidence phase.
