@@ -154,6 +154,123 @@ Notes:
 | `-log_level`                      | INFO               | Logs level. Can be: TRACE, DEBUG, INFO, WARN, ERROR                                                                                             |
 | `-log_debug`                      | Off (logs at INFO) | Alias for `-log_level DEBUG`                                                                                                                    |
 
+## Output
+
+### Top solution summary: `<sample_id>.lilac.tsv`
+
+Summary of top solution. Tumor and/or RNA results are only shown if [tumor and/or RNA inputs](#tumor-and-rna-status-of-alleles) are provided.
+
+| Field(s)                                | Description                                                                                                               |
+|:----------------------------------------|:--------------------------------------------------------------------------------------------------------------------------|
+| `Allele`                                | Allele ID                                                                                                                 |
+| `RefTotal`, `TumorTotal`, `RnaTotal`    | Total assigned fragments from reference/tumor/RNA BAM                                                                     |
+| `RefUnique`, `TumorUnique`, `RnaUnique` | Number of fragments assigned uniquely to allele                                                                           |
+| `RefShared`, `TumorShared`, `RnaShared` | Number of fragments assigned to allele and others in this solution (i.e. [shared](#shared-fragment-support-across-genes)) |
+| `RefWild`, `TumorWild`, `RnaWild`       | Number of fragments matched to wildcard sequences                                                                         |
+| `TumorCopyNumber`                       | Copy number from tumor/ref fragment ratio and PURPLE copy number                                                          |
+| `SomaticMissense`                       | Matched missense variants                                                                                                 |
+| `SomaticNonsenseOrFrameshift`           | Matched nonsense or frameshift variants                                                                                   |
+| `SomaticSplice`                         | Matched splice variants                                                                                                   |
+| `SomaticSynonymous`                     | Matched synonymous variants                                                                                               |
+| `SomaticInframeIndel`                   | Matched inframe indels                                                                                                    |
+
+Example snippet:
+
+```
+Allele   RefTotal RefUnique RefShared RefWild TumorTotal ...
+A*01:01  6941     4374      2567      0       0          ...
+A*24:02  5916     3380      2536      0       0          ...
+B*07:02  4103     2222      1881      0       0          ...
+B*27:05  3706     1876      1830      0       0          ...
+C*02:02  3582     2772      810       0       0          ...
+C*07:02  3011     2288      723       0       0          ...
+```
+
+### Top ranked solutions summary: `<sample_id>.lilac.candidates.coverage.tsv`
+
+Coverage (i.e. fragment support) for all candidate solutions within X% of the top solution's score.
+
+| Field(s)                                    | Description                                                                                                                                           |
+|:--------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Score`                                     | Solution [score](#scoring) (`TotalCoverage` minus penalties)                                                                                          |
+| `ComplexityPenalty`, `Complexity`           | [Solution complexity](#scoring) and corresponding penalty                                                                                             |
+| `HomozygousCount`                           | Number of homozygous genes                                                                                                                            |
+| `CohortFrequencyPenalty`, `CohortFrequency` | [Total log10 population frequency](#scoring) across alleles, and corresponding penalty                                                                |
+| `RecoveryCount`                             | Number of alleles in solution that were eliminated but subsequently [recovered](#conditionally-eliminate-and-recover-alleles)                         |
+| `WildcardCount`                             | Number of wildcards characters in all allele sequences                                                                                                |
+| `TotalCoverage`                             | Sum of total fragments assigned across all alleles in solution                                                                                        |
+| `UniqueCoverage`                            | Sum of uniquely assigned fragments across all alleles in solution                                                                                     |
+| `SharedCoverage`                            | Sum of [shared](#shared-fragment-support-across-genes) fragments across all alleles  in solution                                                      |
+| `WildCoverage`                              | Sum of fragments matched to wildcard sequences across all alleles in solution                                                                         |
+| `A1`, `A2`, `B1`, `B2`, etc...              | Per gene (e.g. HLA-`A`) and allele slot (e.g. `1`/`2`), allele name and `[total, unique, shared, wildcard]` fragment counts per allele                |
+
+Example snippet:
+
+```
+Score    ComplexityPenalty Complexity HomozygousCount CohortFrequencyPenalty CohortFrequency
+15900.63 -1060.57          31         0               -144.80                -9.41          
+15884.65 -1060.01          31         0               -152.34                -9.90          
+...      ...               ...        ...             ...                    ...
+
+RecoveryCount WildcardCount TotalCoverage UniqueCoverage SharedCoverage WildCoverage
+0             0             17106         8171           8935           0           
+1             0             17097         8196           8901           0           
+...           ...           ...           ...            ...            ...
+
+A1                        A2                        B1                       ...
+A*02:01[3642,2326,1316,0] A*33:03[4332,3034,1298,0] B*51:01[2067,748,1319,0] ...
+A*02:01[3642,2326,1316,0] A*33:03[4332,3034,1298,0] B*51:12[2041,739,1302,0] ...
+...                       ...                       ...                      ...
+```
+
+### QC metrics: `<sample_id>.lilac.qc.tsv`
+
+| Field(s)                                                         | Description                                                                                                                                                                             |
+|:-----------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Status`                                                         | Either PASS or 1 or more warnings (see below for warning descriptions)                                                                                                                  |
+| `ScoreMargin`                                                    | Difference in score to second-top solution                                                                                                                                              |
+| `NextSolutionAlleles`                                            | Allele difference in second-top solution                                                                                                                                                |
+| `MedianBaseQuality`                                              | Median base quality across all coding bases from all fragments                                                                                                                          |
+| `HlaYAllele`                                                     | HLA-Y allele detected if present, else 'NONE'                                                                                                                                           |
+| `DiscardedIndels`                                                | Discarded fragments due to unknown indels                                                                                                                                               |
+| `DiscardedIndelMaxFrags`                                         | Maximum fragment support for an indel detected but not present in any known allele.                                                                                                     |
+| `DiscardedAlignmentFragments`                                    | Fragments discarded because 1 read aligns more than 1000 bases from an HLA gene                                                                                                         |
+| `A_LowCoverageBases`, `B_LowCoverageBases`, `C_LowCoverageBases` | Number of bases with less than 15-depth coverage across all coding bases                                                                                                                |
+| `ATypes`, `BTypes`, `CTypes`                                     | Number of distinct alleles fitted (0,1 or 2) per HLA gene                                                                                                                               |
+| `TotalFragments`                                                 | Total of fragments overlapping a coding base of HLA-A, HLA-B or HLA-C with MAPQ >=1                                                                                                     |
+| `FittedFragments`                                                | Total fragments assigned to fitted alleles (ie. exact or wildcard match at every heterozygous location)                                                                                 |
+| `UnmatchedFragments`                                             | Fragment that do not match any allele exactly in solution at all heterozygous location (eg. due to sequencing error or mapping error)                                                   |
+| `UninformativeFragments`                                         | Fragments that do not overlap any heterozygous location considered in evidence phase                                                                                                    |
+| `HlaYFragments`                                                  | Fragments excluded from fit due to allocation to assignment to HLA-Y.                                                                                                                   |
+| `PercentUnique`                                                  | Percentage of fitted fragments that are uniquely assigned to 1 allele                                                                                                                   |
+| `PercentShared`                                                  | Percentage of fitted fragments allocated across multiple alleles                                                                                                                        |
+| `PercentWildcard`                                                | Percentage of fitted fragments uniquely assigned to wildcard regions                                                                                                                    |
+| `UnusedAminoAcids`                                               | # of amino acids detected with at least 3 fragments support but not present in final allele solution set (excluding PON filtered and regions overlapping wildcards in selected alleles) |
+| `UnusedAminoAcidMaxFrags`                                        | Maximum fragments support for an unmatched amino acid not present in the final allele solution set                                                                                      |
+| `UnusedHaplotypes`                                               | # of haplotypes phased with at least 3 fragments support but not present in final allele solution set (excluding PON filtered and regions overlapping wildcards in selected alleles)    |
+| `UnusedHaplotypeMaxFrags`                                        | Maximum support for an unmatched haplotype not present in final allele solution set                                                                                                     |
+| `SomaticVariantsMatched`                                         | Somatic variants supported by solution allele                                                                                                                                           |
+| `SomaticVariantsUnmatched`                                       | Somatic variants not supported by solution allele                                                                                                                                       |
+
+Example snippet:
+
+```
+Status ScoreMargin NextSolutionAlleles MedianBaseQuality HlaYAllele ...
+PASS   26.513      C*02:175            37                NONE       ...
+```
+
+#### Additional output files
+
+| File                                           | Description                                                                                                       |
+|:-----------------------------------------------|:------------------------------------------------------------------------------------------------------------------|
+| `<sample_id>.lilac.log`                        | Log file with information about the fit and details of all [unmatched haplotypes and indels](#qc-metrics-and-pon) |
+| `<sample_id>.lilac.HLA-A.aminoacids.txt`       | Fragment support for each amino acid by HLA gene                                                                  |
+| `<sample_id>.lilac.HLA-A.nucleotides.txt`      | Fragment support for each nucleotide by HLA gene                                                                  |
+| `<sample_id>.lilac.fragments.csv`              | Read details for all BAM fragments                                                                                |
+| `<sample_id>.lilac.candidates.fragments.csv`   | Allocation of each fragment to one or more solutions and which alleles they support                               |
+| `<sample_id>.lilac.candidates.aminoacids.txt`  | Fragment support for amino acids in the candidate alleles                                                         |
+| `<sample_id>.lilac.candidates.nucleotides.txt` | Fragment support for nucleotides in the candidate alleles                                                         |
+| `<sample_id>.lilac.somatic.vcf.gz`             | Annotation of supplied somatic variants if somatic VCF provided with assigned allele                              |
 
 ## Reference data generation
 
@@ -627,124 +744,6 @@ cohort. We therefore exclude the following indels and haplotypes prior to calcul
 | 299   | IPNLGIVSGPAVLAVLAVLAVLAV                                                                  | Alignment issue with C\*17 indel |
 | 337   | DRKGGSYSQAAS                                                                              | HLA-Y or HLA-H                   |
 | 351   | IAQGSDVSLTAC                                                                              | HLA-Y                            |
-
-## Output
-
-### Top solution summary: `<sample_id>.lilac.tsv`
-
-Summary of top solution. Tumor and/or RNA results are only shown if [tumor and/or RNA inputs](#tumor-and-rna-status-of-alleles) are provided.
-
-| Field(s)                                | Description                                                                                                               |
-|:----------------------------------------|:--------------------------------------------------------------------------------------------------------------------------|
-| `Allele`                                | Allele ID                                                                                                                 |
-| `RefTotal`, `TumorTotal`, `RnaTotal`    | Total assigned fragments from reference/tumor/RNA BAM                                                                     |
-| `RefUnique`, `TumorUnique`, `RnaUnique` | Number of fragments assigned uniquely to allele                                                                           |
-| `RefShared`, `TumorShared`, `RnaShared` | Number of fragments assigned to allele and others in this solution (i.e. [shared](#shared-fragment-support-across-genes)) |
-| `RefWild`, `TumorWild`, `RnaWild`       | Number of fragments matched to wildcard sequences                                                                         |
-| `TumorCopyNumber`                       | Copy number from tumor/ref fragment ratio and PURPLE copy number                                                          |
-| `SomaticMissense`                       | Matched missense variants                                                                                                 |
-| `SomaticNonsenseOrFrameshift`           | Matched nonsense or frameshift variants                                                                                   |
-| `SomaticSplice`                         | Matched splice variants                                                                                                   |
-| `SomaticSynonymous`                     | Matched synonymous variants                                                                                               |
-| `SomaticInframeIndel`                   | Matched inframe indels                                                                                                    |
-
-Example snippet:
-
-```
-Allele   RefTotal RefUnique RefShared RefWild TumorTotal ...
-A*01:01  6941     4374      2567      0       0          ...
-A*24:02  5916     3380      2536      0       0          ...
-B*07:02  4103     2222      1881      0       0          ...
-B*27:05  3706     1876      1830      0       0          ...
-C*02:02  3582     2772      810       0       0          ...
-C*07:02  3011     2288      723       0       0          ...
-```
-
-### Top ranked solutions summary: `<sample_id>.lilac.candidates.coverage.tsv`
-
-Coverage (i.e. fragment support) for all candidate solutions within X% of the top solution's score.
-
-| Field(s)                                    | Description                                                                                                                                           |
-|:--------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Score`                                     | Solution [score](#scoring) (`TotalCoverage` minus penalties)                                                                                          |
-| `ComplexityPenalty`, `Complexity`           | [Solution complexity](#scoring) and corresponding penalty                                                                                             |
-| `HomozygousCount`                           | Number of homozygous genes                                                                                                                            |
-| `CohortFrequencyPenalty`, `CohortFrequency` | [Total log10 population frequency](#scoring) across alleles, and corresponding penalty                                                                |
-| `RecoveryCount`                             | Number of alleles in solution that were eliminated but subsequently [recovered](#conditionally-eliminate-and-recover-alleles)                         |
-| `WildcardCount`                             | Number of wildcards characters in all allele sequences                                                                                                |
-| `TotalCoverage`                             | Sum of total fragments assigned across all alleles in solution                                                                                        |
-| `UniqueCoverage`                            | Sum of uniquely assigned fragments across all alleles in solution                                                                                     |
-| `SharedCoverage`                            | Sum of [shared](#shared-fragment-support-across-genes) fragments across all alleles  in solution                                                      |
-| `WildCoverage`                              | Sum of fragments matched to wildcard sequences across all alleles in solution                                                                         |
-| `A1`, `A2`, `B1`, `B2`, etc...              | Per gene (e.g. HLA-`A`) and allele slot (e.g. `1`/`2`), allele name and `[total, unique, shared, wildcard]` fragment counts per allele                |
-
-Example snippet:
-
-```
-Score    ComplexityPenalty Complexity HomozygousCount CohortFrequencyPenalty CohortFrequency
-15900.63 -1060.57          31         0               -144.80                -9.41          
-15884.65 -1060.01          31         0               -152.34                -9.90          
-...      ...               ...        ...             ...                    ...
-
-RecoveryCount WildcardCount TotalCoverage UniqueCoverage SharedCoverage WildCoverage
-0             0             17106         8171           8935           0           
-1             0             17097         8196           8901           0           
-...           ...           ...           ...            ...            ...
-
-A1                        A2                        B1                       ...
-A*02:01[3642,2326,1316,0] A*33:03[4332,3034,1298,0] B*51:01[2067,748,1319,0] ...
-A*02:01[3642,2326,1316,0] A*33:03[4332,3034,1298,0] B*51:12[2041,739,1302,0] ...
-...                       ...                       ...                      ...
-```
-
-### QC metrics: `<sample_id>.lilac.qc.tsv`
-
-| Field(s)                                                         | Description                                                                                                                                                                             |
-|:-----------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Status`                                                         | Either PASS or 1 or more warnings (see below for warning descriptions)                                                                                                                  |
-| `ScoreMargin`                                                    | Difference in score to second-top solution                                                                                                                                              |
-| `NextSolutionAlleles`                                            | Allele difference in second-top solution                                                                                                                                                |
-| `MedianBaseQuality`                                              | Median base quality across all coding bases from all fragments                                                                                                                          |
-| `HlaYAllele`                                                     | HLA-Y allele detected if present, else 'NONE'                                                                                                                                           |
-| `DiscardedIndels`                                                | Discarded fragments due to unknown indels                                                                                                                                               |
-| `DiscardedIndelMaxFrags`                                         | Maximum fragment support for an indel detected but not present in any known allele.                                                                                                     |
-| `DiscardedAlignmentFragments`                                    | Fragments discarded because 1 read aligns more than 1000 bases from an HLA gene                                                                                                         |
-| `A_LowCoverageBases`, `B_LowCoverageBases`, `C_LowCoverageBases` | Number of bases with less than 15-depth coverage across all coding bases                                                                                                                |
-| `ATypes`, `BTypes`, `CTypes`                                     | Number of distinct alleles fitted (0,1 or 2) per HLA gene                                                                                                                               |
-| `TotalFragments`                                                 | Total of fragments overlapping a coding base of HLA-A, HLA-B or HLA-C with MAPQ >=1                                                                                                     |
-| `FittedFragments`                                                | Total fragments assigned to fitted alleles (ie. exact or wildcard match at every heterozygous location)                                                                                 |
-| `UnmatchedFragments`                                             | Fragment that do not match any allele exactly in solution at all heterozygous location (eg. due to sequencing error or mapping error)                                                   |
-| `UninformativeFragments`                                         | Fragments that do not overlap any heterozygous location considered in evidence phase                                                                                                    |
-| `HlaYFragments`                                                  | Fragments excluded from fit due to allocation to assignment to HLA-Y.                                                                                                                   |
-| `PercentUnique`                                                  | Percentage of fitted fragments that are uniquely assigned to 1 allele                                                                                                                   |
-| `PercentShared`                                                  | Percentage of fitted fragments allocated across multiple alleles                                                                                                                        |
-| `PercentWildcard`                                                | Percentage of fitted fragments uniquely assigned to wildcard regions                                                                                                                    |
-| `UnusedAminoAcids`                                               | # of amino acids detected with at least 3 fragments support but not present in final allele solution set (excluding PON filtered and regions overlapping wildcards in selected alleles) |
-| `UnusedAminoAcidMaxFrags`                                        | Maximum fragments support for an unmatched amino acid not present in the final allele solution set                                                                                      |
-| `UnusedHaplotypes`                                               | # of haplotypes phased with at least 3 fragments support but not present in final allele solution set (excluding PON filtered and regions overlapping wildcards in selected alleles)    |
-| `UnusedHaplotypeMaxFrags`                                        | Maximum support for an unmatched haplotype not present in final allele solution set                                                                                                     |
-| `SomaticVariantsMatched`                                         | Somatic variants supported by solution allele                                                                                                                                           |
-| `SomaticVariantsUnmatched`                                       | Somatic variants not supported by solution allele                                                                                                                                       |
-
-Example snippet:
-
-```
-Status ScoreMargin NextSolutionAlleles MedianBaseQuality HlaYAllele ...
-PASS   26.513      C*02:175            37                NONE       ...
-```
-
-#### Additional output files
-
-| File                                           | Description                                                                                                       |
-|:-----------------------------------------------|:------------------------------------------------------------------------------------------------------------------|
-| `<sample_id>.lilac.log`                        | Log file with information about the fit and details of all [unmatched haplotypes and indels](#qc-metrics-and-pon) |
-| `<sample_id>.lilac.HLA-A.aminoacids.txt`       | Fragment support for each amino acid by HLA gene                                                                  |
-| `<sample_id>.lilac.HLA-A.nucleotides.txt`      | Fragment support for each nucleotide by HLA gene                                                                  |
-| `<sample_id>.lilac.fragments.csv`              | Read details for all BAM fragments                                                                                |
-| `<sample_id>.lilac.candidates.fragments.csv`   | Allocation of each fragment to one or more solutions and which alleles they support                               |
-| `<sample_id>.lilac.candidates.aminoacids.txt`  | Fragment support for amino acids in the candidate alleles                                                         |
-| `<sample_id>.lilac.candidates.nucleotides.txt` | Fragment support for nucleotides in the candidate alleles                                                         |
-| `<sample_id>.lilac.somatic.vcf.gz`             | Annotation of supplied somatic variants if somatic VCF provided with assigned allele                              |
 
 ## Known issues / future improvements
 
