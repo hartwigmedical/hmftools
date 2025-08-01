@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.jitter;
 
+import static com.hartwig.hmftools.redux.common.Constants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
@@ -50,7 +51,7 @@ public class JitterAnalyserConfig
     public static final String JITTER_WRITE_SITE_FILE = "write_msi_site_file";
     public static final String JITTER_WRITE_SITE_FILE_DESC = "Write MSI site file (useful for debugging)";
 
-    public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
+    public static final int DEFAULT_MIN_MAPPING_QUALITY = BQR_MIN_MAP_QUAL;
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
 
     private JitterAnalyserConfig(final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,

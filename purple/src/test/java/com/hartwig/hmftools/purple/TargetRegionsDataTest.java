@@ -12,7 +12,6 @@ import org.junit.Test;
 
 public class TargetRegionsDataTest extends TargetRegionsTestBase
 {
-
     @Before
     public void setup()
     {

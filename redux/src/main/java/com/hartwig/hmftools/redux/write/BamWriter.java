@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.redux.common.Constants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
@@ -167,7 +168,13 @@ public abstract class BamWriter
 
     public void captureReadInfo(final SAMRecord read)
     {
-        if(mJitterAnalyser != null && mJitterAnalyser.bamSlicerFilter().passesFilters(read))
+        if(read.getDuplicateReadFlag() || read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+            return;
+
+        if(read.getMappingQuality() < BQR_MIN_MAP_QUAL)
+            return;
+
+        if(mJitterAnalyser != null)
             mJitterAnalyser.processRead(read);
 
         if(mBqrProcessor.isActive())
