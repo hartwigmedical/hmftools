@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.String.format;
 

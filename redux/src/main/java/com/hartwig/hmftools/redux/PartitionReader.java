@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -16,6 +14,8 @@ import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_M
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.fillQualZeroMismatchesWithRef;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndels;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
@@ -209,7 +209,9 @@ public class PartitionReader
         if(mConfig.Sequencing == SBX)
         {
             for(ReadInfo readInfo : singleReads)
+            {
                 fillQualZeroMismatchesWithRef(mConfig.RefGenome, readInfo.read());
+            }
         }
     }
 

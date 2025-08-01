@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sequencing;
+package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -14,6 +14,9 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.replaceXwithM;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
+import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
@@ -28,92 +31,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
-import org.jetbrains.annotations.Nullable;
-
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public class SBXBamUtils
+public final class SbxRoutines
 {
     public static byte INVALID_BASE_QUAL = -1;
-    public static int INVALID_POSITION = -1;
-
-    public static int DUPLEX_QUAL = 93;
-    public static int SIMPLEX_QUAL = 18;
-    public static int DUPLEX_ERROR_QUAL = 0;
-
-    public static final String SBX_YC_TAG = "YC";
-
-    @Nullable
-    private static String parseInt(final String s, int start)
-    {
-        if(start < 0 || start >= s.length())
-            return null;
-
-        if(s.charAt(start) < '0' || s.charAt(start) > '9')
-            return null;
-
-        StringBuilder intString = new StringBuilder();
-        for(int i = start; i < s.length(); i++)
-        {
-            if(s.charAt(i) < '0' || s.charAt(i) > '9')
-                break;
-
-            intString.append(s.charAt(i));
-        }
-
-        return intString.toString();
-    }
-
-    public static List<Boolean> getDuplexIndels(final String ycTagStr)
-    {
-        List<Boolean> duplexIndels = Lists.newArrayList();
-        String[] ycTagComponents = ycTagStr.split("-");
-
-        int simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
-        String duplexRegion = ycTagComponents[1];
-        for(int i = 0; i < simplexHeadLength; i++)
-        {
-            duplexIndels.add(false);
-        }
-
-        for(int i = 0; i < duplexRegion.length();)
-        {
-            String intString = parseInt(duplexRegion, i);
-            if(intString != null)
-            {
-                int duplexMatchLength = Integer.parseInt(intString);
-                for(int j = 0; j < duplexMatchLength; j++)
-                {
-                    duplexIndels.add(false);
-                }
-                i += intString.length();
-                continue;
-            }
-
-            char code = duplexRegion.charAt(i);
-            i++;
-            switch(code)
-            {
-                case 'I':
-                case 'L':
-                case 'P':
-                case 'Q':
-                case 'J':
-                case 'O':
-                case 'X':
-                case 'Z':
-                    duplexIndels.add(true);
-                    break;
-                default:
-                    duplexIndels.add(false);
-            }
-        }
-
-        return duplexIndels;
-    }
 
     public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
     {
@@ -152,7 +77,7 @@ public class SBXBamUtils
             return;
         }
 
-        List<AnnotatedBase> annotatedBases = getAnnotatedBases(record, duplexIndels);
+        List<SbxAnnotatedBase> annotatedBases = getAnnotatedBases(record, duplexIndels);
         boolean readModified = processAnnotatedBases(refGenome, chromosome, annotatedBases, isForward);
         if(!readModified)
         {
@@ -163,7 +88,7 @@ public class SBXBamUtils
         StringBuilder newReadString = new StringBuilder();
         StringBuilder newBaseQualString = new StringBuilder();
         List<CigarOperator> newOps = Lists.newArrayList();
-        for(AnnotatedBase annotatedBase : annotatedBases)
+        for(SbxAnnotatedBase annotatedBase : annotatedBases)
         {
             if(annotatedBase.deleted())
             {
@@ -251,7 +176,7 @@ public class SBXBamUtils
     }
 
     @VisibleForTesting
-    public static class AnnotatedBase
+    public static class SbxAnnotatedBase
     {
         public final int ReadIndex;
         public final int RefPos;
@@ -262,7 +187,7 @@ public class SBXBamUtils
         private byte mQual;
         private boolean mDeleted;
 
-        public AnnotatedBase(int readIndex, int refPos, final CigarOperator op, byte readBase, byte qual, boolean isDuplexIndel)
+        public SbxAnnotatedBase(int readIndex, int refPos, final CigarOperator op, byte readBase, byte qual, boolean isDuplexIndel)
         {
             ReadIndex = readIndex;
             RefPos = refPos;
@@ -297,12 +222,12 @@ public class SBXBamUtils
                 return true;
             }
 
-            if(!(o instanceof AnnotatedBase))
+            if(!(o instanceof SbxAnnotatedBase))
             {
                 return false;
             }
 
-            final AnnotatedBase that = (AnnotatedBase) o;
+            final SbxAnnotatedBase that = (SbxAnnotatedBase) o;
             return ReadIndex == that.ReadIndex && RefPos == that.RefPos && ReadBase == that.ReadBase && IsDuplexIndel == that.IsDuplexIndel
                     && mQual == that.mQual && mDeleted == that.mDeleted && Op == that.Op;
         }
@@ -337,13 +262,13 @@ public class SBXBamUtils
     }
 
     @VisibleForTesting
-    public static List<AnnotatedBase> getAnnotatedBases(final SAMRecord record, final List<Boolean> duplexIndels)
+    public static List<SbxAnnotatedBase> getAnnotatedBases(final SAMRecord record, final List<Boolean> duplexIndels)
     {
         byte[] quals = record.getBaseQualities();
         byte[] bases = record.getReadBases();
         int readIndex = 0;
         int refPos = record.getAlignmentStart() - leftSoftClipLength(record);
-        List<AnnotatedBase> annotatedBases = Lists.newArrayList();
+        List<SbxAnnotatedBase> annotatedBases = Lists.newArrayList();
         for(CigarElement el : record.getCigar().getCigarElements())
         {
             if(el.getOperator() == H)
@@ -356,7 +281,7 @@ public class SBXBamUtils
             {
                 for(int i = 0; i < el.getLength(); i++)
                 {
-                    annotatedBases.add(new AnnotatedBase(readIndex, refPos, el.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
+                    annotatedBases.add(new SbxAnnotatedBase(readIndex, refPos, el.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
                     readIndex++;
                     refPos++;
                 }
@@ -368,7 +293,7 @@ public class SBXBamUtils
             {
                 for(int i = 0; i < el.getLength(); i++)
                 {
-                    annotatedBases.add(new AnnotatedBase(readIndex, refPos - 1, el.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
+                    annotatedBases.add(new SbxAnnotatedBase(readIndex, refPos - 1, el.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
                     readIndex++;
                 }
 
@@ -379,7 +304,7 @@ public class SBXBamUtils
             {
                 for(int i = 0; i < el.getLength(); i++)
                 {
-                    annotatedBases.add(new AnnotatedBase(readIndex - 1, refPos, el.getOperator(), INVALID_BASE_QUAL, INVALID_BASE_QUAL, false));
+                    annotatedBases.add(new SbxAnnotatedBase(readIndex - 1, refPos, el.getOperator(), INVALID_BASE_QUAL, INVALID_BASE_QUAL, false));
                     refPos++;
                 }
 
@@ -395,7 +320,7 @@ public class SBXBamUtils
 
     @VisibleForTesting
     public static boolean processAnnotatedBases(final RefGenomeInterface refGenome, final String chromosome,
-            final List<AnnotatedBase> annotatedBases, boolean isForward)
+            final List<SbxAnnotatedBase> annotatedBases, boolean isForward)
     {
         int chromosomeLength = refGenome.getChromosomeLength(chromosome);
         if(!isForward)
@@ -404,7 +329,7 @@ public class SBXBamUtils
         boolean readModified = false;
         for(int i = 0; i < annotatedBases.size();)
         {
-            AnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
             if(annotatedBase.Op == S || !annotatedBase.isReadBase())
             {
                 i++;

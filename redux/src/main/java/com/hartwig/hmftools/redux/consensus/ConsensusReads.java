@@ -49,6 +49,7 @@ public class ConsensusReads
     {
         mRefGenome = new RefGenome(refGenome);
         mNonStandardBaseBuilder = NonStandardBaseBuilder.fromSequencingType(sequencingType, mRefGenome);
+
         if(mNonStandardBaseBuilder == null)
         {
             mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);

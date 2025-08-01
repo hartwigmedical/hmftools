@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.consensus;
 
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_ERROR_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.SIMPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_ERROR_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
@@ -34,7 +34,7 @@ import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.ConsensusState;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.AnnotatedBase;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.ExtendedRefPos;
-import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.SbxBuilder;
+import com.hartwig.hmftools.redux.consensus.SbxBaseBuilder;
 import com.hartwig.hmftools.redux.consensus.RefGenome;
 
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public class SBXConsensusTest
+public class SbxConsensusTest
 {
     private static final String ZERO_QUAL_STR = String.valueOf(phredToFastq(0));
     private static final String SIMPLEX_QUAL_STR = String.valueOf(phredToFastq(SIMPLEX_QUAL));
@@ -50,10 +50,10 @@ public class SBXConsensusTest
 
     private final RefGenome mRefGenome;
     private final ConsensusReads mConsensusReads;
-    private final SbxBuilder mSbxBuilder;
+    private final SbxBaseBuilder mSbxBuilder;
     private final Map<Byte, Byte> mNextBaseMap;
 
-    public SBXConsensusTest()
+    public SbxConsensusTest()
     {
         MockRefGenome mockRefGenome = new MockRefGenome(true);
         mockRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
@@ -62,7 +62,7 @@ public class SBXConsensusTest
         mConsensusReads = new ConsensusReads(mockRefGenome, SBX);
 
         mRefGenome = new RefGenome(mockRefGenome);
-        mSbxBuilder = new SbxBuilder(mRefGenome);
+        mSbxBuilder = new SbxBaseBuilder(mRefGenome);
         mSbxBuilder.setChromosomeLength(REF_BASES.length());
 
         mNextBaseMap = Maps.newHashMap();

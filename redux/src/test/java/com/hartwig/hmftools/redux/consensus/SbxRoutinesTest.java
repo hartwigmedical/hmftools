@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sequencing;
+package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
@@ -6,19 +6,17 @@ import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.DUPLEX_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.INVALID_BASE_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.getAnnotatedBases;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.getDuplexIndels;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.processAnnotatedBases;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.getAnnotatedBases;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.processAnnotatedBases;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -33,60 +31,17 @@ import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.sequencing.SBXBamUtils.AnnotatedBase;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public class SBXBamUtilsTest
+public class SbxRoutinesTest
 {
     private static final String ZERO_QUAL = String.valueOf(phredToFastq(0));
     private static final String NON_ZERO_QUAL = String.valueOf(phredToFastq(DUPLEX_QUAL));
-
-    @Test
-    public void testGetDuplexIndelsNoDuplexIndels()
-    {
-        String ycTagStr = "0-100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
-
-        assertEquals(100, duplexIndels.size());
-        assertTrue(duplexIndels.stream().noneMatch(x -> x));
-    }
-
-    @Test
-    public void testGetDuplexIndelsNoDuplexIndelsWithSimplexHead()
-    {
-        String ycTagStr = "10-100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
-
-        assertEquals(110, duplexIndels.size());
-        assertTrue(duplexIndels.stream().noneMatch(x -> x));
-    }
-
-    @Test
-    public void testGetDuplexIndelsSingleDuplexIndel()
-    {
-        String ycTagStr = "0-100I100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
-
-        assertEquals(201, duplexIndels.size());
-        assertTrue(duplexIndels.subList(0, 100).stream().noneMatch(x -> x));
-        assertTrue(duplexIndels.get(100));
-        assertTrue(duplexIndels.subList(101, 201).stream().noneMatch(x -> x));
-    }
-
-    @Test
-    public void testGetDuplexIndelsSingleNonDuplexIndel()
-    {
-        String ycTagStr = "0-100A100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
-
-        assertEquals(201, duplexIndels.size());
-        assertTrue(duplexIndels.stream().noneMatch(x -> x));
-    }
 
     @Test
     public void testGetAnnotatedBasesSimple()
@@ -98,13 +53,13 @@ public class SBXBamUtilsTest
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<AnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength, annotatedBases.size());
 
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            AnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             assertEquals(i, annotatedBase.ReadIndex);
             assertEquals(i + alignmentStart, annotatedBase.RefPos);
@@ -125,13 +80,13 @@ public class SBXBamUtilsTest
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<AnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength, annotatedBases.size());
 
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            AnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             CigarOperator expectedOp = i < leftSoftClipLength ? S : M;
 
@@ -154,13 +109,13 @@ public class SBXBamUtilsTest
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<AnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength, annotatedBases.size());
 
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            AnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             assertEquals(i, annotatedBase.ReadIndex);
             assertEquals(i + alignmentStart, annotatedBase.RefPos);
@@ -180,7 +135,7 @@ public class SBXBamUtilsTest
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<AnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength + 1, annotatedBases.size());
 
@@ -188,7 +143,7 @@ public class SBXBamUtilsTest
         int expectedRefPos = alignmentStart;
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            AnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             byte expectedReadBase = i != 50 ? (byte) 'A' : INVALID_BASE_QUAL;
             CigarOperator expectedOp = M;
@@ -236,10 +191,10 @@ public class SBXBamUtilsTest
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
         RefGenomeInterface refGenome = getRefGenome(refBases);
 
-        List<AnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
         boolean readModified = processAnnotatedBases(refGenome, CHR_1, annotedBases, true);
 
-        List<AnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
 
         expectedBases.get(5).setQual((byte) 0);
         expectedBases.get(6).setQual((byte) 0);
@@ -272,10 +227,10 @@ public class SBXBamUtilsTest
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
         RefGenomeInterface refGenome = getRefGenome(refBases);
 
-        List<AnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
         boolean readModified = processAnnotatedBases(refGenome, CHR_1, annotedBases, false);
 
-        List<AnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxRoutines.SbxAnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
 
         expectedBases.get(9).setQual((byte) 0);
         expectedBases.get(10).setQual((byte) 0);
@@ -313,7 +268,7 @@ public class SBXBamUtilsTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
-        stripDuplexIndels(refGenome, read);
+        SbxRoutines.stripDuplexIndels(refGenome, read);
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
@@ -358,7 +313,7 @@ public class SBXBamUtilsTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
-        stripDuplexIndels(refGenome, read);
+        SbxRoutines.stripDuplexIndels(refGenome, read);
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
@@ -400,7 +355,7 @@ public class SBXBamUtilsTest
         String refBases = "A".repeat(alignmentStart - 1 + 10) + "G" + "A".repeat(1000);
         RefGenomeInterface refGenome = getRefGenome(refBases);
 
-        fillQualZeroMismatchesWithRef(refGenome, read);
+        SbxRoutines.fillQualZeroMismatchesWithRef(refGenome, read);
 
         int alignmentScoreDiff = BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
 

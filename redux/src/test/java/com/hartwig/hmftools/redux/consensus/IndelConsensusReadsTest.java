@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.redux.ConsensusReadsTest.UMI_ID_1;
-import static com.hartwig.hmftools.redux.ConsensusReadsTest.nextUmiReadId;
+import static com.hartwig.hmftools.redux.consensus.ConsensusReadsTest.UMI_ID_1;
+import static com.hartwig.hmftools.redux.consensus.ConsensusReadsTest.nextUmiReadId;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
@@ -17,8 +17,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
 import org.junit.jupiter.api.Test;
 
