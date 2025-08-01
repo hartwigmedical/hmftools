@@ -7,7 +7,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TargetRegionsDataTest extends TargetRegionsTestBase
@@ -18,7 +17,6 @@ public class TargetRegionsDataTest extends TargetRegionsTestBase
         super.setup();
     }
 
-    @Ignore
     @Test
     public void targetRegionsTest()
     {

@@ -4,8 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,7 +15,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.hartwig.hmftools.common.utils.EnsemblMini;
 import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcid;
 import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSpecification;
@@ -27,7 +25,7 @@ import com.hartwig.hmftools.pavereverse.protein.SingleAminoAcidVariant;
 
 public class ReversePaveTestBase
 {
-    public final File ensemblDataDir;
+    private File ensemblDataDir = Paths.get("src","test","resources","ensembl").toFile();
     public final ReversePave reversePave;
     public final RefGenomeInterface genome = new TinyGenome();
     protected final String braf = "BRAF";
@@ -39,7 +37,6 @@ public class ReversePaveTestBase
 
     public ReversePaveTestBase()
     {
-        ensemblDataDir = EnsemblMini.ensemblMiniDataDir();
         reversePave = new ReversePave(ensemblDataDir, RefGenomeVersion.V38, genome);
     }
 
