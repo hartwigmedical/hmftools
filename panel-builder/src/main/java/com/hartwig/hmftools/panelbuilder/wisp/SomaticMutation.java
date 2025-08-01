@@ -9,12 +9,13 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CLONAL_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.common.wisp.Utils.generateMutationSequence;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_MAPPABILITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_REPEAT_COUNT_MAX_LOWER;
@@ -182,10 +183,10 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome)
     {
-        mSequence = CommonUtils.generateMutationSequence(
-                refGenome, config.ProbeLength, mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(),
+        mSequence = generateMutationSequence(
+                refGenome, PROBE_LENGTH, mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(),
                 mVariantDecorator.alt());
     }
 

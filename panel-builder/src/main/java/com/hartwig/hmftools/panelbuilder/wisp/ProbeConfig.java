@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildca
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_FRAG_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_FRAG_COUNT_MIN_LOWER;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_GC_THRESHOLD_MAX;
@@ -59,7 +58,6 @@ public class ProbeConfig
     public final double GcRatioLimitLowerMax;
 
     public final int ProbeCount;
-    public final int ProbeLength;
     public final int NonReportableSvCount;
     public final int SubclonalCount;
     public final boolean WriteAll;
@@ -73,7 +71,6 @@ public class ProbeConfig
     private static final String FRAG_COUNT_THRESHOLD = "frag_count_min";
     private static final String FRAG_COUNT_THRESHOLD_LOWER = "frag_count_min_lower";
     private static final String PROBE_COUNT = "probe_count";
-    private static final String PROBE_LENGTH = "probe_length";
     private static final String NON_REPORTABLE_SV_COUNT = "non_reportable_sv_count";
     private static final String SUBCLONAL_COUNT = "subclonal_count";
     private static final String WRITE_ALL = "write_all";
@@ -97,7 +94,6 @@ public class ProbeConfig
         LOGGER.info("output({})", OutputDir);
 
         ProbeCount = configBuilder.getInteger(PROBE_COUNT);
-        ProbeLength = configBuilder.getInteger(PROBE_LENGTH);
         NonReportableSvCount = configBuilder.getInteger(NON_REPORTABLE_SV_COUNT);
         SubclonalCount = configBuilder.getInteger(SUBCLONAL_COUNT);
         VafMin = configBuilder.getDecimal(VAF_THRESHOLD);
@@ -135,10 +131,9 @@ public class ProbeConfig
         }
     }
 
-    public ProbeConfig(int probeLength, int probeCount, int nonReportableSvCount, double vafMin, int fragmentCountMin)
+    public ProbeConfig(int probeCount, int nonReportableSvCount, double vafMin, int fragmentCountMin)
     {
         ProbeCount = probeCount;
-        ProbeLength = probeLength;
         NonReportableSvCount = nonReportableSvCount;
         SubclonalCount = 0;
         VafMin = vafMin;
@@ -178,7 +173,6 @@ public class ProbeConfig
                 DEFAULT_FRAG_COUNT_MIN_LOWER);
 
         configBuilder.addInteger(PROBE_COUNT, "Probe count", DEFAULT_PROBE_COUNT);
-        configBuilder.addInteger(PROBE_LENGTH, "Probe length", CommonUtils.DEFAULT_PROBE_LENGTH);
 
         configBuilder.addInteger(NON_REPORTABLE_SV_COUNT, "Max count of non-reportable SVs", 0);
         configBuilder.addInteger(SUBCLONAL_COUNT, "Max count of subclonal mutations", 0);

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,11 +38,11 @@ public class StructuralVariantTest
                 Lists.newArrayList(), Lists.newArrayList());
         var.markAmpDelDriver(false);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
         String sequence = TestUtils.REF_BASES_CHR_1.substring(11, 21) + TestUtils.REF_BASES_CHR_1.substring(30, 40);
         assertEquals(sequence, var.sequence());
-        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
-        assertEquals(TestUtils.REF_BASES_CHR_1.substring(20, 20 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(1));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + PROBE_LENGTH), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(20, 20 + PROBE_LENGTH), var.refSequences().get(1));
 
         // DUP with an insert
         String insertSeq = "AAAAA";
@@ -50,7 +51,7 @@ public class StructuralVariantTest
                         2, 2, insertSeq),
                 Lists.newArrayList(), Lists.newArrayList());
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
         sequence = TestUtils.REF_BASES_CHR_1.substring(33, 41) + insertSeq + TestUtils.REF_BASES_CHR_1.substring(20, 27);
         assertEquals(sequence, var.sequence());
 
@@ -61,7 +62,7 @@ public class StructuralVariantTest
                         2, 2, insertSeq),
                 Lists.newArrayList(), Lists.newArrayList());
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
         sequence = Nucleotides.reverseComplementBases(TestUtils.REF_BASES_CHR_2.substring(40, 47)) + insertSeq
                 + TestUtils.REF_BASES_CHR_1.substring(20, 27);
         assertEquals(sequence, var.sequence());
@@ -74,10 +75,10 @@ public class StructuralVariantTest
                         2, 0, insertSeq),
                 Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
         sequence = TestUtils.REF_BASES_CHR_1.substring(6, 21) + insertSeq;
         assertEquals(sequence, var.sequence());
-        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + PROBE_LENGTH), var.refSequences().get(0));
 
         // with a longer insert sequence - will only allocate half the probe length
         insertSeq = "AAAAAGGGGGCCCCCTTTTT";
@@ -86,10 +87,10 @@ public class StructuralVariantTest
                         2, 0, insertSeq),
                 Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
         sequence = TestUtils.REF_BASES_CHR_1.substring(11, 21) + insertSeq.substring(0, 10);
         assertEquals(sequence, var.sequence());
-        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + PROBE_LENGTH), var.refSequences().get(0));
 
         // negative orientation
         var = new StructuralVariant(
@@ -97,10 +98,10 @@ public class StructuralVariantTest
                         2, 0, insertSeq),
                 Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
         sequence = insertSeq.substring(insertSeq.length() - 10) + TestUtils.REF_BASES_CHR_1.substring(20, 30);
         assertEquals(sequence, var.sequence());
-        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + TestUtils.TEST_CONFIG.ProbeLength), var.refSequences().get(0));
+        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + PROBE_LENGTH), var.refSequences().get(0));
     }
 
     public static StructuralVariantData createSv(

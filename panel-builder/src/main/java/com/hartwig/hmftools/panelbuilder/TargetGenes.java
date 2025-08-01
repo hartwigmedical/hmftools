@@ -287,6 +287,7 @@ public class TargetGenes
 
         if(options.promoter() && !mergedExons.isEmpty())
         {
+            // TODO: is this correct?
             MergedExonRegion exon = geneData.forwardStrand() ? mergedExons.get(0) : mergedExons.get(mergedExons.size() - 1);
             BaseRegion region = geneData.forwardStrand()
                     ? regionEndingAt(exon.Region.start() - 1, GENE_PROMOTER_REGION)

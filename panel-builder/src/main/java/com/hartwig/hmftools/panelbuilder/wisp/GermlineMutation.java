@@ -2,7 +2,8 @@ package com.hartwig.hmftools.panelbuilder.wisp;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
+import static com.hartwig.hmftools.common.wisp.Utils.generateMutationSequence;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 
 import java.util.List;
 
@@ -79,10 +80,10 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome)
     {
-        String sequence = CommonUtils.generateMutationSequence(
-                refGenome, config.ProbeLength, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
+        String sequence = generateMutationSequence(
+                refGenome, PROBE_LENGTH, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
         setSequence(sequence);
     }
 

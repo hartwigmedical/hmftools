@@ -18,6 +18,6 @@ public final class TestUtils
     public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
 
     public static final ProbeConfig TEST_CONFIG = new ProbeConfig(
-            20, 1, 0, 0, 0);
+            1, 0, 0, 0);
 
 }

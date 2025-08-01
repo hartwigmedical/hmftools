@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -99,24 +100,24 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome)
     {
         if(mAlt.isEmpty())
         {
-            int startLength = config.ProbeLength / 2;
+            int startLength = PROBE_LENGTH / 2;
             int startPos = mPosition - startLength;
 
-            setSequence(refGenome.getBaseString(mChromosome, startPos, startPos + config.ProbeLength - 1));
+            setSequence(refGenome.getBaseString(mChromosome, startPos, startPos + PROBE_LENGTH - 1));
             return;
         }
 
         int altLength = mAlt.length();
         int refLength = mRef.length();
-        int startLength = config.ProbeLength / 2 - altLength / 2;
+        int startLength = PROBE_LENGTH / 2 - altLength / 2;
         int startPos = mPosition - startLength;
 
         String basesStart = refGenome.getBaseString(mChromosome, startPos, mPosition - 1);
-        int endBaseLength = config.ProbeLength - basesStart.length() - altLength;
+        int endBaseLength = PROBE_LENGTH - basesStart.length() - altLength;
 
         int postPosition = mPosition + refLength;
         String basesEnd = refGenome.getBaseString(mChromosome, postPosition, postPosition + endBaseLength - 1);

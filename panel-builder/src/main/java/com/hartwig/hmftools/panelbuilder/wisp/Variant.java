@@ -64,7 +64,7 @@ public abstract class Variant
 
     abstract boolean reported();
 
-    abstract void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config);
+    abstract void generateSequences(final RefGenomeInterface refGenome);
 
     abstract boolean checkFilters();
 

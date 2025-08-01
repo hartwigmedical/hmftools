@@ -31,7 +31,7 @@ public class PanelBuilderConstants
     public static final int GENE_UPDOWNSTREAM_REGION = 2000;
     // Coding exons are expanded by this many bases each side to include splice points in probe coverage.
     public static final int GENE_CODING_REGION_EXPAND = 10;
-    public static final double GENE_EXON_QUALITY_MIN = 0.05;
+    public static final double GENE_GENERAL_QUALITY_MIN = 0.05;
     // Minimum space between exon and intron probe.
     public static final int GENE_EXON_FLANK_GAP = 1000;
     // Exon flank probes are selected within a region of this many bases.

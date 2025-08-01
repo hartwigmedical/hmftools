@@ -90,13 +90,13 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome)
     {
         mRefSequences.addAll(StructuralVariant.generateSvReferenceSequences(
-                refGenome, config, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.ChromosomeEnd, mVariant.PositionEnd));
+                refGenome, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.ChromosomeEnd, mVariant.PositionEnd));
 
         String sequence = StructuralVariant.generateSvSequence(
-                refGenome, config, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
+                refGenome, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence);
 
         setSequence(sequence);

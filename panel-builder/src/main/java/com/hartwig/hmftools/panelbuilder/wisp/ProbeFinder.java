@@ -9,9 +9,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_CATEGORY;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_VARIANT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -92,7 +89,7 @@ public class ProbeFinder
             variants.addAll(StructuralVariant.loadStructuralVariants(sampleId, mConfig));
             variants.addAll(GermlineSv.loadGermlineStructuralVariants(sampleId, mConfig));
 
-            variants.forEach(x -> x.generateSequences(mRefGenome, mConfig));
+            variants.forEach(x -> x.generateSequences(mRefGenome));
 
             return VariantSelection.selectVariants(variants, mConfig);
         }
@@ -123,9 +120,9 @@ public class ProbeFinder
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add(CommonUtils.FLD_CATEGORY)
+            sj.add("Category")
                     .add("Status")
-                    .add(CommonUtils.FLD_VARIANT)
+                    .add("Variant")
                     .add("Reported")
                     .add("CopyNumber")
                     .add("Vaf")
@@ -197,7 +194,9 @@ public class ProbeFinder
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder(CommonUtils.APP_NAME);
+        // TODO
+        String appName = "TODO";
+        ConfigBuilder configBuilder = new ConfigBuilder(appName);
         ProbeConfig.addConfig(configBuilder);
 
         addLoggingOptions(configBuilder);

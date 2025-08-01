@@ -37,7 +37,7 @@ public class PointMutationTest
         String alt = "A";
         SomaticMutation var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TestUtils.TEST_SAMPLE_ID);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
 
         String sequence = TestUtils.REF_BASES_CHR_1.substring(10, 20) + alt + TestUtils.REF_BASES_CHR_1.substring(21, 30);
         assertEquals(var.sequence(), sequence);
@@ -47,7 +47,7 @@ public class PointMutationTest
         alt = "AA";
         var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TestUtils.TEST_SAMPLE_ID);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
 
         sequence = TestUtils.REF_BASES_CHR_1.substring(11, 20) + alt + TestUtils.REF_BASES_CHR_1.substring(22, 31);
         assertEquals(var.sequence(), sequence);
@@ -57,7 +57,7 @@ public class PointMutationTest
         alt = "AAA";
         var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TestUtils.TEST_SAMPLE_ID);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
 
         sequence = TestUtils.REF_BASES_CHR_1.substring(11, 20) + alt + TestUtils.REF_BASES_CHR_1.substring(23, 31);
         assertEquals(sequence, var.sequence());
@@ -68,7 +68,7 @@ public class PointMutationTest
         alt = ref.substring(0, 1);
         var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TestUtils.TEST_SAMPLE_ID);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
 
         sequence = TestUtils.REF_BASES_CHR_1.substring(10, 20) + alt + TestUtils.REF_BASES_CHR_1.substring(
                 position + delLength, position + delLength + 9);
@@ -80,7 +80,7 @@ public class PointMutationTest
         alt = ref.substring(0, 1);
         var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TestUtils.TEST_SAMPLE_ID);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
 
         sequence = TestUtils.REF_BASES_CHR_1.substring(10, 20) + alt + TestUtils.REF_BASES_CHR_1.substring(
                 position + delLength, position + delLength + 9);
@@ -91,7 +91,7 @@ public class PointMutationTest
         alt = ref + "AA";
         var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TestUtils.TEST_SAMPLE_ID);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
 
         sequence = TestUtils.REF_BASES_CHR_1.substring(11, 20) + alt + TestUtils.REF_BASES_CHR_1.substring(position + 1, position + 9);
         assertEquals(sequence, var.sequence());
@@ -101,7 +101,7 @@ public class PointMutationTest
         alt = ref + "AAAAAAA";
         var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TestUtils.TEST_SAMPLE_ID);
 
-        var.generateSequences(TestUtils.MOCK_REF_GENOME, TestUtils.TEST_CONFIG);
+        var.generateSequences(TestUtils.MOCK_REF_GENOME);
 
         sequence = TestUtils.REF_BASES_CHR_1.substring(14, 20) + alt + TestUtils.REF_BASES_CHR_1.substring(position + 1, position + 7);
         assertEquals(sequence, var.sequence());

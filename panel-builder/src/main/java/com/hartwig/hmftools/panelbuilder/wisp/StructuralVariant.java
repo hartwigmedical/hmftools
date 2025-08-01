@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.AMP;
 import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.MAX_POLY_A_T_BASES;
@@ -189,12 +190,12 @@ public class StructuralVariant extends Variant
     }
 
     protected static List<String> generateSvReferenceSequences(
-            final RefGenomeInterface refGenome, final ProbeConfig config,
+            final RefGenomeInterface refGenome,
             final String chrStart, final int positionStart, final String chrEnd, final int positionEnd)
     {
         List<String> refSequences = Lists.newArrayList();
 
-        int probeLength = config.ProbeLength;
+        int probeLength = PROBE_LENGTH;
         int halfProbeLength = probeLength / 2;
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -216,10 +217,10 @@ public class StructuralVariant extends Variant
     }
 
     private static String generateSglSequence(
-            final RefGenomeInterface refGenome, final ProbeConfig config,
+            final RefGenomeInterface refGenome,
             final String chromosome, final int position, final byte orientation, final String insertSequence)
     {
-        int probeLength = config.ProbeLength;
+        int probeLength = PROBE_LENGTH;
         int halfProbeLength = probeLength / 2;
         int insSeqLength = min(insertSequence.length(), halfProbeLength);
         int refBaseLength = probeLength - insSeqLength;
@@ -253,11 +254,11 @@ public class StructuralVariant extends Variant
     }
 
     protected static String generateSvSequence(
-            final RefGenomeInterface refGenome, final ProbeConfig config,
+            final RefGenomeInterface refGenome,
             final String chrStart, final int positionStart, final byte orientStart,
             final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence)
     {
-        int probeLength = config.ProbeLength;
+        int probeLength = PROBE_LENGTH;
         int halfProbeLength = probeLength / 2;
         int insSeqLength = insertSequence.length();
         int halfInsSeqLength = insSeqLength / 2;
@@ -323,12 +324,12 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome)
     {
         if(mCategoryType != OTHER_SV)
         {
             mRefSequences.addAll(generateSvReferenceSequences(
-                    refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
+                    refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
         }
 
         String sequence;
@@ -336,12 +337,12 @@ public class StructuralVariant extends Variant
         if(mVariant.type() == SGL)
         {
             sequence = generateSglSequence(
-                    refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence());
+                    refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence());
         }
         else
         {
             sequence = generateSvSequence(
-                    refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
+                    refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
         }
 
