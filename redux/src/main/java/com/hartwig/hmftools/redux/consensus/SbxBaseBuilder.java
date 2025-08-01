@@ -2,7 +2,6 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_ERROR_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
@@ -25,6 +24,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class SbxBaseBuilder extends NonStandardBaseBuilder
 {
+    public static final int DUPLEX_ERROR_QUAL = 0;
+
     public SbxBaseBuilder(final RefGenome refGenome)
     {
         super(refGenome);

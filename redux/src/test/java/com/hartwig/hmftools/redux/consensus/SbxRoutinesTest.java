@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.redux.common.Constants.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.getAnnotatedBases;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.processAnnotatedBases;
 
@@ -53,13 +53,13 @@ public class SbxRoutinesTest
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength, annotatedBases.size());
 
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             assertEquals(i, annotatedBase.ReadIndex);
             assertEquals(i + alignmentStart, annotatedBase.RefPos);
@@ -80,13 +80,13 @@ public class SbxRoutinesTest
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength, annotatedBases.size());
 
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             CigarOperator expectedOp = i < leftSoftClipLength ? S : M;
 
@@ -109,13 +109,13 @@ public class SbxRoutinesTest
         SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength, annotatedBases.size());
 
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             assertEquals(i, annotatedBase.ReadIndex);
             assertEquals(i + alignmentStart, annotatedBase.RefPos);
@@ -132,10 +132,12 @@ public class SbxRoutinesTest
         int alignmentStart = 25;
         String readStr = "A".repeat(readLength);
         String cigar = "9M1I40M1D50M";
-        SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
+        SAMRecord read = createSamRecordUnpaired(
+                "READ_001", CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
         List<Boolean> duplexIndels = IntStream.range(0, readLength).mapToObj(i -> false).collect(Collectors.toList());
 
-        List<SbxRoutines.SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> annotatedBases = getAnnotatedBases(read, duplexIndels);
 
         assertEquals(readLength + 1, annotatedBases.size());
 
@@ -143,7 +145,7 @@ public class SbxRoutinesTest
         int expectedRefPos = alignmentStart;
         for(int i = 0; i < annotatedBases.size(); i++)
         {
-            SbxRoutines.SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
+            SbxAnnotatedBase annotatedBase = annotatedBases.get(i);
 
             byte expectedReadBase = i != 50 ? (byte) 'A' : INVALID_BASE_QUAL;
             CigarOperator expectedOp = M;
@@ -191,10 +193,10 @@ public class SbxRoutinesTest
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
         RefGenomeInterface refGenome = getRefGenome(refBases);
 
-        List<SbxRoutines.SbxAnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
         boolean readModified = processAnnotatedBases(refGenome, CHR_1, annotedBases, true);
 
-        List<SbxRoutines.SbxAnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
 
         expectedBases.get(5).setQual((byte) 0);
         expectedBases.get(6).setQual((byte) 0);
@@ -216,7 +218,8 @@ public class SbxRoutinesTest
 
         String readStr = "A".repeat(5) + "CT".repeat(3) + "A".repeat(5);
         String cigar = "5M4I7M";  // inserts are left aligned.
-        SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readStr, cigar, true, false, null);
+        SAMRecord read = createSamRecordUnpaired(
+                "READ_001", CHR_1, alignmentStart, readStr, cigar, true, false, null);
 
         String qualStr = NON_ZERO_QUAL.repeat(5) + ZERO_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(9);
         read.setBaseQualityString(qualStr);
@@ -227,10 +230,10 @@ public class SbxRoutinesTest
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(1000);
         RefGenomeInterface refGenome = getRefGenome(refBases);
 
-        List<SbxRoutines.SbxAnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> annotedBases = getAnnotatedBases(read, duplexIndels);
         boolean readModified = processAnnotatedBases(refGenome, CHR_1, annotedBases, false);
 
-        List<SbxRoutines.SbxAnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
+        List<SbxAnnotatedBase> expectedBases = getAnnotatedBases(read, duplexIndels);
 
         expectedBases.get(9).setQual((byte) 0);
         expectedBases.get(10).setQual((byte) 0);
@@ -324,7 +327,8 @@ public class SbxRoutinesTest
         String expectedQualStr = NON_ZERO_QUAL.repeat(5) + ZERO_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(5);
 
         SAMRecord expectedRead =
-                createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, expectedReadStr, expectedCigar, true, false, null);
+                createSamRecordUnpaired(
+                        "READ_001", CHR_1, alignmentStart, expectedReadStr, expectedCigar, true, false, null);
 
         expectedRead.setBaseQualityString(expectedQualStr);
         expectedRead.setMappingQuality(mapq);
@@ -366,7 +370,8 @@ public class SbxRoutinesTest
         String expectedQualStr = NON_ZERO_QUAL.repeat(10) + phredToFastq(1) + NON_ZERO_QUAL.repeat(9);
 
         SAMRecord expectedRead =
-                createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, expectedReadStr, expectedCigar, false, false, null);
+                createSamRecordUnpaired(
+                        "READ_001", CHR_1, alignmentStart, expectedReadStr, expectedCigar, false, false, null);
         expectedRead.setBaseQualityString(expectedQualStr);
         expectedRead.setMappingQuality(mapq);
         expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);

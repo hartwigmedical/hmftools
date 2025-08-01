@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_ERROR_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
@@ -11,6 +10,7 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ON
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.ANY_BASE;
+import static com.hartwig.hmftools.redux.consensus.SbxBaseBuilder.DUPLEX_ERROR_QUAL;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

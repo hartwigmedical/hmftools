@@ -215,7 +215,7 @@ public class PartitionReader
         }
     }
 
-    private void postProcessPrimaryRead(@Nullable SAMRecord primaryRead)
+    private void postProcessPrimaryRead(@Nullable final SAMRecord primaryRead)
     {
         if(primaryRead == null)
             return;

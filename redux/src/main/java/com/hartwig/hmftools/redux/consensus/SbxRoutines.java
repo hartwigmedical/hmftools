@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
+import static com.hartwig.hmftools.redux.common.Constants.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
@@ -38,14 +39,10 @@ import htsjdk.samtools.SAMRecord;
 
 public final class SbxRoutines
 {
-    public static byte INVALID_BASE_QUAL = -1;
-
     public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
-        {
             return;
-        }
 
         String chromosome = record.getReferenceName();
         String ycTagStr = record.getStringAttribute(SBX_YC_TAG);
@@ -73,16 +70,13 @@ public final class SbxRoutines
         }
 
         if(!hasDuplexIndels)
-        {
             return;
-        }
 
         List<SbxAnnotatedBase> annotatedBases = getAnnotatedBases(record, duplexIndels);
         boolean readModified = processAnnotatedBases(refGenome, chromosome, annotatedBases, isForward);
+
         if(!readModified)
-        {
             return;
-        }
 
         int newAlignmentStart = INVALID_POSITION;
         StringBuilder newReadString = new StringBuilder();
@@ -91,16 +85,12 @@ public final class SbxRoutines
         for(SbxAnnotatedBase annotatedBase : annotatedBases)
         {
             if(annotatedBase.deleted())
-            {
                 continue;
-            }
 
             newOps.add(annotatedBase.Op);
 
             if(!annotatedBase.isReadBase())
-            {
                 continue;
-            }
 
             if(newAlignmentStart == INVALID_POSITION && !annotatedBase.Op.isClipping())
             {
@@ -112,9 +102,7 @@ public final class SbxRoutines
         }
 
         if(newAlignmentStart == INVALID_POSITION)
-        {
             return;
-        }
 
         List<CigarElement> newCigarElements = Lists.newArrayList();
         if(readLeftHardClipLength > 0)
@@ -127,28 +115,24 @@ public final class SbxRoutines
 
         int oldInsertGaps = 0;
         int oldTotalInsertLength = 0;
-        for(CigarElement el : record.getCigar().getCigarElements())
+        for(CigarElement element : record.getCigar().getCigarElements())
         {
-            if(el.getOperator() != I)
-            {
+            if(element.getOperator() != I)
                 continue;
-            }
 
             oldInsertGaps++;
-            oldTotalInsertLength += el.getLength();
+            oldTotalInsertLength += element.getLength();
         }
 
         int newInsertGaps = 0;
         int newTotalInsertLength = 0;
-        for(CigarElement el : newCigarElements)
+        for(CigarElement element : newCigarElements)
         {
-            if(el.getOperator() != I)
-            {
+            if(element.getOperator() != I)
                 continue;
-            }
 
             newInsertGaps++;
-            newTotalInsertLength += el.getLength();
+            newTotalInsertLength += element.getLength();
         }
 
         int nmDiff = newTotalInsertLength - oldTotalInsertLength;
@@ -176,92 +160,6 @@ public final class SbxRoutines
     }
 
     @VisibleForTesting
-    public static class SbxAnnotatedBase
-    {
-        public final int ReadIndex;
-        public final int RefPos;
-        public final CigarOperator Op;
-        public final byte ReadBase;
-        public final boolean IsDuplexIndel;
-
-        private byte mQual;
-        private boolean mDeleted;
-
-        public SbxAnnotatedBase(int readIndex, int refPos, final CigarOperator op, byte readBase, byte qual, boolean isDuplexIndel)
-        {
-            ReadIndex = readIndex;
-            RefPos = refPos;
-            Op = op;
-            ReadBase = readBase;
-            IsDuplexIndel = isDuplexIndel;
-
-            mQual = qual;
-            mDeleted = false;
-        }
-
-        public boolean isReadBase() { return Op.consumesReadBases(); }
-        public boolean isRefBase() { return Op.consumesReferenceBases(); }
-
-        public void deleteBase() { mDeleted = true; }
-        public boolean deleted() { return mDeleted; }
-
-        public byte qual() { return mQual; }
-        public boolean setQual(byte qual) {
-            if(mQual == qual)
-                return false;
-
-            mQual = qual;
-            return true;
-        }
-
-        @Override
-        public boolean equals(final Object o)
-        {
-            if(this == o)
-            {
-                return true;
-            }
-
-            if(!(o instanceof SbxAnnotatedBase))
-            {
-                return false;
-            }
-
-            final SbxAnnotatedBase that = (SbxAnnotatedBase) o;
-            return ReadIndex == that.ReadIndex && RefPos == that.RefPos && ReadBase == that.ReadBase && IsDuplexIndel == that.IsDuplexIndel
-                    && mQual == that.mQual && mDeleted == that.mDeleted && Op == that.Op;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int hash = ReadIndex;
-            hash = 31 * hash + RefPos;
-            hash = 31 * hash + Op.hashCode();
-            hash = 31 * hash + (int) ReadBase;
-            hash = 31 * hash + (IsDuplexIndel ? 1 : 0);
-            hash = 31 * hash + (int) mQual;
-            hash = 31 * hash + (mDeleted ? 1 : 0);
-
-            return hash;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "AnnotatedBase{" +
-                    "ReadIndex=" + ReadIndex +
-                    ", RefPos=" + RefPos +
-                    ", Op=" + Op +
-                    ", ReadBase=" + ReadBase +
-                    ", IsDuplexIndel=" + IsDuplexIndel +
-                    ", mQual=" + mQual +
-                    ", mDeleted=" + mDeleted +
-                    '}';
-        }
-    }
-
-    @VisibleForTesting
     public static List<SbxAnnotatedBase> getAnnotatedBases(final SAMRecord record, final List<Boolean> duplexIndels)
     {
         byte[] quals = record.getBaseQualities();
@@ -269,19 +167,20 @@ public final class SbxRoutines
         int readIndex = 0;
         int refPos = record.getAlignmentStart() - leftSoftClipLength(record);
         List<SbxAnnotatedBase> annotatedBases = Lists.newArrayList();
-        for(CigarElement el : record.getCigar().getCigarElements())
+        for(CigarElement element : record.getCigar().getCigarElements())
         {
-            if(el.getOperator() == H)
+            if(element.getOperator() == H)
                 continue;
 
-            boolean isRead = el.getOperator().consumesReadBases();
-            boolean isRef = el.getOperator() == S || el.getOperator().consumesReferenceBases();
+            boolean isRead = element.getOperator().consumesReadBases();
+            boolean isRef = element.getOperator() == S || element.getOperator().consumesReferenceBases();
 
             if(isRead && isRef)
             {
-                for(int i = 0; i < el.getLength(); i++)
+                for(int i = 0; i < element.getLength(); i++)
                 {
-                    annotatedBases.add(new SbxAnnotatedBase(readIndex, refPos, el.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
+                    annotatedBases.add(new SbxAnnotatedBase(
+                            readIndex, refPos, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
                     readIndex++;
                     refPos++;
                 }
@@ -291,9 +190,10 @@ public final class SbxRoutines
 
             if(isRead)
             {
-                for(int i = 0; i < el.getLength(); i++)
+                for(int i = 0; i < element.getLength(); i++)
                 {
-                    annotatedBases.add(new SbxAnnotatedBase(readIndex, refPos - 1, el.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
+                    annotatedBases.add(new SbxAnnotatedBase(
+                            readIndex, refPos - 1, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndels.get(readIndex)));
                     readIndex++;
                 }
 
@@ -302,9 +202,10 @@ public final class SbxRoutines
 
             if(isRef)
             {
-                for(int i = 0; i < el.getLength(); i++)
+                for(int i = 0; i < element.getLength(); i++)
                 {
-                    annotatedBases.add(new SbxAnnotatedBase(readIndex - 1, refPos, el.getOperator(), INVALID_BASE_QUAL, INVALID_BASE_QUAL, false));
+                    annotatedBases.add(new SbxAnnotatedBase(
+                            readIndex - 1, refPos, element.getOperator(), INVALID_BASE_QUAL, INVALID_BASE_QUAL, false));
                     refPos++;
                 }
 
@@ -312,15 +213,15 @@ public final class SbxRoutines
             }
 
             throw new IllegalStateException(format("CigarOperator(%s) in read(%s) with cigar(%s) consumes neither read or ref bases",
-                    el.getOperator().name(), record.getReferenceName(), record.getCigarString()));
+                    element.getOperator().name(), record.getReferenceName(), record.getCigarString()));
         }
 
         return annotatedBases;
     }
 
     @VisibleForTesting
-    public static boolean processAnnotatedBases(final RefGenomeInterface refGenome, final String chromosome,
-            final List<SbxAnnotatedBase> annotatedBases, boolean isForward)
+    public static boolean processAnnotatedBases(
+            final RefGenomeInterface refGenome, final String chromosome, final List<SbxAnnotatedBase> annotatedBases, boolean isForward)
     {
         int chromosomeLength = refGenome.getChromosomeLength(chromosome);
         if(!isForward)
@@ -500,20 +401,20 @@ public final class SbxRoutines
         byte[] baseQuals = record.getBaseQualities();
         int nmDiff = 0;
         int alignmentScoreDiff = 0;
-        for(CigarElement el : record.getCigar().getCigarElements())
+        for(CigarElement element : record.getCigar().getCigarElements())
         {
-            if(el.getOperator() != M)
+            if(element.getOperator() != M)
             {
-                if(el.getOperator().consumesReadBases())
-                    readIndex += el.getLength();
+                if(element.getOperator().consumesReadBases())
+                    readIndex += element.getLength();
 
-                if(el.getOperator().consumesReferenceBases())
-                    refPos += el.getLength();
+                if(element.getOperator().consumesReferenceBases())
+                    refPos += element.getLength();
 
                 continue;
             }
 
-            for(int i = 0; i < el.getLength(); i++, readIndex++, refPos++)
+            for(int i = 0; i < element.getLength(); i++, readIndex++, refPos++)
             {
                 if(baseQuals[readIndex] > 0)
                     continue;

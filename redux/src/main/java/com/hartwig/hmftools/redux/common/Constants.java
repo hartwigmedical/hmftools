@@ -25,6 +25,15 @@ public class Constants
 
     public static final int SUPP_ALIGNMENT_SCORE_MIN = 30;
 
+    // base quals
+    public static final byte SBX_SIMPLEX_QUAL = 27;
+    public static final byte SBX_DUPLEX_QUAL = 40;
+    public static final byte SBX_DUPLEX_MISMATCH_QUAL = 1;
+    public static final byte SBX_DUPLEX_ADJACENT_1_QUAL = 10;
+    public static final byte SBX_DUPLEX_ADJACENT_2_QUAL = 15;
+
+    public static byte INVALID_BASE_QUAL = -1;
+
     // consensus building
     public static int CONSENSUS_MAX_DEPTH = 100;
 
