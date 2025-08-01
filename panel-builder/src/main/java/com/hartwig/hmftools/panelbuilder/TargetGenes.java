@@ -52,7 +52,7 @@ import org.apache.logging.log4j.Logger;
 //   - Coding: Cover the full coding region of each exon, plus splice points.
 //   - UTR: Select 1 probe within each noncoding exon.
 //   - Upstream/downstream: Select the best acceptable probe from a 2kb region 1kb upstream/downstream.
-//   - Promoter: Cover the full region from first exon to 500b upstream.
+//   - Promoter: Cover the full region from the transcription start to 500b upstream.
 //   - Exon flanks: Only when there are not too many exons:
 //     - Small introns: Select the best acceptable probe from a 1kb region centered on the centre of the intron.
 //     - Large introns: Select the best acceptable probe from each of 1-5kb regions near the adjacent exons.
@@ -287,11 +287,12 @@ public class TargetGenes
 
         if(options.promoter() && !mergedExons.isEmpty())
         {
-            // TODO: is this correct?
-            MergedExonRegion exon = geneData.forwardStrand() ? mergedExons.get(0) : mergedExons.get(mergedExons.size() - 1);
+            int transStart = geneData.forwardStrand()
+                    ? transcripts.stream().mapToInt(trans -> trans.TransStart).min().orElseThrow()
+                    : transcripts.stream().mapToInt(trans -> trans.TransEnd).max().orElseThrow();
             BaseRegion region = geneData.forwardStrand()
-                    ? regionEndingAt(exon.Region.start() - 1, GENE_PROMOTER_REGION)
-                    : regionStartingAt(exon.Region.end() + 1, GENE_PROMOTER_REGION);
+                    ? regionEndingAt(transStart - 1, GENE_PROMOTER_REGION)
+                    : regionStartingAt(transStart + 1, GENE_PROMOTER_REGION);
             regions.add(new GeneRegion(gene, GeneRegionType.PROMOTER, region));
         }
 
