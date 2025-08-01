@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.redux.bqr;
 
-import org.checkerframework.checker.units.qual.N;
-
 public class AltQualityCount
 {
     public final byte Alt;
@@ -32,6 +30,6 @@ public class AltQualityCount
     public String toString()
     {
         return String.format("alt(%s) qual(%d) count(pos=%d neg=%d)",
-                (char) Alt, (int) Quality, PosStrandCount, NegStrandCount);
+                (char)Alt, Quality, PosStrandCount, NegStrandCount);
     }
 }

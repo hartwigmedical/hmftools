@@ -23,18 +23,7 @@ public class RefSequence
         Start = max(1, posStart - BUFFER);
         End = min(sequenceEnd, posEnd) + BUFFER;
         Bases = refGenome.getBases(chromosome, Start, End);
-
-        boolean allValidBases = true;
-
-        for(int i = 0; i < Bases.length; ++i)
-        {
-            if(!Nucleotides.isValidDnaBase(Bases[i]))
-            {
-                allValidBases = false;
-            }
-        }
-
-        IsValid = allValidBases;
+        IsValid = true;
     }
 
     public int index(int position)

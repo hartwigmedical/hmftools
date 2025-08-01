@@ -24,13 +24,15 @@ public class BaseQualityData
 
     private final Map<BqrReadType,List<AltQualityCount>> mAltQualityCountsMap;
     private boolean mHasIndel;
+    private int mFilteredAltCount;
 
     public BaseQualityData(final byte[] trinucleotideContext)
     {
-        TrinucleotideContext = trinucleotideContext;
+        TrinucleotideContext = new byte[] { trinucleotideContext[0], trinucleotideContext[1], trinucleotideContext[2] };
 
         mHasIndel = false;
         mAltQualityCountsMap = Maps.newHashMap();
+        mFilteredAltCount = 0;
     }
 
     public byte ref() { return TrinucleotideContext[1]; }
@@ -59,6 +61,9 @@ public class BaseQualityData
 
     public void setHasIndel() { mHasIndel = true; }
     public boolean hasIndel() { return mHasIndel; }
+    public int filteredAltCount() { return mFilteredAltCount; }
+
+    private static final boolean USE_READ_STRAND = true; // debug only
 
     public Map<BqrKey,Integer> formKeyCounts()
     {
@@ -124,6 +129,8 @@ public class BaseQualityData
                 failedAlts.add(alt);
         }
 
+        mFilteredAltCount = failedAlts.size();
+
         for(Map.Entry<BqrReadType,List<AltQualityCount>> entry : mAltQualityCountsMap.entrySet())
         {
             BqrReadType readType = entry.getKey();
@@ -133,16 +140,23 @@ public class BaseQualityData
                 if(failedAlts.contains(aqCount.Alt))
                     continue;
 
-                if(aqCount.PosStrandCount > 0)
+                if(USE_READ_STRAND)
                 {
-                    keyCounts.put(new BqrKey(ref(), aqCount.Alt, TrinucleotideContext, aqCount.Quality, readType), aqCount.PosStrandCount);
-                }
+                    if(aqCount.PosStrandCount > 0)
+                    {
+                        keyCounts.put(new BqrKey(ref(), aqCount.Alt, TrinucleotideContext, aqCount.Quality, readType), aqCount.PosStrandCount);
+                    }
 
-                if(aqCount.NegStrandCount > 0)
+                    if(aqCount.NegStrandCount > 0)
+                    {
+                        byte[] tncReversed = Nucleotides.reverseComplementBases(TrinucleotideContext);
+                        byte altReversed = Nucleotides.swapDnaBase(aqCount.Alt);
+                        keyCounts.put(new BqrKey(tncReversed[1], altReversed, tncReversed, aqCount.Quality, readType), aqCount.NegStrandCount);
+                    }
+                }
+                else
                 {
-                    byte[] tncReversed = Nucleotides.reverseComplementBases(TrinucleotideContext);
-                    byte altReversed = Nucleotides.swapDnaBase(aqCount.Alt);
-                    keyCounts.put(new BqrKey(tncReversed[1], altReversed, tncReversed, aqCount.Quality, readType), aqCount.NegStrandCount);
+                    keyCounts.put(new BqrKey(ref(), aqCount.Alt, TrinucleotideContext, aqCount.Quality, readType), aqCount.totalCount());
                 }
             }
         }

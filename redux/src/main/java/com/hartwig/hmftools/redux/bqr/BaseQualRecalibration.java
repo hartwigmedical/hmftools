@@ -120,7 +120,8 @@ public class BaseQualRecalibration
 
     public void finalise()
     {
-        RD_LOGGER.debug("writing base quality recalibration");
+        RD_LOGGER.debug("writing base quality recalibration, readsUsed({}) altsFiltered({})",
+                mResults.totalReadsUsed(), mResults.totalAltsFiltered());
 
         String sampleId = mConfig.SampleId;;
 

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.redux;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
+
 public class BqrKey
 {
     public final byte Ref;
@@ -39,6 +41,13 @@ public class BqrKey
             return false;
 
         return Arrays.equals(trinucleotideContext, TrinucleotideContext);
+    }
+
+    public boolean isValid()
+    {
+        return TrinucleotideContext.length == 3 && Ref == TrinucleotideContext[1] && Nucleotides.isValidDnaBase(Alt)
+                && Nucleotides.isValidDnaBase(TrinucleotideContext[0]) && Nucleotides.isValidDnaBase(TrinucleotideContext[1])
+                && Nucleotides.isValidDnaBase(TrinucleotideContext[2]);
     }
 
     @Override
