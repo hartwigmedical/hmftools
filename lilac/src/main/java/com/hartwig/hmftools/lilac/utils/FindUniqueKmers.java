@@ -52,7 +52,7 @@ public class FindUniqueKmers
     private static final int KMER_MIN = 8;
     private static final int KMER_MAX = 20;
 
-    public FindUniqueKmers(final ConfigBuilder configBuilder)
+    private FindUniqueKmers(final ConfigBuilder configBuilder)
     {
         mAlleleCache = new HlaAlleleCache();
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
@@ -69,7 +69,7 @@ public class FindUniqueKmers
         mHlaYNucleotideSequences = Lists.newArrayList();
     }
 
-    public void run()
+    private void run()
     {
         LL_LOGGER.info("finding unique K-mer sequences");
 
@@ -80,14 +80,14 @@ public class FindUniqueKmers
         if(!mAminoAcidSequences.isEmpty() && !mHlaYAminoAcidSequences.isEmpty())
         {
             LL_LOGGER.info("searching for unique k-mers");
-            mHlaYAminoAcidSequences.forEach(x -> findUniqueKmers(x));
+            mHlaYAminoAcidSequences.forEach(this::findUniqueKmers);
             LL_LOGGER.info("unique k-mer search complete");
         }
 
         if(!mNucleotideSequences.isEmpty() && !mHlaYNucleotideSequences.isEmpty())
         {
             LL_LOGGER.info("searching for unique loci");
-            mHlaYNucleotideSequences.forEach(x -> findUniqueLoci(x));
+            mHlaYNucleotideSequences.forEach(this::findUniqueLoci);
             LL_LOGGER.info("unique loci search complete");
         }
 
@@ -219,7 +219,7 @@ public class FindUniqueKmers
                     mAminoAcidSequences.add(sequence);
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LL_LOGGER.error("failed to load ref sequence data from file({}): {}", aminoAcidFilename, e.toString());
             return;
@@ -263,7 +263,7 @@ public class FindUniqueKmers
                     mNucleotideSequences.add(sequence);
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LL_LOGGER.error("failed to load ref sequence data from file({}): {}", aminoAcidFilename, e.toString());
             return;

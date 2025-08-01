@@ -25,7 +25,7 @@ public class HlaContextFactory
         CBoundaries = cBoundaries;
     }
 
-    public final HlaContext hlaA()
+    public HlaContext hlaA()
     {
         ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
                 NucleotideGeneEnrichment.getAFilterB(), NucleotideGeneEnrichment.getAFilterC());
@@ -33,7 +33,7 @@ public class HlaContextFactory
         return new HlaContext(HLA_A, ABoundaries, expectedAlleles);
     }
 
-    public final HlaContext hlaB()
+    public HlaContext hlaB()
     {
         ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
                 NucleotideGeneEnrichment.getBFilterA(), NucleotideGeneEnrichment.getBFilterC());
@@ -41,7 +41,7 @@ public class HlaContextFactory
         return new HlaContext(HLA_B, BBoundaries, expectedAlleles);
     }
 
-    public final HlaContext hlaC()
+    public HlaContext hlaC()
     {
         ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
                 NucleotideGeneEnrichment.getCFilterA(), NucleotideGeneEnrichment.getCFilterB());

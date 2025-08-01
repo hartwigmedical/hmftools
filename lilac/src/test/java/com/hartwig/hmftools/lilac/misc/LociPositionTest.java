@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import java.util.Map;
@@ -81,6 +81,5 @@ public class LociPositionTest
 
         locus = calcNucelotideLocus(transcripts, cTranscript.CodingStart);
         assertEquals(1100, locus);
-
     }
 }

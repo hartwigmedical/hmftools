@@ -350,7 +350,7 @@ public class FragmentsTest
         assertEquals(6, mergedFrag.nucleotidesByLoci().size());
     }
 
-    private static void assertRange(int expectedStart, int expectedEnd, List<Integer> victim)
+    private static void assertRange(int expectedStart, int expectedEnd, final List<Integer> victim)
     {
         assertEquals(expectedStart, victim.get(0).intValue());
         assertEquals(expectedEnd, victim.get(victim.size() - 1).intValue());

@@ -7,19 +7,15 @@ import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.read.BamReader;
 import com.hartwig.hmftools.lilac.read.Indel;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.jetbrains.annotations.NotNull;
 
 public class BamQC
 {
@@ -46,9 +42,9 @@ public class BamQC
         }
     }
 
-    public int totalLowCoverage() { return GeneLowCoverageCounts.values().stream().mapToInt(x -> x.intValue()).sum(); }
+    public int totalLowCoverage() { return GeneLowCoverageCounts.values().stream().mapToInt(Integer::intValue).sum(); }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return Lists.newArrayList("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments",
                 "A_LowCoverageBases", "B_LowCoverageBases", "C_LowCoverageBases");
@@ -64,8 +60,8 @@ public class BamQC
 
     public static BamQC create(final BamReader reader, final Map<HlaGene, int[]> geneBaseDepth)
     {
-        Map<Indel,Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
-        Map<Indel,Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);
+        Map<Indel, Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
+        Map<Indel, Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);
 
         fragmentsWithUnmatchedIndel.entrySet().forEach(x -> LL_LOGGER.warn(
                 "  UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", x.getValue(), x.getKey().toString()));

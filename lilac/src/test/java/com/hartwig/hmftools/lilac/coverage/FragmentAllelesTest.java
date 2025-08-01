@@ -70,7 +70,7 @@ public class FragmentAllelesTest
         assertTrue(fragAlleles.get(0).getFull().contains(allele1));
 
         // check non-het locations aren't checked
-        Map<Integer,Set<String>> geneBLociMap = Maps.newLinkedHashMap();
+        Map<Integer, Set<String>> geneBLociMap = Maps.newLinkedHashMap();
         geneBLociMap.put(1, Sets.newHashSet("B"));
         geneBLociMap.put(3, Sets.newHashSet("D"));
         geneHetLociMap.put(HLA_B, geneBLociMap);
@@ -131,7 +131,7 @@ public class FragmentAllelesTest
         Set<HlaGene> aGenes = Sets.newHashSet(HLA_A);
 
         final Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
-        Map<Integer,Set<String>> geneALociMap = Maps.newLinkedHashMap();
+        Map<Integer, Set<String>> geneALociMap = Maps.newLinkedHashMap();
         geneALociMap.put(0, Sets.newHashSet("A"));
         geneALociMap.put(1, Sets.newHashSet("P"));
         geneALociMap.put(2, Sets.newHashSet("C"));

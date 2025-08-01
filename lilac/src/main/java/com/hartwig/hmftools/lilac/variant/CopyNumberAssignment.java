@@ -50,21 +50,20 @@ public class CopyNumberAssignment
         }
     }
 
-    public static List<Double> formEmptyAlleleCopyNumber(final List<HlaAllele> winners)
+    public static List<Double> formEmptyAlleleCopyNumber(final Iterable<HlaAllele> winners)
     {
         List<Double> alleleCN = Lists.newArrayList();
         winners.forEach(x -> alleleCN.add(0.0));
         return alleleCN;
     }
 
-    public void assign(
-            final String sampleId, final List<HlaAllele> winners,
-            final ComplexCoverage refCoverage, final ComplexCoverage tumorCoverage, final List<Double> copyNumbers)
+    public void assign(final String sampleId, final ComplexCoverage refCoverage, final ComplexCoverage tumorCoverage,
+            final Collection<Double> copyNumbers)
     {
         LL_LOGGER.info("calculating tumor copy number of winning alleles");
 
         if(refCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount
-        || tumorCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount)
+                || tumorCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount)
         {
             return;
         }
@@ -99,8 +98,8 @@ public class CopyNumberAssignment
         }
     }
 
-    private void alleleCopyNumber(
-            final CopyNumberData copyNumberData, final List<Double> alleleCopyNumbers,
+    private static void alleleCopyNumber(
+            final CopyNumberData copyNumberData, final Collection<Double> alleleCopyNumbers,
             final AlleleCoverage refCoverage1, final AlleleCoverage refCoverage2,
             final AlleleCoverage tumorCoverage1, final AlleleCoverage tumorCoverage2)
     {

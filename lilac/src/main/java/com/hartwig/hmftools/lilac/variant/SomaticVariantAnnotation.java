@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -70,8 +71,8 @@ public class SomaticVariantAnnotation
 
     public List<SomaticVariant> getSomaticVariants() { return mSomaticVariants; }
 
-    public final List<AlleleCoverage> assignAlleleCoverage(
-            final SomaticVariant variant, final List<Fragment> fragments, final List<HlaSequenceLoci> winners)
+    public List<AlleleCoverage> assignAlleleCoverage(
+            final SomaticVariant variant, final Collection<Fragment> fragments, final Iterable<HlaSequenceLoci> winners)
     {
         List<AlleleCoverage> coverages = Lists.newArrayList();
 
@@ -155,7 +156,7 @@ public class SomaticVariantAnnotation
         if(maxUnique > 0 && maxUnique >= fragments.size() / 2)
             return coverages.stream().filter(x -> x.UniqueCoverage == maxUnique).collect(Collectors.toList());
 
-        int maxWildcard = coverages.stream().mapToInt(x -> (int)x.WildCoverage).max().orElse(0);
+        int maxWildcard = coverages.stream().mapToInt(x -> (int) x.WildCoverage).max().orElse(0);
 
         if(maxWildcard > 0)
             return coverages.stream().filter(x -> (int)x.WildCoverage == maxWildcard).collect(Collectors.toList());

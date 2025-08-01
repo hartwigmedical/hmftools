@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSeque
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -108,7 +109,7 @@ public class GenerateReferenceSequences
         LL_LOGGER.info("reference data written");
     }
 
-    public void rewriteRefData(final String outputDir)
+    private void rewriteRefData(final String outputDir)
     {
         String nucleotideSequenceFile = outputDir + NUC_REF_FILE;
         writeSequenceData(nucleotideSequenceFile, mNucleotideSequences);
@@ -120,7 +121,7 @@ public class GenerateReferenceSequences
         writeAminoAcidSequences(aminoAcidComparisonFile, mAminoAcidSequences);
     }
 
-    public boolean loadSequenceFiles()
+    private boolean loadSequenceFiles()
     {
         LL_LOGGER.info("reading nucleotide files");
 
@@ -157,8 +158,7 @@ public class GenerateReferenceSequences
     {
         List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename);
 
-        List<HlaSequence> filteredSequences = sequences.stream()
-                .collect(Collectors.toList());
+        List<HlaSequence> filteredSequences = Lists.newArrayList(sequences);
 
         List<HlaSequence> reducedSequences = reduceToSixDigit(filteredSequences);
 
@@ -169,8 +169,7 @@ public class GenerateReferenceSequences
     {
         List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename);
 
-        List<HlaSequence> filteredSequences = sequences.stream()
-                .collect(Collectors.toList());
+        List<HlaSequence> filteredSequences = Lists.newArrayList(sequences);
 
         List<HlaSequence> reducedSequences = reduceToFourDigit(filteredSequences);
 
@@ -206,7 +205,7 @@ public class GenerateReferenceSequences
         return newSequences;
     }
 
-    private void writeSequenceData(final String filename, final List<HlaSequenceLoci> sequenceData)
+    private static void writeSequenceData(final String filename, final Iterable<HlaSequenceLoci> sequenceData)
     {
         try
         {
@@ -244,7 +243,7 @@ public class GenerateReferenceSequences
         }
     }
 
-    private void writeAminoAcidSequences(final String filename, final List<HlaSequenceLoci> sequenceData)
+    private void writeAminoAcidSequences(final String filename, final Collection<HlaSequenceLoci> sequenceData)
     {
         // write each allele's amino acid sequence with reference to the template allele A*01:01
 
@@ -257,7 +256,7 @@ public class GenerateReferenceSequences
         }
 
         List<Integer> sequenceMaxLengths = Lists.newArrayList();
-        int sequenceLociMax = sequenceData.stream().mapToInt(x -> x.length()).max().orElse(0);
+        int sequenceLociMax = sequenceData.stream().mapToInt(HlaSequenceLoci::length).max().orElse(0);
 
         int maxAlleleNameLength = sequenceData.stream().mapToInt(x -> x.Allele.toString().length()).max().orElse(0);
 
@@ -410,13 +409,6 @@ public class GenerateReferenceSequences
         if(str.length() >= reqLength)
             return str;
 
-        String newStr = str;
-
-        for(int i = str.length(); i < reqLength; ++i)
-        {
-            newStr += padChar;
-        }
-
-        return newStr;
+        return str + String.valueOf(padChar).repeat(reqLength - str.length());
     }
 }

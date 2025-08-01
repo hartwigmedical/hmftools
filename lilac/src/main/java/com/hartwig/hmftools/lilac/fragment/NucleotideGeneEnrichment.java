@@ -30,22 +30,22 @@ public class NucleotideGeneEnrichment
     {
         Set<Integer> uniqueBoundaries = Sets.newHashSet();
 
-        boundariesGene1.stream().filter(x -> !boundariesGene2.contains(x)).forEach(x -> uniqueBoundaries.add(x));
-        boundariesGene2.stream().filter(x -> !boundariesGene1.contains(x)).forEach(x -> uniqueBoundaries.add(x));
+        boundariesGene1.stream().filter(x -> !boundariesGene2.contains(x)).forEach(uniqueBoundaries::add);
+        boundariesGene2.stream().filter(x -> !boundariesGene1.contains(x)).forEach(uniqueBoundaries::add);
 
         return uniqueBoundaries.stream().mapToInt(x -> x).min().orElse(0);
     }
 
-    public final int getAFilterB() { return mAbMinUniqueProteinExonBoundary; }
-    public final int getAFilterC() { return mAcMinUniqueProteinExonBoundary; }
-    public final int getBFilterA() { return mAbMinUniqueProteinExonBoundary; }
-    public final int getBFilterC() { return mBcMinUniqueProteinExonBoundary; }
-    public final int getCFilterA() { return mAcMinUniqueProteinExonBoundary; }
-    public final int getCFilterB() { return mBcMinUniqueProteinExonBoundary; }
+    public int getAFilterB() { return mAbMinUniqueProteinExonBoundary; }
+    public int getAFilterC() { return mAcMinUniqueProteinExonBoundary; }
+    public int getBFilterA() { return mAbMinUniqueProteinExonBoundary; }
+    public int getBFilterC() { return mBcMinUniqueProteinExonBoundary; }
+    public int getCFilterA() { return mAcMinUniqueProteinExonBoundary; }
+    public int getCFilterB() { return mBcMinUniqueProteinExonBoundary; }
 
-    public void checkAddAdditionalGenes(final List<Fragment> fragments)
+    public void checkAddAdditionalGenes(final Iterable<Fragment> fragments)
     {
-        fragments.forEach(x -> checkAdditionalGenes(x));
+        fragments.forEach(this::checkAdditionalGenes);
     }
 
     @VisibleForTesting
@@ -63,7 +63,7 @@ public class NucleotideGeneEnrichment
         if(considerAddingGene(fragment, HLA_A, maxFragmentNucleotideLocus))
         {
             if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mAbMinUniqueProteinExonBoundary)
-            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mAcMinUniqueProteinExonBoundary))
+                    || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mAcMinUniqueProteinExonBoundary))
             {
                 fragment.addGene(HLA_A);
             }
@@ -73,7 +73,7 @@ public class NucleotideGeneEnrichment
         {
             // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
             if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAbMinUniqueProteinExonBoundary)
-            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mBcMinUniqueProteinExonBoundary))
+                    || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mBcMinUniqueProteinExonBoundary))
             {
                 fragment.addGene(HLA_B);
             }
@@ -83,7 +83,7 @@ public class NucleotideGeneEnrichment
         {
             // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
             if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAcMinUniqueProteinExonBoundary)
-            || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mBcMinUniqueProteinExonBoundary))
+                    || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mBcMinUniqueProteinExonBoundary))
             {
                 fragment.addGene(HLA_C);
             }
@@ -99,7 +99,7 @@ public class NucleotideGeneEnrichment
         return maxFragmentNucleotideLocus <= GENE_CACHE.NucleotideLengths.get(gene);
     }
 
-    private boolean checkAddAdditionalGene(
+    private static boolean checkAddAdditionalGene(
             final Fragment fragment, int maxFragmentNucleotideLocus, final HlaGene otherGene, int geneComboUniqueAminoAcidBoundary)
     {
         if(!fragment.containsGene(otherGene))

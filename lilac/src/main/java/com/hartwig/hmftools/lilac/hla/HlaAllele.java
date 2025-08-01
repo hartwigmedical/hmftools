@@ -58,7 +58,7 @@ public class HlaAllele implements Comparable<HlaAllele>
 
     public static HlaAllele fromString(final String line)
     {
-        int starIndex = line.indexOf("*");
+        int starIndex = line.indexOf('*');
         HlaGene gene = HlaGene.fromString(line.substring(0, starIndex));
         String contigRemainder = line.substring(starIndex + 1);
         String[] contigSplit = contigRemainder.split(":");
@@ -79,14 +79,12 @@ public class HlaAllele implements Comparable<HlaAllele>
         return new HlaAllele(gene, alleleGroup, protein, synonymousCoding, synonymousNonCoding, fourDigit, group);
     }
 
-    public String geneName() { return Gene.toString(); }
-
-    public final HlaAllele asAlleleGroup()
+    public HlaAllele asAlleleGroup()
     {
         return mGroup != null ? mGroup : this;
     }
 
-    public final HlaAllele asFourDigit() { return mFourDigit != null ? mFourDigit : this; }
+    public HlaAllele asFourDigit() { return mFourDigit != null ? mFourDigit : this; }
 
     public boolean hasWildcards() { return mHasWildcards; }
     public void setHasWildcard(boolean toggle) { mHasWildcards = toggle; }
@@ -151,17 +149,17 @@ public class HlaAllele implements Comparable<HlaAllele>
     public String toString()
     {
         CharSequence charSequence = Protein;
-        if(charSequence.length() == 0)
+        if(charSequence.isEmpty())
         {
             return Gene.shortName() + '*' + AlleleGroup;
         }
         charSequence = Synonymous;
-        if(charSequence.length() == 0)
+        if(charSequence.isEmpty())
         {
             return Gene.shortName() + '*' + AlleleGroup + ':' + Protein;
         }
         charSequence = SynonymousNonCoding;
-        if(charSequence.length() == 0)
+        if(charSequence.isEmpty())
         {
             return Gene.shortName() + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous;
         }
@@ -193,10 +191,10 @@ public class HlaAllele implements Comparable<HlaAllele>
         // dedup but maintain ordering
         List<HlaAllele> newList = Lists.newArrayList();
 
-        for(int i = 0; i < alleles.size(); ++i)
+        for(HlaAllele allele : alleles)
         {
-            if(!newList.contains(alleles.get(i)))
-                newList.add(alleles.get(i));
+            if(!newList.contains(allele))
+                newList.add(allele);
         }
 
         return newList;

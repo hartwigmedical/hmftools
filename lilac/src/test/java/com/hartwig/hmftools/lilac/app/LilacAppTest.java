@@ -339,7 +339,7 @@ public class LilacAppTest
         return fragments;
     }
 
-    private void loadTestReferenceData(final ReferenceData refData)
+    private static void loadTestReferenceData(final ReferenceData refData)
     {
         final List<String> nucleotides = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream("/test_allele_nucleotides.csv")))

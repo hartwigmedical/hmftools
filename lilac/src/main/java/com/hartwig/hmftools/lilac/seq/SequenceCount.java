@@ -125,7 +125,7 @@ public final class SequenceCount
             return Lists.newArrayList();
 
         int support = seqCounts.size();
-        int evidenceMinCount = max(MIN_EVIDENCE_SUPPORT, (int)ceil(support * mMinEvidenceFactor));
+        int evidenceMinCount = max(MIN_EVIDENCE_SUPPORT, (int) ceil(support * mMinEvidenceFactor));
 
         return seqCounts.entrySet().stream()
                 .filter(x -> x.getCount() >= evidenceMinCount)
