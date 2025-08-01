@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
 import java.util.Map;
 

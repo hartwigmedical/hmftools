@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;

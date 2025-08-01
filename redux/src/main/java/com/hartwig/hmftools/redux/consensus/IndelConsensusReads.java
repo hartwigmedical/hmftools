@@ -4,8 +4,8 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -41,7 +41,6 @@ public class IndelConsensusReads
 
         if(!hasCigarMismatch)
         {
-            // SAMRecord selectedConsensusRead = reads.get(0);
             int baseLength = templateRead.getReadBases().length;
             consensusState.setBaseLength(baseLength);
             consensusState.setBoundaries(templateRead);
@@ -235,7 +234,7 @@ public class IndelConsensusReads
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = BaseBuilder.INVALID_POSITION;
 
-                byte[] consensusBaseAndQual;
+                BaseQualPair consensusBaseAndQual;
 
                 if(isDualStrand && basePosition != INVALID_POSITION)
                 {
@@ -249,8 +248,8 @@ public class IndelConsensusReads
                             locationBases, locationQuals, consensusState.Chromosome, basePosition);
                 }
 
-                consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
-                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
+                consensusState.Bases[baseIndex] = consensusBaseAndQual.Base;
+                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual.Qual);
             }
 
             if(consensusState.IsForward)

@@ -341,12 +341,12 @@ public class SbxConsensusTest
     {
         ExtendedRefPos pos = new ExtendedRefPos(0, 0);
         byte[] bases = new byte[] { (byte) 'A' };
-        byte[] quals = new byte[] { (byte) DUPLEX_ERROR_QUAL };
+        byte[] quals = new byte[] { DUPLEX_ERROR_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, S, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
         assertEquals((byte) 'A', consensus.Base);
-        assertEquals((byte) DUPLEX_ERROR_QUAL, consensus.Qual);
+        assertEquals(DUPLEX_ERROR_QUAL, consensus.Qual);
         assertEquals(S, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
@@ -358,7 +358,7 @@ public class SbxConsensusTest
         ExtendedRefPos pos = new ExtendedRefPos(basePosition, 0);
         byte refBase = mRefGenome.getRefBase(CHR_1, basePosition);
         byte[] bases = new byte[] { mNextBaseMap.get(refBase) };
-        byte[] quals = new byte[] { (byte) DUPLEX_ERROR_QUAL };
+        byte[] quals = new byte[] { DUPLEX_ERROR_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
@@ -375,12 +375,12 @@ public class SbxConsensusTest
         ExtendedRefPos pos = new ExtendedRefPos(basePosition, 0);
         byte refBase = mRefGenome.getRefBase(CHR_1, basePosition);
         byte[] bases = new byte[] { mNextBaseMap.get(refBase) };
-        byte[] quals = new byte[] { (byte) SIMPLEX_QUAL };
+        byte[] quals = new byte[] { SIMPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
         assertEquals(bases[0], consensus.Base);
-        assertEquals((byte) SIMPLEX_QUAL, consensus.Qual);
+        assertEquals(SIMPLEX_QUAL, consensus.Qual);
         assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
@@ -393,7 +393,7 @@ public class SbxConsensusTest
         byte refBase = mRefGenome.getRefBase(CHR_1, basePosition);
         byte readBase = mNextBaseMap.get(refBase);
         byte[] bases = new byte[] { readBase, readBase };
-        byte[] quals = new byte[] { (byte) DUPLEX_ERROR_QUAL, (byte) DUPLEX_ERROR_QUAL };
+        byte[] quals = new byte[] { DUPLEX_ERROR_QUAL, DUPLEX_ERROR_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
@@ -411,12 +411,12 @@ public class SbxConsensusTest
         byte refBase = mRefGenome.getRefBase(CHR_1, basePosition);
         byte readBase = mNextBaseMap.get(refBase);
         byte[] bases = new byte[] { readBase, readBase };
-        byte[] quals = new byte[] { (byte) DUPLEX_ERROR_QUAL, (byte) SIMPLEX_QUAL };
+        byte[] quals = new byte[] { DUPLEX_ERROR_QUAL, SIMPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
         assertEquals(readBase, consensus.Base);
-        assertEquals((byte) SIMPLEX_QUAL, consensus.Qual);
+        assertEquals(SIMPLEX_QUAL, consensus.Qual);
         assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
@@ -430,7 +430,7 @@ public class SbxConsensusTest
         byte readBase1 = mNextBaseMap.get(refBase);
         byte readBase2 = mNextBaseMap.get(readBase1);
         byte[] bases = new byte[] { readBase1, readBase2 };
-        byte[] quals = new byte[] { (byte) SIMPLEX_QUAL, (byte) SIMPLEX_QUAL };
+        byte[] quals = new byte[] { SIMPLEX_QUAL, SIMPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
@@ -448,12 +448,12 @@ public class SbxConsensusTest
         byte refBase = mRefGenome.getRefBase(CHR_1, basePosition);
         byte readBase = mNextBaseMap.get(refBase);
         byte[] bases = new byte[] { readBase, readBase };
-        byte[] quals = new byte[] { (byte) DUPLEX_QUAL, (byte) DUPLEX_QUAL };
+        byte[] quals = new byte[] { DUPLEX_QUAL, DUPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
         assertEquals(readBase, consensus.Base);
-        assertEquals((byte) DUPLEX_QUAL, consensus.Qual);
+        assertEquals(DUPLEX_QUAL, consensus.Qual);
         assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
@@ -466,12 +466,12 @@ public class SbxConsensusTest
         byte refBase = mRefGenome.getRefBase(CHR_1, basePosition);
         byte readBase = mNextBaseMap.get(refBase);
         byte[] bases = new byte[] { readBase, readBase, readBase };
-        byte[] quals = new byte[] { (byte) DUPLEX_ERROR_QUAL, (byte) DUPLEX_ERROR_QUAL, (byte) DUPLEX_QUAL };
+        byte[] quals = new byte[] { DUPLEX_ERROR_QUAL, DUPLEX_ERROR_QUAL, DUPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
         assertEquals(readBase, consensus.Base);
-        assertEquals((byte) SIMPLEX_QUAL, consensus.Qual);
+        assertEquals(SIMPLEX_QUAL, consensus.Qual);
         assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
@@ -485,12 +485,12 @@ public class SbxConsensusTest
         byte readBase1 = mNextBaseMap.get(refBase);
         byte readBase2 = mNextBaseMap.get(readBase1);
         byte[] bases = new byte[] { readBase1, readBase2 };
-        byte[] quals = new byte[] { (byte) DUPLEX_QUAL, (byte) DUPLEX_QUAL };
+        byte[] quals = new byte[] { DUPLEX_QUAL, DUPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, M, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
         assertEquals(refBase, consensus.Base);
-        assertEquals((byte) 1, consensus.Qual);
+        assertEquals(1, consensus.Qual);
         assertEquals(M, consensus.cigarOp());
         assertTrue(consensus.Annotations.isEmpty());
     }
@@ -503,7 +503,7 @@ public class SbxConsensusTest
         byte refBase = mRefGenome.getRefBase(CHR_1, basePosition);
         byte readBase = mNextBaseMap.get(refBase);
         byte[] bases = new byte[] { readBase, readBase };
-        byte[] quals = new byte[] { (byte) DUPLEX_ERROR_QUAL, (byte) DUPLEX_ERROR_QUAL };
+        byte[] quals = new byte[] { DUPLEX_ERROR_QUAL, DUPLEX_ERROR_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, I, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
@@ -515,7 +515,7 @@ public class SbxConsensusTest
     {
         ExtendedRefPos pos = new ExtendedRefPos(0, 0);
         byte[] bases = new byte[] { (byte) 'A', (byte) 'A' };
-        byte[] quals = new byte[] { (byte) DUPLEX_ERROR_QUAL, (byte) DUPLEX_ERROR_QUAL };
+        byte[] quals = new byte[] { DUPLEX_ERROR_QUAL, DUPLEX_ERROR_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, S, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
@@ -530,7 +530,7 @@ public class SbxConsensusTest
     {
         ExtendedRefPos pos = new ExtendedRefPos(0, 0);
         byte[] bases = new byte[] { (byte) 'A', (byte) 'C' };
-        byte[] quals = new byte[] { (byte) SIMPLEX_QUAL, (byte) SIMPLEX_QUAL };
+        byte[] quals = new byte[] { SIMPLEX_QUAL, SIMPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, S, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
@@ -545,7 +545,7 @@ public class SbxConsensusTest
     {
         ExtendedRefPos pos = new ExtendedRefPos(0, 0);
         byte[] bases = new byte[] { (byte) 'A', (byte) 'C' };
-        byte[] quals = new byte[] { (byte) DUPLEX_QUAL, (byte) DUPLEX_QUAL };
+        byte[] quals = new byte[] { DUPLEX_QUAL, DUPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, S, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 
@@ -561,7 +561,7 @@ public class SbxConsensusTest
         int basePosition = 100;
         ExtendedRefPos pos = new ExtendedRefPos(basePosition, 1);
         byte[] bases = new byte[] { (byte) 'A', (byte) 'C' };
-        byte[] quals = new byte[] { (byte) DUPLEX_QUAL, (byte) DUPLEX_QUAL };
+        byte[] quals = new byte[] { DUPLEX_QUAL, DUPLEX_QUAL };
         List<AnnotatedBase> annotatedBases = getAnnotatedBases(pos, I, bases, quals);
         AnnotatedBase consensus = mSbxBuilder.determineConsensus(CHR_1, annotatedBases);
 

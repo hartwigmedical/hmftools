@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +33,6 @@ public class BaseBuilder
     public int chromosomeLength() { return mChromosomeLength; }
     public RefGenome refGenome() { return mRefGenome; }
 
-    public static final byte NO_BASE = 0;
     public static final int INVALID_POSITION = -1;
 
     public void buildReadBases(final List<SAMRecord> reads, final ConsensusState consensusState)
@@ -110,7 +110,7 @@ public class BaseBuilder
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = INVALID_POSITION; // protect against over-runs from soft-clips - rare but possible
 
-                byte[] consensusBaseAndQual;
+                BaseQualPair consensusBaseAndQual;
 
                 if(isDualStrand && basePosition != INVALID_POSITION)
                 {
@@ -122,13 +122,13 @@ public class BaseBuilder
                     consensusBaseAndQual = determineBaseAndQual(locationBases, locationQuals, chromosome, basePosition);
                 }
 
-                consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
-                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
+                consensusState.Bases[baseIndex] = consensusBaseAndQual.Base;
+                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual.Qual);
             }
         }
     }
 
-    public byte[] determineDualStrandBaseAndQual(
+    public BaseQualPair determineDualStrandBaseAndQual(
             final boolean[] isFirstInPair, final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
     {
         int readCount = isFirstInPair.length;
@@ -169,72 +169,71 @@ public class BaseBuilder
             }
         }
 
-        byte[] firstBaseAndQual = determineBaseAndQual(locationBasesFirst, locationQualsFirst, chromosome, position);
-        byte[] secondBaseAndQual = determineBaseAndQual(locationBasesSecond, locationQualsSecond, chromosome, position);
+        BaseQualPair firstBaseAndQual = determineBaseAndQual(locationBasesFirst, locationQualsFirst, chromosome, position);
+        BaseQualPair secondBaseAndQual = determineBaseAndQual(locationBasesSecond, locationQualsSecond, chromosome, position);
 
-        if(firstBaseAndQual[0] == NO_BASE)
+        if(!firstBaseAndQual.isValid())
             return secondBaseAndQual;
 
-        if(secondBaseAndQual[0] == NO_BASE)
+        if(!secondBaseAndQual.isValid())
             return firstBaseAndQual;
 
-        if(firstBaseAndQual[0] == secondBaseAndQual[0])
+        if(firstBaseAndQual.Base == secondBaseAndQual.Base)
         {
-            byte qual = (byte)max(firstBaseAndQual[1], secondBaseAndQual[1]);
-            return new byte[] { firstBaseAndQual[0], qual };
+            return new BaseQualPair(firstBaseAndQual.Base, max(firstBaseAndQual.Qual, secondBaseAndQual.Qual));
         }
 
         mConsensusStats.registerDualStrandMismatchReadGroup(readCount);
 
         byte refBase = mRefGenome.getRefBase(chromosome, position);
-        boolean firstIsRef = firstBaseAndQual[0] == refBase;
-        boolean secondIsRef = secondBaseAndQual[0] == refBase;
+        boolean firstIsRef = firstBaseAndQual.Base == refBase;
+        boolean secondIsRef = secondBaseAndQual.Base == refBase;
 
         if(!firstIsRef && !secondIsRef)
         {
             byte maxBase;
             int maxQual;
             int differingQual;
-            if(firstBaseAndQual[1] >= secondBaseAndQual[1])
+            if(firstBaseAndQual.Qual >= secondBaseAndQual.Qual)
             {
-                maxBase = firstBaseAndQual[0];
-                maxQual = firstBaseAndQual[1];
-                differingQual = secondBaseAndQual[1];
+                maxBase = firstBaseAndQual.Base;
+                maxQual = firstBaseAndQual.Qual;
+                differingQual = secondBaseAndQual.Qual;
             }
             else
             {
-                maxBase = secondBaseAndQual[0];
-                maxQual = secondBaseAndQual[1];
-                differingQual = firstBaseAndQual[1];
+                maxBase = secondBaseAndQual.Base;
+                maxQual = secondBaseAndQual.Qual;
+                differingQual = firstBaseAndQual.Qual;
             }
 
             byte qual = (byte) max(0, maxQual - differingQual);
-            return new byte[] { maxBase, qual };
+            return new BaseQualPair(maxBase, qual);
         }
 
         int refQual;
         int differingQual;
         if(firstIsRef)
         {
-            refQual = firstBaseAndQual[1];
-            differingQual = secondBaseAndQual[1];
+            refQual = firstBaseAndQual.Qual;
+            differingQual = secondBaseAndQual.Qual;
         }
         else
         {
-            refQual = secondBaseAndQual[1];
-            differingQual = firstBaseAndQual[1];
+            refQual = secondBaseAndQual.Qual;
+            differingQual = firstBaseAndQual.Qual;
         }
 
         byte qual = (byte) max(BASE_QUAL_MINIMUM, refQual - differingQual);
-        return new byte[] { refBase, qual };
+        return new BaseQualPair(refBase, qual);
     }
 
-    public byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
+    public BaseQualPair determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
     {
         if(locationBases.length == 1)
         {
             // early exit for dual strand with a single read on one side - a very common scenario
-            return new byte[] { locationBases[0], locationQuals[0] };
+            return new BaseQualPair(locationBases[0], locationQuals[0]);
         }
 
         List<Byte> distinctBases = Lists.newArrayListWithCapacity(4);
@@ -270,7 +269,7 @@ public class BaseBuilder
 
         if(distinctBases.isEmpty())
         {
-            return new byte[] { NO_BASE, 0 };
+            return BaseQualPair.INVALID;
         }
 
         byte maxBase = distinctBases.get(0);
@@ -326,7 +325,7 @@ public class BaseBuilder
 
         double calcQual = (double)medianBaseQual * max(BASE_QUAL_MINIMUM, maxQualTotal - differingQual) / maxQualTotal;
 
-        return new byte[] { maxBase, (byte)round(calcQual) };
+        return new BaseQualPair(maxBase, calcQual);
     }
 
     public static boolean isDualStrandAndIsFirstInPair(final List<SAMRecord> reads, final boolean[] isFirstInPairOut)

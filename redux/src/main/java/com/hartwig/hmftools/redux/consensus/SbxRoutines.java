@@ -446,4 +446,13 @@ public final class SbxRoutines
             record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
         }
     }
+
+    public byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
+    {
+        // consensus rules
+
+
+        return null;
+    }
+
 }

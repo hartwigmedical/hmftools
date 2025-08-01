@@ -24,7 +24,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class SbxBaseBuilder extends NonStandardBaseBuilder
 {
-    public static final int DUPLEX_ERROR_QUAL = 0;
+    public static final byte DUPLEX_ERROR_QUAL = 0;
 
     public SbxBaseBuilder(final RefGenome refGenome)
     {
@@ -104,7 +104,7 @@ public class SbxBaseBuilder extends NonStandardBaseBuilder
             return new AnnotatedBase(pos, ANY_BASE, (byte) 0, S);
         }
 
-        if(!baseCountsByQual.containsKey((byte) SIMPLEX_QUAL) && !baseCountsByQual.containsKey((byte) DUPLEX_QUAL))
+        if(!baseCountsByQual.containsKey(SIMPLEX_QUAL) && !baseCountsByQual.containsKey(DUPLEX_QUAL))
         {
             if(refPos != INVALID_POSITION)
             {
@@ -120,9 +120,9 @@ public class SbxBaseBuilder extends NonStandardBaseBuilder
             return new AnnotatedBase(pos, ANY_BASE, (byte) 0, S);
         }
 
-        if(!baseCountsByQual.containsKey((byte) DUPLEX_QUAL))
+        if(!baseCountsByQual.containsKey(DUPLEX_QUAL))
         {
-            int[] simplexCounts = baseCountsByQual.get((byte) SIMPLEX_QUAL);
+            int[] simplexCounts = baseCountsByQual.get(SIMPLEX_QUAL);
             int maxIdx = -1;
             int maxCount = -1;
             int totalCount = 0;
@@ -139,7 +139,7 @@ public class SbxBaseBuilder extends NonStandardBaseBuilder
             if(2 * maxCount > totalCount)
             {
                 byte base = DNA_BASE_BYTES[maxIdx];
-                byte qual = (byte) SIMPLEX_QUAL;
+                byte qual = SIMPLEX_QUAL;
                 return new AnnotatedBase(pos, base, qual, consensusOp);
             }
 
@@ -157,7 +157,7 @@ public class SbxBaseBuilder extends NonStandardBaseBuilder
             return new AnnotatedBase(pos, ANY_BASE, (byte) 0, S);
         }
 
-        int[] duplexCounts = baseCountsByQual.get((byte) DUPLEX_QUAL);
+        int[] duplexCounts = baseCountsByQual.get(DUPLEX_QUAL);
         int maxIdx = -1;
         boolean multipleMax = false;
         int maxCount = -1;
@@ -177,7 +177,7 @@ public class SbxBaseBuilder extends NonStandardBaseBuilder
             }
         }
 
-        int[] duplexErrorCounts = baseCountsByQual.get((byte) DUPLEX_ERROR_QUAL);
+        int[] duplexErrorCounts = baseCountsByQual.get(DUPLEX_ERROR_QUAL);
         if(duplexErrorCounts != null)
         {
             for(int duplexErrorCount : duplexErrorCounts)
@@ -189,7 +189,7 @@ public class SbxBaseBuilder extends NonStandardBaseBuilder
         if(2 * maxCount > totalCount)
         {
             byte base = DNA_BASE_BYTES[maxIdx];
-            byte qual = (byte) DUPLEX_QUAL;
+            byte qual = DUPLEX_QUAL;
             return new AnnotatedBase(pos, base, qual, consensusOp);
         }
 

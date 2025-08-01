@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MODC_ANNOT
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMValueFromModCReadIndices;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getModCReadIndices;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -82,9 +82,9 @@ public class BiomodalBaseBuilder extends NonStandardBaseBuilder
             basePosition = INVALID_POSITION;
         }
 
-        byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(locationBases, locationQuals, chromosome, basePosition);
-        byte consensusBase = consensusBaseAndQual[0] == NO_BASE ? ANY_BASE : consensusBaseAndQual[0];
-        byte consensusQual = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
+        BaseQualPair consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(locationBases, locationQuals, chromosome, basePosition);
+        byte consensusBase = !consensusBaseAndQual.isValid() ? ANY_BASE : consensusBaseAndQual.Base;
+        byte consensusQual = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual.Qual);
 
         if(consensusQual == (byte) 0 && consensusOp == I)
         {
