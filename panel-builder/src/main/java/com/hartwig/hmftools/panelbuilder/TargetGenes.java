@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENERAL_GC
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_CN_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_CODING_REGION_EXPAND;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_GAP;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_GENERAL_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_PROMOTER_REGION;
@@ -60,8 +60,8 @@ public class TargetGenes
 {
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.GENE;
 
-    private static final ProbeSelectCriteria EXON_PROBE_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(GENE_EXON_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+    private static final ProbeSelectCriteria GENERAL_PROBE_CRITERIA = new ProbeSelectCriteria(
+            new ProbeEvaluator.Criteria(GENE_GENERAL_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
             new ProbeSelector.Strategy.MaxQuality());
     private static final ProbeSelectCriteria CN_PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
@@ -446,13 +446,13 @@ public class TargetGenes
             case CODING, PROMOTER ->
             {
                 ProbeContext context = new ProbeContext(metadata);
-                yield probeGenerator.coverRegion(geneRegion.region(), context, EXON_PROBE_CRITERIA, null);
+                yield probeGenerator.coverRegion(geneRegion.region(), context, GENERAL_PROBE_CRITERIA, null);
             }
             case UTR ->
             {
                 BasePosition position = new BasePosition(geneRegion.region().chromosome(), regionCentre(geneRegion.region().baseRegion()));
                 ProbeContext context = new ProbeContext(metadata);
-                yield probeGenerator.coverPosition(position, context, EXON_PROBE_CRITERIA);
+                yield probeGenerator.coverPosition(position, context, GENERAL_PROBE_CRITERIA);
             }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
             {
