@@ -18,11 +18,14 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_PROMOTER_REGION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
 import static com.hartwig.hmftools.panelbuilder.Utils.regionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.Utils.regionCentre;
+import static com.hartwig.hmftools.panelbuilder.Utils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.Utils.regionOverlapsOrAdjacent;
+import static com.hartwig.hmftools.panelbuilder.Utils.regionStartingAt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +52,7 @@ import org.apache.logging.log4j.Logger;
 //   - Coding: Cover the full coding region of each exon, plus splice points.
 //   - UTR: Select 1 probe within each noncoding exon.
 //   - Upstream/downstream: Select the best acceptable probe from a 2kb region 1kb upstream/downstream.
+//   - Promoter: Cover the full region from first exon to 500b upstream.
 //   - Exon flanks: Only when there are not too many exons:
 //     - Small introns: Select the best acceptable probe from a 1kb region centered on the centre of the intron.
 //     - Large introns: Select the best acceptable probe from each of 1-5kb regions near the adjacent exons.
@@ -68,6 +72,7 @@ public class TargetGenes
     private static final String FLD_INCLUDE_EXON_FLANK = "IncludeExonFlank";
     private static final String FLD_INCLUDE_UPSTREAM = "IncludeUpstream";
     private static final String FLD_INCLUDE_DOWNSTREAM = "IncludeDownstream";
+    private static final String FLD_INCLUDE_PROMOTER = "IncludePromoter";
     private static final String FLD_EXTRA_TRANSCRIPTS = "ExtraTransNames";
 
     private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);
@@ -132,7 +137,8 @@ public class TargetGenes
             boolean utr,
             boolean exonFlank,
             boolean upstream,
-            boolean downstream
+            boolean downstream,
+            boolean promoter
     )
     {
     }
@@ -167,10 +173,11 @@ public class TargetGenes
                 boolean exonFlank = row.getBoolean(FLD_INCLUDE_EXON_FLANK);
                 boolean upstream = row.getBoolean(FLD_INCLUDE_UPSTREAM);
                 boolean downstream = row.getBoolean(FLD_INCLUDE_DOWNSTREAM);
+                boolean promoter = row.getBoolean(FLD_INCLUDE_PROMOTER);
                 String extraTranscriptsStr = row.get(FLD_EXTRA_TRANSCRIPTS);
                 List<String> extraTranscripts =
                         extraTranscriptsStr.isEmpty() ? emptyList() : Arrays.asList(extraTranscriptsStr.split(","));
-                GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream);
+                GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream, promoter);
                 return new GeneDefinition(geneName, options, extraTranscripts);
             }).toList();
 
@@ -236,7 +243,8 @@ public class TargetGenes
         UTR,
         UP_STREAM,
         DOWN_STREAM,
-        EXON_FLANK
+        EXON_FLANK,
+        PROMOTER
     }
 
     private record GeneRegion(
@@ -258,6 +266,7 @@ public class TargetGenes
         //   - Coding: superset of exons from all transcripts where any part of the exon is coding.
         //   - UTR: superset of exons from all transcripts where no part of the exon is coding.
         //   - Exon flanks: based on superset of exons from all transcripts.
+        //   - Promoter: first/last exon in the superset of exons from all transcripts.
 
         List<GeneRegion> regions = new ArrayList<>();
 
@@ -271,12 +280,19 @@ public class TargetGenes
             regions.add(new GeneRegion(
                     gene,
                     geneData.forwardStrand() ? GeneRegionType.UP_STREAM : GeneRegionType.DOWN_STREAM,
-                    new BaseRegion(
-                            minTransStart - GENE_UPDOWNSTREAM_GAP - GENE_UPDOWNSTREAM_REGION,
-                            minTransStart - GENE_UPDOWNSTREAM_GAP - 1)));
+                    regionEndingAt(minTransStart - 1 - GENE_UPDOWNSTREAM_GAP, GENE_UPDOWNSTREAM_REGION)));
         }
 
         List<MergedExonRegion> mergedExons = mergeExons(transcripts);
+
+        if(options.promoter() && !mergedExons.isEmpty())
+        {
+            MergedExonRegion exon = geneData.forwardStrand() ? mergedExons.get(0) : mergedExons.get(mergedExons.size() - 1);
+            BaseRegion region = geneData.forwardStrand()
+                    ? regionEndingAt(exon.Region.start() - 1, GENE_PROMOTER_REGION)
+                    : regionStartingAt(exon.Region.end() + 1, GENE_PROMOTER_REGION);
+            regions.add(new GeneRegion(gene, GeneRegionType.PROMOTER, region));
+        }
 
         int lastExonEnd = 0;
         for(MergedExonRegion mergedExon : mergedExons)
@@ -303,15 +319,11 @@ public class TargetGenes
                         regions.add(new GeneRegion(
                                 gene,
                                 GeneRegionType.EXON_FLANK,
-                                new BaseRegion(
-                                        lastExonEnd + 1 + GENE_EXON_FLANK_GAP,
-                                        lastExonEnd + GENE_EXON_FLANK_GAP + regionSize)));
+                                regionStartingAt(lastExonEnd + 1 + GENE_EXON_FLANK_GAP, regionSize)));
                         regions.add(new GeneRegion(
                                 gene,
                                 GeneRegionType.EXON_FLANK,
-                                new BaseRegion(
-                                        exonRegion.start() - GENE_EXON_FLANK_GAP - regionSize,
-                                        exonRegion.start() - GENE_EXON_FLANK_GAP - 1)));
+                                regionEndingAt(exonRegion.start() - 1 - GENE_EXON_FLANK_GAP, regionSize)));
                     }
                     else
                     {
@@ -341,10 +353,7 @@ public class TargetGenes
             {
                 if(options.utr())
                 {
-                    regions.add(new GeneRegion(
-                            gene,
-                            GeneRegionType.UTR,
-                            new BaseRegion(exonRegion.start(), exonRegion.end())));
+                    regions.add(new GeneRegion(gene, GeneRegionType.UTR, exonRegion));
                 }
             }
 
@@ -357,9 +366,7 @@ public class TargetGenes
             regions.add(new GeneRegion(
                     gene,
                     geneData.forwardStrand() ? GeneRegionType.DOWN_STREAM : GeneRegionType.UP_STREAM,
-                    new BaseRegion(
-                            maxTransEnd + GENE_UPDOWNSTREAM_GAP,
-                            maxTransEnd + GENE_UPDOWNSTREAM_GAP + GENE_UPDOWNSTREAM_REGION - 1)));
+                    regionStartingAt(maxTransEnd + GENE_UPDOWNSTREAM_GAP, GENE_UPDOWNSTREAM_REGION)));
         }
 
         regions.forEach(region -> LOGGER.trace("Gene region: {}", region));
@@ -436,7 +443,7 @@ public class TargetGenes
 
         return switch(geneRegion.type())
         {
-            case CODING ->
+            case CODING, PROMOTER ->
             {
                 ProbeContext context = new ProbeContext(metadata);
                 yield probeGenerator.coverRegion(geneRegion.region(), context, EXON_PROBE_CRITERIA, null);

@@ -38,6 +38,8 @@ public class PanelBuilderConstants
     public static final int GENE_EXON_FLANK_REGION_MIN = 1000;
     public static final int GENE_EXON_FLANK_REGION_MAX = 5000;
     public static final double GENE_CN_QUALITY_MIN = 0.5;
+    // How many bases upstream to cover as part of the promoter region.
+    public static final int GENE_PROMOTER_REGION = 500;
 
     // Copy number backbone constants.
     public static final int CN_BACKBONE_PARTITION_SIZE = 1_000_000;
@@ -95,6 +97,10 @@ public class PanelBuilderConstants
             throw new IllegalArgumentException();
         }
         if(!(GENE_EXON_FLANK_REGION_MAX > GENE_EXON_FLANK_REGION_MIN))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(GENE_UPDOWNSTREAM_GAP > GENE_PROMOTER_REGION))
         {
             throw new IllegalArgumentException();
         }
