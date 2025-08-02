@@ -38,8 +38,8 @@ public final class TestUtils
     public static final String REF_BASES_G = "GGGGGGGGGG";
     public static final String REF_BASES_T = "TTTTTTTTTT";
 
-    protected static final String CHR_4 = "4";
-    protected static final String CHR_5 = "5";
+    public static final String CHR_4 = "4";
+    public static final String CHR_5 = "5";
 
     public static final String REF_BASES_RANDOM = generateRandomBases(10);
 
@@ -100,8 +100,8 @@ public final class TestUtils
     }
 
     // unmapping test state
-    protected static final Map<String,List<UnmappingRegion>> CHR_LOCATION_MAP;
-    protected static final ReadUnmapper READ_UNMAPPER;
+    public static final Map<String,List<UnmappingRegion>> CHR_LOCATION_MAP;
+    public static final ReadUnmapper READ_UNMAPPER;
 
     static
     {

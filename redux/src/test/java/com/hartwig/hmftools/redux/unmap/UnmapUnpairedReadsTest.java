@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.unmap;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
-import static com.hartwig.hmftools.redux.UnmapReadsTest.READ_BASES;
-import static com.hartwig.hmftools.redux.UnmapReadsTest.SOFT_CLIPPED_READ_CIGAR;
+import static com.hartwig.hmftools.redux.unmap.UnmapReadsTest.READ_BASES;
+import static com.hartwig.hmftools.redux.unmap.UnmapReadsTest.SOFT_CLIPPED_READ_CIGAR;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

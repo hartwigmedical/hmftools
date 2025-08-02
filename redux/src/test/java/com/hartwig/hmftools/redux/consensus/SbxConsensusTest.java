@@ -31,9 +31,7 @@ import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.AnnotatedBase;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.ExtendedRefPos;
 
-// import org.junit.jupiter.api.Test;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -93,6 +91,7 @@ public class SbxConsensusTest
         assertEquals(qualStr, consensusRead.getBaseQualityString());
     }
 
+    /*
     @Ignore
     @Test
     public void testSbxConsensusReadWithClippingAndIndels()
@@ -310,6 +309,8 @@ public class SbxConsensusTest
         assertEquals(expectedReadStr, consensusRead.getReadString());
         assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
     }
+
+     */
 
     @Test
     public void testSbxConsensusAlignmentBoundariesForInsertBookends()
@@ -662,6 +663,7 @@ public class SbxConsensusTest
         assertEquals(refBases.length(), consensusRead.getUnclippedEnd());
     }
 
+    /*
     @Ignore
     @Test
     public void testInsertToSoftclipLeft()
@@ -826,6 +828,7 @@ public class SbxConsensusTest
         assertEquals(2, consensusRead.getAlignmentEnd());
         assertEquals(3, consensusRead.getUnclippedEnd());
     }
+    */
 
     @Test
     public void testCreateLeftSoftclipOnlyWhenAlignmentScoreImproves()

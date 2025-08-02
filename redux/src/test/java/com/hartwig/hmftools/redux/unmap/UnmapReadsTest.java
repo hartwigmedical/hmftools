@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.unmap;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
