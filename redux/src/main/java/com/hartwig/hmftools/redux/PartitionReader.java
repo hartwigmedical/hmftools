@@ -10,6 +10,9 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNo
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
@@ -77,27 +80,30 @@ public class PartitionReader
         mBamReader = bamReader;
         mReadUnmapper = mConfig.UnmapRegions;
 
-        if(config.Sequencing == ILLUMINA && mConfig.UMIs.Enabled)
+        if(isIllumina())
         {
-            mReadCache = new JitterReadCache(new ReadCache(
-                    ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse));
-        }
-        else if(config.Sequencing == ILLUMINA)
-        {
-            mReadCache = new ReadCache(
-                    ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+            if(mConfig.UMIs.Enabled)
+            {
+                mReadCache = new JitterReadCache(new ReadCache(
+                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse));
+            }
+            else
+            {
+                mReadCache = new ReadCache(
+                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+            }
         }
         else
         {
-            // the sampled max read length is doubled, because it has been observed in non-ulimina bams that the max read length is usually
-            // larger than the sampled max read length, so we need extra room
+            // the sampled max read length is doubled, because it has been observed in non-Illumina bams that the max read length is usually
+            // larger than the sampled max read length extra room is required
             mReadCache = new ReadCache(3 * mConfig.readLength(),
                     2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
         }
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
-        mConsensusReads = new ConsensusReads(config.RefGenome, mConfig.Sequencing, mStats.ConsensusStats);
+        mConsensusReads = new ConsensusReads(config.RefGenome, SEQUENCING_TYPE, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mCurrentRegion = null;
@@ -198,7 +204,7 @@ public class PartitionReader
 
     private void preprocessSamRecord(final SAMRecord read)
     {
-        if(mConfig.Sequencing == SBX)
+        if(isSbx())
         {
             stripDuplexIndels(mConfig.RefGenome, read);
         }
@@ -206,7 +212,7 @@ public class PartitionReader
 
     private void postProcessSingleReads(final List<ReadInfo> singleReads)
     {
-        if(mConfig.Sequencing == SBX)
+        if(isSbx())
         {
             for(ReadInfo readInfo : singleReads)
             {
@@ -220,7 +226,7 @@ public class PartitionReader
         if(primaryRead == null)
             return;
 
-        if(mConfig.Sequencing == SBX)
+        if(isSbx())
             fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
     }
 
@@ -384,7 +390,7 @@ public class PartitionReader
             // do not form consensus if duplicateGroup only contains one non poly-g umi read
             if(mConfig.FormConsensus && duplicateGroup.readCount() - duplicateGroup.polyGUmiReads().size() >= 2)
             {
-                duplicateGroup.setPCRClusterCount(mConfig.Sequencing);
+                duplicateGroup.setPCRClusterCount(SEQUENCING_TYPE);
                 duplicateGroup.formConsensusRead(mConsensusReads);
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }

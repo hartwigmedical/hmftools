@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -14,9 +15,16 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.replaceXwithM;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
+import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 import static com.hartwig.hmftools.redux.common.Constants.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.redux.common.Constants.SBX_CONSENSUS_BASE_THRESHOLD;
+import static com.hartwig.hmftools.redux.common.Constants.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
@@ -27,9 +35,11 @@ import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.Cigar;
@@ -447,12 +457,121 @@ public final class SbxRoutines
         }
     }
 
-    public byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
+    public static BaseQualPair determineBaseAndQual(
+            final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position, final RefGenome refGenome)
     {
-        // consensus rules
+        // count bases by qual type and apply rules
+        Map<Byte,int[]> baseCountsByQual = Maps.newHashMap();
 
+        int zeroQuallReads = 0;
+        int simplexCount = 0;
+        int duplexCount = 0;
 
-        return null;
+        for(int i = 0; i < locationBases.length; ++i)
+        {
+            byte qual = locationQuals[i];
+
+            if(qual == SIMPLEX_QUAL)
+            {
+                ++simplexCount;
+            }
+            else if(qual == DUPLEX_QUAL)
+            {
+                ++duplexCount;
+            }
+            else
+            {
+                ++zeroQuallReads;
+                continue;
+            }
+
+            int[] qualBaseCounts = baseCountsByQual.get(qual);
+
+            if(qualBaseCounts == null)
+            {
+                qualBaseCounts = new int[DNA_BASE_BYTES.length];
+                baseCountsByQual.put(qual, qualBaseCounts);
+            }
+
+            int baseIndex = baseIndex(locationBases[i]);
+
+            if(baseIndex >= 0 && baseIndex < DNA_BASE_BYTES.length)
+            {
+                ++qualBaseCounts[baseIndex];
+            }
+        }
+
+        // int totalReads = locationBases.length;
+
+        byte refBase = chromosome != null && position != INVALID_POSITION ? refGenome.getRefBase(chromosome, position) : DNA_N_BYTE;
+
+        if(baseCountsByQual.isEmpty()) // all reads have invalid qual
+            return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
+
+        if(simplexCount > 0 && duplexCount == 0)
+        {
+            int[] baseCounts = baseCountsByQual.get(SIMPLEX_QUAL);
+            int maxBaseCount = findMostCommonBaseCount(baseCounts);
+            byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
+
+            if(maxBaseCount >= SBX_CONSENSUS_BASE_THRESHOLD * simplexCount)
+                return new BaseQualPair(maxBase, SIMPLEX_QUAL);
+            else
+                return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
+        }
+
+        if(duplexCount > 0)
+        {
+            int[] baseCounts = baseCountsByQual.get(DUPLEX_QUAL);
+            int maxBaseCount = findMostCommonBaseCount(baseCounts);
+            byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
+
+            if(maxBaseCount >= SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + zeroQuallReads))
+                return new BaseQualPair(maxBase, DUPLEX_QUAL);
+
+            // check for a tie
+            int matchingMostCommon = 0;
+
+            for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
+            {
+                if(DNA_BASE_BYTES[b] == matchingMostCommon)
+                    ++matchingMostCommon;
+            }
+
+            if(matchingMostCommon == 1)
+                return new BaseQualPair(maxBase, SIMPLEX_QUAL);
+            else
+                return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
+        }
+
+        return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
     }
 
+    private static int findMostCommonBaseCount(final int[] baseCounts)
+    {
+        int maxCount = 0;
+
+        for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
+        {
+            maxCount = max(maxCount, baseCounts[b]);
+        }
+
+        return maxCount;
+    }
+
+    private static byte findMostCommonBase(final int[] baseCounts, final byte refBase, final int maxCount)
+    {
+        byte maxBase = DNA_N_BYTE;
+
+        for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
+        {
+            if(baseCounts[b] == maxCount)
+            {
+                if(DNA_BASE_BYTES[b] == refBase || maxBase == DNA_N_BYTE)
+                    maxBase = DNA_BASE_BYTES[b];
+            }
+        }
+
+        return maxBase;
+    }
 }

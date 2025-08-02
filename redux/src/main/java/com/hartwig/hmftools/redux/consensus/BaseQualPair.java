@@ -27,5 +27,5 @@ public class BaseQualPair
 
     public boolean isValid() { return Base == NO_BASE || Qual > 0; }
 
-    public String toString() { return format("%d:%d", (char)Base, Qual); }
+    public String toString() { return format("%c:%d", (char)Base, Qual); }
 }

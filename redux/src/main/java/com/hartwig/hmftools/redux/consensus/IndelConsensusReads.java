@@ -3,12 +3,11 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.H;
@@ -234,6 +233,10 @@ public class IndelConsensusReads
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = BaseBuilder.INVALID_POSITION;
 
+                BaseQualPair consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
+                        locationBases, locationQuals, consensusState.Chromosome, basePosition, isDualStrand, isFirstInPair);
+
+                /*
                 BaseQualPair consensusBaseAndQual;
 
                 if(isDualStrand && basePosition != INVALID_POSITION)
@@ -247,9 +250,10 @@ public class IndelConsensusReads
                     consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
                             locationBases, locationQuals, consensusState.Chromosome, basePosition);
                 }
+                */
 
                 consensusState.Bases[baseIndex] = consensusBaseAndQual.Base;
-                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual.Qual);
+                consensusState.BaseQualities[baseIndex] = consensusBaseAndQual.Qual;
             }
 
             if(consensusState.IsForward)

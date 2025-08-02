@@ -48,11 +48,17 @@ public class ConsensusReads
     public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType, final ConsensusStatistics consensusStats)
     {
         mRefGenome = new RefGenome(refGenome);
+
+        mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats, sequencingType);
+        mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
+        mNonStandardBaseBuilder = null;
+
+        /*
         mNonStandardBaseBuilder = NonStandardBaseBuilder.fromSequencingType(sequencingType, mRefGenome);
 
         if(mNonStandardBaseBuilder == null)
         {
-            mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
+            mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats, sequencingType);
             mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         }
         else
@@ -60,6 +66,7 @@ public class ConsensusReads
             mBaseBuilder = null;
             mIndelConsensusReads = null;
         }
+        */
 
         mConsensusStats = consensusStats;
         mValidateConsensusReads = false;

@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.common.Constants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
@@ -53,10 +55,10 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
-        mBqrProcessor = new BqrRegionReader(config.Sequencing, config.RefGenome, bqr.results(), bqr.regions());
+        mBqrProcessor = new BqrRegionReader(SEQUENCING_TYPE, config.RefGenome, bqr.results(), bqr.regions());
 
-        mRecomputeFragCoords = mReadDataWriter.enabled() && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse)
-                || (config.Sequencing == ILLUMINA && config.UMIs.Enabled));
+        mRecomputeFragCoords = mReadDataWriter.enabled()
+                && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse) || (isIllumina() && config.UMIs.Enabled));
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);

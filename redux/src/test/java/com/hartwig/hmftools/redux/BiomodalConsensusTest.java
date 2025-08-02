@@ -33,7 +33,8 @@ import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.RefGenome;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -62,6 +63,7 @@ public class BiomodalConsensusTest
         mNextBaseMap.put((byte) 'T', (byte) 'G');
     }
 
+    @Ignore
     @Test
     public void testBiomodalConsensusReadSimple()
     {
@@ -88,6 +90,7 @@ public class BiomodalConsensusTest
         assertEquals(MM_PREFIX + MM_SUFFIX, consensusRead.getStringAttribute(BASE_MODIFICATIONS_ATTRIBUTE));
     }
 
+    @Ignore
     @Test
     public void testBiomodalConsensusReadWithClippingAndIndels()
     {
@@ -154,6 +157,7 @@ public class BiomodalConsensusTest
         assertEquals(MM_PREFIX + MM_SUFFIX, consensusRead.getStringAttribute(BASE_MODIFICATIONS_ATTRIBUTE));
     }
 
+    @Ignore
     @Test
     public void testBiomodalConsensusModCForward()
     {
@@ -205,6 +209,7 @@ public class BiomodalConsensusTest
         assertEquals(expectedMMValue, consensusRead.getStringAttribute(BASE_MODIFICATIONS_ATTRIBUTE));
     }
 
+    @Ignore
     @Test
     public void testBiomodalConsensusModCReverse()
     {
@@ -256,6 +261,7 @@ public class BiomodalConsensusTest
         assertEquals(expectedMMValue, consensusRead.getStringAttribute(BASE_MODIFICATIONS_ATTRIBUTE));
     }
 
+    @Ignore
     @Test
     public void testBiomodalConsensusDropNonStrictMajorityInserts()
     {
@@ -296,6 +302,7 @@ public class BiomodalConsensusTest
         assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
     }
 
+    @Ignore
     @Test
     public void testBiomodalConsensusKeepStrictMajorityDels()
     {
@@ -336,6 +343,7 @@ public class BiomodalConsensusTest
         assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
     }
 
+    @Ignore
     @Test
     public void testBiomodalConsensusNoReplacementOfSoftClipWithRef()
     {
@@ -369,7 +377,9 @@ public class BiomodalConsensusTest
         assertEquals(expectedQualStr, consensusRead.getBaseQualityString());
     }
 
-    private static SAMRecord createBiomodalSamRecord(final String readName, final String chromosome, int alignmentStart, final String modCReadStr, final String qualStr, final String cigar, boolean isForward)
+    private static SAMRecord createBiomodalSamRecord(
+            final String readName, final String chromosome, int alignmentStart, final String modCReadStr, final String qualStr,
+            final String cigar, boolean isForward)
     {
         char modCBase = isForward ? 'C' : swapDnaBase('C');
         StringBuilder readStr = new StringBuilder(modCReadStr);

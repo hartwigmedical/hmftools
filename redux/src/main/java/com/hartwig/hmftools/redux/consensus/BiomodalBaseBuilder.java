@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MODC_ANNOTATION;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMValueFromModCReadIndices;
 import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getModCReadIndices;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
@@ -29,7 +30,7 @@ public class BiomodalBaseBuilder extends NonStandardBaseBuilder
     {
         super(refGenome);
 
-        mBaseBuilder = new BaseBuilder(refGenome, null);
+        mBaseBuilder = new BaseBuilder(refGenome, null, SEQUENCING_TYPE);
     }
 
     @Override
@@ -82,7 +83,9 @@ public class BiomodalBaseBuilder extends NonStandardBaseBuilder
             basePosition = INVALID_POSITION;
         }
 
-        BaseQualPair consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(locationBases, locationQuals, chromosome, basePosition);
+        BaseQualPair consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
+                locationBases, locationQuals, chromosome, basePosition, false, null);
+
         byte consensusBase = !consensusBaseAndQual.isValid() ? ANY_BASE : consensusBaseAndQual.Base;
         byte consensusQual = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual.Qual);
 

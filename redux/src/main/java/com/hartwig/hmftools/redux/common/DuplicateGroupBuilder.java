@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.common;
 
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
+
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -21,7 +23,7 @@ public class DuplicateGroupBuilder
         mFormConsensus = config.FormConsensus;
         mUmiConfig = config.UMIs;
         mStats = new Statistics();
-        mUmiGroupBuilder = new UmiGroupBuilder(config.Sequencing, config.UMIs, mStats.UmiStats);
+        mUmiGroupBuilder = new UmiGroupBuilder(SEQUENCING_TYPE, config.UMIs, mStats.UmiStats);
     }
 
     public Statistics statistics() { return mStats; }
