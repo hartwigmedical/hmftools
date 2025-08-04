@@ -2,14 +2,13 @@ package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.redux.bqr.BaseQualRecalibration.convertToRecords;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +28,7 @@ import com.hartwig.hmftools.redux.bqr.BaseQualityResults;
 import com.hartwig.hmftools.redux.bqr.BqrKeyCounter;
 import com.hartwig.hmftools.redux.bqr.BqrRegionReader;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 public class BaseQualityRecalibrationTest
 {

@@ -10,9 +10,9 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ON
 import static com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.ANY_BASE;
 import static com.hartwig.hmftools.redux.consensus.SbxBaseBuilder.DUPLEX_ERROR_QUAL;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -29,7 +29,7 @@ import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.AnnotatedBase;
 import com.hartwig.hmftools.redux.consensus.NonStandardBaseBuilder.ExtendedRefPos;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
