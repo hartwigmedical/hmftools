@@ -358,7 +358,7 @@ public class PurpleApplication
 
         if (mConfig.TargetRegionsMode)
         {
-            TargetRegionsCopyNumbers targetRegionsCopyNumbers = new TargetRegionsCopyNumbers(mReferenceData.TargetRegions, sampleData.Cobalt.Ratios, mReferenceData.RefGenVersion);
+            TargetRegionsCopyNumbers targetRegionsCopyNumbers = new TargetRegionsCopyNumbers(mReferenceData.TargetRegions, sampleData.Cobalt.Ratios, copyNumbers, mReferenceData.RefGenVersion);
             List<TargetRegionsCopyNumber> copyNumberData = targetRegionsCopyNumbers.copyNumbersData();
             String fileName = TargetRegionsCopyNumberFile.generateFilename(mConfig.OutputDir, tumorId);
             TargetRegionsCopyNumberFile.write(fileName, copyNumberData);

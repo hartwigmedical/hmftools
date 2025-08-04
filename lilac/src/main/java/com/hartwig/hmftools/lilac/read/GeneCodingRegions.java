@@ -10,17 +10,18 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public class GeneCodingRegions
 {
-    public final String GeneName;
+    public final HlaGene GeneName;
     public final String Chromosome;
     public final byte Strand;
     public final int CodingStart;
     public final int CodingEnd;
     public final List<BaseRegion> CodingRegions;
 
-    public GeneCodingRegions(final String geneName, final String chromosome, final TranscriptData transcriptData)
+    public GeneCodingRegions(final HlaGene geneName, final String chromosome, final TranscriptData transcriptData)
     {
         GeneName = geneName;
         Chromosome = chromosome;
@@ -48,6 +49,7 @@ public class GeneCodingRegions
         return position >= CodingStart - buffer && position <= CodingEnd + buffer;
     }
 
+    @Override
     public String toString()
     {
         return format("gene(%s) strand(%d) coding(%d-%d)", GeneName, Strand, CodingStart, CodingEnd);

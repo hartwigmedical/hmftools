@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
-public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio, List<TaggedRegion> mOverlappingRegions)
+public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio,
+                                      List<TaggedRegion> mOverlappingRegions,
+                                      PurpleCopyNumber mPurpleCopyNumber)
 {
-
     public static String tsvFileHeader()
     {
         return new StringJoiner("\t")
@@ -23,12 +25,19 @@ public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio, List<TaggedRegio
                 .add("averageDepth")
                 .add("windowGCContent")
                 .add("windowTumorRatio")
+                .add("regionStart")
+                .add("regionEnd")
+                .add("copyNumber")
+                .add("minorAlleleCopNumber")
+                .add("depthWindowCount")
+                .add("bafCount")
+                .add("GCContent")
                 .toString();
     }
 
     public String toTSV()
     {
-        BaseRegion cobaltRegion = mCobaltRatio.baseRegion();
+        BaseRegion cobaltRegion = mCobaltRatio.window();
         StringJoiner panelRegionsStringJoiner = new StringJoiner(":");
         for(TaggedRegion region : mOverlappingRegions)
         {
@@ -43,6 +52,13 @@ public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio, List<TaggedRegio
                 .add(String.valueOf(mCobaltRatio.tumorReadDepth()))
                 .add(String.valueOf(mCobaltRatio.tumorGcContent()))
                 .add(String.valueOf(mCobaltRatio.tumorGCRatio()))
+                .add(String.valueOf(mPurpleCopyNumber.start()))
+                .add(String.valueOf(mPurpleCopyNumber.end()))
+                .add(String.valueOf(mPurpleCopyNumber.averageTumorCopyNumber()))
+                .add(String.valueOf(mPurpleCopyNumber.minorAlleleCopyNumber()))
+                .add(String.valueOf(mPurpleCopyNumber.depthWindowCount()))
+                .add(String.valueOf(mPurpleCopyNumber.bafCount()))
+                .add(String.valueOf(mPurpleCopyNumber.gcContent()))
                 .toString();
     }
 }

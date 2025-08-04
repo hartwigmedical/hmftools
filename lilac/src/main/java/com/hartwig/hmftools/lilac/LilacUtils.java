@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -52,7 +51,7 @@ public class LilacUtils
         return list.stream().mapToInt(x -> x).max().orElse(0);
     }
 
-    public static boolean namesMatch(final Set<String> list1, final Set<String> list2)
+    public static <T> boolean namesMatch(final Set<T> list1, final Set<T> list2)
     {
         if(list1.size() != list2.size())
             return false;

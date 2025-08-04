@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class NucleotideFiltering
@@ -64,9 +65,7 @@ public class NucleotideFiltering
                 continue;
 
             String nucleotides = fragment.nucleotides(nucleotideIndices);
-
-            Integer count = sequenceCounts.get(nucleotides);
-            sequenceCounts.put(nucleotides, count != null ? count + 1 : 1);
+            sequenceCounts.merge(nucleotides, 1, Integer::sum);
             totalCount++;
         }
 
@@ -79,12 +78,12 @@ public class NucleotideFiltering
 
     }
 
-    public static Map<String, List<Integer>> calcNucleotideHeterogygousLoci(final List<Integer> refNucleotideHetLoci)
+    public static Map<HlaGene, List<Integer>> calcNucleotideHeterogygousLoci(final List<Integer> refNucleotideHetLoci)
     {
         // convert from amino acid exon boundaries to nucleotides for each gene
-        Map<String, List<Integer>> hetLociMap = Maps.newHashMap();
+        Map<HlaGene, List<Integer>> hetLociMap = Maps.newHashMap();
 
-        for(String gene : GENE_CACHE.GeneIds)
+        for(HlaGene gene : GENE_CACHE.GeneNames)
         {
             List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
 

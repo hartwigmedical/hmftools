@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.lilac;
 
-import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
-
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 
@@ -66,19 +66,8 @@ public final class LilacConstants
     public static final double WARN_LOW_COVERAGE_DEPTH = 10;
     public static final int DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS = 300;
 
-    public static final String HLA_PREFIX = "HLA-";
     public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
-
-    // MHC class 1 constants
-    public static final String GENE_A = "A";
-    public static final String GENE_B = "B";
-    public static final String GENE_C = "C";
-    public static final String GENE_Y = "Y";
-    public static final String GENE_H = "H";
-
-    public static final String HLA_A = longGeneName(GENE_A);
-    public static final String HLA_B = longGeneName(GENE_B);
-    public static final String HLA_C = longGeneName(GENE_C);
+    public static final String HLA_PREFIX = "HLA-";
 
     public static final List<String> CLASS_1_EXCLUDED_ALLELES = Lists.newArrayList(
             "A*31:135", "A*33:191", "A*02:783", "B*07:282",

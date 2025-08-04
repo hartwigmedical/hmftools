@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.lilac.variant;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariant
 {
-    public final String Gene;
+    public final HlaGene Gene;
     public final String Chromosome;
     public final int Position;
     public final String Ref;
@@ -19,7 +18,7 @@ public class SomaticVariant
     public final VariantContext Context;
 
     public SomaticVariant(
-            final String gene, final String chromosome, final int position, final String ref, final String alt,
+            final HlaGene gene, final String chromosome, final int position, final String ref, final String alt,
             final String filter, final CodingEffect canonicalCodingEffect, final VariantContext context)
     {
         Gene = gene;
@@ -32,6 +31,7 @@ public class SomaticVariant
         Context = context;
     }
 
+    @Override
     public String toString()
     {
         return String.format("gene(%s) pos(%s:%d) variant(%s>%s %s)", Gene, Chromosome, Position, Ref, Alt, CanonicalCodingEffect);

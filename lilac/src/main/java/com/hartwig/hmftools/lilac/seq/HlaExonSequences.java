@@ -2,14 +2,13 @@ package com.hartwig.hmftools.lilac.seq;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
-
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public final class HlaExonSequences
 {
@@ -24,10 +23,10 @@ public final class HlaExonSequences
         ExonSequences = ImmutableList.copyOf(exonSequences);
     }
 
-    public static HlaExonSequences create(final Map<String, List<Integer>> geneExonBoundaries, final HlaSequenceLoci sequence)
+    public static HlaExonSequences create(final Map<HlaGene, List<Integer>> geneExonBoundaries, final HlaSequenceLoci sequence)
     {
         HlaAllele allele = sequence.Allele;
-        List<Integer> exonBoundaries = geneExonBoundaries.get(longGeneName(allele.Gene));
+        List<Integer> exonBoundaries = geneExonBoundaries.get(allele.Gene);
         List<String> acids = sequence.getSequences();
         List<List<String>> exonAcids = Lists.newArrayList();
 

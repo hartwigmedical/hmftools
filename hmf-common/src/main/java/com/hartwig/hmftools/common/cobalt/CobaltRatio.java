@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.cobalt;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
@@ -24,8 +27,13 @@ public record CobaltRatio(
                 referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
     }
 
-    public BaseRegion baseRegion()
+    public BaseRegion window()
     {
-        return new BaseRegion(position, position + 1000);
+        return new BaseRegion(position, position + 1000 - 1);
+    }
+
+    public <T extends BaseRegion> List<T> findWindowOverlaps(@NotNull List<T> intervals)
+    {
+        return intervals.stream().filter(t -> this.window().overlaps(t)).collect(Collectors.toList());
     }
 }

@@ -26,6 +26,7 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.read.BamRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -103,10 +104,10 @@ public class LilacAppendRna
         // Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
                 // extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, Collections.emptyList());
 
-        Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap = Maps.newHashMap();
+        Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap = Maps.newHashMap();
 
         // Map<String,List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(mRefNucleotideCounts.heterozygousLoci());
-        Map<String,List<Integer>> refNucleotideHetLociMap = Maps.newHashMap();
+        Map<HlaGene, List<Integer>> refNucleotideHetLociMap = Maps.newHashMap();
 
         FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
@@ -162,7 +163,7 @@ public class LilacAppendRna
         return rnaCoverage;
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main( final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 

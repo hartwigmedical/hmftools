@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.WILD_ONLY;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildLoci;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetSequences;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
@@ -21,11 +19,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.junit.Test;
 
@@ -41,18 +40,18 @@ public class FragmentAllelesTest
         List<String> emptyNucs = Lists.newArrayList();
         List<Byte> emptyQuals = Lists.newArrayList();
         List<Integer> emptyLoci = Lists.newArrayList();
-        Set<String> aGenes = Sets.newHashSet(HLA_A);
-        Set<String> bGenes = Sets.newHashSet(HLA_B);
+        Set<HlaGene> aGenes = Sets.newHashSet(HLA_A);
+        Set<HlaGene> bGenes = Sets.newHashSet(HLA_B);
 
-        final Map<String,Map<Integer,Set<String>>> geneHetLociMap = Maps.newHashMap();
-        Map<Integer,Set<String>> geneALociMap = Maps.newLinkedHashMap();
+        final Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
+        Map<Integer, Set<String>> geneALociMap = Maps.newLinkedHashMap();
         geneALociMap.put(0, Sets.newHashSet("A"));
         geneALociMap.put(1, Sets.newHashSet("B"));
         geneALociMap.put(2, Sets.newHashSet("C"));
         geneALociMap.put(3, Sets.newHashSet("D"));
-        geneHetLociMap.put(GENE_A, geneALociMap);
+        geneHetLociMap.put(HLA_A, geneALociMap);
 
-        Map<String,List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
+        Map<HlaGene, List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
         List<HlaSequenceLoci> candidateNucSequences = Lists.newArrayList();
         List<Set<String>> refNucleotides = Lists.newArrayList();
 
@@ -71,16 +70,16 @@ public class FragmentAllelesTest
         assertTrue(fragAlleles.get(0).getFull().contains(allele1));
 
         // check non-het locations aren't checked
-        Map<Integer,Set<String>> geneBLociMap = Maps.newLinkedHashMap();
+        Map<Integer, Set<String>> geneBLociMap = Maps.newLinkedHashMap();
         geneBLociMap.put(1, Sets.newHashSet("B"));
         geneBLociMap.put(3, Sets.newHashSet("D"));
-        geneHetLociMap.put(GENE_B, geneBLociMap);
+        geneHetLociMap.put(HLA_B, geneBLociMap);
 
         HlaAllele allele2 = HlaAllele.fromString("B*01:01");
         HlaSequenceLoci seq2 = new HlaSequenceLoci(allele2, Lists.newArrayList("A", "B", "C", "D"));
         sequences = Lists.newArrayList(seq2);
 
-        Fragment frag2 = new Fragment(createReadRecord("02"), GENE_B, bGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag2 = new Fragment(createReadRecord("02"), HLA_B, bGenes, emptyLoci, emptyQuals, emptyNucs);
         frag2.setAminoAcids(Lists.newArrayList(
                 new AminoAcid(0, "L"),
                 new AminoAcid(1, "B"),
@@ -99,7 +98,7 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq3 = new HlaSequenceLoci(allele3, Lists.newArrayList("*", "B", "C", "*"));
         sequences = Lists.newArrayList(seq3);
 
-        Fragment frag3 = new Fragment(createReadRecord("03"), GENE_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag3 = new Fragment(createReadRecord("03"), HLA_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
         frag3.setAminoAcids(Lists.newArrayList(
                 new AminoAcid(0, "A"),
                 new AminoAcid(1, "B"),
@@ -129,17 +128,17 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq1 = new HlaSequenceLoci(allele1, Lists.newArrayList("A", "P", "C", "D"));
         List<HlaSequenceLoci> sequences = Lists.newArrayList(seq1);
 
-        Set<String> aGenes = Sets.newHashSet(HLA_A);
+        Set<HlaGene> aGenes = Sets.newHashSet(HLA_A);
 
-        final Map<String,Map<Integer,Set<String>>> geneHetLociMap = Maps.newHashMap();
-        Map<Integer,Set<String>> geneALociMap = Maps.newLinkedHashMap();
+        final Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
+        Map<Integer, Set<String>> geneALociMap = Maps.newLinkedHashMap();
         geneALociMap.put(0, Sets.newHashSet("A"));
         geneALociMap.put(1, Sets.newHashSet("P"));
         geneALociMap.put(2, Sets.newHashSet("C"));
         geneALociMap.put(3, Sets.newHashSet("D"));
-        geneHetLociMap.put(GENE_A, geneALociMap);
+        geneHetLociMap.put(HLA_A, geneALociMap);
 
-        Map<String,List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
+        Map<HlaGene, List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
         List<HlaSequenceLoci> candidateNucSequences = Lists.newArrayList();
         List<Set<String>> refNucleotides = Lists.newArrayList();
 
@@ -153,7 +152,7 @@ public class FragmentAllelesTest
         nucQuals.set(1, (byte) 2);
         nucQuals.set(4, (byte) 2);
         nucQuals.set(11, (byte) 2);
-        Fragment frag1 = new Fragment(createReadRecord("01"), GENE_A, aGenes, nucLoci, nucQuals, nucleotides);
+        Fragment frag1 = new Fragment(createReadRecord("01"), HLA_A, aGenes, nucLoci, nucQuals, nucleotides);
 
         assertTrue(frag1.validate());
 

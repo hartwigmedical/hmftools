@@ -4,12 +4,11 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.lilac.GeneCache.shortGeneName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,6 +32,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -125,7 +125,7 @@ public final class SequenceCount
             return Lists.newArrayList();
 
         int support = seqCounts.size();
-        int evidenceMinCount = max(MIN_EVIDENCE_SUPPORT, (int)ceil(support * mMinEvidenceFactor));
+        int evidenceMinCount = max(MIN_EVIDENCE_SUPPORT, (int) ceil(support * mMinEvidenceFactor));
 
         return seqCounts.entrySet().stream()
                 .filter(x -> x.getCount() >= evidenceMinCount)
@@ -145,24 +145,24 @@ public final class SequenceCount
 
     public int depth(final int locus) { return mSeqCountsByLoci.get(locus).size(); }
 
-    public static Map<String, Map<Integer, Set<String>>> extractHeterozygousLociSequences(
-            final Map<String, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
+    public static Map<HlaGene, Map<Integer, Set<String>>> extractHeterozygousLociSequences(
+            final Map<HlaGene, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
     {
-        Map<String, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
-        for(Map.Entry<String, SequenceCount> geneEntry : geneCountsMap.entrySet())
+        Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
+        for(Map.Entry<HlaGene, SequenceCount> geneEntry : geneCountsMap.entrySet())
         {
-            String gene = shortGeneName(geneEntry.getKey());
+            HlaGene gene = geneEntry.getKey();
             SequenceCount sequenceCounts = geneEntry.getValue();
-            List<HlaSequenceLoci> geneExtraSeqLoci = extraSeqLoci.stream().filter(x -> x.Allele.Gene.equals(gene)).toList();
+            List<HlaSequenceLoci> geneExtraSeqLoci = extraSeqLoci.stream().filter(x -> x.Allele.Gene == gene).toList();
             Map<Integer, Set<String>> hetLociMap = sequenceCounts.extractHeterozygousLociSequences(geneExtraSeqLoci);
             geneHetLociMap.put(gene, hetLociMap);
         }
 
         // for recovered alleles (the extra-seq-loci), any additional amino acid location prior to 337 needs to be evaluated against
         // all 3 genes and added to all of them. From 338 onwards, A and B should be shared with each other, but C needs to be separate.
-        Map<Integer, Set<String>> aHetLociMap = geneHetLociMap.get(GENE_A);
-        Map<Integer, Set<String>> bHetLociMap = geneHetLociMap.get(GENE_B);
-        Map<Integer, Set<String>> cHetLociMap = geneHetLociMap.get(GENE_C);
+        Map<Integer, Set<String>> aHetLociMap = geneHetLociMap.get(HLA_A);
+        Map<Integer, Set<String>> bHetLociMap = geneHetLociMap.get(HLA_B);
+        Map<Integer, Set<String>> cHetLociMap = geneHetLociMap.get(HLA_C);
 
         for(int locus = 0; locus <= 348; ++locus)
         {
