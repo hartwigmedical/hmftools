@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
 import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
-import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -34,8 +34,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
 import org.junit.jupiter.api.Test;
 

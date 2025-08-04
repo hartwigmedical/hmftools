@@ -18,10 +18,10 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_SOFT_CLIP;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MAX_NON_OVERLAPPING_BASES;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_SOFT_CLIP;
 
 import java.util.List;
 import java.util.Map;

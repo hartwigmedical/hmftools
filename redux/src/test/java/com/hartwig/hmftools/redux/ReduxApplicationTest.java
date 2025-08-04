@@ -15,8 +15,8 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.createTestConfig;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MAX_NON_OVERLAPPING_BASES;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

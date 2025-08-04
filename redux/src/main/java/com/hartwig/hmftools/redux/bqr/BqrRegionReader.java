@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.redux.BqrReadType.extractReadType;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 
 import java.util.Collection;
 import java.util.List;

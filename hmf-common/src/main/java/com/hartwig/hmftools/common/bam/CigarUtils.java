@@ -383,10 +383,9 @@ public final class CigarUtils
     public static void replaceXwithM(final SAMRecord record)
     {
         List<CigarElement> newCigarElements = replaceXwithM(record.getCigar().getCigarElements());
-        if(newCigarElements == null)
-        {
+
+        if(newCigarElements == null) // nothing was changed
             return;
-        }
 
         record.setCigar(new Cigar(newCigarElements));
     }

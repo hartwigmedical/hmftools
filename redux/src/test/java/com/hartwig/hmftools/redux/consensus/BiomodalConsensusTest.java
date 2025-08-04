@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BASE_MODIFICATIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;

@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.redux.bqr;
 
-import static com.hartwig.hmftools.redux.common.Constants.BQR_DUAL_AD;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_DUAL_AF_HIGH;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_DUAL_AF_LOW;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_NON_DUAL_AD;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_NON_DUAL_AF_HIGH;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_NON_DUAL_AF_LOW;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_DUAL_AD;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_DUAL_AF_HIGH;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_DUAL_AF_LOW;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_NON_DUAL_AD;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_NON_DUAL_AF_HIGH;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_NON_DUAL_AF_LOW;
 
 import java.util.List;
 import java.util.Map;

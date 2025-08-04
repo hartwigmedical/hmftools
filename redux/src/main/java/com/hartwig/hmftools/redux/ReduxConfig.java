@@ -32,10 +32,10 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
-import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_DUPLEX_UMI_DELIM;
+import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.FILE_ID;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.redux.write.ReadOutput.NONE;
 
 import java.util.Arrays;
@@ -221,7 +221,9 @@ public class ReduxConfig
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
-        SkipFullyUnmappedReads = configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
+
+        SkipUnmapping = configBuilder.hasFlag(SKIP_UNMAPPING);
+        SkipFullyUnmappedReads = SkipUnmapping || configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
         FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(SEQUENCING_TYPE, configBuilder);
@@ -233,8 +235,6 @@ public class ReduxConfig
                 SampleId, RefGenomeFile, RefGenVersion, SEQUENCING_TYPE, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
-
-        SkipUnmapping = configBuilder.hasFlag(SKIP_UNMAPPING);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {

@@ -7,17 +7,15 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
-import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
+import static com.hartwig.hmftools.redux.ReduxConstants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.fillQualZeroMismatchesWithRef;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.finaliseRead;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndels;
 
 import static org.apache.logging.log4j.Level.DEBUG;
@@ -216,7 +214,7 @@ public class PartitionReader
         {
             for(ReadInfo readInfo : singleReads)
             {
-                fillQualZeroMismatchesWithRef(mConfig.RefGenome, readInfo.read());
+                finaliseRead(mConfig.RefGenome, readInfo.read());
             }
         }
     }
@@ -227,7 +225,7 @@ public class PartitionReader
             return;
 
         if(isSbx())
-            fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
+            finaliseRead(mConfig.RefGenome, primaryRead);
     }
 
     private void processSamRecord(final SAMRecord read)

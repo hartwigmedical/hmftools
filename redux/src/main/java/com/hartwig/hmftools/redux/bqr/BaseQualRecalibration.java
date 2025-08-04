@@ -7,8 +7,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_CHR_END_BUFFER;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_SAMPLE_SIZE;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_CHR_END_BUFFER;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_SAMPLE_SIZE;
 
 import java.util.Collection;
 import java.util.List;

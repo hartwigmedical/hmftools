@@ -6,7 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
 import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsUnmapRegion;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import com.google.common.annotations.VisibleForTesting;
+import static java.lang.String.format;
 
 import htsjdk.samtools.CigarOperator;
 
@@ -55,9 +55,7 @@ public class SbxAnnotatedBase
     public boolean setQual(byte qual)
     {
         if(mQual == qual)
-        {
             return false;
-        }
 
         mQual = qual;
         return true;
@@ -67,14 +65,10 @@ public class SbxAnnotatedBase
     public boolean equals(final Object o)
     {
         if(this == o)
-        {
             return true;
-        }
 
         if(!(o instanceof SbxAnnotatedBase))
-        {
             return false;
-        }
 
         final SbxAnnotatedBase that = (SbxAnnotatedBase) o;
         return ReadIndex == that.ReadIndex && RefPos == that.RefPos && ReadBase == that.ReadBase && IsDuplexIndel == that.IsDuplexIndel
@@ -98,14 +92,7 @@ public class SbxAnnotatedBase
     @Override
     public String toString()
     {
-        return "AnnotatedBase{" +
-                "ReadIndex=" + ReadIndex +
-                ", RefPos=" + RefPos +
-                ", Op=" + Op +
-                ", ReadBase=" + ReadBase +
-                ", IsDuplexIndel=" + IsDuplexIndel +
-                ", mQual=" + mQual +
-                ", mDeleted=" + mDeleted +
-                '}';
+        return format("%d:$d %c@%d cigar(%s) duplexIndel(%s) deleted(%d)",
+                ReadIndex, RefPos, (char)ReadBase, mQual, Op, IsDuplexIndel, mDeleted);
     }
 }

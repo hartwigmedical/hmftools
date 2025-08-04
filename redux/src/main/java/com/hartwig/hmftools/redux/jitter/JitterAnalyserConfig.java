@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.jitter;
 
-import static com.hartwig.hmftools.redux.common.Constants.BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;

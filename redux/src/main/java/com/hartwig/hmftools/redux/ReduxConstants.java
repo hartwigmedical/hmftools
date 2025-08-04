@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux;
 
-public class Constants
+public class ReduxConstants
 {
     public static final String FILE_ID = "redux";
 
@@ -25,7 +25,7 @@ public class Constants
 
     public static final int SUPP_ALIGNMENT_SCORE_MIN = 30;
 
-    // base quals
+    // SBX qual and consensus
     public static final byte SBX_SIMPLEX_QUAL = 27;
     public static final byte SBX_DUPLEX_QUAL = 40;
     public static final byte SBX_DUPLEX_MISMATCH_QUAL = 1;

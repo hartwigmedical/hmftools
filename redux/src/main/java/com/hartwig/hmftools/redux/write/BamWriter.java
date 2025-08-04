@@ -3,10 +3,9 @@ package com.hartwig.hmftools.redux.write;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
@@ -15,7 +14,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
-import com.hartwig.hmftools.redux.bqr.BaseQualityResults;
 import com.hartwig.hmftools.redux.bqr.BqrRegionReader;
 import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;

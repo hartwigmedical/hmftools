@@ -3,7 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.common.Constants.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
 
 public class BaseQualPair
 {

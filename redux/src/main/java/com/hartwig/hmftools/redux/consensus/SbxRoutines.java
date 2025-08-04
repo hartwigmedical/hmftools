@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.replaceXwithM;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
@@ -22,16 +24,19 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
-import static com.hartwig.hmftools.redux.common.Constants.INVALID_BASE_QUAL;
-import static com.hartwig.hmftools.redux.common.Constants.SBX_CONSENSUS_BASE_THRESHOLD;
-import static com.hartwig.hmftools.redux.common.Constants.SBX_DUPLEX_MISMATCH_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
+import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_1_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_2_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.SBX_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
-import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +45,9 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.redux.umi.UmiType;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -49,6 +56,10 @@ import htsjdk.samtools.SAMRecord;
 
 public final class SbxRoutines
 {
+    // internal SBX base qual values to maintain knowledge of simplex vs duplex mismatches
+    public static final byte DUPLEX_NO_CONSENSUS_QUAL = 3;
+    public static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
+
     public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
@@ -58,7 +69,7 @@ public final class SbxRoutines
         String ycTagStr = record.getStringAttribute(SBX_YC_TAG);
         if(ycTagStr == null)
         {
-            throw new IllegalArgumentException(format("Read must have YC tag: %s", record.getSAMString()));
+            throw new IllegalArgumentException(format("read missing %s tag: %s", SBX_YC_TAG, record.getSAMString()));
         }
 
         boolean isForward = !record.getReadNegativeStrandFlag();
@@ -89,9 +100,22 @@ public final class SbxRoutines
             return;
 
         int newAlignmentStart = INVALID_POSITION;
-        StringBuilder newReadString = new StringBuilder();
-        StringBuilder newBaseQualString = new StringBuilder();
         List<CigarOperator> newOps = Lists.newArrayList();
+
+        byte[] readBases = record.getReadBases();
+        byte[] readQuals = record.getBaseQualities();
+        boolean replaceReadBaseQuals = false;
+
+        int newBaseLength = (int)annotatedBases.stream().filter(x -> !x.deleted() && x.isReadBase()).count();
+
+        if(newBaseLength != record.getReadBases().length)
+        {
+            readBases = new byte[newBaseLength];
+            readQuals = new byte[newBaseLength];
+            replaceReadBaseQuals = true;
+        }
+
+        int readIndex = 0;
         for(SbxAnnotatedBase annotatedBase : annotatedBases)
         {
             if(annotatedBase.deleted())
@@ -107,8 +131,9 @@ public final class SbxRoutines
                 newAlignmentStart = annotatedBase.RefPos;
             }
 
-            newReadString.append((char) annotatedBase.ReadBase);
-            newBaseQualString.append(phredToFastq(annotatedBase.qual()));
+            readBases[readIndex] = annotatedBase.ReadBase;
+            readQuals[readIndex] = annotatedBase.qual();
+            ++readIndex;
         }
 
         if(newAlignmentStart == INVALID_POSITION)
@@ -163,8 +188,12 @@ public final class SbxRoutines
             record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
         }
 
-        record.setReadString(newReadString.toString());
-        record.setBaseQualityString(newBaseQualString.toString());
+        if(replaceReadBaseQuals)
+        {
+            record.setReadBases(readBases);
+            record.setBaseQualities(readQuals);
+        }
+
         record.setCigar(new Cigar(newCigarElements));
         record.setAlignmentStart(newAlignmentStart);
     }
@@ -177,6 +206,7 @@ public final class SbxRoutines
         int readIndex = 0;
         int refPos = record.getAlignmentStart() - leftSoftClipLength(record);
         List<SbxAnnotatedBase> annotatedBases = Lists.newArrayList();
+
         for(CigarElement element : record.getCigar().getCigarElements())
         {
             if(element.getOperator() == H)
@@ -296,7 +326,7 @@ public final class SbxRoutines
                 if(!annotatedBases.get(j).isReadBase())
                     continue;
 
-                readModified |= annotatedBases.get(j).setQual((byte) 0);
+                readModified |= annotatedBases.get(j).setQual(SBX_DUPLEX_MISMATCH_QUAL);
                 basesSeen++;
             }
 
@@ -381,7 +411,7 @@ public final class SbxRoutines
                 if(!annotatedBases.get(j).deleted() && annotatedBases.get(j).isReadBase())
                 {
                     basesSeen++;
-                    readModified |= annotatedBases.get(j).setQual((byte) 0);
+                    readModified |= annotatedBases.get(j).setQual(SBX_DUPLEX_MISMATCH_QUAL);
                 }
             }
 
@@ -395,66 +425,6 @@ public final class SbxRoutines
         }
 
         return readModified;
-    }
-
-    public static void fillQualZeroMismatchesWithRef(final RefGenomeInterface refGenome, final SAMRecord record)
-    {
-        if(record.getReadUnmappedFlag())
-            return;
-
-        String chromosome = record.getReferenceName();
-        replaceXwithM(record);
-
-        int refPos = record.getAlignmentStart();
-        int readIndex = 0;
-        byte[] readBases = record.getReadBases();
-        byte[] baseQuals = record.getBaseQualities();
-        int nmDiff = 0;
-        int alignmentScoreDiff = 0;
-        for(CigarElement element : record.getCigar().getCigarElements())
-        {
-            if(element.getOperator() != M)
-            {
-                if(element.getOperator().consumesReadBases())
-                    readIndex += element.getLength();
-
-                if(element.getOperator().consumesReferenceBases())
-                    refPos += element.getLength();
-
-                continue;
-            }
-
-            for(int i = 0; i < element.getLength(); i++, readIndex++, refPos++)
-            {
-                if(baseQuals[readIndex] > 0)
-                    continue;
-
-                baseQuals[readIndex] = 1;
-
-                byte refBase = refGenome.getBase(chromosome, refPos);
-                byte readBase = readBases[readIndex];
-                if(refBase == readBase)
-                    continue;
-
-                readBases[readIndex] = refBase;
-                nmDiff--;
-                alignmentScoreDiff += BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
-            }
-        }
-
-        Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
-        if(oldNumMutations != null && nmDiff != 0)
-        {
-            int newNumMutations = oldNumMutations + nmDiff;
-            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
-        }
-
-        Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
-        if(oldAlignmentScore != null && alignmentScoreDiff != 0)
-        {
-            int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
-            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
-        }
     }
 
     public static BaseQualPair determineBaseAndQual(
@@ -514,10 +484,10 @@ public final class SbxRoutines
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            if(maxBaseCount >= SBX_CONSENSUS_BASE_THRESHOLD * simplexCount)
+            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * simplexCount)
                 return new BaseQualPair(maxBase, SIMPLEX_QUAL);
             else
-                return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
+                return new BaseQualPair(refBase, SIMPLEX_NO_CONSENSUS_QUAL);
         }
 
         if(duplexCount > 0)
@@ -526,22 +496,10 @@ public final class SbxRoutines
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            if(maxBaseCount >= SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + zeroQuallReads))
+            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + zeroQuallReads))
                 return new BaseQualPair(maxBase, DUPLEX_QUAL);
-
-            // check for a tie
-            int matchingMostCommon = 0;
-
-            for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
-            {
-                if(DNA_BASE_BYTES[b] == matchingMostCommon)
-                    ++matchingMostCommon;
-            }
-
-            if(matchingMostCommon == 1)
-                return new BaseQualPair(maxBase, SIMPLEX_QUAL);
             else
-                return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
+                return new BaseQualPair(refBase, DUPLEX_NO_CONSENSUS_QUAL);
         }
 
         return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
@@ -573,5 +531,155 @@ public final class SbxRoutines
         }
 
         return maxBase;
+    }
+
+    public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
+    {
+        if(record.getReadUnmappedFlag())
+            return;
+
+        String chromosome = record.getReferenceName();
+        replaceXwithM(record);
+
+        int firstDuplexBaseIndex = -1;
+
+        // first pass map to final base quals and note duplex mismatches requiring adjacent base adjustments
+        List<Integer> duplexMismatchIndices = null;
+        boolean isPosOrientRead = !record.getReadNegativeStrandFlag();
+
+        for(int i = 0; i < record.getBaseQualities().length; ++i)
+        {
+            // values to handle and convert:
+            // 93 - convert to 40
+            // 18 - convert to 27
+            // 1 - leave as-is but adjust adjacent bases
+            // 4 (DUPLEX_MINOR_CONSENSUS_QUAL) - convert to 27
+            // 3 (DUPLEX_NO_CONSENSUS_QUAL) - convert 1 and adjust adjacent bases
+            // 2 (SIMPLEX_NO_CONSENSUS_QUAL) - convert to 1
+
+            byte qual = record.getBaseQualities()[i];
+
+            if(firstDuplexBaseIndex < 0)
+            {
+                if(isPosOrientRead && (qual == DUPLEX_QUAL || qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL))
+                {
+                    firstDuplexBaseIndex = i;
+                }
+                else if(!isPosOrientRead && (qual == SIMPLEX_QUAL || qual == SIMPLEX_NO_CONSENSUS_QUAL))
+                {
+                    firstDuplexBaseIndex = i - 1;
+                }
+            }
+
+            if(qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL)
+            {
+                if(duplexMismatchIndices == null)
+                    duplexMismatchIndices = Lists.newArrayList();
+
+                duplexMismatchIndices.add(i);
+            }
+
+            switch(qual)
+            {
+                case DUPLEX_QUAL:
+                    record.getBaseQualities()[i] = SBX_DUPLEX_QUAL;
+                    break;
+
+                case SIMPLEX_QUAL:
+                    record.getBaseQualities()[i] = SBX_SIMPLEX_QUAL;
+                    break;
+
+                case SIMPLEX_NO_CONSENSUS_QUAL:
+                    record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
+                    break;
+
+                case DUPLEX_NO_CONSENSUS_QUAL:
+                default:
+                    record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
+                    break;
+            }
+        }
+
+        if(duplexMismatchIndices != null)
+        {
+            int lastIndex = record.getBaseQualities().length - 1;
+
+            for(Integer i : duplexMismatchIndices)
+            {
+                if(i >= 1 && record.getBaseQualities()[i - 1] > SBX_DUPLEX_MISMATCH_QUAL)
+                    record.getBaseQualities()[i - 1] = SBX_DUPLEX_ADJACENT_1_QUAL;
+
+                if(i >= 2 && record.getBaseQualities()[i - 2] > SBX_DUPLEX_MISMATCH_QUAL)
+                    record.getBaseQualities()[i - 2] = SBX_DUPLEX_ADJACENT_2_QUAL;
+
+                if(i <= lastIndex - 1 && record.getBaseQualities()[i + 1] > SBX_DUPLEX_MISMATCH_QUAL)
+                    record.getBaseQualities()[i + 1] = SBX_DUPLEX_ADJACENT_1_QUAL;
+
+                if(i <= lastIndex - 2 && record.getBaseQualities()[i + 2] > SBX_DUPLEX_MISMATCH_QUAL)
+                    record.getBaseQualities()[i + 2] = SBX_DUPLEX_ADJACENT_2_QUAL;
+            }
+        }
+
+        if(record.hasAttribute(UMI_TYPE_ATTRIBUTE))
+        {
+            UmiReadType umiReadType = extractUmiType(record);
+            record.setAttribute(UMI_TYPE_ATTRIBUTE, format("%s_%d", umiReadType, firstDuplexBaseIndex));
+        }
+        else
+        {
+            record.setAttribute(UMI_TYPE_ATTRIBUTE, format("%s_%d", UmiType.NONE, firstDuplexBaseIndex));
+        }
+
+        int refPos = record.getAlignmentStart();
+        int readIndex = 0;
+        byte[] readBases = record.getReadBases();
+        byte[] baseQuals = record.getBaseQualities();
+        int nmDiff = 0;
+        int alignmentScoreDiff = 0;
+
+        for(CigarElement element : record.getCigar().getCigarElements())
+        {
+            if(element.getOperator() != M)
+            {
+                if(element.getOperator().consumesReadBases())
+                    readIndex += element.getLength();
+
+                if(element.getOperator().consumesReferenceBases())
+                    refPos += element.getLength();
+
+                continue;
+            }
+
+            for(int i = 0; i < element.getLength(); i++, readIndex++, refPos++)
+            {
+                if(baseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
+                    continue;
+
+                baseQuals[readIndex] = SBX_DUPLEX_MISMATCH_QUAL;
+
+                byte refBase = refGenome.getBase(chromosome, refPos);
+                byte readBase = readBases[readIndex];
+                if(refBase == readBase)
+                    continue;
+
+                readBases[readIndex] = refBase;
+                nmDiff--;
+                alignmentScoreDiff += BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
+            }
+        }
+
+        Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        if(oldNumMutations != null && nmDiff != 0)
+        {
+            int newNumMutations = oldNumMutations + nmDiff;
+            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+        }
+
+        Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+        if(oldAlignmentScore != null && alignmentScoreDiff != 0)
+        {
+            int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
+        }
     }
 }
