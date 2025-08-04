@@ -88,12 +88,6 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public boolean hasPhaseVariants()
-    {
-        return false;
-    }
-
-    @Override
     public boolean reported()
     {
         return false;

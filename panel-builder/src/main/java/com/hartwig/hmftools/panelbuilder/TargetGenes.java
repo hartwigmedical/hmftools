@@ -77,8 +77,8 @@ public class TargetGenes
 
     private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);
 
-    public record Stats(
-            List<GeneStats> perGene
+    public record ExtraOutput(
+            List<GeneStats> geneStats
     )
     {
     }
@@ -90,7 +90,7 @@ public class TargetGenes
     {
     }
 
-    public static Stats generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
+    public static ExtraOutput generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
             final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating gene probes");
@@ -123,13 +123,13 @@ public class TargetGenes
 
             geneStats.add(new GeneStats(gene.gene().GeneName, geneResult.probes().size()));
         }
-        Stats stats = new Stats(geneStats);
+        ExtraOutput extraOutput = new ExtraOutput(geneStats);
 
         panelData.addResult(result);
 
         LOGGER.info("Done generating gene probes");
 
-        return stats;
+        return extraOutput;
     }
 
     private record GeneOptions(

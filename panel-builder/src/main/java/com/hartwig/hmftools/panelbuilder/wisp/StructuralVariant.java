@@ -20,10 +20,12 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.DEFAULT_SV_BREAKENDS_PER_GENE;
-import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.panelbuilder.wisp.ProbeConstants.MAX_POLY_A_T_BASES;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.MAX_POLY_A_T_BASES;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.SV_BREAKENDS_PER_GENE;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.VAF_MIN;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,6 +54,7 @@ import com.hartwig.hmftools.common.wisp.CategoryType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariant extends Variant
 {
@@ -167,12 +170,6 @@ public class StructuralVariant extends Variant
     public int tumorFragments()
     {
         return max(mVariant.startTumorVariantFragmentCount(), mVariant.endTumorVariantFragmentCount());
-    }
-
-    @Override
-    public boolean hasPhaseVariants()
-    {
-        return false;
     }
 
     @Override
@@ -356,14 +353,14 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public boolean passNonReportableFilters(final ProbeConfig config, boolean useLowerLimits)
+    public boolean passNonReportableFilters(boolean useLowerLimits)
     {
         if(reported() && mCategoryType != DISRUPTION)
         {
             return true;
         }
 
-        if(!passesGcRatioLimit(gc(), config, useLowerLimits))
+        if(!passesGcRatioLimit(gc(), useLowerLimits))
         {
             return false;
         }
@@ -372,7 +369,7 @@ public class StructuralVariant extends Variant
         {
             double gcRatio = calcGcPercent(refSequence);
 
-            if(!passesGcRatioLimit(gcRatio, config, useLowerLimits))
+            if(!passesGcRatioLimit(gcRatio, useLowerLimits))
             {
                 return false;
             }
@@ -383,12 +380,12 @@ public class StructuralVariant extends Variant
             }
         }
 
-        if(vaf() < config.VafMin)
+        if(vaf() < VAF_MIN)
         {
             return false;
         }
 
-        if(!passesFragmentCountLimit(tumorFragments(), config, useLowerLimits))
+        if(!passesFragmentCountLimit(tumorFragments(), useLowerLimits))
         {
             return false;
         }
@@ -443,7 +440,7 @@ public class StructuralVariant extends Variant
 
             if(breakendCount != null)
             {
-                if(breakendCount >= DEFAULT_SV_BREAKENDS_PER_GENE)
+                if(breakendCount >= SV_BREAKENDS_PER_GENE)
                 {
                     return false;
                 }
@@ -464,44 +461,55 @@ public class StructuralVariant extends Variant
         return format("variant(%s) category(%s) fusion(%d) breakends(%d)", description(), categoryType(), mFusions.size(), mBreakends.size());
     }
 
-    public static List<Variant> loadStructuralVariants(final String sampleId, final ProbeConfig config) throws Exception
+    public static List<Variant> loadStructuralVariants(final String sampleId, final String purpleDir, @Nullable final String linxDir)
     {
         List<Variant> variants = Lists.newArrayList();
 
-        if(config.LinxDir == null)
+        if(linxDir == null)
         {
             return variants;
         }
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        String purpleDir = ProbeConfig.getSampleFilePath(sampleId, config.PurpleDir);
 
         String vcfFile = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 
-        List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
-                StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));
-
-        String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxDir);
-
-        List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
-        List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
-        List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
-
-        List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(linxDir, sampleId))
-                .stream().filter(x -> x.eventType() == DEL || x.eventType() == GAIN)
-                .toList();
-
+        List<EnrichedStructuralVariant> enrichedVariants;
+        List<LinxBreakend> breakends;
+        List<LinxSvAnnotation> annotations;
+        List<LinxFusion> fusions;
+        List<LinxDriver> drivers;
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+        List<LinxCluster> clusters;
 
-        if(drivers.stream().anyMatch(x -> x.eventType() == DEL))
+        try
         {
-            String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
-            GeneCopyNumberFile.read(geneCopyNumberFile).stream()
-                    .filter(x -> drivers.stream().anyMatch(y -> y.gene().equals(x.geneName())))
-                    .forEach(geneCopyNumbers::add);
-        }
+            enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
+                    StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));
+            breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
+            annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
+            fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
 
-        List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
+            drivers = LinxDriver.read(LinxDriver.generateFilename(linxDir, sampleId))
+                    .stream().filter(x -> x.eventType() == DEL || x.eventType() == GAIN)
+                    .toList();
+
+            if(drivers.stream().anyMatch(x -> x.eventType() == DEL))
+            {
+                String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
+                GeneCopyNumberFile.read(geneCopyNumberFile).stream()
+                        .filter(x -> drivers.stream().anyMatch(y -> y.gene().equals(x.geneName())))
+                        .forEach(geneCopyNumbers::add);
+            }
+
+            clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
+        }
+        catch(IOException e)
+        {
+            String error = "Failed to load structural variants: " + e;
+            LOGGER.error(error);
+            throw new RuntimeException(error);
+        }
 
         Map<Integer, List<StructuralVariant>> clusterSVs = Maps.newHashMap();
         drivers.forEach(x -> clusterSVs.put(x.clusterId(), Lists.newArrayList()));

@@ -68,12 +68,6 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    public boolean hasPhaseVariants()
-    {
-        return false;
-    }
-
-    @Override
     public boolean reported()
     {
         return true;
@@ -110,16 +104,17 @@ public class GermlineMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineMutations(final String sampleId, final ProbeConfig config)
+    public static List<Variant> loadGermlineMutations(final String sampleId, final String purpleDir)
     {
         List<Variant> variants = Lists.newArrayList();
 
+        // TODO: unused - bug?
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        String purpleDir = ProbeConfig.getSampleFilePath(sampleId, config.PurpleDir);
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
 
+        // TODO: better error handling?
         try
         {
             List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);

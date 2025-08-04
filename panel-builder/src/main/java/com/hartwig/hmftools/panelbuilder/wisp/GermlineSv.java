@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.wisp.CategoryType.GERMLINE_SV;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -78,12 +79,6 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public boolean hasPhaseVariants()
-    {
-        return false;
-    }
-
-    @Override
     public boolean reported()
     {
         return true;
@@ -127,29 +122,40 @@ public class GermlineSv extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final ProbeConfig config) throws Exception
+    public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final String linxGermlineDir)
     {
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxGermlineDir);
 
-        if(linxDir == null)
+        if(linxGermlineDir == null)
         {
             return variants;
         }
 
-        String germlineSvFile = LinxGermlineDisruption.generateFilename(linxDir, sampleId);
-        String germlineBreakendsFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
+        String germlineSvFile = LinxGermlineDisruption.generateFilename(linxGermlineDir, sampleId);
+        String germlineBreakendsFile = LinxBreakend.generateFilename(linxGermlineDir, sampleId, true);
 
         if(!Files.exists(Paths.get(germlineSvFile)) || !Files.exists(Paths.get(germlineBreakendsFile)))
         {
             return variants;
         }
 
-        List<LinxGermlineDisruption> germlineSvs = LinxGermlineDisruption.read(germlineSvFile);
-        List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendsFile).stream()
-                .filter(LinxBreakend::reportedDisruption).toList();
+        List<LinxGermlineDisruption> germlineSvs;
+        List<LinxBreakend> germlineBreakends;
+
+        try
+        {
+            germlineSvs = LinxGermlineDisruption.read(germlineSvFile);
+            germlineBreakends = LinxBreakend.read(germlineBreakendsFile).stream()
+                    .filter(LinxBreakend::reportedDisruption).toList();
+        }
+        catch(IOException e)
+        {
+            String error = "Failed to load germline structural variants: " + e;
+            LOGGER.error(error);
+            throw new RuntimeException(error);
+        }
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
         {

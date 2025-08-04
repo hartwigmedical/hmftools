@@ -10,13 +10,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.APP_NAME;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.panelbuilder.wisp.SampleVariants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,16 +60,24 @@ public class PanelBuilderApplication
         mPanelData = new PanelData();
         // Note the order of generation here determines the priority of probe overlap resolution.
         // Probes generated first will exclude overlapping probes generated afterward.
-        Optional<TargetGenes.Stats> geneStats = generateTargetGeneProbes();
+        TargetGenes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
         generateCopyNumberBackboneProbes();
+        SampleVariants.ExtraOutput sampleExtraOutput = generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
         mOutputWriter.writePanelProbes(mPanelData.probes());
         mOutputWriter.writeTargetRegions(mPanelData.coveredTargetRegions());
         mOutputWriter.writeCandidateRegions(mPanelData.candidateTargetRegions());
         mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
-        geneStats.ifPresent(stats -> mOutputWriter.writeGeneStats(stats.perGene()));
+        if(geneExtraOutput != null)
+        {
+            mOutputWriter.writeGeneStats(geneExtraOutput.geneStats());
+        }
+        if(sampleExtraOutput != null)
+        {
+            mOutputWriter.writeSampleVariants(sampleExtraOutput.variants());
+        }
 
         mOutputWriter.close();
         mOutputWriter = null;
@@ -77,19 +85,21 @@ public class PanelBuilderApplication
         LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private Optional<TargetGenes.Stats> generateTargetGeneProbes()
+    @Nullable
+    private TargetGenes.ExtraOutput generateTargetGeneProbes()
     {
         if(mConfig.TargetGenesFile == null)
         {
             LOGGER.info("Target genes not provided; skipping gene probes");
-            return Optional.empty();
+            return null;
         }
         else
         {
             EnsemblDataCache ensemblData = loadEnsemblData();
-            TargetGenes.Stats stats = TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator, mPanelData);
+            TargetGenes.ExtraOutput extraOutput =
+                    TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator, mPanelData);
             // Result is stored into mPanelData
-            return Optional.of(stats);
+            return extraOutput;
         }
     }
 
@@ -119,6 +129,14 @@ public class PanelBuilderApplication
             CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData
         }
+    }
+
+    private SampleVariants.ExtraOutput generateSampleVariantProbes()
+    {
+        // TODO
+        SampleVariants.ExtraOutput extraOutput = SampleVariants.generateProbes(mRefGenome, mPanelData);
+        // Result is stored into mPanelData
+        return extraOutput;
     }
 
     private EnsemblDataCache loadEnsemblData()

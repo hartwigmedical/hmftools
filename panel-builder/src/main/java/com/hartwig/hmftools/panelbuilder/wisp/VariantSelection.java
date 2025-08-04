@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATIO
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.NONREPORTABLE_SV_COUNT;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.SUBCLONAL_COUNT;
 import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.EXCEEDS_COUNT;
 import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.FILTERED;
 import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.GENE_LOCATIONS;
@@ -29,7 +32,7 @@ public final class VariantSelection
 {
     private static final Logger LOGGER = LogManager.getLogger(VariantSelection.class);
 
-    public static List<Variant> selectVariants(final List<Variant> variants, final ProbeConfig config)
+    public static List<Variant> selectVariants(final List<Variant> variants)
     {
         variants.sort(new VariantComparator());
 
@@ -39,8 +42,8 @@ public final class VariantSelection
         Map<String, Integer> geneDisruptions = Maps.newHashMap();
         int[] typeCounts = new int[CategoryType.values().length];
 
-        selectVariants(variants, config, selectedVariants, registeredLocations, geneDisruptions, typeCounts, false);
-        selectVariants(variants, config, selectedVariants, registeredLocations, geneDisruptions, typeCounts, true);
+        selectVariants(variants, selectedVariants, registeredLocations, geneDisruptions, typeCounts, false);
+        selectVariants(variants, selectedVariants, registeredLocations, geneDisruptions, typeCounts, true);
 
         StringJoiner sj = new StringJoiner(" ");
         for(CategoryType type : CategoryType.values())
@@ -75,7 +78,7 @@ public final class VariantSelection
     }
 
     private static void selectVariants(
-            final List<Variant> variants, final ProbeConfig config, final List<Variant> selectedVariants,
+            final List<Variant> variants, final List<Variant> selectedVariants,
             final ProximateLocations registeredLocations, final Map<String, Integer> geneDisruptions, final int[] typeCounts,
             boolean useLowerThresholds)
     {
@@ -97,13 +100,13 @@ public final class VariantSelection
                         canAdd = false;
                         variant.setSelectionStatus(GENE_LOCATIONS);
                     }
-                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, config.NonReportableSvCount)
-                            || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, config.SubclonalCount))
+                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, NONREPORTABLE_SV_COUNT)
+                            || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, SUBCLONAL_COUNT))
                     {
                         canAdd = false;
                         variant.setSelectionStatus(EXCEEDS_COUNT);
                     }
-                    else if(!variant.passNonReportableFilters(config, false))
+                    else if(!variant.passNonReportableFilters(false))
                     {
                         variant.setSelectionStatus(FILTERED);
                         canAdd = false;
@@ -117,7 +120,7 @@ public final class VariantSelection
                         continue;
                     }
 
-                    if(variant.passNonReportableFilters(config, true))
+                    if(variant.passNonReportableFilters(true))
                     {
                         variant.setSelectionStatus(NOT_SET);
                     }
@@ -140,13 +143,13 @@ public final class VariantSelection
                 }
             }
 
-            if(!variant.isSelected() && config.WriteAll && useLowerThresholds)
+            if(!variant.isSelected() && useLowerThresholds)
             {
                 selectedVariants.add(variant);
             }
 
             int variantSequences = selectedVariants.stream().filter(Variant::isSelected).mapToInt(Variant::sequenceCount).sum();
-            if(variantSequences >= config.ProbeCount)
+            if(variantSequences >= SAMPLE_PROBES)
             {
                 break;
             }

@@ -60,6 +60,13 @@ public class PanelBuilderConstants
     // Custom regions parameters.
     public static final double CUSTOM_REGION_QUALITY_MIN = 0.1;
 
+    // Sample variants parameters.
+    public static final int SAMPLE_PROBES = 500;
+    public static final double SAMPLE_GC_MIN = 0.4;
+    public static final double SAMPLE_GC_MAX = 0.6;
+    public static final double SAMPLE_GC_MIN_LOWER = 0.3;
+    public static final double SAMPLE_GC_MAX_LOWER = 0.7;
+
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
     public static final String TARGET_REGIONS_FILE_NAME = "target_regions.bed";
@@ -68,6 +75,7 @@ public class PanelBuilderConstants
     // This output can get very large (multiple GB) so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
     public static final String GENE_STATS_FILE_NAME = "target_gene_stats.tsv";
+    public static final String SAMPLE_VARIANTS_FILE_NAME = "sample_variants.tsv";
 
     static
     {

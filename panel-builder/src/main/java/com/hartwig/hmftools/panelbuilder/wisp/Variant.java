@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.panelbuilder.wisp;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MAX_LOWER;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MIN_LOWER;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.FRAG_COUNT_MIN;
+import static com.hartwig.hmftools.panelbuilder.wisp.Constants.FRAG_COUNT_MIN_LOWER;
 
 import java.util.List;
 import java.util.Map;
@@ -20,11 +26,11 @@ public abstract class Variant
         mStatus = SelectionStatus.NOT_SET;
     }
 
-    abstract CategoryType categoryType();
+    public abstract CategoryType categoryType();
 
-    abstract String description();
+    public abstract String description();
 
-    abstract String gene();
+    public abstract String gene();
 
     public List<String> refSequences()
     {
@@ -41,28 +47,28 @@ public abstract class Variant
         return mSequence;
     }
 
-    abstract double copyNumber();
+    public abstract double copyNumber();
 
-    abstract double vaf();
+    public abstract double vaf();
 
     public double gc()
     {
         return calcGcPercent(sequence());
     }
 
-    String otherData()
+    public String otherData()
     {
         return "";
     }
 
-    abstract int tumorFragments();
+    public abstract int tumorFragments();
 
-    boolean hasPhaseVariants()
+    public boolean hasPhaseVariants()
     {
         return false;
     }
 
-    abstract boolean reported();
+    public abstract boolean reported();
 
     abstract void generateSequences(final RefGenomeInterface refGenome);
 
@@ -75,32 +81,32 @@ public abstract class Variant
         return true;
     }
 
-    boolean passNonReportableFilters(final ProbeConfig config, boolean useLowerLimits)
+    boolean passNonReportableFilters(boolean useLowerLimits)
     {
         return true;
     }
 
-    protected static boolean passesGcRatioLimit(double gcRatio, final ProbeConfig config, boolean useLowerLimits)
+    protected static boolean passesGcRatioLimit(double gcRatio, boolean useLowerLimits)
     {
         if(useLowerLimits)
         {
-            return gcRatio >= config.GcRatioLimitLowerMin && gcRatio <= config.GcRatioLimitLowerMax;
+            return gcRatio >= SAMPLE_GC_MIN_LOWER && gcRatio <= SAMPLE_GC_MAX_LOWER;
         }
         else
         {
-            return gcRatio >= config.GcRatioLimitMin && gcRatio <= config.GcRatioLimitMax;
+            return gcRatio >= SAMPLE_GC_MIN && gcRatio <= SAMPLE_GC_MAX;
         }
     }
 
-    protected static boolean passesFragmentCountLimit(int fragmentCount, final ProbeConfig config, boolean useLowerLimits)
+    protected static boolean passesFragmentCountLimit(int fragmentCount, boolean useLowerLimits)
     {
         if(useLowerLimits)
         {
-            return fragmentCount >= config.FragmentCountMinLower;
+            return fragmentCount >= FRAG_COUNT_MIN_LOWER;
         }
         else
         {
-            return fragmentCount >= config.FragmentCountMin;
+            return fragmentCount >= FRAG_COUNT_MIN;
         }
     }
 
