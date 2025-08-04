@@ -29,7 +29,7 @@ import java.util.function.Function;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
-import com.hartwig.hmftools.panelbuilder.wisp.Variant;
+import com.hartwig.hmftools.panelbuilder.samplevariants.Variant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

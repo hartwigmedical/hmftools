@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.panelbuilder.wisp;
+package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MAX_LOWER;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MIN_LOWER;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.FRAG_COUNT_MIN;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.FRAG_COUNT_MIN_LOWER;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN_LOWER;
 
 import java.util.List;
 import java.util.Map;
@@ -70,18 +70,18 @@ public abstract class Variant
 
     public abstract boolean reported();
 
-    abstract void generateSequences(final RefGenomeInterface refGenome);
+    public abstract void generateSequences(final RefGenomeInterface refGenome);
 
-    abstract boolean checkFilters();
+    public abstract boolean checkFilters();
 
-    abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
+    public abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
 
-    boolean checkAndRegisterGeneLocation(final Map<String, Integer> geneDisruptions)
+    public boolean checkAndRegisterGeneLocation(final Map<String, Integer> geneDisruptions)
     {
         return true;
     }
 
-    boolean passNonReportableFilters(boolean useLowerLimits)
+    public boolean passNonReportableFilters(boolean useLowerLimits)
     {
         return true;
     }
@@ -110,7 +110,7 @@ public abstract class Variant
         }
     }
 
-    int sequenceCount()
+    public int sequenceCount()
     {
         return 1 + refSequences().size();
     }

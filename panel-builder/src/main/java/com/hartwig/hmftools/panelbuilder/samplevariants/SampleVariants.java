@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.panelbuilder.wisp;
+package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;

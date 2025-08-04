@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.panelbuilder.wisp;
+package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -20,10 +20,10 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.MAX_POLY_A_T_BASES;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.SV_BREAKENDS_PER_GENE;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.VAF_MIN;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_POLY_A_T_BASES;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SV_BREAKENDS_PER_GENE;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
 
 import java.io.IOException;
 import java.util.List;
@@ -347,7 +347,7 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    boolean checkFilters()
+    public boolean checkFilters()
     {
         return mCategoryType != FUSION && mCategoryType != AMP && mCategoryType != CategoryType.DEL;
     }

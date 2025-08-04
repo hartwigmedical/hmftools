@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.panelbuilder.wisp;
+package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.String.format;
 
@@ -82,7 +82,7 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    boolean checkFilters()
+    public boolean checkFilters()
     {
         return false;
     }

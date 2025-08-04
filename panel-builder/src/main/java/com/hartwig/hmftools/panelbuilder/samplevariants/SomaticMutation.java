@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.panelbuilder.wisp;
+package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -16,12 +16,12 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.common.wisp.Utils.generateMutationSequence;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.MAX_INDEL_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.REPEAT_COUNT_MAX;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.REPEAT_COUNT_MAX_LOWER;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.SUBCLONAL_LIKELIHOOD_MIN;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.VAF_MIN;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INDEL_LENGTH;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX_LOWER;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_LIKELIHOOD_MIN;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
 
 import java.util.List;
 
@@ -196,7 +196,7 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    boolean checkFilters()
+    public boolean checkFilters()
     {
         return !reported();
     }

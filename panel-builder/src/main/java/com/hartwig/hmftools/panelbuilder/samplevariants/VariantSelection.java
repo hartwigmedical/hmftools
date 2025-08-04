@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.panelbuilder.wisp;
+package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.String.format;
 
@@ -7,14 +7,14 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.NONREPORTABLE_SV_COUNT;
-import static com.hartwig.hmftools.panelbuilder.wisp.Constants.SUBCLONAL_COUNT;
-import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.EXCEEDS_COUNT;
-import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.FILTERED;
-import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.GENE_LOCATIONS;
-import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.NOT_SET;
-import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.PROXIMATE;
-import static com.hartwig.hmftools.panelbuilder.wisp.SelectionStatus.SELECTED;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.NONREPORTABLE_SV_COUNT;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_COUNT;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.EXCEEDS_COUNT;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.FILTERED;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.GENE_LOCATIONS;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.NOT_SET;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.PROXIMATE;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.SELECTED;
 
 import java.util.Comparator;
 import java.util.List;
