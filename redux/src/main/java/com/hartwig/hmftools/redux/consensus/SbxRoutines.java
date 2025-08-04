@@ -57,8 +57,8 @@ import htsjdk.samtools.SAMRecord;
 public final class SbxRoutines
 {
     // internal SBX base qual values to maintain knowledge of simplex vs duplex mismatches
-    public static final byte DUPLEX_NO_CONSENSUS_QUAL = 3;
-    public static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
+    protected static final byte DUPLEX_NO_CONSENSUS_QUAL = 3;
+    protected static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
 
     public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
     {
@@ -433,7 +433,7 @@ public final class SbxRoutines
         // count bases by qual type and apply rules
         Map<Byte,int[]> baseCountsByQual = Maps.newHashMap();
 
-        int zeroQuallReads = 0;
+        int lowQuallReads = 0;
         int simplexCount = 0;
         int duplexCount = 0;
 
@@ -451,7 +451,7 @@ public final class SbxRoutines
             }
             else
             {
-                ++zeroQuallReads;
+                ++lowQuallReads;
                 continue;
             }
 
@@ -470,8 +470,6 @@ public final class SbxRoutines
                 ++qualBaseCounts[baseIndex];
             }
         }
-
-        // int totalReads = locationBases.length;
 
         byte refBase = chromosome != null && position != INVALID_POSITION ? refGenome.getRefBase(chromosome, position) : DNA_N_BYTE;
 
@@ -496,7 +494,7 @@ public final class SbxRoutines
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + zeroQuallReads))
+            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + lowQuallReads))
                 return new BaseQualPair(maxBase, DUPLEX_QUAL);
             else
                 return new BaseQualPair(refBase, DUPLEX_NO_CONSENSUS_QUAL);
@@ -553,22 +551,19 @@ public final class SbxRoutines
             // 93 - convert to 40
             // 18 - convert to 27
             // 1 - leave as-is but adjust adjacent bases
-            // 4 (DUPLEX_MINOR_CONSENSUS_QUAL) - convert to 27
             // 3 (DUPLEX_NO_CONSENSUS_QUAL) - convert 1 and adjust adjacent bases
             // 2 (SIMPLEX_NO_CONSENSUS_QUAL) - convert to 1
 
             byte qual = record.getBaseQualities()[i];
 
-            if(firstDuplexBaseIndex < 0)
+            // work out the first duplex base from the 5-prime end, which can with simplex if
+            if(isPosOrientRead && firstDuplexBaseIndex < 0 && isDuplexQual(qual))
             {
-                if(isPosOrientRead && (qual == DUPLEX_QUAL || qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL))
-                {
-                    firstDuplexBaseIndex = i;
-                }
-                else if(!isPosOrientRead && (qual == SIMPLEX_QUAL || qual == SIMPLEX_NO_CONSENSUS_QUAL))
-                {
-                    firstDuplexBaseIndex = i - 1;
-                }
+                firstDuplexBaseIndex = i;
+            }
+            else if(!isPosOrientRead && isDuplexQual(qual))
+            {
+                firstDuplexBaseIndex = i;
             }
 
             if(qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL)
@@ -606,16 +601,16 @@ public final class SbxRoutines
 
             for(Integer i : duplexMismatchIndices)
             {
-                if(i >= 1 && record.getBaseQualities()[i - 1] > SBX_DUPLEX_MISMATCH_QUAL)
+                if(i >= 1 && record.getBaseQualities()[i - 1] > SBX_DUPLEX_ADJACENT_1_QUAL)
                     record.getBaseQualities()[i - 1] = SBX_DUPLEX_ADJACENT_1_QUAL;
 
-                if(i >= 2 && record.getBaseQualities()[i - 2] > SBX_DUPLEX_MISMATCH_QUAL)
+                if(i >= 2 && record.getBaseQualities()[i - 2] > SBX_DUPLEX_ADJACENT_2_QUAL)
                     record.getBaseQualities()[i - 2] = SBX_DUPLEX_ADJACENT_2_QUAL;
 
-                if(i <= lastIndex - 1 && record.getBaseQualities()[i + 1] > SBX_DUPLEX_MISMATCH_QUAL)
+                if(i <= lastIndex - 1 && record.getBaseQualities()[i + 1] > SBX_DUPLEX_ADJACENT_1_QUAL)
                     record.getBaseQualities()[i + 1] = SBX_DUPLEX_ADJACENT_1_QUAL;
 
-                if(i <= lastIndex - 2 && record.getBaseQualities()[i + 2] > SBX_DUPLEX_MISMATCH_QUAL)
+                if(i <= lastIndex - 2 && record.getBaseQualities()[i + 2] > SBX_DUPLEX_ADJACENT_2_QUAL)
                     record.getBaseQualities()[i + 2] = SBX_DUPLEX_ADJACENT_2_QUAL;
             }
         }
@@ -681,5 +676,15 @@ public final class SbxRoutines
             int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
             record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
         }
+    }
+
+    private static boolean isDuplexQual(final byte qual)
+    {
+        return qual == DUPLEX_QUAL || qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL;
+    }
+
+    private static boolean isSimplexQual(final byte qual)
+    {
+        return qual == SIMPLEX_QUAL || qual == SIMPLEX_NO_CONSENSUS_QUAL;
     }
 }
