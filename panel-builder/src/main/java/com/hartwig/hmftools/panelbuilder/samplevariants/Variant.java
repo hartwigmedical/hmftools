@@ -10,10 +10,8 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN_LOWER;
 
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.Probe;
@@ -24,40 +22,33 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Variant
 {
     @Nullable
-    private String mSequence;
+    private Probe mProbe;
     private SelectionStatus mStatus;
 
     public Variant()
     {
-        mSequence = null;
+        mProbe = null;
         mStatus = SelectionStatus.NOT_SET;
-    }
-
-    public Probe probe()
-    {
-        TargetMetadata metadata = new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, description());
-        return new Probe(sequence(), metadata);
     }
 
     public abstract CategoryType categoryType();
 
     public abstract String description();
 
-    public abstract String gene();
-
-    public List<String> refSequences()
+    @Nullable
+    public String gene()
     {
-        return Lists.newArrayList();
+        return null;
     }
 
-    public void setSequence(final String sequence)
+    protected void setProbe(final Probe probe)
     {
-        mSequence = sequence;
+        mProbe = probe;
     }
 
-    public String sequence()
+    public Probe probe()
     {
-        return requireNonNull(mSequence);
+        return requireNonNull(mProbe);
     }
 
     public abstract double copyNumber();
@@ -66,12 +57,13 @@ public abstract class Variant
 
     public double gc()
     {
-        return calcGcPercent(sequence());
+        return calcGcPercent(requireNonNull(probe().sequence()));
     }
 
+    @Nullable
     public String otherData()
     {
-        return "";
+        return null;
     }
 
     public abstract int tumorFragments();
@@ -83,7 +75,7 @@ public abstract class Variant
 
     public abstract boolean reported();
 
-    public abstract void generateSequences(final RefGenomeInterface refGenome);
+    public abstract void generateProbe(final RefGenomeInterface refGenome);
 
     public abstract boolean checkFilters();
 
@@ -117,11 +109,6 @@ public abstract class Variant
         }
     }
 
-    public int sequenceCount()
-    {
-        return 1 + refSequences().size();
-    }
-
     public SelectionStatus selectionStatus()
     {
         return mStatus;
@@ -135,5 +122,10 @@ public abstract class Variant
     public void setSelectionStatus(final SelectionStatus status)
     {
         mStatus = status;
+    }
+
+    protected TargetMetadata probeMetadata()
+    {
+        return new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, description());
     }
 }

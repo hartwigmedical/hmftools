@@ -148,7 +148,7 @@ public final class VariantSelection
                 selectedVariants.add(variant);
             }
 
-            int variantSequences = selectedVariants.stream().filter(Variant::isSelected).mapToInt(Variant::sequenceCount).sum();
+            long variantSequences = selectedVariants.stream().filter(Variant::isSelected).count();
             if(variantSequences >= SAMPLE_PROBES)
             {
                 break;

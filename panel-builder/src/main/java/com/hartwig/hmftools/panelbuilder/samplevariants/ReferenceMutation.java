@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.Probe;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,12 +65,6 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public String gene()
-    {
-        return "";
-    }
-
-    @Override
     public double copyNumber()
     {
         return 0;
@@ -94,17 +89,20 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome)
     {
+        String sequence;
         if(mAlt.isEmpty())
         {
             BaseRegion region = probeRegionCenteredAt(mPosition.Position);
-            setSequence(refGenome.getBaseString(mPosition.Chromosome, region.start(), region.end()));
+            sequence = refGenome.getBaseString(mPosition.Chromosome, region.start(), region.end());
         }
         else
         {
-            setSequence(generateMutationSequence(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt));
+            sequence = generateMutationSequence(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
         }
+        Probe probe = new Probe(sequence, probeMetadata());
+        setProbe(probe);
     }
 
     @Override

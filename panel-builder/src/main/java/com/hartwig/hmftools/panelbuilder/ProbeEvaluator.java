@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -19,6 +20,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+// TODO: polyA/T checks?
 
 // Common candidate probe evaluation and filtering.
 public class ProbeEvaluator
@@ -63,9 +66,13 @@ public class ProbeEvaluator
 
     private Probe evaluateQualityScore(Probe probe)
     {
+        if(probe.qualityScore() == null)
+        {
+            probe = setQualityScore(probe);
+        }
+
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        double qualityScore = getProbeQualityScore(probe);
-        probe = probe.withQualityScore(qualityScore);
+        double qualityScore = requireNonNull(probe.qualityScore());
         if(!(qualityScore >= criteria.qualityScoreMin()))
         {
             probe = probe.withRejectionReason("QS");
@@ -75,30 +82,42 @@ public class ProbeEvaluator
 
     private Probe evaluateGcContent(Probe probe)
     {
+        if(probe.gcContent() == null)
+        {
+            probe = setGcContent(probe);
+        }
+
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        probe = setProbeSequence(probe);
-        double gcContent = calcGcPercent(requireNonNull(probe.sequence()));
-        probe = probe.withGcContent(gcContent);
-        if(!(gcContent >= criteria.gcContentMin() && gcContent <= criteria.gcContentMax()))
+        double gcContent = requireNonNull(probe.gcContent());
+        if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
         {
             probe = probe.withRejectionReason("GC");
         }
         return probe;
     }
 
-    private double getProbeQualityScore(final Probe probe)
+    private Probe setQualityScore(final Probe probe)
     {
-        // TODO: compute score based on probe quality model
-        return mQualityProfile.computeQualityScore(probe.region()).orElseGet(() ->
+        // TODO: compute score based on probe quality model?
+        double qualityScore = mQualityProfile.computeQualityScore(probe.region()).orElseGet(() ->
         {
             double quality = DEFAULT_PROBE_QUALITY;
             LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore={} probe={}",
                     quality, probe);
             return quality;
         });
+        return probe.withQualityScore(qualityScore);
     }
 
-    private Probe setProbeSequence(Probe probe)
+    private Probe setGcContent(Probe probe)
+    {
+        probe = setSequence(probe);
+        double gcContent = calcGcPercent(requireNonNull(probe.sequence()));
+        probe = probe.withGcContent(gcContent);
+        return probe;
+    }
+
+    private Probe setSequence(Probe probe)
     {
         if(probe.sequence() == null)
         {

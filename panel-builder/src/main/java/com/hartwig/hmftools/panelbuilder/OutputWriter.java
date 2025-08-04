@@ -3,7 +3,6 @@ package com.hartwig.hmftools.panelbuilder;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
@@ -362,28 +361,14 @@ public class OutputWriter implements AutoCloseable
             variantInfo.add(String.valueOf(variant.hasPhaseVariants()));
             variantInfo.add(variant.gene());
 
-            {
-                StringJoiner sj = new StringJoiner(TSV_DELIM);
-                sj.add(variantInfo.toString());
-                sj.add("ALT");
-                sj.add(variant.sequence());
-                sj.add(format("%.2f", variant.gc()));
-                sj.add(variant.otherData());
-                mSampleVariantsTsvWriter.write(sj.toString());
-                mSampleVariantsTsvWriter.newLine();
-            }
-
-            for(String refSequence : variant.refSequences())
-            {
-                StringJoiner refSj = new StringJoiner(TSV_DELIM);
-                refSj.add(variantInfo.toString());
-                refSj.add("REF");
-                refSj.add(refSequence);
-                refSj.add(format("%.2f", calcGcPercent(refSequence)));
-                refSj.add("");
-                mSampleVariantsTsvWriter.write(refSj.toString());
-                mSampleVariantsTsvWriter.newLine();
-            }
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(variantInfo.toString());
+            sj.add("ALT");
+            sj.add(variant.probe().sequence());
+            sj.add(format("%.2f", variant.gc()));
+            sj.add(variant.otherData());
+            mSampleVariantsTsvWriter.write(sj.toString());
+            mSampleVariantsTsvWriter.newLine();
         }
     }
 

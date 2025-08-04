@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.Probe;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,14 +24,11 @@ public class GermlineSv extends Variant
 {
     private final LinxGermlineDisruption mVariant;
 
-    private final List<String> mRefSequences;
-
     private static final Logger LOGGER = LogManager.getLogger(GermlineSv.class);
 
     public GermlineSv(final LinxGermlineDisruption variant)
     {
         mVariant = variant;
-        mRefSequences = Lists.newArrayListWithExpectedSize(2);
     }
 
     @Override
@@ -51,12 +49,6 @@ public class GermlineSv extends Variant
     public String gene()
     {
         return mVariant.GeneName;
-    }
-
-    @Override
-    public List<String> refSequences()
-    {
-        return mRefSequences;
     }
 
     @Override
@@ -85,16 +77,13 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome)
     {
-        mRefSequences.addAll(StructuralVariant.generateSvReferenceSequences(
-                refGenome, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.ChromosomeEnd, mVariant.PositionEnd));
-
         String sequence = StructuralVariant.generateSvSequence(
                 refGenome, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence);
-
-        setSequence(sequence);
+        Probe probe = new Probe(sequence, probeMetadata());
+        setProbe(probe);
     }
 
     @Override

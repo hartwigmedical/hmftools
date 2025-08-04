@@ -34,6 +34,7 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.Probe;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -162,13 +163,14 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome)
     {
         String sequence = generateMutationSequence(
                 refGenome, PROBE_LENGTH,
                 mVariantDecorator.chromosome(), mVariantDecorator.position(),
                 mVariantDecorator.ref(), mVariantDecorator.alt());
-        setSequence(sequence);
+        Probe probe = new Probe(sequence, probeMetadata());
+        setProbe(probe);
     }
 
     private double subclonalLikelihood()

@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.Probe;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,11 +75,12 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome)
     {
         String sequence = generateMutationSequence(
                 refGenome, PROBE_LENGTH, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
-        setSequence(sequence);
+        Probe probe = new Probe(sequence, probeMetadata());
+        setProbe(probe);
     }
 
     @Override

@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.linx.DriverEventType.DEL;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
@@ -21,7 +20,6 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_POLY_A_T_BASES;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
 
@@ -33,7 +31,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
@@ -51,6 +48,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.Probe;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,8 +61,6 @@ public class StructuralVariant extends Variant
     private final List<LinxFusion> mFusions;
     private CategoryType mCategoryType;
 
-    private final List<String> mRefSequences;
-
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariant.class);
 
     public StructuralVariant(
@@ -73,7 +69,6 @@ public class StructuralVariant extends Variant
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
-        mRefSequences = Lists.newArrayListWithExpectedSize(2);
         mCategoryType = OTHER_SV;
         setCategoryType();
     }
@@ -145,13 +140,7 @@ public class StructuralVariant extends Variant
             return breakend.gene();
         }
 
-        return !mBreakends.isEmpty() ? mBreakends.get(0).gene() : "";
-    }
-
-    @Override
-    public List<String> refSequences()
-    {
-        return mRefSequences;
+        return !mBreakends.isEmpty() ? mBreakends.get(0).gene() : null;
     }
 
     @Override
@@ -176,14 +165,6 @@ public class StructuralVariant extends Variant
     public boolean reported()
     {
         return mCategoryType == FUSION || mCategoryType == AMP || mCategoryType == CategoryType.DEL || mCategoryType == DISRUPTION;
-    }
-
-    @Override
-    public String otherData()
-    {
-        return format("GcRefMin=%.2f GcRefMax=%.2f",
-                mRefSequences.stream().mapToDouble(GcCalcs::calcGcPercent).min().orElse(0),
-                mRefSequences.stream().mapToDouble(GcCalcs::calcGcPercent).max().orElse(0));
     }
 
     protected static List<String> generateSvReferenceSequences(
@@ -321,16 +302,9 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome)
     {
-        if(mCategoryType != OTHER_SV)
-        {
-            mRefSequences.addAll(generateSvReferenceSequences(
-                    refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
-        }
-
         String sequence;
-
         if(mVariant.type() == SGL)
         {
             sequence = generateSglSequence(
@@ -342,8 +316,8 @@ public class StructuralVariant extends Variant
                     refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
         }
-
-        setSequence(sequence);
+        Probe probe = new Probe(sequence, probeMetadata());
+        setProbe(probe);
     }
 
     @Override
@@ -365,21 +339,6 @@ public class StructuralVariant extends Variant
             return false;
         }
 
-        for(String refSequence : mRefSequences)
-        {
-            double gcRatio = calcGcPercent(refSequence);
-
-            if(!passesGcRatioLimit(gcRatio, useLowerLimits))
-            {
-                return false;
-            }
-
-            if(exceedsPolyAtThreshold(refSequence))
-            {
-                return false;
-            }
-        }
-
         if(vaf() < VAF_MIN)
         {
             return false;
@@ -391,30 +350,6 @@ public class StructuralVariant extends Variant
         }
 
         return true;
-    }
-
-    private boolean exceedsPolyAtThreshold(final String sequence)
-    {
-        int aCount = 0;
-        int tCount = 0;
-        for(int i = 0; i < sequence.length(); ++i)
-        {
-            if(sequence.charAt(i) == 'A')
-            {
-                ++aCount;
-            }
-            if(sequence.charAt(i) == 'T')
-            {
-                ++tCount;
-            }
-            else
-            {
-                aCount = 0;
-                tCount = 0;
-            }
-        }
-
-        return aCount > MAX_POLY_A_T_BASES || tCount > MAX_POLY_A_T_BASES;
     }
 
     @Override
