@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
+import static java.util.Collections.emptyList;
+
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_QUALITY_MIN;
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -8,13 +14,20 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.panelbuilder.PanelData;
+import com.hartwig.hmftools.panelbuilder.Probe;
+import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
+import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SampleVariants
 {
+    private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
+            SAMPLE_QUALITY_MIN,
+            SAMPLE_GC_TARGET, SAMPLE_GC_TOLERANCE);
+
     private static final Logger LOGGER = LogManager.getLogger(SampleVariants.class);
 
     public record ExtraOutput(
@@ -23,7 +36,8 @@ public class SampleVariants
     {
     }
 
-    public static ExtraOutput generateProbes(final SampleVariantsConfig config, final RefGenomeInterface refGenome, PanelData panelData)
+    public static ExtraOutput generateProbes(final SampleVariantsConfig config, final RefGenomeInterface refGenome,
+            final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating sample variant probes");
 
@@ -52,9 +66,14 @@ public class SampleVariants
 
         List<Variant> selectedVariants = VariantSelection.selectVariants(variants);
 
-        // TODO
-        //        ProbeGenerationResult result;
-        //        panelData.addResult(result);
+        List<Probe> probes = selectedVariants.stream().map(Variant::probe)
+                .map(probe -> probeGenerator.mProbeEvaluator.evaluateProbe(probe, PROBE_CRITERIA))
+                .filter(Probe::accepted)
+                .toList();
+
+        // TODO: populate candidate regions, target regions, rejected regions(?)
+        ProbeGenerationResult result = new ProbeGenerationResult(probes, emptyList(), emptyList(), emptyList());
+        panelData.addResult(result);
 
         LOGGER.info("Done generating sample variant probes");
 

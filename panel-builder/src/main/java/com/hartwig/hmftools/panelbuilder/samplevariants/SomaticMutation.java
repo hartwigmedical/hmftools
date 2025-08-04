@@ -3,7 +3,6 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -47,7 +46,6 @@ public class SomaticMutation extends Variant
     private final VariantContextDecorator mVariantDecorator;
     private final int mTumorDepth;
     private final double mTumorAF;
-    private String mSequence;
     private final int mLocationHash;
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticMutation.class);
@@ -56,7 +54,7 @@ public class SomaticMutation extends Variant
     {
         mVariantDecorator = new VariantContextDecorator(variantContext);
 
-        final Genotype genotype = variantContext.getGenotype(sampleId);
+        Genotype genotype = variantContext.getGenotype(sampleId);
 
         if(genotype != null)
         {
@@ -70,13 +68,6 @@ public class SomaticMutation extends Variant
         }
 
         mLocationHash = Integer.parseInt(Strings.reverseString(String.valueOf(variantContext.getStart())));
-
-        mSequence = "";
-    }
-
-    public VariantContextDecorator variantDecorator()
-    {
-        return mVariantDecorator;
     }
 
     public int locationHash()
@@ -131,12 +122,6 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public String sequence()
-    {
-        return mSequence;
-    }
-
-    @Override
     public double copyNumber()
     {
         return mVariantDecorator.adjustedCopyNumber();
@@ -146,12 +131,6 @@ public class SomaticMutation extends Variant
     public double vaf()
     {
         return mTumorAF;
-    }
-
-    @Override
-    public double gc()
-    {
-        return calcGcPercent(mSequence);
     }
 
     @Override
@@ -185,9 +164,11 @@ public class SomaticMutation extends Variant
     @Override
     public void generateSequences(final RefGenomeInterface refGenome)
     {
-        mSequence = generateMutationSequence(
-                refGenome, PROBE_LENGTH, mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(),
-                mVariantDecorator.alt());
+        String sequence = generateMutationSequence(
+                refGenome, PROBE_LENGTH,
+                mVariantDecorator.chromosome(), mVariantDecorator.position(),
+                mVariantDecorator.ref(), mVariantDecorator.alt());
+        setSequence(sequence);
     }
 
     private double subclonalLikelihood()

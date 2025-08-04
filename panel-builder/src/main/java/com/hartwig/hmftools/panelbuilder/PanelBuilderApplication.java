@@ -140,7 +140,8 @@ public class PanelBuilderApplication
         }
         else
         {
-            SampleVariants.ExtraOutput extraOutput = SampleVariants.generateProbes(mConfig.sampleVariants(), mRefGenome, mPanelData);
+            SampleVariants.ExtraOutput extraOutput =
+                    SampleVariants.generateProbes(mConfig.sampleVariants(), mRefGenome, mProbeGenerator, mPanelData);
             // Result is stored into mPanelData
             return extraOutput;
         }

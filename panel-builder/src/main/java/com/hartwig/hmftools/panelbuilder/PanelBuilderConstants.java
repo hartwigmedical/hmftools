@@ -62,10 +62,11 @@ public class PanelBuilderConstants
 
     // Sample variants parameters.
     public static final int SAMPLE_PROBES = 500;
-    public static final double SAMPLE_GC_MIN = 0.4;
-    public static final double SAMPLE_GC_MAX = 0.6;
-    public static final double SAMPLE_GC_MIN_LOWER = 0.3;
-    public static final double SAMPLE_GC_MAX_LOWER = 0.7;
+    // TODO: sort these out with the wisp filtering
+    public static final double SAMPLE_QUALITY_MIN = 0.5;
+    public static final double SAMPLE_GC_TARGET = 0.5;
+    public static final double SAMPLE_GC_TOLERANCE_STRICT = 0.1;
+    public static final double SAMPLE_GC_TOLERANCE = 0.2;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";

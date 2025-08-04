@@ -147,14 +147,14 @@ public class OutputWriter implements AutoCloseable
         LOGGER.debug("Writing {} panel probes to file", probes.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
-        probes = probes.stream().sorted(Comparator.nullsLast(Comparator.comparing(Probe::region))).toList();
+        probes = probes.stream().sorted(Comparator.comparing(Probe::region, Comparator.nullsLast(Comparator.naturalOrder()))).toList();
 
         for(Probe probe : probes)
         {
             if(!probe.accepted())
             {
-                // If this happens there's a code bug.
-                throw new IllegalArgumentException("Shouldn't be writing rejected probes");
+                // If this happens there's probably a code bug.
+                throw new IllegalArgumentException("Should only be writing accepted probes");
             }
 
             mPanelProbesTsvWriter.writeRow(probe);
@@ -351,40 +351,38 @@ public class OutputWriter implements AutoCloseable
     {
         for(Variant variant : variants)
         {
-            if(variant.isSelected())
-            {
-                StringJoiner variantInfo = new StringJoiner(TSV_DELIM);
-                variantInfo.add(variant.categoryType().toString());
-                variantInfo.add(variant.selectionStatus().toString());
-                variantInfo.add(variant.description());
-                variantInfo.add(String.valueOf(variant.reported()));
-                variantInfo.add(format("%.2f", variant.copyNumber()));
-                variantInfo.add(format("%.2f", variant.vaf()));
-                variantInfo.add(String.valueOf(variant.tumorFragments()));
-                variantInfo.add(String.valueOf(variant.hasPhaseVariants()));
-                variantInfo.add(variant.gene());
+            StringJoiner variantInfo = new StringJoiner(TSV_DELIM);
+            variantInfo.add(variant.categoryType().toString());
+            variantInfo.add(variant.selectionStatus().toString());
+            variantInfo.add(variant.description());
+            variantInfo.add(String.valueOf(variant.reported()));
+            variantInfo.add(format("%.2f", variant.copyNumber()));
+            variantInfo.add(format("%.2f", variant.vaf()));
+            variantInfo.add(String.valueOf(variant.tumorFragments()));
+            variantInfo.add(String.valueOf(variant.hasPhaseVariants()));
+            variantInfo.add(variant.gene());
 
+            {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
                 sj.add(variantInfo.toString());
                 sj.add("ALT");
                 sj.add(variant.sequence());
                 sj.add(format("%.2f", variant.gc()));
                 sj.add(variant.otherData());
-
                 mSampleVariantsTsvWriter.write(sj.toString());
                 mSampleVariantsTsvWriter.newLine();
+            }
 
-                for(String refSequence : variant.refSequences())
-                {
-                    StringJoiner refSj = new StringJoiner(TSV_DELIM);
-                    refSj.add(variantInfo.toString());
-                    refSj.add("REF");
-                    refSj.add(refSequence);
-                    refSj.add(format("%.2f", calcGcPercent(refSequence)));
-                    refSj.add("");
-                    mSampleVariantsTsvWriter.write(refSj.toString());
-                    mSampleVariantsTsvWriter.newLine();
-                }
+            for(String refSequence : variant.refSequences())
+            {
+                StringJoiner refSj = new StringJoiner(TSV_DELIM);
+                refSj.add(variantInfo.toString());
+                refSj.add("REF");
+                refSj.add(refSequence);
+                refSj.add(format("%.2f", calcGcPercent(refSequence)));
+                refSj.add("");
+                mSampleVariantsTsvWriter.write(refSj.toString());
+                mSampleVariantsTsvWriter.newLine();
             }
         }
     }

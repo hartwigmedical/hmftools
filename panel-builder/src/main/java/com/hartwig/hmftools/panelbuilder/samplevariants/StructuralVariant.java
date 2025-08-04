@@ -78,12 +78,12 @@ public class StructuralVariant extends Variant
         setCategoryType();
     }
 
-    public StructuralVariantData variantData()
+    private StructuralVariantData variantData()
     {
         return mVariant;
     }
 
-    public void markAmpDelDriver(boolean isAmp)
+    private void markAmpDelDriver(boolean isAmp)
     {
         mCategoryType = isAmp ? CategoryType.AMP : CategoryType.DEL;
     }

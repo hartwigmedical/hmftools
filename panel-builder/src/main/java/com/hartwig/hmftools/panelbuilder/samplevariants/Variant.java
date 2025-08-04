@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
+import static java.lang.Math.abs;
+import static java.util.Objects.requireNonNull;
+
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MAX;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MAX_LOWER;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_MIN_LOWER;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE_STRICT;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN_LOWER;
 
@@ -14,16 +16,27 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.Probe;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
+
+import org.jetbrains.annotations.Nullable;
 
 public abstract class Variant
 {
+    @Nullable
     private String mSequence;
     private SelectionStatus mStatus;
 
     public Variant()
     {
-        mSequence = "";
+        mSequence = null;
         mStatus = SelectionStatus.NOT_SET;
+    }
+
+    public Probe probe()
+    {
+        TargetMetadata metadata = new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, description());
+        return new Probe(sequence(), metadata);
     }
 
     public abstract CategoryType categoryType();
@@ -44,7 +57,7 @@ public abstract class Variant
 
     public String sequence()
     {
-        return mSequence;
+        return requireNonNull(mSequence);
     }
 
     public abstract double copyNumber();
@@ -88,14 +101,8 @@ public abstract class Variant
 
     protected static boolean passesGcRatioLimit(double gcRatio, boolean useLowerLimits)
     {
-        if(useLowerLimits)
-        {
-            return gcRatio >= SAMPLE_GC_MIN_LOWER && gcRatio <= SAMPLE_GC_MAX_LOWER;
-        }
-        else
-        {
-            return gcRatio >= SAMPLE_GC_MIN && gcRatio <= SAMPLE_GC_MAX;
-        }
+        double tolerance = useLowerLimits ? SAMPLE_GC_TOLERANCE : SAMPLE_GC_TOLERANCE_STRICT;
+        return abs(gcRatio - SAMPLE_GC_TARGET) <= tolerance;
     }
 
     protected static boolean passesFragmentCountLimit(int fragmentCount, boolean useLowerLimits)

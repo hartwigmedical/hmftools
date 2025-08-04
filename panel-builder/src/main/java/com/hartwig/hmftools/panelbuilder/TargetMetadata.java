@@ -18,7 +18,8 @@ public record TargetMetadata(
     {
         GENE,
         CN_BACKBONE,
-        CUSTOM
+        CUSTOM,
+        SAMPLE_VARIANT
     }
 
     public sealed interface ExtraData permits CopyNumberBackbone.TargetMetadataExtra
