@@ -76,7 +76,7 @@ public class OutputWriter implements AutoCloseable
             FLD_REJECT_REASON);
 
     private static final List<String> CANDIDATE_PROBES_COLUMNS = List.of(
-            FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END,
+            FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_SEQUENCE,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT,
             FLD_EVAL_CRITERIA, FLD_REJECT_REASON);
@@ -147,7 +147,7 @@ public class OutputWriter implements AutoCloseable
         LOGGER.debug("Writing {} panel probes to file", probes.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
-        probes = probes.stream().sorted(Comparator.comparing(Probe::region)).toList();
+        probes = probes.stream().sorted(Comparator.nullsLast(Comparator.comparing(Probe::region))).toList();
 
         for(Probe probe : probes)
         {
@@ -158,17 +158,21 @@ public class OutputWriter implements AutoCloseable
             }
 
             mPanelProbesTsvWriter.writeRow(probe);
-            writePanelProbesBedRow(probe);
+            if(probe.region() != null)
+            {
+                writePanelProbesBedRow(probe);
+            }
             writePanelProbesFastaRecord(probe);
         }
     }
 
     private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
-        row.set(FLD_CHROMOSOME, probe.region().chromosome());
-        row.set(FLD_POSITION_START, probe.region().start());
-        row.set(FLD_POSITION_END, probe.region().end());
-        row.set(FLD_SEQUENCE, probe.sequence());
+        ChrBaseRegion region = probe.region();
+        row.setOrNull(FLD_CHROMOSOME, region == null ? null : region.chromosome());
+        row.setOrNull(FLD_POSITION_START, region == null ? null : region.start());
+        row.setOrNull(FLD_POSITION_END, region == null ? null : region.end());
+        row.setOrNull(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_QUALITY_SCORE, requireNonNull(probe.qualityScore()));
         row.set(FLD_GC_CONTENT, requireNonNull(probe.gcContent()));
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
@@ -177,7 +181,7 @@ public class OutputWriter implements AutoCloseable
 
     private void writePanelProbesBedRow(final Probe probe) throws IOException
     {
-        mPanelProbesBedWriter.write(formatBedRow(probe.region(), probeBedName(probe)));
+        mPanelProbesBedWriter.write(formatBedRow(requireNonNull(probe.region()), probeBedName(probe)));
     }
 
     private void writePanelProbesFastaRecord(final Probe probe) throws IOException
@@ -285,11 +289,11 @@ public class OutputWriter implements AutoCloseable
 
     private static void writeCandidateProbesRow(final Probe probe, DelimFileWriter.Row row)
     {
-        // To save disk space, don't write these fields:
-        //   - Probe end position (implied from start and probe length)
-        //   - Base sequence (implied from probe region)
-        row.set(FLD_CHROMOSOME, probe.region().chromosome());
-        row.set(FLD_POSITION_START, probe.region().start());
+        ChrBaseRegion region = probe.region();
+        row.setOrNull(FLD_CHROMOSOME, region == null ? null : region.chromosome());
+        row.setOrNull(FLD_POSITION_START, region == null ? null : region.start());
+        row.setOrNull(FLD_POSITION_END, region == null ? null : region.end());
+        row.setOrNull(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
         row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
@@ -323,9 +327,13 @@ public class OutputWriter implements AutoCloseable
 
     private static String getProbeLabel(final Probe probe)
     {
-        // This should be unique enough.
         TargetMetadata metadata = probe.metadata();
-        return format("%s:%s:%d", metadata.type().name(), metadata.extraInfo(), probe.region().start());
+        String label = format("%s:%s", metadata.type().name(), metadata.extraInfo());
+        if(probe.region() != null)
+        {
+            label = format("%s:%d", label, probe.region().start());
+        }
+        return label;
     }
 
     public void writeGeneStats(final List<TargetGenes.GeneStats> geneStats)

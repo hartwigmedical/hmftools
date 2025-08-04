@@ -23,7 +23,7 @@ public class ProbeTest
     public void testConstructor()
     {
         assertEquals(
-                new Probe(PROBE_REGION, METADATA, null, null, null, null, null),
+                new Probe(PROBE_REGION, null, METADATA, null, null, null, null),
                 mProbe);
         assertEquals(METADATA, mProbe.metadata());
         assertEquals(PROBE_REGION, mProbe.region());
@@ -58,7 +58,7 @@ public class ProbeTest
         assertNotNull(probe.gcContent());
         assertEquals(gcContent, probe.gcContent(), 0);
 
-        assertEquals(new Probe(PROBE_REGION, METADATA, EVAL_CRITERIA, rejectionReason, PROBE_SEQUENCE, qualityScore, gcContent), probe);
+        assertEquals(new Probe(PROBE_REGION, PROBE_SEQUENCE, METADATA, EVAL_CRITERIA, rejectionReason, qualityScore, gcContent), probe);
     }
 
     @Test

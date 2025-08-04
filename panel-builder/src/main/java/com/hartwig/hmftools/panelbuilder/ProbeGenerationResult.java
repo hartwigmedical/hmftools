@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.Utils.regionIntersection;
 
@@ -37,7 +38,7 @@ public record ProbeGenerationResult(
     public static ProbeGenerationResult coveredTarget(final TargetRegion candidateTarget, final Probe probe)
     {
         TargetRegion covered = new TargetRegion(
-                regionIntersection(candidateTarget.region(), probe.region()).orElseThrow(),
+                regionIntersection(candidateTarget.region(), requireNonNull(probe.region())).orElseThrow(),
                 candidateTarget.metadata());
         return new ProbeGenerationResult(
                 List.of(probe),

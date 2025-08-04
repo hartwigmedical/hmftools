@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_OVERLAP_EXTENSION_BALANCE;
@@ -112,7 +113,7 @@ public class ProbeGenerator
         // This requires sorted by position, but it's already in that order.
         allPlausibleProbes.forEach(probe ->
         {
-            BaseRegion probeRegion = probe.region().baseRegion();
+            BaseRegion probeRegion = requireNonNull(probe.region()).baseRegion();
             BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);
             if(prev != null && probeRegion.start() <= prev.end() + 1)
             {
@@ -141,7 +142,7 @@ public class ProbeGenerator
             // Not that the reference region here is not necessarily the target region, but the subregion of the target which the tiling
             // algorithm found to be optimal to cover. This may exclude a few bases on the edge which are uncovered. However, we want to
             // count those as covered and not mark them as rejected.
-            Stream<BaseRegion> probeRegions = result.probes().stream().map(probe -> probe.region().baseRegion());
+            Stream<BaseRegion> probeRegions = result.probes().stream().map(probe -> requireNonNull(probe.region()).baseRegion());
             computeUncoveredRegions(result.tilingIntendedCoverage(), probeRegions).stream()
                     .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), context.metadata(), rejectionReason))
                     .forEach(rejectedRegions::add);
@@ -191,7 +192,7 @@ public class ProbeGenerator
             BaseRegion originalProbe = tiling.get(i);
             BaseRegion prevProbe = finalProbes.isEmpty()
                     ? null
-                    : finalProbes.get(finalProbes.size() - 1).region().baseRegion();
+                    : requireNonNull(finalProbes.get(finalProbes.size() - 1).region()).baseRegion();
             // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
             BaseRegion nextProbe = i + 1 < tiling.size() ? tiling.get(i + 1) : null;
 

@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.DEFAULT_PROBE_QUALITY;
 
 import java.text.DecimalFormat;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -63,7 +63,7 @@ public class ProbeEvaluator
 
     private Probe evaluateQualityScore(Probe probe)
     {
-        Criteria criteria = Objects.requireNonNull(probe.evalCriteria());
+        Criteria criteria = requireNonNull(probe.evalCriteria());
         double qualityScore = getProbeQualityScore(probe);
         probe = probe.withQualityScore(qualityScore);
         if(!(qualityScore >= criteria.qualityScoreMin()))
@@ -75,10 +75,9 @@ public class ProbeEvaluator
 
     private Probe evaluateGcContent(Probe probe)
     {
-        Criteria criteria = Objects.requireNonNull(probe.evalCriteria());
-        String sequence = getProbeSequence(probe);
-        probe = probe.withSequence(sequence);
-        double gcContent = calcGcPercent(sequence);
+        Criteria criteria = requireNonNull(probe.evalCriteria());
+        probe = setProbeSequence(probe);
+        double gcContent = calcGcPercent(requireNonNull(probe.sequence()));
         probe = probe.withGcContent(gcContent);
         if(!(gcContent >= criteria.gcContentMin() && gcContent <= criteria.gcContentMax()))
         {
@@ -89,6 +88,7 @@ public class ProbeEvaluator
 
     private double getProbeQualityScore(final Probe probe)
     {
+        // TODO: compute score based on probe quality model
         return mQualityProfile.computeQualityScore(probe.region()).orElseGet(() ->
         {
             double quality = DEFAULT_PROBE_QUALITY;
@@ -98,10 +98,15 @@ public class ProbeEvaluator
         });
     }
 
-    private String getProbeSequence(final Probe probe)
+    private Probe setProbeSequence(Probe probe)
     {
-        ChrBaseRegion region = probe.region();
-        return mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
+        if(probe.sequence() == null)
+        {
+            ChrBaseRegion region = requireNonNull(probe.region());
+            String sequence = mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
+            probe = probe.withSequence(sequence);
+        }
+        return probe;
     }
 
     private void logCandidateProbe(final Probe probe)

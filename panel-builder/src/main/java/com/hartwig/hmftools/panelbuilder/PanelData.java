@@ -3,6 +3,7 @@ package com.hartwig.hmftools.panelbuilder;
 import static com.hartwig.hmftools.panelbuilder.Utils.isCoveredBy;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -32,7 +33,8 @@ public class PanelData implements PanelCoverage
     @Override
     public Stream<ChrBaseRegion> coveredRegions()
     {
-        return mData.probes().stream().map(Probe::region);
+        // TODO: include target regions as well (or instead) to include coverage of SV probes?
+        return mData.probes().stream().map(Probe::region).filter(Objects::nonNull);
     }
 
     public void addResult(final ProbeGenerationResult result)

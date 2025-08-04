@@ -257,7 +257,7 @@ public class CopyNumberBackbone
         return partition.Sites.stream()
                 .flatMap(site -> generateCandidateProbes(partition, site))
                 // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
-                .filter(probe -> partition.Region.containsRegion(probe.region()));
+                .filter(probe -> partition.Region.containsRegion(requireNonNull(probe.region())));
     }
 
     private Stream<Probe> generateCandidateProbes(final Partition partition, final AmberSite site)
