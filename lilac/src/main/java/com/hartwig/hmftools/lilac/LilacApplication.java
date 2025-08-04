@@ -77,6 +77,8 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
+import org.jetbrains.annotations.NotNull;
+
 public class LilacApplication
 {
     private final LilacConfig mConfig;
@@ -706,7 +708,7 @@ public class LilacApplication
         return true;
     }
 
-    public static void main(final String[] args)
+    public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
