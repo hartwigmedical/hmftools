@@ -163,7 +163,7 @@ public class LilacAppendRna
         return rnaCoverage;
     }
 
-    public static void main( final String[] args)
+    public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 

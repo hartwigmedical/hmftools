@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreForFields;
+import static com.hartwig.hmftools.compar.ComparTestUtil.union;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
@@ -25,62 +27,92 @@ import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.compar.ComparConfig;
+import com.hartwig.hmftools.compar.ComparableItemTest;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
 
+import org.junit.Before;
 import org.junit.Test;
 
-public class SomaticVariantDataTest
+public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantData, SomaticVariantComparer, TestSomaticVariantDataBuilder>
 {
-    private static final Set<String> PURPLE_ONLY_FIELDS =
-            Set.of(FLD_HOTSPOT, FLD_BIALLELIC, FLD_OTHER_REPORTED, FLD_SUBCLONAL_LIKELIHOOD, FLD_VARIANT_COPY_NUMBER, FLD_PURITY_ADJUSTED_VAF);
     private static final Set<String> PAVE_ONLY_FIELDS =
             Set.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
-    private static final Set<String> SAGE_FIELDS =
+    private static final Set<String> SAGE_ONLY_FIELDS =
             Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FILTER_DIFF);
+    private static final Set<String> FIELDS_UP_TO_PAVE = union(SAGE_ONLY_FIELDS, PAVE_ONLY_FIELDS);
 
-    private static final Set<String> ALL_FIELDS = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS, PURPLE_ONLY_FIELDS));
-    private static final Set<String> FIELDS_UP_TO_PAVE = union(List.of(SAGE_FIELDS, PAVE_ONLY_FIELDS));
-
-    @Test
-    public void fullyMatchesSelf()
+    @Before
+    public void setUp()
     {
-        var victim = TestSomaticVariantDataBuilder.create();
-        var diffThresholds = createDefaultThresholds();
+        comparer = new SomaticVariantComparer(new ComparConfig());
+        builder = TestSomaticVariantDataBuilder.BUILDER;
+        SomaticVariantData alternateValueSource = builder.createWithAlternateDefaults();
 
-        assertTrue(victim.matches(victim));
-        assertNull(victim.findMismatch(victim, MatchLevel.DETAILED, diffThresholds, false));
-        assertNull(victim.findMismatch(victim, MatchLevel.REPORTABLE, diffThresholds, false));
+        fieldToAlternateValueInitializer = new HashMap<>();
+        fieldToAlternateValueInitializer.put(FLD_QUAL, b -> b.qual = alternateValueSource.Qual);
+        fieldToAlternateValueInitializer.put(FLD_TIER, b -> b.tier = alternateValueSource.Tier);
+        fieldToAlternateValueInitializer.put(FLD_TUMOR_SUPPORTING_READ_COUNT, b -> b.tumorSupportingReadCount =
+                alternateValueSource.TumorSupportingReadCount);
+        fieldToAlternateValueInitializer.put(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount =
+                alternateValueSource.TumorTotalReadCount);
+        fieldToAlternateValueInitializer.put(FLD_GENE, b -> b.gene = alternateValueSource.Gene);
+        fieldToAlternateValueInitializer.put(FLD_CANON_EFFECT, b -> b.canonicalEffect = alternateValueSource.CanonicalEffect);
+        fieldToAlternateValueInitializer.put(FLD_CODING_EFFECT, b -> b.canonicalCodingEffect = alternateValueSource.CanonicalCodingEffect);
+        fieldToAlternateValueInitializer.put(FLD_HGVS_CODING, b -> b.canonicalHgvsCodingImpact =
+                alternateValueSource.CanonicalHgvsCodingImpact);
+        fieldToAlternateValueInitializer.put(FLD_HGVS_PROTEIN, b -> b.canonicalHgvsProteinImpact =
+                alternateValueSource.CanonicalHgvsProteinImpact);
+        fieldToAlternateValueInitializer.put(FLD_HOTSPOT, b -> b.hotspotStatus = alternateValueSource.HotspotStatus);
+        fieldToAlternateValueInitializer.put(FLD_BIALLELIC, b -> b.biallelic = alternateValueSource.Biallelic);
+        fieldToAlternateValueInitializer.put(FLD_OTHER_REPORTED, b -> b.otherReportedEffects = alternateValueSource.OtherReportedEffects);
+        fieldToAlternateValueInitializer.put(FLD_SUBCLONAL_LIKELIHOOD, b -> b.subclonalLikelihood =
+                alternateValueSource.SubclonalLikelihood);
+        fieldToAlternateValueInitializer.put(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber = alternateValueSource.VariantCopyNumber);
+        fieldToAlternateValueInitializer.put(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf = alternateValueSource.PurityAdjustedVaf);
+        fieldToAlternateValueInitializer.put(FLD_LPS, b -> b.hasLPS = alternateValueSource.HasLPS);
+        fieldToAlternateValueInitializer.put(FILTER_DIFF, b -> b.filters = alternateValueSource.Filters);
 
-        Mismatch expectedMatch = new Mismatch(victim, victim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(victim, MatchLevel.DETAILED, diffThresholds, true));
-        assertEquals(expectedMatch, victim.findMismatch(victim, MatchLevel.REPORTABLE, diffThresholds, true));
+        nameToAlternateIndexInitializer = Map.of(
+                "Chromosome", b ->
+                {
+                    b.chromosome = alternateValueSource.Chromosome;
+                    b.comparisonChromosome = alternateValueSource.mComparisonChromosome;
+                },
+                "Position", b ->
+                {
+                    b.position = alternateValueSource.Position;
+                    b.comparisonPosition = alternateValueSource.mComparisonPosition;
+                },
+                "Ref", b -> b.ref = alternateValueSource.Ref,
+                "Alt", b -> b.alt = alternateValueSource.Alt,
+                "Type", b -> b.type = alternateValueSource.Type
+        );
+        reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
     }
 
     @Test
     public void fullyMatchesSelfWithLiftover()
     {
-        var victim = TestSomaticVariantDataBuilder.create(b ->
+        SomaticVariantData victim = TestSomaticVariantDataBuilder.BUILDER.create(b ->
         {
             b.comparisonChromosome = "8";
             b.comparisonPosition = 10000;
         });
-        var liftoverVictim = TestSomaticVariantDataBuilder.create(b ->
+        SomaticVariantData liftoverVictim = TestSomaticVariantDataBuilder.BUILDER.create(b ->
         {
             b.chromosome = "8";
             b.position = 10000;
         });
-        var diffThresholds = createDefaultThresholds();
+        DiffThresholds diffThresholds = createDefaultThresholds();
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
@@ -93,36 +125,10 @@ public class SomaticVariantDataTest
     }
 
     @Test
-    public void onlyMatchesIndex()
-    {
-        var refVictim = TestSomaticVariantDataBuilder.create();
-        var newVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
-        {
-            b.chromosome = refVictim.Chromosome;
-            b.position = refVictim.Position;
-            b.ref = refVictim.Ref;
-            b.alt = refVictim.Alt;
-            b.type = refVictim.Type;
-            b.comparisonChromosome = refVictim.mComparisonChromosome;
-            b.comparisonPosition = refVictim.mComparisonPosition;
-        });
-
-        var diffThresholds = createDefaultThresholds();
-
-        assertTrue(refVictim.matches(newVictim));
-        var mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
-
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals(refVictim, mismatch.RefItem());
-        assertEquals(newVictim, mismatch.NewItem());
-        assertDifferencesAreForFields(ALL_FIELDS, mismatch.DiffValues());
-    }
-
-    @Test
     public void nonPurpleMatchHandledCorrectly()
     {
-        var refVictim = TestSomaticVariantDataBuilder.create(b -> b.hasPurpleAnnotation = false);
-        var newVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
+        SomaticVariantData refVictim = TestSomaticVariantDataBuilder.BUILDER.create(b -> b.hasPurpleAnnotation = false);
+        SomaticVariantData newVictim = TestSomaticVariantDataBuilder.BUILDER.createWithAlternateDefaults(b ->
         {
             b.chromosome = refVictim.Chromosome;
             b.position = refVictim.Position;
@@ -134,10 +140,10 @@ public class SomaticVariantDataTest
             b.hasPurpleAnnotation = false;
         });
 
-        var diffThresholds = createDefaultThresholds();
+        DiffThresholds diffThresholds = createDefaultThresholds();
 
         assertTrue(refVictim.matches(newVictim));
-        var mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
+        Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
         assertEquals(refVictim, mismatch.RefItem());
@@ -148,8 +154,8 @@ public class SomaticVariantDataTest
     @Test
     public void unfilteredMatchHandledCorrectly()
     {
-        var passVictim = TestSomaticVariantDataBuilder.create();
-        var filteredVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
+        SomaticVariantData passVictim = TestSomaticVariantDataBuilder.BUILDER.create();
+        SomaticVariantData filteredVictim = TestSomaticVariantDataBuilder.BUILDER.createWithAlternateDefaults(b ->
         {
             b.chromosome = passVictim.Chromosome;
             b.position = passVictim.Position;
@@ -160,177 +166,36 @@ public class SomaticVariantDataTest
             b.comparisonPosition = passVictim.mComparisonPosition;
             b.isFromUnfilteredVcf = true;
             b.hasPurpleAnnotation = false;
+            b.filters = Set.of("PASS");
         });
 
-        var diffThresholds = createDefaultThresholds();
+        DiffThresholds diffThresholds = createDefaultThresholds();
 
         assertTrue(passVictim.matches(filteredVictim));
-        var mismatch = passVictim.findMismatch(filteredVictim, MatchLevel.DETAILED, diffThresholds, false);
+        Mismatch mismatch = passVictim.findMismatch(filteredVictim, MatchLevel.DETAILED, diffThresholds, false);
 
         assertEquals(MismatchType.REF_ONLY, mismatch.MismatchType());
         assertEquals(passVictim, mismatch.RefItem());
         assertEquals(filteredVictim, mismatch.NewItem());
-        assertDifferencesAreForFields(SAGE_FIELDS, mismatch.DiffValues());
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues());
 
         assertTrue(filteredVictim.matches(passVictim));
-        var oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false);
+        Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false);
 
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.MismatchType());
         assertEquals(filteredVictim, oppositeMismatch.RefItem());
         assertEquals(passVictim, oppositeMismatch.NewItem());
-        assertDifferencesAreForFields(SAGE_FIELDS, mismatch.DiffValues());
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues());
     }
 
     @Test
-    public void reportabilityChangeHandledCorrectly()
+    public void keyNonEmptyForLiftover()
     {
-        var passVictim = TestSomaticVariantDataBuilder.create();
-        var nonReportableVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults(b ->
+        SomaticVariantData victim = TestSomaticVariantDataBuilder.BUILDER.create(b ->
         {
-            b.chromosome = passVictim.Chromosome;
-            b.position = passVictim.Position;
-            b.ref = passVictim.Ref;
-            b.alt = passVictim.Alt;
-            b.type = passVictim.Type;
-            b.comparisonChromosome = passVictim.mComparisonChromosome;
-            b.comparisonPosition = passVictim.mComparisonPosition;
-            b.reported = false;
+            b.comparisonChromosome = "8";
+            b.comparisonPosition = 10000;
         });
-
-        var diffThresholds = createDefaultThresholds();
-
-        assertTrue(passVictim.matches(nonReportableVictim));
-        var mismatch = passVictim.findMismatch(nonReportableVictim, MatchLevel.REPORTABLE, diffThresholds, false);
-
-        assertEquals(MismatchType.REF_ONLY, mismatch.MismatchType());
-        assertEquals(passVictim, mismatch.RefItem());
-        assertEquals(nonReportableVictim, mismatch.NewItem());
-        assertDifferencesAreForFields(ALL_FIELDS, mismatch.DiffValues());
-
-        assertTrue(nonReportableVictim.matches(passVictim));
-        var oppositeMismatch = nonReportableVictim.findMismatch(passVictim, MatchLevel.REPORTABLE, diffThresholds, false);
-
-        assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.MismatchType());
-        assertEquals(nonReportableVictim, oppositeMismatch.RefItem());
-        assertEquals(passVictim, oppositeMismatch.NewItem());
-        assertDifferencesAreForFields(ALL_FIELDS, mismatch.DiffValues());
-    }
-
-    @Test
-    public void indexMismatchesAreRecognized()
-    {
-        var victim = TestSomaticVariantDataBuilder.create();
-        var alternateVictim = TestSomaticVariantDataBuilder.createWithAlternateDefaults();
-
-        var chromosomeMismatch = TestSomaticVariantDataBuilder.create(b ->
-        {
-            b.chromosome = alternateVictim.Chromosome;
-            b.comparisonChromosome = alternateVictim.mComparisonChromosome;
-        });
-
-        assertFalse(victim.matches(chromosomeMismatch));
-        assertFalse(chromosomeMismatch.matches(victim));
-
-        var positionMismatch = TestSomaticVariantDataBuilder.create(b ->
-        {
-            b.position = alternateVictim.Position;
-            b.comparisonPosition = alternateVictim.mComparisonPosition;
-        });
-        assertFalse(victim.matches(positionMismatch));
-        assertFalse(positionMismatch.matches(victim));
-
-        var refMismatch = TestSomaticVariantDataBuilder.create(b -> b.ref = alternateVictim.Ref);
-
-        assertFalse(victim.matches(refMismatch));
-        assertFalse(refMismatch.matches(victim));
-
-        var altMismatch = TestSomaticVariantDataBuilder.create(b -> b.alt = alternateVictim.Alt);
-
-        assertFalse(victim.matches(altMismatch));
-        assertFalse(altMismatch.matches(victim));
-
-        var variantTypeMismatch = TestSomaticVariantDataBuilder.create(b -> b.type = alternateVictim.Type);
-
-        assertFalse(victim.matches(variantTypeMismatch));
-        assertFalse(variantTypeMismatch.matches(victim));
-    }
-
-    @Test
-    public void singleFieldMismatchIsRecognized()
-    {
-        var alternateValueSource = TestSomaticVariantDataBuilder.createWithAlternateDefaults();
-
-        testSingleFieldMismatch(FLD_QUAL, b -> b.qual = alternateValueSource.Qual);
-        testSingleFieldMismatch(FLD_TIER, b -> b.tier = alternateValueSource.Tier);
-        testSingleFieldMismatch(FLD_TUMOR_SUPPORTING_READ_COUNT, b -> b.tumorSupportingReadCount =
-                alternateValueSource.TumorSupportingReadCount);
-        testSingleFieldMismatch(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount = alternateValueSource.TumorTotalReadCount);
-        testSingleFieldMismatch(FLD_GENE, b -> b.gene = alternateValueSource.Gene);
-        testSingleFieldMismatch(FLD_CANON_EFFECT, b -> b.canonicalEffect = alternateValueSource.CanonicalEffect);
-        testSingleFieldMismatch(FLD_CODING_EFFECT, b -> b.canonicalCodingEffect = alternateValueSource.CanonicalCodingEffect);
-        testSingleFieldMismatch(FLD_HGVS_CODING, b -> b.canonicalHgvsCodingImpact = alternateValueSource.CanonicalHgvsCodingImpact);
-        testSingleFieldMismatch(FLD_HGVS_PROTEIN, b -> b.canonicalHgvsProteinImpact = alternateValueSource.CanonicalHgvsProteinImpact);
-        testSingleFieldMismatch(FLD_HOTSPOT, b -> b.hotspotStatus = alternateValueSource.HotspotStatus);
-        testSingleFieldMismatch(FLD_BIALLELIC, b -> b.biallelic = alternateValueSource.Biallelic);
-        testSingleFieldMismatch(FLD_OTHER_REPORTED, b -> b.otherReportedEffects = alternateValueSource.OtherReportedEffects);
-        testSingleFieldMismatch(FLD_SUBCLONAL_LIKELIHOOD, b -> b.subclonalLikelihood = alternateValueSource.SubclonalLikelihood);
-        testSingleFieldMismatch(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber = alternateValueSource.VariantCopyNumber);
-        testSingleFieldMismatch(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf = alternateValueSource.PurityAdjustedVaf);
-        testSingleFieldMismatch(FLD_LPS, b -> b.hasLPS = alternateValueSource.HasLPS);
-        testSingleFieldMismatch(FILTER_DIFF, b -> b.filters = alternateValueSource.Filters);
-    }
-
-    private void testSingleFieldMismatch(final String field, final Consumer<TestSomaticVariantDataBuilder> initializer)
-    {
-        var refVictim = TestSomaticVariantDataBuilder.create();
-        var newVictim = TestSomaticVariantDataBuilder.create(initializer);
-
-        assertTrue(refVictim.matches(newVictim));
-        assertTrue(newVictim.matches(refVictim));
-
-        var diffThresholds = createDefaultThresholds();
-        var detailedMismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
-
-        assertEquals(MismatchType.VALUE, detailedMismatch.MismatchType());
-        assertEquals(refVictim, detailedMismatch.RefItem());
-        assertEquals(newVictim, detailedMismatch.NewItem());
-        assertEquals(1, detailedMismatch.DiffValues().size());
-        assertEquals(field, extractFieldNameFromDifference(detailedMismatch.DiffValues().get(0)));
-
-        var reportedMismatch = refVictim.findMismatch(newVictim, MatchLevel.REPORTABLE, diffThresholds, false);
-
-        assertEquals(MismatchType.VALUE, reportedMismatch.MismatchType());
-        assertEquals(refVictim, reportedMismatch.RefItem());
-        assertEquals(newVictim, reportedMismatch.NewItem());
-        assertEquals(1, reportedMismatch.DiffValues().size());
-        assertEquals(field, extractFieldNameFromDifference(reportedMismatch.DiffValues().get(0)));
-    }
-
-    private static void assertDifferencesAreForFields(final Set<String> expectedFields, final List<String> differences)
-    {
-        assertEquals(expectedFields.size(), differences.size());
-        assertEquals(expectedFields, differences.stream()
-                .map(SomaticVariantDataTest::extractFieldNameFromDifference)
-                .collect(Collectors.toSet()));
-    }
-
-    private static String extractFieldNameFromDifference(final String difference)
-    {
-        return difference.split("\\(")[0];
-    }
-
-    private static DiffThresholds createDefaultThresholds()
-    {
-        var config = new ComparConfig();
-        var comparer = new SomaticVariantComparer(config);
-
-        var diffThresholds = new DiffThresholds();
-        comparer.registerThresholds(diffThresholds);
-        return diffThresholds;
-    }
-
-    private static Set<String> union(final List<Set<String>> sets)
-    {
-        return sets.stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        assertFalse(victim.key().isEmpty());
     }
 }

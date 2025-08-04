@@ -84,7 +84,6 @@ public class VirusComparer implements ItemComparer
         return comparableItems;
     }
 
-    @NotNull
     private static String determineFileName(final String sampleId, final FileSources fileSources)
     {
         // dirty hack to get old virus directory working automatically most of the time
