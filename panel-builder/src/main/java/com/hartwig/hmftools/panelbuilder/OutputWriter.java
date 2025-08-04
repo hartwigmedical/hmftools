@@ -90,13 +90,13 @@ public class OutputWriter implements AutoCloseable
 
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    public OutputWriter(final String outputDir, @Nullable final String outputPrefix, boolean verboseOutput) throws IOException
+    public OutputWriter(final String outputDir, @Nullable final String outputId, boolean verboseOutput) throws IOException
     {
         Function<String, String> outputFilePath = fileName ->
         {
-            if(outputPrefix != null)
+            if(outputId != null)
             {
-                fileName = outputPrefix + "." + fileName;
+                fileName = outputId + "." + fileName;
             }
             return Paths.get(outputDir, fileName).toString();
         };
@@ -423,5 +423,7 @@ public class OutputWriter implements AutoCloseable
         }
 
         mGeneStatsTsvWriter.close();
+
+        mSampleVariantsTsvWriter.close();
     }
 }

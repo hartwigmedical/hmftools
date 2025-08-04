@@ -23,7 +23,7 @@ public class SampleVariants
     {
     }
 
-    public static ExtraOutput generateProbes(final Config config, final RefGenomeInterface refGenome, PanelData panelData)
+    public static ExtraOutput generateProbes(final SampleVariantsConfig config, final RefGenomeInterface refGenome, PanelData panelData)
     {
         LOGGER.info("Generating sample variant probes");
 
@@ -52,11 +52,13 @@ public class SampleVariants
 
         List<Variant> selectedVariants = VariantSelection.selectVariants(variants);
 
-        ProbeGenerationResult result;
         // TODO
-        panelData.addResult(result);
+        //        ProbeGenerationResult result;
+        //        panelData.addResult(result);
 
         LOGGER.info("Done generating sample variant probes");
+
+        return new ExtraOutput(selectedVariants);
     }
 
     // TODO: needed?

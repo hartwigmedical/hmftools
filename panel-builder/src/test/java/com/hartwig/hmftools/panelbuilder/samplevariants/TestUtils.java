@@ -16,8 +16,4 @@ public final class TestUtils
     public static final String REF_BASES_CHR_2 = "XAAACCCGGGTTTAACCGGTTACGTAAACCCGGGTTTAACCGGTTACGTACCGGTTACGTT";
 
     public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
-
-    public static final ProbeConfig TEST_CONFIG = new ProbeConfig(
-            1, 0, 0, 0);
-
 }

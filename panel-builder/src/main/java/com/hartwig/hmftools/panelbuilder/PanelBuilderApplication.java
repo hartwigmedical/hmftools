@@ -35,12 +35,12 @@ public class PanelBuilderApplication
 
     private static final Logger LOGGER = LogManager.getLogger(PanelBuilderApplication.class);
 
-    public PanelBuilderApplication(final ConfigBuilder configBuilder)
+    public PanelBuilderApplication(final PanelBuilderConfig config)
     {
-        mConfig = new PanelBuilderConfig(configBuilder);
-        mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
+        mConfig = config;
+        mRefGenome = loadRefGenome(mConfig.refGenomeFile());
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
-        ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.ProbeQualityProfileFile);
+        ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
         ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
         CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
         mProbeGenerator = new ProbeGenerator(candidateGenerator, probeEvaluator);
@@ -53,8 +53,8 @@ public class PanelBuilderApplication
 
         long startTimeMs = System.currentTimeMillis();
 
-        checkCreateOutputDir(mConfig.OutputDir);
-        mOutputWriter = new OutputWriter(mConfig.OutputDir, mConfig.OutputPrefix, mConfig.VerboseOutput);
+        checkCreateOutputDir(mConfig.outputDir());
+        mOutputWriter = new OutputWriter(mConfig.outputDir(), mConfig.outputId(), mConfig.verboseOutput());
 
         LOGGER.info("Generating probes");
         mPanelData = new PanelData();
@@ -88,7 +88,7 @@ public class PanelBuilderApplication
     @Nullable
     private TargetGenes.ExtraOutput generateTargetGeneProbes()
     {
-        if(mConfig.TargetGenesFile == null)
+        if(mConfig.targetGenesFile() == null)
         {
             LOGGER.info("Target genes not provided; skipping gene probes");
             return null;
@@ -97,7 +97,7 @@ public class PanelBuilderApplication
         {
             EnsemblDataCache ensemblData = loadEnsemblData();
             TargetGenes.ExtraOutput extraOutput =
-                    TargetGenes.generateProbes(mConfig.TargetGenesFile, ensemblData, mProbeGenerator, mPanelData);
+                    TargetGenes.generateProbes(mConfig.targetGenesFile(), ensemblData, mProbeGenerator, mPanelData);
             // Result is stored into mPanelData
             return extraOutput;
         }
@@ -105,14 +105,14 @@ public class PanelBuilderApplication
 
     private void generateCopyNumberBackboneProbes()
     {
-        if(mConfig.AmberSitesFile == null)
+        if(mConfig.amberSitesFile() == null)
         {
             LOGGER.warn("Amber sites not provided; skipping copy number backbone probes");
         }
         else
         {
             CopyNumberBackbone copyNumberBackbone =
-                    new CopyNumberBackbone(mConfig.AmberSitesFile, mRefGenomeVersion, mProbeGenerator, mPanelData);
+                    new CopyNumberBackbone(mConfig.amberSitesFile(), mRefGenomeVersion, mProbeGenerator, mPanelData);
             copyNumberBackbone.generateProbes();
             // Result is stored into mPanelData
         }
@@ -120,28 +120,35 @@ public class PanelBuilderApplication
 
     private void generateCustomRegionProbes()
     {
-        if(mConfig.CustomRegionsFile == null)
+        if(mConfig.customRegionsFile() == null)
         {
             LOGGER.info("Custom regions not provided; skipping custom region probes");
         }
         else
         {
-            CustomRegions.generateProbes(mConfig.CustomRegionsFile, mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            CustomRegions.generateProbes(mConfig.customRegionsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData
         }
     }
 
     private SampleVariants.ExtraOutput generateSampleVariantProbes()
     {
-        // TODO
-        SampleVariants.ExtraOutput extraOutput = SampleVariants.generateProbes(mRefGenome, mPanelData);
-        // Result is stored into mPanelData
-        return extraOutput;
+        if(mConfig.sampleVariants() == null)
+        {
+            LOGGER.info("Sample data not provided; skipping sample variants probes");
+            return null;
+        }
+        else
+        {
+            SampleVariants.ExtraOutput extraOutput = SampleVariants.generateProbes(mConfig.sampleVariants(), mRefGenome, mPanelData);
+            // Result is stored into mPanelData
+            return extraOutput;
+        }
     }
 
     private EnsemblDataCache loadEnsemblData()
     {
-        EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.EnsemblDir, mRefGenomeVersion);
+        EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.ensemblDir(), mRefGenomeVersion);
         ensemblData.setRequiredData(true, false, false, false);
         ensemblData.load(false);
         return ensemblData;
@@ -162,7 +169,8 @@ public class PanelBuilderApplication
 
         try
         {
-            PanelBuilderApplication panelBuilder = new PanelBuilderApplication(configBuilder);
+            PanelBuilderConfig config = PanelBuilderConfig.fromConfigBuilder(configBuilder);
+            PanelBuilderApplication panelBuilder = new PanelBuilderApplication(config);
             panelBuilder.run();
         }
         catch(IOException e)
