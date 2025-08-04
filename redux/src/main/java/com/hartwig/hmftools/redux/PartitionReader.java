@@ -247,7 +247,7 @@ public class PartitionReader
             mNextLogReadCount += LOG_READ_COUNT;
         }
 
-        if(mConfig.JitterMsiOnly)
+        if(mConfig.BqrAndJitterMsiOnly)
         {
             mBamWriter.captureReadInfo(read);
             return;

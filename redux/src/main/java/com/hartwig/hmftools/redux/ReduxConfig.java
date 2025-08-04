@@ -93,7 +93,7 @@ public class ReduxConfig
     // UMI group config
     public final UmiConfig UMIs;
     public final boolean FormConsensus;
-    public final boolean JitterMsiOnly;
+    public final boolean BqrAndJitterMsiOnly;
 
     public final BqrConfig BQR;
 
@@ -142,7 +142,7 @@ public class ReduxConfig
 
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
-    private static final String JITTER_MSI_ONLY = "jitter_msi_only";
+    private static final String BQR_JITTER_MSI_ONLY = "bqr_jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
     private static final String SKIP_FULL_UNMAPPED_READS = "skip_fully_unmapped";
@@ -210,29 +210,34 @@ public class ReduxConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        BQR = new BqrConfig(configBuilder);
-
         // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         RD_LOGGER.info("output({})", OutputDir);
 
-        BamStringency = BamUtils.validationStringency(configBuilder);
-
-        mReadLength = configBuilder.getInteger(READ_LENGTH);
-
-        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
-        ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
-
-        SkipUnmapping = configBuilder.hasFlag(SKIP_UNMAPPING);
-        SkipFullyUnmappedReads = SkipUnmapping || configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
-        FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
-
-        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(SEQUENCING_TYPE, configBuilder);
-
         UMIs = UmiConfig.from(configBuilder);
 
-        JitterMsiOnly = configBuilder.hasFlag(JITTER_MSI_ONLY);
+        BQR = new BqrConfig(configBuilder);
+
         JitterConfig = JitterAnalyserConfig.create(
                 SampleId, RefGenomeFile, RefGenVersion, SEQUENCING_TYPE, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
+
+        if(configBuilder.hasFlag(BQR_JITTER_MSI_ONLY))
+        {
+            BqrAndJitterMsiOnly = true;
+
+            SkipUnmapping = true;
+            SkipFullyUnmappedReads = true;
+            FailOnMissingSuppMateCigar = false;
+        }
+        else
+        {
+            BqrAndJitterMsiOnly = false;
+
+            SkipUnmapping = configBuilder.hasFlag(SKIP_UNMAPPING);
+            SkipFullyUnmappedReads = SkipUnmapping || configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
+            FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
+        }
+
+        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(SEQUENCING_TYPE, configBuilder);
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
 
@@ -247,7 +252,7 @@ public class ReduxConfig
         {
             Map<String,List<UnmappingRegion>> unmapRegionsMap;
 
-            if(JitterMsiOnly || SkipUnmapping)
+            if(BqrAndJitterMsiOnly || SkipUnmapping)
             {
                 unmapRegionsMap = Collections.emptyMap();
             }
@@ -264,6 +269,19 @@ public class ReduxConfig
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
         RD_LOGGER.info("duplicate logic: {}", duplicateLogic);
 
+        BamStringency = BamUtils.validationStringency(configBuilder);
+
+        mReadLength = configBuilder.getInteger(READ_LENGTH);
+
+        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+        ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
+
+        DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
+
+        Threads = parseThreads(configBuilder);
+        PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
+
+        // debug options
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
         if(SpecificChrRegions == null)
@@ -273,12 +291,9 @@ public class ReduxConfig
                 FilterReadsType.valueOf(configBuilder.getValue(SPECIFIC_REGION_FILTER_TYPE, FilterReadsType.READ.toString())) :
                 FilterReadsType.NONE;
 
-        Threads = parseThreads(configBuilder);
-        PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
-
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 
-        WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !JitterMsiOnly;
+        WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM) && !BqrAndJitterMsiOnly;
         MultiBam = WriteBam && Threads > 1; // now on automatically
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
@@ -287,7 +302,6 @@ public class ReduxConfig
         WriteStats = configBuilder.hasFlag(WRITE_STATS);
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
-        DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
 
         if(RunChecks)
@@ -353,7 +367,7 @@ public class ReduxConfig
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
-        configBuilder.addFlag(JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");
+        configBuilder.addFlag(BQR_JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
@@ -410,7 +424,7 @@ public class ReduxConfig
 
         UnmapRegions = readUnmapper;
 
-        JitterMsiOnly = false;
+        BqrAndJitterMsiOnly = false;
         JitterConfig = null;
 
         DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, sbxMaxDuplicateDistance);

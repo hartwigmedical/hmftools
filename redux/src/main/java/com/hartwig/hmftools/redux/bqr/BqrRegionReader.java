@@ -45,13 +45,14 @@ public class BqrRegionReader implements CigarHandler
 
     private final Set<BqrKeyCounter> mQualityCounts; // summarised counts with position removed
     private final Map<BqrKey, Integer> mKeyCountsMap;
+
+    private int mNextPurgePosition;
     private int mPurgeIndex;
     private int mMaxIndex;
 
     private BaseQualityData[] mBaseQualityData; // base-qual data by position for this region
 
     private final PerformanceCounter mPerfCounter;
-    private int mReadCounter;
 
     private long mTotalReadsUsed;
     private int mTotalAltsFiltered;
@@ -59,8 +60,9 @@ public class BqrRegionReader implements CigarHandler
     private BqrReadType mCurrentReadType;
     private final SequencingType mSequencingType;
 
-    private static final int BASE_DATA_POS_BUFFER = 100;
     public static final int REF_BASE_REGION_SIZE = 100000;
+    private static final int BASE_DATA_PURGE_POS_BUFFER = 10;
+    private static final int BASE_DATA_PURGE_POS_CHECK = 1000;
 
     public BqrRegionReader(
             final SequencingType sequencingType, final RefGenomeInterface refGenome, final BaseQualityResults results,
@@ -81,10 +83,10 @@ public class BqrRegionReader implements CigarHandler
         mQualityCounts = Sets.newHashSet();
         mKeyCountsMap = Maps.newHashMap();
         mPurgeIndex = 0;
+        mNextPurgePosition = 0;
         mMaxIndex = 0;
 
         mPerfCounter = new PerformanceCounter("BaseQualBuild");
-        mReadCounter = 0;
 
         mTotalReadsUsed = 0;
         mTotalAltsFiltered = 0;
@@ -146,10 +148,14 @@ public class BqrRegionReader implements CigarHandler
         if(!mCurrentRefSequence.IsValid)
             return;
 
+        mNextPurgePosition = refBaseStart + BASE_DATA_PURGE_POS_CHECK;
+
         if(mBaseQualityData == null || mBaseQualityData.length != mCurrentRefSequence.length())
         {
             mBaseQualityData = new BaseQualityData[mCurrentRefSequence.length()];
         }
+
+        RD_LOGGER.trace("bqr starting  new sub-region({})", mCurrentRefSequence);
 
         mPerfCounter.reset();
         mPerfCounter.start();
@@ -159,6 +165,8 @@ public class BqrRegionReader implements CigarHandler
     {
         if(mBaseQualityData == null)
             return;
+
+        RD_LOGGER.trace("bqr completed sub-region({})", mCurrentRefSequence);
 
         buildQualityCounts();
 
@@ -172,7 +180,7 @@ public class BqrRegionReader implements CigarHandler
 
         mKeyCountsMap.clear();
         mQualityCounts.clear();
-        mReadCounter = 0;
+        mNextPurgePosition = 0;
         mPurgeIndex = 0;
         mMaxIndex = 0;
 
@@ -246,15 +254,13 @@ public class BqrRegionReader implements CigarHandler
         if(record.getMappingQuality() < BQR_MIN_MAP_QUAL)
             return;
 
-        ++mReadCounter;
-
         setShortFragmentBoundaries(record);
 
         mCurrentReadType = extractReadType(record, mSequencingType);
 
         CigarHandler.traverseCigar(record, this);
 
-        if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
+        if(record.getAlignmentStart() >= mNextPurgePosition)
         {
             purgeBaseDataList(record.getAlignmentStart());
         }
@@ -394,19 +400,28 @@ public class BqrRegionReader implements CigarHandler
     {
         for(; mPurgeIndex <= mMaxIndex; ++mPurgeIndex)
         {
+            int position = mCurrentRefSequence.position(mPurgeIndex);
+
+            if(position <= 0)
+            {
+                RD_LOGGER.error("invalid calc position({}) purgeIndex({} -> {}) readPos({}) refSeq({})",
+                        position, mPurgeIndex, mMaxIndex, currentReadStartPos, mCurrentRefSequence);
+                System.exit(1);
+            }
+
+            if(position >= currentReadStartPos - BASE_DATA_PURGE_POS_BUFFER)
+                break;
+
             BaseQualityData bqData = mBaseQualityData[mPurgeIndex];
 
             if(bqData == null)
                 continue;
 
-            int position = mCurrentRefSequence.index(mPurgeIndex);
-
-            if(position >= currentReadStartPos - BASE_DATA_POS_BUFFER)
-                break;
-
             convertToKeyCounts(bqData);
             mBaseQualityData[mPurgeIndex] = null;
         }
+
+        mNextPurgePosition = currentReadStartPos + BASE_DATA_PURGE_POS_CHECK;
     }
 
     @VisibleForTesting
@@ -435,7 +450,6 @@ public class BqrRegionReader implements CigarHandler
 
         mKeyCountsMap.clear();
         mQualityCounts.clear();
-        mReadCounter = 0;
         mPurgeIndex = 0;
         mMaxIndex = 0;
     }

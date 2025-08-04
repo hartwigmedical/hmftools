@@ -48,7 +48,7 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        if(!mConfig.JitterMsiOnly)
+        if(!mConfig.BqrAndJitterMsiOnly)
         {
             RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
         }
@@ -129,7 +129,7 @@ public class ReduxApplication
         if(baseQualRecalibration.enabled())
             baseQualRecalibration.finalise();
 
-        if(mConfig.JitterMsiOnly)
+        if(mConfig.BqrAndJitterMsiOnly)
         {
             RD_LOGGER.info("Redux jitter complete, mins({})", runTimeMinsStr(startTimeMs));
             return;

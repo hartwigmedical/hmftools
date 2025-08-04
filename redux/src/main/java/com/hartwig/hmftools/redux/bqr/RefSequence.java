@@ -30,6 +30,7 @@ public class RefSequence
     {
         return position - Start;
     }
+    public int position(int index) { return Start + index; }
 
     public boolean positionWithinBounds(int position)
     {
