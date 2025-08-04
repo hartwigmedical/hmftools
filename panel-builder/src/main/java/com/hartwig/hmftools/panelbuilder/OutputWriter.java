@@ -171,9 +171,9 @@ public class OutputWriter implements AutoCloseable
         row.setOrNull(FLD_CHROMOSOME, region == null ? null : region.chromosome());
         row.setOrNull(FLD_POSITION_START, region == null ? null : region.start());
         row.setOrNull(FLD_POSITION_END, region == null ? null : region.end());
-        row.setOrNull(FLD_SEQUENCE, probe.sequence());
-        row.set(FLD_QUALITY_SCORE, requireNonNull(probe.qualityScore()));
-        row.set(FLD_GC_CONTENT, requireNonNull(probe.gcContent()));
+        row.set(FLD_SEQUENCE, probe.sequence());
+        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.set(FLD_GC_CONTENT, probe.gcContent());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
     }
@@ -292,11 +292,11 @@ public class OutputWriter implements AutoCloseable
         row.setOrNull(FLD_CHROMOSOME, region == null ? null : region.chromosome());
         row.setOrNull(FLD_POSITION_START, region == null ? null : region.start());
         row.setOrNull(FLD_POSITION_END, region == null ? null : region.end());
-        row.setOrNull(FLD_SEQUENCE, probe.sequence());
+        row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
-        row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
-        row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
+        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.set(FLD_GC_CONTENT, probe.gcContent());
         row.setOrNull(FLD_EVAL_CRITERIA, requireNonNull(probe.evalCriteria()).toString());
         row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());
     }
@@ -308,8 +308,8 @@ public class OutputWriter implements AutoCloseable
 
     private static String probeBedName(final Probe probe)
     {
-        double qualityScore = requireNonNull(probe.qualityScore());
-        double gcContent = requireNonNull(probe.gcContent());
+        double qualityScore = probe.qualityScore();
+        double gcContent = probe.gcContent();
         String baseName = targetMetadataToBedName(probe.metadata());
         return format("%s:QS=%.2f:GC=%.2f", baseName, qualityScore, gcContent);
     }

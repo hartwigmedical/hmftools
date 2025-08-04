@@ -133,8 +133,7 @@ public class CustomRegions
     {
         LOGGER.debug("Generating probes for {}", region);
         TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
-        ProbeContext context = new ProbeContext(metadata);
-        ProbeGenerationResult result = probeGenerator.coverRegion(region.region(), context, PROBE_CRITERIA, coverage);
+        ProbeGenerationResult result = probeGenerator.coverRegion(region.region(), metadata, PROBE_CRITERIA, coverage);
         return result;
     }
 }

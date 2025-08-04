@@ -446,21 +446,14 @@ public class TargetGenes
         return switch(geneRegion.type())
         {
             case CODING, PROMOTER ->
-            {
-                ProbeContext context = new ProbeContext(metadata);
-                yield probeGenerator.coverRegion(geneRegion.region(), context, GENERAL_PROBE_CRITERIA, null);
-            }
+                probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, null);
             case UTR ->
             {
                 BasePosition position = new BasePosition(geneRegion.region().chromosome(), regionCentre(geneRegion.region().baseRegion()));
-                ProbeContext context = new ProbeContext(metadata);
-                yield probeGenerator.coverPosition(position, context, GENERAL_PROBE_CRITERIA);
+                yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA);
             }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
-            {
-                ProbeContext context = new ProbeContext(metadata);
-                yield probeGenerator.coverOneSubregion(geneRegion.region(), context, CN_PROBE_CRITERIA);
-            }
+                probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA);
         };
     }
 

@@ -25,16 +25,18 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 // Utilities for creating candidate probes covering target regions.
 public class CandidateProbeGenerator
 {
+    private final ProbeFactory mProbeFactory;
     private final Map<String, Integer> mChromosomeLengths;
 
-    public CandidateProbeGenerator(final Map<String, Integer> chromosomeLengths)
+    public CandidateProbeGenerator(final ProbeFactory probeFactory, final Map<String, Integer> chromosomeLengths)
     {
+        mProbeFactory = probeFactory;
         mChromosomeLengths = chromosomeLengths;
     }
 
     // Generates candidate probes covering any subregion within the target region.
     // Probes do not extend outside the target region.
-    public Stream<Probe> coverOneSubregion(final ChrBaseRegion region, final ProbeContext context)
+    public Stream<Probe> coverOneSubregion(final ChrBaseRegion region, final TargetMetadata metadata)
     {
         if(region.baseLength() < PROBE_LENGTH)
         {
@@ -46,15 +48,15 @@ public class CandidateProbeGenerator
         // Stop once the probes go outside the target region.
         int minProbeStart = region.start();
         int maxProbeEnd = region.end();
-        return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd, context);
+        return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd, metadata);
     }
 
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
-    public Stream<Probe> coverPosition(final BasePosition position, final ProbeContext context)
+    public Stream<Probe> coverPosition(final BasePosition position, final TargetMetadata metadata)
     {
         int minProbeStart = minProbeStartContaining(position.Position);
         int maxProbeEnd = maxProbeEndContaining(position.Position);
-        return outwardMovingCenterAlignedProbes(position, minProbeStart, maxProbeEnd, context);
+        return outwardMovingCenterAlignedProbes(position, minProbeStart, maxProbeEnd, metadata);
     }
 
     // Returns candidate probes shifting left and right with offsets: 0, 1, -1, 2, -2, 3, -3, ...
@@ -66,7 +68,7 @@ public class CandidateProbeGenerator
     //   - Can't end after end of chromosome
     // Useful because we prefer to select probes which are closest to the target position or centre of a region.
     private Stream<Probe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
-            int maxProbeEnd, final ProbeContext context)
+            int maxProbeEnd, final TargetMetadata metadata)
     {
         if(maxProbeEnd - minProbeStart + 1 < PROBE_LENGTH)
         {
@@ -88,18 +90,23 @@ public class CandidateProbeGenerator
 
         return outwardMovingOffsets(minOffset, maxOffset)
                 .mapToObj(offset ->
-                        context.createProbe(ChrBaseRegion.from(
-                                initialPosition.Chromosome,
-                                probeRegionCenteredAt(initialPosition.Position + offset))));
+                        mProbeFactory.createProbeFromRegion(
+                                ChrBaseRegion.from(
+                                        initialPosition.Chromosome,
+                                        probeRegionCenteredAt(initialPosition.Position + offset)),
+                                metadata));
     }
 
     // Generates all probes overlapping a region, in order from left to right.
-    public Stream<Probe> allOverlapping(final ChrBaseRegion region, final ProbeContext context)
+    public Stream<Probe> allOverlapping(final ChrBaseRegion region, final TargetMetadata metadata)
     {
         int minProbeStart = max(minProbeStartOverlapping(region.baseRegion()), 1);
         int maxProbeEnd = min(maxProbeEndOverlapping(region.baseRegion()), mChromosomeLengths.get(region.chromosome()));
         int maxProbeStart = probeRegionEndingAt(maxProbeEnd).start();
         return IntStream.rangeClosed(minProbeStart, maxProbeStart)
-                .mapToObj(start -> context.createProbe(ChrBaseRegion.from(region.chromosome(), probeRegionStartingAt(start))));
+                .mapToObj(start ->
+                        mProbeFactory.createProbeFromRegion(
+                                ChrBaseRegion.from(region.chromosome(), probeRegionStartingAt(start)),
+                                metadata));
     }
 }

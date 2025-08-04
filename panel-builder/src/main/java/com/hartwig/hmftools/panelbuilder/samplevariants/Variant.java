@@ -15,6 +15,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.Probe;
+import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.jetbrains.annotations.Nullable;
@@ -75,7 +76,7 @@ public abstract class Variant
 
     public abstract boolean reported();
 
-    public abstract void generateProbe(final RefGenomeInterface refGenome);
+    public abstract void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory);
 
     public abstract boolean checkFilters();
 

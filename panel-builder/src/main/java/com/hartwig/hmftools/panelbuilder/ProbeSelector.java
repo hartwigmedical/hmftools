@@ -27,7 +27,7 @@ public class ProbeSelector
             double optimalQuality = ((Strategy.MaxQuality) strategy).optimalQuality();
             return getBestScoringElement(
                     acceptableProbes,
-                    probe -> requireNonNull(probe.qualityScore()),
+                    Probe::qualityScore,
                     quality -> Doubles.greaterOrEqual(quality, optimalQuality),
                     true);
         }
@@ -37,7 +37,7 @@ public class ProbeSelector
             double optimalGcTolerance = ((Strategy.BestGc) strategy).gcToleranceOptimal();
             return getBestScoringElement(
                     acceptableProbes,
-                    probe -> abs(requireNonNull(probe.gcContent()) - requireNonNull(probe.evalCriteria()).gcContentTarget()),
+                    probe -> abs(probe.gcContent() - requireNonNull(probe.evalCriteria()).gcContentTarget()),
                     distance -> Doubles.lessOrEqual(distance, optimalGcTolerance),
                     false);
         }

@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromos
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_TOLERANCE;
@@ -263,8 +263,7 @@ public class CopyNumberBackbone
     private Stream<Probe> generateCandidateProbes(final Partition partition, final AmberSite site)
     {
         TargetMetadata metadata = createTargetMetadata(partition.Region, site);
-        ProbeContext context = new ProbeContext(metadata);
-        return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), context);
+        return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), metadata);
     }
 
     public record TargetMetadataExtra(

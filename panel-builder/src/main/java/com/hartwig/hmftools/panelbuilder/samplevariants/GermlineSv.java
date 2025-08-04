@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.Probe;
+import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,12 +78,12 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
     {
         String sequence = StructuralVariant.generateSvSequence(
                 refGenome, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence);
-        Probe probe = new Probe(sequence, probeMetadata());
+        Probe probe = probeFactory.createProbeFromSequence(sequence, probeMetadata());
         setProbe(probe);
     }
 

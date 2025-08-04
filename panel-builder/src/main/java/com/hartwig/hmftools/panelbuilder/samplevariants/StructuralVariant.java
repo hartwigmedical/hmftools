@@ -5,14 +5,14 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.linx.DriverEventType.DEL;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
-import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
-import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.wisp.CategoryType.AMP;
 import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
@@ -49,6 +49,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.Probe;
+import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -302,7 +303,7 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
     {
         String sequence;
         if(mVariant.type() == SGL)
@@ -316,7 +317,7 @@ public class StructuralVariant extends Variant
                     refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
         }
-        Probe probe = new Probe(sequence, probeMetadata());
+        Probe probe = probeFactory.createProbeFromSequence(sequence, probeMetadata());
         setProbe(probe);
     }
 

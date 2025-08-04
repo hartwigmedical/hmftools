@@ -20,9 +20,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.Probe;
+import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,20 +89,18 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome)
+    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
     {
-        String sequence;
         if(mAlt.isEmpty())
         {
-            BaseRegion region = probeRegionCenteredAt(mPosition.Position);
-            sequence = refGenome.getBaseString(mPosition.Chromosome, region.start(), region.end());
+            ChrBaseRegion region = ChrBaseRegion.from(mPosition.Chromosome, probeRegionCenteredAt(mPosition.Position));
+            setProbe(probeFactory.createProbeFromRegion(region, probeMetadata()));
         }
         else
         {
-            sequence = generateMutationSequence(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
+            String sequence = generateMutationSequence(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
+            setProbe(probeFactory.createProbeFromSequence(sequence, probeMetadata()));
         }
-        Probe probe = new Probe(sequence, probeMetadata());
-        setProbe(probe);
     }
 
     @Override

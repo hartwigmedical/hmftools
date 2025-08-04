@@ -15,7 +15,6 @@ public final class Constants
 
     public static final int MAX_INSERT_BASES = 60;
     public static final int MAX_INDEL_LENGTH = 32;
-    public static final int MAX_POLY_A_T_BASES = 7;
 
     public static int NONREPORTABLE_SV_COUNT = 0;
     public static int SUBCLONAL_COUNT = 0;

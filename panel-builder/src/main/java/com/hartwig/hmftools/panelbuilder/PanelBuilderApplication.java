@@ -41,9 +41,7 @@ public class PanelBuilderApplication
         mRefGenome = loadRefGenome(mConfig.refGenomeFile());
         mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
-        ProbeEvaluator probeEvaluator = new ProbeEvaluator(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
-        CandidateProbeGenerator candidateGenerator = new CandidateProbeGenerator(mRefGenome.chromosomeLengths());
-        mProbeGenerator = new ProbeGenerator(candidateGenerator, probeEvaluator);
+        mProbeGenerator = ProbeGenerator.create(mRefGenome, probeQualityProfile, this::writeCandidateProbe);
         mPanelData = new PanelData();
     }
 

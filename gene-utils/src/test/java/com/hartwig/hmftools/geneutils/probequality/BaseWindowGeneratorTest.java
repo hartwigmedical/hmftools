@@ -21,15 +21,15 @@ public class BaseWindowGeneratorTest
     public BaseWindowGeneratorTest()
     {
         MockRefGenome refGenome = new MockRefGenome(true);
-        refGenome.RefGenomeMap.putAll(Map.of(
+        refGenome.RefGenomeMap = Map.of(
                 "10", "AACCGGTTAACCGGTT",
                 "15", "TTGGCCAATTGGCCAATTGGCCAAT",
                 "17", "AAAAAAAAAACCCCCCCCCCGGGGGGGGGGTTTTTTTTTT"
-        ));
+        );
         // Compute chromosome lengths based on base sequences.
-        refGenome.ChromosomeLengths.putAll(
+        refGenome.ChromosomeLengths =
                 refGenome.RefGenomeMap.entrySet().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().length())));
+                        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().length()));
 
         SpecificRegions specificRegions = new SpecificRegions();
         // Include all of chr 10

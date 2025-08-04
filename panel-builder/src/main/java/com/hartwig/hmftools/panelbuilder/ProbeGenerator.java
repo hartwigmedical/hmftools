@@ -30,9 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -43,20 +46,35 @@ import org.jetbrains.annotations.Nullable;
 
 public class ProbeGenerator
 {
+    public final ProbeFactory mProbeFactory;
     public final CandidateProbeGenerator mCandidateGenerator;
     public final ProbeEvaluator mProbeEvaluator;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
-    public ProbeGenerator(final CandidateProbeGenerator candidateGenerator, final ProbeEvaluator probeEvaluator)
+    public ProbeGenerator(final ProbeFactory probeFactory, final CandidateProbeGenerator candidateGenerator,
+            final ProbeEvaluator probeEvaluator)
     {
+        mProbeFactory = probeFactory;
         mCandidateGenerator = candidateGenerator;
         mProbeEvaluator = probeEvaluator;
     }
 
+    public static ProbeGenerator create(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
+            final Consumer<Probe> candidateCallback)
+    {
+        ProbeFactory probeFactory = new ProbeFactory(refGenome, probeQualityProfile);
+        return new ProbeGenerator(
+                probeFactory,
+                new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths()),
+                new ProbeEvaluator(candidateCallback)
+        );
+
+    }
+
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
     // If `coverage` is not null, avoid placing probes in already covered regions.
-    public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final ProbeContext context,
+    public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
     {
         List<ChrBaseRegion> subregions;
@@ -79,17 +97,17 @@ public class ProbeGenerator
         }
 
         ProbeGenerationResult result = subregions.stream()
-                .map(subregion -> coverUncoveredRegion(subregion, context, criteria))
+                .map(subregion -> coverUncoveredRegion(subregion, metadata, criteria))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
 
         // Add in the candidate target region that's not added by coverSubregion().
-        TargetRegion candidateTarget = new TargetRegion(region, context.metadata());
+        TargetRegion candidateTarget = new TargetRegion(region, metadata);
         result = result.add(new ProbeGenerationResult(emptyList(), List.of(candidateTarget), emptyList(), emptyList()));
 
         return result;
     }
 
-    private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion region, final ProbeContext context,
+    private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeSelectCriteria criteria)
     {
         // Methodology:
@@ -101,7 +119,7 @@ public class ProbeGenerator
         String chromosome = region.chromosome();
         BaseRegion baseRegion = region.baseRegion();
 
-        Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, context)
+        Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, metadata)
                 .map(candidate -> mProbeEvaluator.evaluateProbe(candidate, criteria.eval()))
                 .filter(Probe::accepted);
 
@@ -144,13 +162,13 @@ public class ProbeGenerator
             // count those as covered and not mark them as rejected.
             Stream<BaseRegion> probeRegions = result.probes().stream().map(probe -> requireNonNull(probe.region()).baseRegion());
             computeUncoveredRegions(result.tilingIntendedCoverage(), probeRegions).stream()
-                    .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), context.metadata(), rejectionReason))
+                    .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata, rejectionReason))
                     .forEach(rejectedRegions::add);
         });
 
         // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
         List<TargetRegion> coveredTargets = mergeOverlapAndAdjacentRegions(probes.stream().map(Probe::region)).stream()
-                .map(covered -> new TargetRegion(regionIntersection(covered, region).orElseThrow(), context.metadata()))
+                .map(covered -> new TargetRegion(regionIntersection(covered, region).orElseThrow(), metadata))
                 .toList();
 
         // Candidate target is not added here because it would be added multiple times if there are multiple calls to this function for 1
@@ -385,11 +403,11 @@ public class ProbeGenerator
     }
 
     // Generates the 1 best acceptable probe that is contained within the specified region.
-    public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final ProbeContext context,
+    public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeSelectCriteria criteria)
     {
-        TargetRegion target = new TargetRegion(region, context.metadata());
-        Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, context);
+        TargetRegion target = new TargetRegion(region, metadata);
+        Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, metadata);
         Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria.eval());
         return selectBestProbe(evaluatedCandidates, criteria.select())
                 .map(probe -> ProbeGenerationResult.coveredTarget(target, probe))
@@ -401,11 +419,11 @@ public class ProbeGenerator
     }
 
     // Generates the 1 best acceptable probe which covers a position.
-    public ProbeGenerationResult coverPosition(final BasePosition position, final ProbeContext context,
+    public ProbeGenerationResult coverPosition(final BasePosition position, final TargetMetadata metadata,
             final ProbeSelectCriteria criteria)
     {
-        TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), context.metadata());
-        Stream<Probe> candidates = mCandidateGenerator.coverPosition(position, context);
+        TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
+        Stream<Probe> candidates = mCandidateGenerator.coverPosition(position, metadata);
         Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria.eval());
         return selectBestProbe(evaluatedCandidates, criteria.select())
                 .map(probe -> ProbeGenerationResult.coveredTarget(target, probe))

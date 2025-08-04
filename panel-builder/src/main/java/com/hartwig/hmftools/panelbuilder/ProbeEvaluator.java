@@ -4,17 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.DEFAULT_PROBE_QUALITY;
-
 import java.text.DecimalFormat;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
-import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,20 +18,14 @@ import org.jetbrains.annotations.Nullable;
 // Common candidate probe evaluation and filtering.
 public class ProbeEvaluator
 {
-    private final RefGenomeInterface mRefGenome;
-    private final ProbeQualityProfile mQualityProfile;
     // Hook to catch all candidate probes for output.
     @Nullable
     private final Consumer<Probe> mCandidateCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeEvaluator.class);
 
-    public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityProfile qualityProfile,
-            final @Nullable Consumer<Probe> candidateCallback)
+    public ProbeEvaluator(final @Nullable Consumer<Probe> candidateCallback)
     {
-        // During probe generation it's common to evaluate many nearby probes, which can be exploited with caching to improve performance.
-        mRefGenome = refGenome instanceof CachedRefGenome ? refGenome : new CachedRefGenome(refGenome);
-        mQualityProfile = qualityProfile;
         mCandidateCallback = candidateCallback;
     }
 
@@ -64,15 +50,10 @@ public class ProbeEvaluator
         return probes.map(probe -> evaluateProbe(probe, criteria));
     }
 
-    private Probe evaluateQualityScore(Probe probe)
+    private static Probe evaluateQualityScore(Probe probe)
     {
-        if(probe.qualityScore() == null)
-        {
-            probe = setQualityScore(probe);
-        }
-
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        double qualityScore = requireNonNull(probe.qualityScore());
+        double qualityScore = probe.qualityScore();
         if(!(qualityScore >= criteria.qualityScoreMin()))
         {
             probe = probe.withRejectionReason("QS");
@@ -80,50 +61,13 @@ public class ProbeEvaluator
         return probe;
     }
 
-    private Probe evaluateGcContent(Probe probe)
+    private static Probe evaluateGcContent(Probe probe)
     {
-        if(probe.gcContent() == null)
-        {
-            probe = setGcContent(probe);
-        }
-
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        double gcContent = requireNonNull(probe.gcContent());
+        double gcContent = probe.gcContent();
         if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
         {
             probe = probe.withRejectionReason("GC");
-        }
-        return probe;
-    }
-
-    private Probe setQualityScore(final Probe probe)
-    {
-        // TODO: compute score based on probe quality model?
-        double qualityScore = mQualityProfile.computeQualityScore(probe.region()).orElseGet(() ->
-        {
-            double quality = DEFAULT_PROBE_QUALITY;
-            LOGGER.trace("Candidate probe not covered by probe quality profile so assuming qualityScore={} probe={}",
-                    quality, probe);
-            return quality;
-        });
-        return probe.withQualityScore(qualityScore);
-    }
-
-    private Probe setGcContent(Probe probe)
-    {
-        probe = setSequence(probe);
-        double gcContent = calcGcPercent(requireNonNull(probe.sequence()));
-        probe = probe.withGcContent(gcContent);
-        return probe;
-    }
-
-    private Probe setSequence(Probe probe)
-    {
-        if(probe.sequence() == null)
-        {
-            ChrBaseRegion region = requireNonNull(probe.region());
-            String sequence = mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
-            probe = probe.withSequence(sequence);
         }
         return probe;
     }
