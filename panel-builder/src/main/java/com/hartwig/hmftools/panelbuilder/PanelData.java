@@ -39,6 +39,13 @@ public class PanelData implements PanelCoverage
 
     public void addResult(final ProbeGenerationResult result)
     {
+        result.probes().forEach(probe ->
+        {
+            if(!probe.accepted())
+            {
+                throw new IllegalArgumentException("Should only add accepted probes to the panel");
+            }
+        });
         LOGGER.debug("Adding to panel: probes={} candidateTargetRegions={} coveredTargetRegions={} rejectedRegions={}",
                 result.probes().size(), result.candidateTargetRegions().size(), result.coveredTargetRegions().size(),
                 result.rejectedRegions().size());

@@ -74,6 +74,7 @@ public class PanelBuilderApplication
         Genes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
         generateCopyNumberBackboneProbes();
+        generateCdr3Probes();
         SampleVariants.ExtraOutput sampleExtraOutput = generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
@@ -126,6 +127,19 @@ public class PanelBuilderApplication
                     new CopyNumberBackbone(mConfig.amberSitesFile(), mRefGenomeVersion, mProbeGenerator, mPanelData);
             copyNumberBackbone.generateProbes();
             // Result is stored into mPanelData
+        }
+    }
+
+    private void generateCdr3Probes()
+    {
+        if(mConfig.includeCdr3())
+        {
+            Cdr3Regions.generateProbes(mRefGenomeVersion, mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData
+        }
+        else
+        {
+            LOGGER.info("CDR3 not requested; skipping CDR3 probe generation");
         }
     }
 

@@ -50,6 +50,9 @@ public class PanelBuilderConstants
     // Very high probe quality threshold because there are many sites to pick from to we may as well get the best.
     public static final double CN_BACKBONE_QUALITY_MIN = 0.8;
 
+    // CDR3 probe constants.
+    public static final double CDR3_QUALITY_MIN = 0.1;
+
     // GC content bounds for probes used for determining copy number.
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.
     public static final double CN_GC_TARGET = 0.45;

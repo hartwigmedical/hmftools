@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.refGenomeCoordinates;
@@ -223,11 +222,11 @@ public class CopyNumberBackbone
                     if(mPanelData.isCovered(target.region()))
                     {
                         LOGGER.debug("Copy number backbone target already covered by panel: {}", target);
-                        return new ProbeGenerationResult(emptyList(), List.of(target), emptyList(), emptyList());
+                        return ProbeGenerationResult.alreadyCoveredTarget(target);
                     }
                     else
                     {
-                        return new ProbeGenerationResult(List.of(bestProbe), List.of(target), List.of(target), emptyList());
+                        return ProbeGenerationResult.coveredTarget(target, bestProbe);
                     }
                 })
                 .orElseGet(() ->

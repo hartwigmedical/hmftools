@@ -37,6 +37,10 @@ public record ProbeGenerationResult(
     // Convenience method for creating a result from covering a target region with exactly 1 probe.
     public static ProbeGenerationResult coveredTarget(final TargetRegion candidateTarget, final Probe probe)
     {
+        if(!probe.accepted())
+        {
+            throw new IllegalArgumentException("Should only add accepted probes to result");
+        }
         TargetRegion covered = new TargetRegion(
                 regionIntersection(candidateTarget.region(), requireNonNull(probe.region())).orElseThrow(),
                 candidateTarget.metadata());
@@ -46,6 +50,12 @@ public record ProbeGenerationResult(
                 List.of(covered),
                 emptyList()
         );
+    }
+
+    // Convenience method for creating a result from a candidate target which got no probes since it was already covered.
+    public static ProbeGenerationResult alreadyCoveredTarget(final TargetRegion candidateTarget)
+    {
+        return new ProbeGenerationResult(emptyList(), List.of(candidateTarget), emptyList(), emptyList());
     }
 
     // Convenience method for creating a result from rejecting an entire target region.

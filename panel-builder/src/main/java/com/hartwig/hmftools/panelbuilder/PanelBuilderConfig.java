@@ -28,6 +28,7 @@ public record PanelBuilderConfig(
         String bwaIndexImageFile,
         @Nullable String bwaLibPath,
         @Nullable String genesFile,
+        boolean includeCdr3,
         @Nullable String customRegionsFile,
         @Nullable SampleVariantsConfig sampleVariants,
         @Nullable String outputId,
@@ -42,6 +43,8 @@ public record PanelBuilderConfig(
     private static final String DESC_AMBER_SITES_FILE = "Amber het sites file";
     private static final String CFG_TARGET_GENES_FILE = "target_genes";
     private static final String DESC_TARGET_GENES_FILE = "Gene and transcript name file";
+    private static final String CFG_INCLUDE_CDR3 = "cdr3";
+    private static final String DESC_INCLUDE_CDR3 = "Include fixed CDR3 panel probes";
     private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
     private static final String DESC_CUSTOM_REGIONS_FILE = "Custom region file";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
@@ -58,6 +61,7 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(CFG_BWA_INDEX_IMAGE_FILE, refGenomePath + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
                 configBuilder.getValue(CFG_TARGET_GENES_FILE),
+                configBuilder.hasFlag(CFG_INCLUDE_CDR3),
                 configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
@@ -78,6 +82,7 @@ public record PanelBuilderConfig(
         configBuilder.addPath(CFG_BWA_INDEX_IMAGE_FILE, false, DESC_BWA_INDEX_IMAGE_FILE);
 
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
+        configBuilder.addFlag(CFG_INCLUDE_CDR3, DESC_INCLUDE_CDR3);
         configBuilder.addPath(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
 
         addOutputOptions(configBuilder);

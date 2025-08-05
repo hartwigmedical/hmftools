@@ -18,6 +18,7 @@ public record TargetMetadata(
     {
         GENE,
         CN_BACKBONE,
+        CDR3,
         CUSTOM,
         SAMPLE_VARIANT
     }
