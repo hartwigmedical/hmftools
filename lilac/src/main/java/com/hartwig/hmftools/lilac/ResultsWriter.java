@@ -49,6 +49,8 @@ import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.variant.LilacVCF;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class ResultsWriter
@@ -158,8 +160,15 @@ public class ResultsWriter
         AminoAcidQC aminoAcidQC = new AminoAcidQC(0, 0);
         BamQC bamQC = new BamQC(0, 0, 0, geneBaseDepth);
 
+        // TODO:
+        if(true)
+        {
+            throw new NotImplementedException("");
+        }
+
+        Map<HlaGene, Integer> countsByGene = Map.of(HlaGene.HLA_A, 0, HlaGene.HLA_B, 0, HlaGene.HLA_C, 0);
         CoverageQC coverageQC = new CoverageQC(
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                countsByGene, 0, 0, 0, 0, 0, 0, 0);
 
         LilacQC summaryMetrics = new LilacQC(
                 0, "", 0, null,

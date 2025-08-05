@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 public class HlaSequenceLoci
 {
     public final HlaAllele Allele;
@@ -231,7 +233,7 @@ public class HlaSequenceLoci
             char seqChar = sequence.charAt(i);
             char refChar = i < reference.length() ? reference.charAt(i) : IDENTICAL;
             boolean isBaseInserted = seqChar != DELETION && (i >= reference.length() || refChar == DELETION);
-            boolean isBaseIgnored = (seqChar == '.' && i < reference.length() && refChar == DELETION) || (seqChar == EXON_BOUNDARY);
+            boolean isBaseIgnored = (seqChar == DELETION && refChar == DELETION) || (seqChar == EXON_BOUNDARY);
 
             if(insLength > 0 && !isBaseInserted)
             {
