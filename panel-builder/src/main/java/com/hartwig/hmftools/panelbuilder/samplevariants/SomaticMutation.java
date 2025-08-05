@@ -239,7 +239,7 @@ public class SomaticMutation extends Variant
     {
         String vcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
 
-        List<Variant> variants = Lists.newArrayList();
+        List<Variant> variants = new ArrayList<>();
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 

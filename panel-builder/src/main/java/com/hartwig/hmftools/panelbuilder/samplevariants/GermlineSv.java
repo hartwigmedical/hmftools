@@ -112,7 +112,7 @@ public class GermlineSv extends Variant
 
     public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final String linxGermlineDir)
     {
-        List<Variant> variants = Lists.newArrayList();
+        List<Variant> variants = new ArrayList<>();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
 

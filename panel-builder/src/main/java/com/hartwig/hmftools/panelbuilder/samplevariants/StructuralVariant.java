@@ -22,12 +22,12 @@ import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuild
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
@@ -251,7 +251,7 @@ public class StructuralVariant extends Variant
 
     public static List<Variant> loadStructuralVariants(final String sampleId, final String purpleDir, @Nullable final String linxDir)
     {
-        List<Variant> variants = Lists.newArrayList();
+        List<Variant> variants = new ArrayList<>();
 
         if(linxDir == null)
         {
@@ -267,7 +267,7 @@ public class StructuralVariant extends Variant
         List<LinxSvAnnotation> annotations;
         List<LinxFusion> fusions;
         List<LinxDriver> drivers;
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+        List<GeneCopyNumber> geneCopyNumbers = new ArrayList<>();
         List<LinxCluster> clusters;
 
         try
@@ -299,8 +299,8 @@ public class StructuralVariant extends Variant
             throw new RuntimeException(error);
         }
 
-        Map<Integer, List<StructuralVariant>> clusterSVs = Maps.newHashMap();
-        drivers.forEach(x -> clusterSVs.put(x.clusterId(), Lists.newArrayList()));
+        Map<Integer, List<StructuralVariant>> clusterSVs = new HashMap<>();
+        drivers.forEach(x -> clusterSVs.put(x.clusterId(), new ArrayList<>()));
 
         for(EnrichedStructuralVariant variant : enrichedVariants)
         {
@@ -324,7 +324,7 @@ public class StructuralVariant extends Variant
             if(annotation == null)
             {
                 LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
-                // return Lists.newArrayList();
+                // return new ArrayList<>();
                 continue;
             }
 

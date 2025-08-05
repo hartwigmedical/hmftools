@@ -127,10 +127,10 @@ public class PointMutationTest
 //        alleles.add(Allele.create(ref, true));
 //        alleles.add(Allele.create(alt, false));
 //
-//        Map<String, Object> refAttributes = Maps.newHashMap();
-//        Map<String, Object> tumorAttributes = Maps.newHashMap();
+//        Map<String, Object> refAttributes = new HashMap<>();
+//        Map<String, Object> tumorAttributes = new HashMap<>();
 //
-//        Map<String, Object> commonAttributes = Maps.newHashMap();
+//        Map<String, Object> commonAttributes = new HashMap<>();
 //
 //        Genotype gtNormal = new GenotypeBuilder()
 //                .attributes(refAttributes)

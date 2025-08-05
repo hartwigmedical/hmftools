@@ -8,7 +8,8 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENERAL_GC
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
 
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.hartwig.hmftools.common.cider.IgTcrGene;
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile;
@@ -34,14 +35,19 @@ public class Cdr3Regions
     {
         LOGGER.info("Generating CDR3 probes");
 
-        Stream<IgTcrGene> genes = IgTcrGeneFile.read(refGenomeVersion).stream()
+        List<IgTcrGene> genes = IgTcrGeneFile.read(refGenomeVersion).stream()
                 .filter(gene -> gene.region() == IgTcrRegion.V_REGION || gene.region() == IgTcrRegion.J_REGION)
                 .filter(IgTcrGene::inPrimaryAssembly)
-                .filter(gene -> gene.anchorLocation() != null);
+                .filter(gene -> gene.anchorLocation() != null)
+                .toList();
+        LOGGER.debug("Loaded {} V/J genes", genes.size());
 
-        ProbeGenerationResult result = genes
-                .map(gene -> generateProbe(gene, probeGenerator, panelData))
-                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        ProbeGenerationResult result = new ProbeGenerationResult();
+        ArrayList<ChrBaseRegion> coveredRegions = new ArrayList<>();
+        for(IgTcrGene gene : genes)
+        {
+            result = result.add(generateProbe(gene, probeGenerator, panelData, coveredRegions));
+        }
 
         panelData.addResult(result);
 
@@ -49,9 +55,18 @@ public class Cdr3Regions
     }
 
     private static ProbeGenerationResult generateProbe(final IgTcrGene gene, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage)
+            final PanelCoverage coverage, ArrayList<ChrBaseRegion> coveredRegions)
     {
         ChrBaseRegion region = calculateProbeRegion(gene);
+
+        if(coveredRegions.stream().anyMatch(region::overlaps))
+        {
+            // It's possible regions overlap other regions, in which case just take the first and discard the rest.
+            LOGGER.trace("CDR3 region overlaps with another; discarding");
+            return new ProbeGenerationResult();
+        }
+        coveredRegions.add(region);
+
         TargetMetadata metadata = createTargetMetadata(gene);
         TargetRegion target = new TargetRegion(region, metadata);
         Probe probe = probeGenerator.mProbeFactory.createProbeFromRegion(region, metadata).orElseThrow();
@@ -59,7 +74,6 @@ public class Cdr3Regions
 
         if(probe.accepted())
         {
-            // Note this coverage check also checks previously added CDR3 regions, since overlaps may result.
             if(coverage.isCovered(region))
             {
                 LOGGER.debug("CDR3 target already covered by panel: {}", target);

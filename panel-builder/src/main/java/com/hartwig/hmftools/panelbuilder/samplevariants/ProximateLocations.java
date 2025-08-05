@@ -3,13 +3,12 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class ProximateLocations
 {
@@ -20,7 +19,7 @@ public class ProximateLocations
 
     public ProximateLocations()
     {
-        mRegisteredLocations = Maps.newHashMap();
+        mRegisteredLocations = new HashMap<>();
     }
 
     public boolean isNearRegisteredLocation(final String chromosome, final int position)
@@ -52,7 +51,8 @@ public class ProximateLocations
 
         if(positions == null)
         {
-            positions = Lists.newArrayList(new Location(position, orientation));
+            positions = new ArrayList<>();
+            positions.add(new Location(position, orientation));
             mRegisteredLocations.put(chromosome, positions);
             return;
         }
@@ -86,7 +86,7 @@ public class ProximateLocations
         public Location(int position, byte orientation)
         {
             Position = position;
-            Orientations = Sets.newHashSet();
+            Orientations = new HashSet<>();
             Orientations.add(orientation);
         }
 

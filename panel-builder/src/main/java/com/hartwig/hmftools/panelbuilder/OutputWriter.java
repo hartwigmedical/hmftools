@@ -398,6 +398,8 @@ public class OutputWriter implements AutoCloseable
         mRejectedRegionsTsvWriter.close();
         mRejectedRegionsBedWriter.close();
 
+        mCandidateRegionsBedWriter.close();
+
         if(mCandidateProbesTsvWriter != null)
         {
             checkFlushCandidateProbes(true);

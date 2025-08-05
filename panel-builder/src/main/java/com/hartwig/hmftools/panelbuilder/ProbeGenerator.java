@@ -45,9 +45,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+// Encapsulates all functionality for creating probes.
 public class ProbeGenerator
 {
-    // TODO: review external uses of members
     public final ProbeFactory mProbeFactory;
     public final CandidateProbeGenerator mCandidateGenerator;
     public final ProbeEvaluator mProbeEvaluator;

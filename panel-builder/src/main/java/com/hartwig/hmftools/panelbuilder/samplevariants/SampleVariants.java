@@ -17,13 +17,14 @@ import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLON
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.PanelData;
@@ -70,7 +71,7 @@ public class SampleVariants
     {
         LOGGER.info("Generating sample variant probes");
 
-        List<Variant> variants = Lists.newArrayList();
+        List<Variant> variants = new ArrayList<>();
 
         variants.addAll(loadReferenceVariants());
 
@@ -80,8 +81,8 @@ public class SampleVariants
         variants.addAll(StructuralVariant.loadStructuralVariants(mConfig.sampleId(), mConfig.purpleDir(), mConfig.linxDir()));
         variants.addAll(GermlineSv.loadGermlineStructuralVariants(mConfig.sampleId(), mConfig.linxGermlineDir()));
 
-        ProbeGenerationResult result = generateProbes(variants);
-        List<Variant> selectedVariants = variants.stream().filter(Variant::isSelected).toList();
+        ArrayList<Variant> selectedVariants = new ArrayList<>();
+        ProbeGenerationResult result = generateProbes(variants, selectedVariants);
 
         mPanelData.addResult(result);
 
@@ -118,16 +119,15 @@ public class SampleVariants
         }
     }
 
-    public ProbeGenerationResult generateProbes(List<Variant> variants)
+    public ProbeGenerationResult generateProbes(List<Variant> variants, ArrayList<Variant> selectedVariants)
     {
         variants.forEach(variant -> variant.setSelectionStatus(SelectionStatus.NOT_SET));
         variants.sort(new VariantComparator());
 
         ProbeGenerationResult result = new ProbeGenerationResult();
 
-        List<Variant> selectedVariants = Lists.newArrayList();
         ProximateLocations registeredLocations = new ProximateLocations();
-        Map<String, Integer> geneDisruptions = Maps.newHashMap();
+        Map<String, Integer> geneDisruptions = new HashMap<>();
         int[] typeCounts = new int[CategoryType.values().length];
 
         result = result.add(generateProbes(variants, selectedVariants, registeredLocations, geneDisruptions, typeCounts, true));
@@ -143,7 +143,7 @@ public class SampleVariants
         return result;
     }
 
-    private ProbeGenerationResult generateProbes(final List<Variant> variants, List<Variant> selectedVariants,
+    private ProbeGenerationResult generateProbes(final List<Variant> variants, ArrayList<Variant> selectedVariants,
             ProximateLocations registeredLocations,
             Map<String, Integer> geneDisruptions, int[] typeCounts, boolean firstPass)
     {
@@ -224,7 +224,7 @@ public class SampleVariants
         return result;
     }
 
-    private ProbeGenerationResult generateProbe(Variant variant, List<Variant> selectedVariants, int[] typeCounts)
+    private ProbeGenerationResult generateProbe(Variant variant, ArrayList<Variant> selectedVariants, int[] typeCounts)
     {
         VariantProbeData probeData = variant.generateProbe(mRefGenome);
 

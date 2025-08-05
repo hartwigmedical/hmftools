@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 // TODO: polyA/T checks?
 
-// Common candidate probe evaluation and filtering.
+// Common candidate probe filtering.
 public class ProbeEvaluator
 {
     // Hook to catch all candidate probes for output.

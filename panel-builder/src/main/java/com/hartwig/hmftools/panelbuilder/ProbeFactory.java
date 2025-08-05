@@ -18,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+// Handles creation of individual probes.
 public class ProbeFactory
 {
     private final RefGenomeInterface mRefGenome;
@@ -58,23 +59,26 @@ public class ProbeFactory
                 () -> calcGcPercent(sequence));
     }
 
-    private Optional<Probe> createProbe(final ChrBaseRegion region, final String sequence, final TargetMetadata metadata,
+    private Optional<Probe> createProbe(@Nullable final ChrBaseRegion region, final String sequence, final TargetMetadata metadata,
             final DoubleSupplier getQualityScore, final DoubleSupplier getGcContent)
     {
-        // Only check the sequence, which the caller probably won't inspect in advance.
-        // Everything else is expected to be checked by the caller.
-        boolean valid = !isDnaSequenceNormal(sequence);
+        // Only check properties which are inconvenient for the caller to check in advance.
+        // Everything else is expected to be checked by the caller and will generate an exception.
+        boolean regionValid =
+                region == null || (region.start() >= 1 && region.end() <= mRefGenome.getChromosomeLength(region.chromosome()));
+        boolean sequenceValid = isDnaSequenceNormal(sequence);
+        boolean valid = regionValid && sequenceValid;
         if(valid)
-        {
-            LOGGER.trace("Attempted to create invalid probe region={} sequence={} metadata={}", region, sequence, metadata);
-            return Optional.empty();
-        }
-        else
         {
             return Optional.of(new Probe(
                     region, sequence, metadata,
                     null, null,
                     getQualityScore.getAsDouble(), getGcContent.getAsDouble()));
+        }
+        else
+        {
+            LOGGER.trace("Attempted to create invalid probe region={} sequence={} metadata={}", region, sequence, metadata);
+            return Optional.empty();
         }
     }
 

@@ -120,7 +120,7 @@ public class ReferenceMutation extends Variant
 
     public static List<Variant> loadKnownMutations(final String filename)
     {
-        List<Variant> variants = Lists.newArrayList();
+        List<Variant> variants = new ArrayList<>();
 
         try
         {

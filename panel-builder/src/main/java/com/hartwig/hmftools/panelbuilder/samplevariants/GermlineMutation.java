@@ -103,7 +103,7 @@ public class GermlineMutation extends Variant
 
     public static List<Variant> loadGermlineMutations(final String sampleId, final String purpleDir)
     {
-        List<Variant> variants = Lists.newArrayList();
+        List<Variant> variants = new ArrayList<>();
 
         // TODO: unused - bug?
         CompoundFilter filter = new CompoundFilter(true);
