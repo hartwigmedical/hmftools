@@ -33,7 +33,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.GeneCache;
 import com.hartwig.hmftools.lilac.LilacApplication;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.ResultsWriter;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
@@ -72,7 +71,7 @@ public class LilacAppTest
         if(GENE_CACHE != null)
             return;
 
-        GENE_CACHE = new GeneCache(MhcClass.CLASS_1, loadHlaTranscripts(V37, MhcClass.CLASS_1));
+        GENE_CACHE = new GeneCache(loadHlaTranscripts(V37));
         A_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
         B_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
         C_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));

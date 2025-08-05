@@ -27,6 +27,12 @@ public final class ExtendEvidence
     public ExtendEvidence(final LilacConfig config, final List<Integer> heterozygousLoci,
             final List<Fragment> aminoAcidFragments, final ExpectedAlleles expectedAlleles)
     {
+        // TODO:
+        if(expectedAlleles == null)
+        {
+            throw new RuntimeException("expectedAlleles == null");
+        }
+
         mConfig = config;
         mHeterozygousLoci = heterozygousLoci;
         mFragments = aminoAcidFragments;
@@ -135,12 +141,12 @@ public final class ExtendEvidence
         return Pair.create(current, Sets.newHashSet());
     }
 
-    private final int minTotalFragments(List<Integer> indices)
+    private int minTotalFragments(List<Integer> indices)
     {
         return mExpectedAlleles.expectedAlleles(indices) * mConfig.MinFragmentsPerAllele;
     }
 
-    private final Pair<PhasedEvidence, Set<PhasedEvidence>> merge( PhasedEvidence current, PhasedEvidence left, PhasedEvidence right)
+    private Pair<PhasedEvidence, Set<PhasedEvidence>> merge( PhasedEvidence current, PhasedEvidence left, PhasedEvidence right)
     {
         List<Integer> leftTail = left.unambiguousTailIndices();
         List<Integer> rightHead = right.unambiguousHeadIndices();

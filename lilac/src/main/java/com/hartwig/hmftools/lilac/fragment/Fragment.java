@@ -17,10 +17,13 @@ import java.util.stream.IntStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.MhcClass_;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.read.Read;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 public class Fragment
 {
@@ -53,6 +56,12 @@ public class Fragment
     public Fragment(
             final Read read, final HlaGene readGene, final Set<HlaGene> genes, final Iterable<Nucleotide> nucleotides)
     {
+        // TODO:
+        if(!genes.contains(readGene))
+        {
+            throw new RuntimeException("readGene not in genes");
+        }
+
         mReads = Lists.newArrayListWithCapacity(2);
         mReads.add(read);
 

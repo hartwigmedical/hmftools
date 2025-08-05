@@ -72,7 +72,7 @@ public class LilacConfig
     public final String SampleDataDir;
     public final String OutputDir;
 
-    public final MhcClass ClassType;
+    public final MhcClass_ ClassType;
 
     public final double HlaYPercentThreshold;
 
@@ -105,7 +105,7 @@ public class LilacConfig
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
 
-    public static final String MHC_CLASS = "mhc_class";
+    public static final String MHC_CLASS_ = "mhc_class";
 
     // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";
@@ -193,7 +193,7 @@ public class LilacConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        ClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
+        ClassType = configBuilder.hasValue(MHC_CLASS_) ? MhcClass_.valueOf(configBuilder.getValue(MHC_CLASS_)) : null;
 
         LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte)configBuilder.getInteger(MIN_BASE_QUAL);
         LilacConstants.MIN_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
@@ -274,7 +274,7 @@ public class LilacConfig
         RefGenome = "";
         RefGenVersion = V37;
 
-        ClassType = MhcClass.CLASS_1;
+        ClassType = MhcClass_.CLASS_1;
 
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
 
@@ -351,8 +351,6 @@ public class LilacConfig
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(RESOURCE_DIR, true, "Path to resource files");
-
-        configBuilder.addConfigItem(MHC_CLASS, false, "MHC Class Type", MhcClass.CLASS_1.toString());
     }
 
     private static List<HlaAllele> parseAlleleList(final String allelesStr)
