@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
-import static java.util.Collections.emptyList;
-
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_QUALITY_MIN;
@@ -16,7 +14,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
 
 import org.apache.logging.log4j.LogManager;
@@ -71,8 +68,6 @@ public class SampleVariants
                 .filter(Probe::accepted)
                 .toList();
 
-        // TODO: populate candidate regions, target regions, rejected regions(?)
-        ProbeGenerationResult result = new ProbeGenerationResult(probes, emptyList(), emptyList(), emptyList());
         panelData.addResult(result);
 
         LOGGER.info("Done generating sample variant probes");

@@ -4,11 +4,11 @@ public final class Constants
 {
     public static final double VAF_MIN = 0.05;
 
-    public static final int FRAG_COUNT_MIN = 11;
-    public static final int FRAG_COUNT_MIN_LOWER = 7;
+    public static final int FRAG_COUNT_MIN_STRICT = 11;
+    public static final int FRAG_COUNT_MIN = 7;
 
-    public static final int REPEAT_COUNT_MAX = 3;
-    public static final int REPEAT_COUNT_MAX_LOWER = 6;
+    public static final int REPEAT_COUNT_MAX_STRICT = 3;
+    public static final int REPEAT_COUNT_MAX = 6;
 
     public static final double SUBCLONAL_LIKELIHOOD_MIN = 0.95;
     public static final int SV_BREAKENDS_PER_GENE = 5;

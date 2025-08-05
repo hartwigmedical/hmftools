@@ -1,19 +1,13 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
-import static java.lang.Math.abs;
-
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE_STRICT;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN_LOWER;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN_STRICT;
 
 import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.PanelCoverage;
-import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
@@ -48,11 +42,6 @@ public abstract class Variant
         mProbeGenResult = result;
     }
 
-    public Probe probe()
-    {
-        return mProbeGenResult.probes().get(0);
-    }
-
     public abstract double copyNumber();
 
     public abstract double vaf();
@@ -76,34 +65,22 @@ public abstract class Variant
 
     public abstract boolean checkFilters();
 
-    public abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
+    public abstract boolean checkAndRegisterLocation(ProximateLocations registeredLocations);
 
-    public boolean checkAndRegisterGeneLocation(final Map<String, Integer> geneDisruptions)
+    public boolean checkAndRegisterGeneLocation(Map<String, Integer> geneDisruptions)
     {
         return true;
     }
 
-    public boolean passNonReportableFilters(boolean useLowerLimits)
+    public boolean passNonReportableFilters(boolean strictLimits)
     {
         return true;
     }
 
-    protected static boolean passesGcRatioLimit(double gcRatio, boolean useLowerLimits)
+    protected static boolean passesFragmentCountLimit(int fragmentCount, boolean strictLimits)
     {
-        double tolerance = useLowerLimits ? SAMPLE_GC_TOLERANCE : SAMPLE_GC_TOLERANCE_STRICT;
-        return abs(gcRatio - SAMPLE_GC_TARGET) <= tolerance;
-    }
-
-    protected static boolean passesFragmentCountLimit(int fragmentCount, boolean useLowerLimits)
-    {
-        if(useLowerLimits)
-        {
-            return fragmentCount >= FRAG_COUNT_MIN_LOWER;
-        }
-        else
-        {
-            return fragmentCount >= FRAG_COUNT_MIN;
-        }
+        int limit = strictLimits ? FRAG_COUNT_MIN_STRICT : FRAG_COUNT_MIN;
+        return fragmentCount >= limit;
     }
 
     public SelectionStatus selectionStatus()

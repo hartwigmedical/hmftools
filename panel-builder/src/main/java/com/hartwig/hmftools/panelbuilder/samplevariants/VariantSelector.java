@@ -9,12 +9,6 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.NONREPORTABLE_SV_COUNT;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_COUNT;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.EXCEEDS_COUNT;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.FILTERED;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.GENE_LOCATIONS;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.NOT_SET;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.PROXIMATE;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.SelectionStatus.SELECTED;
 
 import java.util.Comparator;
 import java.util.List;
@@ -32,8 +26,14 @@ public final class VariantSelector
 {
     private static final Logger LOGGER = LogManager.getLogger(VariantSelector.class);
 
-    public static List<Variant> selectVariants(final List<Variant> variants)
+    public static List<Variant> selectVariants(List<Variant> variants)
     {
+        // TODO: should have this strategy:
+        //  1. order variants as is done now
+        //  2. filter variants by non-probe-related checks
+        //  3. if decide variant can be selected, generate its probe.
+        //  4. evaluate probe. if it's good, select the variant and add the probe. if not, move to next variant
+
         variants.sort(new VariantComparator());
 
         List<Variant> selectedVariants = Lists.newArrayList();
@@ -42,125 +42,115 @@ public final class VariantSelector
         Map<String, Integer> geneDisruptions = Maps.newHashMap();
         int[] typeCounts = new int[CategoryType.values().length];
 
-        selectVariants(variants, selectedVariants, registeredLocations, geneDisruptions, typeCounts, false);
+        variants.forEach(variant -> variant.setSelectionStatus(SelectionStatus.NOT_SET));
         selectVariants(variants, selectedVariants, registeredLocations, geneDisruptions, typeCounts, true);
+        selectVariants(variants, selectedVariants, registeredLocations, geneDisruptions, typeCounts, false);
 
         StringJoiner sj = new StringJoiner(" ");
         for(CategoryType type : CategoryType.values())
         {
             sj.add(format("%s=%d", type, typeCounts[type.ordinal()]));
         }
-
         LOGGER.debug("selected variant type counts: {}", sj.toString());
 
         return selectedVariants;
     }
 
-    private static boolean exceedsMaxByType(
-            final CategoryType variantCategory, final CategoryType categoryType, final int[] typeCounts, final int maxCount)
+    private static void selectVariants(final List<Variant> variants, List<Variant> selectedVariants, ProximateLocations registeredLocations,
+            Map<String, Integer> geneDisruptions, int[] typeCounts, boolean firstPass)
+    {
+        for(Variant variant : variants)
+        {
+            if(selectedVariants.size() >= SAMPLE_PROBES)
+            {
+                break;
+            }
+
+            if(variant.isSelected())
+            {
+                continue;
+            }
+
+            boolean canSelect;
+
+            if(variant.checkFilters())
+            {
+                if(firstPass)
+                {
+                    if(!variant.checkAndRegisterGeneLocation(geneDisruptions))
+                    {
+                        variant.setSelectionStatus(SelectionStatus.GENE_LOCATIONS);
+                        canSelect = false;
+                    }
+                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, NONREPORTABLE_SV_COUNT)
+                            || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, SUBCLONAL_COUNT))
+                    {
+                        variant.setSelectionStatus(SelectionStatus.EXCEEDS_COUNT);
+                        canSelect = false;
+                    }
+                    else if(!variant.passNonReportableFilters(true))
+                    {
+                        // This will be checked again on the second pass.
+                        variant.setSelectionStatus(SelectionStatus.FILTERED);
+                        canSelect = false;
+                    }
+                    else
+                    {
+                        canSelect = true;
+                    }
+                }
+                else
+                {
+                    // If the variant failed the strict filters before, give it a chance to pass the relaxed filters now.
+                    // Otherwise, the variant failed other checks and it can't be selected.
+                    if(variant.selectionStatus() == SelectionStatus.FILTERED)
+                    {
+                        canSelect = variant.passNonReportableFilters(false);
+                    }
+                    else
+                    {
+                        canSelect = false;
+                    }
+                }
+            }
+            else
+            {
+                canSelect = true;
+            }
+
+            if(canSelect)
+            {
+                if(variant.checkAndRegisterLocation(registeredLocations))
+                {
+                    selectVariant(variant, selectedVariants, typeCounts);
+                }
+                else
+                {
+                    variant.setSelectionStatus(SelectionStatus.PROXIMATE);
+                }
+            }
+        }
+    }
+
+    private static void selectVariant(Variant variant, List<Variant> selectedVariants, int[] typeCounts)
+    {
+        selectedVariants.add(variant);
+        variant.setSelectionStatus(SelectionStatus.SELECTED);
+        ++typeCounts[variant.categoryType().ordinal()];
+    }
+
+    private static boolean exceedsMaxByType(final CategoryType variantCategory, final CategoryType categoryType, final int[] typeCounts,
+            int maxCount)
     {
         if(variantCategory != categoryType)
         {
             return false;
         }
-
         if(maxCount < 0)
         {
             return true;
         }
-
-        if(maxCount == 0)
-        {
-            return false;
-        }
-
         return typeCounts[categoryType.ordinal()] >= maxCount;
-    }
-
-    private static void selectVariants(
-            final List<Variant> variants, final List<Variant> selectedVariants,
-            final ProximateLocations registeredLocations, final Map<String, Integer> geneDisruptions, final int[] typeCounts,
-            boolean useLowerThresholds)
-    {
-        for(Variant variant : variants)
-        {
-            if(useLowerThresholds && variant.isSelected())
-            {
-                continue;
-            }
-
-            boolean canAdd = true;
-
-            if(variant.checkFilters())
-            {
-                if(!useLowerThresholds)
-                {
-                    if(!variant.checkAndRegisterGeneLocation(geneDisruptions))
-                    {
-                        canAdd = false;
-                        variant.setSelectionStatus(GENE_LOCATIONS);
-                    }
-                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, NONREPORTABLE_SV_COUNT)
-                            || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, SUBCLONAL_COUNT))
-                    {
-                        canAdd = false;
-                        variant.setSelectionStatus(EXCEEDS_COUNT);
-                    }
-                    else if(!variant.passNonReportableFilters(false))
-                    {
-                        variant.setSelectionStatus(FILTERED);
-                        canAdd = false;
-                    }
-                }
-                else
-                {
-                    // check second-pass criteria
-                    if(variant.selectionStatus() != FILTERED)
-                    {
-                        continue;
-                    }
-
-                    if(variant.passNonReportableFilters(true))
-                    {
-                        variant.setSelectionStatus(NOT_SET);
-                    }
-                    else
-                    {
-                        canAdd = false;
-                    }
-                }
-            }
-
-            if(canAdd)
-            {
-                if(variant.checkAndRegisterLocation(registeredLocations))
-                {
-                    addVariant(variant, selectedVariants, typeCounts);
-                }
-                else
-                {
-                    variant.setSelectionStatus(PROXIMATE);
-                }
-            }
-
-            if(!variant.isSelected() && useLowerThresholds)
-            {
-                selectedVariants.add(variant);
-            }
-
-            long variantSequences = selectedVariants.stream().filter(Variant::isSelected).count();
-            if(variantSequences >= SAMPLE_PROBES)
-            {
-                break;
-            }
-        }
-    }
-
-    private static void addVariant(final Variant variant, final List<Variant> selectedVariants, final int[] typeCounts)
-    {
-        selectedVariants.add(variant);
-        variant.setSelectionStatus(SELECTED);
-        ++typeCounts[variant.categoryType().ordinal()];
     }
 
     private static class VariantComparator implements Comparator<Variant>
@@ -170,6 +160,7 @@ public final class VariantSelector
             // category
             // reported
             // VCN / copy number
+
             if(first.categoryType() != second.categoryType())
             {
                 return first.categoryType().ordinal() < second.categoryType().ordinal() ? -1 : 1;
@@ -193,12 +184,9 @@ public final class VariantSelector
                     return locationHash1 < locationHash2 ? -1 : 1;
                 }
             }
-            else
+            else if(first.copyNumber() != second.copyNumber())
             {
-                if(first.copyNumber() != second.copyNumber())
-                {
-                    return first.copyNumber() > second.copyNumber() ? -1 : 1;
-                }
+                return first.copyNumber() > second.copyNumber() ? -1 : 1;
             }
 
             return 0;

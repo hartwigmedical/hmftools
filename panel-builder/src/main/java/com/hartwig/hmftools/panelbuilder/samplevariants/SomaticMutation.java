@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INDEL_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX_LOWER;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX_STRICT;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_LIKELIHOOD_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateMutationProbe;
@@ -184,27 +184,21 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public boolean passNonReportableFilters(boolean useLowerLimits)
+    public boolean passNonReportableFilters(boolean strictLimits)
     {
-        if(!passesGcRatioLimit(probe().gcContent(), useLowerLimits))
-        {
-            return false;
-        }
-
         if(categoryType() != SUBCLONAL_MUTATION && vaf() < VAF_MIN)
         {
             return false;
         }
 
-        if(!passesFragmentCountLimit(tumorFragments(), useLowerLimits))
+        if(!passesFragmentCountLimit(tumorFragments(), strictLimits))
         {
             return false;
         }
 
         int repeatCountMax = max(
                 mVariantDecorator.repeatCount(), mVariantDecorator.context().getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0));
-
-        int maxRepeatCount = useLowerLimits ? REPEAT_COUNT_MAX_LOWER : REPEAT_COUNT_MAX;
+        int maxRepeatCount = strictLimits ? REPEAT_COUNT_MAX_STRICT : REPEAT_COUNT_MAX;
         if(repeatCountMax > maxRepeatCount)
         {
             return false;
@@ -230,7 +224,7 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
+    public boolean checkAndRegisterLocation(ProximateLocations registeredLocations)
     {
         if(registeredLocations.isNearRegisteredLocation(mVariantDecorator.chromosome(), mVariantDecorator.position()))
         {

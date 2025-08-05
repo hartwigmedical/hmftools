@@ -195,16 +195,11 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public boolean passNonReportableFilters(boolean useLowerLimits)
+    public boolean passNonReportableFilters(boolean strictLimits)
     {
         if(reported() && mCategoryType != DISRUPTION)
         {
             return true;
-        }
-
-        if(!passesGcRatioLimit(probe().gcContent(), useLowerLimits))
-        {
-            return false;
         }
 
         if(vaf() < VAF_MIN)
@@ -212,7 +207,7 @@ public class StructuralVariant extends Variant
             return false;
         }
 
-        if(!passesFragmentCountLimit(tumorFragments(), useLowerLimits))
+        if(!passesFragmentCountLimit(tumorFragments(), strictLimits))
         {
             return false;
         }
@@ -221,7 +216,7 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
+    public boolean checkAndRegisterLocation(ProximateLocations registeredLocations)
     {
         if(registeredLocations.isNearRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation())
                 || registeredLocations.isNearRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()))
@@ -235,27 +230,24 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterGeneLocation(final Map<String, Integer> geneDisruptions)
+    public boolean checkAndRegisterGeneLocation(Map<String, Integer> geneDisruptions)
     {
         for(LinxBreakend breakend : mBreakends)
         {
             Integer breakendCount = geneDisruptions.get(breakend.gene());
-
-            if(breakendCount != null)
+            if(breakendCount == null)
+            {
+                geneDisruptions.put(breakend.gene(), 1);
+            }
+            else
             {
                 if(breakendCount >= SV_BREAKENDS_PER_GENE)
                 {
                     return false;
                 }
-
                 geneDisruptions.put(breakend.gene(), breakendCount + 1);
             }
-            else
-            {
-                geneDisruptions.put(breakend.gene(), 1);
-            }
         }
-
         return true;
     }
 

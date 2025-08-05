@@ -350,22 +350,16 @@ public class OutputWriter implements AutoCloseable
     {
         for(Variant variant : variants)
         {
-            StringJoiner variantInfo = new StringJoiner(TSV_DELIM);
-            variantInfo.add(variant.categoryType().toString());
-            variantInfo.add(variant.selectionStatus().toString());
-            variantInfo.add(variant.description());
-            variantInfo.add(String.valueOf(variant.reported()));
-            variantInfo.add(format("%.2f", variant.copyNumber()));
-            variantInfo.add(format("%.2f", variant.vaf()));
-            variantInfo.add(String.valueOf(variant.tumorFragments()));
-            variantInfo.add(String.valueOf(variant.hasPhaseVariants()));
-            variantInfo.add(variant.gene());
-
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(variantInfo.toString());
+            sj.add(variant.categoryType().toString());
+            sj.add(variant.description());
+            sj.add(String.valueOf(variant.reported()));
+            sj.add(format("%.2f", variant.copyNumber()));
+            sj.add(format("%.2f", variant.vaf()));
+            sj.add(String.valueOf(variant.tumorFragments()));
+            sj.add(String.valueOf(variant.hasPhaseVariants()));
+            sj.add(variant.gene());
             sj.add("ALT");
-            sj.add(variant.probe().sequence());
-            sj.add(format("%.2f", variant.probe().gcContent()));
             sj.add(variant.otherData());
             mSampleVariantsTsvWriter.write(sj.toString());
             mSampleVariantsTsvWriter.newLine();
@@ -377,7 +371,6 @@ public class OutputWriter implements AutoCloseable
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj
                 .add("Category")
-                .add("Status")
                 .add("Variant")
                 .add("Reported")
                 .add("CopyNumber")
@@ -386,8 +379,6 @@ public class OutputWriter implements AutoCloseable
                 .add("PhasedVariants")
                 .add("Gene")
                 .add("Type")
-                .add("Sequence")
-                .add("GcPercent")
                 .add("OtherData");
         mSampleVariantsTsvWriter.write(sj.toString());
         mSampleVariantsTsvWriter.newLine();

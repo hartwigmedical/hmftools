@@ -126,7 +126,7 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
+    public boolean checkAndRegisterLocation(ProximateLocations registeredLocations)
     {
         registeredLocations.addRegisteredLocation(mPosition.Chromosome, mPosition.Position);
         return true;
