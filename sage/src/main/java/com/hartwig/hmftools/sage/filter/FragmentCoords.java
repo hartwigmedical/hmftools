@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getThreePrimeUnclippedPosition;
 
 import java.util.Set;
 
@@ -35,13 +36,16 @@ public class FragmentCoords
         if(atCapacity())
             return;
 
-        int unclippedPosition = getFivePrimeUnclippedPosition(read);
-
-        String readCoord = formLocalCoordinate(unclippedPosition, !read.getReadNegativeStrandFlag());
+        int fivePrimeUnclippedPosition = getFivePrimeUnclippedPosition(read);
+        String fivePrimeReadCoord = formLocalCoordinate(fivePrimeUnclippedPosition, !read.getReadNegativeStrandFlag());
 
         if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
-            mLowerCoords.add(readCoord);
+            int threePrimeUnclippedPosition = getThreePrimeUnclippedPosition(read);
+            String threePrimeReadCoord = formLocalCoordinate(threePrimeUnclippedPosition, !read.getReadNegativeStrandFlag());
+
+            mLowerCoords.add(fivePrimeUnclippedPosition < threePrimeUnclippedPosition ? fivePrimeReadCoord : threePrimeReadCoord);
+            mUpperCoords.add(fivePrimeUnclippedPosition < threePrimeUnclippedPosition ? threePrimeReadCoord : fivePrimeReadCoord);
             return;
         }
 
@@ -60,7 +64,7 @@ public class FragmentCoords
 
             if(mateCigar == null)
             {
-                mLowerCoords.add(readCoord);
+                mLowerCoords.add(fivePrimeReadCoord);
                 return;
             }
 
@@ -73,16 +77,16 @@ public class FragmentCoords
                 formLocalCoordinate(mateUnclippedPosition, mateForwardStrand) :
                 formRemoteCoordinate(read.getMateReferenceName(), mateUnclippedPosition, mateForwardStrand);
 
-        if(sameChromosome && unclippedPosition <= mateUnclippedPosition
+        if(sameChromosome && fivePrimeUnclippedPosition <= mateUnclippedPosition
         || !sameChromosome && read.getReferenceIndex() < read.getMateReferenceIndex())
         {
-            mLowerCoords.add(readCoord);
+            mLowerCoords.add(fivePrimeReadCoord);
             mUpperCoords.add(mateCoord);
         }
         else
         {
             mLowerCoords.add(mateCoord);
-            mUpperCoords.add(readCoord);
+            mUpperCoords.add(fivePrimeReadCoord);
         }
     }
 
