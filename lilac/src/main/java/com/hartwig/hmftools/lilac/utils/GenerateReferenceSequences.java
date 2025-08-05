@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConfig.MHC_CLASS;
+import static com.hartwig.hmftools.lilac.LilacConfig.MHC_CLASS_;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.registerCommonConfig;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.SEQUENCE_DELIM;
@@ -29,6 +30,7 @@ import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSequenceFromNucleotides;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -40,7 +42,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.GeneCache;
-import com.hartwig.hmftools.lilac.MhcClass;
+import com.hartwig.hmftools.lilac.MhcClass_;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
@@ -48,6 +50,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateReferenceSequences
@@ -65,16 +68,8 @@ public class GenerateReferenceSequences
         mAlleleCache = new HlaAlleleCache();
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
 
-        MhcClass classType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
-
-        if(classType != MhcClass.CLASS_1)
-        {
-            LL_LOGGER.error("only class-1 support for now");
-            System.exit(1);
-        }
-
-        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, classType);
-        mGeneCache = new GeneCache(classType, hlaTranscriptMap);
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, null);
+        mGeneCache = new GeneCache(hlaTranscriptMap);
 
         mNucleotideSequences = Lists.newArrayList();
         mAminoAcidSequences = Lists.newArrayList();
@@ -97,66 +92,61 @@ public class GenerateReferenceSequences
 
         CLASS_1_EXCLUDED_ALLELES.clear();
 
-        if(!seqGenerator.loadSequenceFiles())
-        {
-            LL_LOGGER.error("ref data loading failed");
-            System.exit(1);
-        }
+        seqGenerator.loadSequenceFiles();
 
-        final String outputDir = parseOutputDir(configBuilder);
+        final File outputDir = new File(parseOutputDir(configBuilder));
         seqGenerator.rewriteRefData(outputDir);
 
         LL_LOGGER.info("reference data written");
     }
 
-    private void rewriteRefData(final String outputDir)
+    private void rewriteRefData(final File outputDir)
     {
-        String nucleotideSequenceFile = outputDir + NUC_REF_FILE;
+        File nucleotideSequenceFile = new File(outputDir, NUC_REF_FILE);
         writeSequenceData(nucleotideSequenceFile, mNucleotideSequences);
 
-        String aminoAcidSequenceFile = outputDir + AA_REF_FILE;
+        File aminoAcidSequenceFile = new File(outputDir, AA_REF_FILE);
         writeSequenceData(aminoAcidSequenceFile, mAminoAcidSequences);
 
-        String aminoAcidComparisonFile = outputDir + "hla_ref_aminoacid_compare.csv";
-        writeAminoAcidSequences(aminoAcidComparisonFile, mAminoAcidSequences);
+        // TODO: GENE_CACHE is null
+//        File aminoAcidComparisonFile = new File(outputDir, "hla_ref_aminoacid_compare.csv");
+//        writeAminoAcidSequences(aminoAcidComparisonFile, mAminoAcidSequences);
     }
 
-    private boolean loadSequenceFiles()
+    private void loadSequenceFiles()
     {
         LL_LOGGER.info("reading nucleotide files");
 
-        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "A_nuc.txt"));
-        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "B_nuc.txt"));
-        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "C_nuc.txt"));
+        for(HlaGene gene : mGeneCache.GeneNames)
+            mNucleotideSequences.addAll(nucleotideLoci(new File(mResourceDir, gene.shortName() + "_nuc.txt"), gene));
 
-        List<HlaSequenceLoci> yNucSequences = nucleotideLoci(mResourceDir + "Y_nuc.txt");
+        List<HlaSequenceLoci> yNucSequences = nucleotideLoci(new File(mResourceDir, "Y_nuc.txt"), HLA_Y);
         mNucleotideSequences.addAll(yNucSequences);
 
+        // TODO: We do not include HLA-H seqs?
         // List<HlaSequenceLoci> hNucSequences = nucleotideLoci(mResourceDir + "H_nuc.txt");
         // mNucleotideSequences.addAll(hNucSequences);
 
         LL_LOGGER.info("reading protein files");
 
-        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "A_prot.txt"));
-        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "B_prot.txt"));
-        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "C_prot.txt"));
+        for(HlaGene gene : mGeneCache.GeneNames)
+            mAminoAcidSequences.addAll(aminoAcidLoci(new File(mResourceDir, gene.shortName() + "_prot.txt"), gene));
 
         HlaSequenceLoci sequenceTemplate = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.matches(DEFLATE_TEMPLATE)).findFirst().orElse(null);
 
+        // TODO: do we use H sequences?
         // build H and Y amino-acid sequences from their nucleotides
         if(sequenceTemplate != null)
         {
             yNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
             // hNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
         }
-
-        return true;
     }
 
-    private List<HlaSequenceLoci> nucleotideLoci(final String filename)
+    private List<HlaSequenceLoci> nucleotideLoci(final File filename, final HlaGene gene)
     {
-        List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename);
+        List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename, gene);
 
         List<HlaSequence> filteredSequences = Lists.newArrayList(sequences);
 
@@ -165,9 +155,9 @@ public class GenerateReferenceSequences
         return buildSequences(reducedSequences, false);
     }
 
-    private List<HlaSequenceLoci> aminoAcidLoci(final String filename)
+    private List<HlaSequenceLoci> aminoAcidLoci(final File filename, final HlaGene gene)
     {
-        List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename);
+        List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename, gene);
 
         List<HlaSequence> filteredSequences = Lists.newArrayList(sequences);
 
@@ -205,11 +195,11 @@ public class GenerateReferenceSequences
         return newSequences;
     }
 
-    private static void writeSequenceData(final String filename, final Iterable<HlaSequenceLoci> sequenceData)
+    private static void writeSequenceData(final File filename_, final Iterable<HlaSequenceLoci> sequenceData)
     {
         try
         {
-            final BufferedWriter writer = createBufferedWriter(filename, false);
+            final BufferedWriter writer = createBufferedWriter(filename_.toString(), false);
 
             // header
             writer.write("Allele,Sequence");
@@ -239,11 +229,11 @@ public class GenerateReferenceSequences
         }
         catch(IOException e)
         {
-            LL_LOGGER.error("failed to write file {}: {}", filename, e.toString());
+            LL_LOGGER.error("failed to write file {}: {}", filename_.toString(), e.toString());
         }
     }
 
-    private void writeAminoAcidSequences(final String filename, final Collection<HlaSequenceLoci> sequenceData)
+    private void writeAminoAcidSequences(final File filename_, final Collection<HlaSequenceLoci> sequenceData)
     {
         // write each allele's amino acid sequence with reference to the template allele A*01:01
 
@@ -276,7 +266,7 @@ public class GenerateReferenceSequences
 
         try
         {
-            final BufferedWriter writer = createBufferedWriter(filename, false);
+            final BufferedWriter writer = createBufferedWriter(filename_.toString(), false);
 
             // write locus values first
             String titleStr = padString("Index", alleleNameLength);
@@ -395,7 +385,7 @@ public class GenerateReferenceSequences
         }
         catch(IOException e)
         {
-            LL_LOGGER.error("failed to write file {}: {}", filename, e.toString());
+            LL_LOGGER.error("failed to write file {}: {}", filename_.toString(), e.toString());
         }
     }
 

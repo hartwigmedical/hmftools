@@ -34,6 +34,7 @@ import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 
 public final class SequenceCount
@@ -148,6 +149,12 @@ public final class SequenceCount
     public static Map<HlaGene, Map<Integer, Set<String>>> extractHeterozygousLociSequences(
             final Map<HlaGene, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
     {
+        // TODO:
+        if(true)
+        {
+            throw new NotImplementedException("");
+        }
+
         Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
         for(Map.Entry<HlaGene, SequenceCount> geneEntry : geneCountsMap.entrySet())
         {

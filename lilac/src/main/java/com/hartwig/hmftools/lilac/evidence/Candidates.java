@@ -19,8 +19,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 public final class Candidates
 {
@@ -29,12 +32,30 @@ public final class Candidates
 
     public Candidates(final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
     {
+        // TODO:
+        if(nucleotideSequences.stream().filter(x -> x.Allele.Gene == HlaGene.HLA_DQB1).count() == 0L)
+        {
+            throw new NotImplementedException("nucleotideSequences is empty for HLA_DQB1");
+        }
+
+        // TODO:
+        if(aminoAcidSequences.stream().filter(x -> x.Allele.Gene == HlaGene.HLA_DQB1).count() == 0L)
+        {
+            throw new NotImplementedException("aminoAcidSequences is empty for HLA_DQB1");
+        }
+
         mNucleotideSequences = nucleotideSequences;
         mAminoAcidSequences = aminoAcidSequences;
     }
 
     public List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final Collection<HlaAllele> commonAllles)
     {
+        // TODO:
+        if(context.Gene == HlaGene.HLA_DQB1)
+        {
+            System.out.println("");
+        }
+
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
         LL_LOGGER.debug("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
@@ -43,6 +64,11 @@ public final class Candidates
 
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.Gene == context.Gene).collect(Collectors.toList());
+
+        if(geneCandidates.isEmpty() && context.Gene == HlaGene.HLA_DQB1)
+        {
+            throw new RuntimeException("no gene candidates for HLA_DQB1");
+        }
 
         LL_LOGGER.debug("gene({}) {} candidates before filtering", context.geneName(), geneCandidates.size());
 
