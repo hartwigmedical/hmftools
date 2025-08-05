@@ -5,7 +5,7 @@ import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionCentre;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

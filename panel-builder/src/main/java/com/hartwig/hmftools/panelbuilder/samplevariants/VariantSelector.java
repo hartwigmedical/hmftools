@@ -28,9 +28,9 @@ import com.hartwig.hmftools.common.wisp.CategoryType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class VariantSelection
+public final class VariantSelector
 {
-    private static final Logger LOGGER = LogManager.getLogger(VariantSelection.class);
+    private static final Logger LOGGER = LogManager.getLogger(VariantSelector.class);
 
     public static List<Variant> selectVariants(final List<Variant> variants)
     {

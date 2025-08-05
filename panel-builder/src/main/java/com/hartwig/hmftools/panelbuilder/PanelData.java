@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static com.hartwig.hmftools.panelbuilder.Utils.isCoveredBy;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.isCoveredBy;
 
 import java.util.List;
 import java.util.Objects;

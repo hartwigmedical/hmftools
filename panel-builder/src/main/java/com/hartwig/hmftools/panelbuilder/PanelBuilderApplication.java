@@ -58,7 +58,7 @@ public class PanelBuilderApplication
         mPanelData = new PanelData();
         // Note the order of generation here determines the priority of probe overlap resolution.
         // Probes generated first will exclude overlapping probes generated afterward.
-        TargetGenes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
+        Genes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
         generateCopyNumberBackboneProbes();
         SampleVariants.ExtraOutput sampleExtraOutput = generateSampleVariantProbes();
@@ -84,18 +84,18 @@ public class PanelBuilderApplication
     }
 
     @Nullable
-    private TargetGenes.ExtraOutput generateTargetGeneProbes()
+    private Genes.ExtraOutput generateTargetGeneProbes()
     {
-        if(mConfig.targetGenesFile() == null)
+        if(mConfig.genesFile() == null)
         {
-            LOGGER.info("Target genes not provided; skipping gene probes");
+            LOGGER.info("Genes not provided; skipping gene probes");
             return null;
         }
         else
         {
             EnsemblDataCache ensemblData = loadEnsemblData();
-            TargetGenes.ExtraOutput extraOutput =
-                    TargetGenes.generateProbes(mConfig.targetGenesFile(), ensemblData, mProbeGenerator, mPanelData);
+            Genes.ExtraOutput extraOutput =
+                    Genes.generateProbes(mConfig.genesFile(), ensemblData, mProbeGenerator, mPanelData);
             // Result is stored into mPanelData
             return extraOutput;
         }

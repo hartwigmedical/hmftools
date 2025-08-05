@@ -64,7 +64,7 @@ public class SampleVariants
 
         variants.forEach(variant -> variant.generateProbe(refGenome, probeGenerator.mProbeFactory));
 
-        List<Variant> selectedVariants = VariantSelection.selectVariants(variants);
+        List<Variant> selectedVariants = VariantSelector.selectVariants(variants);
 
         List<Probe> probes = selectedVariants.stream().map(Variant::probe)
                 .map(probe -> probeGenerator.mProbeEvaluator.evaluateProbe(probe, PROBE_CRITERIA))

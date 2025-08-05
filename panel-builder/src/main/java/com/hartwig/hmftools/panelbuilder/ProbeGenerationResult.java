@@ -3,7 +3,7 @@ package com.hartwig.hmftools.panelbuilder;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.panelbuilder.Utils.regionIntersection;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionIntersection;
 
 import java.util.List;
 import java.util.stream.Stream;

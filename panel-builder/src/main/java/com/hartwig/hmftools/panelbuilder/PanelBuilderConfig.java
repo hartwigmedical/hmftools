@@ -23,7 +23,7 @@ public record PanelBuilderConfig(
         String probeQualityProfileFile,
         @Nullable String amberSitesFile,
         // General user input data.
-        @Nullable String targetGenesFile,
+        @Nullable String genesFile,
         @Nullable String customRegionsFile,
         @Nullable SampleVariantsConfig sampleVariants,
         // Output config.

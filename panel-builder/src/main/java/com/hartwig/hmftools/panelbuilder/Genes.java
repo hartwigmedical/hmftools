@@ -15,17 +15,17 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENERAL_GC
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_CN_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_CODING_REGION_EXPAND;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_GAP;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_GENERAL_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_EXON_FLANK_REGION_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_GENERAL_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_PROMOTER_REGION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_UPDOWNSTREAM_GAP;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_UPDOWNSTREAM_REGION;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionCenteredAt;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionCentre;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionEndingAt;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionOverlapsOrAdjacent;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionStartingAt;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCenteredAt;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionOverlapsOrAdjacent;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +56,7 @@ import org.apache.logging.log4j.Logger;
 //   - Exon flanks: Only when there are not too many exons:
 //     - Small introns: Select the best acceptable probe from a 1kb region centered on the centre of the intron.
 //     - Large introns: Select the best acceptable probe from each of 1-5kb regions near the adjacent exons.
-public class TargetGenes
+public class Genes
 {
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.GENE;
 
@@ -75,7 +75,7 @@ public class TargetGenes
     private static final String FLD_INCLUDE_PROMOTER = "IncludePromoter";
     private static final String FLD_EXTRA_TRANSCRIPTS = "ExtraTransNames";
 
-    private static final Logger LOGGER = LogManager.getLogger(TargetGenes.class);
+    private static final Logger LOGGER = LogManager.getLogger(Genes.class);
 
     public record ExtraOutput(
             List<GeneStats> geneStats
@@ -95,7 +95,7 @@ public class TargetGenes
     {
         LOGGER.info("Generating gene probes");
 
-        List<GeneDefinition> geneDefs = loadTargetGenesFile(targetGeneFile);
+        List<GeneDefinition> geneDefs = loadGenesFile(targetGeneFile);
         geneDefs.forEach(gene -> LOGGER.debug("{}", gene));
 
         LOGGER.debug("Loading gene transcript data");
@@ -159,9 +159,9 @@ public class TargetGenes
         }
     }
 
-    private static List<GeneDefinition> loadTargetGenesFile(final String filePath)
+    private static List<GeneDefinition> loadGenesFile(final String filePath)
     {
-        LOGGER.debug("Loading target genes files: {}", filePath);
+        LOGGER.debug("Loading genes file: {}", filePath);
 
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
@@ -181,7 +181,7 @@ public class TargetGenes
                 return new GeneDefinition(geneName, options, extraTranscripts);
             }).toList();
 
-            LOGGER.info("Loaded {} target genes from {}", genes.size(), filePath);
+            LOGGER.info("Loaded {} genes from {}", genes.size(), filePath);
             return genes;
         }
     }
@@ -445,22 +445,20 @@ public class TargetGenes
 
         return switch(geneRegion.type())
         {
-            case CODING, PROMOTER ->
-                probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, null);
+            case CODING, PROMOTER -> probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, null);
             case UTR ->
             {
                 BasePosition position = new BasePosition(geneRegion.region().chromosome(), regionCentre(geneRegion.region().baseRegion()));
                 yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA);
             }
-            case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
-                probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA);
+            case UP_STREAM, DOWN_STREAM, EXON_FLANK -> probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA);
         };
     }
 
     private static TargetMetadata createTargetMetadata(final GeneRegion geneRegion)
     {
         GeneData geneData = geneRegion.gene().gene();
-        List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(TargetGenes::transcriptDataName).toList();
+        List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(Genes::transcriptDataName).toList();
         // If there are multiple transcripts, merge their names, since the region is determined based on 1 or more transcripts.
         String transcripts = join("/", transcriptNames);
         String extraInfo = format("%s:%s:%s", geneData.GeneName, transcripts, geneRegion.type().name());

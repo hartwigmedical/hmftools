@@ -18,11 +18,11 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartOverlapp
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartWithoutGap;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
-import static com.hartwig.hmftools.panelbuilder.Utils.computeUncoveredRegions;
-import static com.hartwig.hmftools.panelbuilder.Utils.mergeOverlapAndAdjacentRegions;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.computeUncoveredRegions;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreFloat;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionIntersection;
 import static com.hartwig.hmftools.panelbuilder.Utils.outwardMovingOffsets;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionCentreFloat;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionIntersection;
 
 import java.util.ArrayList;
 import java.util.HashMap;

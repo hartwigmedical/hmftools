@@ -11,9 +11,9 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartOverlapp
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreStartOffset;
 import static com.hartwig.hmftools.panelbuilder.Utils.outwardMovingOffsets;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionCentre;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionCentreStartOffset;
 
 import java.util.Map;
 import java.util.stream.IntStream;

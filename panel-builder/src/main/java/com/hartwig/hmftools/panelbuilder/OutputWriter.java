@@ -11,11 +11,11 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_REGIONS_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VARIANTS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.TARGET_REGIONS_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -48,7 +48,7 @@ public class OutputWriter implements AutoCloseable
     private final DelimFileWriter<Probe> mCandidateProbesTsvWriter;
     @Nullable
     private final List<Probe> mCandidateProbesBuffer;
-    private final DelimFileWriter<TargetGenes.GeneStats> mGeneStatsTsvWriter;
+    private final DelimFileWriter<Genes.GeneStats> mGeneStatsTsvWriter;
     private final BufferedWriter mSampleVariantsTsvWriter;
 
     private static final String TSV_EXT = ".tsv";
@@ -335,12 +335,12 @@ public class OutputWriter implements AutoCloseable
         return label;
     }
 
-    public void writeGeneStats(final List<TargetGenes.GeneStats> geneStats)
+    public void writeGeneStats(final List<Genes.GeneStats> geneStats)
     {
         geneStats.forEach(mGeneStatsTsvWriter::writeRow);
     }
 
-    private static void writeGeneStatsRow(final TargetGenes.GeneStats stats, DelimFileWriter.Row row)
+    private static void writeGeneStatsRow(final Genes.GeneStats stats, DelimFileWriter.Row row)
     {
         row.set(FLD_GENE_NAME, stats.geneName());
         row.set(FLD_PROBE_COUNT, stats.probeCount());

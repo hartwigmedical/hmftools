@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionCenteredAt;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionEndingAt;
-import static com.hartwig.hmftools.panelbuilder.Utils.regionStartingAt;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCenteredAt;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
