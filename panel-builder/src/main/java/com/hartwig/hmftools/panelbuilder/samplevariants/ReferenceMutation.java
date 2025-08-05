@@ -100,10 +100,16 @@ public class ReferenceMutation extends Variant
         ProbeGenerationResult result;
         if(mAlt.isEmpty())
         {
-            // TODO: overlap detection
             TargetRegion target = new TargetRegion(region, metadata);
-            Probe probe = probeFactory.createProbeFromRegion(target.region(), target.metadata()).orElseThrow();
-            result = ProbeGenerationResult.coveredTarget(target, probe);
+            if(coverage.isCovered(region))
+            {
+                result = ProbeGenerationResult.alreadyCoveredTarget(target);
+            }
+            else
+            {
+                Probe probe = probeFactory.createProbeFromRegion(target.region(), target.metadata()).orElseThrow();
+                result = ProbeGenerationResult.coveredTarget(target, probe);
+            }
         }
         else
         {

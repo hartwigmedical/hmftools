@@ -51,7 +51,7 @@ public class VariantProbeGenerator
             final PanelCoverage coverage)
     {
         ProbeData probeData = generateMutationProbe(refGenome, chromosome, position, ref, alt);
-        return createProbe(probeData, metadata, probeFactory);
+        return createProbe(probeData, metadata, probeFactory, coverage);
     }
 
     private static ProbeData generateMutationProbe(final RefGenomeInterface refGenome, final String chromosome, final int position,
@@ -88,7 +88,7 @@ public class VariantProbeGenerator
     {
         ProbeData probeData =
                 generateSvProbe(refGenome, chrStart, positionStart, orientStart, chrEnd, positionEnd, orientEnd, insertSequence);
-        return createProbe(probeData, metadata, probeFactory);
+        return createProbe(probeData, metadata, probeFactory, coverage);
     }
 
     private static ProbeData generateSvProbe(final RefGenomeInterface refGenome, final String chrStart, final int positionStart,
@@ -171,7 +171,7 @@ public class VariantProbeGenerator
             final PanelCoverage coverage)
     {
         ProbeData probeData = generateSglProbe(refGenome, chromosome, position, orientation, insertSequence);
-        return createProbe(probeData, metadata, probeFactory);
+        return createProbe(probeData, metadata, probeFactory, coverage);
     }
 
     private static ProbeData generateSglProbe(final RefGenomeInterface refGenome, final String chromosome, final int position,
@@ -219,16 +219,23 @@ public class VariantProbeGenerator
     }
 
     private static ProbeGenerationResult createProbe(final ProbeData probeData, final TargetMetadata metadata,
-            final ProbeFactory probeFactory)
+            final ProbeFactory probeFactory, final PanelCoverage coverage)
     {
-        // TODO: overlap detection
         return probeFactory.createProbeFromSequence(probeData.sequence(), metadata)
                 .map(probe ->
                 {
                     List<TargetRegion> targetRegions = probeData.regions().stream()
                             .map(region -> new TargetRegion(region, metadata))
                             .toList();
-                    return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+                    boolean covered = probeData.regions().stream().allMatch(coverage::isCovered);
+                    if(covered)
+                    {
+                        return new ProbeGenerationResult(emptyList(), targetRegions, emptyList(), emptyList());
+                    }
+                    else
+                    {
+                        return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+                    }
                 })
                 .orElseThrow();
     }
