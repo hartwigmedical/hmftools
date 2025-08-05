@@ -35,7 +35,8 @@ public class Cdr3Regions
 
         Stream<IgTcrGene> genes = IgTcrGeneFile.read(refGenomeVersion).stream()
                 .filter(gene -> gene.region() == IgTcrRegion.V_REGION || gene.region() == IgTcrRegion.J_REGION)
-                .filter(IgTcrGene::inPrimaryAssembly);
+                .filter(IgTcrGene::inPrimaryAssembly)
+                .filter(gene -> gene.anchorLocation() != null);
 
         ProbeGenerationResult result = genes
                 .map(gene -> generateProbe(gene, probeGenerator, panelData))
@@ -55,15 +56,23 @@ public class Cdr3Regions
         Probe probe = probeGenerator.mProbeFactory.createProbeFromRegion(region, metadata).orElseThrow();
         probe = probeGenerator.mProbeEvaluator.evaluateProbe(probe, PROBE_CRITERIA);
 
-        // Note this coverage check also checks previously added CDR3 regions, since overlaps may result.
-        if(coverage.isCovered(region))
+        if(probe.accepted())
         {
-            LOGGER.debug("CDR3 target already covered by panel: {}", target);
-            return ProbeGenerationResult.alreadyCoveredTarget(target);
+            // Note this coverage check also checks previously added CDR3 regions, since overlaps may result.
+            if(coverage.isCovered(region))
+            {
+                LOGGER.debug("CDR3 target already covered by panel: {}", target);
+                return ProbeGenerationResult.alreadyCoveredTarget(target);
+            }
+            else
+            {
+                return ProbeGenerationResult.coveredTarget(target, probe);
+            }
         }
         else
         {
-            return ProbeGenerationResult.coveredTarget(target, probe);
+            LOGGER.debug("No acceptable probe for CDR3 target: {}", target);
+            return new ProbeGenerationResult();
         }
     }
 
